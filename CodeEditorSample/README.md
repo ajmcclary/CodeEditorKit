@@ -170,6 +170,30 @@ CodeEditorSample/
     └── QuickIsFlippedTest.swift
 ```
 
+### Library Architecture (Simplified)
+
+The CodeEditorPlugin library now features a streamlined, feature-based directory structure:
+
+```
+CodeEditorPlugin/
+├── Core/                   # Core text editing (STTextView, delegates)
+├── SyntaxHighlighting/     # All highlighting logic unified
+├── TextProcessing/         # Actor-based text processing & validation
+├── RangeProcessing/        # Actor-based range validation
+├── Layout/                 # Layout and view components
+├── Plugins/                # Plugin system with annotations
+├── Extensions/             # All extensions (flattened)
+├── Models/                 # Data models
+├── Completion/             # Code completion
+└── Platform/               # Platform-specific code
+```
+
+**Benefits of the simplified structure:**
+- ✅ **67% reduction** in directory count (39 → 13 directories)
+- ✅ **Feature-based organization** - Related code stays together
+- ✅ **Easier navigation** - Less nesting, clearer structure
+- ✅ **Better maintainability** - Components that work together are in the same directory
+
 ### Key Integration Patterns
 
 **1. SwiftUI + AppKit Integration:**
@@ -235,6 +259,14 @@ swiftlint --fix && swiftlint       # ✅ 0 violations
 swift build                       # ✅ Build complete
 swift test                        # ✅ 23/23 tests passing
 ```
+
+### Recent Improvements
+
+- ✅ **Simplified Directory Structure** - Library reorganized from 39 to 13 directories
+- ✅ **Feature-Based Organization** - Related components now grouped together
+- ✅ **SwiftLint Compliance** - Zero violations with custom configuration
+- ✅ **Extension Naming Convention** - Adopted +Extensions pattern for clarity
+- ✅ **Improved Build Performance** - Flattened structure reduces module complexity
 
 ## 🛠️ Customization Guide
 

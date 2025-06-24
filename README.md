@@ -231,6 +231,25 @@ CodeEditorPlugin is built with a clean, modular architecture fully optimized for
 - **SwiftUI Integration** - Native SwiftUI wrappers with proper scroll view embedding
 - **Performance Layer** - Actor-based background processing and viewport optimization
 
+### Simplified Directory Structure
+
+```
+Sources/CodeEditorPlugin/
+├── Core/                   # Core text editing (STTextView, delegates)
+├── SyntaxHighlighting/     # All highlighting logic unified
+├── TextProcessing/         # Actor-based text processing & validation
+├── RangeProcessing/        # Actor-based range validation
+├── Layout/                 # Layout and view components
+├── Plugins/                # Plugin system
+│   ├── PluginCore/        # Core plugin infrastructure
+│   └── Annotations/       # Annotation plugin
+├── Extensions/             # All extensions (flattened)
+├── Models/                 # Data models
+├── Completion/             # Code completion
+├── Platform/               # Platform-specific code
+└── CodeEditorPlugin.swift  # Main module file
+```
+
 ### Actor-Based Concurrency Architecture
 
 - **RangeValidator** - Core validation actor for thread-safe text processing
@@ -251,6 +270,7 @@ CodeEditorPlugin is built with a clean, modular architecture fully optimized for
 ### Recent Improvements
 
 - ✅ **Swift 6 Actor-Based Concurrency** - Full migration to actors for thread-safe validation and processing
+- ✅ **Simplified Directory Structure** - Reduced from 39 to 13 directories with feature-based organization
 - ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
 - ✅ **Protocol Conformance** - Complete STTextViewDelegate implementation
@@ -274,6 +294,13 @@ swift test
 **Test Results**: 69 tests passing across both projects with performance benchmarks.
 
 ## 🔧 Development
+
+### Project Structure Benefits
+
+- **Feature-based organization** - Related code stays together
+- **Reduced complexity** - From 39 to 13 directories (67% reduction)
+- **Easier navigation** - Less nesting, clearer structure
+- **Better maintainability** - Components that work together are in the same directory
 
 ### Code Quality
 

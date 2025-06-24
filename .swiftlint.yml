@@ -72,7 +72,7 @@ opt_in_rules:
   # - extension_access_modifier # Disabled: conflicts with no_extension_access_modifier
   - fallthrough
   - fatal_error_message
-  - file_name
+  # - file_name # Disabled to allow +Extensions naming convention
   - file_name_no_space
   - first_where
   - flatmap_over_map_reduce

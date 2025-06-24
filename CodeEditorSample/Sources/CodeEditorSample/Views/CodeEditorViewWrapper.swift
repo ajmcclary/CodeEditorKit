@@ -133,11 +133,11 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
 
         // MARK: - STTextViewDelegate
 
-        func undoManager(for textView: STTextView) -> UndoManager? {
-            return nil
+        func undoManager(for _: STTextView) -> UndoManager? {
+            nil
         }
 
-        func textViewWillChangeText(_ notification: Notification) {
+        func textViewWillChangeText(_: Notification) {
             // Default implementation
         }
 
@@ -147,67 +147,67 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
             }
         }
 
-        func textViewDidChangeSelection(_ notification: Notification) {
+        func textViewDidChangeSelection(_: Notification) {
             // Handle selection changes if needed
         }
 
         func textView(
-            _ textView: STTextView,
-            shouldChangeTextIn affectedCharRange: NSTextRange,
-            replacementString: String?
+            _: STTextView,
+            shouldChangeTextIn _: NSTextRange,
+            replacementString _: String?
         ) -> Bool {
-            return true
+            true
         }
 
         func textView(
-            _ textView: STTextView,
-            willChangeTextIn affectedCharRange: NSTextRange,
-            replacementString: String
+            _: STTextView,
+            willChangeTextIn _: NSTextRange,
+            replacementString _: String
         ) {
             // Default implementation
         }
 
         func textView(
-            _ textView: STTextView,
-            didChangeTextIn affectedCharRange: NSTextRange,
-            replacementString: String
+            _: STTextView,
+            didChangeTextIn _: NSTextRange,
+            replacementString _: String
         ) {
             // Default implementation
         }
 
-        func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
-            return false
+        func textView(_: STTextView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
+            false
         }
 
-        func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
+        func textView(_: STTextView, insertCompletionItem _: any STCompletionItem) {
             // Default implementation
         }
 
-        func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
+        func textViewCompletionViewController(_: STTextView) -> any STCompletionViewControllerProtocol {
             fatalError("Completion view controller not implemented")
         }
 
         func textViewInsertionPointView(
-            _ textView: STTextView,
-            frame: CGRect
+            _: STTextView,
+            frame _: CGRect
         ) -> (any STInsertionPointIndicatorProtocol)? {
-            return nil
+            nil
         }
 
         func textView(
-            _ textView: STTextView,
-            clickedOnAttachment attachment: NSTextAttachment,
-            at location: any NSTextLocation
+            _: STTextView,
+            clickedOnAttachment _: NSTextAttachment,
+            at _: any NSTextLocation
         ) -> Bool {
-            return false
+            false
         }
 
         func textView(
-            _ textView: STTextView,
-            shouldAllowInteractionWith attachment: NSTextAttachment,
-            at location: any NSTextLocation
+            _: STTextView,
+            shouldAllowInteractionWith _: NSTextAttachment,
+            at _: any NSTextLocation
         ) -> Bool {
-            return true
+            true
         }
     }
 }
