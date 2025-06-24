@@ -65,5 +65,10 @@ public class STTextLayoutFragmentView: PlatformView {
         // Draw the layout fragment
         layoutFragment.draw(at: .zero, in: context)
     }
+    
+    // Text views need a flipped coordinate system on macOS
+    public override var isFlipped: Bool {
+        return true
+    }
     #endif
 }

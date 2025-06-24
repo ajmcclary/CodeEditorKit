@@ -46,4 +46,11 @@ public class STLineHighlightView: PlatformView {
         layer?.backgroundColor = highlightColor.cgColor
         #endif
     }
+    
+    #if canImport(AppKit)
+    // Text views need a flipped coordinate system on macOS
+    public override var isFlipped: Bool {
+        return true
+    }
+    #endif
 }

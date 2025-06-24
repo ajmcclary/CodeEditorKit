@@ -50,5 +50,10 @@ public class STAnnotationsContentView: PlatformView {
         super.draw(dirtyRect)
         // Drawing handled by subviews
     }
+    
+    // Text views need a flipped coordinate system on macOS
+    public override var isFlipped: Bool {
+        return true
+    }
     #endif
 }

@@ -11,6 +11,14 @@ let package = Package(
         .executable(
             name: "CodeEditorSample",
             targets: ["CodeEditorSample"]
+        ),
+        .executable(
+            name: "IsFlippedTest",
+            targets: ["IsFlippedTest"]
+        ),
+        .executable(
+            name: "EditableTest",
+            targets: ["EditableTest"]
         )
     ],
     dependencies: [
@@ -22,6 +30,29 @@ let package = Package(
             dependencies: [
                 .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
             ]
+        ),
+        .executableTarget(
+            name: "IsFlippedTest",
+            dependencies: [
+                .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
+            ]
+        ),
+        .executableTarget(
+            name: "EditableTest",
+            dependencies: [
+                .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
+            ]
+        ),
+        .testTarget(
+            name: "CodeEditorSampleTests",
+            dependencies: [
+                "CodeEditorSample",
+                .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
+            ]
+        ),
+        .testTarget(
+            name: "CodeEditorSampleUITests",
+            dependencies: ["CodeEditorSample"]
         )
     ]
 )

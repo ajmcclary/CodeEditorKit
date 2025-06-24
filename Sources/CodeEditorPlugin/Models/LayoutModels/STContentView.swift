@@ -28,4 +28,11 @@ public class STContentView: PlatformView {
         wantsLayer = true
         #endif
     }
+    
+    #if canImport(AppKit)
+    // Text views need a flipped coordinate system on macOS
+    public override var isFlipped: Bool {
+        return true
+    }
+    #endif
 }

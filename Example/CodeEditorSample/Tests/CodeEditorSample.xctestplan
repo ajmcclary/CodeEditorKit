@@ -1,0 +1,73 @@
+{
+  "configurations" : [
+    {
+      "id" : "6F5E7D8C-9A1B-2C3D-4E5F-6A7B8C9D0E1F",
+      "name" : "Test Scheme Action",
+      "options" : {
+        "targetForVariableExpansion" : {
+          "containerPath" : "container:CodeEditorSample",
+          "identifier" : "CodeEditorSample",
+          "name" : "CodeEditorSample"
+        }
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:CodeEditorSample",
+          "identifier" : "CodeEditorSample",
+          "name" : "CodeEditorSample"
+        }
+      ]
+    },
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:CodeEditorSample",
+        "identifier" : "CodeEditorSampleTests",
+        "name" : "CodeEditorSampleTests"
+      },
+      "testGroups" : [
+        {
+          "name" : "Coordinate System Tests",
+          "tests" : [
+            {
+              "identifier" : "STTextViewCoordinateTests",
+              "name" : "STTextViewCoordinateTests"
+            }
+          ]
+        },
+        {
+          "name" : "Line Numbers Tests",
+          "tests" : [
+            {
+              "identifier" : "STTextViewLineNumbersTests",
+              "name" : "STTextViewLineNumbersTests"
+            }
+          ]
+        },
+        {
+          "name" : "Text Editing Tests",
+          "tests" : [
+            {
+              "identifier" : "STTextViewEditingTests",
+              "name" : "STTextViewEditingTests"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target" : {
+        "containerPath" : "container:CodeEditorSample",
+        "identifier" : "CodeEditorSampleUITests",
+        "name" : "CodeEditorSampleUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1339,6 +1339,33 @@ public typealias PlatformFont = NSFont
     }
     
     internal func layoutGutter() {
-        // TODO: Implement gutter layout
+        guard isGutterVisible else {
+            gutterView?.removeFromSuperview()
+            gutterView = nil
+            return
+        }
+        
+        // Create gutter view if needed
+        if gutterView == nil {
+            let newGutterView = STGutterView()
+            newGutterView.frame = CGRect(x: 0, y: 0, width: 50, height: bounds.height)
+            addSubview(newGutterView, positioned: .below, relativeTo: textContentView)
+            gutterView = newGutterView
+        }
+        
+        // Update gutter view frame
+        if let gutterView = gutterView {
+            let gutterWidth: CGFloat = 50 // Default width, will be calculated based on line count
+            gutterView.frame = CGRect(x: 0, y: 0, width: gutterWidth, height: bounds.height)
+            
+            // Adjust content view to make room for gutter
+            var contentFrame = bounds
+            contentFrame.origin.x = gutterWidth
+            contentFrame.size.width -= gutterWidth
+            textContentView.frame = contentFrame
+            
+            // Tell gutter to update its content
+            gutterView.needsDisplay = true
+        }
     }
 }
