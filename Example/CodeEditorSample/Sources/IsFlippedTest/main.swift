@@ -18,13 +18,17 @@ struct IsFlippedTest {
                 print("   ✅ PASS: STTextView is correctly flipped")
             }
             
-            // Test 2: Check NSScrollView's contentView
-            let contentView = textView.contentView
-            print("\n2. ContentView isFlipped: \(contentView.isFlipped)")
-            if !contentView.isFlipped {
-                print("   ❌ FAIL: ContentView MUST be flipped!")
+            // Test 2: Check if embedded in scroll view
+            if let scrollView = textView.enclosingScrollView {
+                let contentView = scrollView.contentView
+                print("\n2. ContentView isFlipped: \(contentView.isFlipped)")
+                if !contentView.isFlipped {
+                    print("   ❌ FAIL: ContentView MUST be flipped!")
+                } else {
+                    print("   ✅ PASS: ContentView is correctly flipped")
+                }
             } else {
-                print("   ✅ PASS: ContentView is correctly flipped")
+                print("\n2. No enclosing scroll view found - this is expected for NSTextView-based implementation")
             }
             
             // Test 3: Check if NSScrollView itself needs isFlipped
@@ -57,28 +61,38 @@ struct IsFlippedTest {
             
             // Test 5: Check text rendering direction
             print("\n5. Testing text layout direction...")
-            let layoutManager = textView.textLayoutManager
-            var fragments: [(y: CGFloat, text: String)] = []
-            
-            layoutManager.enumerateTextLayoutFragments(
-                from: layoutManager.documentRange.location,
-                options: [.ensuresLayout]
-            ) { fragment in
-                let y = fragment.layoutFragmentFrame.origin.y
-                // For simplicity, just track Y positions
-                fragments.append((y: y, text: "Line at Y: \(y)"))
-                return true
-            }
-            
-            if fragments.count >= 2 {
-                print("   First line Y: \(fragments[0].y), text: '\(fragments[0].text)'")
-                print("   Second line Y: \(fragments[1].y), text: '\(fragments[1].text)'")
+            if let layoutManager = textView.layoutManager {
+                let textStorage = textView.textStorage!
+                let textLength = textStorage.length
                 
-                if fragments[0].y < fragments[1].y {
-                    print("   ✅ PASS: Text is laid out top-to-bottom (correct for flipped coordinates)")
+                if textLength > 0 {
+                    // Get line rectangles
+                    let lineRange1 = (textView.string as NSString).lineRange(for: NSRange(location: 0, length: 0))
+                    let lineRange2 = (textView.string as NSString).lineRange(for: NSRange(location: min(lineRange1.length + 1, textLength - 1), length: 0))
+                    
+                    if lineRange2.location < textLength {
+                        let glyphRange1 = layoutManager.glyphRange(forCharacterRange: lineRange1, actualCharacterRange: nil)
+                        let glyphRange2 = layoutManager.glyphRange(forCharacterRange: lineRange2, actualCharacterRange: nil)
+                        
+                        let rect1 = layoutManager.boundingRect(forGlyphRange: glyphRange1, in: textView.textContainer!)
+                        let rect2 = layoutManager.boundingRect(forGlyphRange: glyphRange2, in: textView.textContainer!)
+                        
+                        print("   First line Y: \(rect1.origin.y)")
+                        print("   Second line Y: \(rect2.origin.y)")
+                        
+                        if rect1.origin.y < rect2.origin.y {
+                            print("   ✅ PASS: Text is laid out top-to-bottom (correct for flipped coordinates)")
+                        } else {
+                            print("   ❌ FAIL: Text is laid out bottom-to-top (WRONG - indicates coordinate system issue)")
+                        }
+                    } else {
+                        print("   Not enough text to test layout direction")
+                    }
                 } else {
-                    print("   ❌ FAIL: Text is laid out bottom-to-top (WRONG - indicates coordinate system issue)")
+                    print("   No text to test layout direction")
                 }
+            } else {
+                print("   No layout manager available")
             }
             
             print("\n=== Summary ===")

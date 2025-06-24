@@ -8,7 +8,7 @@ final class SampleCodeTests: XCTestCase {
     func testSampleCodeCases() {
         let allCases = SampleCode.allCases
         
-        XCTAssertEqual(allCases.count, 12, "Should have 12 sample code types")
+        XCTAssertEqual(allCases.count, 11, "Should have 11 sample code types")
         
         // Verify all cases exist
         XCTAssertTrue(allCases.contains(.swift))
@@ -22,7 +22,6 @@ final class SampleCodeTests: XCTestCase {
         XCTAssertTrue(allCases.contains(.html))
         XCTAssertTrue(allCases.contains(.css))
         XCTAssertTrue(allCases.contains(.json))
-        XCTAssertTrue(allCases.contains(.markdown))
     }
     
     func testSampleCodeProperties() {
@@ -55,7 +54,6 @@ final class SampleCodeTests: XCTestCase {
         XCTAssertEqual(SampleCode.html.fileExtension, "html")
         XCTAssertEqual(SampleCode.css.fileExtension, "css")
         XCTAssertEqual(SampleCode.json.fileExtension, "json")
-        XCTAssertEqual(SampleCode.markdown.fileExtension, "md")
     }
     
     // MARK: - Sample Code Provider Tests
@@ -123,13 +121,6 @@ final class SampleCodeTests: XCTestCase {
         XCTAssertNoThrow(try JSONSerialization.jsonObject(with: data), "JSON sample should be valid JSON")
     }
     
-    func testMarkdownSampleCode() {
-        let code = SampleCodeProvider.getCode(for: .markdown)
-        
-        // Verify Markdown-specific content
-        XCTAssertTrue(code.contains("#"), "Markdown code should contain headers")
-        XCTAssertTrue(code.contains("*") || code.contains("_") || code.contains("-"), "Markdown code should contain formatting")
-    }
     
     func testCodeComplexity() {
         // Verify each sample has reasonable complexity
@@ -171,9 +162,6 @@ final class SampleCodeTests: XCTestCase {
                 // JSON should be properly formatted
                 XCTAssertTrue(code.contains("\""), "JSON should contain quoted keys")
                 
-            case .markdown:
-                // Markdown should have various formatting
-                XCTAssertTrue(code.contains("#") || code.contains("*"), "Markdown should contain formatting")
             }
         }
     }

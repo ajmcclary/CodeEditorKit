@@ -22,18 +22,15 @@ struct CodeEditorView: NSViewRepresentable {
         // Apply configuration
         applyConfiguration(to: textView)
         
-        // Add custom plugin if enabled
-        if configuration.enableCustomPlugin {
-            let customPlugin = CustomAnnotationPlugin()
-            textView.addPlugin(customPlugin)
-        }
+        // Plugin system has been removed - custom functionality would be integrated directly
+        // if configuration.enableCustomPlugin {
+        //     // Custom annotation functionality would be integrated directly into STTextView
+        // }
         
         // Ensure the text view is properly laid out
         textView.invalidateIntrinsicContentSize()
         
-        // Force initial layout
-        textView.textLayoutManager.ensureLayout(for: textView.textLayoutManager.documentRange)
-        textView.textLayoutManager.textViewportLayoutController.layoutViewport()
+        // NSTextView handles layout automatically
         textView.needsLayout = true
         textView.needsDisplay = true
         

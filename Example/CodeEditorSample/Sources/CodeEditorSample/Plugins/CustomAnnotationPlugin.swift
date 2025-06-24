@@ -3,7 +3,9 @@ import AppKit
 import CodeEditorPlugin
 
 // MARK: - Custom Annotation Plugin
+// Note: Plugin system has been removed - this is kept for reference
 
+/*
 final class CustomAnnotationPlugin: STPlugin {
     typealias Coordinator = CustomAnnotationCoordinator
     
@@ -299,3 +301,4 @@ class CustomAnnotationView: NSView {
         popover.show(relativeTo: bounds, of: self, preferredEdge: .minY)
     }
 }
+*/

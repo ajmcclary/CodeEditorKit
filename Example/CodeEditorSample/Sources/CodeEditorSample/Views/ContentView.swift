@@ -7,6 +7,8 @@ struct ContentView: View {
     @State private var selectedSample: SampleCode = .swift
     @State private var code: String = ""
     @State private var showConfigurationSidebar = true
+    @State private var showTestView = false
+    @State private var showMinimalTestView = false
     
     var body: some View {
         NavigationSplitView {
@@ -21,6 +23,21 @@ struct ContentView: View {
         } detail: {
             // Main editor view
             VStack(spacing: 0) {
+                // Test button
+                HStack {
+                    Button("Test Editable View") {
+                        showTestView = true
+                    }
+                    .padding()
+                    
+                    Button("Minimal Test") {
+                        showMinimalTestView = true
+                    }
+                    .padding()
+                    
+                    Spacer()
+                }
+                
                 // Code editor
                 CodeEditorView(
                     configuration: configuration,
@@ -29,6 +46,12 @@ struct ContentView: View {
                 )
                 .background(Color(configuration.theme.backgroundColor))
             }
+        }
+        .sheet(isPresented: $showTestView) {
+            TestEditableView()
+        }
+        .sheet(isPresented: $showMinimalTestView) {
+            MinimalTextTestView()
         }
         .navigationTitle("CodeEditor Sample")
         .onAppear {

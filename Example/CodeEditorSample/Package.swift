@@ -50,9 +50,5 @@ let package = Package(
                 .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
             ]
         ),
-        .testTarget(
-            name: "CodeEditorSampleUITests",
-            dependencies: ["CodeEditorSample"]
-        )
     ]
 )

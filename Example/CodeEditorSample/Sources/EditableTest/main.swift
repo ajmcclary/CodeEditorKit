@@ -2,62 +2,60 @@ import AppKit
 import CodeEditorPlugin
 
 @main
+@MainActor
 struct EditableTest {
     static func main() async {
-        print("=== Testing STTextView Editable Issue ===")
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.run()
+    }
+}
+
+@MainActor
+class AppDelegate: NSObject, NSApplicationDelegate {
+    var window: NSWindow!
+    
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // Create window
+        window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Editable Test"
+        window.center()
         
-        await MainActor.run {
-            // Create STTextView
-            let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
-            textView.text = "Initial text"
-            
-            // Test 1: Check default editability
-            print("1. Default isEditable: \(textView.isEditable)")
-            print("   Default isSelectable: \(textView.isSelectable)")
-            
-            // Test 2: Check if it accepts first responder
-            print("\n2. acceptsFirstResponder: \(textView.acceptsFirstResponder)")
-            
-            // Test 3: Create a window and test responder chain
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-                                styleMask: [.titled],
-                                backing: .buffered,
-                                defer: false)
-            window.contentView?.addSubview(textView)
-            window.makeKeyAndOrderFront(nil)
-            
-            let canBecomeFirstResponder = window.makeFirstResponder(textView)
-            print("\n3. Can become first responder: \(canBecomeFirstResponder)")
-            print("   Is first responder: \(window.firstResponder === textView)")
-            
-            // Test 4: Check if text input is possible
-            print("\n4. Testing text input capability...")
-            let originalText = textView.text
-            
-            // Try to insert text programmatically
-            textView.insertText("Test", replacementRange: NSRange(location: NSNotFound, length: 0))
-            let textChanged = textView.text != originalText
-            print("   Text changed after insertText: \(textChanged)")
-            if textChanged {
-                print("   New text: '\(textView.text ?? "")'")
-            }
-            
-            // Test 5: Check text view properties
-            print("\n5. Checking text view properties...")
-            print("   font: \(textView.font.displayName ?? "unknown")")
-            print("   textColor: \(textView.textColor)")
-            print("   backgroundColor: \(textView.backgroundColor)")
-            
-            print("\n=== Summary ===")
-            if !textView.isEditable {
-                print("❌ FAIL: Text view is not editable by default")
-            } else if !canBecomeFirstResponder {
-                print("❌ FAIL: Text view cannot become first responder")
-            } else if !textChanged {
-                print("❌ FAIL: Text view does not accept text input")
-            } else {
-                print("✅ PASS: Text view is editable and accepts input")
-            }
-        }
+        // Create STTextView
+        let textView = STTextView(frame: window.contentView!.bounds)
+        textView.text = "Type here to test editing..."
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.showsLineNumbers = true
+        textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        textView.textColor = NSColor.labelColor
+        textView.backgroundColor = NSColor.textBackgroundColor
+        
+        // Add autoresizing mask
+        textView.autoresizingMask = [.width, .height]
+        
+        // Add to window
+        window.contentView?.addSubview(textView)
+        
+        // Show window
+        window.makeKeyAndOrderFront(nil)
+        
+        // Make the text view first responder
+        window.makeFirstResponder(textView)
+        
+        print("Text view acceptsFirstResponder: \(textView.acceptsFirstResponder)")
+        print("Text view isFirstResponder: \(textView.window?.firstResponder == textView)")
+        print("Text view isEditable: \(textView.isEditable)")
+        print("Text view text: '\(textView.text ?? "")'")
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
     }
 }
