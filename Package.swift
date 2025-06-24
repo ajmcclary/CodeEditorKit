@@ -3,7 +3,7 @@
 import PackageDescription
 
 let settings: [SwiftSetting] = [
-    .enableExperimentalFeature("StrictConcurrency")
+    .enableExperimentalFeature("StrictConcurrency"),
 ]
 
 let package = Package(
@@ -13,17 +13,17 @@ let package = Package(
         .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
-        )
+        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "510.0.0")
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "510.0.0"),
     ],
     targets: [
         .target(
             name: "CodeEditorPlugin",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax")
+                .product(name: "SwiftParser", package: "swift-syntax"),
             ],
             swiftSettings: settings
         ),
@@ -31,6 +31,6 @@ let package = Package(
             name: "CodeEditorPluginTests",
             dependencies: ["CodeEditorPlugin"],
             swiftSettings: settings
-        )
+        ),
     ]
 )

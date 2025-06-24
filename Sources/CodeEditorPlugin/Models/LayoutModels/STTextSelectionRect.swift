@@ -1,84 +1,101 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
 
 #if canImport(UIKit)
-final class STTextSelectionRect: UITextSelectionRect {
-    override var rect: CGRect {
-        _rect
-    }
-    
-    override var writingDirection: NSWritingDirection {
-        _writingDirection
-    }
-    
-    override var containsStart: Bool {
-        _containsStart
-    }
+    final class STTextSelectionRect: UITextSelectionRect {
+        override var rect: CGRect {
+            _rect
+        }
 
-    override var containsEnd: Bool {
-        _containsEnd
-    }
+        override var writingDirection: NSWritingDirection {
+            _writingDirection
+        }
 
-    override var isVertical: Bool {
-        _isVertical
-    }
+        override var containsStart: Bool {
+            _containsStart
+        }
 
-    private let _rect: CGRect
-    private let _writingDirection: NSWritingDirection
-    private let _containsStart: Bool
-    private let _containsEnd: Bool
-    private let _isVertical: Bool
+        override var containsEnd: Bool {
+            _containsEnd
+        }
 
-    init(rect: CGRect, writingDirection: NSWritingDirection, containsStart: Bool, containsEnd: Bool, isVertical: Bool = false) {
-        _rect = rect
-        _writingDirection = writingDirection
-        _containsStart = containsStart
-        _containsEnd = containsEnd
-        _isVertical = isVertical
-        super.init()
+        override var isVertical: Bool {
+            _isVertical
+        }
+
+        private let _rect: CGRect
+        private let _writingDirection: NSWritingDirection
+        private let _containsStart: Bool
+        private let _containsEnd: Bool
+        private let _isVertical: Bool
+
+        init(
+            rect: CGRect,
+            writingDirection: NSWritingDirection,
+            containsStart: Bool,
+            containsEnd: Bool,
+            isVertical: Bool = false
+        ) {
+            _rect = rect
+            _writingDirection = writingDirection
+            _containsStart = containsStart
+            _containsEnd = containsEnd
+            _isVertical = isVertical
+            super.init()
+        }
+
+        deinit {
+            // Cleanup if needed
+        }
     }
-}
 #else
-// macOS equivalent - UITextSelectionRect doesn't exist on macOS
-final class STTextSelectionRect {
-    var rect: CGRect {
-        _rect
-    }
-    
-    var writingDirection: NSWritingDirection {
-        _writingDirection
-    }
-    
-    var containsStart: Bool {
-        _containsStart
-    }
+    /// macOS equivalent - UITextSelectionRect doesn't exist on macOS
+    final class STTextSelectionRect {
+        var rect: CGRect {
+            _rect
+        }
 
-    var containsEnd: Bool {
-        _containsEnd
-    }
+        var writingDirection: NSWritingDirection {
+            _writingDirection
+        }
 
-    var isVertical: Bool {
-        _isVertical
-    }
+        var containsStart: Bool {
+            _containsStart
+        }
 
-    private let _rect: CGRect
-    private let _writingDirection: NSWritingDirection
-    private let _containsStart: Bool
-    private let _containsEnd: Bool
-    private let _isVertical: Bool
+        var containsEnd: Bool {
+            _containsEnd
+        }
 
-    init(rect: CGRect, writingDirection: NSWritingDirection, containsStart: Bool, containsEnd: Bool, isVertical: Bool = false) {
-        _rect = rect
-        _writingDirection = writingDirection
-        _containsStart = containsStart
-        _containsEnd = containsEnd
-        _isVertical = isVertical
+        var isVertical: Bool {
+            _isVertical
+        }
+
+        private let _rect: CGRect
+        private let _writingDirection: NSWritingDirection
+        private let _containsStart: Bool
+        private let _containsEnd: Bool
+        private let _isVertical: Bool
+
+        init(
+            rect: CGRect,
+            writingDirection: NSWritingDirection,
+            containsStart: Bool,
+            containsEnd: Bool,
+            isVertical: Bool = false
+        ) {
+            _rect = rect
+            _writingDirection = writingDirection
+            _containsStart = containsStart
+            _containsEnd = containsEnd
+            _isVertical = isVertical
+        }
+
+        deinit {
+            // Cleanup if needed
+        }
     }
-}
 #endif

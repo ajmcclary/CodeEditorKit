@@ -1,16 +1,19 @@
 #if os(macOS)
-import AppKit
+    import AppKit
 #endif
 #if os(iOS) || targetEnvironment(macCatalyst)
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+    #if canImport(UIKit)
+        import UIKit
+    #elseif canImport(AppKit)
+        import AppKit
+    #endif
 #endif
 
+// MARK: - STLineAnnotation
+
 public protocol STLineAnnotation {
-    typealias ID = String
-    var id: ID { get }
+    typealias Identifier = String
+    
+    var id: Identifier { get }
     var location: any NSTextLocation { get set }
 }

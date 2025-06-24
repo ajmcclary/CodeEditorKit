@@ -1,193 +1,200 @@
 import Foundation
 
-import Foundation
-
 public final class ThreePhaseRangeValidator<Content: VersionedContent> {
-	public typealias PrimaryValidator = SinglePhaseRangeValidator<Content>
-	private typealias InternalValidator = RangeValidator<Content>
+    public typealias PrimaryValidator = SinglePhaseRangeValidator<Content>
+    private typealias InternalValidator = RangeValidator<Content>
 
-	public typealias ValidationHandler = (NSRange) -> Void
+    public typealias ValidationHandler = (NSRange) -> Void
 
-	public typealias ContentRange = RangeValidator<Content>.ContentRange
-	public typealias Provider = PrimaryValidator.Provider
-	public typealias FallbackHandler = (NSRange) -> Void
-	public typealias SecondaryValidationProvider = (ContentRange) async -> Validation
+    public typealias ContentRange = RangeValidator<Content>.ContentRange
+    public typealias Provider = PrimaryValidator.Provider
+    public typealias FallbackHandler = (NSRange) -> Void
+    public typealias SecondaryValidationProvider = (ContentRange) async -> Validation
 
-	private typealias Sequence = AsyncStream<ContentRange>
+    private typealias Sequence = AsyncStream<ContentRange>
 
-	public struct Configuration {
-		public let versionedContent: Content
-		public let provider: Provider
-		public let fallbackHandler: FallbackHandler?
-		public let secondaryProvider: SecondaryValidationProvider?
-		public let secondaryValidationDelay: TimeInterval
+    public struct Configuration {
+        public let versionedContent: Content
+        public let provider: Provider
+        public let fallbackHandler: FallbackHandler?
+        public let secondaryProvider: SecondaryValidationProvider?
+        public let secondaryValidationDelay: TimeInterval
 
-		public init(
-			versionedContent: Content,
-			provider: Provider,
-			fallbackHandler: FallbackHandler? = nil,
-			secondaryProvider: SecondaryValidationProvider? = nil,
-			secondaryValidationDelay: TimeInterval = 2.0
-		) {
-			self.versionedContent = versionedContent
-			self.provider = provider
-			self.fallbackHandler = fallbackHandler
-			self.secondaryProvider = secondaryProvider
-			self.secondaryValidationDelay = secondaryValidationDelay
-		}
-	}
+        public init(
+            versionedContent: Content,
+            provider: Provider,
+            fallbackHandler: FallbackHandler? = nil,
+            secondaryProvider: SecondaryValidationProvider? = nil,
+            secondaryValidationDelay: TimeInterval = 2.0
+        ) {
+            self.versionedContent = versionedContent
+            self.provider = provider
+            self.fallbackHandler = fallbackHandler
+            self.secondaryProvider = secondaryProvider
+            self.secondaryValidationDelay = secondaryValidationDelay
+        }
+    }
 
-	private let primaryValidator: PrimaryValidator
-	private let fallbackValidator: InternalValidator
-	private let secondaryValidator: InternalValidator?
-	private var task: Task<Void, Error>?
+    private let primaryValidator: PrimaryValidator
+    private let fallbackValidator: InternalValidator
+    private let secondaryValidator: InternalValidator?
+    private var task: Task<Void, Error>?
 
-	public let configuration: Configuration
+    public let configuration: Configuration
 
-	public init(configuration: Configuration, isolation: isolated (any Actor)) {
-		self.configuration = configuration
-		self.primaryValidator = PrimaryValidator(
-			configuration: .init(
-				versionedContent: configuration.versionedContent,
-				provider: configuration.provider
-			)
-		)
+    public init(configuration: Configuration, isolation: isolated(any Actor)) {
+        self.configuration = configuration
+        primaryValidator = PrimaryValidator(
+            configuration: .init(
+                versionedContent: configuration.versionedContent,
+                provider: configuration.provider
+            )
+        )
 
-		self.fallbackValidator = InternalValidator(content: configuration.versionedContent)
-		self.secondaryValidator = InternalValidator(content: configuration.versionedContent)
+        fallbackValidator = InternalValidator(content: configuration.versionedContent)
+        secondaryValidator = InternalValidator(content: configuration.versionedContent)
 
-		func _validationHandler(_ range: NSRange, _ complete: Bool) {
-			handlePrimaryValidation(of: range, isolation: isolation)
-		}
+        func validationHandlerWrapper(_ range: NSRange, _: Bool) {
+            handlePrimaryValidation(of: range, isolation: isolation)
+        }
 
-		primaryValidator.validationHandler = _validationHandler
-	}
+        primaryValidator.validationHandler = validationHandlerWrapper
+    }
 
-	@MainActor
-	@preconcurrency
-	public convenience init(configuration: Configuration) {
-		self.init(configuration: configuration, isolation: MainActor.shared)
-	}
+    @MainActor
+    @preconcurrency
+    public convenience init(configuration: Configuration) {
+        self.init(configuration: configuration, isolation: MainActor.shared)
+    }
 
-	private var version: Content.Version {
-		configuration.versionedContent.currentVersion
-	}
+    private var version: Content.Version {
+        configuration.versionedContent.currentVersion
+    }
 
-	/// Manually mark a region as invalid.
-	public func invalidate(_ target: RangeTarget) {
-		primaryValidator.invalidate(target)
-		fallbackValidator.invalidate(target)
-		secondaryValidator?.invalidate(target)
-	}
+    /// Manually mark a region as invalid.
+    public func invalidate(_ target: RangeTarget) {
+        primaryValidator.invalidate(target)
+        fallbackValidator.invalidate(target)
+        secondaryValidator?.invalidate(target)
+    }
 
-	public func validate(_ target: RangeTarget, isolation: isolated (any Actor)) {
-		let action = primaryValidator.validate(target, isolation: isolation)
+    public func validate(_ target: RangeTarget, isolation: isolated (any Actor)) {
+        let action = primaryValidator.validate(target, isolation: isolation)
 
-		switch action {
-		case .none:
-			scheduleSecondaryValidation(of: target, isolation: isolation)
-		case let .needed(contentRange):
-			fallbackValidate(contentRange.value)
-		}
-	}
+        switch action {
+        case .noValidation:
+            scheduleSecondaryValidation(of: target, isolation: isolation)
 
-	@MainActor
-	@preconcurrency
-	public func validate(_ target: RangeTarget) {
-		validate(target, isolation: MainActor.shared)
-	}
+        case let .needed(contentRange):
+            fallbackValidate(contentRange.value)
+        }
+    }
 
-	private func fallbackValidate(_ targetRange: NSRange) -> Void {
-		guard let provider = configuration.fallbackHandler else { return }
+    @MainActor
+    @preconcurrency
+    public func validate(_ target: RangeTarget) {
+        validate(target, isolation: MainActor.shared)
+    }
 
-		let action = fallbackValidator.beginValidation(of: .range(targetRange))
+    private func fallbackValidate(_ targetRange: NSRange) {
+        guard let provider = configuration.fallbackHandler else {
+            return
+        }
 
-		switch action {
-		case .none:
-			return
-		case let .needed(contentRange):
-			provider(contentRange.value)
+        let action = fallbackValidator.beginValidation(of: .range(targetRange))
 
-			fallbackValidator.completeValidation(of: contentRange, with: .success(contentRange.value))
-		}
-	}
+        switch action {
+        case .noValidation:
+            return
 
-	/// Update internal state in response to a mutation.
-	///
-	/// This method must be invoked on every content change. The `range` parameter must refer to the range that **was** changed. Consider the example text `"abc"`.
-	///
-	/// Inserting a "d" at the end:
-	///
-	///     range = NSRange(3..<3)
-	///     delta = 1
-	///
-	/// Deleting the middle "b":
-	///
-	///     range = NSRange(1..<2)
-	///     delta = -1
-	public func contentChanged(in range: NSRange, delta: Int) {
-		primaryValidator.contentChanged(in: range, delta: delta)
-		fallbackValidator.contentChanged(in: range, delta: delta)
-		secondaryValidator?.contentChanged(in: range, delta: delta)
+        case let .needed(contentRange):
+            provider(contentRange.value)
 
-		task?.cancel()
-	}
+            fallbackValidator.completeValidation(of: contentRange, with: .success(contentRange.value))
+        }
+    }
 
-	public var name: String? {
-		get { primaryValidator.name }
-		set { primaryValidator.name = newValue }
-	}
-}
+    /// Update internal state in response to a mutation.
+    ///
+    /// This method must be invoked on every content change. The `range` parameter must refer to the range that **was** changed. Consider the example text `"abc"`.
+    ///
+    /// Inserting a "d" at the end:
+    ///
+    ///     range = NSRange(3..<3)
+    ///     delta = 1
+    ///
+    /// Deleting the middle "b":
+    ///
+    ///     range = NSRange(1..<2)
+    ///     delta = -1
+    public func contentChanged(in range: NSRange, delta: Int) {
+        primaryValidator.contentChanged(in: range, delta: delta)
+        fallbackValidator.contentChanged(in: range, delta: delta)
+        secondaryValidator?.contentChanged(in: range, delta: delta)
 
-extension ThreePhaseRangeValidator {
-	private func handlePrimaryValidation(of range: NSRange, isolation: isolated (any Actor)) {
-		let target = RangeTarget.range(range)
+        task?.cancel()
+    }
 
-		fallbackValidator.invalidate(target)
-		secondaryValidator?.invalidate(target)
+    public var name: String? {
+        get { primaryValidator.name }
+        set { primaryValidator.name = newValue }
+    }
+    
+    deinit {
+        // Cleanup if needed
+    }
+    
+    // MARK: - Private Methods
+    
+    private func handlePrimaryValidation(of range: NSRange, isolation: isolated (any Actor)) {
+        let target = RangeTarget.range(range)
 
-		scheduleSecondaryValidation(of: target, isolation: isolation)
-	}
+        fallbackValidator.invalidate(target)
+        secondaryValidator?.invalidate(target)
 
-	private func scheduleSecondaryValidation(of target: RangeTarget, isolation: isolated (any Actor)) {
-		if configuration.secondaryProvider == nil || secondaryValidator == nil {
-			return
-		}
+        scheduleSecondaryValidation(of: target, isolation: isolation)
+    }
 
-		task?.cancel()
+    private func scheduleSecondaryValidation(of target: RangeTarget, isolation: isolated (any Actor)) {
+        if configuration.secondaryProvider == nil || secondaryValidator == nil {
+            return
+        }
 
-		let requestingVersion = configuration.versionedContent.currentVersion
-		let delay = max(UInt64(configuration.secondaryValidationDelay * 1_000_000_000), 0)
+        task?.cancel()
 
-		self.task = Task {
-			try await Task.sleep(nanoseconds: delay)
+        let requestingVersion = configuration.versionedContent.currentVersion
+        let delay = max(UInt64(configuration.secondaryValidationDelay * 1_000_000_000), 0)
 
-			await secondaryValidate(target: target, requestingVersion: requestingVersion, isolation: isolation)
-		}
-	}
+        task = Task {
+            try await Task.sleep(nanoseconds: delay)
 
-	private func secondaryValidate(
-		target: RangeTarget,
-		requestingVersion: Content.Version,
-		isolation: isolated (any Actor)
-	) async {
-		guard
-			requestingVersion == self.version,
-			let validator = secondaryValidator,
-			let provider = configuration.secondaryProvider
-		else {
-			return
-		}
+            await secondaryValidate(target: target, requestingVersion: requestingVersion, isolation: isolation)
+        }
+    }
 
-		let action = validator.beginValidation(of: target)
+    private func secondaryValidate(
+        target: RangeTarget,
+        requestingVersion: Content.Version,
+        isolation _: isolated (any Actor)
+    ) async {
+        guard
+            requestingVersion == version,
+            let validator = secondaryValidator,
+            let provider = configuration.secondaryProvider
+        else {
+            return
+        }
 
-		switch action {
-		case .none:
-			return
-		case let .needed(contentRange):
-			let validation = await provider(contentRange)
+        let action = validator.beginValidation(of: target)
 
-			validator.completeValidation(of: contentRange, with: validation)
-		}
-	}
+        switch action {
+        case .noValidation:
+            return
+
+        case let .needed(contentRange):
+            let validation = await provider(contentRange)
+
+            validator.completeValidation(of: contentRange, with: validation)
+        }
+    }
 }

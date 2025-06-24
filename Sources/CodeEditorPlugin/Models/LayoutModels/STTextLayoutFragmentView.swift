@@ -1,70 +1,73 @@
-//  Created by Claude Code
-//  Missing view type for consolidated package
-
 import Foundation
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
+
+// MARK: - STTextLayoutFragmentView
 
 /// View for rendering text layout fragments
 public class STTextLayoutFragmentView: NSView {
-    
     public var layoutFragment: NSTextLayoutFragment? {
         didSet {
-            self.needsDisplay = true
+            needsDisplay = true
         }
     }
-    
+
     public init(layoutFragment: NSTextLayoutFragment?, frame frameRect: NSRect) {
         self.layoutFragment = layoutFragment
         super.init(frame: frameRect)
         setup()
     }
-    
-    public override init(frame frameRect: NSRect) {
+
+    override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
     }
-    
-    required public init?(coder: NSCoder) {
+
+    public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
     }
-    
+
     private func setup() {
         #if canImport(AppKit)
-        wantsLayer = true
+            wantsLayer = true
         #endif
         #if canImport(UIKit)
-        backgroundColor = .clear
+            backgroundColor = .clear
         #elseif canImport(AppKit)
-        // backgroundColor not available on NSView
+            // backgroundColor not available on NSView
         #endif
     }
-    
+
     #if canImport(UIKit)
-    public override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        // Drawing handled by layout fragment
-    }
+
     #elseif canImport(AppKit)
-    public override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-        
-        guard let layoutFragment = layoutFragment else { return }
-        
-        // Get the graphics context
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
-        
-        // Draw the layout fragment
-        layoutFragment.draw(at: .zero, in: context)
-    }
-    
-    // Text views need a flipped coordinate system on macOS
-    public override var isFlipped: Bool {
-        return true
-    }
+        override public func draw(_ dirtyRect: NSRect) {
+            super.draw(dirtyRect)
+
+            guard let layoutFragment else {
+                return
+            }
+
+            // Get the graphics context
+            guard let context = NSGraphicsContext.current?.cgContext else {
+                return
+            }
+
+            // Draw the layout fragment
+            layoutFragment.draw(at: .zero, in: context)
+        }
+
+        /// Text views need a flipped coordinate system on macOS
+        override public var isFlipped: Bool {
+            true
+        }
     #endif
+
+    deinit {
+        // Cleanup if needed
+    }
 }

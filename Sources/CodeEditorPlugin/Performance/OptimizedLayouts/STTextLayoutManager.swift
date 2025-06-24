@@ -1,32 +1,31 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
+
+// MARK: - STTextLayoutManager
 
 open class STTextLayoutManager: NSTextLayoutManager {
-
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Posted when the selected range of characters changes.
-    public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
-#else
-    /// Posted when the selected range of characters changes.
-    public static let didChangeSelectionNotification = NSNotification.Name("STTextView.didChangeSelectionNotification")
-#endif
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        /// Posted when the selected range of characters changes.
+        public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
+    #else
+        /// Posted when the selected range of characters changes.
+        public static let didChangeSelectionNotification = Notification
+            .Name("STTextView.didChangeSelectionNotification")
+    #endif
 
     private static let needsBoundsWorkaround = testIfNeedsBoundsWorkaround()
 
-    public override var textSelections: [NSTextSelection] {
+    override public var textSelections: [NSTextSelection] {
         didSet {
             let notification = Notification(name: Self.didChangeSelectionNotification, object: self, userInfo: nil)
             NotificationCenter.default.post(notification)
         }
     }
 
-    @objc open dynamic override var usageBoundsForTextContainer: CGRect {
+    @objc override open dynamic var usageBoundsForTextContainer: CGRect {
         var rect = super.usageBoundsForTextContainer
         if Self.needsBoundsWorkaround {
             // FB13290979: NSTextContainer.lineFragmentPadding does not affect end of the fragment usageBoundsForTextContainer rectangle
@@ -37,11 +36,13 @@ open class STTextLayoutManager: NSTextLayoutManager {
         }
         return rect
     }
-
+    
+    deinit {
+        // Cleanup if needed
+    }
 }
 
-
-// Changed in macOS 14 https://developer.apple.com/documentation/macos-release-notes/appkit-release-notes-for-macos-14#TextKit-API-Coordinate-System-Changes
+/// Changed in macOS 14 https://developer.apple.com/documentation/macos-release-notes/appkit-release-notes-for-macos-14#TextKit-API-Coordinate-System-Changes
 private func testIfNeedsBoundsWorkaround() -> Bool {
     if #available(macOS 14, iOS 17, *) {
         return true

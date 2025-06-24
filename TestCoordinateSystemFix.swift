@@ -1,14 +1,11 @@
 #!/usr/bin/env swift
 
-// Test to verify that the coordinate system fix is working properly
-// This file tests that all NSView subclasses have isFlipped implemented
-
-import Foundation
 import AppKit
 import CodeEditorPlugin
+import Foundation
 
 // Test helper to check if a view is flipped
-func testViewIsFlipped<T: NSView>(_ viewType: T.Type, _ viewName: String) {
+func testViewIsFlipped(_ viewType: (some NSView).Type, _ viewName: String) {
     let view = viewType.init(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
     let isFlipped = view.isFlipped
     print("\(viewName): isFlipped = \(isFlipped) \(isFlipped ? "✅" : "❌")")

@@ -1,10 +1,11 @@
-import Foundation
 import AppKit
+import Foundation
 
-struct ConfigurationExporter {
-    
+// MARK: - ConfigurationExporter
+
+enum ConfigurationExporter {
     // MARK: - Export Configuration
-    
+
     @MainActor
     static func exportConfiguration(_ config: EditorConfiguration, from window: NSWindow?) {
         let savePanel = NSSavePanel()
@@ -12,16 +13,18 @@ struct ConfigurationExporter {
         savePanel.message = "Save your editor configuration for later use"
         savePanel.nameFieldStringValue = "editor-config.json"
         savePanel.allowedContentTypes = [.json]
-        
-        guard let window = window else { return }
-        
+
+        guard let window else {
+            return
+        }
+
         savePanel.beginSheetModal(for: window) { response in
             Task { @MainActor in
                 if response == .OK, let url = savePanel.url {
                     do {
                         let data = try JSONEncoder().encode(config)
                         try data.write(to: url)
-                        
+
                         showAlert(
                             title: "Configuration Exported",
                             message: "Your configuration has been saved successfully.",
@@ -39,9 +42,9 @@ struct ConfigurationExporter {
             }
         }
     }
-    
+
     // MARK: - Import Configuration
-    
+
     @MainActor
     static func importConfiguration(from window: NSWindow?, completion: @escaping (EditorConfiguration?) -> Void) {
         let openPanel = NSOpenPanel()
@@ -49,19 +52,19 @@ struct ConfigurationExporter {
         openPanel.message = "Choose a configuration file to import"
         openPanel.allowedContentTypes = [.json]
         openPanel.allowsMultipleSelection = false
-        
-        guard let window = window else {
+
+        guard let window else {
             completion(nil)
             return
         }
-        
+
         openPanel.beginSheetModal(for: window) { response in
             Task { @MainActor in
                 if response == .OK, let url = openPanel.url {
                     do {
                         let data = try Data(contentsOf: url)
                         let config = try JSONDecoder().decode(EditorConfiguration.self, from: data)
-                        
+
                         showAlert(
                             title: "Configuration Imported",
                             message: "Your configuration has been loaded successfully.",
@@ -83,11 +86,16 @@ struct ConfigurationExporter {
             }
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     @MainActor
-    private static func showAlert(title: String, message: String, style: NSAlert.Style = .informational, in window: NSWindow) {
+    private static func showAlert(
+        title: String,
+        message: String,
+        style: NSAlert.Style = .informational,
+        in window: NSWindow
+    ) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
@@ -97,7 +105,7 @@ struct ConfigurationExporter {
     }
 }
 
-// MARK: - Make EditorConfiguration Codable
+// MARK: - EditorConfiguration + Codable
 
 extension EditorConfiguration: Codable {
     enum CodingKeys: String, CodingKey {
@@ -118,10 +126,10 @@ extension EditorConfiguration: Codable {
         case useHardwareAcceleration
         case smoothScrolling
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        
+
         try container.encode(showLineNumbers, forKey: .showLineNumbers)
         try container.encode(showInvisibleCharacters, forKey: .showInvisibleCharacters)
         try container.encode(highlightSelectedLine, forKey: .highlightSelectedLine)
@@ -139,10 +147,10 @@ extension EditorConfiguration: Codable {
         try container.encode(useHardwareAcceleration, forKey: .useHardwareAcceleration)
         try container.encode(smoothScrolling, forKey: .smoothScrolling)
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
+
         showLineNumbers = try container.decode(Bool.self, forKey: .showLineNumbers)
         showInvisibleCharacters = try container.decode(Bool.self, forKey: .showInvisibleCharacters)
         highlightSelectedLine = try container.decode(Bool.self, forKey: .highlightSelectedLine)
@@ -153,10 +161,10 @@ extension EditorConfiguration: Codable {
         insertSpacesForTabs = try container.decode(Bool.self, forKey: .insertSpacesForTabs)
         fontSize = try container.decode(CGFloat.self, forKey: .fontSize)
         lineSpacing = try container.decode(CGFloat.self, forKey: .lineSpacing)
-        
+
         let themeName = try container.decode(String.self, forKey: .themeName)
         theme = ColorTheme(rawValue: themeName) ?? .xcode
-        
+
         enableAnnotations = try container.decode(Bool.self, forKey: .enableAnnotations)
         enableLineHighlight = try container.decode(Bool.self, forKey: .enableLineHighlight)
         enableCustomPlugin = try container.decode(Bool.self, forKey: .enableCustomPlugin)

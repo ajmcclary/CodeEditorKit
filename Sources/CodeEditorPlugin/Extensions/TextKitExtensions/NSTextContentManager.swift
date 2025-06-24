@@ -1,58 +1,27 @@
-// BSD 3-Clause License
-//
-// Copyright (c) Marcin Krzyżanowski
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// * Redistributions of source code must retain the above copyright notice, this
-//   list of conditions and the following disclaimer.
-//
-// * Redistributions in binary form must reproduce the above copyright notice,
-//   this list of conditions and the following disclaimer in the documentation
-//   and/or other materials provided with the distribution.
-//
-// * Neither the name of the copyright holder nor the names of its
-//   contributors may be used to endorse or promote products derived from
-//   this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #if os(macOS) && !targetEnvironment(macCatalyst)
-import AppKit
+    import AppKit
 #elseif os(iOS) || os(visionOS)
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+    #if canImport(UIKit)
+        import UIKit
+    #elseif canImport(AppKit)
+        import AppKit
+    #endif
 #endif
 
-public extension NSTextContentManager {
-
-    func location(at offset: Int) -> NSTextLocation? {
+extension NSTextContentManager {
+    public func location(at offset: Int) -> NSTextLocation? {
         location(documentRange.location, offsetBy: offset)
     }
 
-    var length: Int {
+    public var length: Int {
         offset(from: documentRange.location, to: documentRange.endLocation)
     }
 
-    func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
+    public func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
         let linesTextElements = textElements(for: documentRange)
         guard linesTextElements.indices ~= lineIdx else {
             // https://forums.swift.org/t/invalid-diagnostic-location-after-text-edit/54761
-            // logger.warning("Invalid region line: \(lineIdx). ")
+            // kLogger.warning("Invalid region line: \(lineIdx). ")
             return nil
         }
 
@@ -63,19 +32,18 @@ public extension NSTextContentManager {
         return location(startLocation, offsetBy: characterIdx ?? 0)
     }
 
-    func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
+    public func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
         let linesElements = textElements(for: documentRange)
         if linesElements.isEmpty {
             return nil
         }
 
-        let lineIdx: Int?
-        if location == documentRange.endLocation {
-            lineIdx = max(0, linesElements.count - 1)
+        let lineIdx: Int? = if location == documentRange.endLocation {
+            max(0, linesElements.count - 1)
         } else if let foundLineIdx = linesElements.firstIndex(where: { $0.elementRange!.contains(location) }) {
-            lineIdx = foundLineIdx
+            foundLineIdx
         } else {
-            lineIdx = nil
+            nil
         }
 
         guard let lineIdx else {
@@ -89,7 +57,7 @@ public extension NSTextContentManager {
     /// Attributed string for the range
     /// - Parameter range: Text range, or nil for the whole document.
     /// - Returns: Attributed string, or nil.
-    func attributedString(in range: NSTextRange?) -> NSAttributedString? {
+    public func attributedString(in range: NSTextRange?) -> NSAttributedString? {
         if let range, range.isEmpty {
             return nil
         }
@@ -107,31 +75,42 @@ public extension NSTextContentManager {
         let result = NSMutableAttributedString()
         result.beginEditing()
         enumerateTextElements(from: range?.location) { textElement in
-            if let range = range,
-               let textParagraph = textElement as? NSTextParagraph,
-               let elementRange = textElement.elementRange,
-               let textContentManager = textElement.textContentManager
-            {
+            if let range,
+                let textParagraph = textElement as? NSTextParagraph,
+                let elementRange = textElement.elementRange,
+                let textContentManager = textElement.textContentManager {
                 var shouldStop = false
                 var needAdjustment = false
                 var constrainedElementRange = elementRange
                 if elementRange.contains(range.location) {
                     // start location
-                    constrainedElementRange = NSTextRange(location: range.location, end: constrainedElementRange.endLocation)!
+                    constrainedElementRange = NSTextRange(
+                        location: range.location,
+                        end: constrainedElementRange.endLocation
+                    )!
                     needAdjustment = true
                 }
 
                 if elementRange.contains(range.endLocation) {
                     // end location
-                    constrainedElementRange = NSTextRange(location: constrainedElementRange.location, end: range.endLocation)!
+                    constrainedElementRange = NSTextRange(
+                        location: constrainedElementRange.location,
+                        end: range.endLocation
+                    )!
                     needAdjustment = true
                     shouldStop = true
                 }
 
                 if needAdjustment {
-                    if let constrainedRangeInDocument = NSTextRange(location: constrainedElementRange.location, end: constrainedElementRange.endLocation) {
+                    if let constrainedRangeInDocument = NSTextRange(
+                        location: constrainedElementRange.location,
+                        end: constrainedElementRange.endLocation
+                    ) {
                         let constrainedRangeInDocumentLength = constrainedRangeInDocument.length(in: textContentManager)
-                        let leadingOffset = textContentManager.offset(from: elementRange.location, to: constrainedElementRange.location)
+                        let leadingOffset = textContentManager.offset(
+                            from: elementRange.location,
+                            to: constrainedElementRange.location
+                        )
 
                         // translate contentRangeInDocument from document namespace to textElement.attributedString namespace
                         let nsRangeInDocumentDocument = NSRange(
@@ -169,7 +148,7 @@ public extension NSTextContentManager {
 
         return result
     }
-    
+
     /// Returns an array of text elements that intersect with the range you specify.
     /// - Parameter range: An NSTextRange that describes the range of text to process.
     /// - Returns: An array of NSTextElement.
@@ -177,7 +156,7 @@ public extension NSTextContentManager {
     /// This method can return a set of elements that don’t fill the entire range if the entire range isn’t synchronously available. Uses `enumerateTextElements(from:options:using:)` to fill the array.
     ///
     /// This is working implementation, in contrary to buggy `textElements(for:)` (FB10019859)
-    func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
+    public func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
         var elements: [NSTextElement] = []
 
         if range.location == documentRange.endLocation {

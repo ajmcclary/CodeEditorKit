@@ -1,45 +1,14 @@
-// BSD 3-Clause License
-//
-// Copyright (c) Marcin Krzyżanowski
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// * Redistributions of source code must retain the above copyright notice, this
-//   list of conditions and the following disclaimer.
-//
-// * Redistributions in binary form must reproduce the above copyright notice,
-//   this list of conditions and the following disclaimer in the documentation
-//   and/or other materials provided with the distribution.
-//
-// * Neither the name of the copyright holder nor the names of its
-//   contributors may be used to endorse or promote products derived from
-//   this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #if os(macOS) && !targetEnvironment(macCatalyst)
-import AppKit
+    import AppKit
 #elseif os(iOS) || os(visionOS)
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+    #if canImport(UIKit)
+        import UIKit
+    #elseif canImport(AppKit)
+        import AppKit
+    #endif
 #endif
 
 extension NSRange {
-
     /// A value indicating that a requested item couldn’t be found or doesn’t exist.
     public static let notFound = NSRange(location: NSNotFound, length: 0)
 
@@ -64,5 +33,37 @@ extension NSRange {
     /// Creates a new value object containing the specified Foundation range structure.
     public var nsValue: NSValue {
         NSValue(range: self)
+    }
+    
+    /// Apply a range mutation to this range
+    public func apply(_ mutation: RangeMutation) -> NSRange? {
+        let mutationRange = mutation.range
+        let delta = mutation.delta
+
+        // If mutation is before this range, shift the range
+        if mutationRange.upperBound <= location {
+            return NSRange(location: location + delta, length: length)
+        }
+
+        // If mutation is after this range, no change
+        if mutationRange.location >= upperBound {
+            return self
+        }
+
+        // If mutation overlaps with this range, it's more complex
+        // For now, return nil to indicate the range is invalidated
+        return nil
+    }
+    
+    /// Returns a range clamped to the given limiting range
+    public func clamped(to limit: NSRange) -> NSRange {
+        let start = max(location, limit.location)
+        let end = min(upperBound, limit.upperBound)
+
+        if start > end {
+            return NSRange(location: limit.location, length: 0)
+        }
+
+        return NSRange(location: start, length: end - start)
     }
 }

@@ -1,8 +1,5 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
-import Foundation
 @preconcurrency import AppKit
+import Foundation
 
 @MainActor
 class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NSTextViewDelegate {
@@ -28,8 +25,12 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
         source?.textViewDidChangeSelection(notification)
     }
 
-    func textView(_ textView: STTextView, shouldChangeTextIn affectedCharRange: NSTextRange, replacementString: String?) -> Bool {
-        return source?.textView(textView, shouldChangeTextIn: affectedCharRange, replacementString: replacementString) ?? true
+    func textView(
+        _ textView: STTextView,
+        shouldChangeTextIn affectedCharRange: NSTextRange,
+        replacementString: String?
+    ) -> Bool {
+        source?.textView(textView, shouldChangeTextIn: affectedCharRange, replacementString: replacementString) ?? true
     }
 
     @MainActor
@@ -97,17 +98,25 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
     func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
         source?.textView(textView, clickedOnLink: link, at: location) ?? false
     }
-    
-    func textView(_ textView: STTextView, clickedOnAttachment attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool {
+
+    func textView(
+        _ textView: STTextView,
+        clickedOnAttachment attachment: NSTextAttachment,
+        at location: any NSTextLocation
+    ) -> Bool {
         source?.textView(textView, clickedOnAttachment: attachment, at: location) ?? false
     }
-    
-    func textView(_ textView: STTextView, shouldAllowInteractionWith attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool {
+
+    func textView(
+        _ textView: STTextView,
+        shouldAllowInteractionWith attachment: NSTextAttachment,
+        at location: any NSTextLocation
+    ) -> Bool {
         source?.textView(textView, shouldAllowInteractionWith: attachment, at: location) ?? true
     }
 
     // MARK: - NSTextViewDelegate forwarding
-    
+
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
         if let textView = notification.object as? STTextView {
@@ -115,8 +124,8 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
             textViewDidChangeText(stNotification)
         }
     }
-    
-    func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+
+    func textView(_ textView: NSTextView, shouldChangeTextIn _: NSRange, replacementString _: String?) -> Bool {
         // Convert NSRange to NSTextRange for STTextView compatibility
         // This is a simplified approach - in a full implementation, we'd need proper conversion
         if let stTextView = textView as? STTextView {
@@ -126,5 +135,8 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
         }
         return true
     }
-
+    
+    deinit {
+        // Cleanup if needed
+    }
 }

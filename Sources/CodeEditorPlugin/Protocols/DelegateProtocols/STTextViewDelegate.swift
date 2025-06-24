@@ -1,12 +1,11 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
 import Foundation
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
+
+// MARK: - STTextViewDelegate
 
 /// A set of optional methods that text view delegates can use to manage selection,
 /// set text attributes and more.
@@ -31,7 +30,11 @@ public protocol STTextViewDelegate: AnyObject {
     func textViewDidChangeSelection(_ notification: Notification)
 
     /// Sent when a text view needs to determine if text in a specified range should be changed.
-    func textView(_ textView: STTextView, shouldChangeTextIn affectedCharRange: NSTextRange, replacementString: String?) -> Bool
+    func textView(
+        _ textView: STTextView,
+        shouldChangeTextIn affectedCharRange: NSTextRange,
+        replacementString: String?
+    ) -> Bool
 
     /// Sent when a text view will change text.
     func textView(_ textView: STTextView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String)
@@ -40,7 +43,7 @@ public protocol STTextViewDelegate: AnyObject {
     func textView(_ textView: STTextView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String)
 
     // MARK: Clicking and Pasting
-    
+
     /// Sent after the user clicks a link.
     /// - Parameters:
     ///   - textView: The text view sending the message.
@@ -48,82 +51,88 @@ public protocol STTextViewDelegate: AnyObject {
     ///   - location: The location where the click occurred.
     /// - Returns: true if the click was handled; otherwise, false to allow the next responder to handle it.
     func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool
-    
+
     // MARK: Completion Support
-    
+
     /// Allows customization of completion item insertion
     func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem)
-    
+
     /// Provides a custom completion view controller
     func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol
-    
+
     /// Provides a custom insertion point view
     func textViewInsertionPointView(_ textView: STTextView, frame: CGRect) -> (STInsertionPointIndicatorProtocol)?
-    
+
     // MARK: Attachment Support
-    
+
     /// Sent after the user clicks an attachment.
-    func textView(_ textView: STTextView, clickedOnAttachment attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool
-    
+    func textView(
+        _ textView: STTextView,
+        clickedOnAttachment attachment: NSTextAttachment,
+        at location: any NSTextLocation
+    ) -> Bool
+
     /// Asks whether the user should be allowed to interact with the specified attachment.
-    func textView(_ textView: STTextView, shouldAllowInteractionWith attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool
+    func textView(
+        _ textView: STTextView,
+        shouldAllowInteractionWith attachment: NSTextAttachment,
+        at location: any NSTextLocation
+    ) -> Bool
 }
 
 // MARK: - Default implementation
 
-public extension STTextViewDelegate {
-
-    func undoManager(for textView: STTextView) -> UndoManager? {
+extension STTextViewDelegate {
+    public func undoManager(for _: STTextView) -> UndoManager? {
         nil
     }
 
-    func textViewWillChangeText(_ notification: Notification) {
+    public func textViewWillChangeText(_: Notification) {
         //
     }
 
-    func textViewDidChangeText(_ notification: Notification) {
+    public func textViewDidChangeText(_: Notification) {
         //
     }
 
-    func textViewDidChangeSelection(_ notification: Notification) {
+    public func textViewDidChangeSelection(_: Notification) {
         //
     }
 
-    func textView(_ textView: STTextView, shouldChangeTextIn affectedCharRange: NSTextRange, replacementString: String?) -> Bool {
+    public func textView(_: STTextView, shouldChangeTextIn _: NSTextRange, replacementString _: String?) -> Bool {
         true
     }
 
-    func textView(_ textView: STTextView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
+    public func textView(_: STTextView, willChangeTextIn _: NSTextRange, replacementString _: String) {}
 
-    }
+    public func textView(_: STTextView, didChangeTextIn _: NSTextRange, replacementString _: String) {}
 
-    func textView(_ textView: STTextView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
-
-    }
-
-    func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
+    public func textView(_: STTextView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
         false
     }
-    
-    func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
+
+    public func textView(_: STTextView, insertCompletionItem _: any STCompletionItem) {
         // Default implementation
     }
-    
+
     @MainActor
-    func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
+    public func textViewCompletionViewController(_: STTextView) -> any STCompletionViewControllerProtocol {
         STCompletionViewController()
     }
-    
-    func textViewInsertionPointView(_ textView: STTextView, frame: CGRect) -> (STInsertionPointIndicatorProtocol)? {
+
+    public func textViewInsertionPointView(_: STTextView, frame _: CGRect) -> (STInsertionPointIndicatorProtocol)? {
         nil
     }
-    
-    func textView(_ textView: STTextView, clickedOnAttachment attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool {
+
+    public func textView(_: STTextView, clickedOnAttachment _: NSTextAttachment, at _: any NSTextLocation) -> Bool {
         false
     }
-    
-    func textView(_ textView: STTextView, shouldAllowInteractionWith attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool {
+
+    public func textView(
+        _: STTextView,
+        shouldAllowInteractionWith _: NSTextAttachment,
+        at _: any NSTextLocation
+    ) -> Bool {
         true
     }
-
 }

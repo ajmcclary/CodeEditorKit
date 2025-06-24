@@ -29,6 +29,6 @@ let package = Package(
                 "CodeEditorSample",
                 .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
             ]
-        ),
+        )
     ]
 )

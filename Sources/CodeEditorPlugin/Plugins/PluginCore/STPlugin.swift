@@ -1,7 +1,6 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
 import Foundation
+
+// MARK: - STPlugin
 
 @MainActor
 public protocol STPlugin {
@@ -19,17 +18,14 @@ public protocol STPlugin {
     func tearDown()
 }
 
-public extension STPlugin {
-
-    func tearDown() {
+extension STPlugin {
+    public func tearDown() {
         // Nothing
     }
 }
 
-public extension STPlugin where Coordinator == Void {
-
-    func makeCoordinator(context: CoordinatorContext) -> Coordinator {
+extension STPlugin where Coordinator == Void {
+    public func makeCoordinator(context _: CoordinatorContext) -> Coordinator {
         Coordinator()
     }
-
 }

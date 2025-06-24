@@ -1,0 +1,37 @@
+excluded:
+  - .build
+  - Package.swift
+  - "**/.build"
+
+line_length:
+  warning: 120
+  error: 150
+
+file_length:
+  warning: 1000   # Very lenient for demo project with sample code
+  error: 2000
+
+type_body_length:
+  warning: 800    # Very lenient for sample code providers
+  error: 2000
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 50
+
+disabled_rules:
+  - todo # Allow TODOs in example/demo code
+  - blanket_disable_command # Allow broad disables for sample code files
+
+# Comments explaining the relaxed rules for this demo project
+# This is a sample/demo project containing extensive code examples
+# for multiple programming languages, so file and type length
+# limits are intentionally relaxed.

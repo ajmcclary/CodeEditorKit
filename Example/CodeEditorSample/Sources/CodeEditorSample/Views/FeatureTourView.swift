@@ -1,9 +1,11 @@
 import SwiftUI
 
+// MARK: - FeatureTourView
+
 struct FeatureTourView: View {
     @Binding var isPresented: Bool
     @State private var currentStep = 0
-    
+
     let tourSteps = [
         TourStep(
             title: "Welcome to CodeEditor Sample",
@@ -13,25 +15,37 @@ struct FeatureTourView: View {
         ),
         TourStep(
             title: "Syntax Highlighting",
-            description: "The editor supports syntax highlighting for multiple languages including Swift, JavaScript, Python, and more. Try switching between different sample code languages.",
+            description: [
+                "The editor supports syntax highlighting for multiple languages including Swift,",
+                "JavaScript, Python, and more. Try switching between different sample code languages."
+            ].joined(separator: " "),
             feature: .syntaxHighlighting,
             icon: "paintbrush"
         ),
         TourStep(
             title: "Line Numbers",
-            description: "Toggle line numbers on/off to suit your preference. Line numbers help with navigation and debugging.",
+            description: [
+                "Toggle line numbers on/off to suit your preference. Line numbers help with",
+                "navigation and debugging."
+            ].joined(separator: " "),
             feature: .lineNumbers,
             icon: "number"
         ),
         TourStep(
             title: "Themes",
-            description: "Choose from multiple color themes including Xcode, VS Dark, GitHub, and more. Each theme is carefully designed for optimal readability.",
+            description: [
+                "Choose from multiple color themes including Xcode, VS Dark, GitHub, and more.",
+                "Each theme is carefully designed for optimal readability."
+            ].joined(separator: " "),
             feature: .themes,
             icon: "paintpalette"
         ),
         TourStep(
             title: "Configuration Presets",
-            description: "Quick presets for different use cases: Full Featured, Minimal, Read Only, Markdown, and Presentation modes.",
+            description: [
+                "Quick presets for different use cases: Full Featured, Minimal, Read Only,",
+                "Markdown, and Presentation modes."
+            ].joined(separator: " "),
             feature: .presets,
             icon: "slider.horizontal.3"
         ),
@@ -43,24 +57,31 @@ struct FeatureTourView: View {
         ),
         TourStep(
             title: "Customization",
-            description: "Fine-tune every aspect: font size, line spacing, tab width, invisible characters, and more.",
+            description: [
+                "Fine-tune every aspect: font size, line spacing, tab width,",
+                "invisible characters, and more."
+            ].joined(separator: " "),
             feature: .customization,
             icon: "gearshape.2"
         ),
         TourStep(
             title: "Performance",
-            description: "The editor is optimized for performance with hardware acceleration and efficient syntax highlighting.",
+            description: [
+                "The editor is optimized for performance with hardware acceleration and",
+                "efficient syntax highlighting."
+            ].joined(separator: " "),
             feature: .performance,
             icon: "speedometer"
         ),
         TourStep(
             title: "Start Exploring!",
-            description: "That's all for the tour! Feel free to explore all the features and configurations. Happy coding!",
+            description: "That's all for the tour! Feel free to explore all the features and " +
+                "configurations. Happy coding!",
             feature: nil,
             icon: "star"
         )
     ]
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -68,9 +89,9 @@ struct FeatureTourView: View {
                 Text("Feature Tour")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 Button("Skip Tour") {
                     isPresented = false
                 }
@@ -79,14 +100,14 @@ struct FeatureTourView: View {
             }
             .padding()
             .background(Color(NSColor.windowBackgroundColor))
-            
+
             Divider()
-            
+
             // Content
             VStack(spacing: 24) {
                 // Progress indicators
                 HStack(spacing: 8) {
-                    ForEach(0..<tourSteps.count, id: \.self) { index in
+                    ForEach(0 ..< tourSteps.count, id: \.self) { index in
                         Circle()
                             .fill(index == currentStep ? Color.accentColor : Color.secondary.opacity(0.3))
                             .frame(width: 8, height: 8)
@@ -94,19 +115,19 @@ struct FeatureTourView: View {
                     }
                 }
                 .padding(.top)
-                
+
                 // Current step content
                 VStack(spacing: 16) {
                     Image(systemName: tourSteps[currentStep].icon)
                         .font(.system(size: 48))
                         .foregroundColor(.accentColor)
                         .symbolRenderingMode(.hierarchical)
-                    
+
                     Text(tourSteps[currentStep].title)
                         .font(.title3)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
-                    
+
                     Text(tourSteps[currentStep].description)
                         .font(.body)
                         .foregroundColor(.secondary)
@@ -115,9 +136,9 @@ struct FeatureTourView: View {
                         .frame(maxWidth: 400)
                 }
                 .padding(.horizontal)
-                
+
                 Spacer()
-                
+
                 // Navigation buttons
                 HStack {
                     Button("Previous") {
@@ -126,9 +147,9 @@ struct FeatureTourView: View {
                         }
                     }
                     .disabled(currentStep == 0)
-                    
+
                     Spacer()
-                    
+
                     if currentStep < tourSteps.count - 1 {
                         Button("Next") {
                             withAnimation(.spring()) {
@@ -154,7 +175,7 @@ struct FeatureTourView: View {
             highlightFeature()
         }
     }
-    
+
     private func highlightFeature() {
         // Post notification to highlight the current feature
         if let feature = tourSteps[currentStep].feature {
@@ -167,12 +188,16 @@ struct FeatureTourView: View {
     }
 }
 
+// MARK: - TourStep
+
 struct TourStep {
     let title: String
     let description: String
     let feature: TourFeature?
     let icon: String
 }
+
+// MARK: - TourFeature
 
 enum TourFeature {
     case syntaxHighlighting

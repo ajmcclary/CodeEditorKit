@@ -1,7 +1,7 @@
-import Foundation
 import AppKit
+import Foundation
 
-// MARK: - Editor Configuration
+// MARK: - EditorConfiguration
 
 struct EditorConfiguration {
     // Display settings
@@ -9,61 +9,61 @@ struct EditorConfiguration {
     var showInvisibleCharacters: Bool = false
     var highlightSelectedLine: Bool = true
     var wrapLines: Bool = false
-    
+
     // Editor behavior
     var isEditable: Bool = true
     var autoIndent: Bool = true
     var tabWidth: Int = 4
     var insertSpacesForTabs: Bool = true
-    
+
     // Appearance
     var fontSize: CGFloat = 14
     var lineSpacing: CGFloat = 1.2
     var theme: ColorTheme = .xcode
-    
+
     // Plugins
     var enableAnnotations: Bool = false
     var enableLineHighlight: Bool = true
     var enableCustomPlugin: Bool = false
-    
+
     // Performance
     var useHardwareAcceleration: Bool = true
     var smoothScrolling: Bool = true
 }
 
-// MARK: - Configuration Presets
+// MARK: - ConfigurationPreset
 
 enum ConfigurationPreset: String, CaseIterable {
     case fullFeatured = "full"
-    case minimal = "minimal"
+    case minimal
     case readOnly = "readonly"
-    case markdown = "markdown"
-    case presentation = "presentation"
-    
+    case markdown
+    case presentation
+
     var displayName: String {
         switch self {
-        case .fullFeatured: return "Full Featured"
-        case .minimal: return "Minimal"
-        case .readOnly: return "Read Only"
-        case .markdown: return "Markdown"
-        case .presentation: return "Presentation"
+        case .fullFeatured: "Full Featured"
+        case .minimal: "Minimal"
+        case .readOnly: "Read Only"
+        case .markdown: "Markdown"
+        case .presentation: "Presentation"
         }
     }
-    
+
     var description: String {
         switch self {
-        case .fullFeatured: return "All features enabled for code editing"
-        case .minimal: return "Basic text editing with minimal UI"
-        case .readOnly: return "Syntax highlighted code viewer"
-        case .markdown: return "Optimized for Markdown editing"
-        case .presentation: return "Large font, high contrast for demos"
+        case .fullFeatured: "All features enabled for code editing"
+        case .minimal: "Basic text editing with minimal UI"
+        case .readOnly: "Syntax highlighted code viewer"
+        case .markdown: "Optimized for Markdown editing"
+        case .presentation: "Large font, high contrast for demos"
         }
     }
-    
+
     var configuration: EditorConfiguration {
         switch self {
         case .fullFeatured:
-            return EditorConfiguration(
+            EditorConfiguration(
                 showLineNumbers: true,
                 showInvisibleCharacters: false,
                 highlightSelectedLine: true,
@@ -81,9 +81,9 @@ enum ConfigurationPreset: String, CaseIterable {
                 useHardwareAcceleration: true,
                 smoothScrolling: true
             )
-            
+
         case .minimal:
-            return EditorConfiguration(
+            EditorConfiguration(
                 showLineNumbers: false,
                 showInvisibleCharacters: false,
                 highlightSelectedLine: false,
@@ -101,9 +101,9 @@ enum ConfigurationPreset: String, CaseIterable {
                 useHardwareAcceleration: true,
                 smoothScrolling: true
             )
-            
+
         case .readOnly:
-            return EditorConfiguration(
+            EditorConfiguration(
                 showLineNumbers: true,
                 showInvisibleCharacters: false,
                 highlightSelectedLine: false,
@@ -121,9 +121,9 @@ enum ConfigurationPreset: String, CaseIterable {
                 useHardwareAcceleration: true,
                 smoothScrolling: true
             )
-            
+
         case .markdown:
-            return EditorConfiguration(
+            EditorConfiguration(
                 showLineNumbers: false,
                 showInvisibleCharacters: false,
                 highlightSelectedLine: true,
@@ -141,9 +141,9 @@ enum ConfigurationPreset: String, CaseIterable {
                 useHardwareAcceleration: true,
                 smoothScrolling: true
             )
-            
+
         case .presentation:
-            return EditorConfiguration(
+            EditorConfiguration(
                 showLineNumbers: true,
                 showInvisibleCharacters: false,
                 highlightSelectedLine: true,

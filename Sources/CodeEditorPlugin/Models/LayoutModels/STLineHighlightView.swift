@@ -1,40 +1,42 @@
-//  Created by Claude Code
-//  Line highlight view
-
 import Foundation
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
+
+// MARK: - STLineHighlightView
 
 /// View for highlighting the current line
 public class STLineHighlightView: NSView {
-    
-    public var highlightColor: NSColor = NSColor.controlAccentColor.withAlphaComponent(0.1) {
+    public var highlightColor: NSColor = .controlAccentColor.withAlphaComponent(0.1) {
         didSet {
-            self.wantsLayer = true
-            self.layer?.backgroundColor = highlightColor.cgColor
+            wantsLayer = true
+            layer?.backgroundColor = highlightColor.cgColor
         }
     }
-    
-    public override init(frame frameRect: NSRect) {
+
+    override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
     }
-    
-    required public init?(coder: NSCoder) {
+
+    public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
     }
-    
+
     private func setup() {
-        self.wantsLayer = true
-        self.layer?.backgroundColor = highlightColor.cgColor
+        wantsLayer = true
+        layer?.backgroundColor = highlightColor.cgColor
     }
-    
-    // Text views need a flipped coordinate system on macOS
-    public override var isFlipped: Bool {
-        return true
+
+    /// Text views need a flipped coordinate system on macOS
+    override public var isFlipped: Bool {
+        true
+    }
+
+    deinit {
+        // Cleanup if needed
     }
 }

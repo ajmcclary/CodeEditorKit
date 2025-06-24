@@ -1,8 +1,5 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
-import Foundation
 @preconcurrency import AppKit
+import Foundation
 
 public protocol STCompletionItem: Identifiable {
     var view: NSView { get }

@@ -1,24 +1,24 @@
-//  Created by Marcin Krzyzanowski
-//  https://github.com/krzyzanowskim/STTextView/blob/main/LICENSE.md
-
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
 #endif
+
+// MARK: - STTextViewProtocol
 
 /// A common public interface for TextView
 package protocol STTextViewProtocol {
     associatedtype GutterView
-    
+
     var showsInvisibleCharacters: Bool { get set }
+    
     associatedtype Color
     associatedtype Font
     associatedtype Delegate
 
-    static var didChangeSelectionNotification: NSNotification.Name { get }
-    static var textWillChangeNotification: NSNotification.Name { get }
-    static var textDidChangeNotification: NSNotification.Name { get }
+    static var didChangeSelectionNotification: Notification.Name { get }
+    static var textWillChangeNotification: Notification.Name { get }
+    static var textDidChangeNotification: Notification.Name { get }
 
     var textLayoutManager: NSTextLayoutManager { get }
     var textContentManager: NSTextContentManager { get }
@@ -30,7 +30,7 @@ package protocol STTextViewProtocol {
     var isVerticallyResizable: Bool { get set }
 
     var highlightSelectedLine: Bool { get set }
-    var selectedLineHighlightColor: Color { get set}
+    var selectedLineHighlightColor: Color { get set }
 
     var showsLineNumbers: Bool { get set }
 
@@ -50,6 +50,7 @@ package protocol STTextViewProtocol {
     var textDelegate: Delegate? { get set }
 
     var gutterView: GutterView? { get }
+    
     func toggleRuler(_ sender: Any?)
 
     var textSelection: NSRange { get set }

@@ -1,7 +1,6 @@
 import Cocoa
 
 public struct Theme {
-    
     // MARK: - Props
     public let colors: Colors
     public let fonts: Fonts
@@ -11,17 +10,16 @@ public struct Theme {
         self.colors = colors
         self.fonts = fonts
     }
-    
+
     public func color(forToken tokenName: TokenName) -> NSColor? {
         colors.color(forToken: tokenName)
     }
-    
+
     public func font(forToken tokenName: TokenName) -> NSFont? {
         fonts.font(forToken: tokenName)
     }
 
     public struct Colors {
-        
         public let colors: [TokenName: NSColor]
 
         public init(colors: [String: NSColor]) {
@@ -52,21 +50,20 @@ public struct Theme {
                 "variable": NSColor(named: "\(name)/variable", bundle: bundle)!
             ]
         }
-        
+
         public func color(forToken tokenName: TokenName) -> NSColor? {
             colors[tokenName]
         }
     }
 
     public struct Fonts {
-
         public let fonts: [TokenName: NSFont]
 
         public init(fonts: [String: NSFont]) {
             self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in (TokenName(key), value) })
         }
 
-        public init(bundle: Bundle, name: String) {
+        public init(bundle _: Bundle, name _: String) {
             fonts = [
                 "plain": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
                 "boolean": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
@@ -89,7 +86,6 @@ public struct Theme {
                 "variable.builtin": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
                 "variable": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular)
             ]
-
         }
 
         public func font(forToken tokenName: TokenName) -> NSFont? {

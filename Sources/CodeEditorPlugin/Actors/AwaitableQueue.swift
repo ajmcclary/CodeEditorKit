@@ -1,71 +1,73 @@
 struct AwaitableQueue<Element> {
-	private typealias Continuation = CheckedContinuation<Void, Never>
+    private typealias Continuation = CheckedContinuation<Void, Never>
 
-	private enum Event {
-		case element(Element)
-		case waiter(Continuation)
-	}
+    private enum Event {
+        case element(Element)
+        case waiter(Continuation)
+    }
 
-	private var pendingEvents = [Event]()
+    private var pendingEvents = [Event]()
 
-	init() {
+    init() {}
 
-	}
+    var hasPendingEvents: Bool {
+        pendingEvents.contains { event in
+            switch event {
+            case .element:
+                true
 
-	public var hasPendingEvents: Bool {
-		pendingEvents.contains { event in
-			switch event {
-			case .element:
-				true
-			case .waiter:
-				false
-			}
-		}
-	}
+            case .waiter:
+                false
+            }
+        }
+    }
 
-	public mutating func processingCompleted(isolation: isolated any Actor) async {
-		if hasPendingEvents == false {
-			return
-		}
+    mutating func processingCompleted(isolation _: isolated any Actor) async {
+        if hasPendingEvents == false {
+            return
+        }
 
-		await withCheckedContinuation { continuation in
-			self.pendingEvents.append(.waiter(continuation))
-		}
-	}
+        await withCheckedContinuation { continuation in
+            pendingEvents.append(.waiter(continuation))
+        }
+    }
 
-	public mutating func enqueue(_ element: Element) {
-		self.pendingEvents.append(.element(element))
-	}
+    mutating func enqueue(_ element: Element) {
+        pendingEvents.append(.element(element))
+    }
 
-	public var pendingElements: [Element] {
-		pendingEvents.compactMap {
-			switch $0 {
-			case let .element(value):
-				value
-			case .waiter:
-				nil
-			}
-		}
-	}
+    var pendingElements: [Element] {
+        pendingEvents.compactMap {
+            switch $0 {
+            case let .element(value):
+                value
 
-	public mutating func handlePendingWaiters() {
-		while let event = pendingEvents.first {
-			guard case let .waiter(continuation) = event else { break }
+            case .waiter:
+                nil
+            }
+        }
+    }
 
-			continuation.resume()
-			pendingEvents.removeFirst()
-		}
-	}
+    mutating func handlePendingWaiters() {
+        while let event = pendingEvents.first {
+            guard case let .waiter(continuation) = event else {
+                break
+            }
 
-	mutating func next() -> Element? {
-		handlePendingWaiters()
+            continuation.resume()
+            pendingEvents.removeFirst()
+        }
+    }
 
-		guard case let .element(first) = pendingEvents.first else {
-			return nil
-		}
+    mutating func next() -> Element? {
+        handlePendingWaiters()
 
-		self.pendingEvents.removeFirst()
+        guard case let .element(first) = pendingEvents.first else {
+            return nil
+        }
 
-		return first
-	}
+        pendingEvents.removeFirst()
+
+        return first
+    }
 }

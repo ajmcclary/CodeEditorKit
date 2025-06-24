@@ -1,17 +1,18 @@
 #if os(macOS)
-import AppKit
+    import AppKit
 #endif
 
 #if os(iOS) || targetEnvironment(macCatalyst)
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
+    #if canImport(UIKit)
+        import UIKit
+    #elseif canImport(AppKit)
+        import AppKit
+    #endif
 #endif
-#endif
+
+// MARK: - STMessageLineAnnotation
 
 open class STMessageLineAnnotation: STLineAnnotation {
-
     public enum AnnotationKind {
         case info
         case warning
@@ -28,5 +29,9 @@ open class STMessageLineAnnotation: STLineAnnotation {
         self.message = message
         self.kind = kind
         self.location = location
+    }
+    
+    deinit {
+        // Cleanup if needed
     }
 }

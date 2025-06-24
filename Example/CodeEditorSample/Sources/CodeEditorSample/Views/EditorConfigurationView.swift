@@ -1,8 +1,10 @@
 import SwiftUI
 
+// MARK: - EditorConfigurationView
+
 struct EditorConfigurationView: View {
     @EnvironmentObject var appState: AppState
-    
+
     var body: some View {
         List {
             // Configuration presets
@@ -14,16 +16,19 @@ struct EditorConfigurationView: View {
                         }
                 }
             }
-            
+
             // Sample code selection
             Section("Sample Code") {
                 ForEach(SampleCode.allCases, id: \.self) { sample in
-                    SampleCodeRow(sample: sample, isSelected: appState.selectedSample == sample && appState.customCode.isEmpty)
-                        .onTapGesture {
-                            appState.selectSample(sample)
-                        }
+                    SampleCodeRow(
+                        sample: sample,
+                        isSelected: appState.selectedSample == sample && appState.customCode.isEmpty
+                    )
+                    .onTapGesture {
+                        appState.selectSample(sample)
+                    }
                 }
-                
+
                 // Custom code option
                 HStack {
                     Image(systemName: "doc.text")
@@ -43,37 +48,37 @@ struct EditorConfigurationView: View {
                     }
                 }
             }
-            
+
             // Editor settings
             Section("Editor Settings") {
                 // Line numbers
                 Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.showLineNumbers)
-                
+
                 // Invisible characters
                 Toggle("Show Invisible Characters", isOn: $appState.currentConfiguration.showInvisibleCharacters)
-                
+
                 // Line wrapping
                 Toggle("Wrap Lines", isOn: $appState.currentConfiguration.wrapLines)
-                
+
                 // Line highlighting
                 Toggle("Highlight Current Line", isOn: $appState.currentConfiguration.highlightSelectedLine)
-                
+
                 // Editing
                 Toggle("Enable Editing", isOn: $appState.currentConfiguration.isEditable)
-                
+
                 // Auto-indent
                 Toggle("Auto Indent", isOn: $appState.currentConfiguration.autoIndent)
             }
-            
+
             // Appearance settings
             Section("Appearance") {
                 // Font size
                 VStack(alignment: .leading) {
                     Text("Font Size: \(Int(appState.currentConfiguration.fontSize))pt")
                         .font(.caption)
-                    Slider(value: $appState.currentConfiguration.fontSize, in: 10...32, step: 1)
+                    Slider(value: $appState.currentConfiguration.fontSize, in: 10 ... 32, step: 1)
                 }
-                
+
                 // Tab width
                 VStack(alignment: .leading) {
                     Text("Tab Width: \(appState.currentConfiguration.tabWidth) spaces")
@@ -81,17 +86,17 @@ struct EditorConfigurationView: View {
                     Slider(value: Binding(
                         get: { Double(appState.currentConfiguration.tabWidth) },
                         set: { appState.currentConfiguration.tabWidth = Int($0) }
-                    ), in: 2...8, step: 1)
+                    ), in: 2 ... 8, step: 1)
                 }
-                
+
                 // Line spacing
                 VStack(alignment: .leading) {
                     Text("Line Spacing: \(appState.currentConfiguration.lineSpacing, specifier: "%.1f")")
                         .font(.caption)
-                    Slider(value: $appState.currentConfiguration.lineSpacing, in: 0...10, step: 0.5)
+                    Slider(value: $appState.currentConfiguration.lineSpacing, in: 0 ... 10, step: 0.5)
                 }
             }
-            
+
             // Theme selection
             Section("Color Theme") {
                 ForEach(ColorTheme.allCases, id: \.self) { theme in
@@ -101,14 +106,14 @@ struct EditorConfigurationView: View {
                         }
                 }
             }
-            
+
             // Plugin settings
             Section("Plugins") {
                 Toggle("Enable Annotations", isOn: $appState.currentConfiguration.enableAnnotations)
                 Toggle("Enable Line Highlight", isOn: $appState.currentConfiguration.enableLineHighlight)
                 Toggle("Enable Custom Plugin", isOn: $appState.currentConfiguration.enableCustomPlugin)
             }
-            
+
             // Performance options
             Section("Performance") {
                 Toggle("Use Hardware Acceleration", isOn: $appState.currentConfiguration.useHardwareAcceleration)
@@ -120,12 +125,12 @@ struct EditorConfigurationView: View {
     }
 }
 
-// MARK: - Preset Row
+// MARK: - PresetRow
 
 struct PresetRow: View {
     let preset: ConfigurationPreset
     let isSelected: Bool
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -135,9 +140,9 @@ struct PresetRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.accentColor)
@@ -148,18 +153,18 @@ struct PresetRow: View {
     }
 }
 
-// MARK: - Sample Code Row
+// MARK: - SampleCodeRow
 
 struct SampleCodeRow: View {
     let sample: SampleCode
     let isSelected: Bool
-    
+
     var body: some View {
         HStack {
             Image(systemName: sample.icon)
                 .foregroundColor(sample.iconColor)
                 .frame(width: 20)
-            
+
             VStack(alignment: .leading) {
                 Text(sample.displayName)
                     .font(.body)
@@ -167,9 +172,9 @@ struct SampleCodeRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.accentColor)
@@ -179,12 +184,12 @@ struct SampleCodeRow: View {
     }
 }
 
-// MARK: - Theme Row
+// MARK: - ThemeRow
 
 struct ThemeRow: View {
     let theme: ColorTheme
     let isSelected: Bool
-    
+
     var body: some View {
         HStack {
             // Theme preview
@@ -205,11 +210,11 @@ struct ThemeRow: View {
             .padding(4)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(4)
-            
+
             Text(theme.displayName)
-            
+
             Spacer()
-            
+
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.accentColor)

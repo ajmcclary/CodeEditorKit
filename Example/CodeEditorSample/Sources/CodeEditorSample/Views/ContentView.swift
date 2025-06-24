@@ -1,5 +1,7 @@
-import SwiftUI
 import CodeEditorPlugin
+import SwiftUI
+
+// MARK: - ContentView
 
 struct ContentView: View {
     @State private var configuration = EditorConfiguration()
@@ -11,7 +13,7 @@ struct ContentView: View {
     @State private var currentTextView: STTextView?
     @State private var showSplitView = false
     @State private var splitConfiguration = EditorConfiguration()
-    
+
     var body: some View {
         NavigationSplitView {
             // Sidebar with configuration options
@@ -31,9 +33,9 @@ struct ContentView: View {
                     showSplitView: $showSplitView,
                     showFeatureTour: $showFeatureTour
                 )
-                
+
                 Divider()
-                
+
                 // Editor area
                 if showSplitView {
                     // Split view to compare configurations
@@ -44,7 +46,7 @@ struct ContentView: View {
                                 .padding(.vertical, 4)
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
-                            
+
                             CodeEditorViewWrapper(
                                 configuration: configuration,
                                 text: $code,
@@ -54,14 +56,14 @@ struct ContentView: View {
                                 }
                             )
                         }
-                        
+
                         VStack(spacing: 0) {
                             Text("Configuration: Custom")
                                 .font(.caption)
                                 .padding(.vertical, 4)
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
-                            
+
                             CodeEditorViewWrapper(
                                 configuration: splitConfiguration,
                                 text: $code,
@@ -81,9 +83,9 @@ struct ContentView: View {
                         }
                     )
                 }
-                
+
                 Divider()
-                
+
                 // Status bar
                 StatusBarView(textView: currentTextView)
                     .frame(height: 24)
@@ -100,7 +102,7 @@ struct ContentView: View {
                 } label: {
                     Label("Feature Tour", systemImage: "questionmark.circle")
                 }
-                
+
                 Button {
                     if let window = NSApp.keyWindow {
                         ConfigurationExporter.exportConfiguration(configuration, from: window)
@@ -108,7 +110,7 @@ struct ContentView: View {
                 } label: {
                     Label("Export Config", systemImage: "square.and.arrow.up")
                 }
-                
+
                 Button {
                     if let window = NSApp.keyWindow {
                         ConfigurationExporter.importConfiguration(from: window) { imported in
@@ -127,7 +129,7 @@ struct ContentView: View {
             code = SampleCodeProvider.getCode(for: selectedSample)
             applyPreset(selectedPreset)
             splitConfiguration = ConfigurationPreset.minimal.configuration
-            
+
             // Show feature tour on first launch
             if !UserDefaults.standard.bool(forKey: "hasSeenFeatureTour") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -147,20 +149,20 @@ struct ContentView: View {
             selectedPreset = .fullFeatured
         }
     }
-    
+
     private func applyPreset(_ preset: ConfigurationPreset) {
         configuration = preset.configuration
     }
 }
 
-// MARK: - Configuration Sidebar
+// MARK: - ConfigurationSidebar
 
 struct ConfigurationSidebar: View {
     @Binding var configuration: EditorConfiguration
     @Binding var selectedPreset: ConfigurationPreset
     @Binding var selectedSample: SampleCode
     @Binding var code: String
-    
+
     var body: some View {
         List {
             // Configuration presets
@@ -174,9 +176,9 @@ struct ConfigurationSidebar: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         if selectedPreset == preset {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.accentColor)
@@ -190,7 +192,7 @@ struct ConfigurationSidebar: View {
                     }
                 }
             }
-            
+
             // Sample code selection
             Section("Sample Code") {
                 ForEach(SampleCode.allCases, id: \.self) { sample in
@@ -198,7 +200,7 @@ struct ConfigurationSidebar: View {
                         Image(systemName: sample.icon)
                             .foregroundColor(sample.iconColor)
                             .frame(width: 20)
-                        
+
                         VStack(alignment: .leading) {
                             Text(sample.displayName)
                                 .font(.body)
@@ -206,9 +208,9 @@ struct ConfigurationSidebar: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         if selectedSample == sample {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.accentColor)
@@ -221,7 +223,7 @@ struct ConfigurationSidebar: View {
                     }
                 }
             }
-            
+
             // Editor settings
             Section("Editor Settings") {
                 Toggle("Show Line Numbers", isOn: $configuration.showLineNumbers)
@@ -230,16 +232,16 @@ struct ConfigurationSidebar: View {
                 Toggle("Highlight Current Line", isOn: $configuration.highlightSelectedLine)
                 Toggle("Enable Editing", isOn: $configuration.isEditable)
             }
-            
+
             // Appearance settings
             Section("Appearance") {
                 // Font size
                 VStack(alignment: .leading) {
                     Text("Font Size: \(Int(configuration.fontSize))pt")
                         .font(.caption)
-                    Slider(value: $configuration.fontSize, in: 10...32, step: 1)
+                    Slider(value: $configuration.fontSize, in: 10 ... 32, step: 1)
                 }
-                
+
                 // Theme selection
                 ForEach(ColorTheme.allCases, id: \.self) { theme in
                     HStack {
@@ -261,11 +263,11 @@ struct ConfigurationSidebar: View {
                         .padding(4)
                         .background(Color(NSColor.controlBackgroundColor))
                         .cornerRadius(4)
-                        
+
                         Text(theme.displayName)
-                        
+
                         Spacer()
-                        
+
                         if configuration.theme == theme {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.accentColor)
