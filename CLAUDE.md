@@ -31,7 +31,7 @@ swift test --verbose
 ### Example Application
 ```bash
 # Build and run the example application
-cd Example/CodeEditorSample
+cd CodeEditorSample
 swift build
 swift run
 ```

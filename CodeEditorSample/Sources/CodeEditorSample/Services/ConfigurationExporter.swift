@@ -46,7 +46,10 @@ enum ConfigurationExporter {
     // MARK: - Import Configuration
 
     @MainActor
-    static func importConfiguration(from window: NSWindow?, completion: @escaping (EditorConfiguration?) -> Void) {
+    static func importConfiguration(
+        from window: NSWindow?,
+        completion: @escaping @Sendable (EditorConfiguration?) -> Void
+    ) {
         let openPanel = NSOpenPanel()
         openPanel.title = "Import Configuration"
         openPanel.message = "Choose a configuration file to import"

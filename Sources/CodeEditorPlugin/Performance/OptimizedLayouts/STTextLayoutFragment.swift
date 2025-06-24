@@ -59,9 +59,9 @@ final class STTextLayoutFragment: NSTextLayoutFragment {
             // the ExtraLineFragment doesn't have information about typing attributes hence layout manager uses a default values - not from text view
             let paragraphStyle: NSParagraphStyle = if !lineFragment.isExtraLineFragment,
                                                       let lineParagraphStyle = lineFragment.attributedString.attribute(
-                                                          .paragraphStyle,
-                                                          at: 0,
-                                                          effectiveRange: nil
+                                                        .paragraphStyle,
+                                                        at: 0,
+                                                        effectiveRange: nil
                                                       ) as? NSParagraphStyle {
                 lineParagraphStyle
             } else {
@@ -112,18 +112,18 @@ final class STTextLayoutFragment: NSTextLayoutFragment {
             let substring = sourceString[lineFragmentRange]
 
             for (offset, character) in substring.utf16.enumerated()
-                where Unicode.Scalar(character)?.properties.isWhitespace == true {
+            where Unicode.Scalar(character)?.properties.isWhitespace == true {
                 guard let segmentLocation = textLayoutManager.location(
                     lineFragmentTextRange.location,
                     offsetBy: offset
                 ),
-                    let segmentRange = NSTextRange(location: segmentLocation, end: segmentLocation),
-                    let segmentFrame = textLayoutManager.textSegmentFrame(in: segmentRange, type: .standard),
-                    let font = lineFragment.attributedString.attribute(
-                        .font,
-                        at: offset,
-                        effectiveRange: nil
-                    ) as? NSFont
+                let segmentRange = NSTextRange(location: segmentLocation, end: segmentLocation),
+                let segmentFrame = textLayoutManager.textSegmentFrame(in: segmentRange, type: .standard),
+                let font = lineFragment.attributedString.attribute(
+                    .font,
+                    at: offset,
+                    effectiveRange: nil
+                ) as? NSFont
                 else {
                     continue
                 }

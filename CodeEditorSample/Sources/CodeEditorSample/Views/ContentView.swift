@@ -115,7 +115,9 @@ struct ContentView: View {
                     if let window = NSApp.keyWindow {
                         ConfigurationExporter.importConfiguration(from: window) { imported in
                             if let config = imported {
-                                configuration = config
+                                Task { @MainActor in
+                                    configuration = config
+                                }
                             }
                         }
                     }

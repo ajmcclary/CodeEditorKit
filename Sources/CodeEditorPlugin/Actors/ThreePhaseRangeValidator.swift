@@ -1,19 +1,19 @@
 import Foundation
 
-public final class ThreePhaseRangeValidator<Content: VersionedContent> {
+public actor ThreePhaseRangeValidator<Content: VersionedContent> {
     public typealias PrimaryValidator = SinglePhaseRangeValidator<Content>
     private typealias InternalValidator = RangeValidator<Content>
 
-    public typealias ValidationHandler = (NSRange) -> Void
+    public typealias ValidationHandler = @Sendable (NSRange) -> Void
 
     public typealias ContentRange = RangeValidator<Content>.ContentRange
     public typealias Provider = PrimaryValidator.Provider
-    public typealias FallbackHandler = (NSRange) -> Void
-    public typealias SecondaryValidationProvider = (ContentRange) async -> Validation
+    public typealias FallbackHandler = @Sendable (NSRange) -> Void
+    public typealias SecondaryValidationProvider = @Sendable (ContentRange) async -> Validation
 
     private typealias Sequence = AsyncStream<ContentRange>
 
-    public struct Configuration {
+    public struct Configuration: Sendable {
         public let versionedContent: Content
         public let provider: Provider
         public let fallbackHandler: FallbackHandler?
@@ -40,7 +40,7 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
     private let secondaryValidator: InternalValidator?
     private var task: Task<Void, Error>?
 
-    public let configuration: Configuration
+    public nonisolated let configuration: Configuration
 
     public init(configuration: Configuration, isolation: isolated(any Actor)) {
         self.configuration = configuration
@@ -54,54 +54,63 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         fallbackValidator = InternalValidator(content: configuration.versionedContent)
         secondaryValidator = InternalValidator(content: configuration.versionedContent)
 
-        func validationHandlerWrapper(_ range: NSRange, _: Bool) {
-            handlePrimaryValidation(of: range, isolation: isolation)
-        }
+        Task { [weak self] in
+            guard let self else { return }
 
-        primaryValidator.validationHandler = validationHandlerWrapper
+            let validationHandlerWrapper: @Sendable (NSRange, Bool) -> Void = { [weak self] range, _ in
+                guard let self else { return }
+                Task {
+                    await self.handlePrimaryValidation(of: range, isolation: isolation)
+                }
+            }
+
+            await self.primaryValidator.setValidationHandler(validationHandlerWrapper)
+        }
     }
 
     @MainActor
     @preconcurrency
-    public convenience init(configuration: Configuration) {
+    public init(configuration: Configuration) {
         self.init(configuration: configuration, isolation: MainActor.shared)
     }
 
     private var version: Content.Version {
-        configuration.versionedContent.currentVersion
+        get async {
+            configuration.versionedContent.currentVersion
+        }
     }
 
     /// Manually mark a region as invalid.
-    public func invalidate(_ target: RangeTarget) {
-        primaryValidator.invalidate(target)
-        fallbackValidator.invalidate(target)
-        secondaryValidator?.invalidate(target)
+    public func invalidate(_ target: RangeTarget) async {
+        await primaryValidator.invalidate(target)
+        await fallbackValidator.invalidate(target)
+        await secondaryValidator?.invalidate(target)
     }
 
-    public func validate(_ target: RangeTarget, isolation: isolated (any Actor)) {
-        let action = primaryValidator.validate(target, isolation: isolation)
+    public func validate(_ target: RangeTarget, isolation: isolated (any Actor)) async {
+        let action = await primaryValidator.validate(target, isolation: isolation)
 
         switch action {
         case .noValidation:
             scheduleSecondaryValidation(of: target, isolation: isolation)
 
         case let .needed(contentRange):
-            fallbackValidate(contentRange.value)
+            await fallbackValidate(contentRange.value)
         }
     }
 
     @MainActor
     @preconcurrency
-    public func validate(_ target: RangeTarget) {
-        validate(target, isolation: MainActor.shared)
+    public func validate(_ target: RangeTarget) async {
+        await validate(target, isolation: MainActor.shared)
     }
 
-    private func fallbackValidate(_ targetRange: NSRange) {
+    private func fallbackValidate(_ targetRange: NSRange) async {
         guard let provider = configuration.fallbackHandler else {
             return
         }
 
-        let action = fallbackValidator.beginValidation(of: .range(targetRange))
+        let action = await fallbackValidator.beginValidation(of: .range(targetRange))
 
         switch action {
         case .noValidation:
@@ -110,7 +119,7 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         case let .needed(contentRange):
             provider(contentRange.value)
 
-            fallbackValidator.completeValidation(of: contentRange, with: .success(contentRange.value))
+            await fallbackValidator.completeValidation(of: contentRange, with: .success(contentRange.value))
         }
     }
 
@@ -127,17 +136,22 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
     ///
     ///     range = NSRange(1..<2)
     ///     delta = -1
-    public func contentChanged(in range: NSRange, delta: Int) {
-        primaryValidator.contentChanged(in: range, delta: delta)
-        fallbackValidator.contentChanged(in: range, delta: delta)
-        secondaryValidator?.contentChanged(in: range, delta: delta)
+    public func contentChanged(in range: NSRange, delta: Int) async {
+        await primaryValidator.contentChanged(in: range, delta: delta)
+        await fallbackValidator.contentChanged(in: range, delta: delta)
+        await secondaryValidator?.contentChanged(in: range, delta: delta)
 
         task?.cancel()
     }
 
     public var name: String? {
-        get { primaryValidator.name }
-        set { primaryValidator.name = newValue }
+        get async {
+            await primaryValidator.name
+        }
+    }
+
+    public func setName(_ newValue: String?) async {
+        await primaryValidator.setName(newValue)
     }
 
     deinit {
@@ -146,30 +160,58 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
 
     // MARK: - Private Methods
 
-    private func handlePrimaryValidation(of range: NSRange, isolation: isolated (any Actor)) {
+    private func handlePrimaryValidation(of range: NSRange, isolation: isolated (any Actor)) async {
         let target = RangeTarget.range(range)
 
-        fallbackValidator.invalidate(target)
-        secondaryValidator?.invalidate(target)
+        await fallbackValidator.invalidate(target)
+        await secondaryValidator?.invalidate(target)
 
         scheduleSecondaryValidation(of: target, isolation: isolation)
     }
 
     private func scheduleSecondaryValidation(of target: RangeTarget, isolation: isolated (any Actor)) {
-        if configuration.secondaryProvider == nil || secondaryValidator == nil {
+        Task {
+            await self.scheduleSecondaryValidationAsync(target: target, isolation: isolation)
+        }
+    }
+
+    private func scheduleSecondaryValidationAsync(target: RangeTarget, isolation: isolated (any Actor)) async {
+        guard await shouldScheduleSecondaryValidation() else {
             return
         }
 
-        task?.cancel()
+        // Cancel and set task in actor-isolated context
+        await cancelAndScheduleTask(target: target, externalIsolation: isolation)
+    }
 
-        let requestingVersion = configuration.versionedContent.currentVersion
-        let delay = max(UInt64(configuration.secondaryValidationDelay * 1_000_000_000), 0)
+    // Actor-isolated helper to check configuration
+    private func shouldScheduleSecondaryValidation() async -> Bool {
+        configuration.secondaryProvider != nil && secondaryValidator != nil
+    }
 
-        task = Task {
+    private func cancelAndScheduleTask(target: RangeTarget, externalIsolation: isolated (any Actor)) async {
+        // Cancel existing task and get request version
+        let (requestingVersion, delay) = await prepareForScheduling()
+
+        let newTask = Task {
             try await Task.sleep(nanoseconds: delay)
 
-            await secondaryValidate(target: target, requestingVersion: requestingVersion, isolation: isolation)
+            await self.secondaryValidate(target: target, requestingVersion: requestingVersion, isolation: externalIsolation)
         }
+
+        await setTask(newTask)
+    }
+
+    // Actor-isolated methods to access actor state
+    private func prepareForScheduling() async -> (Content.Version, UInt64) {
+        task?.cancel()
+        let requestingVersion = configuration.versionedContent.currentVersion
+        let delay = max(UInt64(configuration.secondaryValidationDelay * 1_000_000_000), 0)
+        return (requestingVersion, delay)
+    }
+
+    private func setTask(_ newTask: Task<Void, Error>) async {
+        self.task = newTask
     }
 
     private func secondaryValidate(
@@ -177,14 +219,15 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         requestingVersion: Content.Version,
         isolation _: isolated (any Actor)
     ) async {
-        guard requestingVersion == version,
+        let currentVersion = await version
+        guard requestingVersion == currentVersion,
               let validator = secondaryValidator,
               let provider = configuration.secondaryProvider
         else {
             return
         }
 
-        let action = validator.beginValidation(of: target)
+        let action = await validator.beginValidation(of: target)
 
         switch action {
         case .noValidation:
@@ -193,7 +236,7 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         case let .needed(contentRange):
             let validation = await provider(contentRange)
 
-            validator.completeValidation(of: contentRange, with: validation)
+            await validator.completeValidation(of: contentRange, with: validation)
         }
     }
 }

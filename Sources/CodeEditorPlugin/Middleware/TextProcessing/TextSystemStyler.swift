@@ -38,16 +38,16 @@ public final class TextSystemStyler<Interface: TextSystemInterface> {
     ///
     ///     range = NSRange(1..<2)
     ///     delta = -1
-    public func didChangeContent(in range: NSRange, delta: Int) {
-        validator.contentChanged(in: range, delta: delta)
+    public func didChangeContent(in range: NSRange, delta: Int) async {
+        await validator.contentChanged(in: range, delta: delta)
     }
 
-    public func invalidate(_ target: RangeTarget) {
-        validator.invalidate(target)
+    public func invalidate(_ target: RangeTarget) async {
+        await validator.invalidate(target)
     }
 
-    public func validate(_ target: RangeTarget = .all) {
-        validator.validate(target)
+    public func validate(_ target: RangeTarget = .all) async {
+        await validator.validate(target)
     }
 
     deinit {

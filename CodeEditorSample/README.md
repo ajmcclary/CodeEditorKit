@@ -1,6 +1,6 @@
 # CodeEditor Sample App
 
-A comprehensive, feature-rich macOS application demonstrating the full capabilities of the CodeEditorPlugin package. This sample app provides a professional code editing experience with modern Swift 6 architecture, smooth scrolling, advanced syntax highlighting, and extensive customization options.
+A comprehensive, feature-rich macOS application demonstrating the full capabilities of the CodeEditorPlugin package. This sample app provides a professional code editing experience with modern Swift 6 Actor-Based Concurrency architecture, smooth scrolling, advanced syntax highlighting, and extensive customization options.
 
 ## 🎯 Overview
 
@@ -13,7 +13,8 @@ This sample app is a complete demonstration of CodeEditorPlugin's capabilities:
 - ✅ **Configuration management** with import/export functionality and presets
 - ✅ **Multiple editor instances** with different configurations and layouts
 - ✅ **Interactive feature tour** and comprehensive documentation
-- ✅ **Swift 6 compliance** with modern concurrency and performance optimizations
+- ✅ **Swift 6 Actor-Based Concurrency** with thread-safe validation and processing
+- ✅ **Full Swift 6 compliance** with complete Sendable conformance
 - ✅ **Comprehensive testing** with 23 passing tests and performance benchmarks
 
 ## 🚀 Quick Start
@@ -22,7 +23,7 @@ This sample app is a complete demonstration of CodeEditorPlugin's capabilities:
 
 1. **Navigate to the sample directory:**
    ```bash
-   cd Example/CodeEditorSample
+   cd CodeEditorSample
    ```
 
 2. **Run the app:**
@@ -108,8 +109,10 @@ All settings update instantly without restart:
 
 **📱 Modern Architecture:**
 - SwiftUI + AppKit integration
-- Swift 6 actor-based concurrency
-- Protocol-oriented design
+- Swift 6 Actor-Based Concurrency throughout
+- Thread-safe validation with RangeValidator actors
+- Protocol-oriented design with Sendable conformance
+- Advanced actor isolation patterns
 - Comprehensive error handling
 
 **💾 Configuration Management:**
@@ -141,7 +144,7 @@ All settings update instantly without restart:
 CodeEditorSample/
 ├── 📱 App Layer
 │   ├── CodeEditorSampleApp.swift     # Main app + menu system
-│   ├── ContentView.swift             # Primary layout
+│   ├── ContentView.swift             # Primary layout with @Sendable closures
 │   └── AppState.swift                # Global state management
 ├── 🎨 Views  
 │   ├── CodeEditorView.swift          # SwiftUI ↔ STTextView bridge
@@ -154,6 +157,8 @@ CodeEditorSample/
 │   ├── EditorConfiguration.swift     # Configuration + presets
 │   ├── SampleCodeProvider.swift      # Language samples
 │   └── *Samples.swift               # Sample code by category
+├── 🛠️ Services
+│   └── ConfigurationExporter.swift   # Thread-safe config management
 ├── 🎨 Themes
 │   └── ThemeProvider.swift           # Color theme definitions
 ├── 🔌 Plugins
@@ -191,10 +196,20 @@ struct CodeEditorView: NSViewRepresentable {
 }
 ```
 
-**3. Swift 6 Delegate Pattern:**
+**3. Swift 6 Actor-Based Delegate Pattern:**
 ```swift
 class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
     // Full protocol conformance with concurrency safety
+    // @Sendable closures for thread-safe callbacks
+}
+```
+
+**4. Actor-Based Validation:**
+```swift
+// Thread-safe validation with actors
+actor SinglePhaseRangeValidator<Content: VersionedContent> {
+    // Actor-isolated validation methods
+    func validate(_ target: RangeTarget) async -> Action
 }
 ```
 
@@ -261,10 +276,11 @@ config.enableSyntaxHighlighting = false  // For very large files
 
 ## 📋 Requirements & Compatibility
 
-- **Swift**: 6.0+ (with experimental concurrency)
+- **Swift**: 6.0+ (with experimental concurrency and full actor-based architecture)
 - **macOS**: 12.0+ (optimized for macOS 14+)
 - **Xcode**: 16.0+
 - **Dependencies**: swift-syntax 510.0.0+
+- **Concurrency**: Full Swift 6 Actor-Based Concurrency with Sendable conformance
 
 ## 🐛 Troubleshooting
 

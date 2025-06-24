@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a mutation operation on a text range
-public struct RangeMutation: Equatable {
+public struct RangeMutation: Equatable, Sendable {
     public let range: NSRange
     public let delta: Int
     public let version: Int

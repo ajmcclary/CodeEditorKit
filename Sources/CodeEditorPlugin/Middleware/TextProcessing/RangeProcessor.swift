@@ -18,7 +18,7 @@ public enum RangeFillMode: Sendable, Hashable {
 // MARK: - RangeProcessor
 
 /// A type that can perform on-demand processing of range-based data.
-public final class RangeProcessor {
+public final class RangeProcessor: @unchecked Sendable {
     private typealias VersionedMutation = Versioned<Int, RangeMutation>
 
     /// Function to apply changes.

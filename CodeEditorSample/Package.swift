@@ -14,7 +14,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../..")
+        .package(path: "..")
     ],
     targets: [
         .executableTarget(

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - HybridSyncAsyncLanguageLayer
 
-public struct HybridSyncAsyncLanguageLayer<Input, Output, Failure: Error> {
+public struct HybridSyncAsyncLanguageLayer<Input: Sendable, Output: Sendable, Failure: Error & Sendable>: Sendable {
     let provider: HybridSyncAsyncValueProvider<Input, Output, Failure>
 }
 
@@ -41,10 +41,10 @@ extension HybridSyncAsyncValueProvider {
     }
 }
 
-final class HybridSyncAsyncVersionedResource<Resource> {
+final class HybridSyncAsyncVersionedResource<Resource: Sendable> {
     typealias Version = Int
     typealias VersionedResource = Versioned<Version, Resource>
-    typealias SyncAvailable = (Version) -> Bool
+    typealias SyncAvailable = @Sendable (Version) -> Bool
     typealias Provider = HybridSyncAsyncValueProvider<Version, Resource, any Error>
 
     private let resource: VersionedResource
@@ -55,10 +55,10 @@ final class HybridSyncAsyncVersionedResource<Resource> {
         self.syncAvailable = syncAvailable
     }
 
-    func access<Success>(
+    func access<Success: Sendable>(
         version _: Version,
-        operation: @escaping (Bool, Resource) throws -> sending Success,
-        completion: @escaping (Result<Success, Error>) -> Void
+        operation: @escaping @Sendable (Bool, Resource) throws -> sending Success,
+        completion: @escaping @Sendable (Result<Success, Error>) -> Void
     ) {
         if syncAvailable(resource.version) {
             let result = Result { try operation(true, resource.value) }

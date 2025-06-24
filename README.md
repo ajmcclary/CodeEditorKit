@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-A powerful, modern code editor component for macOS and iOS applications built with Swift 6. CodeEditorPlugin provides syntax highlighting, line numbers, themes, scrolling, and extensive customization options for building modern code editing experiences in Swift applications.
+A powerful, modern code editor component for macOS and iOS applications built with Swift 6 and Actor-Based Concurrency. CodeEditorPlugin provides syntax highlighting, line numbers, themes, scrolling, and extensive customization options for building modern code editing experiences in Swift applications with full concurrency safety.
 
 ## ✨ Features
 
@@ -200,7 +200,7 @@ textView.language = .javascript
 
 ## 📱 Example Application
 
-Check out the comprehensive example application in `Example/CodeEditorSample/` that demonstrates:
+Check out the comprehensive example application in `CodeEditorSample/` that demonstrates:
 
 - ✅ **Full-featured code editor** with syntax highlighting and scrolling
 - ✅ **Multiple themes** with real-time theme switching
@@ -214,13 +214,13 @@ Check out the comprehensive example application in `Example/CodeEditorSample/` t
 ### Running the Example
 
 ```bash
-cd Example/CodeEditorSample
+cd CodeEditorSample
 swift run CodeEditorSample
 ```
 
 ## 🏗️ Architecture
 
-CodeEditorPlugin is built with a clean, modular architecture optimized for Swift 6:
+CodeEditorPlugin is built with a clean, modular architecture fully optimized for Swift 6 Actor-Based Concurrency:
 
 ### Core Components
 
@@ -229,23 +229,34 @@ CodeEditorPlugin is built with a clean, modular architecture optimized for Swift
 - **Theme System** - Comprehensive theming with color management
 - **Plugin Architecture** - Extensible system for custom functionality
 - **SwiftUI Integration** - Native SwiftUI wrappers with proper scroll view embedding
-- **Performance Layer** - Background processing and viewport optimization
+- **Performance Layer** - Actor-based background processing and viewport optimization
+
+### Actor-Based Concurrency Architecture
+
+- **RangeValidator** - Core validation actor for thread-safe text processing
+- **SinglePhaseRangeValidator** - Actor for single-phase validation operations
+- **ThreePhaseRangeValidator** - Actor for complex three-phase validation workflows
+- **BackgroundProcessor** - Actor for async text processing operations
+- **HybridSyncAsyncValueProvider** - Thread-safe provider with actor isolation support
 
 ### Key Design Patterns
 
-- **Protocol-Oriented Design** - STTextViewProtocol, STTextViewDelegate
-- **Actor-Based Concurrency** - Swift 6 actors for background processing  
+- **Protocol-Oriented Design** - STTextViewProtocol, STTextViewDelegate with Sendable conformance
+- **Actor-Based Concurrency** - Full Swift 6 actor architecture for all validation and processing
 - **Type Aliases** - Clean public API (CodeEditorTextView, CodeEditorDelegate)
-- **Versioned Content System** - Efficient change tracking and validation
+- **Versioned Content System** - Thread-safe change tracking with actor-isolated validation
+- **Isolation Parameters** - Advanced actor communication patterns for cross-actor operations
+- **@Sendable Closures** - Complete thread-safety in all async operations
 
 ### Recent Improvements
 
-- ✅ **Swift 6 Compliance** - Full concurrency safety and modern Swift features
+- ✅ **Swift 6 Actor-Based Concurrency** - Full migration to actors for thread-safe validation and processing
+- ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
 - ✅ **Protocol Conformance** - Complete STTextViewDelegate implementation
 - ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations
 - ✅ **Test Coverage** - Comprehensive test suite with 69 passing tests
-- ✅ **Performance** - Optimized for large files and responsive editing
+- ✅ **Performance** - Optimized for large files with actor-based background processing
 
 ## 🧪 Testing
 
@@ -256,7 +267,7 @@ Run the comprehensive test suite:
 swift test
 
 # Example project tests  
-cd Example/CodeEditorSample
+cd CodeEditorSample
 swift test
 ```
 

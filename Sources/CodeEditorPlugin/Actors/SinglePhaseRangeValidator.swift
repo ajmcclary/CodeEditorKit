@@ -1,15 +1,15 @@
 import Foundation
 
-public final class SinglePhaseRangeValidator<Content: VersionedContent> {
+public actor SinglePhaseRangeValidator<Content: VersionedContent> {
     public typealias ContentRange = RangeValidator<Content>.ContentRange
     public typealias Provider = HybridSyncAsyncValueProvider<ContentRange, Validation, Never>
 
-    private struct ValidationOperation {
+    private struct ValidationOperation: Sendable {
         let contentRange: ContentRange
         let target: RangeTarget
     }
 
-    public struct Configuration {
+    public struct Configuration: Sendable {
         public let versionedContent: Content
         public let provider: Provider
 
@@ -25,9 +25,21 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
     private let primaryValidator: RangeValidator<Content>
     private var eventQueue: AwaitableQueue<ValidationOperation>
 
-    public let configuration: Configuration
-    public var validationHandler: (NSRange, Bool) -> Void = { _, _ in }
+    public nonisolated let configuration: Configuration
+    public var validationHandler: @Sendable (NSRange, Bool) -> Void = { _, _ in }
     public var name: String?
+
+    public func setName(_ newValue: String?) {
+        self.name = newValue
+    }
+
+    public func setValidationHandler(_ handler: @escaping @Sendable (NSRange, Bool) -> Void) {
+        self.validationHandler = handler
+    }
+
+    private func handlePendingWaiters() {
+        eventQueue.handlePendingWaiters()
+    }
 
     public init(configuration: Configuration) {
         self.configuration = configuration
@@ -36,27 +48,27 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
     }
 
     private var version: Content.Version {
-        configuration.versionedContent.currentVersion
+        get async {
+            configuration.versionedContent.currentVersion
+        }
     }
 
     /// Manually mark a region as invalid.
-    public func invalidate(_ target: RangeTarget) {
-        primaryValidator.invalidate(target)
+    public func invalidate(_ target: RangeTarget) async {
+        await primaryValidator.invalidate(target)
     }
 
+    // Actor-isolated version without isolation parameter
     @discardableResult
-    public func validate(
-        _ target: RangeTarget,
-        isolation: isolated (any Actor)
-    ) -> RangeValidator<Content>.Action {
+    public func validateOnActor(_ target: RangeTarget) async -> RangeValidator<Content>.Action {
         // capture this first, because we're about to start one
-        let outstanding = primaryValidator.hasOutstandingValidations
+        let outstanding = await primaryValidator.hasOutstandingValidations
 
-        let action = primaryValidator.beginValidation(of: target)
+        let action = await primaryValidator.beginValidation(of: target)
 
         switch action {
         case .noValidation:
-            eventQueue.handlePendingWaiters()
+            handlePendingWaiters()
             return .noValidation
 
         case let .needed(contentRange):
@@ -64,18 +76,166 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
 
             // if we have an outstanding async operation going, force this to be async too
             if outstanding {
-                enqueueValidation(operation, isolation: isolation)
+                enqueueValidationOnActor(operation)
                 return action
             }
 
             guard let validation = configuration.provider.sync(contentRange) else {
-                enqueueValidation(operation, isolation: isolation)
+                enqueueValidationOnActor(operation)
                 return action
             }
 
-            completePrimaryValidation(of: operation, with: validation, isolation: isolation)
+            await completePrimaryValidationOnActor(of: operation, with: validation)
 
             return .noValidation
+        }
+    }
+
+    @discardableResult
+    public func validate(
+        _ target: RangeTarget,
+        isolation _: isolated (any Actor)
+    ) async -> RangeValidator<Content>.Action {
+        // Call the actor-isolated version
+        await validateOnActor(target)
+    }
+
+    private func enqueueValidationOnActor(_ operation: ValidationOperation) {
+        eventQueue.enqueue(operation)
+
+        Task {
+            await validateRangeOnActor()
+        }
+    }
+
+    private func enqueueValidation(_ operation: ValidationOperation, isolation: isolated any Actor) {
+        Task {
+            await enqueueValidationOnActor(operation)
+            await validateRangeAsync(isolation: isolation)
+        }
+    }
+
+    private func validateRangeAsync(isolation: isolated any Actor) async {
+        // This method needs to run in the actor's context to access eventQueue
+        await performValidateRangeAsync(isolation: isolation)
+    }
+
+    private func validateRangeOnActor() async {
+        guard let operation = eventQueue.next() else {
+            preconditionFailure("There must always be a next operation to process")
+        }
+
+        let validation = await configuration.provider.async(isolation: self, operation.contentRange)
+
+        await completePrimaryValidationOnActor(of: operation, with: validation)
+    }
+
+    private func performValidateRangeAsync(isolation: isolated any Actor) async {
+        // Get operation in actor context first
+        let operation = await getNextOperation()
+
+        guard let operation else {
+            preconditionFailure("There must always be a next operation to process")
+        }
+
+        let validation = await configuration.provider.async(isolation: isolation, operation.contentRange)
+
+        await completePrimaryValidation(of: operation, with: validation, externalIsolation: isolation)
+    }
+
+    private func getNextOperation() async -> ValidationOperation? {
+        eventQueue.next()
+    }
+
+    private func completePrimaryValidationWithIsolation(
+        of operation: ValidationOperation,
+        with validation: Validation,
+        isolation: isolated (any Actor)
+    ) async {
+        await completePrimaryValidation(of: operation, with: validation, externalIsolation: isolation)
+    }
+
+    // Actor-isolated version without external isolation
+    private func completePrimaryValidationOnActor(
+        of operation: ValidationOperation,
+        with validation: Validation
+    ) async {
+        await primaryValidator.completeValidation(of: operation.contentRange, with: validation)
+
+        switch validation {
+        case .stale:
+            Task {
+                let currentVersion = await self.version
+                if operation.contentRange.version == currentVersion {
+                    // Version unchanged after stale results, stopping validation
+                    return
+                }
+
+                await self.validateOnActor(operation.target)
+            }
+
+        case let .success(range):
+            let complete = await primaryValidator.isValid(operation.target)
+
+            validationHandler(range, complete)
+
+            // this only makes sense if the content has remained unchanged
+            if complete {
+                handlePendingWaiters()
+                return
+            }
+
+            Task {
+                await self.validateOnActor(operation.target)
+            }
+        }
+    }
+
+    // Version that runs with external isolation - cannot access actor state directly
+    private func completePrimaryValidation(
+        of operation: ValidationOperation,
+        with validation: Validation,
+        externalIsolation: isolated (any Actor)
+    ) async {
+        await primaryValidator.completeValidation(of: operation.contentRange, with: validation)
+
+        switch validation {
+        case .stale:
+            Task {
+                let currentVersion = await self.version
+                if operation.contentRange.version == currentVersion {
+                    // Version unchanged after stale results, stopping validation
+                    return
+                }
+
+                await self.validate(operation.target, isolation: externalIsolation)
+            }
+
+        case let .success(range):
+            let complete = await primaryValidator.isValid(operation.target)
+
+            // Need to handle validation completion
+            await self.handleValidationCompletionOnActor(range: range, complete: complete, target: operation.target, externalIsolation: externalIsolation)
+        }
+    }
+
+    // Actor-isolated method to handle validation completion
+    private func handleValidationCompletionOnActor(range: NSRange, complete: Bool, target: RangeTarget, externalIsolation: isolated (any Actor)) async {
+        // Call actor-isolated method to perform the actual work
+        await performValidationCompletion(range: range, complete: complete)
+
+        // Continue validation if needed
+        if !complete {
+            await self.validate(target, isolation: externalIsolation)
+        }
+    }
+
+    // Actor-isolated method without isolation parameter to access actor state
+    private func performValidationCompletion(range: NSRange, complete: Bool) async {
+        validationHandler(range, complete)
+
+        if complete {
+            handlePendingWaiters()
         }
     }
 
@@ -84,43 +244,8 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
     @discardableResult
     public func validate(
         _ target: RangeTarget
-    ) -> RangeValidator<Content>.Action {
-        validate(target, isolation: MainActor.shared)
-    }
-
-    private func completePrimaryValidation(
-        of operation: ValidationOperation,
-        with validation: Validation,
-        isolation: isolated (any Actor)
-    ) {
-        primaryValidator.completeValidation(of: operation.contentRange, with: validation)
-
-        switch validation {
-        case .stale:
-            Task<Void, Never> {
-                if operation.contentRange.version == self.version {
-                    // Version unchanged after stale results, stopping validation
-                    return
-                }
-
-                validate(operation.target, isolation: isolation)
-            }
-
-        case let .success(range):
-            let complete = primaryValidator.isValid(operation.target)
-
-            validationHandler(range, complete)
-
-            // this only makes sense if the content has remained unchanged
-            if complete {
-                eventQueue.handlePendingWaiters()
-                return
-            }
-
-            Task<Void, Never> {
-                validate(operation.target, isolation: isolation)
-            }
-        }
+    ) async -> RangeValidator<Content>.Action {
+        await validate(target, isolation: MainActor.shared)
     }
 
     /// Update internal state in response to a mutation.
@@ -136,30 +261,13 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
     ///
     ///     range = NSRange(1..<2)
     ///     delta = -1
-    public func contentChanged(in range: NSRange, delta: Int) {
-        primaryValidator.contentChanged(in: range, delta: delta)
+    public func contentChanged(in range: NSRange, delta: Int) async {
+        await primaryValidator.contentChanged(in: range, delta: delta)
     }
 
-    private func enqueueValidation(_ operation: ValidationOperation, isolation: isolated any Actor) {
-        eventQueue.enqueue(operation)
-
-        Task<Void, Never> {
-            await self.validateRangeAsync(isolation: isolation)
-        }
-    }
-
-    private func validateRangeAsync(isolation: isolated any Actor) async {
-        guard let operation = eventQueue.next() else {
-            preconditionFailure("There must always be a next operation to process")
-        }
-
-        let validation = await configuration.provider.async(isolation: isolation, operation.contentRange)
-
-        completePrimaryValidation(of: operation, with: validation, isolation: isolation)
-    }
-
-    public func validationCompleted(isolation: isolated any Actor) async {
-        await eventQueue.processingCompleted(isolation: isolation)
+    // This needs to be an actor-isolated method to mutate eventQueue
+    public func validationCompleted() async {
+        await eventQueue.processingCompleted(isolation: self)
     }
 
     deinit {

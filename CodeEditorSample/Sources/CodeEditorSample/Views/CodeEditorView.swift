@@ -1,41 +1,25 @@
+import AppKit
 import CodeEditorPlugin
 import SwiftUI
 
-// MARK: - CodeEditorViewWrapper
-
-struct CodeEditorViewWrapper: View {
+struct CodeEditorView: NSViewRepresentable {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    let onTextViewReady: (STTextView) -> Void
-
-    var body: some View {
-        CodeEditorViewWithCallback(
-            configuration: configuration,
-            text: $text,
-            language: language,
-            onTextViewReady: onTextViewReady
-        )
-        .background(Color(configuration.theme.backgroundColor))
-    }
-}
-
-// MARK: - CodeEditorViewWithCallback
-
-struct CodeEditorViewWithCallback: NSViewRepresentable {
-    let configuration: EditorConfiguration
-    @Binding var text: String
-    let language: String
-    let onTextViewReady: (STTextView) -> Void
 
     func makeNSView(context: Context) -> NSScrollView {
+        print("DEBUG makeNSView: Creating STTextView with NSScrollView")
+        print("DEBUG makeNSView: Input text length = \(text.count)")
+        print("DEBUG makeNSView: Input text preview = \(String(text.prefix(50)))")
+
         // Create NSScrollView
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = false
         scrollView.borderType = .noBorder
-        
+
+        // Create STTextView with proper frame - use a reasonable initial size
         let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
         // Set delegate
@@ -43,30 +27,50 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
 
         // Set the text content
         textView.text = text
+        print("DEBUG makeNSView: After setting text: \(textView.text?.count ?? -1) characters")
+        print("DEBUG makeNSView: Text preview after setting: \(String((textView.text ?? "").prefix(50)))")
+
+        // Apply configuration
+        applyConfiguration(to: textView)
+
+        // Plugin system has been removed - custom functionality would be integrated directly
+        // if configuration.enableCustomPlugin {
+        //     // Custom annotation functionality would be integrated directly into STTextView
+        // }
 
         // Configure text view for scroll view
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.textContainer?.widthTracksTextView = true
         textView.textContainer?.heightTracksTextView = false
-        
+
         // Set the text view as the document view
         scrollView.documentView = textView
-        
-        // Apply configuration
-        applyConfiguration(to: textView)
 
-        // Notify that text view is ready
-        onTextViewReady(textView)
+        // Ensure the text view is properly laid out
+        textView.invalidateIntrinsicContentSize()
+
+        // NSTextView handles layout automatically
+        textView.needsLayout = true
+        textView.needsDisplay = true
+
+        // Text color will be set by applyConfiguration
 
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context _: Context) {
         guard let textView = scrollView.documentView as? STTextView else { return }
+        print("DEBUG updateNSView: Called with text length = \(text.count)")
+        print("DEBUG updateNSView: Current textView text length = \(textView.text?.count ?? -1)")
+
         // Update text if changed
         if textView.text != text {
+            print("DEBUG updateNSView: Text changed, updating...")
             textView.text = text
+            print("DEBUG updateNSView: After update: \(textView.text?.count ?? -1) characters")
+        } else {
+            print("DEBUG updateNSView: Text unchanged")
         }
 
         // Update configuration
@@ -92,6 +96,9 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         )
 
         // Colors
+        print("DEBUG applyConfiguration: theme = \(configuration.theme)")
+        print("DEBUG applyConfiguration: textColor = \(configuration.theme.textColor)")
+        print("DEBUG applyConfiguration: backgroundColor = \(configuration.theme.backgroundColor)")
         textView.textColor = configuration.theme.textColor
         textView.backgroundColor = configuration.theme.backgroundColor
         textView.selectedLineHighlightColor = configuration.theme.selectedLineColor
@@ -115,28 +122,25 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         paragraphStyle.defaultTabInterval = CGFloat(configuration.tabWidth) * 7.0
         paragraphStyle.lineSpacing = configuration.lineSpacing
         textView.defaultParagraphStyle = paragraphStyle
-
-        // Set language for syntax highlighting using file extension
-        textView.setLanguage(fileExtension: language)
     }
 
     // MARK: - Coordinator
 
     @MainActor
     class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
-        var parent: CodeEditorViewWithCallback
+        var parent: CodeEditorView
 
-        init(_ parent: CodeEditorViewWithCallback) {
+        init(_ parent: CodeEditorView) {
             self.parent = parent
             super.init()
         }
 
         // MARK: - STTextViewDelegate
-        
+
         func undoManager(for textView: STTextView) -> UndoManager? {
             return nil
         }
-        
+
         func textViewWillChangeText(_ notification: Notification) {
             // Default implementation
         }
@@ -150,7 +154,7 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         func textViewDidChangeSelection(_ notification: Notification) {
             // Handle selection changes if needed
         }
-        
+
         func textView(
             _ textView: STTextView,
             shouldChangeTextIn affectedCharRange: NSTextRange,
@@ -158,7 +162,7 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         ) -> Bool {
             return true
         }
-        
+
         func textView(
             _ textView: STTextView,
             willChangeTextIn affectedCharRange: NSTextRange,
@@ -166,7 +170,7 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         ) {
             // Default implementation
         }
-        
+
         func textView(
             _ textView: STTextView,
             didChangeTextIn affectedCharRange: NSTextRange,
@@ -174,26 +178,26 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         ) {
             // Default implementation
         }
-        
+
         func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
             return false
         }
-        
+
         func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
             // Default implementation
         }
-        
+
         func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
             fatalError("Completion view controller not implemented")
         }
-        
+
         func textViewInsertionPointView(
             _ textView: STTextView,
             frame: CGRect
         ) -> (any STInsertionPointIndicatorProtocol)? {
             return nil
         }
-        
+
         func textView(
             _ textView: STTextView,
             clickedOnAttachment attachment: NSTextAttachment,
@@ -201,7 +205,7 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         ) -> Bool {
             return false
         }
-        
+
         func textView(
             _ textView: STTextView,
             shouldAllowInteractionWith attachment: NSTextAttachment,

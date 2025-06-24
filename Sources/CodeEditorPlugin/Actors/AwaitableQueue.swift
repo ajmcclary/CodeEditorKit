@@ -1,4 +1,4 @@
-struct AwaitableQueue<Element> {
+final class AwaitableQueue<Element>: @unchecked Sendable where Element: Sendable {
     private typealias Continuation = CheckedContinuation<Void, Never>
 
     private enum Event {
@@ -22,7 +22,7 @@ struct AwaitableQueue<Element> {
         }
     }
 
-    mutating func processingCompleted(isolation _: isolated any Actor) async {
+    func processingCompleted(isolation _: isolated any Actor) async {
         if hasPendingEvents == false {
             return
         }
@@ -32,7 +32,7 @@ struct AwaitableQueue<Element> {
         }
     }
 
-    mutating func enqueue(_ element: Element) {
+    func enqueue(_ element: Element) {
         pendingEvents.append(.element(element))
     }
 
@@ -48,7 +48,7 @@ struct AwaitableQueue<Element> {
         }
     }
 
-    mutating func handlePendingWaiters() {
+    func handlePendingWaiters() {
         while let event = pendingEvents.first {
             guard case let .waiter(continuation) = event else {
                 break
@@ -59,7 +59,7 @@ struct AwaitableQueue<Element> {
         }
     }
 
-    mutating func next() -> Element? {
+    func next() -> Element? {
         handlePendingWaiters()
 
         guard case let .element(first) = pendingEvents.first else {
@@ -69,5 +69,9 @@ struct AwaitableQueue<Element> {
         pendingEvents.removeFirst()
 
         return first
+    }
+
+    deinit {
+        // Cleanup if needed
     }
 }

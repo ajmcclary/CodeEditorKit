@@ -1,7 +1,7 @@
 import Foundation
 
 /// A versioned wrapper for data with associated version tracking
-public struct Versioned<Version: Comparable, Value> {
+public struct Versioned<Version: Comparable & Sendable, Value: Sendable>: Sendable {
     public let value: Value
     public let version: Version
 

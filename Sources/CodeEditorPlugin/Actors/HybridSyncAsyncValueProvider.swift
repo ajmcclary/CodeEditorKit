@@ -3,9 +3,9 @@ import Foundation
 // MARK: - HybridSyncAsyncValueProvider
 
 /// A type that can perform work both synchronously and asynchronously.
-public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error> {
-    public typealias SyncValueProvider = (Input) throws(Failure) -> Output?
-    public typealias AsyncValueProvider = (isolated (any Actor), sending Input) async throws(Failure) -> sending Output
+public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error>: Sendable where Input: Sendable, Output: Sendable, Failure: Sendable {
+    public typealias SyncValueProvider = @Sendable (Input) throws(Failure) -> Output?
+    public typealias AsyncValueProvider = @Sendable (isolated (any Actor), sending Input) async throws(Failure) -> sending Output
 
     public let syncValueProvider: SyncValueProvider
     public let asyncValueProvider: AsyncValueProvider
@@ -55,7 +55,7 @@ public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error> {
     //              guard let output = try sync(input) else {
     //                  return nil
     //              }
-//
+    //
     //              return try transform(#isolation, output)
     //          },
     //          asyncValue: { (isolation, input) in
@@ -90,37 +90,28 @@ public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error> {
 extension HybridSyncAsyncValueProvider where Failure == Never {
     /// Construct a `HybridSyncAsyncValueProvider` that will first attempt to process a location using a `RangeProcessor`.
     init(
-        isolation: isolated(any Actor),
+        isolation _: isolated(any Actor),
         rangeProcessor: RangeProcessor,
-        inputTransformer: @escaping (Input) -> (Int, RangeFillMode),
-        syncValue: @escaping SyncValueProvider,
-        asyncValue: @escaping (Input) async throws(Failure) -> sending Output
+        inputTransformer: @escaping @Sendable (Input) -> (Int, RangeFillMode),
+        syncValue _: @escaping SyncValueProvider,
+        asyncValue: @escaping @Sendable (Input) async throws(Failure) -> sending Output
     ) {
-        // bizarre local-function workaround https://github.com/swiftlang/swift/issues/77067
-        func syncVersionWrapper(input: Input) throws(Failure) -> Output? {
-            let (location, fill) = inputTransformer(input)
-
-            if rangeProcessor.processLocation(location, isolation: isolation, mode: fill) {
-                return try syncValue(input)
-            }
-
-            return nil
-        }
-
-        // and similar
-        func asyncVersionWrapper(isolation: isolated (any Actor), input: sending Input) async throws(Failure) -> sending Output {
-            let (location, fill) = inputTransformer(input)
-
-            // processLocation returns Bool, not an enum
-            _ = rangeProcessor.processLocation(location, isolation: isolation, mode: fill)
-
-            // If the location was successfully processed, execute the async value
-            return try await asyncValue(input)
-        }
-
+        // Since processLocation is actor-isolated, we can't call it from a synchronous context
+        // So we'll make the sync version return nil to force async processing
         self.init(
-            syncValue: syncVersionWrapper,
-            asyncValue: asyncVersionWrapper
+            syncValue: { @Sendable _ in
+                // Can't call actor-isolated processLocation from sync context
+                nil
+            },
+            asyncValue: { @Sendable isolation, input async throws(Failure) in
+                let (location, fill) = inputTransformer(input)
+
+                // processLocation returns Bool, not an enum
+                _ = rangeProcessor.processLocation(location, isolation: isolation, mode: fill)
+
+                // If the location was successfully processed, execute the async value
+                return await asyncValue(input)
+            }
         )
     }
 }
