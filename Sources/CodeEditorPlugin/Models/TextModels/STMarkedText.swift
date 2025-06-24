@@ -17,7 +17,7 @@ package final class STMarkedText: CustomDebugStringConvertible {
     package var debugDescription: String {
         "markedText: \"\(markedText.string)\", markedRange: \(markedRange), selectedRange: \(selectedRange)"
     }
-    
+
     deinit {
         // Cleanup if needed
     }

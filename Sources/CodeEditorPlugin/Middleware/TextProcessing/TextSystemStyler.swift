@@ -49,7 +49,7 @@ public final class TextSystemStyler<Interface: TextSystemInterface> {
     public func validate(_ target: RangeTarget = .all) {
         validator.validate(target)
     }
-    
+
     deinit {
         // Cleanup if needed
     }

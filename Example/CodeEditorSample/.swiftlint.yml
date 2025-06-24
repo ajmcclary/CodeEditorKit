@@ -1,8 +1,13 @@
+# SwiftLint configuration for CodeEditorSample
+# Relaxed configuration for sample/demo code with educational focus
+
 excluded:
   - .build
   - Package.swift
   - "**/.build"
+  - Sources/**/Resources
 
+# Relaxed limits for demo project with extensive code samples
 line_length:
   warning: 120
   error: 150
@@ -15,9 +20,13 @@ type_body_length:
   warning: 800    # Very lenient for sample code providers
   error: 2000
 
+function_body_length:
+  warning: 100    # Sample functions often demonstrate complex examples
+  error: 200
+
 cyclomatic_complexity:
-  warning: 15
-  error: 25
+  warning: 20     # More lenient for educational examples
+  error: 30
 
 identifier_name:
   min_length:
@@ -27,11 +36,29 @@ identifier_name:
     warning: 40
     error: 50
 
+# Disabled rules for sample/demo code
 disabled_rules:
   - todo # Allow TODOs in example/demo code
   - blanket_disable_command # Allow broad disables for sample code files
+  - missing_docs # Sample code doesn't need comprehensive documentation
+  - type_contents_order # Sample code should prioritize clarity over organization
+  - force_unwrapping # Sample code may use force unwrapping for clarity
+  - trailing_whitespace # Handled by SwiftFormat
+  - opening_brace # Handled by SwiftFormat
+  - closure_spacing # Handled by SwiftFormat
+  - operator_whitespace # Handled by SwiftFormat
+
+# Enable some basic quality rules
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - contains_over_first_not_nil
+  - sorted_imports
+  - unused_optional_binding
+  - redundant_nil_coalescing
 
 # Comments explaining the relaxed rules for this demo project
 # This is a sample/demo project containing extensive code examples
-# for multiple programming languages, so file and type length
-# limits are intentionally relaxed.
+# for multiple programming languages, so many restrictions are relaxed
+# to prioritize code clarity and educational value over strict style.

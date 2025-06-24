@@ -126,13 +126,13 @@ public final class RangeValidator<Content: VersionedContent> {
         // if we have pending requests, we have to start over
         pendingSet.removeAll()
     }
-    
+
     deinit {
         // Cleanup if needed
     }
-    
+
     // MARK: - Private Properties
-    
+
     private var length: Int {
         content.currentLength
     }
@@ -144,9 +144,9 @@ public final class RangeValidator<Content: VersionedContent> {
     private var invalidSet: IndexSet {
         fullSet.subtracting(validSet)
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Computes the next contiguous invalid range
     private func nextNeededRange(in set: IndexSet) -> NSRange? {
         // the candidate set is:

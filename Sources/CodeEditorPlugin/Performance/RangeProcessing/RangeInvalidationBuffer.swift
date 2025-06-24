@@ -12,18 +12,18 @@ public final class RangeInvalidationBuffer {
 
     private var state = State.idle
     public var invalidationHandler: Handler = { _ in }
-    
+
     private var isEmpty: Bool {
-        if case .buffering(let target, _) = state {
+        if case let .buffering(target, _) = state {
             return target.isEmpty
         }
         return true
     }
 
     public init() {}
-    
+
     // MARK: - Public Methods
-    
+
     public func beginBuffering() {
         switch state {
         case .idle:
@@ -60,7 +60,7 @@ public final class RangeInvalidationBuffer {
             state = .buffering(existing.union(target), count)
         }
     }
-    
+
     deinit {
         // Cleanup if needed
     }

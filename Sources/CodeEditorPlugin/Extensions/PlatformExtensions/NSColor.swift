@@ -77,7 +77,7 @@ extension NSColor {
 }
 
 extension Int64 {
-    internal func duplicate4bits() -> Int64 {
+    func duplicate4bits() -> Int64 {
         (self << 4) + self
     }
 }

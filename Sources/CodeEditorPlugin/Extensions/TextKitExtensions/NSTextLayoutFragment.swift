@@ -1,11 +1,11 @@
 #if os(macOS) && !targetEnvironment(macCatalyst)
-    import AppKit
+import AppKit
 #elseif os(iOS) || os(visionOS)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 extension NSTextLayoutFragment {
@@ -13,7 +13,7 @@ extension NSTextLayoutFragment {
         textLineFragments.contains(where: \.isExtraLineFragment)
     }
 
-    public func textLineFragment(
+    func textLineFragment(
         at location: NSTextLocation,
         in textContentManager: NSTextContentManager? = nil
     ) -> NSTextLineFragment? {
@@ -33,7 +33,7 @@ extension NSTextLayoutFragment {
         }
     }
 
-    public func textLineFragment(at location: CGPoint, in _: NSTextContentManager? = nil) -> NSTextLineFragment? {
+    func textLineFragment(at location: CGPoint, in _: NSTextContentManager? = nil) -> NSTextLineFragment? {
         textLineFragments.first { lineFragment in
             CGRect(origin: layoutFragmentFrame.origin, size: lineFragment.typographicBounds.size).contains(location)
         }

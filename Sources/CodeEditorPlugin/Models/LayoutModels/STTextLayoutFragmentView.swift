@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STTextLayoutFragmentView
@@ -33,38 +33,38 @@ public class STTextLayoutFragmentView: NSView {
 
     private func setup() {
         #if canImport(AppKit)
-            wantsLayer = true
+        wantsLayer = true
         #endif
         #if canImport(UIKit)
-            backgroundColor = .clear
+        backgroundColor = .clear
         #elseif canImport(AppKit)
-            // backgroundColor not available on NSView
+        // backgroundColor not available on NSView
         #endif
     }
 
     #if canImport(UIKit)
 
     #elseif canImport(AppKit)
-        override public func draw(_ dirtyRect: NSRect) {
-            super.draw(dirtyRect)
+    override public func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
 
-            guard let layoutFragment else {
-                return
-            }
-
-            // Get the graphics context
-            guard let context = NSGraphicsContext.current?.cgContext else {
-                return
-            }
-
-            // Draw the layout fragment
-            layoutFragment.draw(at: .zero, in: context)
+        guard let layoutFragment else {
+            return
         }
 
-        /// Text views need a flipped coordinate system on macOS
-        override public var isFlipped: Bool {
-            true
+        // Get the graphics context
+        guard let context = NSGraphicsContext.current?.cgContext else {
+            return
         }
+
+        // Draw the layout fragment
+        layoutFragment.draw(at: .zero, in: context)
+    }
+
+    /// Text views need a flipped coordinate system on macOS
+    override public var isFlipped: Bool {
+        true
+    }
     #endif
 
     deinit {

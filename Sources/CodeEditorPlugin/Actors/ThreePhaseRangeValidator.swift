@@ -139,13 +139,13 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         get { primaryValidator.name }
         set { primaryValidator.name = newValue }
     }
-    
+
     deinit {
         // Cleanup if needed
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func handlePrimaryValidation(of range: NSRange, isolation: isolated (any Actor)) {
         let target = RangeTarget.range(range)
 
@@ -177,10 +177,9 @@ public final class ThreePhaseRangeValidator<Content: VersionedContent> {
         requestingVersion: Content.Version,
         isolation _: isolated (any Actor)
     ) async {
-        guard
-            requestingVersion == version,
-            let validator = secondaryValidator,
-            let provider = configuration.secondaryProvider
+        guard requestingVersion == version,
+              let validator = secondaryValidator,
+              let provider = configuration.secondaryProvider
         else {
             return
         }

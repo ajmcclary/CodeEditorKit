@@ -1,0 +1,43 @@
+# SwiftFormat configuration for CodeEditorSample
+# Basic formatting for sample/demo code with educational focus
+
+# Indentation - match main project
+--indent 4
+--indentcase false
+--smarttabs enabled
+--tabwidth 4
+--xcodeindentation enabled
+
+# Spacing
+--commas inline
+--semicolons inline
+--trimwhitespace always
+
+# Wrapping - preserve for sample code clarity
+--wraparguments preserve
+--wrapparameters preserve
+--wrapcollections preserve
+--wrapconditions preserve
+--wrapternary default
+
+# Organization - minimal for sample code
+--importgrouping alpha
+--extensionacl on-declarations
+
+# Rules to enable
+--enable isEmpty
+--enable void
+--enable wrap
+
+# Rules to disable for sample code clarity
+--disable organizeDeclarations  # Keep sample code structure clear
+--disable redundantSelf  # Swift 6 concurrency requires explicit self
+--disable todos  # Allow TODOs in sample code
+
+# File exclusions
+--exclude .build
+--exclude **/*.generated.swift
+--exclude Sources/**/Resources
+
+# Swift version
+--swiftversion 6.0

@@ -1,6 +1,6 @@
-import XCTest
 @testable import CodeEditorPlugin
 @testable import CodeEditorSample
+import XCTest
 
 /// Test without MainActor to see if basic functionality works
 final class BasicFunctionalityTests: XCTestCase {

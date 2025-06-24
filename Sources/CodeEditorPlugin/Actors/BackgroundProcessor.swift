@@ -94,9 +94,9 @@ final class BackgroundProcessor<Value> {
     ) async throws -> T {
         // older compilers believe this is unsafe
         #if compiler(<6.1)
-            nonisolated(unsafe) let localSelf = self
+        nonisolated(unsafe) let localSelf = self
         #else
-            let localSelf = self
+        let localSelf = self
         #endif
 
         return try await withCheckedThrowingContinuation(isolation: isolation) { continuation in
@@ -109,7 +109,7 @@ final class BackgroundProcessor<Value> {
             }
         }
     }
-    
+
     deinit {
         // Cleanup if needed
     }

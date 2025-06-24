@@ -128,14 +128,14 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
     func textView(_ textView: NSTextView, shouldChangeTextIn _: NSRange, replacementString _: String?) -> Bool {
         // Convert NSRange to NSTextRange for STTextView compatibility
         // This is a simplified approach - in a full implementation, we'd need proper conversion
-        if let stTextView = textView as? STTextView {
+        if textView is STTextView {
             // For now, just forward with a simple implementation - skip the NSTextRange conversion
             // TODO: Properly convert NSRange to NSTextRange
             return true // source?.textView(stTextView, shouldChangeTextIn: convertedRange, replacementString: replacementString) ?? true
         }
         return true
     }
-    
+
     deinit {
         // Cleanup if needed
     }

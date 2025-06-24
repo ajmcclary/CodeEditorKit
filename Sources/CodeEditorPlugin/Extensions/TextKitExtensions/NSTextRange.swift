@@ -1,15 +1,15 @@
 #if os(macOS) && !targetEnvironment(macCatalyst)
-    import AppKit
+import AppKit
 #elseif os(iOS) || os(visionOS)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 extension NSTextRange {
-    public convenience init?(_ nsRange: NSRange, in textContentManager: NSTextContentManager) {
+    convenience init?(_ nsRange: NSRange, in textContentManager: NSTextContentManager) {
         guard let start = textContentManager.location(
             textContentManager.documentRange.location,
             offsetBy: nsRange.location
@@ -20,12 +20,12 @@ extension NSTextRange {
         self.init(location: start, end: end)
     }
 
-    public func length(in textContentManager: NSTextContentManager) -> Int {
+    func length(in textContentManager: NSTextContentManager) -> Int {
         textContentManager.offset(from: location, to: endLocation)
     }
 
     /// Returns a copy of this range clamped to the given limiting range.
-    public func clamped(to textRange: NSTextRange) -> Self? {
+    func clamped(to textRange: NSTextRange) -> Self? {
         let beginLocation = {
             if self.location <= textRange.location {
                 return textRange.location

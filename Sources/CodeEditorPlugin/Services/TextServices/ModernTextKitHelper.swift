@@ -198,7 +198,7 @@ public final class ModernTextKitHelper: @unchecked Sendable {
         //     view.layoutRegions = [.safeArea, .cornerAvoidance]
         // }
     }
-    
+
     deinit {
         // Cleanup if needed
     }
@@ -208,18 +208,18 @@ public final class ModernTextKitHelper: @unchecked Sendable {
 
 extension NSTextView {
     /// Apply modern configuration for the current macOS version
-    public func applyModernConfiguration() {
+    func applyModernConfiguration() {
         ModernTextKitHelper.configureTextView(self)
         ModernTextKitHelper.optimizeTextViewPerformance(self)
     }
 
     /// Check if this text view is using TextKit2
-    public var isUsingTextKit2: Bool {
+    var isUsingTextKit2: Bool {
         textLayoutManager != nil
     }
 
     /// Get the appropriate text content manager for the current configuration
-    public var modernTextContentManager: NSTextContentManager? {
+    var modernTextContentManager: NSTextContentManager? {
         // This property should be accessed from the text view directly
         // as the helper doesn't store a reference to the text view
         nil

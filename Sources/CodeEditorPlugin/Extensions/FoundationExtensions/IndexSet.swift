@@ -4,9 +4,9 @@ extension IndexSet {
     init(integersIn nsRange: NSRange) {
         self.init(integersIn: Range(nsRange) ?? 0 ..< 0)
     }
-    
+
     /// Initialize from an array of NSRanges
-    public init(ranges: [NSRange]) {
+    init(ranges: [NSRange]) {
         self.init()
         for range in ranges {
             insert(integersIn: range.location ..< (range.location + range.length))
@@ -14,12 +14,12 @@ extension IndexSet {
     }
 
     /// Insert a range into the index set
-    public mutating func insert(range: NSRange) {
+    mutating func insert(range: NSRange) {
         insert(integersIn: range.location ..< (range.location + range.length))
     }
 
     /// Apply mutations to the index set
-    public mutating func applying(_ mutations: [RangeMutation]) {
+    mutating func applying(_ mutations: [RangeMutation]) {
         // Apply each mutation in order
         for mutation in mutations {
             let range = mutation.range
@@ -51,7 +51,7 @@ extension IndexSet {
     }
 
     /// Get NSRange view of the index set
-    public var nsRangeView: [NSRange] {
+    var nsRangeView: [NSRange] {
         var ranges: [NSRange] = []
         for range in rangeView {
             ranges.append(NSRange(location: range.lowerBound, length: range.count))

@@ -52,7 +52,7 @@ public typealias TokenProvider = HybridSyncAsyncValueProvider<NSRange, TokenAppl
 
 extension TokenProvider {
     /// A TokenProvider that returns an empty set of tokens for all requests.
-    public static var empty: TokenProvider {
+    static var empty: TokenProvider {
         .init(
             syncValue: { _ in
                 .noChange
@@ -64,7 +64,7 @@ extension TokenProvider {
     }
 
     /// A TokenProvider that returns an empty set of tokens for all async requests, but fails to resolve tokens synchronously.
-    public static var asyncOnlyNone: TokenProvider {
+    static var asyncOnlyNone: TokenProvider {
         .init(
             syncValue: { _ in
                 nil

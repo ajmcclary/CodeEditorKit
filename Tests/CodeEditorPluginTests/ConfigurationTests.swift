@@ -94,8 +94,15 @@ final class ConfigurationTests: XCTestCase {
         let textView = STTextView()
         textView.text = "Test content"
 
-        // Create NSTextRange for annotation (simplified approach)
-        let mockRange = NSTextRange(location: NSTextLocation(), end: NSTextLocation())
+        // Create NSTextRange for annotation using document range
+        guard let documentRange = textView.textContentStorage?.documentRange else {
+            XCTFail("Could not get document range")
+            return
+        }
+        guard let mockRange = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+            XCTFail("Could not create NSTextRange")
+            return
+        }
         let annotation = STAnnotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)
@@ -104,7 +111,7 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.count, 1)
         XCTAssertEqual(textView.allAnnotations.first?.id, "test")
     }
-    
+
     deinit {
         // Cleanup if needed
     }

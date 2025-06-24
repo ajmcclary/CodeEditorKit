@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STInsertionPointView
@@ -21,18 +21,18 @@ public class STInsertionPointView: NSView {
 
     private func setup() {
         #if canImport(UIKit)
-            backgroundColor = UIColor.label
+        backgroundColor = UIColor.label
         #elseif canImport(AppKit)
-            wantsLayer = true
-            layer?.backgroundColor = NSColor.labelColor.cgColor
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.labelColor.cgColor
         #endif
     }
 
     #if canImport(AppKit)
-        /// Text views need a flipped coordinate system on macOS
-        override public var isFlipped: Bool {
-            true
-        }
+    /// Text views need a flipped coordinate system on macOS
+    override public var isFlipped: Bool {
+        true
+    }
     #endif
 
     deinit {

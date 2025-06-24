@@ -2,10 +2,12 @@ import Cocoa
 
 public struct Theme {
     // MARK: - Props
+
     public let colors: Colors
     public let fonts: Fonts
 
     // MARK: - Lifecycle
+
     public init(colors: Colors, fonts: Fonts) {
         self.colors = colors
         self.fonts = fonts

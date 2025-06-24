@@ -67,13 +67,13 @@ public final class RangeProcessor {
     private var contentLength: Int {
         configuration.lengthProvider()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func deltaRange(for mode: RangeFillMode) -> Range<Int> {
         switch mode {
         case .skip,
-            .optional:
+             .optional:
             configuration.deltaRange
 
         case .required:
@@ -288,7 +288,7 @@ public final class RangeProcessor {
             self.pendingEventQueue.handlePendingWaiters()
         }
     }
-    
+
     private func updateProcessedLocation(by delta: Int) {
         precondition(processedUpperBound >= 0)
 
@@ -300,7 +300,7 @@ public final class RangeProcessor {
 
         processedUpperBound = newMax
     }
-    
+
     deinit {
         // Cleanup if needed
     }

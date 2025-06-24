@@ -1,7 +1,7 @@
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    @preconcurrency import AppKit
+@preconcurrency import AppKit
 #endif
 
 // MARK: - STTextLayoutFragment
@@ -58,11 +58,11 @@ final class STTextLayoutFragment: NSTextLayoutFragment {
             // Determine paragraph style. Either from the fragment string or default for the text view
             // the ExtraLineFragment doesn't have information about typing attributes hence layout manager uses a default values - not from text view
             let paragraphStyle: NSParagraphStyle = if !lineFragment.isExtraLineFragment,
-                let lineParagraphStyle = lineFragment.attributedString.attribute(
-                    .paragraphStyle,
-                    at: 0,
-                    effectiveRange: nil
-                ) as? NSParagraphStyle {
+                                                      let lineParagraphStyle = lineFragment.attributedString.attribute(
+                                                          .paragraphStyle,
+                                                          at: 0,
+                                                          effectiveRange: nil
+                                                      ) as? NSParagraphStyle {
                 lineParagraphStyle
             } else {
                 defaultParagraphStyle
@@ -104,7 +104,7 @@ final class STTextLayoutFragment: NSTextLayoutFragment {
             let sourceString = lineFragment.attributedString.string
 
             guard let lineFragmentTextRange = lineFragment.textRange(in: self),
-                let lineFragmentRange = Range(lineFragment.characterRange, in: sourceString)
+                  let lineFragmentRange = Range(lineFragment.characterRange, in: sourceString)
             else {
                 continue
             }
@@ -171,7 +171,7 @@ final class STTextLayoutFragment: NSTextLayoutFragment {
 
         context.restoreGState()
     }
-    
+
     deinit {
         // Cleanup if needed
     }

@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STTextViewDelegate
@@ -83,52 +83,52 @@ public protocol STTextViewDelegate: AnyObject {
 // MARK: - Default implementation
 
 extension STTextViewDelegate {
-    public func undoManager(for _: STTextView) -> UndoManager? {
+    func undoManager(for _: STTextView) -> UndoManager? {
         nil
     }
 
-    public func textViewWillChangeText(_: Notification) {
+    func textViewWillChangeText(_: Notification) {
         //
     }
 
-    public func textViewDidChangeText(_: Notification) {
+    func textViewDidChangeText(_: Notification) {
         //
     }
 
-    public func textViewDidChangeSelection(_: Notification) {
+    func textViewDidChangeSelection(_: Notification) {
         //
     }
 
-    public func textView(_: STTextView, shouldChangeTextIn _: NSTextRange, replacementString _: String?) -> Bool {
+    func textView(_: STTextView, shouldChangeTextIn _: NSTextRange, replacementString _: String?) -> Bool {
         true
     }
 
-    public func textView(_: STTextView, willChangeTextIn _: NSTextRange, replacementString _: String) {}
+    func textView(_: STTextView, willChangeTextIn _: NSTextRange, replacementString _: String) {}
 
-    public func textView(_: STTextView, didChangeTextIn _: NSTextRange, replacementString _: String) {}
+    func textView(_: STTextView, didChangeTextIn _: NSTextRange, replacementString _: String) {}
 
-    public func textView(_: STTextView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
+    func textView(_: STTextView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
         false
     }
 
-    public func textView(_: STTextView, insertCompletionItem _: any STCompletionItem) {
+    func textView(_: STTextView, insertCompletionItem _: any STCompletionItem) {
         // Default implementation
     }
 
     @MainActor
-    public func textViewCompletionViewController(_: STTextView) -> any STCompletionViewControllerProtocol {
+    func textViewCompletionViewController(_: STTextView) -> any STCompletionViewControllerProtocol {
         STCompletionViewController()
     }
 
-    public func textViewInsertionPointView(_: STTextView, frame _: CGRect) -> (STInsertionPointIndicatorProtocol)? {
+    func textViewInsertionPointView(_: STTextView, frame _: CGRect) -> (STInsertionPointIndicatorProtocol)? {
         nil
     }
 
-    public func textView(_: STTextView, clickedOnAttachment _: NSTextAttachment, at _: any NSTextLocation) -> Bool {
+    func textView(_: STTextView, clickedOnAttachment _: NSTextAttachment, at _: any NSTextLocation) -> Bool {
         false
     }
 
-    public func textView(
+    func textView(
         _: STTextView,
         shouldAllowInteractionWith _: NSTextAttachment,
         at _: any NSTextLocation

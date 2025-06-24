@@ -1,43 +1,43 @@
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 #if canImport(UIKit)
-    class STTextLocation: UITextPosition {
-        let location: NSTextLocation
+class STTextLocation: UITextPosition {
+    let location: NSTextLocation
 
-        override var debugDescription: String {
-            location.description
-        }
-
-        init(location: NSTextLocation) {
-            self.location = location
-            super.init()
-        }
-
-        deinit {
-            // Cleanup if needed
-        }
+    override var debugDescription: String {
+        location.description
     }
+
+    init(location: NSTextLocation) {
+        self.location = location
+        super.init()
+    }
+
+    deinit {
+        // Cleanup if needed
+    }
+}
 #else
-    /// macOS equivalent - UITextPosition doesn't exist on macOS
-    class STTextLocation {
-        let location: NSTextLocation
+/// macOS equivalent - UITextPosition doesn't exist on macOS
+class STTextLocation {
+    let location: NSTextLocation
 
-        var debugDescription: String {
-            location.description
-        }
-
-        init(location: NSTextLocation) {
-            self.location = location
-        }
-
-        deinit {
-            // Cleanup if needed
-        }
+    var debugDescription: String {
+        location.description
     }
+
+    init(location: NSTextLocation) {
+        self.location = location
+    }
+
+    deinit {
+        // Cleanup if needed
+    }
+}
 #endif
 
 extension NSTextLocation {

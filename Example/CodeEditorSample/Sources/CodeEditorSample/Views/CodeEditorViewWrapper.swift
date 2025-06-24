@@ -28,7 +28,14 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
     let language: String
     let onTextViewReady: (STTextView) -> Void
 
-    func makeNSView(context: Context) -> STTextView {
+    func makeNSView(context: Context) -> NSScrollView {
+        // Create NSScrollView
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = false
+        scrollView.borderType = .noBorder
+        
         let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
         // Set delegate
@@ -37,16 +44,26 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         // Set the text content
         textView.text = text
 
+        // Configure text view for scroll view
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.heightTracksTextView = false
+        
+        // Set the text view as the document view
+        scrollView.documentView = textView
+        
         // Apply configuration
         applyConfiguration(to: textView)
 
         // Notify that text view is ready
         onTextViewReady(textView)
 
-        return textView
+        return scrollView
     }
 
-    func updateNSView(_ textView: STTextView, context _: Context) {
+    func updateNSView(_ scrollView: NSScrollView, context _: Context) {
+        guard let textView = scrollView.documentView as? STTextView else { return }
         // Update text if changed
         if textView.text != text {
             textView.text = text
@@ -115,6 +132,14 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         }
 
         // MARK: - STTextViewDelegate
+        
+        func undoManager(for textView: STTextView) -> UndoManager? {
+            return nil
+        }
+        
+        func textViewWillChangeText(_ notification: Notification) {
+            // Default implementation
+        }
 
         func textViewDidChangeText(_ notification: Notification) {
             if let textView = notification.object as? STTextView {
@@ -122,8 +147,67 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
             }
         }
 
-        func textViewDidChangeSelection(_: Notification) {
+        func textViewDidChangeSelection(_ notification: Notification) {
             // Handle selection changes if needed
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            shouldChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String?
+        ) -> Bool {
+            return true
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            willChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String
+        ) {
+            // Default implementation
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            didChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String
+        ) {
+            // Default implementation
+        }
+        
+        func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
+            return false
+        }
+        
+        func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
+            // Default implementation
+        }
+        
+        func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
+            fatalError("Completion view controller not implemented")
+        }
+        
+        func textViewInsertionPointView(
+            _ textView: STTextView,
+            frame: CGRect
+        ) -> (any STInsertionPointIndicatorProtocol)? {
+            return nil
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            clickedOnAttachment attachment: NSTextAttachment,
+            at location: any NSTextLocation
+        ) -> Bool {
+            return false
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            shouldAllowInteractionWith attachment: NSTextAttachment,
+            at location: any NSTextLocation
+        ) -> Bool {
+            return true
         }
     }
 }

@@ -161,7 +161,7 @@ public final class SinglePhaseRangeValidator<Content: VersionedContent> {
     public func validationCompleted(isolation: isolated any Actor) async {
         await eventQueue.processingCompleted(isolation: isolation)
     }
-    
+
     deinit {
         // Cleanup if needed
     }

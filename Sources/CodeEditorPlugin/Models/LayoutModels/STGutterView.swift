@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STGutterView
@@ -72,7 +72,7 @@ public class STGutterView: NSView {
         for (lineNumber, lineRange) in lineRanges {
             // Calculate the line rect using layout manager
             if let layoutManager = textView.layoutManager,
-                let textContainer = textView.textContainer {
+               let textContainer = textView.textContainer {
                 let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
                 let lineRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
 
@@ -117,12 +117,12 @@ public class STGutterView: NSView {
 
         // Process visible lines
         currentIndex = visibleStartIndex
-        while currentIndex < visibleEndIndex && currentIndex < text.endIndex {
+        while currentIndex < visibleEndIndex, currentIndex < text.endIndex {
             // Find start of current line
             var lineStart = currentIndex
             if lineStart > text.startIndex {
                 // Search backwards for the previous newline
-                let searchRange = text.startIndex..<lineStart
+                let searchRange = text.startIndex ..< lineStart
                 if let lastNewline = text[searchRange].lastIndex(of: "\n") {
                     lineStart = text.index(after: lastNewline)
                 } else {

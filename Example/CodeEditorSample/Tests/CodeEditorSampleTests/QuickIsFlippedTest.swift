@@ -1,6 +1,6 @@
 import AppKit
-import XCTest
 @testable import CodeEditorPlugin
+import XCTest
 
 /// Simple test to verify isFlipped behavior
 final class QuickIsFlippedTest: XCTestCase {

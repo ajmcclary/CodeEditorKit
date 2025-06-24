@@ -31,7 +31,7 @@ public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error> {
     public func sync(_ input: Input) throws(Failure) -> Output? {
         try syncValueProvider(input)
     }
-    
+
     /// Create an instance that can statically prove to the compiler that asyncValueProvider is isolated to the MainActor.
     @preconcurrency
     public init(
@@ -43,52 +43,53 @@ public struct HybridSyncAsyncValueProvider<Input, Output, Failure: Error> {
             try await mainActorAsyncValue(input)
         }
     }
-    
-    // MARK: - Work in Progress
-    // I've not yet gotten these working right, but I think there could be something here.
-    
-    // Returns a new `HybridSyncAsyncValueProvider` with a new output type.
-    //	func map<T>(_ transform: @escaping (isolated (any Actor)?, Output) throws -> T) -> HybridSyncAsyncValueProvider<Input, T, any Error> {
-    //		.init(
-    //			syncValue: { input in
-    //				guard let output = try sync(input) else {
-    //					return nil
-    //				}
-//
-    //				return try transform(#isolation, output)
-    //			},
-    //			asyncValue: { (isolation, input) in
-    //				try transform(isolation, try await self.async(isolation: isolation, input))
-    //			}
-    //		)
-    //	}
 
-    //	/// Transforms the `Failure` type of `HybridSyncAsyncValueProvider` to `Never`,
-    //	func catching(_ block: @escaping (Input, Error) -> Output) -> HybridSyncAsyncValueProvider<Input, Output, Never> {
-    //		.init(
-    //			syncValue: {
-    //				do {
-    //					return try self.sync($0)
-    //				} catch {
-    //					return block($0, error)
-    //				}
-    //			},
-    //			asyncValue: {
-    //				do {
-    //					return try await self.async(isolation: $0, $1)
-    //				} catch {
-    //					return block($1, error)
-    //				}
-    //			}
-    //		)
-    //	}
+    // MARK: - Work in Progress
+
+    // I've not yet gotten these working right, but I think there could be something here.
+
+    // Returns a new `HybridSyncAsyncValueProvider` with a new output type.
+    //  func map<T>(_ transform: @escaping (isolated (any Actor)?, Output) throws -> T) -> HybridSyncAsyncValueProvider<Input, T, any Error> {
+    //      .init(
+    //          syncValue: { input in
+    //              guard let output = try sync(input) else {
+    //                  return nil
+    //              }
+//
+    //              return try transform(#isolation, output)
+    //          },
+    //          asyncValue: { (isolation, input) in
+    //              try transform(isolation, try await self.async(isolation: isolation, input))
+    //          }
+    //      )
+    //  }
+
+    //  /// Transforms the `Failure` type of `HybridSyncAsyncValueProvider` to `Never`,
+    //  func catching(_ block: @escaping (Input, Error) -> Output) -> HybridSyncAsyncValueProvider<Input, Output, Never> {
+    //      .init(
+    //          syncValue: {
+    //              do {
+    //                  return try self.sync($0)
+    //              } catch {
+    //                  return block($0, error)
+    //              }
+    //          },
+    //          asyncValue: {
+    //              do {
+    //                  return try await self.async(isolation: $0, $1)
+    //              } catch {
+    //                  return block($1, error)
+    //              }
+    //          }
+    //      )
+    //  }
 }
 
 // MARK: - RangeProcessor Integration
 
 extension HybridSyncAsyncValueProvider where Failure == Never {
     /// Construct a `HybridSyncAsyncValueProvider` that will first attempt to process a location using a `RangeProcessor`.
-    public init(
+    init(
         isolation: isolated(any Actor),
         rangeProcessor: RangeProcessor,
         inputTransformer: @escaping (Input) -> (Int, RangeFillMode),
@@ -107,12 +108,12 @@ extension HybridSyncAsyncValueProvider where Failure == Never {
         }
 
         // and similar
-        func asyncVersionWrapper(isolation: isolated(any Actor), input: sending Input) async throws(Failure) -> sending Output {
+        func asyncVersionWrapper(isolation: isolated (any Actor), input: sending Input) async throws(Failure) -> sending Output {
             let (location, fill) = inputTransformer(input)
 
             // processLocation returns Bool, not an enum
             _ = rangeProcessor.processLocation(location, isolation: isolation, mode: fill)
-            
+
             // If the location was successfully processed, execute the async value
             return try await asyncValue(input)
         }

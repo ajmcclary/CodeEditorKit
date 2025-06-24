@@ -1,13 +1,13 @@
 #if os(macOS)
-    import AppKit
+import AppKit
 #endif
 
 #if os(iOS) || targetEnvironment(macCatalyst)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 // MARK: - STMessageLineAnnotation
@@ -30,7 +30,7 @@ open class STMessageLineAnnotation: STLineAnnotation {
         self.kind = kind
         self.location = location
     }
-    
+
     deinit {
         // Cleanup if needed
     }

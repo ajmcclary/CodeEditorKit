@@ -3,7 +3,6 @@ import Foundation
 // MARK: - Systems Programming Samples
 
 enum SystemsSamples {
-
     // MARK: - Go Sample
 
     static let goSample = """

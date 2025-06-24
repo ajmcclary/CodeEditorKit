@@ -1,8 +1,8 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STAnnotationsContentView
@@ -27,10 +27,10 @@ public class STAnnotationsContentView: NSView {
 
     private func setup() {
         #if canImport(UIKit)
-            backgroundColor = .clear
+        backgroundColor = .clear
         #elseif canImport(AppKit)
-            wantsLayer = true
-            layer?.backgroundColor = NSColor.clear.cgColor
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
         #endif
     }
 
@@ -38,12 +38,12 @@ public class STAnnotationsContentView: NSView {
 
     #elseif canImport(AppKit)
 
-        /// Text views need a flipped coordinate system on macOS
-        override public var isFlipped: Bool {
-            true
-        }
+    /// Text views need a flipped coordinate system on macOS
+    override public var isFlipped: Bool {
+        true
+    }
     #endif
-    
+
     deinit {
         // Cleanup if needed
     }

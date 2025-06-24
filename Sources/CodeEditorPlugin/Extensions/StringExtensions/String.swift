@@ -7,9 +7,9 @@ public typealias TextSnapshotProvider = (NSRange, Any?) -> String?
 extension String {
     static var nativeUTF16Encoding: String.Encoding {
         #if _endian(little)
-            return .utf16LittleEndian
+        return .utf16LittleEndian
         #else
-            return .utf16BigEndian
+        return .utf16BigEndian
         #endif
     }
 
@@ -38,9 +38,9 @@ extension String {
         // have to remove the bom from the string
         return substring.data(using: encoding)
     }
-    
+
     /// Produces a `TextProvider` for use with `Predicate` resolution.
-    @available(*, deprecated, renamed: "predicateTextProvider") public var cursorTextProvider: TextProvider {
+    @available(*, deprecated, renamed: "predicateTextProvider") var cursorTextProvider: TextProvider {
         { nsRange, _ in
             guard let range = Range<String.Index>(nsRange, in: self) else {
                 return nil
@@ -50,11 +50,11 @@ extension String {
         }
     }
 
-    public var predicateTextProvider: TextProvider {
+    var predicateTextProvider: TextProvider {
         predicateTextSnapshotProvider
     }
 
-    public var predicateTextSnapshotProvider: TextSnapshotProvider {
+    var predicateTextSnapshotProvider: TextSnapshotProvider {
         { nsRange, _ in
             guard let range = Range<String.Index>(nsRange, in: self) else {
                 return nil

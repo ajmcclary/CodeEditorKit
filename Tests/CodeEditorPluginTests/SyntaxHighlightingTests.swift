@@ -261,7 +261,7 @@ final class SyntaxHighlightingTests: XCTestCase {
             XCTAssertLessThanOrEqual(currentEnd, nextStart, "Tokens should not overlap")
         }
     }
-    
+
     deinit {
         // Cleanup if needed
     }

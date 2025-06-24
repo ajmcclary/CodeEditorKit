@@ -1,18 +1,18 @@
 #if os(macOS) && !targetEnvironment(macCatalyst)
-    import AppKit
+import AppKit
 #elseif os(iOS) || os(visionOS)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 extension NSTextLineFragment {
     /// Whether the line fragment is for the extra line fragment at the end of a document.
     ///
     /// The layout manager uses the extra line fragment when the last character in a document causes a line or paragraph break. This extra line fragment has no corresponding glyph.
-    public var isExtraLineFragment: Bool {
+    var isExtraLineFragment: Bool {
         // textLineFragment.characterRange.isEmpty the extra line fragment at the end of a document.
         characterRange.isEmpty
     }
@@ -22,7 +22,7 @@ extension NSTextLineFragment {
     /// Returned range is relative to the document range origin.
     /// - Parameter textLayoutFragment: Text layout fragment
     /// - Returns: Text range or nil
-    public func textRange(in textLayoutFragment: NSTextLayoutFragment) -> NSTextRange? {
+    func textRange(in textLayoutFragment: NSTextLayoutFragment) -> NSTextRange? {
         guard let textContentManager = textLayoutFragment.textLayoutManager?.textContentManager else {
             assertionFailure()
             return nil

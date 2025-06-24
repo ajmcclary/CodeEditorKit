@@ -22,7 +22,7 @@ public final class TokenSystemValidator<Interface: TextSystemInterface> {
             }
         )
     }
-    
+
     deinit {
         // Cleanup if needed
     }

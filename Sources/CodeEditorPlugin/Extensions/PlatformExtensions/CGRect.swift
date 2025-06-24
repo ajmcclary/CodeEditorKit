@@ -1,17 +1,17 @@
 import Foundation
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 extension CGRect {
     /// Returns a pixel-aligned rect
     var pixelAligned: CGRect {
         #if os(macOS)
-            return NSIntegralRectWithOptions(self, .alignAllEdgesNearest)
+        return NSIntegralRectWithOptions(self, .alignAllEdgesNearest)
         #else
-            return integral
+        return integral
         #endif
     }
 

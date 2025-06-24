@@ -50,7 +50,7 @@ public final class ThreePhaseTextSystemStyler<Interface: TextSystemInterface> {
         get { validator.name }
         set { validator.name = newValue }
     }
-    
+
     deinit {
         // Cleanup if needed
     }

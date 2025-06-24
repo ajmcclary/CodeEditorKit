@@ -1,17 +1,17 @@
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 
-    public typealias PlatformTextView = UITextView
-    public typealias PlatformScrollView = UIScrollView
-    public typealias PlatformColor = UIColor
-    public typealias PlatformFont = UIFont
+public typealias PlatformTextView = UITextView
+public typealias PlatformScrollView = UIScrollView
+public typealias PlatformColor = UIColor
+public typealias PlatformFont = UIFont
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 
-    public typealias PlatformTextView = NSTextView
-    public typealias PlatformScrollView = NSScrollView
-    public typealias PlatformColor = NSColor
-    public typealias PlatformFont = NSFont
+public typealias PlatformTextView = NSTextView
+public typealias PlatformScrollView = NSScrollView
+public typealias PlatformColor = NSColor
+public typealias PlatformFont = NSFont
 #endif
 
 import os.log
@@ -92,9 +92,9 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     /// The color for highlighting the selected line
     public var selectedLineHighlightColor: PlatformColor = {
         #if canImport(UIKit)
-            return UIColor.tintColor.withAlphaComponent(0.15)
+        return UIColor.tintColor.withAlphaComponent(0.15)
         #else
-            return NSColor.controlAccentColor.withAlphaComponent(0.15)
+        return NSColor.controlAccentColor.withAlphaComponent(0.15)
         #endif
     }() {
         didSet {
@@ -219,9 +219,9 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func setupDefaultTheme() {
         #if canImport(AppKit)
-            backgroundColor = NSColor.textBackgroundColor
-            textColor = NSColor.labelColor
-            font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        backgroundColor = NSColor.textBackgroundColor
+        textColor = NSColor.labelColor
+        font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         #endif
     }
 
@@ -230,7 +230,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     @objc
     func handleTextStorageDidProcessEditing(_ notification: Notification) {
         guard let textStorage = notification.object as? NSTextStorage,
-            textStorage === self.textStorage
+              textStorage === self.textStorage
         else {
             return
         }
@@ -249,7 +249,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func applySyntaxHighlighting() {
         guard isSyntaxHighlightingEnabled,
-            let textStorage
+              let textStorage
         else {
             return
         }
@@ -260,7 +260,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func applySyntaxHighlighting(in range: NSRange) {
         guard let textStorage,
-            range.location != NSNotFound
+              range.location != NSNotFound
         else {
             return
         }
@@ -321,8 +321,8 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
             // Double-check the adjusted range is valid
             guard adjustedRange.location >= 0,
-                adjustedRange.length > 0,
-                adjustedRange.location + adjustedRange.length <= textStorage.length
+                  adjustedRange.length > 0,
+                  adjustedRange.location + adjustedRange.length <= textStorage.length
             else {
                 continue
             }
@@ -339,8 +339,8 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
                 length: token.range.length
             )
             if adjustedRange.location >= 0,
-                adjustedRange.length > 0,
-                adjustedRange.location + adjustedRange.length <= textStorage.length {
+               adjustedRange.length > 0,
+               adjustedRange.location + adjustedRange.length <= textStorage.length {
                 coveredRanges.append(adjustedRange)
             }
         }
@@ -495,7 +495,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         let textContainer = textContainer
 
         guard let layoutManager,
-            let textContainer
+              let textContainer
         else {
             return
         }
@@ -639,7 +639,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
             // Convert visible rect to text range
             if let layoutManager,
-                let textContainer {
+               let textContainer {
                 let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
                 return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             }
@@ -648,8 +648,9 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         // Fallback to entire text range
         return NSRange(location: 0, length: string.count)
     }
-    
+
     // MARK: - Additional STTextView Methods
+
     // Removed problematic textContainer override that was blocking text container setup
 
     public var widthTracksTextView: Bool {

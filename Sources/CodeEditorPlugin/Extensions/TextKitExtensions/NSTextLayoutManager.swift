@@ -1,11 +1,11 @@
 #if os(macOS) && !targetEnvironment(macCatalyst)
-    import AppKit
+import AppKit
 #elseif os(iOS) || os(visionOS)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 extension NSTextLayoutManager {
@@ -13,11 +13,11 @@ extension NSTextLayoutManager {
     ///
     /// Only valid when ``state`` greater than NSTextLayoutFragment.State.estimatedUsageBounds
     @nonobjc
-    public func extraLineTextLayoutFragment() -> NSTextLayoutFragment? {
+    func extraLineTextLayoutFragment() -> NSTextLayoutFragment? {
         var extraTextLayoutFragment: NSTextLayoutFragment?
         enumerateTextLayoutFragments(from: nil, options: .reverse) { textLayoutFragment in
             if textLayoutFragment.state.rawValue > NSTextLayoutFragment.State.estimatedUsageBounds.rawValue,
-                textLayoutFragment.isExtraLineFragment {
+               textLayoutFragment.isExtraLineFragment {
                 extraTextLayoutFragment = textLayoutFragment
             }
             return false
@@ -29,11 +29,11 @@ extension NSTextLayoutManager {
     ///
     /// Only valid when ``state`` greater than NSTextLayoutFragment.State.estimatedUsageBounds
     @nonobjc
-    public func extraLineTextLineFragment() -> NSTextLineFragment? {
+    func extraLineTextLineFragment() -> NSTextLineFragment? {
         if let textLayoutFragment = extraLineTextLayoutFragment() {
             let textLineFragments = textLayoutFragment.textLineFragments
             if textLineFragments.count > 1, let lastTextLineFragment = textLineFragments.last,
-                lastTextLineFragment.isExtraLineFragment {
+               lastTextLineFragment.isExtraLineFragment {
                 return lastTextLineFragment
             }
         }
@@ -42,11 +42,11 @@ extension NSTextLayoutManager {
 }
 
 extension NSTextLayoutManager {
-    public func textLineFragment(at location: NSTextLocation) -> NSTextLineFragment? {
+    func textLineFragment(at location: NSTextLocation) -> NSTextLineFragment? {
         textLayoutFragment(for: location)?.textLineFragment(at: location)
     }
 
-    public func textLineFragment(at point: CGPoint) -> NSTextLineFragment? {
+    func textLineFragment(at point: CGPoint) -> NSTextLineFragment? {
         textLayoutFragment(for: point)?.textLineFragment(at: point)
     }
 }
@@ -57,7 +57,7 @@ extension NSTextLayoutManager {
     ///   - point: A CGPoint that represents the location of the tap or click.
     ///   - containerLocation: A NSTextLocation that describes the contasiner location.
     /// - Returns: A location
-    public func location(
+    func location(
         interactingAt point: CGPoint,
         inContainerAt containerLocation: NSTextLocation
     ) -> NSTextLocation? {
@@ -91,12 +91,12 @@ extension NSTextLayoutManager {
     /// - Returns: Typographic bounds of the range.
     ///
     /// Returns a union of each segment frame in the range, which may be larger than the area needed to layout the range.
-    public func typographicBounds(in textRange: NSTextRange) -> CGRect? {
+    func typographicBounds(in textRange: NSTextRange) -> CGRect? {
         textSegmentFrame(in: textRange, type: .standard, options: [.upstreamAffinity, .rangeNotRequired])
     }
 
     ///  A text segment is both logically and visually contiguous portion of the text content inside a line fragment.
-    public func textSegmentFrame(
+    func textSegmentFrame(
         at location: NSTextLocation,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity]
@@ -107,7 +107,7 @@ extension NSTextLayoutManager {
     /// A text segment is both logically and visually contiguous portion of the text content inside a line fragment.
     /// Text segment is a logically and visually contiguous portion of the text content inside a line fragment that you specify with a single text range.
     /// The framework enumerates the segments visually from left to right.
-    public func textSegmentFrame(
+    func textSegmentFrame(
         in textRange: NSTextRange,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity, .rangeNotRequired]
@@ -128,7 +128,7 @@ extension NSTextLayoutManager {
     }
 
     /// Enumerates text segments in the text range you provide.
-    public func textSegmentFrames(
+    func textSegmentFrames(
         in textRange: NSTextRange,
         type: NSTextLayoutManager.SegmentType,
         options: SegmentOptions = [.upstreamAffinity, .rangeNotRequired]
@@ -151,7 +151,7 @@ extension NSTextLayoutManager {
     ///   - block: A closure you provide that determines if the enumeration finishes early.
     /// - Returns: An NSTextLocation, or nil. If the method enumerates at least one fragment, it returns the edge of the enumerated range.
     @discardableResult
-    public func enumerateTextLayoutFragments(
+    func enumerateTextLayoutFragments(
         in range: NSTextRange,
         options: NSTextLayoutFragment.EnumerationOptions = [],
         using block: (NSTextLayoutFragment) -> Bool
@@ -168,11 +168,11 @@ extension NSTextLayoutManager {
 }
 
 extension NSTextLayoutManager {
-    public var insertionPointLocations: [NSTextLocation] {
+    var insertionPointLocations: [NSTextLocation] {
         insertionPointSelections.flatMap(\.textRanges).map(\.location).sorted { $0 < $1 }
     }
 
-    public var insertionPointSelections: [NSTextSelection] {
+    var insertionPointSelections: [NSTextSelection] {
         textSelections.filter(kTextSelectionInsertionPointFilter)
     }
 }
@@ -197,7 +197,7 @@ extension NSTextLayoutManager {
     /// A String in range
     /// - Parameter range: Text range
     /// - Returns: String in the range
-    package func substring(in range: NSTextRange) -> String {
+    func substring(in range: NSTextRange) -> String {
         guard !range.isEmpty else {
             return ""
         }
@@ -224,7 +224,7 @@ extension NSTextLayoutManager {
         return output
     }
 
-    package func textSelectionsRanges(_ options: TextSelectionRangesOptions = .withInsertionPoints) -> [NSTextRange] {
+    func textSelectionsRanges(_ options: TextSelectionRangesOptions = .withInsertionPoints) -> [NSTextRange] {
         if options.contains(.withoutInsertionPoints) {
             textSelections.flatMap(\.textRanges).filter { !$0.isEmpty }.sorted { $0.location < $1.location }
         } else {
@@ -232,7 +232,7 @@ extension NSTextLayoutManager {
         }
     }
 
-    package func textSelectionsString() -> String? {
+    func textSelectionsString() -> String? {
         textSelectionsRanges(.withoutInsertionPoints)
             .compactMap { textRange in
                 substring(in: textRange)
@@ -240,11 +240,11 @@ extension NSTextLayoutManager {
             .joined(separator: "\n")
     }
 
-    package func textSelectionsAttributedString() -> NSAttributedString? {
+    func textSelectionsAttributedString() -> NSAttributedString? {
         textAttributedString(in: textSelectionsRanges(.withoutInsertionPoints))
     }
 
-    package func textAttributedString(at location: any NSTextLocation) -> NSAttributedString? {
+    func textAttributedString(at location: any NSTextLocation) -> NSAttributedString? {
         if let range = NSTextRange(location: location, end: self.location(location, offsetBy: 1)), !range.isEmpty {
             return textAttributedString(in: range)
         }
@@ -252,11 +252,11 @@ extension NSTextLayoutManager {
         return nil
     }
 
-    package func textAttributedString(in textRange: NSTextRange) -> NSAttributedString? {
+    func textAttributedString(in textRange: NSTextRange) -> NSAttributedString? {
         textAttributedString(in: [textRange])
     }
 
-    package func textAttributedString(in textRanges: [NSTextRange]) -> NSAttributedString? {
+    func textAttributedString(in textRanges: [NSTextRange]) -> NSAttributedString? {
         let attributedString = textRanges.reduce(NSMutableAttributedString()) { partialResult, range in
             if let attributedString = textContentManager?.attributedString(in: range) {
                 if partialResult.length != 0 {

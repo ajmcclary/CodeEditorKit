@@ -7,11 +7,18 @@ struct CodeEditorView: NSViewRepresentable {
     @Binding var text: String
     let language: String
 
-    func makeNSView(context: Context) -> STTextView {
-        print("DEBUG makeNSView: Creating STTextView")
+    func makeNSView(context: Context) -> NSScrollView {
+        print("DEBUG makeNSView: Creating STTextView with NSScrollView")
         print("DEBUG makeNSView: Input text length = \(text.count)")
         print("DEBUG makeNSView: Input text preview = \(String(text.prefix(50)))")
 
+        // Create NSScrollView
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = false
+        scrollView.borderType = .noBorder
+        
         // Create STTextView with proper frame - use a reasonable initial size
         let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
@@ -31,6 +38,15 @@ struct CodeEditorView: NSViewRepresentable {
         //     // Custom annotation functionality would be integrated directly into STTextView
         // }
 
+        // Configure text view for scroll view
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.heightTracksTextView = false
+        
+        // Set the text view as the document view
+        scrollView.documentView = textView
+        
         // Ensure the text view is properly laid out
         textView.invalidateIntrinsicContentSize()
 
@@ -40,10 +56,11 @@ struct CodeEditorView: NSViewRepresentable {
 
         // Text color will be set by applyConfiguration
 
-        return textView
+        return scrollView
     }
 
-    func updateNSView(_ textView: STTextView, context _: Context) {
+    func updateNSView(_ scrollView: NSScrollView, context _: Context) {
+        guard let textView = scrollView.documentView as? STTextView else { return }
         print("DEBUG updateNSView: Called with text length = \(text.count)")
         print("DEBUG updateNSView: Current textView text length = \(textView.text?.count ?? -1)")
 
@@ -119,6 +136,14 @@ struct CodeEditorView: NSViewRepresentable {
         }
 
         // MARK: - STTextViewDelegate
+        
+        func undoManager(for textView: STTextView) -> UndoManager? {
+            return nil
+        }
+        
+        func textViewWillChangeText(_ notification: Notification) {
+            // Default implementation
+        }
 
         func textViewDidChangeText(_ notification: Notification) {
             if let textView = notification.object as? STTextView {
@@ -126,8 +151,67 @@ struct CodeEditorView: NSViewRepresentable {
             }
         }
 
-        func textViewDidChangeSelection(_: Notification) {
+        func textViewDidChangeSelection(_ notification: Notification) {
             // Handle selection changes if needed
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            shouldChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String?
+        ) -> Bool {
+            return true
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            willChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String
+        ) {
+            // Default implementation
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            didChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String
+        ) {
+            // Default implementation
+        }
+        
+        func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
+            return false
+        }
+        
+        func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
+            // Default implementation
+        }
+        
+        func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
+            fatalError("Completion view controller not implemented")
+        }
+        
+        func textViewInsertionPointView(
+            _ textView: STTextView,
+            frame: CGRect
+        ) -> (any STInsertionPointIndicatorProtocol)? {
+            return nil
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            clickedOnAttachment attachment: NSTextAttachment,
+            at location: any NSTextLocation
+        ) -> Bool {
+            return false
+        }
+        
+        func textView(
+            _ textView: STTextView,
+            shouldAllowInteractionWith attachment: NSTextAttachment,
+            at location: any NSTextLocation
+        ) -> Bool {
+            return true
         }
     }
 }

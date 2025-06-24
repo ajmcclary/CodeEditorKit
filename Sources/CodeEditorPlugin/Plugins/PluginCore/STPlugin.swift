@@ -19,13 +19,13 @@ public protocol STPlugin {
 }
 
 extension STPlugin {
-    public func tearDown() {
+    func tearDown() {
         // Nothing
     }
 }
 
 extension STPlugin where Coordinator == Void {
-    public func makeCoordinator(context _: CoordinatorContext) -> Coordinator {
+    func makeCoordinator(context _: CoordinatorContext) -> Coordinator {
         Coordinator()
     }
 }

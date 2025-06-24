@@ -1,5 +1,5 @@
-import XCTest
 @testable import CodeEditorSample
+import XCTest
 
 final class SampleCodeTests: XCTestCase {
     // MARK: - Sample Code Enum Tests

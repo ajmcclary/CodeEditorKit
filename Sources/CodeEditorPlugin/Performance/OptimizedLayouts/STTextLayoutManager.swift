@@ -1,19 +1,19 @@
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STTextLayoutManager
 
 open class STTextLayoutManager: NSTextLayoutManager {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        /// Posted when the selected range of characters changes.
-        public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
+    /// Posted when the selected range of characters changes.
+    public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
     #else
-        /// Posted when the selected range of characters changes.
-        public static let didChangeSelectionNotification = Notification
-            .Name("STTextView.didChangeSelectionNotification")
+    /// Posted when the selected range of characters changes.
+    public static let didChangeSelectionNotification = Notification
+        .Name("STTextView.didChangeSelectionNotification")
     #endif
 
     private static let needsBoundsWorkaround = testIfNeedsBoundsWorkaround()
@@ -36,7 +36,7 @@ open class STTextLayoutManager: NSTextLayoutManager {
         }
         return rect
     }
-    
+
     deinit {
         // Cleanup if needed
     }

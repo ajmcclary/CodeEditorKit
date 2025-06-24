@@ -1,7 +1,7 @@
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #elseif canImport(AppKit)
-    import AppKit
+import AppKit
 #endif
 
 // MARK: - STTextViewProtocol
@@ -11,7 +11,7 @@ package protocol STTextViewProtocol {
     associatedtype GutterView
 
     var showsInvisibleCharacters: Bool { get set }
-    
+
     associatedtype Color
     associatedtype Font
     associatedtype Delegate
@@ -50,7 +50,7 @@ package protocol STTextViewProtocol {
     var textDelegate: Delegate? { get set }
 
     var gutterView: GutterView? { get }
-    
+
     func toggleRuler(_ sender: Any?)
 
     var textSelection: NSRange { get set }

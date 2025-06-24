@@ -1,23 +1,23 @@
 #if os(macOS) && !targetEnvironment(macCatalyst)
-    import AppKit
+import AppKit
 #elseif os(iOS) || os(visionOS)
-    #if canImport(UIKit)
-        import UIKit
-    #elseif canImport(AppKit)
-        import AppKit
-    #endif
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 #endif
 
 extension NSTextContentManager {
-    public func location(at offset: Int) -> NSTextLocation? {
+    func location(at offset: Int) -> NSTextLocation? {
         location(documentRange.location, offsetBy: offset)
     }
 
-    public var length: Int {
+    var length: Int {
         offset(from: documentRange.location, to: documentRange.endLocation)
     }
 
-    public func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
+    func location(line lineIdx: Int, character characterIdx: Int? = 0) -> NSTextLocation? {
         let linesTextElements = textElements(for: documentRange)
         guard linesTextElements.indices ~= lineIdx else {
             // https://forums.swift.org/t/invalid-diagnostic-location-after-text-edit/54761
@@ -32,7 +32,7 @@ extension NSTextContentManager {
         return location(startLocation, offsetBy: characterIdx ?? 0)
     }
 
-    public func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
+    func position(_ location: NSTextLocation) -> (row: Int, column: Int)? {
         let linesElements = textElements(for: documentRange)
         if linesElements.isEmpty {
             return nil
@@ -57,7 +57,7 @@ extension NSTextContentManager {
     /// Attributed string for the range
     /// - Parameter range: Text range, or nil for the whole document.
     /// - Returns: Attributed string, or nil.
-    public func attributedString(in range: NSTextRange?) -> NSAttributedString? {
+    func attributedString(in range: NSTextRange?) -> NSAttributedString? {
         if let range, range.isEmpty {
             return nil
         }
@@ -76,9 +76,9 @@ extension NSTextContentManager {
         result.beginEditing()
         enumerateTextElements(from: range?.location) { textElement in
             if let range,
-                let textParagraph = textElement as? NSTextParagraph,
-                let elementRange = textElement.elementRange,
-                let textContentManager = textElement.textContentManager {
+               let textParagraph = textElement as? NSTextParagraph,
+               let elementRange = textElement.elementRange,
+               let textContentManager = textElement.textContentManager {
                 var shouldStop = false
                 var needAdjustment = false
                 var constrainedElementRange = elementRange
@@ -156,7 +156,7 @@ extension NSTextContentManager {
     /// This method can return a set of elements that don’t fill the entire range if the entire range isn’t synchronously available. Uses `enumerateTextElements(from:options:using:)` to fill the array.
     ///
     /// This is working implementation, in contrary to buggy `textElements(for:)` (FB10019859)
-    public func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
+    func textElementsNotBuggy(for range: NSTextRange) -> [NSTextElement] {
         var elements: [NSTextElement] = []
 
         if range.location == documentRange.endLocation {

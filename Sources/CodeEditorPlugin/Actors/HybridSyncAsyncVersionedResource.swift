@@ -66,7 +66,7 @@ final class HybridSyncAsyncVersionedResource<Resource> {
             return
         }
     }
-    
+
     deinit {
         // Cleanup if needed
     }

@@ -6,17 +6,17 @@ public enum RangeTarget: Hashable, Sendable {
     case all
 
     public static let empty = Self.set(IndexSet())
-    
+
     public var isEmpty: Bool {
         switch self {
-        case .set(let indexSet):
-            return indexSet.isEmpty
+        case let .set(indexSet):
+            indexSet.isEmpty
 
-        case .range(let range):
-            return range.length == 0
+        case let .range(range):
+            range.length == 0
 
         case .all:
-            return false
+            false
         }
     }
 
@@ -44,9 +44,9 @@ public enum RangeTarget: Hashable, Sendable {
             IndexSet(integersIn: 0 ..< length)
         }
     }
-    
+
     // MARK: - Set Operations
-    
+
     public func union(_ other: Self) -> Self {
         switch (self, other) {
         case (.set(var set), let .set(rhs)):

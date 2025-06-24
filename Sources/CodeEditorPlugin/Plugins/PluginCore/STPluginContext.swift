@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 public protocol PluginContext<Plugin> {
     associatedtype Plugin: STPlugin
-    
+
     var coordinator: Plugin.Coordinator { get }
     var textView: STTextView { get }
     var events: STPluginEvents { get }

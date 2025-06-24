@@ -3,7 +3,6 @@ import Foundation
 // MARK: - Web Development Samples
 
 enum WebSamples {
-
     // MARK: - JavaScript Sample
 
     static let javascriptSample = """

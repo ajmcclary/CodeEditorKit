@@ -3,6 +3,7 @@ import CodeEditorPlugin
 import Foundation
 
 // MARK: - Custom Annotation Plugin
+
 // Note: Plugin system has been removed - this is kept for reference
 
 // final class CustomAnnotationPlugin: STPlugin {
