@@ -1,20 +1,18 @@
 //  Created by Claude Code
-//  Missing view type for consolidated package
+//  Content view for STTextView
 
 import Foundation
 #if canImport(UIKit)
 import UIKit
-public typealias PlatformView = UIView
 #elseif canImport(AppKit)
 import AppKit
-public typealias PlatformView = NSView
 #endif
 
 /// Content view that contains layout fragments
-public class STContentView: PlatformView {
+public class STContentView: NSView, @preconcurrency NSTextInputClient {
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         setup()
     }
     
@@ -24,15 +22,146 @@ public class STContentView: PlatformView {
     }
     
     private func setup() {
-        #if canImport(AppKit)
-        wantsLayer = true
-        #endif
+        self.wantsLayer = true
     }
     
-    #if canImport(AppKit)
     // Text views need a flipped coordinate system on macOS
     public override var isFlipped: Bool {
         return true
     }
-    #endif
+    
+    // Accept first responder for text input
+    public override var acceptsFirstResponder: Bool {
+        if let textView = superview?.superview as? STTextView {
+            return textView.isEditable
+        }
+        return true
+    }
+    
+    public override func becomeFirstResponder() -> Bool {
+        let result = super.becomeFirstResponder()
+        if result {
+            needsDisplay = true
+        }
+        return result
+    }
+    
+    // MARK: - Keyboard Events
+    
+    public override func keyDown(with event: NSEvent) {
+        // Use input method system for proper text input
+        interpretKeyEvents([event])
+    }
+    
+    // Handle mouse events for text selection
+    public override func mouseDown(with event: NSEvent) {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            textView.mouseDown(with: event)
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
+    
+    public override func mouseDragged(with event: NSEvent) {
+        if let textView = superview?.superview as? STTextView {
+            textView.mouseDragged(with: event)
+        } else {
+            super.mouseDragged(with: event)
+        }
+    }
+    
+    public override func mouseUp(with event: NSEvent) {
+        if let textView = superview?.superview as? STTextView {
+            textView.mouseUp(with: event)
+        } else {
+            super.mouseUp(with: event)
+        }
+    }
+    
+    // MARK: - NSTextInputClient
+    
+    public func insertText(_ string: Any, replacementRange: NSRange) {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            textView.insertText(string, replacementRange: replacementRange)
+        }
+    }
+    
+    public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            textView.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
+        }
+    }
+    
+    public func unmarkText() {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            textView.unmarkText()
+        }
+    }
+    
+    public func selectedRange() -> NSRange {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.selectedRange()
+        }
+        return NSRange(location: 0, length: 0)
+    }
+    
+    public func markedRange() -> NSRange {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.markedRange()
+        }
+        return NSRange(location: NSNotFound, length: 0)
+    }
+    
+    public func hasMarkedText() -> Bool {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.hasMarkedText()
+        }
+        return false
+    }
+    
+    public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.attributedSubstring(forProposedRange: range, actualRange: actualRange)
+        }
+        return nil
+    }
+    
+    public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.validAttributesForMarkedText()
+        }
+        return []
+    }
+    
+    public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.firstRect(forCharacterRange: range, actualRange: actualRange)
+        }
+        return NSRect.zero
+    }
+    
+    public func characterIndex(for point: NSPoint) -> Int {
+        // Forward to parent STTextView
+        if let textView = superview?.superview as? STTextView {
+            return textView.characterIndex(for: point)
+        }
+        return 0
+    }
+    
+    public override func doCommand(by selector: Selector) {
+        // Forward to parent STTextView or handle directly
+        if let textView = superview?.superview as? STTextView {
+            textView.doCommand(by: selector)
+        }
+    }
 }

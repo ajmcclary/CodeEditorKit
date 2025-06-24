@@ -1,16 +1,16 @@
 # CodeEditor Sample App
 
-A comprehensive sample application demonstrating the various features and configurations of the CodeEditorPlugin package.
+A comprehensive macOS application demonstrating all features of the CodeEditorPlugin package. This sample app provides a complete code editing experience with syntax highlighting, themes, and extensive customization options.
 
 ## Overview
 
 This sample app showcases:
-- Multiple editor configurations (Full Featured, Minimal, Read-Only, Markdown, Presentation)
-- Syntax highlighting for 11+ programming languages
-- 5 different color themes
-- Custom plugin implementation
-- Real-time configuration changes
-- Performance optimizations
+- Full-featured code editor with syntax highlighting for 15+ languages
+- 6 built-in color themes with real-time switching
+- Line numbers, invisible characters, and line highlighting
+- Configuration import/export functionality
+- Multiple editor instances with different configurations
+- Interactive feature tour for new users
 
 ## Features
 
@@ -27,17 +27,20 @@ The app includes several pre-configured editor setups:
 ### 2. Language Support
 
 Demonstrates syntax highlighting for:
-- Swift (using SwiftSyntax)
-- JavaScript
-- TypeScript
+- Swift
+- JavaScript/TypeScript
 - Python
 - Go
 - Rust
-- C++
+- C/C++
 - Java
-- HTML
-- CSS
+- HTML/CSS
 - JSON
+- Ruby
+- Shell/Bash
+- Markdown
+- YAML
+- And more...
 
 ### 3. Color Themes
 
@@ -51,23 +54,24 @@ Includes multiple themes:
 
 ### 4. Editor Features
 
-Configurable options include:
-- Line numbers
-- Invisible characters
-- Line wrapping
-- Current line highlighting
-- Font size adjustment
-- Tab width
-- Line spacing
-- Hardware acceleration
-- Smooth scrolling
+Real-time configurable options:
+- **Line Numbers**: Toggle line number display
+- **Invisible Characters**: Show/hide spaces, tabs, and line breaks
+- **Line Wrapping**: Wrap long lines vs horizontal scrolling
+- **Current Line Highlighting**: Highlight the line containing the cursor
+- **Font Size**: Adjustable from 10pt to 24pt
+- **Tab Width**: Configure spaces per tab (2, 4, or 8)
+- **Tab/Space Conversion**: Use tabs or spaces for indentation
+- **Line Spacing**: Adjust vertical spacing between lines
+- **Editable/Read-only Mode**: Toggle editing capabilities
 
-### 5. Plugin System
+### 5. Additional Features
 
-Demonstrates:
-- Built-in annotations plugin
-- Custom TODO/FIXME highlighting plugin
-- Plugin configuration options
+- **Configuration Import/Export**: Save and load editor configurations as JSON
+- **Status Bar**: Shows cursor position, selection info, and document statistics
+- **Menu Commands**: Keyboard shortcuts for common actions
+- **Feature Tour**: Interactive introduction to all features
+- **Multiple Windows**: Open multiple editor instances
 
 ## Running the Sample
 
@@ -78,8 +82,10 @@ Demonstrates:
 
 2. Run the app:
    ```bash
-   swift run
+   swift run CodeEditorSample
    ```
+
+The app will launch as a native macOS application with its own window and menu bar.
 
 ## Architecture
 
@@ -94,28 +100,26 @@ Demonstrates:
 - **ThemeProvider.swift**: Color theme definitions
 - **CustomAnnotationPlugin.swift**: Example custom plugin
 
-### Key Integration Points
+### Key Features
 
-1. **STTextView Setup**:
+1. **SwiftUI Integration**:
+   The app uses a custom NSViewRepresentable wrapper to integrate STTextView with SwiftUI:
    ```swift
-   let textView = STTextView()
-   textView.textDelegate = delegate
-   textView.showsLineNumbers = true
-   textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+   CodeEditorView(
+       configuration: configuration,
+       text: $text,
+       language: "swift"
+   )
    ```
 
-2. **Syntax Highlighting**:
-   ```swift
-   let highlighter = SyntaxHighlightingCoordinator()
-   let language = highlighter.detectLanguage(from: fileExtension)
-   let tokens = highlighter.highlight(source: code, language: language)
-   ```
+2. **Real-time Configuration Updates**:
+   All settings update the editor in real-time without requiring a restart.
 
-3. **Plugin Integration**:
-   ```swift
-   let plugin = CustomAnnotationPlugin()
-   textView.addPlugin(plugin)
-   ```
+3. **Theme System**:
+   Themes define colors for background, text, keywords, strings, comments, and more.
+
+4. **Status Bar**:
+   Shows line/column position, selection range, and total line count.
 
 ## Customization
 
@@ -131,35 +135,27 @@ Demonstrates:
 2. Define colors for each syntax element
 3. The theme will appear in the theme selector
 
-### Building Custom Plugins
+### Keyboard Shortcuts
 
-1. Implement the `STPlugin` protocol
-2. Create a coordinator for the plugin logic
-3. Register event handlers in `setUp`
-4. Add the plugin to the text view
+- **⌘⇧L**: Toggle line numbers
+- **⌘⇧I**: Toggle invisible characters
+- **⌘+**: Increase font size
+- **⌘-**: Decrease font size
+- **⌘0**: Reset font size
 
-## Performance Tips
+## Requirements
 
-- Use hardware acceleration for large files
-- Enable smooth scrolling for better user experience
-- Consider disabling line numbers for very large files
-- Use read-only mode when editing is not required
+- macOS 14.0 or later
+- Swift 6.0 or later
+- Xcode 16.0 or later
 
 ## Troubleshooting
 
-### Build Issues
+### Common Issues
 
-If you encounter build errors:
-1. Ensure you're using Swift 6.0 or later
-2. Clean the build folder: `swift package clean`
-3. Update dependencies: `swift package update`
-
-### Performance Issues
-
-For better performance:
-1. Disable plugins for large files
-2. Use minimal theme for reduced rendering
-3. Turn off line wrapping for wide content
+1. **Text not visible**: Ensure the theme has proper contrast between text and background colors
+2. **Performance with large files**: Disable line numbers and syntax highlighting for files over 10MB
+3. **Build errors**: Clean build folder with `swift package clean` and rebuild
 
 ## License
 

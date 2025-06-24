@@ -6,6 +6,9 @@ import AppKit
 import SwiftUI
 // Module imports removed - functionality consolidated into CodeEditorPlugin
 
+/*
+// MARK: - This plugin system is being removed - kept for reference during refactor
+
 public class STAnnotationsPlugin: STPlugin {
 
     /// Data Source
@@ -141,3 +144,4 @@ extension STAnnotationsPlugin {
 }
 
 // CGRect extension moved to CGRect+Extensions.swift
+*/

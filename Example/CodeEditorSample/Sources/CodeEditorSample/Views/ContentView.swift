@@ -7,8 +7,10 @@ struct ContentView: View {
     @State private var selectedSample: SampleCode = .swift
     @State private var code: String = ""
     @State private var showConfigurationSidebar = true
-    @State private var showTestView = false
-    @State private var showMinimalTestView = false
+    @State private var showFeatureTour = false
+    @State private var currentTextView: STTextView?
+    @State private var showSplitView = false
+    @State private var splitConfiguration = EditorConfiguration()
     
     var body: some View {
         NavigationSplitView {
@@ -23,41 +25,126 @@ struct ContentView: View {
         } detail: {
             // Main editor view
             VStack(spacing: 0) {
-                // Test button
-                HStack {
-                    Button("Test Editable View") {
-                        showTestView = true
+                // Toolbar
+                EditorToolbar(
+                    configuration: $configuration,
+                    showSplitView: $showSplitView,
+                    showFeatureTour: $showFeatureTour
+                )
+                
+                Divider()
+                
+                // Editor area
+                if showSplitView {
+                    // Split view to compare configurations
+                    HSplitView {
+                        VStack(spacing: 0) {
+                            Text("Configuration: \(selectedPreset.displayName)")
+                                .font(.caption)
+                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity)
+                                .background(Color(NSColor.controlBackgroundColor))
+                            
+                            CodeEditorViewWrapper(
+                                configuration: configuration,
+                                text: $code,
+                                language: selectedSample.fileExtension,
+                                onTextViewReady: { textView in
+                                    currentTextView = textView
+                                }
+                            )
+                        }
+                        
+                        VStack(spacing: 0) {
+                            Text("Configuration: Custom")
+                                .font(.caption)
+                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity)
+                                .background(Color(NSColor.controlBackgroundColor))
+                            
+                            CodeEditorViewWrapper(
+                                configuration: splitConfiguration,
+                                text: $code,
+                                language: selectedSample.fileExtension,
+                                onTextViewReady: { _ in }
+                            )
+                        }
                     }
-                    .padding()
-                    
-                    Button("Minimal Test") {
-                        showMinimalTestView = true
-                    }
-                    .padding()
-                    
-                    Spacer()
+                } else {
+                    // Single editor
+                    CodeEditorViewWrapper(
+                        configuration: configuration,
+                        text: $code,
+                        language: selectedSample.fileExtension,
+                        onTextViewReady: { textView in
+                            currentTextView = textView
+                        }
+                    )
                 }
                 
-                // Code editor
-                CodeEditorView(
-                    configuration: configuration,
-                    text: $code,
-                    language: selectedSample.fileExtension
-                )
-                .background(Color(configuration.theme.backgroundColor))
+                Divider()
+                
+                // Status bar
+                StatusBarView(textView: currentTextView)
+                    .frame(height: 24)
             }
         }
-        .sheet(isPresented: $showTestView) {
-            TestEditableView()
-        }
-        .sheet(isPresented: $showMinimalTestView) {
-            MinimalTextTestView()
+        .sheet(isPresented: $showFeatureTour) {
+            FeatureTourView(isPresented: $showFeatureTour)
         }
         .navigationTitle("CodeEditor Sample")
+        .toolbar {
+            ToolbarItemGroup(placement: .automatic) {
+                Button {
+                    showFeatureTour = true
+                } label: {
+                    Label("Feature Tour", systemImage: "questionmark.circle")
+                }
+                
+                Button {
+                    if let window = NSApp.keyWindow {
+                        ConfigurationExporter.exportConfiguration(configuration, from: window)
+                    }
+                } label: {
+                    Label("Export Config", systemImage: "square.and.arrow.up")
+                }
+                
+                Button {
+                    if let window = NSApp.keyWindow {
+                        ConfigurationExporter.importConfiguration(from: window) { imported in
+                            if let config = imported {
+                                configuration = config
+                            }
+                        }
+                    }
+                } label: {
+                    Label("Import Config", systemImage: "square.and.arrow.down")
+                }
+            }
+        }
         .onAppear {
             // Initialize with sample code
             code = SampleCodeProvider.getCode(for: selectedSample)
             applyPreset(selectedPreset)
+            splitConfiguration = ConfigurationPreset.minimal.configuration
+            
+            // Show feature tour on first launch
+            if !UserDefaults.standard.bool(forKey: "hasSeenFeatureTour") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showFeatureTour = true
+                    UserDefaults.standard.set(true, forKey: "hasSeenFeatureTour")
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleLineNumbers)) { _ in
+            configuration.showLineNumbers.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleInvisibleCharacters)) { _ in
+            configuration.showInvisibleCharacters.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .resetLayout)) { _ in
+            applyPreset(.fullFeatured)
+            selectedPreset = .fullFeatured
         }
     }
     

@@ -78,7 +78,7 @@ final class ConfigurationTests: XCTestCase {
         // Test width tracking
         textView.widthTracksTextView = true
         XCTAssertTrue(textView.widthTracksTextView)
-        XCTAssertTrue(textView.textContainer.widthTracksTextView)
+        XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         
         // Test resizability
         textView.isHorizontallyResizable = false
@@ -88,34 +88,34 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertFalse(textView.isVerticallyResizable)
     }
     
-    // MARK: - Plugin Configuration Tests
+    // MARK: - Annotation Configuration Tests
     
     @MainActor
-    func testPluginAddition() {
+    func testAnnotationAddition() {
         let textView = STTextView()
-        let plugin = MockPlugin()
+        textView.text = "Test content"
         
-        textView.addPlugin(plugin)
+        // Create text range for annotation
+        guard let textContentStorage = textView.textContentStorage else {
+            XCTFail("Text content storage not available")
+            return
+        }
         
-        // Verify plugin was set up
-        XCTAssertTrue(plugin.setUpCalled)
+        guard let startLocation = textContentStorage.location(textContentStorage.documentRange.location, offsetBy: 0),
+              let endLocation = textContentStorage.location(startLocation, offsetBy: 1),
+              let textRange = NSTextRange(location: startLocation, end: endLocation) else {
+            XCTFail("Could not create text range")
+            return
+        }
+        
+        let annotation = STAnnotation(id: "test", range: textRange, content: "Test annotation")
+        
+        textView.addAnnotation(annotation)
+        
+        // Verify annotation was added
+        XCTAssertEqual(textView.allAnnotations.count, 1)
+        XCTAssertEqual(textView.allAnnotations.first?.id, "test")
     }
 }
 
-// MARK: - Mock Plugin
-
-@MainActor
-class MockPlugin: STPlugin {
-    typealias Coordinator = Void
-    
-    var setUpCalled = false
-    var tearDownCalled = false
-    
-    func setUp(context: any PluginContext<MockPlugin>) {
-        setUpCalled = true
-    }
-    
-    func tearDown() {
-        tearDownCalled = true
-    }
-}
+// Note: Plugin system has been removed and functionality integrated directly into STTextView

@@ -5,7 +5,7 @@ import Foundation
 @preconcurrency import AppKit
 
 @MainActor
-class STTextViewDelegateProxy: @preconcurrency STTextViewDelegate {
+class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NSTextViewDelegate {
     weak var source: STTextViewDelegate?
 
     init(source: STTextViewDelegate?) {
@@ -29,30 +29,17 @@ class STTextViewDelegateProxy: @preconcurrency STTextViewDelegate {
     }
 
     func textView(_ textView: STTextView, shouldChangeTextIn affectedCharRange: NSTextRange, replacementString: String?) -> Bool {
-        var result = source?.textView(textView, shouldChangeTextIn: affectedCharRange, replacementString: replacementString) ?? true
-        result = result && textView.plugins.events.reduce(result) { partialResult, events in
-            partialResult && (events.shouldChangeTextHandler?(affectedCharRange, replacementString) ?? true)
-        }
-        return result
+        return source?.textView(textView, shouldChangeTextIn: affectedCharRange, replacementString: replacementString) ?? true
     }
 
     @MainActor
     func textView(_ textView: STTextView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
         source?.textView(textView, willChangeTextIn: affectedCharRange, replacementString: replacementString)
-
-        for events in textView.plugins.events {
-            events.willChangeTextHandler?(affectedCharRange)
-        }
     }
 
     @MainActor
     func textView(_ textView: STTextView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
         source?.textView(textView, didChangeTextIn: affectedCharRange, replacementString: replacementString)
-
-        for events in textView.plugins.events {
-            events.didChangeTextHandler?(affectedCharRange, replacementString)
-        }
-
     }
 
     // Menu customization is not yet supported in the delegate protocol
@@ -117,6 +104,27 @@ class STTextViewDelegateProxy: @preconcurrency STTextViewDelegate {
     
     func textView(_ textView: STTextView, shouldAllowInteractionWith attachment: NSTextAttachment, at location: any NSTextLocation) -> Bool {
         source?.textView(textView, shouldAllowInteractionWith: attachment, at: location) ?? true
+    }
+
+    // MARK: - NSTextViewDelegate forwarding
+    
+    func textDidChange(_ notification: Notification) {
+        // Forward NSTextView's textDidChange to our custom notification
+        if let textView = notification.object as? STTextView {
+            let stNotification = Notification(name: NSText.didChangeNotification, object: textView)
+            textViewDidChangeText(stNotification)
+        }
+    }
+    
+    func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        // Convert NSRange to NSTextRange for STTextView compatibility
+        // This is a simplified approach - in a full implementation, we'd need proper conversion
+        if let stTextView = textView as? STTextView {
+            // For now, just forward with a simple implementation - skip the NSTextRange conversion
+            // TODO: Properly convert NSRange to NSTextRange
+            return true // source?.textView(stTextView, shouldChangeTextIn: convertedRange, replacementString: replacementString) ?? true
+        }
+        return true
     }
 
 }

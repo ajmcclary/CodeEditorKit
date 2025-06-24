@@ -1,0 +1,319 @@
+# SwiftLint configuration for Allegory
+# Optimized for Swift 6, TCA, and modern Swift concurrency
+
+# Paths to include/exclude
+# Only analyze files in Sources and Tests directories
+included:
+  - Sources
+  - Tests
+
+# Exclude everything else is handled by only including Sources and Tests
+# But we can still exclude generated files within those directories
+excluded:
+  - .build
+  - Sources/**/*.generated.swift
+  - Tests/**/*.generated.swift
+
+# Analyzer rules
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+  - capture_variable
+  - explicit_self
+  - typesafe_array_init
+  - unused_parameter # Swift 6 - catch unused parameters
+
+# Rules configuration
+disabled_rules:
+  - file_length # Allow longer files for complex TCA features
+  - type_body_length # Allow longer types for complex reducers
+  - function_body_length # Allow longer reducer bodies
+  - line_length # Handled by SwiftFormat
+  - trailing_whitespace # Handled by SwiftFormat
+  - todo # We use TODOs for tracking
+  - missing_docs # Documentation is optional for internal code
+  - switch_case_alignment # Handled by SwiftFormat
+  - type_contents_order # TCA patterns have specific ordering needs
+  - switch_case_on_newline # TCA switch statements can be complex
+  - multiple_closures_with_trailing_closure # Common SwiftUI/TCA pattern
+  - attributes # SwiftUI @ViewBuilder and TCA @Reducer patterns
+  - closure_body_length # Complex SwiftUI views and TCA effects
+  - large_tuple # TCA sometimes uses larger tuples for state
+  - static_operator # Operators like <- need to be free functions for generic usage
+
+opt_in_rules:
+  # Swift 6 & Concurrency
+  - array_init
+  # - attributes # Disabled
+  - accessibility_trait_for_button # Better accessibility
+  - balanced_xctest_lifecycle
+  # - closure_body_length # Disabled
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - comma_inheritance
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - convenience_type
+  - direct_return
+  - discouraged_assert
+  - discouraged_none_name
+  - discouraged_object_literal
+  - discouraged_optional_boolean
+  - discouraged_optional_collection
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - empty_xctest_method
+  - enum_case_associated_values_count
+  - explicit_init
+  # - extension_access_modifier # Disabled: conflicts with no_extension_access_modifier
+  - fallthrough
+  - fatal_error_message
+  - file_name
+  - file_name_no_space
+  - first_where
+  - flatmap_over_map_reduce
+  # - force_unwrapping # Disabled due to test files requiring it
+  - function_default_parameter_at_end
+  - ibinspectable_in_extension
+  - identical_operands
+  - implicit_return
+  - implicitly_unwrapped_optional
+  - indentation_width
+  - joined_default_parameter
+  - last_where
+  - legacy_multiple
+  - legacy_objc_type
+  - let_var_whitespace
+  - literal_expression_end_indentation
+  - local_doc_comment
+  - lower_acl_than_parent
+  # - missing_docs # Disabled
+  - modifier_order
+  - multiline_arguments
+  - multiline_arguments_brackets
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - multiline_parameters_brackets
+  - nimble_operator
+  - no_extension_access_modifier
+  - no_grouping_extension
+  - nslocalizedstring_key
+  - nslocalizedstring_require_bundle
+  - number_separator
+  - object_literal
+  - operator_usage_whitespace
+  - optional_enum_case_matching
+  - overridden_super_call
+  - override_in_extension
+  - pattern_matching_keywords
+  - period_spacing
+  - prefer_self_in_static_references
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - prefixed_toplevel_constant
+  - private_action
+  - private_outlet
+  - private_subject
+  - private_swiftui_state
+  - prohibited_interface_builder
+  - prohibited_super_call
+  - quick_discouraged_call
+  - quick_discouraged_focused_test
+  - quick_discouraged_pending_test
+  # - raw_value_for_camel_cased_codable_enum # Conflicts with redundant_string_enum_value
+  - reduce_boolean
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - required_deinit
+  - required_enum_case
+  - return_arrow_whitespace
+  - self_binding
+  - shorthand_optional_binding
+  - single_test_class
+  - sorted_first_last
+  - sorted_imports
+  - static_operator
+  - strict_fileprivate
+  - strong_iboutlet
+  - superfluous_disable_command
+  # - switch_case_on_newline # Disabled
+  - test_case_accessibility
+  - toggle_bool
+  - trailing_closure
+  # - type_contents_order # Disabled
+  - unavailable_condition
+  - unavailable_function
+  - unhandled_throwing_task
+  - unneeded_parentheses_in_closure_argument
+  - unowned_variable_capture
+  - untyped_error_in_catch
+  - unused_closure_parameter
+  - unused_control_flow_label
+  - unused_enumerated
+  - unused_optional_binding
+  - unused_setter_value
+  - valid_ibinspectable
+  - vertical_parameter_alignment
+  - vertical_parameter_alignment_on_call
+  - vertical_whitespace_between_cases
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - weak_delegate
+  - xct_specific_matcher
+  - yoda_condition
+
+# Rule configurations
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - ui
+    - to
+    - up
+    - on
+    - ok
+    - no
+    - is
+    - at
+    - by
+    - dx
+    - dy
+    - x
+    - y
+    - z
+
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+  allowed_symbols: ["_"]
+  excluded:
+    - UI
+
+function_parameter_count:
+  warning: 7
+  error: 10
+  ignores_default_parameters: true # TCA initializers often have many default parameters
+
+cyclomatic_complexity:
+  warning: 20 # Higher threshold for TCA reducers
+  error: 30
+  ignores_case_statements: true
+
+nesting:
+  type_level:
+    warning: 4 # Allow deeper nesting for TCA feature composition
+    error: 6
+  function_level:
+    warning: 5
+    error: 7
+    
+file_name:
+  excluded:
+    - main.swift
+    - Package.swift
+  prefix_pattern: ""
+  suffix_pattern: ""
+  nested_type_separator: "+"
+
+# type_contents_order: # Disabled
+#   order:
+#     - case
+#     - associated_type
+#     - type_alias
+#     - subtype
+#     - type_property
+#     - instance_property
+#     - ib_outlet
+#     - ib_inspectable
+#     - initializer
+#     - deinitializer
+#     - subscript
+#     - type_method
+#     - view_life_cycle_method
+#     - ib_action
+#     - other_method
+
+
+# Custom rules for TCA patterns
+custom_rules:
+  no_print_statements:
+    included: '.*\.swift'
+    excluded: '.*Tests\.swift'
+    name: "No print statements"
+    regex: '\bprint\('
+    message: "Use logger.debug() instead of print statements"
+    severity: warning
+
+  mark_formatting:
+    included: '.*\.swift'
+    name: "MARK Format"
+    regex: '// MARK: -? (?![A-Z])'
+    message: "MARK comment should be followed by a capitalized section name"
+    severity: warning
+
+
+  sendable_conformance:
+    included: '.*\.swift'
+    name: "Sendable Conformance"
+    regex: 'enum\s+Action(?!.*:\s*.*Sendable)'
+    message: "Action enums must conform to Sendable for Swift 6 compliance"
+    severity: error
+    
+  state_equatable_conformance:
+    included: '.*\.swift'
+    name: "State Equatable Conformance"
+    regex: 'struct\s+State(?!.*:\s*.*Equatable)'
+    message: "State structs must conform to Equatable for TCA"
+    severity: error
+    
+  # Removed observable_state_annotation - was incorrectly flagging structs that have @ObservableState on the line above
+    
+  dependency_macro_usage:
+    included: '.*\.swift'
+    name: "Dependency Macro Usage"
+    regex: '\bDependencyValues\.\w+\s*='
+    message: "Use @Dependency macro instead of direct DependencyValues assignment"
+    severity: warning
+    
+  # Removed reducer_annotation - was incorrectly flagging structs that have @Reducer on the line above
+
+  test_store_usage:
+    included: '.*Tests\.swift'
+    name: "Test Store Usage"
+    regex: '(?<!Test)Store\(initialState:'
+    message: "Use TestStore instead of Store in tests"
+    severity: error
+    
+  # effect_return_type - removed due to configuration issues
+    
+  # Removed store_scope_deprecation - was incorrectly flagging valid TCA 1.0+ syntax
+
+
+
+# Reporting
+reporter: "xcode" # Use "json" for CI/CD integration
+
+# Additional Swift 6 and TCA configurations
+strict: true # Enable strict mode for better Swift 6 compliance
+
+# Identifier configurations for TCA patterns
+# type_name configuration is already defined above
+  
+private_outlet:
+  allow_private_set: true # TCA often uses private(set) for state properties
+  
+# SwiftLint version
+swiftlint_version: 0.59.1

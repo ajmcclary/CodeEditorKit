@@ -3,17 +3,9 @@
 
 @preconcurrency import AppKit
 
-extension STTextView: NSTextLayoutOrientationProvider {
-    nonisolated public var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
-        MainActor.assumeIsolated {
-            switch textLayoutManager.textLayoutOrientation(at: textLayoutManager.documentRange.location) {
-            case .horizontal:
-                return .horizontal
-            case .vertical:
-                return .vertical
-            @unknown default:
-                return textContainer.layoutOrientation
-            }
-        }
+extension STTextView {
+    nonisolated public override var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
+        // For NSTextView, we'll default to horizontal layout
+        return .horizontal
     }
 }

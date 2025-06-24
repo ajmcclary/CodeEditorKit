@@ -1,18 +1,30 @@
 import SwiftUI
-import AppKit
 import CodeEditorPlugin
 
-struct CodeEditorView: NSViewRepresentable {
+struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
+    let onTextViewReady: (STTextView) -> Void
+    
+    var body: some View {
+        CodeEditorViewWithCallback(
+            configuration: configuration,
+            text: $text,
+            language: language,
+            onTextViewReady: onTextViewReady
+        )
+        .background(Color(configuration.theme.backgroundColor))
+    }
+}
+
+struct CodeEditorViewWithCallback: NSViewRepresentable {
+    let configuration: EditorConfiguration
+    @Binding var text: String
+    let language: String
+    let onTextViewReady: (STTextView) -> Void
     
     func makeNSView(context: Context) -> STTextView {
-        print("DEBUG makeNSView: Creating STTextView")
-        print("DEBUG makeNSView: Input text length = \(text.count)")
-        print("DEBUG makeNSView: Input text preview = \(String(text.prefix(50)))")
-        
-        // Create STTextView with proper frame - use a reasonable initial size
         let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         
         // Set delegate
@@ -20,40 +32,20 @@ struct CodeEditorView: NSViewRepresentable {
         
         // Set the text content
         textView.text = text
-        print("DEBUG makeNSView: After setting text: \(textView.text?.count ?? -1) characters")
-        print("DEBUG makeNSView: Text preview after setting: \(String((textView.text ?? "").prefix(50)))")
         
         // Apply configuration
         applyConfiguration(to: textView)
         
-        // Plugin system has been removed - custom functionality would be integrated directly
-        // if configuration.enableCustomPlugin {
-        //     // Custom annotation functionality would be integrated directly into STTextView
-        // }
-        
-        // Ensure the text view is properly laid out
-        textView.invalidateIntrinsicContentSize()
-        
-        // NSTextView handles layout automatically
-        textView.needsLayout = true
-        textView.needsDisplay = true
-        
-        // Text color will be set by applyConfiguration
+        // Notify that text view is ready
+        onTextViewReady(textView)
         
         return textView
     }
     
     func updateNSView(_ textView: STTextView, context: Context) {
-        print("DEBUG updateNSView: Called with text length = \(text.count)")
-        print("DEBUG updateNSView: Current textView text length = \(textView.text?.count ?? -1)")
-        
         // Update text if changed
         if textView.text != text {
-            print("DEBUG updateNSView: Text changed, updating...")
             textView.text = text
-            print("DEBUG updateNSView: After update: \(textView.text?.count ?? -1) characters")
-        } else {
-            print("DEBUG updateNSView: Text unchanged")
         }
         
         // Update configuration
@@ -79,9 +71,6 @@ struct CodeEditorView: NSViewRepresentable {
         )
         
         // Colors
-        print("DEBUG applyConfiguration: theme = \(configuration.theme)")
-        print("DEBUG applyConfiguration: textColor = \(configuration.theme.textColor)")
-        print("DEBUG applyConfiguration: backgroundColor = \(configuration.theme.backgroundColor)")
         textView.textColor = configuration.theme.textColor
         textView.backgroundColor = configuration.theme.backgroundColor
         textView.selectedLineHighlightColor = configuration.theme.selectedLineColor
@@ -105,15 +94,18 @@ struct CodeEditorView: NSViewRepresentable {
         paragraphStyle.defaultTabInterval = CGFloat(configuration.tabWidth) * 7.0
         paragraphStyle.lineSpacing = configuration.lineSpacing
         textView.defaultParagraphStyle = paragraphStyle
+        
+        // Set language for syntax highlighting using file extension
+        textView.setLanguage(fileExtension: language)
     }
     
     // MARK: - Coordinator
     
     @MainActor
     class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
-        var parent: CodeEditorView
+        var parent: CodeEditorViewWithCallback
         
-        init(_ parent: CodeEditorView) {
+        init(_ parent: CodeEditorViewWithCallback) {
             self.parent = parent
             super.init()
         }

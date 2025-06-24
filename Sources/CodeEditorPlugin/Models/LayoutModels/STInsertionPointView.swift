@@ -9,10 +9,10 @@ import AppKit
 #endif
 
 /// View representing the text insertion point (cursor)
-public class STInsertionPointView: PlatformView {
+public class STInsertionPointView: NSView {
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         setup()
     }
     

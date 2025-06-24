@@ -9,20 +9,16 @@ import AppKit
 #endif
 
 /// View for displaying annotation content
-public class STAnnotationsContentView: PlatformView {
+public class STAnnotationsContentView: NSView {
     
     public var annotations: [STAnnotation] = [] {
         didSet {
-            #if canImport(UIKit)
-            setNeedsDisplay()
-            #elseif canImport(AppKit)
-            needsDisplay = true
-            #endif
+            self.needsDisplay = true
         }
     }
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         setup()
     }
     

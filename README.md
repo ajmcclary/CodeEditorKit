@@ -1,22 +1,24 @@
 # CodeEditorPlugin
 
-A powerful, customizable code editor component for macOS and iOS applications, built on Apple's TextKit2 framework. CodeEditorPlugin provides syntax highlighting, line numbers, themes, and an extensible plugin system for building modern code editing experiences in Swift applications.
+A powerful, customizable code editor component for macOS applications built with Swift. CodeEditorPlugin provides syntax highlighting, line numbers, themes, and extensive customization options for building modern code editing experiences in Swift applications.
 
 ## Features
 
-- 🎨 **Syntax Highlighting** - Support for 11+ programming languages including Swift, Python, JavaScript, and more
+- 🎨 **Syntax Highlighting** - Support for 15+ programming languages including Swift, Python, JavaScript, and more
 - 🎯 **Line Numbers** - Configurable line number display with custom styling
-- 🌈 **Theme Support** - Multiple built-in themes (Xcode, VS Code Dark, GitHub Light, etc.)
-- 🔌 **Plugin System** - Extensible architecture for adding custom functionality
-- 📐 **TextKit2 Based** - Modern text rendering with hardware acceleration support
-- 📱 **Cross-Platform** - Works on macOS 12+, iOS 16+, and Mac Catalyst 16+
-- ⚡ **Performance Optimized** - Efficient rendering for large files with viewport-based updates
-- 🔧 **Highly Configurable** - Pre-built configurations for different use cases
+- 🌈 **Theme Support** - Multiple built-in themes (Xcode, VS Code Dark, GitHub Light, Solarized, etc.)
+- 📐 **NSTextView Based** - Built on macOS native text system for reliability and performance
+- ⚡ **Performance Optimized** - Efficient rendering for large files
+- 🔧 **Highly Configurable** - Extensive customization options for appearance and behavior
+- ✏️ **Full Editing Support** - Complete text editing capabilities with undo/redo
+- 🎯 **Line Highlighting** - Highlight current line with customizable colors
+- 👻 **Invisible Characters** - Show spaces, tabs, and line breaks
+- 📏 **Tab & Indentation** - Configurable tab width and space/tab preferences
 
 ## Requirements
 
 - Swift 6.0 or later
-- macOS 12.0+ / iOS 16.0+ / Mac Catalyst 16.0+
+- macOS 14.0 or later
 - Xcode 16.0 or later
 
 ## Installation
@@ -39,19 +41,22 @@ dependencies: [
 
 ## Quick Start
 
-### Basic Usage
+### SwiftUI Usage
 
 ```swift
 import CodeEditorPlugin
 import SwiftUI
 
 struct ContentView: View {
-    @State private var code = "print(\"Hello, World!\")"
+    @State private var text = "print(\"Hello, World!\")"
+    @State private var configuration = EditorConfiguration()
     
     var body: some View {
-        CodeEditorTextView(text: $code)
-            .showsLineNumbers(true)
-            .font(.monospacedSystemFont(ofSize: 14, weight: .regular))
+        CodeEditorView(
+            configuration: configuration,
+            text: $text,
+            language: "swift"
+        )
     }
 }
 ```
@@ -67,40 +72,44 @@ class ViewController: NSViewController {
         super.viewDidLoad()
         
         let textView = STTextView()
-        textView.string = "// Your code here"
+        textView.text = "// Your code here"
         textView.showsLineNumbers = true
         textView.highlightSelectedLine = true
         textView.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
         
-        // Add syntax highlighting
-        let highlighter = SyntaxHighlightingCoordinator()
-        textView.addPlugin(highlighter.createPlugin())
+        // Enable syntax highlighting
+        textView.language = .swift
+        textView.isSyntaxHighlightingEnabled = true
         
         view.addSubview(textView)
     }
 }
 ```
 
-## Pre-Built Configurations
+## Configuration
 
-CodeEditorPlugin includes several pre-built configurations for common use cases:
+### EditorConfiguration
+
+The `EditorConfiguration` struct provides extensive customization options:
 
 ```swift
-// Full-featured editor with all capabilities
-let config = EditorConfiguration.fullFeatured
-
-// Minimal editor for simple text editing
-let config = EditorConfiguration.minimal
-
-// Read-only viewer
-let config = EditorConfiguration.readOnly
-
-// Markdown editing optimized
-let config = EditorConfiguration.markdown
-
-// Presentation mode with larger fonts
-let config = EditorConfiguration.presentation
+var config = EditorConfiguration()
+config.showLineNumbers = true
+config.highlightSelectedLine = true
+config.fontSize = 14
+config.theme = .vsDark
+config.tabWidth = 4
+config.insertSpacesForTabs = true
 ```
+
+### Available Themes
+
+- `.xcode` - Xcode default light theme
+- `.vsDark` - VS Code dark theme  
+- `.github` - GitHub light theme
+- `.solarizedDark` - Solarized dark theme
+- `.minimal` - Minimal light theme
+- `.presentation` - High contrast presentation theme
 
 ## Syntax Highlighting
 
@@ -118,112 +127,44 @@ let config = EditorConfiguration.presentation
 - Shell
 - And more...
 
-### Custom Language Support
+### Setting Language
 
 ```swift
 // Auto-detect language from file extension
-let language = highlighter.detectLanguage(from: "example.swift")
+textView.setLanguage(fileExtension: "swift")
 
-// Or specify directly
-let tokens = highlighter.highlight(source: code, language: .swift)
+// Or set directly
+textView.language = .swift
 ```
-
-## Theme System
-
-### Built-in Themes
-
-- Xcode (Light/Dark)
-- VS Code Dark
-- GitHub (Light/Dark)
-- Atom One Dark
-- Tomorrow Night
-
-### Creating Custom Themes
-
-```swift
-let customTheme = Theme(
-    name: "My Theme",
-    settings: ThemeSettings(
-        background: .init(hex: "#1e1e1e"),
-        foreground: .init(hex: "#d4d4d4"),
-        currentLine: .init(hex: "#2a2a2a"),
-        selection: .init(hex: "#264f78"),
-        cursor: .init(hex: "#aeafad")
-    ),
-    tokenColors: [
-        TokenColor(scope: "keyword", color: .init(hex: "#569cd6")),
-        TokenColor(scope: "string", color: .init(hex: "#ce9178")),
-        TokenColor(scope: "comment", color: .init(hex: "#6a9955"))
-    ]
-)
-```
-
-## Plugin Development
-
-Create custom plugins to extend functionality:
-
-```swift
-class MyCustomPlugin: STPlugin {
-    func setUp(context: PluginContext) {
-        // Initialize your plugin
-    }
-    
-    func makeCoordinator(context: CoordinatorContext) -> MyCoordinator {
-        return MyCoordinator()
-    }
-    
-    func tearDown() {
-        // Clean up resources
-    }
-}
-
-// Use the plugin
-textView.addPlugin(MyCustomPlugin())
-```
-
-## Annotations
-
-Add line-based annotations for warnings, errors, or other information:
-
-```swift
-class ErrorAnnotation: STLineAnnotation {
-    let message: String
-    let line: Int
-    
-    var view: NSView {
-        // Return your custom annotation view
-    }
-}
-
-// Add annotations
-textView.addAnnotation(ErrorAnnotation(message: "Syntax error", line: 42))
-```
-
-## Performance Tips
-
-- Enable hardware acceleration for large files: `textView.enableHardwareAcceleration = true`
-- Use read-only mode when editing is not required: `textView.isEditable = false`
-- Disable features you don't need (line numbers, plugins) for better performance
-- Consider using viewport-based rendering for very large documents
 
 ## Example Application
 
-Check out the example application in `Example/CodeEditorSample/` for a comprehensive demonstration of all features:
+Check out the comprehensive example application in `Example/CodeEditorSample/` that demonstrates:
+
+- Full-featured code editor with syntax highlighting
+- Multiple themes and real-time theme switching
+- Configuration import/export
+- Line numbers, invisible characters, and line highlighting
+- Multiple editor instances
+- Preset configurations (minimal, read-only, markdown, presentation)
+- Interactive feature tour
+
+To run the example:
 
 ```bash
 cd Example/CodeEditorSample
-swift run
+swift run CodeEditorSample
 ```
 
 ## Architecture
 
-CodeEditorPlugin is built with a modular, protocol-oriented architecture:
+CodeEditorPlugin is built with a clean, modular architecture:
 
-- **Core**: STTextView built on TextKit2
-- **Plugins**: Extensible plugin system for adding features
-- **Themes**: Flexible theming system with TextMate grammar support
-- **Highlighting**: Modular syntax highlighting with language-specific implementations
-- **Annotations**: Line-based annotation system for inline feedback
+- **Core**: `STTextView` - NSTextView subclass with enhanced functionality
+- **Syntax Highlighting**: Token-based highlighting system with per-language support
+- **Themes**: Comprehensive theming system with built-in color schemes
+- **Configuration**: Flexible configuration system for easy customization
+- **SwiftUI Integration**: Native SwiftUI wrapper for seamless integration
 
 ## Contributing
 
@@ -235,4 +176,4 @@ CodeEditorPlugin is available under the MIT license. See the LICENSE file for mo
 
 ## Acknowledgments
 
-This project builds upon Apple's STTextView and integrates swift-syntax for Swift language support.
+This project was inspired by STTextView by Marcin Krzyzanowski and includes syntax highlighting patterns from various open-source projects.

@@ -9,26 +9,22 @@ import AppKit
 #endif
 
 /// View for rendering text layout fragments
-public class STTextLayoutFragmentView: PlatformView {
+public class STTextLayoutFragmentView: NSView {
     
     public var layoutFragment: NSTextLayoutFragment? {
         didSet {
-            #if canImport(UIKit)
-            setNeedsDisplay()
-            #elseif canImport(AppKit)
-            needsDisplay = true
-            #endif
+            self.needsDisplay = true
         }
     }
     
-    public init(layoutFragment: NSTextLayoutFragment?, frame: CGRect) {
+    public init(layoutFragment: NSTextLayoutFragment?, frame frameRect: NSRect) {
         self.layoutFragment = layoutFragment
-        super.init(frame: frame)
+        super.init(frame: frameRect)
         setup()
     }
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         setup()
     }
     

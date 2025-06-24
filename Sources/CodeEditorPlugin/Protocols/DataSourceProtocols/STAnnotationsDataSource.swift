@@ -17,5 +17,5 @@ public protocol STAnnotationsDataSource: AnyObject {
     var textViewAnnotations: [STTextViewAnnotation] { get }
     
     /// Create a view for the given annotation
-    func textView(_ textView: STTextView, viewForLineAnnotation annotation: STTextViewAnnotation, textLineFragment: NSTextLineFragment, proposedViewFrame: CGRect) -> PlatformView?
+    func textView(_ textView: STTextView, viewForLineAnnotation annotation: STTextViewAnnotation, textLineFragment: NSTextLineFragment, proposedViewFrame: CGRect) -> NSView?
 }

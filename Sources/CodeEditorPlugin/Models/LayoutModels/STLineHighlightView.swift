@@ -9,27 +9,17 @@ import AppKit
 #endif
 
 /// View for highlighting the current line
-public class STLineHighlightView: PlatformView {
+public class STLineHighlightView: NSView {
     
-    public var highlightColor: PlatformColor = {
-        #if canImport(UIKit)
-        return UIColor.systemBlue.withAlphaComponent(0.1)
-        #else
-        return NSColor.controlAccentColor.withAlphaComponent(0.1)
-        #endif
-    }() {
+    public var highlightColor: NSColor = NSColor.controlAccentColor.withAlphaComponent(0.1) {
         didSet {
-            #if canImport(UIKit)
-            backgroundColor = highlightColor
-            #else
-            wantsLayer = true
-            layer?.backgroundColor = highlightColor.cgColor
-            #endif
+            self.wantsLayer = true
+            self.layer?.backgroundColor = highlightColor.cgColor
         }
     }
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         setup()
     }
     
@@ -39,18 +29,12 @@ public class STLineHighlightView: PlatformView {
     }
     
     private func setup() {
-        #if canImport(UIKit)
-        backgroundColor = highlightColor
-        #else
-        wantsLayer = true
-        layer?.backgroundColor = highlightColor.cgColor
-        #endif
+        self.wantsLayer = true
+        self.layer?.backgroundColor = highlightColor.cgColor
     }
     
-    #if canImport(AppKit)
     // Text views need a flipped coordinate system on macOS
     public override var isFlipped: Bool {
         return true
     }
-    #endif
 }
