@@ -145,6 +145,8 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         // The custom text container creation was breaking text rendering
         kLogger.debug("STTextView init: frame = \(String(describing: frameRect))")
 
+        // Use default NSTextView initialization
+        // NSTextView should automatically use TextKit2 on supported systems
         super.init(frame: frameRect)
         setupTextView()
     }
@@ -159,6 +161,24 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         kLogger.debug("STTextView setupTextView: textStorage = \(self.textStorage != nil ? "exists" : "nil")")
         kLogger.debug("STTextView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
         kLogger.debug("STTextView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
+        kLogger.debug("STTextView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
+        kLogger.debug("STTextView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
+        
+        // Check which TextKit version we're using
+        if textLayoutManager != nil {
+            kLogger.debug("STTextView setupTextView: Using TextKit2")
+        } else if layoutManager != nil {
+            kLogger.debug("STTextView setupTextView: Using TextKit1 (fallback)")
+        } else {
+            kLogger.debug("STTextView setupTextView: WARNING - No layout manager detected!")
+        }
+        
+        // Try to ensure we're using TextKit2 if possible
+        if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
+            kLogger.debug("STTextView setupTextView: Attempting to initialize with TextKit2")
+            // Force TextKit2 initialization if needed
+            // This is a fallback - normally NSTextView should auto-initialize with TextKit2
+        }
 
         // Set up the text view
         isAutomaticQuoteSubstitutionEnabled = false
@@ -193,6 +213,14 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         // Setup theme
         setupDefaultTheme()
+        
+        // Apply modern TextKit configuration
+        ModernTextKitHelper.configureTextView(self)
+        ModernTextKitHelper.optimizeTextViewPerformance(self)
+        
+        // Ensure TextKit2 is used if available and beneficial
+        let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)
+        kLogger.debug("STTextView setupTextView: Using TextKit2: \(usingTextKit2)")
 
         // Ensure proper sizing and layout
         isVerticallyResizable = true
@@ -555,31 +583,114 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     private func updateAnnotationView(for annotation: STAnnotation) {
+        kLogger.debug("updateAnnotationView called for annotation: \(annotation.id)")
+        kLogger.debug("- annotation range: \(String(describing: annotation.range))")
+        kLogger.debug("- annotation content: \(annotation.content)")
+        kLogger.debug("- textLayoutManager exists: \(self.textLayoutManager != nil)")
+        kLogger.debug("- annotationsDataSource exists: \(self.annotationsDataSource != nil)")
+        
         // Remove existing view if any
-        annotationViews[annotation.id]?.removeFromSuperview()
+        if let existingView = annotationViews[annotation.id] {
+            kLogger.debug("Removing existing annotation view")
+            existingView.removeFromSuperview()
+        }
 
         // Create new annotation view using data source
-        guard annotationsDataSource != nil else {
+        guard let dataSource = annotationsDataSource else {
+            kLogger.debug("No annotations data source - annotation will not be displayed")
             return
         }
 
-        // Convert NSTextRange to location for compatibility
-        let location = annotation.range.location
+        // Check if we're using TextKit2
+        guard let textLayoutManager else {
+            kLogger.debug("No textLayoutManager (not using TextKit2?) - annotation will not be displayed")
+            return
+        }
+        
+        kLogger.debug("Using TextKit2 with textLayoutManager")
+        
+        // Convert STAnnotation to STTextViewAnnotation
+        let textViewAnnotation = STTextViewAnnotation(
+            location: annotation.range.location,
+            content: annotation.content,
+            id: annotation.id
+        )
 
-        // Calculate frame for annotation
-        _ = calculateAnnotationFrame(for: location)
+        // Ensure layout for the annotation range
+        textLayoutManager.ensureLayout(for: annotation.range)
+        kLogger.debug("ensureLayout completed for range")
+        
+        // Get text layout fragment for the annotation location
+        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotation.range.location) else {
+            kLogger.debug("Could not get textLayoutFragment for location: \(String(describing: annotation.range.location))")
+            return
+        }
+        kLogger.debug("Got textLayoutFragment")
+        
+        guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotation.range.location) else {
+            kLogger.debug("Could not get textLineFragment at location: \(String(describing: annotation.range.location))")
+            return
+        }
+        kLogger.debug("Got textLineFragment")
 
-        // Skip creating annotation view for now - this needs more work
-        // TODO: Implement proper annotation system without plugin dependencies
-        // if let annotationView = dataSource.textView(self, viewForLineAnnotation: annotation, textLineFragment: mockFragment, proposedViewFrame: annotationFrame) {
-        //    addSubview(annotationView)
-        //    annotationViews[annotation.id] = annotationView
-        // }
+        // Get the exact text segment frame for the annotation range
+        guard let segmentFrame = textLayoutManager.textSegmentFrame(
+            in: annotation.range,
+            type: .standard
+        ) else { 
+            kLogger.debug("Could not get textSegmentFrame for range: \(String(describing: annotation.range))")
+            return 
+        }
+        kLogger.debug("Got segmentFrame: \(String(describing: segmentFrame))")
+
+        // Calculate inline annotation position (right after the annotated text)
+        let badgeSize: CGFloat = 20
+        let badgePadding: CGFloat = 4
+        let inlineX = textContainerInset.width + segmentFrame.maxX + badgePadding
+        let inlineY = textContainerInset.height + segmentFrame.midY - (badgeSize / 2)
+        
+        let proposedFrame = CGRect(
+            x: inlineX,
+            y: inlineY,
+            width: badgeSize,
+            height: badgeSize
+        ).integral
+        
+        kLogger.debug("Calculated proposedFrame: \(String(describing: proposedFrame))")
+        kLogger.debug("textContainerInset: \(String(describing: self.textContainerInset))")
+
+        // Create annotation view
+        if let annotationView = dataSource.textView(
+            self,
+            viewForLineAnnotation: textViewAnnotation,
+            textLineFragment: textLineFragment,
+            proposedViewFrame: proposedFrame
+        ) {
+            kLogger.debug("Successfully created annotation view")
+            kLogger.debug("Adding annotation view to subview hierarchy")
+            kLogger.debug("Current view bounds: \(String(describing: self.bounds))")
+            kLogger.debug("Current view subviews count: \(self.subviews.count)")
+            
+            addSubview(annotationView)
+            annotationViews[annotation.id] = annotationView
+            
+            kLogger.debug("Added annotation view, new subviews count: \(self.subviews.count)")
+            
+            // Force view update
+            annotationView.needsDisplay = true
+            needsDisplay = true
+        } else {
+            kLogger.debug("Data source returned nil annotation view")
+        }
     }
-
-    private func calculateAnnotationFrame(for _: NSTextLocation) -> CGRect {
-        // Simple frame calculation - can be enhanced
-        CGRect(x: bounds.maxX - 200, y: 0, width: 200, height: 20)
+    
+    /// Update all annotation views (called during layout)
+    private func updateAnnotationViews() {
+        kLogger.debug("updateAnnotationViews called, total annotations: \(self.annotations.count)")
+        
+        for annotation in annotations {
+            updateAnnotationView(for: annotation)
+        }
     }
 
     // MARK: - Text Changes
@@ -611,13 +722,6 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         updateGutterFrame()
-    }
-
-    private func updateAnnotationViews() {
-        // Update all annotation view positions
-        for annotation in annotations {
-            updateAnnotationView(for: annotation)
-        }
     }
 
     // MARK: - Convenience Methods

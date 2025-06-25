@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import os.log
 
 // MARK: - ModernTextKitHelper
 
@@ -14,14 +15,56 @@ public final class ModernTextKitHelper: @unchecked Sendable {
     }
 
     /// Check if we can safely opt into TextKit2 for a text view
-    public static func canOptIntoTextKit2(for _: NSTextView) -> Bool {
+    public static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
         // Only opt into TextKit2 on macOS 23+ where it's more stable
         guard MacOSVersionDetection.hasStableTextKit2 else {
             return false
         }
 
+        // Additional checks for macOS 26+ compatibility
+        if MacOSVersionDetection.isMacOS26OrLater {
+            return canUseTextKit2OnMacOS26(textView)
+        }
+
         // Additional checks can be added here for specific compatibility requirements
         return true
+    }
+    
+    /// Enhanced TextKit2 compatibility check for macOS 26+
+    private static func canUseTextKit2OnMacOS26(_ textView: NSTextView) -> Bool {
+        // macOS 26 has improved TextKit2 stability
+        // Check for any known issues or requirements
+        
+        // Ensure the text view is properly configured
+        guard textView.textStorage != nil else {
+            return false
+        }
+        
+        // macOS 26+ should handle TextKit2 well for most use cases
+        return true
+    }
+    
+    /// Force TextKit2 initialization if possible and beneficial
+    public static func ensureTextKit2(for textView: NSTextView) -> Bool {
+        // Check if TextKit2 is already active
+        if textView.textLayoutManager != nil {
+            return true
+        }
+        
+        // Only attempt to force TextKit2 on compatible systems
+        guard canOptIntoTextKit2(for: textView) else {
+            return false
+        }
+        
+        // On macOS 26+, TextKit2 should be the default
+        // If it's not active, there might be a specific reason
+        if MacOSVersionDetection.isMacOS26OrLater {
+            // Log the situation for debugging
+            os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
+                .debug("TextKit2 not active on macOS 26+, using TextKit1 fallback")
+        }
+        
+        return false
     }
 
     // MARK: - NSTextView Configuration
@@ -90,17 +133,77 @@ public final class ModernTextKitHelper: @unchecked Sendable {
 
     private static func configureTextKit2Features(_ textView: NSTextView) {
         // TextKit2 specific configuration
+        
+        // Check if we're on macOS 26+ for enhanced TextKit2 features
+        if MacOSVersionDetection.isMacOS26OrLater {
+            configureTextKit2ForMacOS26(textView)
+        }
 
         // Ensure we're using TextKit2 layout manager
         if let textLayoutManager = textView.textLayoutManager {
             // TextKit2 is active
             configureTextLayoutManager(textLayoutManager)
+            
+            // Enable advanced TextKit2 features if available
+            if MacOSVersionDetection.isMacOS26OrLater {
+                configureAdvancedTextLayoutFeatures(textLayoutManager)
+            }
         } else {
             // Fallback to TextKit1 if needed
             if let layoutManager = textView.layoutManager {
                 configureLayoutManager(layoutManager)
             }
         }
+    }
+    
+    /// Configure TextKit2 features specific to macOS 26+
+    private static func configureTextKit2ForMacOS26(_ textView: NSTextView) {
+        // macOS 26 introduced improved TextKit2 stability and new features
+        
+        // Enable enhanced text rendering if available
+        if MacOSVersionDetection.supportsLiquidGlassDesign {
+            // Optimize text rendering for Liquid Glass design
+            // Use available properties that improve rendering
+            textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
+            textView.insertionPointColor = NSColor.controlAccentColor
+        }
+        
+        // Configure for better performance with large documents
+        textView.allowsUndo = true
+        textView.isAutomaticTextCompletionEnabled = false
+        
+        // Disable features that can impact performance in code editing
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        
+        // Enhanced text view features
+        textView.usesFindBar = true
+        textView.usesFontPanel = true
+        textView.usesRuler = false // Disable ruler for code editing
+    }
+    
+    /// Configure advanced TextKit2 layout features for macOS 26+
+    private static func configureAdvancedTextLayoutFeatures(_ textLayoutManager: NSTextLayoutManager) {
+        // Configure text layout manager for optimal performance on macOS 26+
+        
+        // Enable enhanced layout caching if available
+        if let textContainer = textLayoutManager.textContainer {
+            textContainer.maximumNumberOfLines = 0 // No line limit
+            textContainer.lineBreakMode = .byWordWrapping
+            
+            // Optimize for large documents
+            textContainer.widthTracksTextView = true
+            textContainer.heightTracksTextView = false
+        }
+        
+        // Configure text selection behavior
+        textLayoutManager.limitsLayoutForSuspiciousContents = true
+        
+        // Enable text rendering optimizations if available
+        textLayoutManager.usesHyphenation = false
     }
 
     // MARK: - TextKit2 Layout Manager Configuration

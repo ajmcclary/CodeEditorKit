@@ -19,13 +19,29 @@ swift package clean
 swift package update
 ```
 
+### Code Quality and Linting
+```bash
+# Fix lint violations automatically
+swiftlint --fix
+
+# Run linting (should show 0 violations)
+swiftlint
+
+# Combined build, lint, and test
+swift build && swiftlint && swift test
+```
+
 ### Running Tests
 ```bash
-# Run all tests
+# Run all tests (71 tests in main package)
 swift test
 
 # Run tests with verbose output
 swift test --verbose
+
+# Run sample app tests (43 tests)
+cd CodeEditorSample
+swift test
 ```
 
 ### Example Application
@@ -33,22 +49,7 @@ swift test --verbose
 # Build and run the example application
 cd CodeEditorSample
 swift build
-swift run
-```
-
-### Code Quality
-```bash
-# Format code
-swiftformat --swiftversion 6.0 .
-
-# Lint code (with auto-fix)
-swiftlint --fix
-
-# Run linter
-swiftlint
-
-# Full quality check sequence
-swiftformat --swiftversion 6.0 . && swiftlint --fix && swiftlint && swift build && swift test
+swift run CodeEditorSample
 ```
 
 ## High-Level Architecture
@@ -69,11 +70,8 @@ Sources/CodeEditorPlugin/
 ├── Layout/                 # Layout and view components
 │   ├── STGutterView.swift  # Line numbers
 │   └── Fragments/          # Text layout fragments
-├── Plugins/                # Plugin system
-│   ├── PluginCore/         # Core plugin infrastructure
-│   └── Annotations/        # Annotation plugin
+├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
-├── Models/                 # Data models
 ├── Completion/             # Code completion
 ├── Platform/               # Platform-specific code
 └── CodeEditorPlugin.swift  # Main module file
@@ -84,22 +82,20 @@ Sources/CodeEditorPlugin/
 1. **STTextView** - The main text view component built on TextKit2
    - Located in `Sources/CodeEditorPlugin/Core/STTextView.swift`
    - Provides the core editing functionality with modern TextKit2 integration
-   - Supports features like line numbers, syntax highlighting, and plugin system
+   - Supports features like line numbers, syntax highlighting, and annotations
 
-2. **Plugin System** - Extensible architecture for adding functionality
-   - Protocol: `STPlugin` in `Sources/CodeEditorPlugin/Plugins/PluginCore/STPlugin.swift`
-   - Events flow through `STPluginEvents` for text changes and UI updates
-   - Each plugin can have a coordinator for complex state management
+2. **Annotation System** - Inline code comment detection and visualization
+   - Detects TODO/FIXME/NOTE/WARNING/ERROR comments in code
+   - Displays hover popups with annotation details
+   - `AnnotationManager` handles detection and positioning
+   - Data source pattern via `STAnnotationsDataSource`
+   - Integrated through the plugin system with visual badges
 
 3. **Syntax Highlighting** - Multi-language support with two strategies
    - `SyntaxHighlightingCoordinator` in `Sources/CodeEditorPlugin/SyntaxHighlighting/`
    - SwiftSyntax integration for Swift code (requires swift-syntax dependency)
    - Regex-based highlighting for other languages
 
-4. **Annotation System** - Line-based annotations for inline documentation
-   - `STLineAnnotation` protocol defines the interface
-   - Data source pattern via `STAnnotationsDataSource`
-   - Integrated through the plugin system
 
 ### Key Design Patterns
 
@@ -164,10 +160,19 @@ Sources/CodeEditorPlugin/
 
 ### Testing Approach
 
-Tests are located in `Tests/CodeEditorPluginTests/`. The project uses Swift Package Manager's built-in testing support. Key test files include:
+Tests are located in `Tests/CodeEditorPluginTests/` (71 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (43 tests) for a total of 114 comprehensive tests. The project uses Swift Package Manager's built-in testing support. Key test files include:
+
+**Main Package Tests (71 tests):**
 - `STTextViewTests.swift` - Core text view functionality
 - `SyntaxHighlightingTests.swift` - Highlighting system tests
 - `ConfigurationTests.swift` - Configuration system tests
+- `AnnotationTests.swift` - Annotation system functionality
+
+**Sample App Tests (43 tests):**
+- `AnnotationSystemTests.swift` - Comprehensive annotation testing with performance benchmarks
+- `BasicFunctionalityTests.swift` - Core functionality verification
+- `SampleCodeTests.swift` - Language sample validation
+- `SimplifiedIntegrationTests.swift` - End-to-end integration testing
 
 ### Recent Architecture Changes
 
@@ -187,5 +192,12 @@ Tests are located in `Tests/CodeEditorPluginTests/`. The project uses Swift Pack
 **Code Quality Improvements**
 - SwiftLint configuration with custom rules
 - SwiftFormat integration for consistent styling
-- Zero linting violations maintained
-- Comprehensive test coverage (69 tests total)
+- Zero linting violations maintained across 102 files
+- Swift 6 concurrency compliance with all actor isolation issues resolved
+- Comprehensive test coverage (114 tests total: 71 main + 43 sample)
+
+**Annotation System Implementation**
+- Complete inline annotation system with TODO/FIXME/NOTE/WARNING/ERROR detection
+- Hover popups for annotation details with styled presentation
+- TextKit1-compatible annotation positioning for broad platform support
+- Performance testing with large files and many annotations

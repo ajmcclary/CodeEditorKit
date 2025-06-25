@@ -17,9 +17,7 @@ public struct CodeEditorPlugin {
 public typealias CodeEditorTextView = STTextView
 public typealias CodeEditorDelegate = STTextViewDelegate
 
-// Plugin types
-public typealias CodeEditorPluginProtocol = STPlugin
-public typealias CodeEditorPluginContext = STPluginContext
+// Plugin types have been removed - functionality integrated directly into STTextView
 
 // Annotation types
 public typealias CodeEditorAnnotation = STLineAnnotation

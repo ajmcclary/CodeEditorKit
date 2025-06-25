@@ -220,13 +220,13 @@ nesting:
     warning: 5
     error: 7
     
-file_name:
-  excluded:
-    - main.swift
-    - Package.swift
-  prefix_pattern: ""
-  suffix_pattern: ""
-  nested_type_separator: "+"
+# file_name: # Disabled to allow +Extensions naming convention
+#   excluded:
+#     - main.swift
+#     - Package.swift
+#   prefix_pattern: ""
+#   suffix_pattern: ""
+#   nested_type_separator: "+"
 
 # type_contents_order: # Disabled
 #   order:

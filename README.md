@@ -16,6 +16,7 @@ A powerful, modern code editor component for macOS and iOS applications built wi
 - 👻 **Invisible Characters** - Show spaces, tabs, and line breaks with configurable visibility
 - 📏 **Smart Indentation** - Configurable tab width, space/tab preferences, and auto-indentation
 - 🔌 **Plugin Architecture** - Extensible plugin system for custom functionality
+- 📝 **Inline Annotations** - TODO/FIXME/NOTE/WARNING/ERROR detection with hover popups
 - 📱 **Cross-Platform** - macOS, iOS, and Mac Catalyst support
 
 ## 📋 Requirements
@@ -206,15 +207,16 @@ Check out the comprehensive example application in `CodeEditorSample/` that demo
 - ✅ **Multiple themes** with real-time theme switching
 - ✅ **Configuration management** with import/export
 - ✅ **All editor features** (line numbers, invisible characters, line highlighting)
+- ✅ **Inline annotations** with hover popups for TODO/FIXME/NOTE/WARNING/ERROR comments
 - ✅ **Multiple editor instances** and layouts
 - ✅ **Preset configurations** (minimal, read-only, markdown, presentation)
 - ✅ **Interactive feature tour** and documentation
-- ✅ **Performance testing** with large files
+- ✅ **Performance testing** with large files and annotation systems
 
 ### Running the Example
 
 ```bash
-cd CodeEditorSample
+cd Example/CodeEditorSample
 swift run CodeEditorSample
 ```
 
@@ -242,7 +244,7 @@ Sources/CodeEditorPlugin/
 ├── Layout/                 # Layout and view components
 ├── Plugins/                # Plugin system
 │   ├── PluginCore/        # Core plugin infrastructure
-│   └── Annotations/       # Annotation plugin
+│   └── AnnotationsPlugin/ # Annotation plugin with inline comment detection
 ├── Extensions/             # All extensions (flattened)
 ├── Models/                 # Data models
 ├── Completion/             # Code completion
@@ -274,8 +276,9 @@ Sources/CodeEditorPlugin/
 - ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
 - ✅ **Protocol Conformance** - Complete STTextViewDelegate implementation
-- ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations
-- ✅ **Test Coverage** - Comprehensive test suite with 69 passing tests
+- ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations across 102 files
+- ✅ **Test Coverage** - Comprehensive test suite with 114 passing tests
+- ✅ **Annotation System** - Complete inline annotations with hover popups for code comments
 - ✅ **Performance** - Optimized for large files with actor-based background processing
 
 ## 🧪 Testing
@@ -291,7 +294,7 @@ cd CodeEditorSample
 swift test
 ```
 
-**Test Results**: 69 tests passing across both projects with performance benchmarks.
+**Test Results**: 114 tests passing across both projects (71 main + 43 sample) with comprehensive annotation system testing and performance benchmarks.
 
 ## 🔧 Development
 

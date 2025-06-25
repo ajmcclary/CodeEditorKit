@@ -189,6 +189,143 @@ final class STTextViewTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.first?.id, "test")
     }
 
+    @MainActor
+    func testRemoveAnnotation() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = "Test content with annotations"
+
+        // Add multiple annotations
+        guard let documentRange = textView.textContentStorage?.documentRange else {
+            XCTFail("Could not get document range")
+            return
+        }
+        
+        guard let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
+              let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+            XCTFail("Could not create NSTextRange")
+            return
+        }
+        
+        let annotation1 = STAnnotation(range: range1, content: "First annotation", id: "test1")
+        let annotation2 = STAnnotation(range: range2, content: "Second annotation", id: "test2")
+
+        textView.addAnnotation(annotation1)
+        textView.addAnnotation(annotation2)
+        XCTAssertEqual(textView.allAnnotations.count, 2)
+
+        // Remove one annotation
+        textView.removeAnnotation(withId: "test1")
+        XCTAssertEqual(textView.allAnnotations.count, 1)
+        XCTAssertEqual(textView.allAnnotations.first?.id, "test2")
+
+        // Remove remaining annotation
+        textView.removeAnnotation(withId: "test2")
+        XCTAssertEqual(textView.allAnnotations.count, 0)
+    }
+
+    @MainActor
+    func testRemoveAllAnnotations() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = "Test content with multiple annotations"
+
+        guard let documentRange = textView.textContentStorage?.documentRange else {
+            XCTFail("Could not get document range")
+            return
+        }
+        
+        // Add multiple annotations
+        for index in 1...5 {
+            guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+                XCTFail("Could not create NSTextRange")
+                return
+            }
+            let annotation = STAnnotation(range: range, content: "Annotation \(index)", id: "test\(index)")
+            textView.addAnnotation(annotation)
+        }
+        
+        XCTAssertEqual(textView.allAnnotations.count, 5)
+        
+        // Remove all annotations
+        textView.removeAllAnnotations()
+        XCTAssertEqual(textView.allAnnotations.count, 0)
+    }
+
+    @MainActor
+    func testAnnotationDataSource() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let mockDataSource = MockAnnotationDataSource()
+        
+        textView.annotationsDataSource = mockDataSource
+        XCTAssertNotNil(textView.annotationsDataSource)
+        XCTAssertTrue(textView.annotationsDataSource === mockDataSource)
+        
+        // Test weak reference
+        textView.annotationsDataSource = nil
+        XCTAssertNil(textView.annotationsDataSource)
+    }
+
+    @MainActor
+    func testAnnotationWithTextKit1() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = "// TODO: Implement this feature\nlet x = 42"
+        
+        // Force layout to ensure text is rendered
+        textView.layoutSubtreeIfNeeded()
+        
+        // Verify text layout manager setup
+        XCTAssertNotNil(textView.textStorage)
+        XCTAssertNotNil(textView.layoutManager)
+        XCTAssertNotNil(textView.textContainer)
+        
+        // Verify text content
+        let text = textView.text ?? ""
+        XCTAssertTrue(text.contains("TODO"))
+        XCTAssertGreaterThan(text.count, 0)
+    }
+
+    @MainActor
+    func testAnnotationRangeCalculation() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let testText = "Line 1\nLine 2 with TODO\nLine 3"
+        textView.text = testText
+        
+        // Force layout
+        textView.layoutSubtreeIfNeeded()
+        
+        // Find TODO range manually
+        let todoRange = testText.range(of: "TODO").map { NSRange($0, in: testText) } ?? NSRange(location: NSNotFound, length: 0)
+        XCTAssertNotEqual(todoRange.location, NSNotFound)
+        XCTAssertEqual(todoRange.length, 4)
+        
+        // Verify range is within text bounds
+        let textLength = textView.textStorage?.length ?? 0
+        XCTAssertLessThan(todoRange.location + todoRange.length, textLength + 1)
+    }
+
+    @MainActor
+    func testAnnotationPositioning() {
+        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = "// TODO: Test annotation positioning"
+        
+        // Force layout
+        textView.layoutSubtreeIfNeeded()
+        
+        // Verify layout manager can calculate positions
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else {
+            XCTFail("Layout manager or text container not available")
+            return
+        }
+        
+        let textRange = NSRange(location: 0, length: textView.textStorage?.length ?? 0)
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: textRange, actualCharacterRange: nil)
+        let boundingRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        
+        // Verify we can calculate bounding rectangles
+        XCTAssertGreaterThan(boundingRect.width, 0)
+        XCTAssertGreaterThan(boundingRect.height, 0)
+    }
+
     // MARK: - Layout Tests
 
     @MainActor
@@ -302,6 +439,74 @@ class MockSTTextViewDelegate: NSObject, @preconcurrency STTextViewDelegate {
 
     deinit {
         // Cleanup if needed
+    }
+}
+
+// MARK: - MockAnnotationDataSource
+
+@MainActor
+class MockAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSource {
+    var mockAnnotations: [STAnnotation] = []
+    var viewCreationCallCount = 0
+    
+    deinit {
+        // Cleanup if needed
+    }
+    
+    func annotations(for textRange: NSTextRange) -> [STAnnotation] {
+        // Return annotations that intersect with the given range
+        mockAnnotations.filter { annotation in
+            annotation.range.intersects(textRange)
+        }
+    }
+    
+    var textViewAnnotations: [STTextViewAnnotation] {
+        mockAnnotations.compactMap { annotation in
+            STTextViewAnnotation(
+                location: annotation.range.location,
+                content: annotation.content,
+                id: annotation.id
+            )
+        }
+    }
+    
+    func textView(
+        _: STTextView,
+        viewForLineAnnotation _: STTextViewAnnotation,
+        textLineFragment _: NSTextLineFragment,
+        proposedViewFrame: CGRect
+    ) -> NSView? {
+        viewCreationCallCount += 1
+        
+        // Create a simple test view
+        let view = NSView(frame: proposedViewFrame)
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.blue.cgColor
+        view.layer?.cornerRadius = proposedViewFrame.width / 2
+        
+        return view
+    }
+    
+    func addMockAnnotation(range: NSTextRange, content: String, id: String) {
+        let annotation = STAnnotation(range: range, content: content, id: id)
+        mockAnnotations.append(annotation)
+    }
+    
+    func clearMockAnnotations() {
+        mockAnnotations.removeAll()
+        viewCreationCallCount = 0
+    }
+}
+
+// MARK: - Test Utilities
+
+extension NSTextRange {
+    /// Test helper to check if ranges intersect
+    func intersects(_ other: NSTextRange) -> Bool {
+        _ = other
+        // Simple intersection check for testing
+        // In a real implementation, this would use proper NSTextRange comparison
+        return true // Simplified for testing
     }
 }
 
