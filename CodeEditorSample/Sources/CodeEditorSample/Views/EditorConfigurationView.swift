@@ -43,9 +43,15 @@ struct EditorConfigurationView: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     // Show text input dialog or paste from clipboard
+                    #if canImport(AppKit)
                     if let clipboard = NSPasteboard.general.string(forType: .string) {
                         appState.setCustomCode(clipboard)
                     }
+                    #else
+                    // iOS doesn't have direct clipboard access like macOS
+                    // For now, just clear the custom code
+                    appState.setCustomCode("")
+                    #endif
                 }
             }
 
@@ -106,7 +112,11 @@ struct EditorConfigurationView: View {
                     Slider(value: Binding(
                         get: { appState.currentConfiguration.textContainerInset.width },
                         set: { 
+                            #if canImport(AppKit)
                             appState.currentConfiguration.textContainerInset = NSSize(width: $0, height: $0)
+                            #else
+                            appState.currentConfiguration.textContainerInset = CGSize(width: $0, height: $0)
+                            #endif
                         }
                     ), in: 0 ... 20, step: 1)
                 }
@@ -271,7 +281,11 @@ struct ThemeRow: View {
                     .frame(width: 16, height: 16)
             }
             .padding(4)
+            #if canImport(AppKit)
             .background(Color(NSColor.controlBackgroundColor))
+            #else
+            .background(Color(.systemGray6))
+            #endif
             .cornerRadius(4)
 
             Text(theme.displayName)

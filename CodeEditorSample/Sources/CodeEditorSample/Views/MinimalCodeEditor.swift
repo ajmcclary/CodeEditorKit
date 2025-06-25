@@ -1,4 +1,9 @@
+#if canImport(AppKit)
 import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import CodeEditorPlugin
 import SwiftUI
 
@@ -23,9 +28,16 @@ struct MinimalCodeEditor: View {
                 .font(.headline)
                 .padding()
 
+            #if canImport(AppKit)
             MinimalCodeEditorWrapper()
                 .frame(minHeight: 400)
                 .border(Color.red, width: 2)
+            #else
+            Text("MinimalCodeEditorWrapper is not available on iOS")
+                .foregroundColor(.secondary)
+                .frame(minHeight: 400)
+                .border(Color.red, width: 2)
+            #endif
         }
         .padding()
     }
@@ -33,6 +45,7 @@ struct MinimalCodeEditor: View {
 
 // MARK: - MinimalCodeEditorWrapper
 
+#if canImport(AppKit)
 struct MinimalCodeEditorWrapper: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSView {
         // Create a container view
@@ -62,3 +75,4 @@ struct MinimalCodeEditorWrapper: NSViewRepresentable {
         // Nothing to update
     }
 }
+#endif

@@ -18,6 +18,8 @@ A powerful, modern code editor component for macOS and iOS applications built wi
 - 🔌 **Plugin Architecture** - Extensible plugin system for custom functionality
 - 📝 **Inline Annotations** - TODO/FIXME/NOTE/WARNING/ERROR detection with hover popups
 - 📱 **Cross-Platform** - macOS, iOS, and Mac Catalyst support
+- 🎨 **SwiftUI Integration** - Native SwiftUI wrapper with environment theming
+- ⚡ **Reactive Bindings** - Real-time text and selection change callbacks
 
 ## 📋 Requirements
 
@@ -46,7 +48,78 @@ dependencies: [
 
 ## 🚀 Quick Start
 
-### SwiftUI Usage (Recommended)
+### SwiftUI Integration (Recommended)
+
+CodeEditorPlugin provides native SwiftUI support with cross-platform compatibility:
+
+```swift
+import CodeEditorPlugin
+import SwiftUI
+
+struct ContentView: View {
+    @State private var code = """
+        func greetWorld() {
+            print("Hello, World!")
+            print("Welcome to CodeEditorPlugin!")
+        }
+        """
+    
+    var body: some View {
+        VStack {
+            CodeEditorSwiftUIView(
+                text: $code,
+                language: .swift,
+                theme: .default,
+                showLineNumbers: true,
+                highlightSelectedLine: true,
+                isEditable: true
+            )
+            .onTextChange { newText in
+                print("Text changed: \(newText.count) characters")
+            }
+            .onSelectionChange { range in
+                print("Selection: \(range)")
+            }
+            .frame(minHeight: 400)
+        }
+        .padding()
+    }
+}
+```
+
+#### Cross-Platform Support
+
+The same SwiftUI code works across all platforms:
+
+- **macOS 12.0+** - Uses `NSViewRepresentable` with `NSTextView`
+- **iOS 16.0+** - Uses `UIViewRepresentable` with `UITextView`  
+- **iPadOS 16.0+** - Full tablet support with touch optimizations
+- **Mac Catalyst 16.0+** - iPad apps running natively on macOS
+
+#### Environment Theming
+
+```swift
+VStack {
+    CodeEditorSwiftUIView(text: $code, language: .swift)
+    CodeEditorSwiftUIView(text: $pythonCode, language: .python)
+}
+.codeEditorTheme(.dark)  // Apply theme to entire hierarchy
+```
+
+#### Built-in Language Support
+
+```swift
+// Static language constants
+CodeEditorSwiftUIView(text: $code, language: .swift)
+CodeEditorSwiftUIView(text: $code, language: .python)
+CodeEditorSwiftUIView(text: $code, language: .javascript)
+CodeEditorSwiftUIView(text: $code, language: .json)
+
+// Or use automatic detection
+CodeEditorSwiftUIView(text: $code, language: .plainText)
+```
+
+### Legacy SwiftUI Usage (Configuration-Based)
 
 ```swift
 import CodeEditorPlugin
@@ -260,6 +333,130 @@ Most configuration options are fully implemented. The following features are mar
 
 All other configurations including word wrap, horizontal scrolling, hardware acceleration, and text processing options are fully functional.
 
+## 🎨 SwiftUI API Reference
+
+### CodeEditorSwiftUIView
+
+The modern SwiftUI wrapper provides a clean, reactive API:
+
+```swift
+CodeEditorSwiftUIView(
+    text: Binding<String>,              // Required: Two-way text binding
+    language: Language = .plainText,    // Language for syntax highlighting
+    theme: CodeEditorSwiftUITheme = .default,  // Visual theme
+    showLineNumbers: Bool = true,       // Show line numbers in gutter
+    highlightSelectedLine: Bool = true, // Highlight current line
+    isEditable: Bool = true            // Enable text editing
+)
+```
+
+### Theme System
+
+Built-in themes:
+
+```swift
+.default    // System default theme
+.dark      // Dark theme optimized for low light
+```
+
+Custom themes:
+
+```swift
+let customTheme = CodeEditorSwiftUITheme(
+    name: "custom",
+    backgroundColor: .black,
+    textColor: .white,
+    lineNumberColor: .gray,
+    selectedLineColor: .blue.opacity(0.2)
+)
+
+CodeEditorSwiftUIView(text: $code, theme: customTheme)
+```
+
+### Event Handling
+
+React to text and selection changes:
+
+```swift
+CodeEditorSwiftUIView(text: $code, language: .swift)
+    .onTextChange { newText in
+        // Called when text changes
+        validateCode(newText)
+    }
+    .onSelectionChange { range in
+        // Called when selection changes
+        updateStatusBar(range)
+    }
+```
+
+### Modifiers
+
+Chain modifiers for clean configuration:
+
+```swift
+CodeEditorSwiftUIView(text: $code, language: .swift)
+    .showLineNumbers(true)
+    .highlightSelectedLine(true)
+    .editable(true)
+    .onTextChange { text in print("Changed: \(text)") }
+```
+
+### Environment Integration
+
+Use environment values for theme management:
+
+```swift
+@Environment(\.codeEditorTheme) var theme
+
+var body: some View {
+    VStack {
+        CodeEditorSwiftUIView(text: $code)
+        Button("Toggle Theme") {
+            // Theme changes apply to entire hierarchy
+        }
+    }
+    .codeEditorTheme(isDark ? .dark : .default)
+}
+```
+
+### Language Detection
+
+Automatic language detection based on content and file extensions:
+
+```swift
+// Explicit language setting
+CodeEditorSwiftUIView(text: $swiftCode, language: .swift)
+CodeEditorSwiftUIView(text: $pythonCode, language: .python)
+CodeEditorSwiftUIView(text: $jsCode, language: .javascript)
+CodeEditorSwiftUIView(text: $jsonData, language: .json)
+
+// Auto-detection (falls back to .plainText)
+CodeEditorSwiftUIView(text: $unknownCode, language: .plainText)
+```
+
+### Cross-Platform Considerations
+
+The SwiftUI wrapper automatically adapts to the platform:
+
+**macOS:**
+- Uses `NSViewRepresentable`
+- Full TextKit 2 integration
+- Native scroll view support
+- Complete keyboard shortcuts
+
+**iOS/iPadOS:**
+- Uses `UIViewRepresentable` with `CodeEditorContainerView`
+- Touch-optimized interactions
+- Fixed gutter architecture prevents line number clipping
+- Adaptive layouts for different screen sizes
+- Proper keyboard handling with content insets
+- Support for external keyboards
+
+**Mac Catalyst:**
+- Hybrid approach optimized for macOS
+- Touch and mouse input support
+- Native window management
+
 ## 🎨 Syntax Highlighting
 
 ### Supported Languages
@@ -303,6 +500,7 @@ Check out the comprehensive example application in `CodeEditorSample/` that demo
 - ✅ **Configuration management** with import/export
 - ✅ **All editor features** (line numbers, invisible characters, line highlighting)
 - ✅ **Inline annotations** with hover popups for TODO/FIXME/NOTE/WARNING/ERROR comments
+- ✅ **SwiftUI integration demo** with cross-platform examples
 - ✅ **Multiple editor instances** and layouts
 - ✅ **Preset configurations** (minimal, read-only, markdown, presentation)
 - ✅ **Interactive feature tour** and documentation
@@ -321,11 +519,12 @@ CodeEditorPlugin is built with a clean, modular architecture fully optimized for
 
 ### Core Components
 
-- **CodeEditorView** - Enhanced NSTextView subclass with modern TextKit2 integration
+- **CodeEditorView** - Enhanced NSTextView/UITextView subclass with modern TextKit2 integration
+- **CodeEditorContainerView (iOS)** - Container architecture for proper iOS gutter display
 - **Syntax Highlighting** - Multi-strategy highlighting system (SwiftSyntax + Regex-based)
 - **Theme System** - Comprehensive theming with color management
 - **Plugin Architecture** - Extensible system for custom functionality
-- **SwiftUI Integration** - Native SwiftUI wrappers with proper scroll view embedding
+- **SwiftUI Integration** - Native cross-platform SwiftUI wrappers with environment theming
 - **Performance Layer** - Actor-based background processing and viewport optimization
 
 ### Simplified Directory Structure
@@ -337,8 +536,12 @@ Sources/CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
+│   ├── GutterView.swift    # Line numbers (cross-platform)
+│   ├── CodeEditorContainerView.swift # iOS container architecture
+│   └── Fragments/          # Text layout fragments
 ├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
+├── SwiftUI/                # SwiftUI integration components
 ├── Completion/             # Code completion
 ├── Platform/               # Platform-specific code
 └── CodeEditorPlugin.swift  # Main module file
@@ -367,10 +570,12 @@ Sources/CodeEditorPlugin/
 - ✅ **Simplified Directory Structure** - Reduced from 39 to 10 directories with feature-based organization
 - ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
+- ✅ **iOS Container Architecture** - Fixed line number display issues with proper container view separation
 - ✅ **Protocol Conformance** - Complete CodeEditorViewDelegate implementation
 - ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations across 102 files
 - ✅ **Test Coverage** - Comprehensive test suite with 172 passing tests
 - ✅ **Annotation System** - Complete inline annotations with hover popups for code comments
+- ✅ **SwiftUI Integration** - Cross-platform SwiftUI wrapper with environment theming
 - ✅ **Performance** - Optimized for large files with actor-based background processing
 
 ## 🧪 Testing

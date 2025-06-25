@@ -35,7 +35,11 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
                 NSColor.systemPurple
 
             case .identifier:
+                #if canImport(AppKit)
                 NSColor.labelColor
+                #else
+                UIColor.label
+                #endif
 
             case .string:
                 NSColor.systemRed
@@ -59,13 +63,21 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
                 NSColor.systemBrown
 
             case .punctuation:
+                #if canImport(AppKit)
                 NSColor.secondaryLabelColor
+                #else
+                UIColor.secondaryLabel
+                #endif
 
             case .whitespace:
                 NSColor.clear
 
             case .unknown:
+                #if canImport(AppKit)
                 NSColor.labelColor
+                #else
+                UIColor.label
+                #endif
             }
         }
     }

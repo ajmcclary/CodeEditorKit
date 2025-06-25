@@ -1,4 +1,9 @@
+#if canImport(AppKit)
 import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import CodeEditorPlugin
 import SwiftUI
 
@@ -8,7 +13,7 @@ struct SampleCodeEditorView: View {
     let language: String
 
     var body: some View {
-        UnifiedCodeEditorView(
+        CodeEditorViewWrapper(
             configuration: configuration,
             text: $text,
             language: language,

@@ -117,7 +117,11 @@ extension CodeEditorViewDelegate {
 
     @MainActor
     func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
+        #if canImport(AppKit)
         CompletionViewController()
+        #else
+        BasicCompletionViewController()
+        #endif
     }
 
     func textViewInsertionPointView(_: CodeEditorView, frame _: CGRect) -> (InsertionPointIndicatorProtocol)? {

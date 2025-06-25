@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "CodeEditorSample",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v12), .iOS(.v16), .macCatalyst(.v16)
     ],
     products: [
         .executable(

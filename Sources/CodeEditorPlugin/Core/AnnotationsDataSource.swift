@@ -21,5 +21,5 @@ public protocol AnnotationsDataSource: AnyObject {
         viewForLineAnnotation annotation: CodeEditorViewAnnotation,
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
-    ) -> NSView?
+    ) -> PlatformView?
 }

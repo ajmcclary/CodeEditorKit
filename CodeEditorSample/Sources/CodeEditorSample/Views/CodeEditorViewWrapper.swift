@@ -1,8 +1,15 @@
+#if canImport(AppKit)
+import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import CodeEditorPlugin
 import SwiftUI
 
 // MARK: - CodeEditorViewWrapper
 
+#if canImport(AppKit)
 struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
@@ -189,8 +196,8 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         
         // Selection attributes based on theme
         textView.selectedTextAttributes = [
-            .backgroundColor: NSColor.selectedTextBackgroundColor,
-            .foregroundColor: NSColor.selectedTextColor
+            .backgroundColor: PlatformColor.selectedTextBackgroundColor,
+            .foregroundColor: PlatformColor.selectedTextColor
         ]
 
         // Line highlighting
@@ -286,7 +293,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             shouldChangeTextIn affectedCharRange: NSTextRange,
             replacementString: String?
         ) -> Bool {
-            guard let replacementString = replacementString else { return true }
+            guard replacementString != nil else { return true }
             
             // Note: Tab handling and auto-indent would require deeper integration with CodeEditorView's
             // text system. For now, these features are documented but not implemented.
@@ -346,3 +353,54 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
     }
 }
+#endif
+
+// MARK: - iOS Implementation
+
+#if canImport(UIKit)
+struct CodeEditorViewWrapper: View {
+    let configuration: EditorConfiguration
+    @Binding var text: String
+    let language: String
+    let onTextViewReady: ((CodeEditorView) -> Void)?
+
+    init(
+        configuration: EditorConfiguration,
+        text: Binding<String>,
+        language: String,
+        onTextViewReady: ((CodeEditorView) -> Void)? = nil
+    ) {
+        self.configuration = configuration
+        self._text = text
+        self.language = language
+        self.onTextViewReady = onTextViewReady
+    }
+
+    var body: some View {
+        // Use the actual CodeEditorSwiftUIView implementation
+        CodeEditorSwiftUIView(
+            text: $text,
+            language: detectLanguage(from: language),
+            showLineNumbers: configuration.showLineNumbers,
+            highlightSelectedLine: configuration.highlightSelectedLine,
+            isEditable: configuration.isEditable,
+            becomeFirstResponderOnAppear: configuration.isEditable
+        )
+    }
+    
+    private func detectLanguage(from fileExtension: String) -> Language {
+        switch fileExtension.lowercased() {
+        case "swift":
+            return .swift
+        case "py", "python":
+            return .python
+        case "js", "javascript":
+            return .javascript
+        case "json":
+            return .json
+        default:
+            return .plainText
+        }
+    }
+}
+#endif

@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import AppKit
 import Foundation
 import os.log
@@ -328,3 +329,21 @@ extension NSTextView {
         nil
     }
 }
+
+#else
+// MARK: iOS/UIKit Stub
+
+/// Stub implementation for iOS/UIKit
+@MainActor
+public final class ModernTextKitHelper: @unchecked Sendable {
+    public static var shouldUseTextKit2: Bool { false }
+
+    public static func configureTextView(_: Any) {}
+    public static func optimizeTextViewPerformance(_: Any) {}
+    public static func ensureTextKit2(for _: Any) -> Bool { false }
+
+    deinit {
+        // Cleanup if needed
+    }
+}
+#endif

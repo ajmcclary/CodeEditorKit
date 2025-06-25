@@ -1,8 +1,5 @@
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
+#if canImport(AppKit)
 @preconcurrency import AppKit
-#endif
 
 // MARK: - TextLayoutFragment
 
@@ -176,3 +173,4 @@ final class TextLayoutFragment: NSTextLayoutFragment {
         // Cleanup if needed
     }
 }
+#endif

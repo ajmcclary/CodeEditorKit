@@ -655,4 +655,8 @@ enum WebSamples {
         }
     }
     """
+    
+    static let allSamples: [String: String] = [
+        "JavaScript Sample": javascriptSample
+    ]
 }

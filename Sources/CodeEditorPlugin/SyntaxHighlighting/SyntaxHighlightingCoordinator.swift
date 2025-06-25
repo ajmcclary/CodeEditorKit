@@ -81,7 +81,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
                 continue
             }
             // Use adaptive color system that works with macOS 26 Liquid Glass design
-            attributedString.addAttribute(.foregroundColor, value: token.type.adaptiveColor, range: token.range)
+            attributedString.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
     }
 
@@ -104,7 +104,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 
 // MARK: - Language
 
-public enum Language: Equatable {
+public enum Language: Equatable, Hashable {
     case swift
     case regex(RegexSyntaxHighlighter.LanguageDefinition)
     case plainText
@@ -135,6 +135,76 @@ public enum Language: Equatable {
             false
         }
     }
+    
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case .swift:
+            hasher.combine("swift")
+
+        case .plainText:
+            hasher.combine("plainText")
+
+        case .regex(let definition):
+            hasher.combine("regex")
+            hasher.combine(definition.name)
+        }
+    }
+    
+    // MARK: - Commonly Used Languages
+    
+    /// Python language definition
+    public static var python: Self {
+        // Create language definition directly using the static helper
+        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "#.*$", tokenType: .comment, priority: 10),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\\b", tokenType: .keyword, priority: 7)
+        ].compactMap { $0 }
+        
+        let definition = RegexSyntaxHighlighter.LanguageDefinition(
+            name: "Python",
+            fileExtensions: ["py", "pyw"],
+            rules: rules
+        )
+        return .regex(definition)
+    }
+    
+    public static var javascript: Self {
+        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "//.*$", tokenType: .comment, priority: 10),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "/\\*[\\s\\S]*?\\*/", tokenType: .comment, priority: 10),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "`(?:[^`\\\\]|\\\\.)*`", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof)\\b", tokenType: .keyword, priority: 7)
+        ].compactMap { $0 }
+        
+        let definition = RegexSyntaxHighlighter.LanguageDefinition(
+            name: "JavaScript",
+            fileExtensions: ["js", "jsx", "mjs"],
+            rules: rules
+        )
+        return .regex(definition)
+    }
+    
+    public static var json: Self {
+        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null)\\b", tokenType: .keyword, priority: 7),
+            try? RegexSyntaxHighlighter.HighlightRule(pattern: "[{}\\[\\],:]", tokenType: .punctuation, priority: 6)
+        ].compactMap { $0 }
+        
+        let definition = RegexSyntaxHighlighter.LanguageDefinition(
+            name: "JSON",
+            fileExtensions: ["json", "jsonc"],
+            rules: rules
+        )
+        return .regex(definition)
+    }
 }
 
 // MARK: - TokenType
@@ -154,10 +224,46 @@ public enum TokenType: String, CaseIterable {
     case preprocessor
     case unknown
 
-    /// Legacy color property - use adaptiveColor for macOS 26 compatibility
-    @MainActor public var color: NSColor {
+    /// Cross-platform adaptive color property
+    #if canImport(AppKit)
+    @MainActor public var adaptiveColor: NSColor {
         AdaptiveColorSystem.syntaxColor(for: self)
     }
+    #else
+    @MainActor public var adaptiveColor: UIColor {
+        defaultColor
+    }
+    #endif
+    
+    /// Legacy color property - use adaptiveColor for macOS 26 compatibility
+    @MainActor public var color: NSColor {
+        #if canImport(AppKit)
+        AdaptiveColorSystem.syntaxColor(for: self)
+        #else
+        defaultColor
+        #endif
+    }
+    
+    #if canImport(UIKit)
+    /// Default colors for iOS
+    @MainActor public var defaultColor: UIColor {
+        switch self {
+        case .keyword: return .systemPurple
+        case .identifier: return .label
+        case .string: return .systemRed
+        case .number: return .systemBlue
+        case .comment: return .systemGreen
+        case .type: return .systemTeal
+        case .function: return .systemIndigo
+        case .property: return .systemOrange
+        case .operator: return .systemBrown
+        case .punctuation: return .secondaryLabel
+        case .whitespace: return .clear
+        case .preprocessor: return .systemPink
+        case .unknown: return .label
+        }
+    }
+    #endif
 
     /// Convert from SwiftSyntax token type
     init(from swiftType: SwiftSyntaxHighlighter.TokenType) {

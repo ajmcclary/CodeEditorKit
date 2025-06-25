@@ -4,6 +4,29 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
+    
+    var body: some View {
+        #if os(macOS)
+        if #available(macOS 13.0, *) {
+            MacOSContentView()
+        } else {
+            Text("macOS 13.0 or later required")
+        }
+        #elseif os(iOS) || os(visionOS)
+        if #available(iOS 16.0, *) {
+            IOSContentView()
+        } else {
+            Text("iOS 16.0 or later required")
+        }
+        #endif
+    }
+}
+
+// MARK: - macOS Content View
+
+#if os(macOS)
+@available(macOS 13.0, *)
+struct MacOSContentView: View {
     @State private var configuration = ConfigurationPreset.fullFeatured.configuration
     @State private var selectedPreset: ConfigurationPreset = .fullFeatured
     @State private var selectedSample: SampleCode = .swift
@@ -44,7 +67,7 @@ struct ContentView: View {
                                 .font(.caption)
                                 .padding(.vertical, 4)
                                 .frame(maxWidth: .infinity)
-                                .background(Color(NSColor.controlBackgroundColor))
+                                .background(Color(.controlBackgroundColor))
 
                             SampleCodeEditorView(
                                 configuration: configuration,
@@ -58,7 +81,7 @@ struct ContentView: View {
                                 .font(.caption)
                                 .padding(.vertical, 4)
                                 .frame(maxWidth: .infinity)
-                                .background(Color(NSColor.controlBackgroundColor))
+                                .background(Color(.controlBackgroundColor))
 
                             SampleCodeEditorView(
                                 configuration: splitConfiguration,
@@ -151,6 +174,7 @@ struct ContentView: View {
 
 // MARK: - ConfigurationSidebar
 
+@available(macOS 13.0, *)
 struct ConfigurationSidebar: View {
     @Binding var configuration: EditorConfiguration
     @Binding var selectedPreset: ConfigurationPreset
@@ -257,7 +281,11 @@ struct ConfigurationSidebar: View {
                                 .frame(width: 16, height: 16)
                         }
                         .padding(4)
+                        #if canImport(AppKit)
                         .background(Color(NSColor.controlBackgroundColor))
+                        #else
+                        .background(Color(.systemGray6))
+                        #endif
                         .cornerRadius(4)
 
                         Text(theme.displayName)
@@ -280,3 +308,4 @@ struct ConfigurationSidebar: View {
         .navigationTitle("Configuration")
     }
 }
+#endif

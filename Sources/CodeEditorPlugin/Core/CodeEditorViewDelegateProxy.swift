@@ -1,8 +1,19 @@
+#if canImport(AppKit)
 @preconcurrency import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import Foundation
 
 @MainActor
-class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate, NSTextViewDelegate {
+class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate {
+    #if canImport(AppKit)
+    // NSTextViewDelegate methods will be implemented
+    #elseif canImport(UIKit)
+    // UITextViewDelegate methods will be implemented
+    #endif
+    
     weak var source: CodeEditorViewDelegate?
 
     init(source: CodeEditorViewDelegate?) {
@@ -88,7 +99,12 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
     }
 
     func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol {
-        source?.textViewCompletionViewController(textView) ?? CompletionViewController()
+        #if canImport(AppKit)
+        return source?.textViewCompletionViewController(textView) ?? CompletionViewController()
+        #else
+        // iOS stub - return a minimal implementation
+        return source?.textViewCompletionViewController(textView) ?? BasicCompletionViewController()
+        #endif
     }
 
     func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicatorProtocol)? {
@@ -115,8 +131,9 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         source?.textView(textView, shouldAllowInteractionWith: attachment, at: location) ?? true
     }
 
-    // MARK: - NSTextViewDelegate forwarding
+    // MARK: - Platform-specific delegate forwarding
 
+    #if canImport(AppKit)
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
         if let textView = notification.object as? CodeEditorView {
@@ -135,8 +152,34 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         }
         return true
     }
+    #elseif canImport(UIKit)
+    func textViewDidChange(_ textView: UITextView) {
+        // Forward UITextView's textViewDidChange to our custom notification
+        if let codeEditorView = textView as? CodeEditorView {
+            let stNotification = Notification(name: UITextView.textDidChangeNotification, object: codeEditorView)
+            textViewDidChangeText(stNotification)
+        }
+    }
+
+    func textView(_ textView: UITextView, shouldChangeTextIn _: NSRange, replacementText _: String) -> Bool {
+        // Convert NSRange to NSTextRange for CodeEditorView compatibility
+        if textView is CodeEditorView {
+            // For now, just forward with a simple implementation
+            return true
+        }
+        return true
+    }
+    #endif
 
     deinit {
         // Cleanup if needed
     }
 }
+
+#if canImport(AppKit)
+// swiftlint:disable:next no_grouping_extension
+extension CodeEditorViewDelegateProxy: NSTextViewDelegate {}
+#elseif canImport(UIKit)
+// swiftlint:disable:next no_grouping_extension
+extension CodeEditorViewDelegateProxy: UITextViewDelegate {}
+#endif

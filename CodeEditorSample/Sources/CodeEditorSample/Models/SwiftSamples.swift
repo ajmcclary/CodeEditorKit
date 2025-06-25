@@ -93,4 +93,8 @@ enum SwiftSamples {
         }
     }
     """
+    
+    static let allSamples: [String: String] = [
+        "SwiftUI Sample": swiftSample
+    ]
 }

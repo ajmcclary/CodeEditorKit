@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 @preconcurrency import AppKit
 
 /// Custom insertion point indicator view. Optional.
@@ -7,3 +8,15 @@ public protocol InsertionPointIndicatorProtocol: NSView {
     func blinkStart()
     func blinkStop()
 }
+
+#elseif canImport(UIKit)
+import UIKit
+
+/// Custom insertion point indicator view. Optional.
+public protocol InsertionPointIndicatorProtocol: UIView {
+    var insertionPointColor: UIColor { get set }
+
+    func blinkStart()
+    func blinkStop()
+}
+#endif

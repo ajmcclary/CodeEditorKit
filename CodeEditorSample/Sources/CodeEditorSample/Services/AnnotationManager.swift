@@ -1,4 +1,9 @@
+#if canImport(AppKit)
 import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import CodeEditorPlugin
 import Foundation
 
@@ -63,7 +68,9 @@ final class AnnotationManager: NSObject {
         annotations.removeAll()
         
         // Also remove any manually added annotation views
+        #if canImport(AppKit)
         textView?.subviews.filter { $0 is AnnotationView }.forEach { $0.removeFromSuperview() }
+        #endif
     }
     
     /// Create annotations using TextKit1-compatible approach
@@ -102,11 +109,19 @@ final class AnnotationManager: NSObject {
         print("DEBUG AnnotationManager: Creating simple annotation marker at range: \(range)")
         
         // Create a dummy NSTextRange using the document start
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage,
               textStorage.length > 0 else { 
             print("DEBUG AnnotationManager: No text storage or empty text")
             return 
         }
+        #else
+        let textStorage = textView.textStorage
+        guard textStorage.length > 0 else { 
+            print("DEBUG AnnotationManager: Empty text")
+            return 
+        }
+        #endif
         
         // Create a simple range at the location we found
         let location = max(0, min(range.location, textStorage.length - 1))
@@ -127,11 +142,16 @@ final class AnnotationManager: NSObject {
         annotations.append(annotation)
         
         // Calculate proper position using TextKit1 layout
+        #if canImport(AppKit)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
             print("DEBUG AnnotationManager: No layout manager or text container")
             return
         }
+        #else
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        #endif
         
         // Convert NSRange to glyph range
         let glyphRange = layoutManager.glyphRange(forCharacterRange: clampedRange, actualCharacterRange: nil)
@@ -144,8 +164,13 @@ final class AnnotationManager: NSObject {
         // Position annotation inline, right after the text
         let badgeSize: CGFloat = 20
         let badgePadding: CGFloat = 4
+        #if canImport(AppKit)
         let annotationX = textView.textContainerInset.width + boundingRect.maxX + badgePadding
         let annotationY = textView.textContainerInset.height + boundingRect.midY - (badgeSize / 2)
+        #else
+        let annotationX = textView.textContainerInset.left + boundingRect.maxX + badgePadding
+        let annotationY = textView.textContainerInset.top + boundingRect.midY - (badgeSize / 2)
+        #endif
         
         let annotationFrame = CGRect(
             x: annotationX,
@@ -157,10 +182,21 @@ final class AnnotationManager: NSObject {
         print("DEBUG AnnotationManager: Calculated annotation frame: \(annotationFrame)")
         
         // Create a simple annotation view and add it directly to the text view
+        #if canImport(AppKit)
         let annotationView = AnnotationView(annotation: annotation, frame: annotationFrame)
+        #else
+        // iOS doesn't have AnnotationView yet - create a simple UIView instead
+        let annotationView = UIView(frame: annotationFrame)
+        annotationView.backgroundColor = type.color
+        annotationView.layer.cornerRadius = badgeSize / 2
+        #endif
+        #if canImport(AppKit)
         annotationView.wantsLayer = true
         annotationView.layer?.backgroundColor = type.color.cgColor
         annotationView.layer?.cornerRadius = badgeSize / 2
+        #else
+        // Already configured above for iOS
+        #endif
         
         print("DEBUG AnnotationManager: Adding annotation view at calculated position")
         textView.addSubview(annotationView)
@@ -208,6 +244,7 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         }
     }
     
+    #if canImport(AppKit)
     func textView(
         _ textView: CodeEditorView,
         viewForLineAnnotation annotation: CodeEditorViewAnnotation,
@@ -224,13 +261,29 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
             return nil
         }
         
+        #if canImport(AppKit)
         print("DEBUG AnnotationManager: Creating AnnotationView for: \(codeAnnotation.type.label)")
         
         // Create and return annotation view
         let annotationView = AnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
         print("DEBUG AnnotationManager: Created AnnotationView with frame: \(annotationView.frame)")
         return annotationView
+        #else
+        // iOS doesn't have AnnotationView yet
+        return nil
+        #endif
     }
+    #else
+    func textView(
+        _ textView: CodeEditorView,
+        viewForLineAnnotation annotation: CodeEditorViewAnnotation,
+        textLineFragment: NSTextLineFragment,
+        proposedViewFrame: CGRect
+    ) -> UIView? {
+        // iOS stub implementation
+        return nil
+    }
+    #endif
 }
 
 // MARK: - CodeAnnotation
@@ -249,7 +302,8 @@ struct CodeAnnotation {
         case note
         case error
         
-        var color: NSColor {
+        #if canImport(AppKit)
+        var color: PlatformColor {
             switch self {
             case .todo:
                 return .systemBlue
@@ -263,6 +317,22 @@ struct CodeAnnotation {
                 return .systemRed
             }
         }
+        #else
+        var color: UIColor {
+            switch self {
+            case .todo:
+                return .systemBlue
+            case .fixme:
+                return .systemOrange
+            case .warning:
+                return .systemYellow
+            case .note:
+                return .systemGray
+            case .error:
+                return .systemRed
+            }
+        }
+        #endif
         
         var icon: String {
             switch self {
@@ -298,6 +368,7 @@ struct CodeAnnotation {
 
 // MARK: - AnnotationView
 
+#if canImport(AppKit)
 class AnnotationView: NSView {
     private let annotation: CodeAnnotation
     private var trackingArea: NSTrackingArea?
@@ -417,7 +488,7 @@ class AnnotationView: NSView {
         let containerView = NSView()
         containerView.wantsLayer = true
         containerView.layer?.cornerRadius = 6
-        containerView.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        containerView.layer?.backgroundColor = PlatformColor.controlBackgroundColor.cgColor
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
         
@@ -467,3 +538,4 @@ class AnnotationView: NSView {
         popover = nil
     }
 }
+#endif

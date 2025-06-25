@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import AppKit
 import Foundation
 
@@ -153,3 +154,20 @@ extension NSControl.ControlSize {
         }
     }
 }
+
+#else
+// MARK: iOS/UIKit Stub
+
+/// Stub implementation for iOS
+@MainActor
+public enum MacOSVersionDetection {
+    public static var hasStableTextKit2: Bool { false }
+    public static var isMacOS26OrLater: Bool { false }
+    public static var isMacOS25OrLater: Bool { false }
+    public static var isMacOS24OrLater: Bool { false }
+    public static var supportsTextViewSoundAttachments: Bool { false }
+    public static var supportsLiquidGlassDesign: Bool { false }
+    public static var supportsLayoutRegionAPI: Bool { false }
+    public static var supportsExtraLargeControlSize: Bool { false }
+}
+#endif

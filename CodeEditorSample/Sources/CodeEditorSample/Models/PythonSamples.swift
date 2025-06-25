@@ -193,4 +193,8 @@ enum PythonSamples {
 
         asyncio.run(main())
     """
+    
+    static let allSamples: [String: String] = [
+        "Python Sample": pythonSample
+    ]
 }

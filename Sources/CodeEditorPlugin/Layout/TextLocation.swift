@@ -5,11 +5,12 @@ import AppKit
 #endif
 
 #if canImport(UIKit)
+@MainActor
 class TextLocation: UITextPosition {
     let location: NSTextLocation
 
     override var debugDescription: String {
-        location.description
+        "TextLocation"
     }
 
     init(location: NSTextLocation) {
@@ -41,6 +42,7 @@ class TextLocation {
 #endif
 
 extension NSTextLocation {
+    @MainActor
     var uiTextPosition: TextLocation {
         TextLocation(location: self)
     }

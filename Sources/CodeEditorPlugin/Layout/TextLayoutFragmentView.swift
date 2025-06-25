@@ -1,9 +1,6 @@
 import Foundation
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
+#if canImport(AppKit)
 import AppKit
-#endif
 
 // MARK: - TextLayoutFragmentView
 
@@ -71,3 +68,44 @@ public class TextLayoutFragmentView: NSView {
         // Cleanup if needed
     }
 }
+
+#elseif canImport(UIKit)
+import UIKit
+
+// MARK: - TextLayoutFragmentView (iOS Stub)
+
+/// Stub implementation for iOS
+public class TextLayoutFragmentView: UIView {
+    public var layoutFragment: NSTextLayoutFragment? {
+        didSet {
+            setNeedsDisplay()
+        }
+    }
+
+    public init(layoutFragment: NSTextLayoutFragment?, frame frameRect: CGRect) {
+        self.layoutFragment = layoutFragment
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    override public init(frame frameRect: CGRect) {
+        self.layoutFragment = nil
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    public required init?(coder: NSCoder) {
+        self.layoutFragment = nil
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+    }
+
+    deinit {
+        // Cleanup if needed
+    }
+}
+#endif

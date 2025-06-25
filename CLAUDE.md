@@ -68,10 +68,12 @@ Sources/CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
-│   ├── GutterView.swift  # Line numbers
+│   ├── GutterView.swift    # Line numbers (cross-platform)
+│   ├── CodeEditorContainerView.swift # iOS container architecture
 │   └── Fragments/          # Text layout fragments
 ├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
+├── SwiftUI/                # SwiftUI integration components
 ├── Completion/             # Code completion
 ├── Platform/               # Platform-specific code
 └── CodeEditorPlugin.swift  # Main module file
@@ -83,6 +85,7 @@ Sources/CodeEditorPlugin/
    - Located in `Sources/CodeEditorPlugin/Core/CodeEditorView.swift`
    - Provides the core editing functionality with modern TextKit2 integration
    - Supports features like line numbers, syntax highlighting, and annotations
+   - On iOS, wrapped by CodeEditorContainerView for proper gutter display
 
 2. **Annotation System** - Inline code comment detection and visualization
    - Detects TODO/FIXME/NOTE/WARNING/ERROR comments in code
@@ -95,6 +98,12 @@ Sources/CodeEditorPlugin/
    - `SyntaxHighlightingCoordinator` in `Sources/CodeEditorPlugin/SyntaxHighlighting/`
    - SwiftSyntax integration for Swift code (requires swift-syntax dependency)
    - Regex-based highlighting for other languages
+
+4. **CodeEditorContainerView (iOS)** - Container architecture for iOS
+   - Located in `Sources/CodeEditorPlugin/Layout/CodeEditorContainerView.swift`
+   - Separates gutter from text view to prevent scrolling/clipping issues
+   - Handles keyboard appearance with content insets
+   - Ensures proper line number display on iOS/iPadOS
 
 
 ### Key Design Patterns
@@ -180,7 +189,13 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 
 ### Recent Architecture Changes
 
-**Directory Structure Simplification (Latest)**
+**iOS Container Architecture (Latest)**
+- Fixed iOS line number display issues where gutter was cut off at line 88
+- Implemented CodeEditorContainerView to separate gutter from scrolling text view
+- Proper keyboard handling using content insets instead of frame resizing
+- Ensures line numbers remain visible and properly aligned on iOS/iPadOS
+
+**Directory Structure Simplification**
 - Reduced from 39 to 10 directories (74% reduction)
 - Transitioned from type-based to feature-based organization
 - Flattened Extensions directory structure

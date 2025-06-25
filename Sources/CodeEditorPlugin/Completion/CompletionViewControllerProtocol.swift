@@ -1,6 +1,11 @@
+#if canImport(AppKit)
 @preconcurrency import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
-public protocol CompletionViewControllerProtocol: NSViewController {
+public protocol CompletionViewControllerProtocol: PlatformViewController {
     typealias Item = any CompletionItem
 
     var items: [Item] { get set }

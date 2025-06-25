@@ -1,17 +1,24 @@
+#if os(macOS)
 import AppKit
+#endif
 import SwiftUI
 
 // MARK: - CodeEditorSampleApp
 
 @main
 struct CodeEditorSampleApp: App {
+    #if os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    #endif
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                #if os(macOS)
                 .frame(minWidth: 1200, minHeight: 800)
+                #endif
         }
+        #if os(macOS)
         .windowStyle(.titleBar)
         .windowToolbarStyle(.automatic)
         .commands {
@@ -40,8 +47,10 @@ struct CodeEditorSampleApp: App {
                 }
             }
         }
+        #endif
     }
 
+    #if os(macOS)
     private func showAboutWindow() {
         let alert = NSAlert()
         alert.messageText = "CodeEditor Sample"
@@ -56,8 +65,10 @@ struct CodeEditorSampleApp: App {
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
+    #endif
 }
 
+#if os(macOS)
 // MARK: - AppDelegate
 
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -78,6 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 }
+#endif
 
 // MARK: - Notification Names
 

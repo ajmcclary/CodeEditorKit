@@ -273,3 +273,236 @@ extension NSTextLayoutManager {
         return attributedString
     }
 }
+
+// MARK: - Enhanced TextKit 2 Viewport Optimization
+
+@available(macOS 12.0, iOS 15.0, *)
+extension NSTextLayoutManager {
+    /// Enumerates line fragments for a given rectangle with viewport optimization
+    public func enumerateLineFragments(for rect: CGRect, strictIntersection: Bool = true, options: NSTextLayoutFragment.EnumerationOptions = [], block: (CGRect, NSRange, inout Bool) -> Void) {
+        guard let textContentManager else { return }
+
+        // Viewport optimization - if viewportRange is available, use it as starting point
+        let viewportRange = textViewportLayoutController.viewportRange ?? documentRange
+        let viewportBounds = textViewportLayoutController.viewportBounds
+        let reversed = options.contains(.reverse)
+
+        var location: NSTextLocation
+
+        if reversed {
+            location = documentRange.endLocation
+            
+            if rect.maxY <= viewportBounds.maxY {
+                location = viewportRange.endLocation
+            }
+            
+            if rect.maxY <= viewportBounds.minY {
+                location = viewportRange.location
+            }
+        } else {
+            location = documentRange.location
+            
+            if rect.minY >= viewportBounds.minY {
+                location = viewportRange.location
+            }
+            
+            if rect.minY >= viewportBounds.maxY {
+                location = viewportRange.endLocation
+            }
+        }
+
+        enumerateTextLayoutFragments(from: location, options: options) { fragment in
+            let frame = fragment.layoutFragmentFrame
+
+            if frame.intersects(rect) == false {
+                // Check if we haven't reached the target rectangle yet
+                if reversed {
+                    return frame.minY < rect.minY
+                } else {
+                    return frame.maxY < rect.maxY
+                }
+            }
+
+            var keepGoing: Bool = true
+
+            if strictIntersection {
+                fragment.enumerateLineFragments(with: textContentManager, intersecting: rect) { _, lineFrame, elementRange in
+                    block(lineFrame, elementRange, &keepGoing)
+                    return keepGoing
+                }
+            } else {
+                fragment.enumerateLineFragments(with: textContentManager) { _, lineFrame, elementRange, _ in
+                    block(lineFrame, elementRange, &keepGoing)
+                    return keepGoing
+                }
+            }
+
+            return keepGoing
+        }
+    }
+
+    /// Enumerates line fragments within a specific range
+    public func enumerateLineFragments(
+        in range: NSRange,
+        options: NSTextLayoutFragment.EnumerationOptions = [],
+        block: (CGRect, NSRange, inout Bool) -> Void
+    ) {
+        guard let textContentManager else { return }
+
+        guard
+            let start = textContentManager.location(documentRange.location, offsetBy: range.location),
+            let end = textContentManager.location(start, offsetBy: range.length)
+        else {
+            return
+        }
+
+        let reverse = options.contains(.reverse)
+
+        enumerateTextLayoutFragments(from: start, options: options) { fragment in
+            let fragmentRange = fragment.rangeInElement
+
+            var stop = false
+
+            fragment.enumerateLineFragments(
+                in: range,
+                with: textContentManager,
+                reverse: reverse
+            ) { _, frame, elementRange, _ in
+                block(frame, elementRange, &stop)
+                return stop == false
+            }
+
+            let beforeEnd = fragmentRange.endLocation.compare(end) == .orderedAscending
+            
+            return stop == false && beforeEnd
+        }
+    }
+
+    /// Enumerates line fragments starting from a specific index
+    public func enumerateLineFragments(
+        from index: Int,
+        options: NSTextLayoutFragment.EnumerationOptions = [],
+        block: (CGRect, NSRange, inout Bool) -> Void
+    ) {
+        guard let textContentManager else { return }
+
+        let docStart = documentRange.location
+        guard let start = textContentManager.location(docStart, offsetBy: index) else {
+            return
+        }
+
+        let reverse = options.contains(.reverse)
+
+        enumerateTextLayoutFragments(from: start, options: options) { fragment in
+            var stop = false
+
+            fragment.enumerateLineFragments(with: textContentManager, reverse: reverse) { _, frame, elementRange, _ in
+                // Verify that we're within the requested range
+                if reverse {
+                    if elementRange.lowerBound > index {
+                        return true
+                    }
+                } else {
+                    if elementRange.upperBound < index {
+                        return true
+                    }
+                }
+
+                block(frame, elementRange, &stop)
+                return stop == false
+            }
+
+            return stop == false
+        }
+    }
+
+    /// Returns the bounding rectangle for a given range
+    public func boundingRect(for range: NSRange) -> CGRect? {
+        var rect: CGRect?
+
+        enumerateTextLineFragments(in: range, options: [.ensuresLayout, .ensuresExtraLineFragment]) { fragment, lineFragment, lineRect, lineRange, offset in
+            // Limit the check to what overlaps with the target range
+            let startIndex = max(range.lowerBound, lineRange.lowerBound) - lineRange.lowerBound
+            let endIndex = min(range.upperBound, lineRange.upperBound) - lineRange.lowerBound
+
+            // These positions are relative to the lineRange's location within fragment
+            let startPos = lineFragment.locationForCharacter(at: startIndex + offset)
+            let endPos = lineFragment.locationForCharacter(at: endIndex + offset)
+            let originPadding = fragment.layoutFragmentFrame.origin.x
+
+            let bounds = CGRect(
+                x: startPos.x + originPadding,
+                y: lineRect.origin.y,
+                width: (endPos.x - startPos.x),
+                height: lineRect.height
+            )
+
+            rect = rect?.union(bounds) ?? bounds
+            return true
+        }
+
+        return rect
+    }
+
+    /// Private helper to get the last text layout fragment
+    private func lastTextLayoutFragment() -> NSTextLayoutFragment? {
+        guard let textContentManager else { return nil }
+
+        if let fragment = textLayoutFragment(for: documentRange.endLocation) {
+            return fragment
+        }
+
+        guard let locBefore = textContentManager.location(documentRange.endLocation, offsetBy: -1) else {
+            return nil
+        }
+
+        return textLayoutFragment(for: locBefore)
+    }
+
+    /// Private helper to enumerate text line fragments within a range
+    private func enumerateTextLineFragments(
+        in range: NSRange,
+        options: NSTextLayoutFragment.EnumerationOptions = [],
+        block: (NSTextLayoutFragment, NSTextLineFragment, CGRect, NSRange, Int) -> Bool
+    ) {
+        guard let textContentManager else { return }
+
+        let docStart = documentRange.location
+        guard
+            let start = textContentManager.location(docStart, offsetBy: range.lowerBound),
+            let end = textContentManager.location(docStart, offsetBy: range.upperBound)
+        else {
+            return
+        }
+
+        let reverse = options.contains(.reverse)
+
+        if textContentManager.offset(from: start, to: documentRange.endLocation) == 0 {
+            guard let fragment = lastTextLayoutFragment() else { return }
+
+            fragment.enumerateLineFragments(
+                in: range,
+                with: textContentManager,
+                reverse: reverse
+            ) { lineFragment, frame, elementRange, offset in
+                block(fragment, lineFragment, frame, elementRange, offset)
+            }
+
+            return
+        }
+
+        enumerateTextLayoutFragments(from: start, options: options) { fragment in
+            let fragmentRange = fragment.rangeInElement
+
+            fragment.enumerateLineFragments(
+                in: range,
+                with: textContentManager,
+                reverse: reverse
+            ) { lineFragment, frame, elementRange, offset in
+                block(fragment, lineFragment, frame, elementRange, offset)
+            }
+
+            return fragmentRange.endLocation.compare(end) == .orderedAscending
+        }
+    }
+}

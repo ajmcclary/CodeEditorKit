@@ -1,4 +1,9 @@
+#if canImport(AppKit)
 import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import Foundation
 
 // MARK: - EditorConfiguration
@@ -20,7 +25,11 @@ struct EditorConfiguration: Sendable {
     var fontSize: CGFloat = 14
     var lineSpacing: CGFloat = 1.2
     var theme: ColorTheme = .xcode
+    #if canImport(AppKit)
     var textContainerInset: NSSize = NSSize(width: 5, height: 5)
+    #else
+    var textContainerInset: CGSize = CGSize(width: 5, height: 5)
+    #endif
     var lineFragmentPadding: CGFloat = 5.0
 
     // Plugins
@@ -53,7 +62,11 @@ struct EditorConfiguration: Sendable {
     var displaysLinkToolTips: Bool = true
     
     // Selection Settings
-    var insertionPointColor: NSColor = NSColor.controlAccentColor
+    #if canImport(AppKit)
+    var insertionPointColor: PlatformColor = PlatformColor.controlAccentColor
+    #else
+    var insertionPointColor: UIColor = UIColor.systemBlue
+    #endif
     // Note: selectedTextAttributes removed due to Sendable constraints
     // These will be computed when needed based on theme
 }

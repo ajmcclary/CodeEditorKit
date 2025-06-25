@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import AppKit
 import Foundation
 
@@ -294,6 +295,7 @@ extension EditorConfiguration: Codable {
             (try? container.decode(Bool.self, forKey: .displaysLinkToolTips)) ?? true
         
         // Selection Settings - use defaults
-        insertionPointColor = NSColor.controlAccentColor
+        insertionPointColor = PlatformColor.controlAccentColor
     }
 }
+#endif

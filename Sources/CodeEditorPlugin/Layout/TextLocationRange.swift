@@ -5,6 +5,7 @@ import AppKit
 #endif
 
 #if canImport(UIKit)
+@MainActor
 class TextLocationRange: UITextRange {
     let textRange: NSTextRange
 
@@ -14,7 +15,7 @@ class TextLocationRange: UITextRange {
     }
 
     override var debugDescription: String {
-        textRange.description
+        "TextLocationRange"
     }
 
     override var start: UITextPosition {
@@ -44,6 +45,7 @@ extension UITextRange {
 }
 #else
 /// macOS equivalent - UITextRange doesn't exist on macOS
+@MainActor
 class TextLocationRange {
     let textRange: NSTextRange
 
@@ -74,6 +76,7 @@ class TextLocationRange {
 #endif
 
 extension NSTextRange {
+    @MainActor
     var uiTextRange: TextLocationRange {
         TextLocationRange(textRange: self)
     }

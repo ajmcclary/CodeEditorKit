@@ -1,0 +1,109 @@
+name: CodeEditorSample
+options:
+  bundleIdPrefix: com.codeeditor.sample
+  deploymentTarget:
+    iOS: "16.0"
+    macOS: "12.0"
+  developmentLanguage: en
+  xcodeVersion: "16.0"
+
+packages:
+  CodeEditorPlugin:
+    path: ../
+
+targets:
+  CodeEditorSample:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources: 
+      - Sources/CodeEditorSample
+    dependencies:
+      - package: CodeEditorPlugin
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.ios
+      MARKETING_VERSION: "1.0.0"
+      CURRENT_PROJECT_VERSION: "1"
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_STYLE: Automatic
+      TARGETED_DEVICE_FAMILY: "1,2" # iPhone and iPad
+      SUPPORTS_MACCATALYST: false
+      DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: false
+      IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+      SWIFT_VERSION: "6.0"
+      ENABLE_EXPERIMENTAL_CONCURRENCY: true
+      SWIFT_STRICT_CONCURRENCY: complete
+      GENERATE_INFOPLIST_FILE: NO
+      INFOPLIST_FILE: Info.plist
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: CodeEditor Sample
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIUserInterfaceStyle: Automatic
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+
+  CodeEditorSample-macOS:
+    type: application
+    platform: macOS
+    deploymentTarget: "12.0"
+    sources: 
+      - Sources/CodeEditorSample
+    dependencies:
+      - package: CodeEditorPlugin
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.macos
+      MARKETING_VERSION: "1.0.0"
+      CURRENT_PROJECT_VERSION: "1"
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_STYLE: Automatic
+      MACOSX_DEPLOYMENT_TARGET: "12.0"
+      SWIFT_VERSION: "6.0"
+      ENABLE_EXPERIMENTAL_CONCURRENCY: true
+      SWIFT_STRICT_CONCURRENCY: complete
+    info:
+      path: Info-macOS.plist
+      properties:
+        CFBundleDisplayName: CodeEditor Sample
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: "Copyright © 2024 CodeEditor. All rights reserved."
+
+schemes:
+  CodeEditorSample:
+    build:
+      targets:
+        CodeEditorSample: all
+    run:
+      config: Debug
+      
+  CodeEditorSample-macOS:
+    build:
+      targets:
+        CodeEditorSample-macOS: all
+    run:
+      config: Debug

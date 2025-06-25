@@ -3,7 +3,7 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 
-private typealias RegexHighlighterColor = UIColor
+public typealias RegexHighlighterColor = UIColor
 #else
 import AppKit
 
@@ -64,7 +64,11 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemPurple
 
             case .identifier:
+                #if canImport(AppKit)
                 .labelColor
+                #else
+                .label
+                #endif
 
             case .string:
                 .systemRed
@@ -88,7 +92,11 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemBrown
 
             case .punctuation:
+                #if canImport(AppKit)
                 .secondaryLabelColor
+                #else
+                .secondaryLabel
+                #endif
 
             case .whitespace:
                 .clear
@@ -97,7 +105,11 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemPink
 
             case .unknown:
+                #if canImport(AppKit)
                 .labelColor
+                #else
+                .label
+                #endif
             }
         }
     }

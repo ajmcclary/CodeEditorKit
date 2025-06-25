@@ -17,6 +17,8 @@ This sample app is a complete demonstration of CodeEditorPlugin's capabilities:
 - ✅ **Full Swift 6 compliance** with complete Sendable conformance
 - ✅ **Comprehensive testing** with 66 passing tests including annotation system testing and performance benchmarks
 - ✅ **Inline Annotations** with hover popups for TODO/FIXME/NOTE/WARNING/ERROR comments
+- ✅ **SwiftUI Integration** with cross-platform support for macOS, iOS, and iPadOS
+- ✅ **Modern SwiftUI API** with environment theming and reactive bindings
 
 ## 🚀 Quick Start
 
@@ -106,7 +108,46 @@ All settings update instantly without restart:
 - **🔄 Auto-indentation** - Smart code formatting
 - **🎪 Hardware Acceleration** - Performance optimization
 
-### 5. 🔧 Advanced Features
+### 5. 📱 SwiftUI Integration
+
+**Cross-Platform Support:**
+- **🖥️ macOS** - Native NSViewRepresentable integration
+- **📱 iOS** - UIViewRepresentable with touch optimizations  
+- **📱 iPadOS** - Full tablet experience with split-screen support
+- **💻 Mac Catalyst** - iPad apps running on macOS
+
+**SwiftUI API:**
+```swift
+CodeEditorSwiftUIView(
+    text: $code,
+    language: .swift,
+    theme: .default,
+    showLineNumbers: true,
+    highlightSelectedLine: true,
+    isEditable: true
+)
+.onTextChange { newText in
+    // Handle text changes
+}
+.onSelectionChange { range in
+    // Handle selection changes
+}
+```
+
+**Theme Environment:**
+```swift
+VStack {
+    CodeEditorSwiftUIView(text: $code, language: .swift)
+}
+.codeEditorTheme(.dark)  // Apply theme to hierarchy
+```
+
+**Language Support:**
+- Built-in language detection for Swift, Python, JavaScript, JSON
+- Automatic syntax highlighting with proper highlighting rules
+- Seamless integration with the underlying CodeEditorView
+
+### 6. 🔧 Advanced Features
 
 **📱 Modern Architecture:**
 - SwiftUI + AppKit integration
@@ -150,6 +191,8 @@ CodeEditorSample/
 ├── 🎨 Views  
 │   ├── SampleCodeEditorView.swift    # SwiftUI ↔ CodeEditorView bridge
 │   ├── CodeEditorViewWrapper.swift   # Enhanced wrapper with callbacks
+│   ├── SwiftUIDemoView.swift         # SwiftUI integration demo
+│   ├── iOSContentView.swift          # iOS/iPadOS optimized interface
 │   ├── EditorConfigurationView.swift # Settings sidebar
 │   ├── StatusBarView.swift           # Status information
 │   ├── EditorToolbar.swift           # Action toolbar
@@ -186,8 +229,12 @@ CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
+│   ├── GutterView.swift    # Line numbers (cross-platform)
+│   ├── CodeEditorContainerView.swift # iOS container architecture
+│   └── Fragments/          # Text layout fragments
 ├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened, +Extensions naming)
+├── SwiftUI/                # SwiftUI integration components
 ├── Completion/             # Code completion
 └── Platform/               # Platform-specific code
 ```
@@ -200,18 +247,32 @@ CodeEditorPlugin/
 
 ### Key Integration Patterns
 
-**1. SwiftUI + AppKit Integration:**
+**1. SwiftUI Cross-Platform Integration:**
 ```swift
-struct UnifiedCodeEditorView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSScrollView()
-        let textView = CodeEditorView()
-        
-        // Configure scroll view for proper scrolling
-        scrollView.hasVerticalScroller = true
-        scrollView.documentView = textView
-        
-        return scrollView
+// macOS Implementation
+struct CodeEditorSwiftUIView: NSViewRepresentable {
+    @Binding var text: String
+    let language: Language
+    
+    func makeNSView(context: Context) -> CodeEditorView {
+        let editorView = CodeEditorView()
+        editorView.language = language
+        editorView.string = text
+        return editorView
+    }
+}
+
+// iOS Implementation  
+struct CodeEditorSwiftUIView: UIViewRepresentable {
+    @Binding var text: String
+    let language: Language
+    
+    func makeUIView(context: Context) -> CodeEditorContainerView {
+        let containerView = CodeEditorContainerView()
+        let editorView = containerView.textView
+        editorView.language = language
+        editorView.text = text
+        return containerView
     }
 }
 ```
@@ -270,11 +331,13 @@ swift test                        # ✅ 66/66 tests passing
 
 - ✅ **Simplified Directory Structure** - Library reorganized from 39 to 10 directories
 - ✅ **Feature-Based Organization** - Related components now grouped together
+- ✅ **iOS Container Architecture** - Fixed line number display beyond line 88 with proper container separation
 - ✅ **SwiftLint Compliance** - Zero violations across 25 files with custom configuration
 - ✅ **Extension Naming Convention** - Adopted +Extensions pattern for clarity
 - ✅ **Improved Build Performance** - Flattened structure reduces module complexity
 - ✅ **Annotation System** - Complete inline code annotation system with hover popups
 - ✅ **Swift 6 Concurrency** - Fixed all concurrency issues for full compliance
+- ✅ **Keyboard Handling** - Proper content insets prevent line number compression on iOS
 
 ## 🛠️ Customization Guide
 
@@ -317,7 +380,11 @@ config.enableSyntaxHighlighting = false  // For very large files
 ## 📋 Requirements & Compatibility
 
 - **Swift**: 6.0+ (with experimental concurrency and full actor-based architecture)
-- **macOS**: 12.0+ (optimized for macOS 14+)
+- **Platforms**: 
+  - **macOS**: 12.0+ (optimized for macOS 14+)
+  - **iOS**: 16.0+ (SwiftUI integration)
+  - **iPadOS**: 16.0+ (Full tablet support)
+  - **Mac Catalyst**: 16.0+ (iPad apps on macOS)
 - **Xcode**: 16.0+
 - **Dependencies**: swift-syntax 510.0.0+
 - **Concurrency**: Full Swift 6 Actor-Based Concurrency with Sendable conformance

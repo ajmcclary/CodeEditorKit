@@ -1,9 +1,6 @@
 import Foundation
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
+#if canImport(AppKit)
 import AppKit
-#endif
 
 // MARK: - InsertionPointView
 
@@ -39,3 +36,30 @@ public class InsertionPointView: NSView {
         // Cleanup if needed
     }
 }
+
+#elseif canImport(UIKit)
+import UIKit
+
+// MARK: - InsertionPointView (iOS Stub)
+
+/// Stub implementation for iOS
+public class InsertionPointView: UIView {
+    override public init(frame frameRect: CGRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        backgroundColor = .label
+    }
+
+    deinit {
+        // Cleanup if needed
+    }
+}
+#endif

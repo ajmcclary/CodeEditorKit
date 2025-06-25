@@ -1,5 +1,10 @@
 import CodeEditorPlugin
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
 struct StatusBarView: View {
     let textView: CodeEditorView?
@@ -41,7 +46,11 @@ struct StatusBarView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
+        #if canImport(AppKit)
         .background(Color(NSColor.controlBackgroundColor))
+        #else
+        .background(Color(.secondarySystemBackground))
+        #endif
         .onAppear {
             setupObservers()
             updateStatus()
@@ -50,6 +59,7 @@ struct StatusBarView: View {
 
     private func setupObservers() {
         // Listen for text changes
+        #if canImport(AppKit)
         NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
@@ -59,8 +69,20 @@ struct StatusBarView: View {
                 updateStatus()
             }
         }
+        #else
+        NotificationCenter.default.addObserver(
+            forName: UITextView.textDidChangeNotification,
+            object: textView,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                updateStatus()
+            }
+        }
+        #endif
 
         // Listen for selection changes
+        #if canImport(AppKit)
         NotificationCenter.default.addObserver(
             forName: NSTextView.didChangeSelectionNotification,
             object: textView,
@@ -70,6 +92,9 @@ struct StatusBarView: View {
                 updateStatus()
             }
         }
+        #else
+        // iOS doesn't have a separate selection change notification
+        #endif
     }
 
     private func updateStatus() {

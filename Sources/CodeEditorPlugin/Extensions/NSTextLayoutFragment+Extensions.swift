@@ -39,3 +39,165 @@ extension NSTextLayoutFragment {
         }
     }
 }
+
+// MARK: - Enhanced Line Fragment Enumeration
+
+@available(macOS 12.0, iOS 15.0, *)
+extension NSTextLayoutFragment {
+    /// Enumerate the line fragments making up the layout fragment.
+    ///
+    /// > Note: Reverse enumeration is more expensive.
+    ///
+    /// - Parameter provider: used to translate ranges.
+    /// - Parameter reverse: perform enumeration in reverse, defaults to false.
+    /// - Parameter block: invoked per line fragment with the fragment itself, its bounding rect, its range in the text, and its layout fragment-relative index offset for use with the `locationForCharacter(at:)` API.
+    public func enumerateLineFragments(with provider: NSTextElementProvider, reverse: Bool = false, block: (NSTextLineFragment, CGRect, NSRange, Int) -> Bool) {
+        let origin = layoutFragmentFrame.origin
+        let location = provider.offset?(from: provider.documentRange.location, to: rangeInElement.location) ?? 0
+
+        // Check to ensure our shift will always be valid
+        precondition(location >= 0)
+        precondition(location != NSNotFound)
+
+        let fragments = reverse ? textLineFragments.reversed() : textLineFragments
+        var offset = 0
+
+        for textLineFragment in fragments {
+            let bounds = textLineFragment.typographicBounds.offsetBy(dx: origin.x, dy: origin.y)
+            let range = NSRange(
+                location: textLineFragment.characterRange.location + location,
+                length: textLineFragment.characterRange.length
+            )
+
+            if block(textLineFragment, bounds, range, offset) == false {
+                return
+            }
+
+            offset += textLineFragment.characterRange.length
+        }
+    }
+
+    /// Enumerate the line fragments making up the layout fragment within a specific range.
+    ///
+    /// > Note: Reverse enumeration is more expensive.
+    ///
+    /// - Parameter range: restrict the enumeration to line fragments within this range.
+    /// - Parameter provider: used to translate ranges.
+    /// - Parameter reverse: perform enumeration in reverse, defaults to false.
+    /// - Parameter block: invoked per line fragment with the fragment itself, its bounding rect, its range in the text, and its layout fragment-relative index offset for use with the `locationForCharacter(at:)` API.
+    public func enumerateLineFragments(
+        in range: NSRange,
+        with provider: NSTextElementProvider,
+        reverse: Bool = false,
+        block: (NSTextLineFragment, CGRect, NSRange, Int) -> Bool
+    ) {
+        enumerateLineFragments(with: provider, reverse: reverse) { lineFragment, frame, elementRange, offset in
+            // This enumeration is unconditional, but some line fragments might not be within our range
+            
+            if reverse {
+                // For reverse enumeration, we could add range checking logic here if needed
+            } else {
+                if elementRange.upperBound <= range.lowerBound {
+                    return true
+                }
+
+                if elementRange.lowerBound > range.upperBound {
+                    return true
+                }
+            }
+
+            return block(lineFragment, frame, elementRange, offset)
+        }
+    }
+
+    /// Enumerate line fragments that intersect with a given rectangle
+    func enumerateLineFragments(
+        with provider: NSTextElementProvider,
+        intersecting rect: CGRect,
+        block: (NSTextLineFragment, CGRect, NSRange) -> Bool
+    ) {
+        let origin = layoutFragmentFrame.origin
+        let location = provider.offset?(from: provider.documentRange.location, to: rangeInElement.location) ?? 0
+
+        // Check to ensure our shift will always be valid
+        precondition(location >= 0)
+        precondition(location != NSNotFound)
+
+        var locationOffset = location
+
+        for textLineFragment in textLineFragments {
+            // We have to shift to compute overlap, and then shift back to compute the span
+            let bounds = textLineFragment.typographicBounds.offsetBy(dx: origin.x, dy: origin.y)
+            let overlap = bounds.intersection(rect).offsetBy(dx: -origin.x, dy: -origin.y)
+            let span: Range<CGFloat> = overlap.minX..<overlap.maxX
+
+            // The locationOffset has to be computed even if we do not overlap
+            let offset = locationOffset
+            defer {
+                locationOffset += textLineFragment.characterRange.length
+            }
+
+            guard let localRange = textLineFragment.rangeOfCharacters(intersecting: span) else { continue }
+
+            let range = NSRange(
+                location: localRange.location + offset,
+                length: localRange.length
+            )
+
+            if block(textLineFragment, bounds, range) == false {
+                return
+            }
+        }
+    }
+}
+
+// MARK: - NSTextLineFragment Character Intersection
+
+@available(macOS 12.0, iOS 15.0, *)
+extension NSTextLineFragment {
+    /// Returns the range of characters that intersect with a given horizontal span
+    /// The span has to be within this fragment's coordinate system
+    func rangeOfCharacters(intersecting span: Range<CGFloat>) -> NSRange? {
+        // Even an empty fragment will respond to locationForCharacter(at: 0)
+        let length = max(characterRange.length, 1)
+
+        var start: Int?
+
+        for index in 0..<length {
+            let point = locationForCharacter(at: index)
+
+            // We might need to back up unless we happen to be exactly on the boundary
+            if span.lowerBound < point.x {
+                start = max(index - 1, 0)
+                break
+            }
+
+            if span.lowerBound == point.x {
+                start = index
+                break
+            }
+        }
+
+        guard let start else { return nil }
+        
+        // Continuing to look here for an empty fragment doesn't make sense
+        if characterRange.length == 0 {
+            return NSRange(start..<start)
+        }
+
+        var end: Int?
+
+        for index in (start..<length).reversed() {
+            let point = locationForCharacter(at: index)
+
+            if span.upperBound >= point.x {
+                end = min(index + 1, length)
+                break
+            }
+        }
+
+        guard let end else { return nil }
+
+        return NSRange(start..<end)
+    }
+}

@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import AppKit
 import Foundation
 
@@ -197,10 +198,5 @@ public enum AdaptiveColorSystem {
 }
 
 // MARK: - TokenType Extension
-
-extension TokenType {
-    /// Get the adaptive color for this token type
-    @MainActor var adaptiveColor: NSColor {
-        AdaptiveColorSystem.syntaxColor(for: self)
-    }
-}
+// Extension removed - adaptiveColor is already defined in TokenType enum
+#endif

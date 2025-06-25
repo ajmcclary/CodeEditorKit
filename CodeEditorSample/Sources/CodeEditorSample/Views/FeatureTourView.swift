@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - FeatureTourView
 
@@ -99,7 +104,11 @@ struct FeatureTourView: View {
                 .foregroundColor(.secondary)
             }
             .padding()
+            #if canImport(AppKit)
             .background(Color(NSColor.windowBackgroundColor))
+            #else
+            .background(Color(.systemBackground))
+            #endif
 
             Divider()
 
@@ -170,7 +179,11 @@ struct FeatureTourView: View {
             .padding()
         }
         .frame(width: 500, height: 400)
+        #if canImport(AppKit)
         .background(Color(NSColor.windowBackgroundColor))
+        #else
+        .background(Color(.systemBackground))
+        #endif
         .onAppear {
             highlightFeature()
         }

@@ -1,4 +1,9 @@
+#if canImport(AppKit)
 import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 import Foundation
 import SwiftUI
 
@@ -30,9 +35,11 @@ public typealias CodeEditorTokenType = TokenType
 public typealias CodeEditorSyntaxHighlighter = SyntaxHighlightingCoordinator
 
 // macOS 26 Compatibility types
+#if canImport(AppKit)
 public typealias CodeEditorAdaptiveColors = AdaptiveColorSystem
 public typealias CodeEditorVersionDetection = MacOSVersionDetection
 public typealias CodeEditorModernTextKit = ModernTextKitHelper
+#endif
 
 // MARK: - CodeEditorPluginModule
 
