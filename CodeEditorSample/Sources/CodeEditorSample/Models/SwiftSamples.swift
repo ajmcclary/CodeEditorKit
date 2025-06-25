@@ -9,6 +9,7 @@ enum SwiftSamples {
 
     // TODO: Add more documentation
     // FIXME: Handle edge cases in calculation
+    // ERROR: Missing implementation for edge case
 
     /// A sample SwiftUI view demonstrating syntax highlighting
     struct ContentView: View {

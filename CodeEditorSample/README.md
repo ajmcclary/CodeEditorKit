@@ -15,7 +15,8 @@ This sample app is a complete demonstration of CodeEditorPlugin's capabilities:
 - ✅ **Interactive feature tour** and comprehensive documentation
 - ✅ **Swift 6 Actor-Based Concurrency** with thread-safe validation and processing
 - ✅ **Full Swift 6 compliance** with complete Sendable conformance
-- ✅ **Comprehensive testing** with 23 passing tests and performance benchmarks
+- ✅ **Comprehensive testing** with 43 passing tests including annotation system testing and performance benchmarks
+- ✅ **Inline Annotations** with hover popups for TODO/FIXME/NOTE/WARNING/ERROR comments
 
 ## 🚀 Quick Start
 
@@ -158,12 +159,14 @@ CodeEditorSample/
 │   ├── SampleCodeProvider.swift      # Language samples
 │   └── *Samples.swift               # Sample code by category
 ├── 🛠️ Services
+│   ├── AnnotationManager.swift        # Code annotation detection & display
 │   └── ConfigurationExporter.swift   # Thread-safe config management
 ├── 🎨 Themes
 │   └── ThemeProvider.swift           # Color theme definitions
 ├── 🔌 Plugins
 │   └── CustomAnnotationPlugin.swift  # Example plugin
-└── 🧪 Tests (23 tests)
+└── 🧪 Tests (43 tests)
+    ├── AnnotationSystemTests.swift      # Comprehensive annotation testing
     ├── BasicFunctionalityTests.swift
     ├── SampleCodeTests.swift
     ├── SimplifiedIntegrationTests.swift
@@ -241,12 +244,14 @@ actor SinglePhaseRangeValidator<Content: VersionedContent> {
 
 ### Test Coverage
 
-**23 tests** covering critical functionality:
+**43 tests** covering critical functionality:
 - ✅ Basic editor functionality
 - ✅ Configuration management  
 - ✅ Sample code validation
 - ✅ Theme system
 - ✅ Language detection
+- ✅ Annotation system (TODO/FIXME/NOTE/WARNING/ERROR detection)
+- ✅ Annotation positioning and layout
 - ✅ Performance benchmarks
 - ✅ Integration scenarios
 
@@ -257,16 +262,18 @@ actor SinglePhaseRangeValidator<Content: VersionedContent> {
 swiftformat --swiftversion 6.0 .  # ✅ 25 files formatted
 swiftlint --fix && swiftlint       # ✅ 0 violations
 swift build                       # ✅ Build complete
-swift test                        # ✅ 23/23 tests passing
+swift test                        # ✅ 43/43 tests passing
 ```
 
 ### Recent Improvements
 
 - ✅ **Simplified Directory Structure** - Library reorganized from 39 to 13 directories
 - ✅ **Feature-Based Organization** - Related components now grouped together
-- ✅ **SwiftLint Compliance** - Zero violations with custom configuration
+- ✅ **SwiftLint Compliance** - Zero violations across 25 files with custom configuration
 - ✅ **Extension Naming Convention** - Adopted +Extensions pattern for clarity
 - ✅ **Improved Build Performance** - Flattened structure reduces module complexity
+- ✅ **Annotation System** - Complete inline code annotation system with hover popups
+- ✅ **Swift 6 Concurrency** - Fixed all concurrency issues for full compliance
 
 ## 🛠️ Customization Guide
 

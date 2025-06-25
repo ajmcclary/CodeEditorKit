@@ -4,13 +4,12 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    @State private var configuration = EditorConfiguration()
+    @State private var configuration = ConfigurationPreset.fullFeatured.configuration
     @State private var selectedPreset: ConfigurationPreset = .fullFeatured
     @State private var selectedSample: SampleCode = .swift
-    @State private var code: String = ""
+    @State private var code: String = SampleCodeProvider.getCode(for: .swift)
     @State private var showConfigurationSidebar = true
     @State private var showFeatureTour = false
-    @State private var currentTextView: STTextView?
     @State private var showSplitView = false
     @State private var splitConfiguration = EditorConfiguration()
 
@@ -47,13 +46,10 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
 
-                            CodeEditorViewWrapper(
+                            CodeEditorView(
                                 configuration: configuration,
                                 text: $code,
-                                language: selectedSample.fileExtension,
-                                onTextViewReady: { textView in
-                                    currentTextView = textView
-                                }
+                                language: selectedSample.fileExtension
                             )
                         }
 
@@ -64,30 +60,26 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
 
-                            CodeEditorViewWrapper(
+                            CodeEditorView(
                                 configuration: splitConfiguration,
                                 text: $code,
-                                language: selectedSample.fileExtension,
-                                onTextViewReady: { _ in }
+                                language: selectedSample.fileExtension
                             )
                         }
                     }
                 } else {
                     // Single editor
-                    CodeEditorViewWrapper(
+                    CodeEditorView(
                         configuration: configuration,
                         text: $code,
-                        language: selectedSample.fileExtension,
-                        onTextViewReady: { textView in
-                            currentTextView = textView
-                        }
+                        language: selectedSample.fileExtension
                     )
                 }
 
                 Divider()
 
                 // Status bar
-                StatusBarView(textView: currentTextView)
+                StatusBarView(textView: nil)
                     .frame(height: 24)
             }
         }

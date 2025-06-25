@@ -7,10 +7,22 @@ struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    let onTextViewReady: (STTextView) -> Void
+    let onTextViewReady: ((STTextView) -> Void)?
+
+    init(
+        configuration: EditorConfiguration,
+        text: Binding<String>,
+        language: String,
+        onTextViewReady: ((STTextView) -> Void)? = nil
+    ) {
+        self.configuration = configuration
+        self._text = text
+        self.language = language
+        self.onTextViewReady = onTextViewReady
+    }
 
     var body: some View {
-        CodeEditorViewWithCallback(
+        UnifiedCodeEditorView(
             configuration: configuration,
             text: $text,
             language: language,
@@ -20,13 +32,13 @@ struct CodeEditorViewWrapper: View {
     }
 }
 
-// MARK: - CodeEditorViewWithCallback
+// MARK: - UnifiedCodeEditorView
 
-struct CodeEditorViewWithCallback: NSViewRepresentable {
+struct UnifiedCodeEditorView: NSViewRepresentable {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    let onTextViewReady: (STTextView) -> Void
+    let onTextViewReady: ((STTextView) -> Void)?
 
     func makeNSView(context: Context) -> NSScrollView {
         // Create NSScrollView
@@ -44,6 +56,15 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         // Set the text content
         textView.text = text
 
+        // Apply configuration
+        applyConfiguration(to: textView)
+        
+        // Set up annotation manager if enabled
+        if configuration.enableAnnotations {
+            context.coordinator.annotationManager = AnnotationManager(textView: textView)
+            context.coordinator.annotationManager?.scanForAnnotations()
+        }
+
         // Configure text view for scroll view
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -53,17 +74,20 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         // Set the text view as the document view
         scrollView.documentView = textView
 
-        // Apply configuration
-        applyConfiguration(to: textView)
+        // Ensure the text view is properly laid out
+        textView.invalidateIntrinsicContentSize()
+        textView.needsLayout = true
+        textView.needsDisplay = true
 
-        // Notify that text view is ready
-        onTextViewReady(textView)
+        // Notify that text view is ready if callback provided
+        onTextViewReady?(textView)
 
         return scrollView
     }
 
-    func updateNSView(_ scrollView: NSScrollView, context _: Context) {
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? STTextView else { return }
+        
         // Update text if changed
         if textView.text != text {
             textView.text = text
@@ -71,6 +95,18 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
 
         // Update configuration
         applyConfiguration(to: textView)
+        
+        // Update annotations
+        if configuration.enableAnnotations {
+            if context.coordinator.annotationManager == nil {
+                context.coordinator.annotationManager = AnnotationManager(textView: textView)
+            }
+            context.coordinator.annotationManager?.scanForAnnotations()
+        } else {
+            // Clear annotations if disabled
+            context.coordinator.annotationManager?.clearAnnotations()
+            context.coordinator.annotationManager = nil
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -124,9 +160,10 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
 
     @MainActor
     class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
-        var parent: CodeEditorViewWithCallback
+        var parent: UnifiedCodeEditorView
+        var annotationManager: AnnotationManager?
 
-        init(_ parent: CodeEditorViewWithCallback) {
+        init(_ parent: UnifiedCodeEditorView) {
             self.parent = parent
             super.init()
         }
@@ -144,6 +181,11 @@ struct CodeEditorViewWithCallback: NSViewRepresentable {
         func textViewDidChangeText(_ notification: Notification) {
             if let textView = notification.object as? STTextView {
                 parent.text = textView.text ?? ""
+                
+                // Re-scan for annotations if enabled
+                if parent.configuration.enableAnnotations {
+                    annotationManager?.scanForAnnotations()
+                }
             }
         }
 
