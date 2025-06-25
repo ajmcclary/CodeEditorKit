@@ -148,7 +148,7 @@ CodeEditorSample/
 │   ├── ContentView.swift             # Primary layout with @Sendable closures
 │   └── AppState.swift                # Global state management
 ├── 🎨 Views  
-│   ├── CodeEditorView.swift          # SwiftUI ↔ STTextView bridge
+│   ├── SampleCodeEditorView.swift    # SwiftUI ↔ CodeEditorView bridge
 │   ├── CodeEditorViewWrapper.swift   # Enhanced wrapper with callbacks
 │   ├── EditorConfigurationView.swift # Settings sidebar
 │   ├── StatusBarView.swift           # Status information
@@ -181,13 +181,13 @@ The CodeEditorPlugin library now features a streamlined, feature-based directory
 
 ```
 CodeEditorPlugin/
-├── Core/                   # Core text editing (STTextView, delegates)
+├── Core/                   # Core text editing (CodeEditorView, delegates)
 ├── SyntaxHighlighting/     # All highlighting logic unified
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
 ├── Models/                 # Data models (including annotations)
-├── Extensions/             # All extensions (flattened)
+├── Extensions/             # All extensions (flattened, +Extensions naming)
 ├── Completion/             # Code completion
 └── Platform/               # Platform-specific code
 ```
@@ -202,10 +202,10 @@ CodeEditorPlugin/
 
 **1. SwiftUI + AppKit Integration:**
 ```swift
-struct CodeEditorView: NSViewRepresentable {
+struct UnifiedCodeEditorView: NSViewRepresentable {
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
-        let textView = STTextView()
+        let textView = CodeEditorView()
         
         // Configure scroll view for proper scrolling
         scrollView.hasVerticalScroller = true
@@ -226,7 +226,7 @@ struct CodeEditorView: NSViewRepresentable {
 
 **3. Swift 6 Actor-Based Delegate Pattern:**
 ```swift
-class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
+class Coordinator: NSObject, @preconcurrency CodeEditorViewDelegate {
     // Full protocol conformance with concurrency safety
     // @Sendable closures for thread-safe callbacks
 }
@@ -268,7 +268,7 @@ swift test                        # ✅ 66/66 tests passing
 
 ### Recent Improvements
 
-- ✅ **Simplified Directory Structure** - Library reorganized from 39 to 13 directories
+- ✅ **Simplified Directory Structure** - Library reorganized from 39 to 10 directories
 - ✅ **Feature-Based Organization** - Related components now grouped together
 - ✅ **SwiftLint Compliance** - Zero violations across 25 files with custom configuration
 - ✅ **Extension Naming Convention** - Adopted +Extensions pattern for clarity

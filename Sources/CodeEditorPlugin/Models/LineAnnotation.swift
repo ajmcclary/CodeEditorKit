@@ -9,9 +9,9 @@ import AppKit
 #endif
 #endif
 
-// MARK: - STLineAnnotation
+// MARK: - LineAnnotation
 
-public protocol STLineAnnotation {
+public protocol LineAnnotation {
     typealias Identifier = String
 
     var id: Identifier { get }

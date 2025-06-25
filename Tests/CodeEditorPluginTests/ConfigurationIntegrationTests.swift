@@ -8,7 +8,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testShowInvisibleCharacters() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         XCTAssertFalse(textView.showsInvisibleCharacters)
         
         textView.showsInvisibleCharacters = true
@@ -20,7 +20,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testTextContainerInset() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         _ = textView.textContainerInset
         // Just verify we can get and set the inset
         
@@ -31,7 +31,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testLineFragmentPadding() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         _ = textView.textContainer?.lineFragmentPadding ?? 0
         // Just verify we can get and set the padding
         
@@ -43,16 +43,16 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutoIndentConfiguration() {
-        _ = STTextView()
+        _ = CodeEditorView()
         // Note: autoIndent is a configuration option that needs delegate implementation
         // This test verifies the behavior would be configurable
-        let hasAutoIndentCapability = true // STTextView supports delegates for this
+        let hasAutoIndentCapability = true // CodeEditorView supports delegates for this
         XCTAssertTrue(hasAutoIndentCapability)
     }
     
     @MainActor
     func testTabWidthConfiguration() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.defaultTabInterval = CGFloat(4) * 7.0
         textView.defaultParagraphStyle = paragraphStyle
@@ -66,10 +66,10 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testInsertSpacesForTabsConfiguration() {
-        _ = STTextView()
+        _ = CodeEditorView()
         // Note: insertSpacesForTabs is a configuration option that needs delegate implementation
         // This test verifies the behavior would be configurable
-        let hasTabReplacementCapability = true // STTextView supports delegates for this
+        let hasTabReplacementCapability = true // CodeEditorView supports delegates for this
         XCTAssertTrue(hasTabReplacementCapability)
     }
     
@@ -77,13 +77,13 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testContinuousSpellChecking() {
-        let textView = STTextView()
-        // STTextView sets spell checking to false by default
+        let textView = CodeEditorView()
+        // CodeEditorView sets spell checking to false by default
         XCTAssertFalse(textView.isContinuousSpellCheckingEnabled)
         
         // Test that we can toggle the setting
         textView.isContinuousSpellCheckingEnabled = true
-        // Note: STTextView may override this based on its configuration
+        // Note: CodeEditorView may override this based on its configuration
         
         textView.isContinuousSpellCheckingEnabled = false
         XCTAssertFalse(textView.isContinuousSpellCheckingEnabled)
@@ -91,13 +91,13 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testGrammarChecking() {
-        let textView = STTextView()
-        // STTextView sets grammar checking to false by default
+        let textView = CodeEditorView()
+        // CodeEditorView sets grammar checking to false by default
         XCTAssertFalse(textView.isGrammarCheckingEnabled)
         
         // Test that we can toggle the setting
         textView.isGrammarCheckingEnabled = true
-        // Note: STTextView may override this based on its configuration
+        // Note: CodeEditorView may override this based on its configuration
         
         textView.isGrammarCheckingEnabled = false
         XCTAssertFalse(textView.isGrammarCheckingEnabled)
@@ -105,7 +105,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticQuoteSubstitution() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isAutomaticQuoteSubstitutionEnabled = true
         XCTAssertTrue(textView.isAutomaticQuoteSubstitutionEnabled)
         
@@ -115,7 +115,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticDashSubstitution() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isAutomaticDashSubstitutionEnabled = true
         XCTAssertTrue(textView.isAutomaticDashSubstitutionEnabled)
         
@@ -125,7 +125,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticTextReplacement() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isAutomaticTextReplacementEnabled = true
         XCTAssertTrue(textView.isAutomaticTextReplacementEnabled)
         
@@ -135,7 +135,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticSpellingCorrection() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isAutomaticSpellingCorrectionEnabled = true
         XCTAssertTrue(textView.isAutomaticSpellingCorrectionEnabled)
         
@@ -145,7 +145,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticTextCompletion() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         #if os(macOS)
         if #available(macOS 12.0, *) {
             textView.isAutomaticTextCompletionEnabled = true
@@ -159,7 +159,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testIncrementalSearching() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isIncrementalSearchingEnabled = true
         XCTAssertTrue(textView.isIncrementalSearchingEnabled)
         
@@ -171,7 +171,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAllowsDocumentBackgroundColorChange() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.allowsDocumentBackgroundColorChange = true
         XCTAssertTrue(textView.allowsDocumentBackgroundColorChange)
         
@@ -181,7 +181,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testIsRichText() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.isRichText = true
         XCTAssertTrue(textView.isRichText)
         
@@ -191,7 +191,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testImportsGraphics() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.importsGraphics = true
         XCTAssertTrue(textView.importsGraphics)
         
@@ -201,7 +201,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testUsesFindBar() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.usesFindBar = true
         XCTAssertTrue(textView.usesFindBar)
         
@@ -211,7 +211,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testDisplaysLinkToolTips() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.displaysLinkToolTips = true
         XCTAssertTrue(textView.displaysLinkToolTips)
         
@@ -223,7 +223,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testInsertionPointColor() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let defaultColor = textView.insertionPointColor
         XCTAssertEqual(defaultColor, NSColor.controlAccentColor)
         
@@ -234,7 +234,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testSelectedTextAttributes() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let attributes: [NSAttributedString.Key: Any] = [
             .backgroundColor: NSColor.systemBlue,
             .foregroundColor: NSColor.white
@@ -255,7 +255,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testLineSpacing() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 1.5
         textView.defaultParagraphStyle = paragraphStyle
@@ -271,7 +271,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testWrapLinesConfiguration() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         // Test word wrap enabled
         textView.widthTracksTextView = true
         textView.isHorizontallyResizable = false
@@ -289,8 +289,8 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testCompleteConfigurationWorkflow() {
-        let textView = STTextView()
-        // This test demonstrates applying all available STTextView configurations
+        let textView = CodeEditorView()
+        // This test demonstrates applying all available CodeEditorView configurations
         
         // Apply all display settings
         textView.showsLineNumbers = true
@@ -345,7 +345,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertEqual(textView.font, NSFont.monospacedSystemFont(ofSize: 16, weight: .regular))
         XCTAssertEqual(textView.textContainerInset, NSSize(width: 10, height: 10))
         XCTAssertEqual(textView.textContainer?.lineFragmentPadding, 8.0)
-        // Note: STTextView may override spell/grammar checking settings
+        // Note: CodeEditorView may override spell/grammar checking settings
         // We can only verify we can set them, not that they persist
         // XCTAssertTrue(textView.isContinuousSpellCheckingEnabled)
         // XCTAssertTrue(textView.isGrammarCheckingEnabled)

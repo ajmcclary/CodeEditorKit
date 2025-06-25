@@ -6,23 +6,23 @@ import XCTest
 final class QuickIsFlippedTest: XCTestCase {
     @MainActor
     func testIsFlippedIssue() async {
-        // Create STTextView
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        // Create CodeEditorView
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
-        // Test 1: Check if STTextView reports isFlipped correctly
-        print("STTextView isFlipped: \(textView.isFlipped)")
-        XCTAssertTrue(textView.isFlipped, "STTextView MUST be flipped for correct text rendering")
+        // Test 1: Check if CodeEditorView reports isFlipped correctly
+        print("CodeEditorView isFlipped: \(textView.isFlipped)")
+        XCTAssertTrue(textView.isFlipped, "CodeEditorView MUST be flipped for correct text rendering")
 
-        // Test 2: STTextView should handle flipped coordinates internally
+        // Test 2: CodeEditorView should handle flipped coordinates internally
         // NSTextView-based implementations don't expose contentView
         // Just verify the text view itself is properly flipped
-        XCTAssertTrue(textView.isFlipped, "STTextView handles flipped coordinates internally")
+        XCTAssertTrue(textView.isFlipped, "CodeEditorView handles flipped coordinates internally")
 
         // Test 3: Enable line numbers and check gutter view
         textView.showsLineNumbers = true
         textView.layoutSubtreeIfNeeded()
 
-        if let gutterView = textView.subviews.first(where: { $0 is STGutterView }) {
+        if let gutterView = textView.subviews.first(where: { $0 is GutterView }) {
             print("GutterView isFlipped: \(gutterView.isFlipped)")
             XCTAssertTrue(gutterView.isFlipped, "GutterView MUST be flipped")
         } else {

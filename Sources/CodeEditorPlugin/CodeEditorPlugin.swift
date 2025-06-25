@@ -14,14 +14,14 @@ public struct CodeEditorPlugin {
 // MARK: - Convenience Typealiases
 
 // Main text view types
-public typealias CodeEditorTextView = STTextView
-public typealias CodeEditorDelegate = STTextViewDelegate
+public typealias CodeEditorTextView = CodeEditorView
+public typealias CodeEditorDelegate = CodeEditorViewDelegate
 
-// Plugin types have been removed - functionality integrated directly into STTextView
+// Plugin types have been removed - functionality integrated directly into CodeEditorView
 
 // Annotation types
-public typealias CodeEditorAnnotation = STLineAnnotation
-public typealias CodeEditorAnnotationDataSource = STAnnotationsDataSource
+public typealias CodeEditorAnnotation = LineAnnotation
+public typealias CodeEditorAnnotationDataSource = AnnotationsDataSource
 
 // Highlighting types
 public typealias CodeEditorTheme = Theme

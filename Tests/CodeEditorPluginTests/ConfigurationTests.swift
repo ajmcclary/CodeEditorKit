@@ -4,11 +4,11 @@ import XCTest
 
 @MainActor
 final class ConfigurationTests: XCTestCase {
-    // MARK: - STTextView Configuration Tests
+    // MARK: - CodeEditorView Configuration Tests
 
     @MainActor
-    func testSTTextViewDefaults() {
-        let textView = STTextView()
+    func testCodeEditorViewDefaults() {
+        let textView = CodeEditorView()
 
         // Test default values
         XCTAssertNotNil(textView.font)
@@ -21,8 +21,8 @@ final class ConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testSTTextViewConfigurationChanges() {
-        let textView = STTextView()
+    func testCodeEditorViewConfigurationChanges() {
+        let textView = CodeEditorView()
 
         // Test changing configuration
         textView.showsLineNumbers = true
@@ -72,7 +72,7 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testTextContainerConfiguration() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
 
         // Test width tracking
         textView.widthTracksTextView = true
@@ -91,7 +91,7 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testAnnotationAddition() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.text = "Test content"
 
         // Create NSTextRange for annotation using document range
@@ -103,7 +103,7 @@ final class ConfigurationTests: XCTestCase {
             XCTFail("Could not create NSTextRange")
             return
         }
-        let annotation = STAnnotation(range: mockRange, content: "Test annotation", id: "test")
+        let annotation = Annotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)
 
@@ -117,4 +117,4 @@ final class ConfigurationTests: XCTestCase {
     }
 }
 
-// Note: Plugin system has been removed and functionality integrated directly into STTextView
+// Note: Plugin system has been removed and functionality integrated directly into CodeEditorView

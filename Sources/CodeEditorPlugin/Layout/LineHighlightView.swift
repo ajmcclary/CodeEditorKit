@@ -5,13 +5,14 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STAnnotationsContentView
+// MARK: - LineHighlightView
 
-/// View for displaying annotation content
-public class STAnnotationsContentView: NSView {
-    public var annotations: [STAnnotation] = [] {
+/// View for highlighting the current line
+public class LineHighlightView: NSView {
+    public var highlightColor: NSColor = .controlAccentColor.withAlphaComponent(0.1) {
         didSet {
-            needsDisplay = true
+            wantsLayer = true
+            layer?.backgroundColor = highlightColor.cgColor
         }
     }
 
@@ -26,23 +27,14 @@ public class STAnnotationsContentView: NSView {
     }
 
     private func setup() {
-        #if canImport(UIKit)
-        backgroundColor = .clear
-        #elseif canImport(AppKit)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
-        #endif
+        layer?.backgroundColor = highlightColor.cgColor
     }
-
-    #if canImport(UIKit)
-
-    #elseif canImport(AppKit)
 
     /// Text views need a flipped coordinate system on macOS
     override public var isFlipped: Bool {
         true
     }
-    #endif
 
     deinit {
         // Cleanup if needed

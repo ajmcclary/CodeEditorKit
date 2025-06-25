@@ -4,10 +4,10 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STTextViewProtocol
+// MARK: - CodeEditorViewProtocol
 
 /// A common public interface for TextView
-package protocol STTextViewProtocol {
+package protocol CodeEditorViewProtocol {
     associatedtype GutterView
 
     var showsInvisibleCharacters: Bool { get set }

@@ -11,7 +11,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
         // Test each preset
         for preset in ConfigurationPreset.allCases {
             let config = preset.configuration
-            let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+            let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
             // Apply configuration
             textView.showsLineNumbers = config.showLineNumbers
@@ -47,7 +47,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testLanguageSamples() async {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
         for sample in SampleCode.allCases {
             let code = SampleCodeProvider.getCode(for: sample)
@@ -59,7 +59,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testThemeColors() async {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
         for theme in ColorTheme.allCases {
             textView.backgroundColor = theme.backgroundColor
@@ -73,7 +73,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testEditorWorkflow() async {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
         // 1. Start with full featured config
         let config = ConfigurationPreset.fullFeatured.configuration
@@ -103,7 +103,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testAnnotationSystem() async {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
         // Set text content
         textView.text = "TODO: Implement feature\nFIXME: Fix bug\nNOTE: Remember this"

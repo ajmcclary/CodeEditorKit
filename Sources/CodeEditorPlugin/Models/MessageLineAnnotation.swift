@@ -10,9 +10,9 @@ import AppKit
 #endif
 #endif
 
-// MARK: - STMessageLineAnnotation
+// MARK: - MessageLineAnnotation
 
-open class STMessageLineAnnotation: STLineAnnotation {
+open class MessageLineAnnotation: LineAnnotation {
     public enum AnnotationKind {
         case info
         case warning

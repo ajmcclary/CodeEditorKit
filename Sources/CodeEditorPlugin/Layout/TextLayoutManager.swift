@@ -4,16 +4,16 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STTextLayoutManager
+// MARK: - TextLayoutManager
 
-open class STTextLayoutManager: NSTextLayoutManager {
+open class TextLayoutManager: NSTextLayoutManager {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Posted when the selected range of characters changes.
     public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
     #else
     /// Posted when the selected range of characters changes.
     public static let didChangeSelectionNotification = Notification
-        .Name("STTextView.didChangeSelectionNotification")
+        .Name("CodeEditorView.didChangeSelectionNotification")
     #endif
 
     private static let needsBoundsWorkaround = testIfNeedsBoundsWorkaround()

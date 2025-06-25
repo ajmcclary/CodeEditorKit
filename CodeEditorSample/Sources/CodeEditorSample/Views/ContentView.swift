@@ -46,7 +46,7 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
 
-                            CodeEditorView(
+                            SampleCodeEditorView(
                                 configuration: configuration,
                                 text: $code,
                                 language: selectedSample.fileExtension
@@ -60,7 +60,7 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(Color(NSColor.controlBackgroundColor))
 
-                            CodeEditorView(
+                            SampleCodeEditorView(
                                 configuration: splitConfiguration,
                                 text: $code,
                                 language: selectedSample.fileExtension
@@ -69,7 +69,7 @@ struct ContentView: View {
                     }
                 } else {
                     // Single editor
-                    CodeEditorView(
+                    SampleCodeEditorView(
                         configuration: configuration,
                         text: $code,
                         language: selectedSample.fileExtension

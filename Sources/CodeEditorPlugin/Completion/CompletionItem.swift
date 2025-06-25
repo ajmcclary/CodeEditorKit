@@ -1,6 +1,6 @@
 @preconcurrency import AppKit
 import Foundation
 
-public protocol STCompletionItem: Identifiable {
+public protocol CompletionItem: Identifiable {
     var view: NSView { get }
 }

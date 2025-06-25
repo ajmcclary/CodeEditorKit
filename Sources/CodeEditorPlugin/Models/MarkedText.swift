@@ -1,10 +1,10 @@
 import Foundation
 
-package final class STMarkedText: CustomDebugStringConvertible {
+package final class MarkedText: CustomDebugStringConvertible {
     package var markedText: NSAttributedString
     package var markedRange: NSRange
 
-    /// Not used currently in STTextView.
+    /// Not used currently in CodeEditorView.
     /// that turned out to be good because it's buggy FB13789916 https://gist.github.com/krzyzanowskim/340c5810fc427e346b7c4b06d46b1e10
     package var selectedRange: NSRange
 

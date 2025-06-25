@@ -19,11 +19,11 @@ struct MinimalCodeEditor: View {
 
     var body: some View {
         VStack {
-            Text("STTextView Test")
+            Text("CodeEditorView Test")
                 .font(.headline)
                 .padding()
 
-            STTextViewWrapper()
+            MinimalCodeEditorWrapper()
                 .frame(minHeight: 400)
                 .border(Color.red, width: 2)
         }
@@ -31,16 +31,16 @@ struct MinimalCodeEditor: View {
     }
 }
 
-// MARK: - STTextViewWrapper
+// MARK: - MinimalCodeEditorWrapper
 
-struct STTextViewWrapper: NSViewRepresentable {
+struct MinimalCodeEditorWrapper: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSView {
         // Create a container view
         let containerView = NSView()
 
-        // Create STTextView
-        let textView = STTextView(frame: .zero)
-        textView.text = "Hello from STTextView!"
+        // Create CodeEditorView
+        let textView = CodeEditorView(frame: NSRect.zero)
+        textView.text = "Hello from CodeEditorView!"
         textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         textView.backgroundColor = .white
         textView.textColor = .black

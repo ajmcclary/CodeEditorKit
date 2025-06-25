@@ -9,12 +9,12 @@ import Foundation
 final class AnnotationManager: NSObject {
     // MARK: - Properties
     
-    private weak var textView: STTextView?
+    private weak var textView: CodeEditorView?
     private var annotations: [CodeAnnotation] = []
     
     // MARK: - Initialization
     
-    init(textView: STTextView) {
+    init(textView: CodeEditorView) {
         self.textView = textView
         super.init()
         print("DEBUG AnnotationManager: Initializing with textView")
@@ -68,7 +68,7 @@ final class AnnotationManager: NSObject {
     
     /// Create annotations using TextKit1-compatible approach
     private func createAnnotationsUsingTextKit1(text: String) {
-        guard let textView = textView else {
+        guard textView != nil else {
             print("DEBUG AnnotationManager: No textView available")
             return
         }
@@ -83,17 +83,15 @@ final class AnnotationManager: NSObject {
             let nsRange = NSRange(todoRange, in: text)
             print("DEBUG AnnotationManager: Found TODO at NSRange: \(nsRange)")
             
-            // Create a manual NSTextRange using the text view's text system
-            if textView.textStorage != nil,
-               textView.layoutManager != nil,
-               textView.textContainer != nil {
-                
-                print("DEBUG AnnotationManager: Using TextKit1 components")
-                
-                // For TextKit1, we need to work with what we have
-                // Let's create a simple annotation marker that will be positioned manually
-                createSimpleAnnotationMarker(at: nsRange, type: .todo, message: "TODO found here")
-            }
+            // Use the annotation API instead of direct TextKit access
+            print("DEBUG AnnotationManager: Using CodeEditorView annotation API")
+            
+            // Create annotation through the public API
+            createSimpleAnnotationMarker(
+                at: nsRange,
+                type: CodeAnnotation.AnnotationType.todo,
+                message: "TODO found here"
+            )
         }
     }
     
@@ -171,22 +169,22 @@ final class AnnotationManager: NSObject {
     }
 }
 
-// MARK: - STAnnotationsDataSource
+// MARK: - AnnotationsDataSource
 
-extension AnnotationManager: @preconcurrency STAnnotationsDataSource {
-    func annotations(for textRange: NSTextRange) -> [STAnnotation] {
+extension AnnotationManager: @preconcurrency AnnotationsDataSource {
+    func annotations(for textRange: NSTextRange) -> [Annotation] {
         print("DEBUG AnnotationManager: annotations(for:) called with range: \(textRange)")
         print("DEBUG AnnotationManager: total annotations: \(annotations.count)")
         
         // Return annotations that intersect with the given range
-        let result: [STAnnotation] = annotations.compactMap { annotation in
+        let result: [Annotation] = annotations.compactMap { annotation in
             guard let annotationRange = annotation.range else {
                 print("DEBUG AnnotationManager: annotation \(annotation.id) has no range")
                 return nil
             }
             if annotationRange.intersects(textRange) {
                 print("DEBUG AnnotationManager: annotation \(annotation.id) intersects with range")
-                return STAnnotation(
+                return Annotation(
                     range: annotationRange,
                     content: annotation.message,
                     id: annotation.id
@@ -198,11 +196,11 @@ extension AnnotationManager: @preconcurrency STAnnotationsDataSource {
         return result
     }
     
-    var textViewAnnotations: [STTextViewAnnotation] {
-        // Convert our annotations to STTextViewAnnotation
+    var textViewAnnotations: [CodeEditorViewAnnotation] {
+        // Convert our annotations to CodeEditorViewAnnotation
         annotations.compactMap { annotation in
             guard let range = annotation.range else { return nil }
-            return STTextViewAnnotation(
+            return CodeEditorViewAnnotation(
                 location: range.location,
                 content: annotation.message,
                 id: annotation.id
@@ -211,8 +209,8 @@ extension AnnotationManager: @preconcurrency STAnnotationsDataSource {
     }
     
     func textView(
-        _ textView: STTextView,
-        viewForLineAnnotation annotation: STTextViewAnnotation,
+        _ textView: CodeEditorView,
+        viewForLineAnnotation annotation: CodeEditorViewAnnotation,
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> NSView? {

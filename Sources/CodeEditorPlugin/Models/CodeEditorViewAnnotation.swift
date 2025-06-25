@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// Represents an annotation with location in text view
-public struct STTextViewAnnotation {
+public struct CodeEditorViewAnnotation {
     public var id: String
     public var location: NSTextLocation
     public var content: String

@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// Represents an annotation in the text
-public struct STAnnotation {
+public struct Annotation {
     public let id: String
     public let range: NSTextRange
     public let content: String

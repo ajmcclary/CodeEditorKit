@@ -5,7 +5,7 @@ import AppKit
 #endif
 
 #if canImport(UIKit)
-class STTextLocation: UITextPosition {
+class TextLocation: UITextPosition {
     let location: NSTextLocation
 
     override var debugDescription: String {
@@ -23,7 +23,7 @@ class STTextLocation: UITextPosition {
 }
 #else
 /// macOS equivalent - UITextPosition doesn't exist on macOS
-class STTextLocation {
+class TextLocation {
     let location: NSTextLocation
 
     var debugDescription: String {
@@ -41,7 +41,7 @@ class STTextLocation {
 #endif
 
 extension NSTextLocation {
-    var uiTextPosition: STTextLocation {
-        STTextLocation(location: self)
+    var uiTextPosition: TextLocation {
+        TextLocation(location: self)
     }
 }

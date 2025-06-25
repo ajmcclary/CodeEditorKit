@@ -5,10 +5,10 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STContentView
+// MARK: - ContentView
 
 /// Content view that contains layout fragments
-public class STContentView: NSView, @preconcurrency NSTextInputClient {
+public class ContentView: NSView, @preconcurrency NSTextInputClient {
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -30,7 +30,7 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
 
     /// Accept first responder for text input
     override public var acceptsFirstResponder: Bool {
-        if let textView = superview?.superview as? STTextView {
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.isEditable
         }
         return true
@@ -53,8 +53,8 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
 
     /// Handle mouse events for text selection
     override public func mouseDown(with event: NSEvent) {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             textView.mouseDown(with: event)
         } else {
             super.mouseDown(with: event)
@@ -62,7 +62,7 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
     }
 
     override public func mouseDragged(with event: NSEvent) {
-        if let textView = superview?.superview as? STTextView {
+        if let textView = superview?.superview as? CodeEditorView {
             textView.mouseDragged(with: event)
         } else {
             super.mouseDragged(with: event)
@@ -70,7 +70,7 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
     }
 
     override public func mouseUp(with event: NSEvent) {
-        if let textView = superview?.superview as? STTextView {
+        if let textView = superview?.superview as? CodeEditorView {
             textView.mouseUp(with: event)
         } else {
             super.mouseUp(with: event)
@@ -80,45 +80,45 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
     // MARK: - NSTextInputClient
 
     public func insertText(_ string: Any, replacementRange: NSRange) {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             textView.insertText(string, replacementRange: replacementRange)
         }
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             textView.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
         }
     }
 
     public func unmarkText() {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             textView.unmarkText()
         }
     }
 
     public func selectedRange() -> NSRange {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.selectedRange()
         }
         return NSRange(location: 0, length: 0)
     }
 
     public func markedRange() -> NSRange {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.markedRange()
         }
         return NSRange(location: NSNotFound, length: 0)
     }
 
     public func hasMarkedText() -> Bool {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.hasMarkedText()
         }
         return false
@@ -128,40 +128,40 @@ public class STContentView: NSView, @preconcurrency NSTextInputClient {
         forProposedRange range: NSRange,
         actualRange: NSRangePointer?
     ) -> NSAttributedString? {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.attributedSubstring(forProposedRange: range, actualRange: actualRange)
         }
         return nil
     }
 
     public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.validAttributesForMarkedText()
         }
         return []
     }
 
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.firstRect(forCharacterRange: range, actualRange: actualRange)
         }
         return NSRect.zero
     }
 
     public func characterIndex(for point: NSPoint) -> Int {
-        // Forward to parent STTextView
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView
+        if let textView = superview?.superview as? CodeEditorView {
             return textView.characterIndex(for: point)
         }
         return 0
     }
 
     override public func doCommand(by selector: Selector) {
-        // Forward to parent STTextView or handle directly
-        if let textView = superview?.superview as? STTextView {
+        // Forward to parent CodeEditorView or handle directly
+        if let textView = superview?.superview as? CodeEditorView {
             textView.doCommand(by: selector)
         }
     }

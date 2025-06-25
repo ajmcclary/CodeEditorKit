@@ -16,25 +16,24 @@ public typealias PlatformFont = NSFont
 
 import os.log
 
-// Local logger instance for STTextView
-private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "STTextView")
+// Local logger instance for CodeEditorView
+private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
 
-// MARK: - STTextView
+// MARK: - CodeEditorView
 
 @objc @MainActor
-open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
-    // STTextViewProtocol conformance
-    public typealias GutterView = STGutterView
+open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
+    // CodeEditorViewProtocol conformance  
     public typealias Color = NSColor
     public typealias Font = NSFont
-    public typealias Delegate = STTextViewDelegate
+    public typealias Delegate = CodeEditorViewDelegate
 
     // We'll use NSTextView's built-in notifications instead of overriding them
 
     // MARK: - Properties
 
-    /// Custom delegate for STTextView-specific functionality
-    public weak var textDelegate: (any STTextViewDelegate)? {
+    /// Custom delegate for CodeEditorView-specific functionality
+    public weak var textDelegate: (any CodeEditorViewDelegate)? {
         get {
             delegateProxy.source
         }
@@ -44,7 +43,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     /// Proxy for delegate calls
-    let delegateProxy = STTextViewDelegateProxy(source: nil)
+    let delegateProxy = CodeEditorViewDelegateProxy(source: nil)
 
     /// The syntax highlighting coordinator
     private let syntaxHighlighter = SyntaxHighlightingCoordinator()
@@ -112,19 +111,19 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     /// Gutter view for line numbers
-    private var _gutterView: STGutterView?
+    private var _gutterView: GutterView?
 
     /// Line highlight view
     private var lineHighlightView: NSView?
 
     /// Annotations storage
-    private var annotations: [STAnnotation] = []
+    private var annotations: [Annotation] = []
 
     /// Annotation views mapping
     private var annotationViews: [String: NSView] = [:]
 
     /// Annotations data source
-    public weak var annotationsDataSource: STAnnotationsDataSource?
+    public weak var annotationsDataSource: AnnotationsDataSource?
 
     // MARK: - Coordinate System
 
@@ -143,7 +142,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     override public init(frame frameRect: NSRect) {
         // Use default NSTextView initialization - don't create custom text container
         // The custom text container creation was breaking text rendering
-        kLogger.debug("STTextView init: frame = \(String(describing: frameRect))")
+        kLogger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
 
         // Use default NSTextView initialization
         // NSTextView should automatically use TextKit2 on supported systems
@@ -157,25 +156,25 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     private func setupTextView() {
-        kLogger.debug("STTextView setupTextView: Starting setup")
-        kLogger.debug("STTextView setupTextView: textStorage = \(self.textStorage != nil ? "exists" : "nil")")
-        kLogger.debug("STTextView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
-        kLogger.debug("STTextView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
-        kLogger.debug("STTextView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
-        kLogger.debug("STTextView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
+        kLogger.debug("CodeEditorView setupTextView: Starting setup")
+        kLogger.debug("CodeEditorView setupTextView: textStorage = \(self.textStorage != nil ? "exists" : "nil")")
+        kLogger.debug("CodeEditorView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
+        kLogger.debug("CodeEditorView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
+        kLogger.debug("CodeEditorView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
+        kLogger.debug("CodeEditorView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
         
         // Check which TextKit version we're using
         if textLayoutManager != nil {
-            kLogger.debug("STTextView setupTextView: Using TextKit2")
+            kLogger.debug("CodeEditorView setupTextView: Using TextKit2")
         } else if layoutManager != nil {
-            kLogger.debug("STTextView setupTextView: Using TextKit1 (fallback)")
+            kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (fallback)")
         } else {
-            kLogger.debug("STTextView setupTextView: WARNING - No layout manager detected!")
+            kLogger.debug("CodeEditorView setupTextView: WARNING - No layout manager detected!")
         }
         
         // Try to ensure we're using TextKit2 if possible
         if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
-            kLogger.debug("STTextView setupTextView: Attempting to initialize with TextKit2")
+            kLogger.debug("CodeEditorView setupTextView: Attempting to initialize with TextKit2")
             // Force TextKit2 initialization if needed
             // This is a fallback - normally NSTextView should auto-initialize with TextKit2
         }
@@ -220,7 +219,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         
         // Ensure TextKit2 is used if available and beneficial
         let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)
-        kLogger.debug("STTextView setupTextView: Using TextKit2: \(usingTextKit2)")
+        kLogger.debug("CodeEditorView setupTextView: Using TextKit2: \(usingTextKit2)")
 
         // Ensure proper sizing and layout
         isVerticallyResizable = true
@@ -232,8 +231,8 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         minSize = NSSize(width: 0, height: 0)
         maxSize = NSSize(width: 10_000, height: 10_000)
 
-        kLogger.debug("STTextView setupTextView: Final frame = \(String(describing: self.frame))")
-        kLogger.debug("STTextView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? .zero))")
+        kLogger.debug("CodeEditorView setupTextView: Final frame = \(String(describing: self.frame))")
+        kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? .zero))")
 
         // Initial syntax highlighting
         applySyntaxHighlighting()
@@ -423,9 +422,9 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
             return
         }
 
-        let gutter = STGutterView()
+        let gutter = GutterView()
         gutter.textView = self
-        gutter.autoresizingMask = [.height] // Only resize height, not width
+        gutter.autoresizingMask = NSView.AutoresizingMask.height // Only resize height, not width
 
         // Add gutter directly to the text view since we might not be in a scroll view
         // Position it at the front so it doesn't get covered
@@ -558,7 +557,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     // MARK: - Annotations Support
 
     /// Add an annotation to the text view
-    public func addAnnotation(_ annotation: STAnnotation) {
+    public func addAnnotation(_ annotation: Annotation) {
         annotations.append(annotation)
         updateAnnotationView(for: annotation)
     }
@@ -578,11 +577,11 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     /// Get all annotations
-    public var allAnnotations: [STAnnotation] {
+    public var allAnnotations: [Annotation] {
         annotations
     }
 
-    private func updateAnnotationView(for annotation: STAnnotation) {
+    private func updateAnnotationView(for annotation: Annotation) {
         kLogger.debug("updateAnnotationView called for annotation: \(annotation.id)")
         kLogger.debug("- annotation range: \(String(describing: annotation.range))")
         kLogger.debug("- annotation content: \(annotation.content)")
@@ -609,8 +608,8 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         
         kLogger.debug("Using TextKit2 with textLayoutManager")
         
-        // Convert STAnnotation to STTextViewAnnotation
-        let textViewAnnotation = STTextViewAnnotation(
+        // Convert Annotation to CodeEditorViewAnnotation
+        let textViewAnnotation = CodeEditorViewAnnotation(
             location: annotation.range.location,
             content: annotation.content,
             id: annotation.id
@@ -753,7 +752,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         return NSRange(location: 0, length: string.count)
     }
 
-    // MARK: - Additional STTextView Methods
+    // MARK: - Additional CodeEditorView Methods
 
     // Removed problematic textContainer override that was blocking text container setup
 
@@ -798,11 +797,11 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
             string
         }
         set {
-            kLogger.debug("STTextView text setter: Setting text to '\(newValue ?? "nil")'")
-            kLogger.debug("STTextView text setter: Current string length = \(self.string.count)")
+            kLogger.debug("CodeEditorView text setter: Setting text to '\(newValue ?? "nil")'")
+            kLogger.debug("CodeEditorView text setter: Current string length = \(self.string.count)")
             string = newValue ?? ""
-            kLogger.debug("STTextView text setter: After setting, string length = \(self.string.count)")
-            kLogger.debug("STTextView text setter: textStorage length = \(self.textStorage?.length ?? -1)")
+            kLogger.debug("CodeEditorView text setter: After setting, string length = \(self.string.count)")
+            kLogger.debug("CodeEditorView text setter: textStorage length = \(self.textStorage?.length ?? -1)")
         }
     }
 
@@ -828,7 +827,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
     }
 
-    public var gutterView: STGutterView? {
+    public var gutterView: GutterView? {
         _gutterView
     }
 
@@ -852,9 +851,9 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
     }
 
-    /// Custom notification for STTextView selection changes
+    /// Custom notification for CodeEditorView selection changes
     public static let stTextViewDidChangeSelectionNotification = Notification
-        .Name("STTextViewDidChangeSelectionNotification")
+        .Name("CodeEditorViewDidChangeSelectionNotification")
 
     // MARK: - NSTextLayoutOrientationProvider
 
@@ -872,7 +871,7 @@ open class STTextView: PlatformTextView, NSTextLayoutManagerDelegate {
     ) -> NSTextLayoutFragment {
         // Create the fragment with default paragraph style
         // The style will be updated later if needed
-        STTextLayoutFragment(
+        TextLayoutFragment(
             textElement: textElement,
             range: textElement.elementRange,
             paragraphStyle: NSParagraphStyle.default

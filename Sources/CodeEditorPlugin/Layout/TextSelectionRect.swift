@@ -5,7 +5,7 @@ import AppKit
 #endif
 
 #if canImport(UIKit)
-final class STTextSelectionRect: UITextSelectionRect {
+final class TextSelectionRect: UITextSelectionRect {
     override var rect: CGRect {
         _rect
     }
@@ -53,7 +53,7 @@ final class STTextSelectionRect: UITextSelectionRect {
 }
 #else
 /// macOS equivalent - UITextSelectionRect doesn't exist on macOS
-final class STTextSelectionRect {
+final class TextSelectionRect {
     var rect: CGRect {
         _rect
     }

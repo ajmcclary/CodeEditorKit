@@ -5,7 +5,7 @@ import AppKit
 #endif
 
 #if canImport(UIKit)
-class STTextLocationRange: UITextRange {
+class TextLocationRange: UITextRange {
     let textRange: NSTextRange
 
     init(textRange: NSTextRange) {
@@ -36,7 +36,7 @@ class STTextLocationRange: UITextRange {
 
 extension UITextRange {
     var nsTextRange: NSTextRange {
-        guard let range = self as? STTextLocationRange else {
+        guard let range = self as? TextLocationRange else {
             fatalError("Invalid type")
         }
         return range.textRange
@@ -44,7 +44,7 @@ extension UITextRange {
 }
 #else
 /// macOS equivalent - UITextRange doesn't exist on macOS
-class STTextLocationRange {
+class TextLocationRange {
     let textRange: NSTextRange
 
     init(textRange: NSTextRange) {
@@ -55,11 +55,11 @@ class STTextLocationRange {
         textRange.description
     }
 
-    var start: STTextLocation {
+    var start: TextLocation {
         textRange.location.uiTextPosition
     }
 
-    var end: STTextLocation {
+    var end: TextLocation {
         textRange.endLocation.uiTextPosition
     }
 
@@ -74,7 +74,7 @@ class STTextLocationRange {
 #endif
 
 extension NSTextRange {
-    var uiTextRange: STTextLocationRange {
-        STTextLocationRange(textRange: self)
+    var uiTextRange: TextLocationRange {
+        TextLocationRange(textRange: self)
     }
 }

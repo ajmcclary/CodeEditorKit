@@ -5,20 +5,20 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STAnnotationsDataSource
+// MARK: - AnnotationsDataSource
 
 /// Data source for text annotations
-public protocol STAnnotationsDataSource: AnyObject {
+public protocol AnnotationsDataSource: AnyObject {
     /// Returns the annotations for the given text range
-    func annotations(for textRange: NSTextRange) -> [STAnnotation]
+    func annotations(for textRange: NSTextRange) -> [Annotation]
 
     /// All annotations
-    var textViewAnnotations: [STTextViewAnnotation] { get }
+    var textViewAnnotations: [CodeEditorViewAnnotation] { get }
 
     /// Create a view for the given annotation
     func textView(
-        _ textView: STTextView,
-        viewForLineAnnotation annotation: STTextViewAnnotation,
+        _ textView: CodeEditorView,
+        viewForLineAnnotation annotation: CodeEditorViewAnnotation,
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> NSView?

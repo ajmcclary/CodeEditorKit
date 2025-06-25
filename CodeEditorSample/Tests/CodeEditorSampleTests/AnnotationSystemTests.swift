@@ -8,12 +8,12 @@ import XCTest
 @MainActor
 final class AnnotationSystemTests: XCTestCase {
     
-    var textView: STTextView!
+    var textView: CodeEditorView!
     var annotationManager: AnnotationManager!
     
     override func setUp() async throws {
         await MainActor.run {
-            textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+            textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
             annotationManager = AnnotationManager(textView: textView)
         }
     }

@@ -4,9 +4,9 @@ import UIKit
 @preconcurrency import AppKit
 #endif
 
-// MARK: - STTextLayoutFragment
+// MARK: - TextLayoutFragment
 
-final class STTextLayoutFragment: NSTextLayoutFragment {
+final class TextLayoutFragment: NSTextLayoutFragment {
     private let defaultParagraphStyle: NSParagraphStyle
     var showsInvisibleCharacters: Bool = false
 

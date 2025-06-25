@@ -8,7 +8,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testLargeTextPerformanceWithLineNumbers() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let largeText = String(repeating: "This is a line of text.\n", count: 10_000)
         
         measure {
@@ -20,7 +20,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testLargeTextPerformanceWithoutLineNumbers() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let largeText = String(repeating: "This is a line of text.\n", count: 10_000)
         
         measure {
@@ -32,7 +32,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testSyntaxHighlightingPerformance() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let swiftCode = """
         import Foundation
         
@@ -55,7 +55,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testScrollingPerformanceWithLargeText() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let largeText = String(repeating: "This is a long line of text that should wrap around. ", count: 1_000)
         textView.text = largeText
         textView.widthTracksTextView = true
@@ -73,7 +73,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testConfigurationChangePerformance() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let sampleText = "Sample text for configuration testing"
         textView.text = sampleText
         
@@ -89,7 +89,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testThemeSwitchingPerformance() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let sampleCode = """
         func example() {
             let text = "Hello, World!"
@@ -120,7 +120,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testSpellCheckingPerformanceImpact() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let textWithErrors = """
         This is a sampl text with mny speling erors.
         Ech line contans multipl mistaks that nedd to be checkd.
@@ -138,7 +138,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testTextSubstitutionPerformance() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let textWithSubstitutions = """
         This is a test -- with dashes...
         "Smart quotes" should be replaced.
@@ -156,7 +156,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testHardwareAccelerationImpact() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let largeText = String(repeating: "This is a line of text.\n", count: 5_000)
         textView.text = largeText
         
@@ -183,11 +183,11 @@ final class PerformanceConfigurationTests: XCTestCase {
     @MainActor
     func testMemoryUsageWithLargeConfiguration() {
         // Create multiple text views with full configuration
-        var textViews: [STTextView] = []
+        var textViews: [CodeEditorView] = []
         
         measure {
             for _ in 0..<10 {
-                let tv = STTextView()
+                let tv = CodeEditorView()
                 tv.text = String(repeating: "Sample text\n", count: 100)
                 tv.showsLineNumbers = true
                 tv.highlightSelectedLine = true
@@ -206,7 +206,7 @@ final class PerformanceConfigurationTests: XCTestCase {
     
     @MainActor
     func testLayoutPerformanceWithComplexConfiguration() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let complexText = """
         // TODO: This is a comment
         func complexFunction() {

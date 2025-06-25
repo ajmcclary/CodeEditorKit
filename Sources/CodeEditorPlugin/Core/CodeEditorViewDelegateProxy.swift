@@ -2,14 +2,14 @@
 import Foundation
 
 @MainActor
-class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NSTextViewDelegate {
-    weak var source: STTextViewDelegate?
+class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate, NSTextViewDelegate {
+    weak var source: CodeEditorViewDelegate?
 
-    init(source: STTextViewDelegate?) {
+    init(source: CodeEditorViewDelegate?) {
         self.source = source
     }
 
-    func undoManager(for textView: STTextView) -> UndoManager? {
+    func undoManager(for textView: CodeEditorView) -> UndoManager? {
         source?.undoManager(for: textView)
     }
 
@@ -26,7 +26,7 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
     }
 
     func textView(
-        _ textView: STTextView,
+        _ textView: CodeEditorView,
         shouldChangeTextIn affectedCharRange: NSTextRange,
         replacementString: String?
     ) -> Bool {
@@ -34,18 +34,18 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
     }
 
     @MainActor
-    func textView(_ textView: STTextView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
+    func textView(_ textView: CodeEditorView, willChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
         source?.textView(textView, willChangeTextIn: affectedCharRange, replacementString: replacementString)
     }
 
     @MainActor
-    func textView(_ textView: STTextView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
+    func textView(_ textView: CodeEditorView, didChangeTextIn affectedCharRange: NSTextRange, replacementString: String) {
         source?.textView(textView, didChangeTextIn: affectedCharRange, replacementString: replacementString)
     }
 
     // Menu customization is not yet supported in the delegate protocol
     // @MainActor
-    // func textView(_ textView: STTextView, menu: NSMenu, for event: NSEvent, at location: NSTextLocation) -> NSMenu? {
+    // func textView(_ textView: CodeEditorView, menu: NSMenu, for event: NSEvent, at location: NSTextLocation) -> NSMenu? {
     //     guard let textContentManager = textView.textLayoutManager.textContentManager else {
     //         return nil
     //     }
@@ -75,32 +75,32 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
 
     // Completion items methods are not yet supported in the delegate protocol
     // @_unavailableFromAsync
-    // func textView(_ textView: STTextView, completionItemsAtLocation location: NSTextLocation) -> [any STCompletionItem]? {
+    // func textView(_ textView: CodeEditorView, completionItemsAtLocation location: NSTextLocation) -> [any CompletionItem]? {
     //     source?.textView(textView, completionItemsAtLocation: location)
     // }
     //
-    // func textView(_ textView: STTextView, completionItemsAtLocation location: any NSTextLocation) async -> [any STCompletionItem]? {
+    // func textView(_ textView: CodeEditorView, completionItemsAtLocation location: any NSTextLocation) async -> [any CompletionItem]? {
     //     await source?.textView(textView, completionItemsAtLocation: location)
     // }
 
-    func textView(_ textView: STTextView, insertCompletionItem item: any STCompletionItem) {
+    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItem) {
         source?.textView(textView, insertCompletionItem: item)
     }
 
-    func textViewCompletionViewController(_ textView: STTextView) -> any STCompletionViewControllerProtocol {
-        source?.textViewCompletionViewController(textView) ?? STCompletionViewController()
+    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol {
+        source?.textViewCompletionViewController(textView) ?? CompletionViewController()
     }
 
-    func textViewInsertionPointView(_ textView: STTextView, frame: CGRect) -> (STInsertionPointIndicatorProtocol)? {
+    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicatorProtocol)? {
         source?.textViewInsertionPointView(textView, frame: frame)
     }
 
-    func textView(_ textView: STTextView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
+    func textView(_ textView: CodeEditorView, clickedOnLink link: Any, at location: any NSTextLocation) -> Bool {
         source?.textView(textView, clickedOnLink: link, at: location) ?? false
     }
 
     func textView(
-        _ textView: STTextView,
+        _ textView: CodeEditorView,
         clickedOnAttachment attachment: NSTextAttachment,
         at location: any NSTextLocation
     ) -> Bool {
@@ -108,7 +108,7 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
     }
 
     func textView(
-        _ textView: STTextView,
+        _ textView: CodeEditorView,
         shouldAllowInteractionWith attachment: NSTextAttachment,
         at location: any NSTextLocation
     ) -> Bool {
@@ -119,16 +119,16 @@ class STTextViewDelegateProxy: NSObject, @preconcurrency STTextViewDelegate, NST
 
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
-        if let textView = notification.object as? STTextView {
+        if let textView = notification.object as? CodeEditorView {
             let stNotification = Notification(name: NSText.didChangeNotification, object: textView)
             textViewDidChangeText(stNotification)
         }
     }
 
     func textView(_ textView: NSTextView, shouldChangeTextIn _: NSRange, replacementString _: String?) -> Bool {
-        // Convert NSRange to NSTextRange for STTextView compatibility
+        // Convert NSRange to NSTextRange for CodeEditorView compatibility
         // This is a simplified approach - in a full implementation, we'd need proper conversion
-        if textView is STTextView {
+        if textView is CodeEditorView {
             // For now, just forward with a simple implementation - skip the NSTextRange conversion
             // TODO: Properly convert NSRange to NSTextRange
             return true // source?.textView(stTextView, shouldChangeTextIn: convertedRange, replacementString: replacementString) ?? true

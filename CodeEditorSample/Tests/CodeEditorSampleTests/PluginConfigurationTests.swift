@@ -8,7 +8,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testAnnotationPluginEnableDisable() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         var config = EditorConfiguration()
         
         // Test disabled state
@@ -33,7 +33,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testAnnotationPluginWithDifferentLanguages() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let annotationManager = AnnotationManager(textView: textView)
         
         // Test with Swift
@@ -60,7 +60,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testAnnotationPluginPerformance() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let annotationManager = AnnotationManager(textView: textView)
         
         // Create text with many annotations
@@ -155,7 +155,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testPluginWithThemeChanges() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let annotationManager = AnnotationManager(textView: textView)
         textView.text = "// TODO: Test with themes"
         
@@ -173,7 +173,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testPluginEdgeCases() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let annotationManager = AnnotationManager(textView: textView)
         
         // Test with empty text
@@ -193,7 +193,7 @@ final class PluginConfigurationTests: XCTestCase {
     
     @MainActor
     func testPluginMemoryManagement() {
-        let textView = STTextView()
+        let textView = CodeEditorView()
         let manager = AnnotationManager(textView: textView)
         
         // Test that plugins are properly cleaned up

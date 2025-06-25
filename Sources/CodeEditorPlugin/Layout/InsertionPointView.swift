@@ -5,10 +5,10 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STInsertionPointView
+// MARK: - InsertionPointView
 
 /// View representing the text insertion point (cursor)
-public class STInsertionPointView: NSView {
+public class InsertionPointView: NSView {
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()

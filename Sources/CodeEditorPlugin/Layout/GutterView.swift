@@ -5,11 +5,11 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STGutterView
+// MARK: - GutterView
 
 /// View for displaying line numbers and other gutter information
-public class STGutterView: NSView {
-    weak var textView: STTextView?
+public class GutterView: NSView {
+    weak var textView: CodeEditorView?
 
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

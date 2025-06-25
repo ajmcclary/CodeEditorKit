@@ -6,9 +6,9 @@ import XCTest
 
 @MainActor
 final class AnnotationTests: XCTestCase {
-    private var _textView: STTextView?
+    private var _textView: CodeEditorView?
     
-    private var textView: STTextView {
+    private var textView: CodeEditorView {
         guard let textView = _textView else {
             fatalError("textView not initialized - call setUp first")
         }
@@ -17,7 +17,7 @@ final class AnnotationTests: XCTestCase {
     
     override func setUp() async throws {
         await MainActor.run {
-            _textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+            _textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         }
     }
     
@@ -27,23 +27,23 @@ final class AnnotationTests: XCTestCase {
         }
     }
     
-    // MARK: - STAnnotation Model Tests
+    // MARK: - Annotation Model Tests
     
-    func testSTAnnotationCreation() {
+    func testAnnotationCreation() {
         guard let documentRange = textView.textContentStorage?.documentRange,
               let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
             XCTFail("Could not create text range")
             return
         }
         
-        let annotation = STAnnotation(range: range, content: "Test annotation", id: "test-id")
+        let annotation = Annotation(range: range, content: "Test annotation", id: "test-id")
         
         XCTAssertEqual(annotation.range, range)
         XCTAssertEqual(annotation.content, "Test annotation")
         XCTAssertEqual(annotation.id, "test-id")
     }
     
-    func testSTAnnotationEquality() {
+    func testAnnotationEquality() {
         guard let documentRange = textView.textContentStorage?.documentRange,
               let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
               let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
@@ -51,9 +51,9 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation1 = STAnnotation(range: range1, content: "Same content", id: "id1")
-        let annotation2 = STAnnotation(range: range2, content: "Same content", id: "id2")
-        let annotation3 = STAnnotation(range: range1, content: "Same content", id: "id1")
+        let annotation1 = Annotation(range: range1, content: "Same content", id: "id1")
+        let annotation2 = Annotation(range: range2, content: "Same content", id: "id2")
+        let annotation3 = Annotation(range: range1, content: "Same content", id: "id1")
         
         // Different IDs should make annotations different
         XCTAssertNotEqual(annotation1.id, annotation2.id)
@@ -62,15 +62,15 @@ final class AnnotationTests: XCTestCase {
         XCTAssertEqual(annotation1.id, annotation3.id)
     }
     
-    // MARK: - STTextViewAnnotation Tests
+    // MARK: - CodeEditorViewAnnotation Tests
     
-    func testSTTextViewAnnotationCreation() {
+    func testCodeEditorViewAnnotationCreation() {
         guard let documentRange = textView.textContentStorage?.documentRange else {
             XCTFail("Could not get document range")
             return
         }
         
-        let annotation = STTextViewAnnotation(
+        let annotation = CodeEditorViewAnnotation(
             location: documentRange.location,
             content: "Line annotation",
             id: "line-test"
@@ -92,7 +92,7 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation = STAnnotation(range: range, content: "Single annotation", id: "single")
+        let annotation = Annotation(range: range, content: "Single annotation", id: "single")
         
         XCTAssertEqual(textView.allAnnotations.count, 0)
         textView.addAnnotation(annotation)
@@ -109,11 +109,11 @@ final class AnnotationTests: XCTestCase {
         }
         
         // Create multiple annotations
-        let annotations = (1...5).compactMap { index -> STAnnotation? in
+        let annotations = (1...5).compactMap { index -> Annotation? in
             guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
                 return nil
             }
-            return STAnnotation(range: range, content: "Annotation \(index)", id: "anno-\(index)")
+            return Annotation(range: range, content: "Annotation \(index)", id: "anno-\(index)")
         }
         
         XCTAssertEqual(annotations.count, 5)
@@ -141,8 +141,8 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation1 = STAnnotation(range: range1, content: "First", id: "first")
-        let annotation2 = STAnnotation(range: range2, content: "Second", id: "second")
+        let annotation1 = Annotation(range: range1, content: "First", id: "first")
+        let annotation2 = Annotation(range: range2, content: "Second", id: "second")
         
         textView.addAnnotation(annotation1)
         textView.addAnnotation(annotation2)
@@ -163,7 +163,7 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation = STAnnotation(range: range, content: "Test", id: "exists")
+        let annotation = Annotation(range: range, content: "Test", id: "exists")
         textView.addAnnotation(annotation)
         XCTAssertEqual(textView.allAnnotations.count, 1)
         
@@ -185,7 +185,7 @@ final class AnnotationTests: XCTestCase {
             guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
                 continue
             }
-            let annotation = STAnnotation(range: range, content: "Annotation \(index)", id: "id-\(index)")
+            let annotation = Annotation(range: range, content: "Annotation \(index)", id: "id-\(index)")
             textView.addAnnotation(annotation)
         }
         
@@ -230,7 +230,7 @@ final class AnnotationTests: XCTestCase {
         }
         
         // Add annotation to trigger data source callbacks
-        let annotation = STAnnotation(range: range, content: "Test annotation", id: "callback-test")
+        let annotation = Annotation(range: range, content: "Test annotation", id: "callback-test")
         textView.addAnnotation(annotation)
         
         // Force layout to trigger annotation view creation
@@ -256,7 +256,7 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation = STAnnotation(range: validRange, content: "Valid annotation", id: "valid")
+        let annotation = Annotation(range: validRange, content: "Valid annotation", id: "valid")
         textView.addAnnotation(annotation)
         
         XCTAssertEqual(textView.allAnnotations.count, 1)
@@ -287,7 +287,7 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation = STAnnotation(range: range, content: "Layout test", id: "layout")
+        let annotation = Annotation(range: range, content: "Layout test", id: "layout")
         textView.addAnnotation(annotation)
         
         // Layout again with annotation
@@ -337,7 +337,7 @@ final class AnnotationTests: XCTestCase {
                 guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
                     continue
                 }
-                let annotation = STAnnotation(range: range, content: "Annotation \(index)", id: "perf-\(index)")
+                let annotation = Annotation(range: range, content: "Annotation \(index)", id: "perf-\(index)")
                 textView.addAnnotation(annotation)
             }
         }
@@ -358,7 +358,7 @@ final class AnnotationTests: XCTestCase {
             guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
                 continue
             }
-            let annotation = STAnnotation(range: range, content: "Annotation \(index)", id: "remove-\(index)")
+            let annotation = Annotation(range: range, content: "Annotation \(index)", id: "remove-\(index)")
             textView.addAnnotation(annotation)
         }
         
@@ -383,8 +383,8 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation1 = STAnnotation(range: range1, content: "First", id: "duplicate")
-        let annotation2 = STAnnotation(range: range2, content: "Second", id: "duplicate")
+        let annotation1 = Annotation(range: range1, content: "First", id: "duplicate")
+        let annotation2 = Annotation(range: range2, content: "Second", id: "duplicate")
         
         textView.addAnnotation(annotation1)
         textView.addAnnotation(annotation2)
@@ -408,7 +408,7 @@ final class AnnotationTests: XCTestCase {
             return
         }
         
-        let annotation = STAnnotation(
+        let annotation = Annotation(
             range: range,
             content: "Annotation with 🎯 émojis and ñoño",
             id: "unicode-test"
@@ -427,11 +427,11 @@ final class AnnotationTests: XCTestCase {
 // MARK: - Test Helper Classes
 
 @MainActor
-class TestAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSource {
-    var mockAnnotations: [STAnnotation] = []
+class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
+    var mockAnnotations: [Annotation] = []
     var viewCreationCount = 0
     
-    func annotations(for textRange: NSTextRange) -> [STAnnotation] {
+    func annotations(for textRange: NSTextRange) -> [Annotation] {
         _ = textRange
         return mockAnnotations.filter { _ in
             // Simple intersection check for testing
@@ -439,9 +439,9 @@ class TestAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSourc
         }
     }
     
-    var textViewAnnotations: [STTextViewAnnotation] {
+    var textViewAnnotations: [CodeEditorViewAnnotation] {
         mockAnnotations.compactMap { annotation in
-            STTextViewAnnotation(
+            CodeEditorViewAnnotation(
                 location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
@@ -450,8 +450,8 @@ class TestAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSourc
     }
     
     func textView(
-        _ textView: STTextView,
-        viewForLineAnnotation annotation: STTextViewAnnotation,
+        _ textView: CodeEditorView,
+        viewForLineAnnotation annotation: CodeEditorViewAnnotation,
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> NSView? {
@@ -469,7 +469,7 @@ class TestAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSourc
     }
     
     func addMockAnnotation(range: NSTextRange, content: String, id: String) {
-        let annotation = STAnnotation(range: range, content: content, id: id)
+        let annotation = Annotation(range: range, content: content, id: id)
         mockAnnotations.append(annotation)
     }
     

@@ -2,14 +2,14 @@ import AppKit
 @testable import CodeEditorPlugin
 import XCTest
 
-// MARK: - STTextViewTests
+// MARK: - CodeEditorViewTests
 
-final class STTextViewTests: XCTestCase {
+final class CodeEditorViewTests: XCTestCase {
     // MARK: - Basic Initialization Tests
 
     @MainActor
     func testInitialization() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertNotNil(textView)
         XCTAssertNotNil(textView.textStorage)
         XCTAssertNotNil(textView.textContainer)
@@ -18,7 +18,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testViewHierarchy() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         // NSTextView is its own view, no document view needed
         // Test that it can be standalone or in hierarchy
         XCTAssertTrue(textView.superview == nil || textView.superview != nil)
@@ -30,7 +30,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSetText() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let testText = "Hello, World!"
         textView.text = testText
 
@@ -40,14 +40,14 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSetEmptyText() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = ""
         XCTAssertEqual(textView.text, "")
     }
 
     @MainActor
     func testSetNilText() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Some text"
         textView.text = nil
         XCTAssertEqual(textView.text, "")
@@ -55,7 +55,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSetLongText() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let longText = String(repeating: "Lorem ipsum dolor sit amet. ", count: 1_000)
         textView.text = longText
         XCTAssertEqual(textView.text, longText)
@@ -65,7 +65,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLineNumbers() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertFalse(textView.showsLineNumbers)
         textView.showsLineNumbers = true
         XCTAssertTrue(textView.showsLineNumbers)
@@ -73,7 +73,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testFont() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let customFont = NSFont.monospacedSystemFont(ofSize: 16, weight: .regular)
         textView.font = customFont
         XCTAssertEqual(textView.font, customFont)
@@ -81,7 +81,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testTextColor() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let customColor = NSColor.blue
         textView.textColor = customColor
         XCTAssertEqual(textView.textColor, customColor)
@@ -89,7 +89,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testBackgroundColor() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let customBgColor = NSColor.darkGray
         textView.backgroundColor = customBgColor
         XCTAssertEqual(textView.backgroundColor, customBgColor)
@@ -97,7 +97,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testEditability() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isEditable)
         textView.isEditable = false
         XCTAssertFalse(textView.isEditable)
@@ -105,7 +105,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSelectability() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isSelectable)
         textView.isSelectable = false
         XCTAssertFalse(textView.isSelectable)
@@ -115,7 +115,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLineHighlighting() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertFalse(textView.highlightSelectedLine)
         textView.highlightSelectedLine = true
         XCTAssertTrue(textView.highlightSelectedLine)
@@ -123,7 +123,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLineHighlightColor() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let highlightColor = NSColor.yellow.withAlphaComponent(0.3)
         textView.selectedLineHighlightColor = highlightColor
         XCTAssertEqual(textView.selectedLineHighlightColor, highlightColor)
@@ -133,7 +133,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testWidthTracking() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.widthTracksTextView)
         textView.widthTracksTextView = true
         XCTAssertTrue(textView.widthTracksTextView)
@@ -142,7 +142,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testHorizontalResizability() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertFalse(textView.isHorizontallyResizable)
         textView.isHorizontallyResizable = false
         XCTAssertFalse(textView.isHorizontallyResizable)
@@ -150,7 +150,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testVerticalResizability() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isVerticallyResizable)
         textView.isVerticallyResizable = false
         XCTAssertFalse(textView.isVerticallyResizable)
@@ -160,8 +160,8 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testDelegateAssignment() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
-        let delegate = MockSTTextViewDelegate()
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let delegate = MockCodeEditorViewDelegate()
         textView.textDelegate = delegate
         XCTAssertNotNil(textView.textDelegate)
     }
@@ -170,7 +170,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testAddAnnotation() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content"
 
         // Create NSTextRange for annotation using document range
@@ -182,7 +182,7 @@ final class STTextViewTests: XCTestCase {
             XCTFail("Could not create NSTextRange")
             return
         }
-        let annotation = STAnnotation(range: mockRange, content: "Test annotation", id: "test")
+        let annotation = Annotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)
         XCTAssertEqual(textView.allAnnotations.count, 1)
@@ -191,7 +191,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testRemoveAnnotation() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with annotations"
 
         // Add multiple annotations
@@ -206,8 +206,8 @@ final class STTextViewTests: XCTestCase {
             return
         }
         
-        let annotation1 = STAnnotation(range: range1, content: "First annotation", id: "test1")
-        let annotation2 = STAnnotation(range: range2, content: "Second annotation", id: "test2")
+        let annotation1 = Annotation(range: range1, content: "First annotation", id: "test1")
+        let annotation2 = Annotation(range: range2, content: "Second annotation", id: "test2")
 
         textView.addAnnotation(annotation1)
         textView.addAnnotation(annotation2)
@@ -225,7 +225,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testRemoveAllAnnotations() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with multiple annotations"
 
         guard let documentRange = textView.textContentStorage?.documentRange else {
@@ -239,7 +239,7 @@ final class STTextViewTests: XCTestCase {
                 XCTFail("Could not create NSTextRange")
                 return
             }
-            let annotation = STAnnotation(range: range, content: "Annotation \(index)", id: "test\(index)")
+            let annotation = Annotation(range: range, content: "Annotation \(index)", id: "test\(index)")
             textView.addAnnotation(annotation)
         }
         
@@ -252,7 +252,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationDataSource() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let mockDataSource = MockAnnotationDataSource()
         
         textView.annotationsDataSource = mockDataSource
@@ -266,7 +266,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationWithTextKit1() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Implement this feature\nlet x = 42"
         
         // Force layout to ensure text is rendered
@@ -285,7 +285,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationRangeCalculation() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let testText = "Line 1\nLine 2 with TODO\nLine 3"
         textView.text = testText
         
@@ -304,7 +304,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationPositioning() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Test annotation positioning"
         
         // Force layout
@@ -330,7 +330,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testTextStorageHasContent() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content"
 
         // Force layout
@@ -346,7 +346,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLayoutManager() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertNotNil(textView.layoutManager)
 
         // The layout manager should be connected to the text view
@@ -357,7 +357,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSyntaxHighlightingEnabled() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
         textView.isSyntaxHighlightingEnabled = false
         XCTAssertFalse(textView.isSyntaxHighlightingEnabled)
@@ -365,7 +365,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLanguageSelection() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertEqual(textView.language, .plainText)
         textView.language = .swift
         XCTAssertEqual(textView.language, .swift)
@@ -373,7 +373,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testSetLanguageByExtension() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.setLanguage(fileExtension: "swift")
         XCTAssertEqual(textView.language, .swift)
         textView.setLanguage(fileExtension: "py")
@@ -387,13 +387,13 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testIsFlipped() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isFlipped)
     }
 
     @MainActor
     func testGutterViewCreation() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertNil(textView.gutterView)
         textView.showsLineNumbers = true
         XCTAssertNotNil(textView.gutterView)
@@ -405,7 +405,7 @@ final class STTextViewTests: XCTestCase {
 
     @MainActor
     func testLargeTextPerformance() {
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let largeText = String(repeating: "Line of text\n", count: 10_000)
 
         measure {
@@ -418,10 +418,10 @@ final class STTextViewTests: XCTestCase {
     }
 }
 
-// MARK: - MockSTTextViewDelegate
+// MARK: - MockCodeEditorViewDelegate
 
 @MainActor
-class MockSTTextViewDelegate: NSObject, @preconcurrency STTextViewDelegate {
+class MockCodeEditorViewDelegate: NSObject, @preconcurrency CodeEditorViewDelegate {
     var textDidChangeCalled = false
     var selectionDidChangeCalled = false
 
@@ -445,24 +445,24 @@ class MockSTTextViewDelegate: NSObject, @preconcurrency STTextViewDelegate {
 // MARK: - MockAnnotationDataSource
 
 @MainActor
-class MockAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSource {
-    var mockAnnotations: [STAnnotation] = []
+class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
+    var mockAnnotations: [Annotation] = []
     var viewCreationCallCount = 0
     
     deinit {
         // Cleanup if needed
     }
     
-    func annotations(for textRange: NSTextRange) -> [STAnnotation] {
+    func annotations(for textRange: NSTextRange) -> [Annotation] {
         // Return annotations that intersect with the given range
         mockAnnotations.filter { annotation in
             annotation.range.intersects(textRange)
         }
     }
     
-    var textViewAnnotations: [STTextViewAnnotation] {
+    var textViewAnnotations: [CodeEditorViewAnnotation] {
         mockAnnotations.compactMap { annotation in
-            STTextViewAnnotation(
+            CodeEditorViewAnnotation(
                 location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
@@ -471,8 +471,8 @@ class MockAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSourc
     }
     
     func textView(
-        _: STTextView,
-        viewForLineAnnotation _: STTextViewAnnotation,
+        _: CodeEditorView,
+        viewForLineAnnotation _: CodeEditorViewAnnotation,
         textLineFragment _: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> NSView? {
@@ -488,7 +488,7 @@ class MockAnnotationDataSource: NSObject, @preconcurrency STAnnotationsDataSourc
     }
     
     func addMockAnnotation(range: NSTextRange, content: String, id: String) {
-        let annotation = STAnnotation(range: range, content: content, id: id)
+        let annotation = Annotation(range: range, content: content, id: id)
         mockAnnotations.append(annotation)
     }
     
@@ -510,4 +510,4 @@ extension NSTextRange {
     }
 }
 
-// Note: Plugin system has been removed and functionality integrated directly into STTextView
+// Note: Plugin system has been removed and functionality integrated directly into CodeEditorView

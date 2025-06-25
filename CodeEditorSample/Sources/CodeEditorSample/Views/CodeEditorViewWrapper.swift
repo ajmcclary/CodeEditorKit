@@ -7,13 +7,13 @@ struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    let onTextViewReady: ((STTextView) -> Void)?
+    let onTextViewReady: ((CodeEditorView) -> Void)?
 
     init(
         configuration: EditorConfiguration,
         text: Binding<String>,
         language: String,
-        onTextViewReady: ((STTextView) -> Void)? = nil
+        onTextViewReady: ((CodeEditorView) -> Void)? = nil
     ) {
         self.configuration = configuration
         self._text = text
@@ -38,7 +38,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    let onTextViewReady: ((STTextView) -> Void)?
+    let onTextViewReady: ((CodeEditorView) -> Void)?
 
     func makeNSView(context: Context) -> NSScrollView {
         // Create NSScrollView
@@ -59,7 +59,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             scrollView.horizontalScrollElasticity = .none
         }
 
-        let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
         // Set delegate
         textView.textDelegate = context.coordinator
@@ -105,7 +105,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? STTextView else { return }
+        guard let textView = scrollView.documentView as? CodeEditorView else { return }
         
         // Update text if changed
         if textView.text != text {
@@ -166,7 +166,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         Coordinator(self)
     }
 
-    private func applyConfiguration(to textView: STTextView) {
+    private func applyConfiguration(to textView: CodeEditorView) {
         // Basic settings
         textView.isEditable = configuration.isEditable
         textView.isSelectable = true
@@ -231,7 +231,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         textView.importsGraphics = configuration.importsGraphics
         textView.usesInspectorBar = configuration.usesInspectorBar
         textView.usesFindBar = configuration.usesFindBar
-        // Note: allowsNonContiguousLayout is not available on STTextView
+        // Note: allowsNonContiguousLayout is not available on CodeEditorView
         textView.displaysLinkToolTips = configuration.displaysLinkToolTips
         
         // Performance settings
@@ -247,7 +247,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     // MARK: - Coordinator
 
     @MainActor
-    class Coordinator: NSObject, @preconcurrency STTextViewDelegate {
+    class Coordinator: NSObject, @preconcurrency CodeEditorViewDelegate {
         var parent: UnifiedCodeEditorView
         var annotationManager: AnnotationManager?
 
@@ -256,9 +256,9 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             super.init()
         }
 
-        // MARK: - STTextViewDelegate
+        // MARK: - CodeEditorViewDelegate
 
-        func undoManager(for _: STTextView) -> UndoManager? {
+        func undoManager(for _: CodeEditorView) -> UndoManager? {
             nil
         }
 
@@ -267,7 +267,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textViewDidChangeText(_ notification: Notification) {
-            if let textView = notification.object as? STTextView {
+            if let textView = notification.object as? CodeEditorView {
                 parent.text = textView.text ?? ""
                 
                 // Re-scan for annotations if enabled
@@ -282,20 +282,20 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _ textView: STTextView,
+            _ textView: CodeEditorView,
             shouldChangeTextIn affectedCharRange: NSTextRange,
             replacementString: String?
         ) -> Bool {
             guard let replacementString = replacementString else { return true }
             
-            // Note: Tab handling and auto-indent would require deeper integration with STTextView's
+            // Note: Tab handling and auto-indent would require deeper integration with CodeEditorView's
             // text system. For now, these features are documented but not implemented.
             
             return true
         }
 
         func textView(
-            _ textView: STTextView,
+            _ textView: CodeEditorView,
             willChangeTextIn affectedCharRange: NSTextRange,
             replacementString: String
         ) {
@@ -303,34 +303,34 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _: STTextView,
+            _: CodeEditorView,
             didChangeTextIn _: NSTextRange,
             replacementString _: String
         ) {
             // Default implementation
         }
 
-        func textView(_: STTextView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
+        func textView(_: CodeEditorView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool {
             false
         }
 
-        func textView(_: STTextView, insertCompletionItem _: any STCompletionItem) {
+        func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItem) {
             // Default implementation
         }
 
-        func textViewCompletionViewController(_: STTextView) -> any STCompletionViewControllerProtocol {
+        func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
             fatalError("Completion view controller not implemented")
         }
 
         func textViewInsertionPointView(
-            _: STTextView,
+            _: CodeEditorView,
             frame _: CGRect
-        ) -> (any STInsertionPointIndicatorProtocol)? {
+        ) -> (any InsertionPointIndicatorProtocol)? {
             nil
         }
 
         func textView(
-            _: STTextView,
+            _: CodeEditorView,
             clickedOnAttachment _: NSTextAttachment,
             at _: any NSTextLocation
         ) -> Bool {
@@ -338,7 +338,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _: STTextView,
+            _: CodeEditorView,
             shouldAllowInteractionWith _: NSTextAttachment,
             at _: any NSTextLocation
         ) -> Bool {

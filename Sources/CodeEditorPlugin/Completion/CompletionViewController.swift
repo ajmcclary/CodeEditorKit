@@ -3,11 +3,11 @@ import Foundation
 import AppKit
 
 /// Default completion view controller implementation
-public class STCompletionViewController: NSViewController, STCompletionViewControllerProtocol {
-    public typealias Item = any STCompletionItem
+public class CompletionViewController: NSViewController, CompletionViewControllerProtocol {
+    public typealias Item = any CompletionItem
 
     public var items: [Item] = []
-    public weak var delegate: STCompletionViewControllerDelegate?
+    public weak var delegate: CompletionViewControllerDelegate?
 
     public init() {
         super.init(nibName: nil, bundle: nil)

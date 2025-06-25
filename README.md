@@ -92,7 +92,7 @@ class ViewController: NSViewController {
         scrollView.autohidesScrollers = false
         
         // Create text view
-        let textView = STTextView()
+        let textView = CodeEditorView()
         textView.text = "// Your code here\nprint(\"Hello, World!\")"
         textView.showsLineNumbers = true
         textView.highlightSelectedLine = true
@@ -123,10 +123,10 @@ class ViewController: NSViewController {
 
 CodeEditorPlugin provides extensive configuration through two main APIs:
 
-#### 1. STTextView Properties (Direct Configuration)
+#### 1. CodeEditorView Properties (Direct Configuration)
 
 ```swift
-let textView = STTextView()
+let textView = CodeEditorView()
 
 // Core Properties
 textView.text = "Your code here"
@@ -253,7 +253,7 @@ config.theme = customTheme
 
 ### Implementation Notes
 
-Most configuration options are fully implemented. The following features are marked as "Coming Soon" and require deeper STTextView integration:
+Most configuration options are fully implemented. The following features are marked as "Coming Soon" and require deeper CodeEditorView integration:
 
 - **autoIndent** - Automatic indentation matching (Configuration option available, delegate implementation coming soon)
 - **insertSpacesForTabs** - Tab to spaces conversion (Configuration option available, delegate implementation coming soon)
@@ -311,7 +311,7 @@ Check out the comprehensive example application in `CodeEditorSample/` that demo
 ### Running the Example
 
 ```bash
-cd Example/CodeEditorSample
+cd CodeEditorSample
 swift run CodeEditorSample
 ```
 
@@ -321,7 +321,7 @@ CodeEditorPlugin is built with a clean, modular architecture fully optimized for
 
 ### Core Components
 
-- **STTextView** - Enhanced NSTextView subclass with modern TextKit2 integration
+- **CodeEditorView** - Enhanced NSTextView subclass with modern TextKit2 integration
 - **Syntax Highlighting** - Multi-strategy highlighting system (SwiftSyntax + Regex-based)
 - **Theme System** - Comprehensive theming with color management
 - **Plugin Architecture** - Extensible system for custom functionality
@@ -332,7 +332,7 @@ CodeEditorPlugin is built with a clean, modular architecture fully optimized for
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                   # Core text editing (STTextView, delegates)
+├── Core/                   # Core text editing (CodeEditorView, delegates)
 ├── SyntaxHighlighting/     # All highlighting logic unified
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
@@ -354,9 +354,9 @@ Sources/CodeEditorPlugin/
 
 ### Key Design Patterns
 
-- **Protocol-Oriented Design** - STTextViewProtocol, STTextViewDelegate with Sendable conformance
+- **Protocol-Oriented Design** - CodeEditorViewProtocol, CodeEditorViewDelegate with Sendable conformance
 - **Actor-Based Concurrency** - Full Swift 6 actor architecture for all validation and processing
-- **Type Aliases** - Clean public API (CodeEditorTextView, CodeEditorDelegate)
+- **Type Aliases** - Clean public API (CodeEditorTextView → CodeEditorView, CodeEditorDelegate → CodeEditorViewDelegate)
 - **Versioned Content System** - Thread-safe change tracking with actor-isolated validation
 - **Isolation Parameters** - Advanced actor communication patterns for cross-actor operations
 - **@Sendable Closures** - Complete thread-safety in all async operations
@@ -367,7 +367,7 @@ Sources/CodeEditorPlugin/
 - ✅ **Simplified Directory Structure** - Reduced from 39 to 10 directories with feature-based organization
 - ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
-- ✅ **Protocol Conformance** - Complete STTextViewDelegate implementation
+- ✅ **Protocol Conformance** - Complete CodeEditorViewDelegate implementation
 - ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations across 102 files
 - ✅ **Test Coverage** - Comprehensive test suite with 172 passing tests
 - ✅ **Annotation System** - Complete inline annotations with hover popups for code comments

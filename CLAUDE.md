@@ -59,8 +59,8 @@ swift run CodeEditorSample
 ```
 Sources/CodeEditorPlugin/
 ├── Core/                   # Core text editing components
-│   ├── STTextView.swift    # Main text view (TextKit2)
-│   └── Delegates/          # STTextViewDelegate & protocol
+│   ├── CodeEditorView.swift    # Main text view (TextKit2)
+│   └── Delegates/          # CodeEditorViewDelegate & protocol
 ├── SyntaxHighlighting/     # All highlighting logic unified
 │   ├── Coordinator.swift   # Main highlighting system
 │   ├── SwiftSyntax/        # Swift AST-based highlighting
@@ -68,7 +68,7 @@ Sources/CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
-│   ├── STGutterView.swift  # Line numbers
+│   ├── GutterView.swift  # Line numbers
 │   └── Fragments/          # Text layout fragments
 ├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
@@ -79,8 +79,8 @@ Sources/CodeEditorPlugin/
 
 ### Core Components
 
-1. **STTextView** - The main text view component built on TextKit2
-   - Located in `Sources/CodeEditorPlugin/Core/STTextView.swift`
+1. **CodeEditorView** - The main text view component built on TextKit2
+   - Located in `Sources/CodeEditorPlugin/Core/CodeEditorView.swift`
    - Provides the core editing functionality with modern TextKit2 integration
    - Supports features like line numbers, syntax highlighting, and annotations
 
@@ -88,7 +88,7 @@ Sources/CodeEditorPlugin/
    - Detects TODO/FIXME/NOTE/WARNING/ERROR comments in code
    - Displays hover popups with annotation details
    - `AnnotationManager` handles detection and positioning
-   - Data source pattern via `STAnnotationsDataSource`
+   - Data source pattern via `AnnotationsDataSource`
    - Integrated through the plugin system with visual badges
 
 3. **Syntax Highlighting** - Multi-language support with two strategies
@@ -100,14 +100,13 @@ Sources/CodeEditorPlugin/
 ### Key Design Patterns
 
 1. **Protocol-Oriented Design**
-   - `STTextViewProtocol` defines the core text view interface
-   - `STTextViewDelegate` for comprehensive event handling
+   - `CodeEditorViewProtocol` defines the core text view interface
+   - `CodeEditorViewDelegate` for comprehensive event handling
    - `TextSystemInterface` provides abstract text system access
 
 2. **Type Aliases for Public API**
-   - `CodeEditorTextView` → `STTextView`
-   - `CodeEditorDelegate` → `STTextViewDelegate`
-   - `CodeEditorPluginProtocol` → `STPlugin`
+   - `CodeEditorTextView` → `CodeEditorView`
+   - `CodeEditorDelegate` → `CodeEditorViewDelegate`
    - Defined in `Sources/CodeEditorPlugin/CodeEditorPlugin.swift`
 
 3. **Versioned Content System**
@@ -163,7 +162,7 @@ Sources/CodeEditorPlugin/
 Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (66 tests) for a total of 172 comprehensive tests. The project uses Swift Package Manager's built-in testing support. Key test files include:
 
 **Main Package Tests (106 tests):**
-- `STTextViewTests.swift` - Core text view functionality (33 tests)
+- `CodeEditorViewTests.swift` - Core text view functionality (33 tests)
 - `SyntaxHighlightingTests.swift` - Highlighting system tests (13 tests)
 - `ConfigurationTests.swift` - Configuration system tests (6 tests)
 - `AnnotationTests.swift` - Annotation system functionality (19 tests)
@@ -192,7 +191,7 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - Unified text update mechanism through `NSTextContentStorage`
 - Proper synchronization between text storage and layout manager
 - Ensures consistent rendering across all text changes
-- See `STTextView_Fix_Summary.md` for details
+- See `CodeEditorView_Fix_Summary.md` for details
 
 **Code Quality Improvements**
 - SwiftLint configuration with custom rules

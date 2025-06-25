@@ -2,7 +2,7 @@ import AppKit
 import CodeEditorPlugin
 import SwiftUI
 
-struct CodeEditorView: View {
+struct SampleCodeEditorView: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String

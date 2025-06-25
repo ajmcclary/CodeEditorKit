@@ -2,7 +2,7 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct StatusBarView: View {
-    let textView: STTextView?
+    let textView: CodeEditorView?
     @State private var cursorPosition: (line: Int, column: Int) = (1, 1)
     @State private var selectionLength: Int = 0
     @State private var totalLines: Int = 0
@@ -78,8 +78,8 @@ struct StatusBarView: View {
         }
 
         // Get cursor position
-        let selectedRange = textView.selectedRange()
-        let text = textView.string as NSString
+        let selectedRange = textView.textSelection
+        let text = (textView.text ?? "") as NSString
 
         // Calculate line and column
         var line = 1
@@ -99,6 +99,6 @@ struct StatusBarView: View {
         selectionLength = selectedRange.length
 
         // Count total lines
-        totalLines = textView.string.components(separatedBy: .newlines).count
+        totalLines = (textView.text ?? "").components(separatedBy: .newlines).count
     }
 }

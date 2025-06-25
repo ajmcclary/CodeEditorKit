@@ -5,10 +5,10 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - STTextLayoutFragmentView
+// MARK: - TextLayoutFragmentView
 
 /// View for rendering text layout fragments
-public class STTextLayoutFragmentView: NSView {
+public class TextLayoutFragmentView: NSView {
     public var layoutFragment: NSTextLayoutFragment? {
         didSet {
             needsDisplay = true
