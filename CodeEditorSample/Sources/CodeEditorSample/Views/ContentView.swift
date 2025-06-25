@@ -225,6 +225,8 @@ struct ConfigurationSidebar: View {
                 Toggle("Wrap Lines", isOn: $configuration.wrapLines)
                 Toggle("Highlight Current Line", isOn: $configuration.highlightSelectedLine)
                 Toggle("Enable Editing", isOn: $configuration.isEditable)
+                Toggle("Auto Indent", isOn: $configuration.autoIndent)
+                Toggle("Insert Spaces for Tabs", isOn: $configuration.insertSpacesForTabs)
             }
 
             // Appearance settings

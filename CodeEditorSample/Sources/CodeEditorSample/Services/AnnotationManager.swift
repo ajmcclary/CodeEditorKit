@@ -61,6 +61,9 @@ final class AnnotationManager: NSObject {
     func clearAnnotations() {
         textView?.removeAllAnnotations()
         annotations.removeAll()
+        
+        // Also remove any manually added annotation views
+        textView?.subviews.filter { $0 is AnnotationView }.forEach { $0.removeFromSuperview() }
     }
     
     /// Create annotations using TextKit1-compatible approach

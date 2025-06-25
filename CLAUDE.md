@@ -33,13 +33,13 @@ swift build && swiftlint && swift test
 
 ### Running Tests
 ```bash
-# Run all tests (71 tests in main package)
+# Run all tests (106 tests in main package)
 swift test
 
 # Run tests with verbose output
 swift test --verbose
 
-# Run sample app tests (43 tests)
+# Run sample app tests (66 tests)
 cd CodeEditorSample
 swift test
 ```
@@ -160,27 +160,32 @@ Sources/CodeEditorPlugin/
 
 ### Testing Approach
 
-Tests are located in `Tests/CodeEditorPluginTests/` (71 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (43 tests) for a total of 114 comprehensive tests. The project uses Swift Package Manager's built-in testing support. Key test files include:
+Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (66 tests) for a total of 172 comprehensive tests. The project uses Swift Package Manager's built-in testing support. Key test files include:
 
-**Main Package Tests (71 tests):**
-- `STTextViewTests.swift` - Core text view functionality
-- `SyntaxHighlightingTests.swift` - Highlighting system tests
-- `ConfigurationTests.swift` - Configuration system tests
-- `AnnotationTests.swift` - Annotation system functionality
+**Main Package Tests (106 tests):**
+- `STTextViewTests.swift` - Core text view functionality (33 tests)
+- `SyntaxHighlightingTests.swift` - Highlighting system tests (13 tests)
+- `ConfigurationTests.swift` - Configuration system tests (6 tests)
+- `AnnotationTests.swift` - Annotation system functionality (19 tests)
+- `ConfigurationIntegrationTests.swift` - Comprehensive configuration testing (24 tests)
+- `PerformanceConfigurationTests.swift` - Performance benchmarks (11 tests)
 
-**Sample App Tests (43 tests):**
-- `AnnotationSystemTests.swift` - Comprehensive annotation testing with performance benchmarks
-- `BasicFunctionalityTests.swift` - Core functionality verification
-- `SampleCodeTests.swift` - Language sample validation
-- `SimplifiedIntegrationTests.swift` - End-to-end integration testing
+**Sample App Tests (66 tests):**
+- `AnnotationSystemTests.swift` - Comprehensive annotation testing with performance benchmarks (20 tests)
+- `BasicFunctionalityTests.swift` - Core functionality verification (4 tests)
+- `SampleCodeTests.swift` - Language sample validation (12 tests)
+- `SimplifiedIntegrationTests.swift` - End-to-end integration testing (6 tests)
+- `ConfigurationUITests.swift` - UI-level configuration tests (12 tests)
+- `PluginConfigurationTests.swift` - Plugin system tests (11 tests)
+- `QuickIsFlippedTest.swift` - View hierarchy tests (1 test)
 
 ### Recent Architecture Changes
 
 **Directory Structure Simplification (Latest)**
-- Reduced from 39 to 13 directories (67% reduction)
+- Reduced from 39 to 10 directories (74% reduction)
 - Transitioned from type-based to feature-based organization
 - Flattened Extensions directory structure
-- Eliminated 19 single-file directories
+- Eliminated unnecessary single-file directories
 - Adopted +Extensions naming convention for clarity
 
 **TextKit2 Synchronization Fixes**
@@ -194,7 +199,7 @@ Tests are located in `Tests/CodeEditorPluginTests/` (71 tests) and `CodeEditorSa
 - SwiftFormat integration for consistent styling
 - Zero linting violations maintained across 102 files
 - Swift 6 concurrency compliance with all actor isolation issues resolved
-- Comprehensive test coverage (114 tests total: 71 main + 43 sample)
+- Comprehensive test coverage (172 tests total: 106 main + 66 sample)
 
 **Annotation System Implementation**
 - Complete inline annotation system with TODO/FIXME/NOTE/WARNING/ERROR detection

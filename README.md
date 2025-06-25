@@ -119,29 +119,105 @@ class ViewController: NSViewController {
 
 ## ⚙️ Configuration
 
-### EditorConfiguration
+### Complete Configuration Reference
 
-The `EditorConfiguration` struct provides extensive customization options:
+CodeEditorPlugin provides extensive configuration through two main APIs:
+
+#### 1. STTextView Properties (Direct Configuration)
+
+```swift
+let textView = STTextView()
+
+// Core Properties
+textView.text = "Your code here"
+textView.language = .swift                    // Language for syntax highlighting
+textView.isSyntaxHighlightingEnabled = true  // Enable/disable highlighting
+
+// Display Options
+textView.showsLineNumbers = true             // Show line numbers in gutter
+textView.highlightSelectedLine = true        // Highlight current line
+textView.selectedLineHighlightColor = .blue  // Line highlight color
+textView.showsInvisibleCharacters = true     // Show whitespace characters
+
+// Text Editing
+textView.isEditable = true                   // Enable/disable editing
+textView.isSelectable = true                 // Enable/disable selection
+textView.allowsUndo = true                   // Enable undo/redo
+
+// Appearance
+textView.font = NSFont.monospacedSystemFont(ofSize: 14)
+textView.textColor = .labelColor
+textView.backgroundColor = .textBackgroundColor
+textView.insertionPointColor = .controlAccentColor
+
+// Text Container
+textView.textContainerInset = NSSize(width: 5, height: 5)
+textView.textContainer?.lineFragmentPadding = 5.0
+
+// Layout
+textView.widthTracksTextView = true          // Word wrap
+textView.isHorizontallyResizable = false     // Horizontal sizing
+textView.isVerticallyResizable = true        // Vertical sizing
+
+// Annotations
+textView.annotationsDataSource = myDataSource // Custom annotations
+```
+
+#### 2. EditorConfiguration (SwiftUI/High-Level API)
 
 ```swift
 var config = EditorConfiguration()
 
-// Appearance
+// Display Settings
 config.showLineNumbers = true
-config.highlightSelectedLine = true
 config.showInvisibleCharacters = false
-config.fontSize = 14
-config.theme = .vsDark
+config.highlightSelectedLine = true
+config.wrapLines = false                     // Enable word wrap
 
-// Behavior
+// Editor Behavior
 config.isEditable = true
-config.wrapLines = false
-config.tabWidth = 4
-config.insertSpacesForTabs = true
+config.autoIndent = true                     // Auto-indent new lines (Coming Soon)
+config.tabWidth = 4                          // Spaces per tab
+config.insertSpacesForTabs = true            // Use spaces instead of tabs (Coming Soon)
 
-// Advanced
-config.enableCustomPlugin = true
-config.hardwareAcceleration = true
+// Appearance
+config.fontSize = 14.0
+config.lineSpacing = 1.2                     // Line height multiplier
+config.theme = .vsDark                       // Color theme
+config.textContainerInset = NSSize(width: 5, height: 5)
+config.lineFragmentPadding = 5.0
+
+// Plugins
+config.enableAnnotations = true              // Enable TODO/FIXME detection
+config.enableCustomPlugin = false            // Custom plugin support
+
+// Performance
+config.useHardwareAcceleration = true        // GPU acceleration
+config.smoothScrolling = true                // Smooth scroll animations
+
+// Text Processing
+config.isContinuousSpellCheckingEnabled = false
+config.isGrammarCheckingEnabled = false
+config.isAutomaticQuoteSubstitutionEnabled = false
+config.isAutomaticDashSubstitutionEnabled = false
+config.isAutomaticTextReplacementEnabled = false
+config.isAutomaticSpellingCorrectionEnabled = false
+config.isAutomaticTextCompletionEnabled = false
+config.isIncrementalSearchingEnabled = true
+
+// Advanced Settings
+config.allowsDocumentBackgroundColorChange = false
+config.allowsImageEditing = false
+config.allowsCharacterPickerTouchBarItem = false
+config.isRichText = false
+config.importsGraphics = false
+config.usesInspectorBar = false
+config.usesFindBar = true
+config.allowsNonContiguousLayout = true
+config.displaysLinkToolTips = true
+
+// Selection
+config.insertionPointColor = .controlAccentColor
 ```
 
 ### Available Themes
@@ -152,6 +228,16 @@ config.hardwareAcceleration = true
 - `.solarizedDark` - Solarized dark theme
 - `.minimal` - Minimal light theme
 - `.presentation` - High contrast presentation theme
+
+### Configuration Presets
+
+The sample app includes several pre-configured presets:
+
+- **Full Featured** - All features enabled for code editing
+- **Minimal** - Basic text editing with minimal UI
+- **Read Only** - Syntax highlighted code viewer
+- **Markdown** - Optimized for Markdown editing with spell check
+- **Presentation** - Large font, high contrast for demos
 
 ### Custom Themes
 
@@ -164,6 +250,15 @@ let customTheme = ColorTheme(
 )
 config.theme = customTheme
 ```
+
+### Implementation Notes
+
+Most configuration options are fully implemented. The following features are marked as "Coming Soon" and require deeper STTextView integration:
+
+- **autoIndent** - Automatic indentation matching (Configuration option available, delegate implementation coming soon)
+- **insertSpacesForTabs** - Tab to spaces conversion (Configuration option available, delegate implementation coming soon)
+
+All other configurations including word wrap, horizontal scrolling, hardware acceleration, and text processing options are fully functional.
 
 ## 🎨 Syntax Highlighting
 
@@ -242,11 +337,8 @@ Sources/CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
-├── Plugins/                # Plugin system
-│   ├── PluginCore/        # Core plugin infrastructure
-│   └── AnnotationsPlugin/ # Annotation plugin with inline comment detection
+├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
-├── Models/                 # Data models
 ├── Completion/             # Code completion
 ├── Platform/               # Platform-specific code
 └── CodeEditorPlugin.swift  # Main module file
@@ -272,12 +364,12 @@ Sources/CodeEditorPlugin/
 ### Recent Improvements
 
 - ✅ **Swift 6 Actor-Based Concurrency** - Full migration to actors for thread-safe validation and processing
-- ✅ **Simplified Directory Structure** - Reduced from 39 to 13 directories with feature-based organization
+- ✅ **Simplified Directory Structure** - Reduced from 39 to 10 directories with feature-based organization
 - ✅ **Swift 6 Compliance** - Complete concurrency safety with Sendable conformance
 - ✅ **Proper Scrolling** - NSScrollView integration for smooth scrolling
 - ✅ **Protocol Conformance** - Complete STTextViewDelegate implementation
 - ✅ **Code Quality** - SwiftLint/SwiftFormat integration with 0 violations across 102 files
-- ✅ **Test Coverage** - Comprehensive test suite with 114 passing tests
+- ✅ **Test Coverage** - Comprehensive test suite with 172 passing tests
 - ✅ **Annotation System** - Complete inline annotations with hover popups for code comments
 - ✅ **Performance** - Optimized for large files with actor-based background processing
 
@@ -294,14 +386,14 @@ cd CodeEditorSample
 swift test
 ```
 
-**Test Results**: 114 tests passing across both projects (71 main + 43 sample) with comprehensive annotation system testing and performance benchmarks.
+**Test Results**: 172 tests passing across both projects (106 main + 66 sample) with comprehensive configuration, annotation system testing and performance benchmarks.
 
 ## 🔧 Development
 
 ### Project Structure Benefits
 
 - **Feature-based organization** - Related code stays together
-- **Reduced complexity** - From 39 to 13 directories (67% reduction)
+- **Reduced complexity** - From 39 to 10 directories (74% reduction)
 - **Easier navigation** - Less nesting, clearer structure
 - **Better maintainability** - Components that work together are in the same directory
 

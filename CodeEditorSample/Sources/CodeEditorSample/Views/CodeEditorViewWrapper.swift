@@ -44,9 +44,20 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Create NSScrollView
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
+        scrollView.hasHorizontalScroller = !configuration.wrapLines
         scrollView.autohidesScrollers = false
         scrollView.borderType = .noBorder
+        
+        // Configure smooth scrolling
+        if configuration.smoothScrolling {
+            scrollView.scrollerStyle = .overlay
+            scrollView.verticalScrollElasticity = .automatic
+            scrollView.horizontalScrollElasticity = .automatic
+        } else {
+            scrollView.scrollerStyle = .legacy
+            scrollView.verticalScrollElasticity = .none
+            scrollView.horizontalScrollElasticity = .none
+        }
 
         let textView = STTextView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
@@ -65,11 +76,19 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             context.coordinator.annotationManager?.scanForAnnotations()
         }
 
-        // Configure text view for scroll view
+        // Configure text view for scroll view based on word wrap setting
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
-        textView.textContainer?.widthTracksTextView = true
+        textView.isHorizontallyResizable = !configuration.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.wrapLines
         textView.textContainer?.heightTracksTextView = false
+        
+        // Set container width for non-wrapping mode
+        if !configuration.wrapLines {
+            textView.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
 
         // Set the text view as the document view
         scrollView.documentView = textView
@@ -96,6 +115,40 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Update configuration
         applyConfiguration(to: textView)
         
+        // Update scroll view settings based on word wrap
+        scrollView.hasHorizontalScroller = !configuration.wrapLines
+        
+        // Update smooth scrolling settings
+        if configuration.smoothScrolling {
+            scrollView.scrollerStyle = .overlay
+            scrollView.verticalScrollElasticity = .automatic
+            scrollView.horizontalScrollElasticity = .automatic
+        } else {
+            scrollView.scrollerStyle = .legacy
+            scrollView.verticalScrollElasticity = .none
+            scrollView.horizontalScrollElasticity = .none
+        }
+        
+        // Update text container settings for word wrap
+        textView.isHorizontallyResizable = !configuration.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.wrapLines
+        
+        // Set container width for non-wrapping mode
+        if !configuration.wrapLines {
+            textView.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        } else {
+            // Reset container size for wrapping mode
+            if let scrollViewWidth = scrollView.enclosingScrollView?.contentSize.width {
+                textView.textContainer?.containerSize = NSSize(
+                    width: scrollViewWidth,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+            }
+        }
+        
         // Update annotations
         if configuration.enableAnnotations {
             if context.coordinator.annotationManager == nil {
@@ -117,6 +170,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Basic settings
         textView.isEditable = configuration.isEditable
         textView.isSelectable = true
+        textView.allowsUndo = true
 
         // Line numbers
         textView.showsLineNumbers = configuration.showLineNumbers
@@ -131,6 +185,13 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         textView.textColor = configuration.theme.textColor
         textView.backgroundColor = configuration.theme.backgroundColor
         textView.selectedLineHighlightColor = configuration.theme.selectedLineColor
+        textView.insertionPointColor = configuration.insertionPointColor
+        
+        // Selection attributes based on theme
+        textView.selectedTextAttributes = [
+            .backgroundColor: NSColor.selectedTextBackgroundColor,
+            .foregroundColor: NSColor.selectedTextColor
+        ]
 
         // Line highlighting
         textView.highlightSelectedLine = configuration.highlightSelectedLine
@@ -139,8 +200,8 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         textView.showsInvisibleCharacters = configuration.showInvisibleCharacters
 
         // Text container settings
-        textView.widthTracksTextView = configuration.wrapLines
-        textView.isHorizontallyResizable = !configuration.wrapLines
+        textView.textContainerInset = configuration.textContainerInset
+        textView.textContainer?.lineFragmentPadding = configuration.lineFragmentPadding
 
         // Make sure the text view is properly sized
         textView.isVerticallyResizable = true
@@ -151,6 +212,33 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         paragraphStyle.defaultTabInterval = CGFloat(configuration.tabWidth) * 7.0
         paragraphStyle.lineSpacing = configuration.lineSpacing
         textView.defaultParagraphStyle = paragraphStyle
+        
+        // Text processing settings
+        textView.isContinuousSpellCheckingEnabled = configuration.isContinuousSpellCheckingEnabled
+        textView.isGrammarCheckingEnabled = configuration.isGrammarCheckingEnabled
+        textView.isAutomaticQuoteSubstitutionEnabled = configuration.isAutomaticQuoteSubstitutionEnabled
+        textView.isAutomaticDashSubstitutionEnabled = configuration.isAutomaticDashSubstitutionEnabled
+        textView.isAutomaticTextReplacementEnabled = configuration.isAutomaticTextReplacementEnabled
+        textView.isAutomaticSpellingCorrectionEnabled = configuration.isAutomaticSpellingCorrectionEnabled
+        textView.isAutomaticTextCompletionEnabled = configuration.isAutomaticTextCompletionEnabled
+        textView.isIncrementalSearchingEnabled = configuration.isIncrementalSearchingEnabled
+        
+        // Advanced text settings
+        textView.allowsDocumentBackgroundColorChange = configuration.allowsDocumentBackgroundColorChange
+        textView.allowsImageEditing = configuration.allowsImageEditing
+        textView.allowsCharacterPickerTouchBarItem = configuration.allowsCharacterPickerTouchBarItem
+        textView.isRichText = configuration.isRichText
+        textView.importsGraphics = configuration.importsGraphics
+        textView.usesInspectorBar = configuration.usesInspectorBar
+        textView.usesFindBar = configuration.usesFindBar
+        // Note: allowsNonContiguousLayout is not available on STTextView
+        textView.displaysLinkToolTips = configuration.displaysLinkToolTips
+        
+        // Performance settings
+        if configuration.useHardwareAcceleration {
+            textView.wantsLayer = true
+            textView.layer?.drawsAsynchronously = true
+        }
 
         // Set language for syntax highlighting using file extension
         textView.setLanguage(fileExtension: language)
@@ -194,17 +282,22 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _: STTextView,
-            shouldChangeTextIn _: NSTextRange,
-            replacementString _: String?
+            _ textView: STTextView,
+            shouldChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String?
         ) -> Bool {
-            true
+            guard let replacementString = replacementString else { return true }
+            
+            // Note: Tab handling and auto-indent would require deeper integration with STTextView's
+            // text system. For now, these features are documented but not implemented.
+            
+            return true
         }
 
         func textView(
-            _: STTextView,
-            willChangeTextIn _: NSTextRange,
-            replacementString _: String
+            _ textView: STTextView,
+            willChangeTextIn affectedCharRange: NSTextRange,
+            replacementString: String
         ) {
             // Default implementation
         }

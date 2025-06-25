@@ -15,7 +15,7 @@ This sample app is a complete demonstration of CodeEditorPlugin's capabilities:
 - ✅ **Interactive feature tour** and comprehensive documentation
 - ✅ **Swift 6 Actor-Based Concurrency** with thread-safe validation and processing
 - ✅ **Full Swift 6 compliance** with complete Sendable conformance
-- ✅ **Comprehensive testing** with 43 passing tests including annotation system testing and performance benchmarks
+- ✅ **Comprehensive testing** with 66 passing tests including annotation system testing and performance benchmarks
 - ✅ **Inline Annotations** with hover popups for TODO/FIXME/NOTE/WARNING/ERROR comments
 
 ## 🚀 Quick Start
@@ -165,12 +165,14 @@ CodeEditorSample/
 │   └── ThemeProvider.swift           # Color theme definitions
 ├── 🔌 Plugins
 │   └── CustomAnnotationPlugin.swift  # Example plugin
-└── 🧪 Tests (43 tests)
-    ├── AnnotationSystemTests.swift      # Comprehensive annotation testing
-    ├── BasicFunctionalityTests.swift
-    ├── SampleCodeTests.swift
-    ├── SimplifiedIntegrationTests.swift
-    └── QuickIsFlippedTest.swift
+└── 🧪 Tests (66 tests)
+    ├── AnnotationSystemTests.swift      # Comprehensive annotation testing (20 tests)
+    ├── BasicFunctionalityTests.swift    # Core functionality (4 tests)
+    ├── ConfigurationUITests.swift       # UI configuration tests (12 tests)
+    ├── PluginConfigurationTests.swift   # Plugin system tests (11 tests)
+    ├── QuickIsFlippedTest.swift         # View hierarchy tests (1 test)
+    ├── SampleCodeTests.swift           # Language sample validation (12 tests)
+    └── SimplifiedIntegrationTests.swift # End-to-end testing (6 tests)
 ```
 
 ### Library Architecture (Simplified)
@@ -184,15 +186,14 @@ CodeEditorPlugin/
 ├── TextProcessing/         # Actor-based text processing & validation
 ├── RangeProcessing/        # Actor-based range validation
 ├── Layout/                 # Layout and view components
-├── Plugins/                # Plugin system with annotations
+├── Models/                 # Data models (including annotations)
 ├── Extensions/             # All extensions (flattened)
-├── Models/                 # Data models
 ├── Completion/             # Code completion
 └── Platform/               # Platform-specific code
 ```
 
 **Benefits of the simplified structure:**
-- ✅ **67% reduction** in directory count (39 → 13 directories)
+- ✅ **74% reduction** in directory count (39 → 10 directories)
 - ✅ **Feature-based organization** - Related code stays together
 - ✅ **Easier navigation** - Less nesting, clearer structure
 - ✅ **Better maintainability** - Components that work together are in the same directory
@@ -244,7 +245,7 @@ actor SinglePhaseRangeValidator<Content: VersionedContent> {
 
 ### Test Coverage
 
-**43 tests** covering critical functionality:
+**66 tests** covering critical functionality:
 - ✅ Basic editor functionality
 - ✅ Configuration management  
 - ✅ Sample code validation
@@ -262,7 +263,7 @@ actor SinglePhaseRangeValidator<Content: VersionedContent> {
 swiftformat --swiftversion 6.0 .  # ✅ 25 files formatted
 swiftlint --fix && swiftlint       # ✅ 0 violations
 swift build                       # ✅ Build complete
-swift test                        # ✅ 43/43 tests passing
+swift test                        # ✅ 66/66 tests passing
 ```
 
 ### Recent Improvements

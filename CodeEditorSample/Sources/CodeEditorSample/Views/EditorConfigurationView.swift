@@ -68,6 +68,9 @@ struct EditorConfigurationView: View {
 
                 // Auto-indent
                 Toggle("Auto Indent", isOn: $appState.currentConfiguration.autoIndent)
+                
+                // Insert spaces for tabs
+                Toggle("Insert Spaces for Tabs", isOn: $appState.currentConfiguration.insertSpacesForTabs)
             }
 
             // Appearance settings
@@ -95,6 +98,25 @@ struct EditorConfigurationView: View {
                         .font(.caption)
                     Slider(value: $appState.currentConfiguration.lineSpacing, in: 0 ... 10, step: 0.5)
                 }
+                
+                // Text container inset
+                VStack(alignment: .leading) {
+                    Text("Text Container Inset: \(Int(appState.currentConfiguration.textContainerInset.width))pt")
+                        .font(.caption)
+                    Slider(value: Binding(
+                        get: { appState.currentConfiguration.textContainerInset.width },
+                        set: { 
+                            appState.currentConfiguration.textContainerInset = NSSize(width: $0, height: $0)
+                        }
+                    ), in: 0 ... 20, step: 1)
+                }
+                
+                // Line fragment padding
+                VStack(alignment: .leading) {
+                    Text("Line Fragment Padding: \(Int(appState.currentConfiguration.lineFragmentPadding))pt")
+                        .font(.caption)
+                    Slider(value: $appState.currentConfiguration.lineFragmentPadding, in: 0 ... 20, step: 1)
+                }
             }
 
             // Theme selection
@@ -110,7 +132,6 @@ struct EditorConfigurationView: View {
             // Plugin settings
             Section("Plugins") {
                 Toggle("Enable Annotations", isOn: $appState.currentConfiguration.enableAnnotations)
-                Toggle("Enable Line Highlight", isOn: $appState.currentConfiguration.enableLineHighlight)
                 Toggle("Enable Custom Plugin", isOn: $appState.currentConfiguration.enableCustomPlugin)
             }
 
@@ -118,6 +139,48 @@ struct EditorConfigurationView: View {
             Section("Performance") {
                 Toggle("Use Hardware Acceleration", isOn: $appState.currentConfiguration.useHardwareAcceleration)
                 Toggle("Enable Smooth Scrolling", isOn: $appState.currentConfiguration.smoothScrolling)
+            }
+            
+            // Text Processing
+            Section("Text Processing") {
+                Toggle("Continuous Spell Checking", 
+                       isOn: $appState.currentConfiguration.isContinuousSpellCheckingEnabled)
+                Toggle("Grammar Checking", 
+                       isOn: $appState.currentConfiguration.isGrammarCheckingEnabled)
+                Toggle("Automatic Quote Substitution", 
+                       isOn: $appState.currentConfiguration.isAutomaticQuoteSubstitutionEnabled)
+                Toggle("Automatic Dash Substitution", 
+                       isOn: $appState.currentConfiguration.isAutomaticDashSubstitutionEnabled)
+                Toggle("Automatic Text Replacement", 
+                       isOn: $appState.currentConfiguration.isAutomaticTextReplacementEnabled)
+                Toggle("Automatic Spelling Correction", 
+                       isOn: $appState.currentConfiguration.isAutomaticSpellingCorrectionEnabled)
+                Toggle("Automatic Text Completion", 
+                       isOn: $appState.currentConfiguration.isAutomaticTextCompletionEnabled)
+                Toggle("Incremental Searching", 
+                       isOn: $appState.currentConfiguration.isIncrementalSearchingEnabled)
+            }
+            
+            // Advanced Settings
+            Section("Advanced Settings") {
+                Toggle("Allow Document Background Color Change", 
+                       isOn: $appState.currentConfiguration.allowsDocumentBackgroundColorChange)
+                Toggle("Allow Image Editing", 
+                       isOn: $appState.currentConfiguration.allowsImageEditing)
+                Toggle("Allow Character Picker Touch Bar Item", 
+                       isOn: $appState.currentConfiguration.allowsCharacterPickerTouchBarItem)
+                Toggle("Rich Text Mode", 
+                       isOn: $appState.currentConfiguration.isRichText)
+                Toggle("Import Graphics", 
+                       isOn: $appState.currentConfiguration.importsGraphics)
+                Toggle("Use Inspector Bar", 
+                       isOn: $appState.currentConfiguration.usesInspectorBar)
+                Toggle("Use Find Bar", 
+                       isOn: $appState.currentConfiguration.usesFindBar)
+                Toggle("Allow Non-Contiguous Layout", 
+                       isOn: $appState.currentConfiguration.allowsNonContiguousLayout)
+                Toggle("Display Link Tool Tips", 
+                       isOn: $appState.currentConfiguration.displaysLinkToolTips)
             }
         }
         .listStyle(.sidebar)
