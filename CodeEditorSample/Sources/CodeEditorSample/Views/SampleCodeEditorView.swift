@@ -11,32 +11,67 @@ struct SampleCodeEditorView: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
+    @State private var editorView: CodeEditorView?
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
-        #if os(macOS)
-        if #available(macOS 13.0, *) {
-            CodeEditor(text: $text)
-                .codeLanguage(detectLanguage(from: language))
-                .environment(\.codeEditorConfiguration, configuration)
-        } else {
-            // Fallback for older macOS versions
+        ZStack {
+            #if os(macOS)
+            if #available(macOS 13.0, *) {
+                CodeEditor(text: $text)
+                    .codeLanguage(detectLanguage(from: language))
+                    .environment(\.codeEditorConfiguration, configuration)
+            } else {
+                // Fallback for older macOS versions
+                CodeEditorViewWrapper(
+                    configuration: configuration,
+                    text: $text,
+                    language: language
+                ) { textView in
+                    editorView = textView
+                }
+                .onChange(of: configuration) { newConfig in
+                    // Reapply configuration when it changes
+                    if let editor = editorView {
+                        newConfig.apply(to: editor)
+                    }
+                }
+            }
+            #else
+            // For iOS, use CodeEditorViewWrapper with configuration
             CodeEditorViewWrapper(
                 configuration: configuration,
                 text: $text,
-                language: language,
-                onTextViewReady: nil
-            )
+                language: language
+            ) { textView in
+                editorView = textView
+            }
+            .onChange(of: configuration) { newConfig in
+                // Reapply configuration when it changes
+                if let editor = editorView {
+                    newConfig.apply(to: editor)
+                }
+            }
+            #endif
+            
+            // Visual indicators overlay
+            VStack {
+                HStack {
+                    Spacer()
+                    if configuration.display.showMinimap {
+                        MinimapIndicator()
+                    }
+                }
+                Spacer()
+                HStack {
+                    if configuration.display.enableAnnotations {
+                        AnnotationIndicator()
+                    }
+                    Spacer()
+                }
+            }
+            .padding()
         }
-        #else
-        // For iOS, continue using CodeEditorSwiftUIView for now
-        CodeEditorSwiftUIView(
-            text: $text,
-            language: detectLanguage(from: language),
-            showLineNumbers: configuration.display.showLineNumbers,
-            highlightSelectedLine: configuration.display.highlightSelectedLine,
-            isEditable: configuration.behavior.isEditable
-        )
-        #endif
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {
@@ -56,5 +91,31 @@ struct SampleCodeEditorView: View {
         default:
             return .plainText
         }
+    }
+}
+
+// MARK: - Visual Indicators
+
+struct MinimapIndicator: View {
+    var body: some View {
+        Text("Minimap Active")
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.purple.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(4)
+    }
+}
+
+struct AnnotationIndicator: View {
+    var body: some View {
+        Text("Annotations Active")
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.orange.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(4)
     }
 }

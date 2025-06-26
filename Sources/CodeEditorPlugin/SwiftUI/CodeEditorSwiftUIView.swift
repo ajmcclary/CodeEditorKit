@@ -10,9 +10,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
     @Binding public var text: String
     public let language: Language
     public let theme: CodeEditorSwiftUITheme
-    public let showLineNumbers: Bool
-    public let highlightSelectedLine: Bool
-    public let isEditable: Bool
+    public let configuration: EditorConfiguration
     
     // Callbacks for handling editor events
     public var onTextChange: ((String) -> Void)?
@@ -22,23 +20,19 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
         text: Binding<String>,
         language: Language = .plainText,
         theme: CodeEditorSwiftUITheme = .default,
-        showLineNumbers: Bool = true,
-        highlightSelectedLine: Bool = true,
-        isEditable: Bool = true,
+        configuration: EditorConfiguration = .default,
         onTextChange: ((String) -> Void)? = nil,
         onSelectionChange: ((NSRange) -> Void)? = nil
     ) {
         self._text = text
         self.language = language
         self.theme = theme
-        self.showLineNumbers = showLineNumbers
-        self.highlightSelectedLine = highlightSelectedLine
-        self.isEditable = isEditable
+        self.configuration = configuration
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
     }
     
-    // Configuration-based initializer for the sample app
+    // Legacy compatibility initializer 
     public init(
         text: Binding<String>,
         showLineNumbers: Bool,
@@ -52,42 +46,67 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
         self._text = text
         self.language = language
         self.theme = theme
-        self.showLineNumbers = showLineNumbers
-        self.highlightSelectedLine = highlightSelectedLine
-        self.isEditable = isEditable
+        
+        // Create configuration from individual parameters
+        var config = EditorConfiguration.default
+        config.display.showLineNumbers = showLineNumbers
+        config.display.highlightSelectedLine = highlightSelectedLine
+        config.behavior.isEditable = isEditable
+        self.configuration = config
+        
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
     }
     
-    public func makeNSView(context: Context) -> CodeEditorView {
+    public func makeNSView(context: Context) -> NSView {
+        // Create container view for editor and minimap
+        let containerView = NSView()
         let editorView = CodeEditorView()
+        
+        // Store references in coordinator
+        context.coordinator.editorView = editorView
+        context.coordinator.containerView = containerView
+        
+        // Apply configuration
+        configuration.apply(to: editorView)
         
         // Configure the editor
         editorView.language = language
-        editorView.showsLineNumbers = showLineNumbers
-        editorView.highlightSelectedLine = highlightSelectedLine
-        editorView.isEditable = isEditable
         
         // Set initial text
         editorView.text = text
         
+        // Add editor to container
+        containerView.addSubview(editorView)
+        
+        // Set up minimap if enabled
+        if configuration.display.showMinimap {
+            context.coordinator.setupMinimap()
+        }
+        
         // Set up simplified delegate using notification observation
         setupNotificationObservers(for: editorView, coordinator: context.coordinator)
         
-        return editorView
+        return containerView
     }
     
-    public func updateNSView(_ nsView: CodeEditorView, context _: Context) {
+    public func updateNSView(_: NSView, context: Context) {
+        guard let editorView = context.coordinator.editorView else { return }
+        
         // Update text if it changed externally
-        if nsView.string != text {
-            nsView.string = text
+        if editorView.string != text {
+            editorView.string = text
         }
         
-        // Update configuration
-        nsView.language = language
-        nsView.showsLineNumbers = showLineNumbers
-        nsView.highlightSelectedLine = highlightSelectedLine
-        nsView.isEditable = isEditable
+        // Apply configuration updates
+        configuration.apply(to: editorView)
+        
+        // Update language
+        editorView.language = language
+        
+        // Update minimap if needed
+        context.coordinator.updateMinimapVisibility(configuration.display.showMinimap)
+        context.coordinator.layoutViews()
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -114,6 +133,10 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
     @MainActor
     public class Coordinator: NSObject {
         var parent: CodeEditorSwiftUIView
+        weak var containerView: NSView?
+        weak var editorView: CodeEditorView?
+        private var minimapView: MinimapView?
+        private var minimapDataProvider: MinimapDataProvider?
         
         init(_ parent: CodeEditorSwiftUIView) {
             self.parent = parent
@@ -134,6 +157,99 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
             parent.onSelectionChange?(selectedRange)
         }
         
+        func setupMinimap() {
+            guard let editorView,
+                  let containerView else { return }
+            
+            // Create minimap
+            let minimap = MinimapView()
+            minimapView = minimap
+            
+            // Create data provider
+            minimapDataProvider = MinimapDataProvider(textView: editorView)
+            
+            // Set up navigation callback
+            minimap.onNavigate = { [weak self] lineNumber in
+                self?.navigateToLine(lineNumber)
+            }
+            
+            // Add to container
+            containerView.addSubview(minimap)
+            
+            // Set up observers
+            NotificationCenter.default.addObserver(
+                forName: NSText.didChangeNotification,
+                object: editorView,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateMinimap()
+                }
+            }
+        }
+        
+        func updateMinimapVisibility(_ shouldShow: Bool) {
+            if shouldShow && minimapView == nil {
+                setupMinimap()
+            }
+            minimapView?.isHidden = !shouldShow
+        }
+        
+        func layoutViews() {
+            guard let containerView,
+                  let editorView else { return }
+            
+            let bounds = containerView.bounds
+            let minimapWidth: CGFloat = (minimapView?.isHidden == false) ? 120 : 0
+            
+            // Layout editor
+            editorView.frame = CGRect(
+                x: 0,
+                y: 0,
+                width: bounds.width - minimapWidth,
+                height: bounds.height
+            )
+            
+            // Layout minimap
+            if let minimapView, !minimapView.isHidden {
+                minimapView.frame = CGRect(
+                    x: bounds.width - minimapWidth,
+                    y: 0,
+                    width: minimapWidth,
+                    height: bounds.height
+                )
+                updateMinimap()
+            }
+        }
+        
+        private func navigateToLine(_ lineNumber: Int) {
+            guard let editorView else { return }
+            
+            let text = editorView.text ?? ""
+            let lines = text.components(separatedBy: .newlines)
+            
+            guard lineNumber < lines.count else { return }
+            
+            // Calculate character position for the line
+            let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
+            let targetPosition = lineNumber > 0 ? lineStart + 1 : lineStart
+            
+            // Navigate to position  
+            let nsRange = NSRange(location: targetPosition, length: 0)
+            editorView.setSelectedRange(nsRange)
+            editorView.scrollRangeToVisible(nsRange)
+        }
+        
+        private func updateMinimap() {
+            guard let minimapView,
+                  let dataProvider = minimapDataProvider,
+                  let data = dataProvider.generateData() else {
+                return
+            }
+            
+            minimapView.updateData(data)
+        }
+        
         deinit {
             NotificationCenter.default.removeObserver(self)
         }
@@ -151,10 +267,10 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
     @Binding public var text: String
     public let language: Language
     public let theme: CodeEditorSwiftUITheme
-    public let showLineNumbers: Bool
-    public let highlightSelectedLine: Bool
-    public let isEditable: Bool
-    public let becomeFirstResponderOnAppear: Bool
+    public let configuration: EditorConfiguration
+    
+    // Environment values
+    @Environment(\.codeEditorBecomeFirstResponder) private var becomeFirstResponderOnAppear
     
     // Callbacks for handling editor events
     public var onTextChange: ((String) -> Void)?
@@ -164,25 +280,19 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         text: Binding<String>,
         language: Language = .plainText,
         theme: CodeEditorSwiftUITheme = .default,
-        showLineNumbers: Bool = true,
-        highlightSelectedLine: Bool = true,
-        isEditable: Bool = true,
-        becomeFirstResponderOnAppear: Bool = true,
+        configuration: EditorConfiguration = .default,
         onTextChange: ((String) -> Void)? = nil,
         onSelectionChange: ((NSRange) -> Void)? = nil
     ) {
         self._text = text
         self.language = language
         self.theme = theme
-        self.showLineNumbers = showLineNumbers
-        self.highlightSelectedLine = highlightSelectedLine
-        self.isEditable = isEditable
-        self.becomeFirstResponderOnAppear = becomeFirstResponderOnAppear
+        self.configuration = configuration
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
     }
     
-    // Configuration-based initializer for the sample app
+    // Legacy compatibility initializer 
     public init(
         text: Binding<String>,
         showLineNumbers: Bool,
@@ -196,10 +306,15 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         self._text = text
         self.language = language
         self.theme = theme
-        self.showLineNumbers = showLineNumbers
-        self.highlightSelectedLine = highlightSelectedLine
-        self.isEditable = isEditable
-        self.becomeFirstResponderOnAppear = isEditable // Automatically enable keyboard when editable
+        
+        // Create configuration from individual parameters
+        var config = EditorConfiguration.default
+        config.display.showLineNumbers = showLineNumbers
+        config.display.highlightSelectedLine = highlightSelectedLine
+        config.behavior.isEditable = isEditable
+        self.configuration = config
+        
+        // becomeFirstResponderOnAppear is now handled via environment
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
     }
@@ -208,11 +323,11 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         let containerView = CodeEditorContainerView()
         let editorView = containerView.textView
         
+        // Apply configuration
+        containerView.configuration = configuration
+        
         // Configure the editor
         editorView.language = language
-        containerView.showsLineNumbers = showLineNumbers
-        editorView.highlightSelectedLine = highlightSelectedLine
-        editorView.isEditable = isEditable
         
         // Set initial text
         editorView.text = text
@@ -224,13 +339,13 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         setupNotificationObservers(for: editorView, coordinator: context.coordinator)
         
         // Make the text view focusable by tapping on it when editable
-        if isEditable {
+        if configuration.behavior.isEditable {
             let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(context.coordinator.handleTap(_:)))
             editorView.addGestureRecognizer(tapGesture)
         }
         
         // Set up input accessory view to help maintain keyboard
-        if isEditable && becomeFirstResponderOnAppear {
+        if configuration.behavior.isEditable && becomeFirstResponderOnAppear {
             let toolbar = UIToolbar()
             toolbar.sizeToFit()
             let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: context.coordinator, action: #selector(context.coordinator.doneButtonTapped))
@@ -253,9 +368,7 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         guard context.coordinator.shouldUpdate(
             text: text,
             language: language,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable
+            configuration: configuration
         ) else {
             return
         }
@@ -265,19 +378,17 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
             uiView.text = text
         }
         
-        // Update configuration
+        // Apply configuration updates
+        containerView.configuration = configuration
+        
+        // Update language
         uiView.language = language
-        containerView.showsLineNumbers = showLineNumbers
-        uiView.highlightSelectedLine = highlightSelectedLine
-        uiView.isEditable = isEditable
         
         // Update coordinator state
         context.coordinator.updateState(
             text: text,
             language: language,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable
+            configuration: configuration
         )
     }
     
@@ -309,9 +420,7 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         // State tracking to prevent unnecessary updates
         private var lastText: String = ""
         private var lastLanguage: Language = .plainText
-        private var lastShowLineNumbers: Bool = true
-        private var lastHighlightSelectedLine: Bool = true
-        private var lastIsEditable: Bool = true
+        private var lastConfiguration: EditorConfiguration = .default
         
         init(_ parent: CodeEditorSwiftUIView) {
             self.parent = parent
@@ -320,29 +429,21 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         func shouldUpdate(
             text: String,
             language: Language,
-            showLineNumbers: Bool,
-            highlightSelectedLine: Bool,
-            isEditable: Bool
+            configuration: EditorConfiguration
         ) -> Bool {
             text != lastText ||
                    language != lastLanguage ||
-                   showLineNumbers != lastShowLineNumbers ||
-                   highlightSelectedLine != lastHighlightSelectedLine ||
-                   isEditable != lastIsEditable
+                   configuration != lastConfiguration
         }
         
         func updateState(
             text: String,
             language: Language,
-            showLineNumbers: Bool,
-            highlightSelectedLine: Bool,
-            isEditable: Bool
+            configuration: EditorConfiguration
         ) {
             lastText = text
             lastLanguage = language
-            lastShowLineNumbers = showLineNumbers
-            lastHighlightSelectedLine = highlightSelectedLine
-            lastIsEditable = isEditable
+            lastConfiguration = configuration
         }
         
         @objc func textDidChange(_ notification: Notification) {
@@ -364,7 +465,7 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             if let textView = gesture.view as? CodeEditorView {
-                if textView.isEditable && !textView.isFirstResponder {
+                if textView.configuration.behavior.isEditable && !textView.isFirstResponder {
                     _ = textView.becomeFirstResponder()
                 }
             }
@@ -383,192 +484,89 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
 @available(macOS 12.0, iOS 16.0, *)
 // swiftlint:disable:next no_grouping_extension
 extension CodeEditorSwiftUIView {
+    /// Helper method to create a new instance with modified configuration
+    private func with(configuration newConfig: EditorConfiguration) -> CodeEditorSwiftUIView {
+        CodeEditorSwiftUIView(
+            text: _text,
+            language: language,
+            theme: theme,
+            configuration: newConfig,
+            onTextChange: onTextChange,
+            onSelectionChange: onSelectionChange
+        )
+    }
     /// Set the programming language for syntax highlighting
     public func language(_ language: Language) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
         CodeEditorSwiftUIView(
             text: _text,
             language: language,
             theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
+            configuration: configuration,
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange
         )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #endif
     }
     
     /// Configure whether line numbers are shown
     public func showLineNumbers(_ show: Bool) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: show,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: show,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #endif
+        var newConfig = configuration
+        newConfig.display.showLineNumbers = show
+        return with(configuration: newConfig)
     }
     
     /// Configure whether the selected line is highlighted
     public func highlightSelectedLine(_ highlight: Bool) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlight,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlight,
-            isEditable: isEditable,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #endif
+        var newConfig = configuration
+        newConfig.display.highlightSelectedLine = highlight
+        return with(configuration: newConfig)
     }
     
     /// Configure whether the editor is editable
     public func editable(_ editable: Bool) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: editable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: editable,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
-        #endif
+        var newConfig = configuration
+        newConfig.behavior.isEditable = editable
+        return with(configuration: newConfig)
     }
     
     /// Set a callback for text changes
     public func onTextChange(_ callback: @escaping (String) -> Void) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
         CodeEditorSwiftUIView(
             text: _text,
             language: language,
             theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
+            configuration: configuration,
             onTextChange: callback,
             onSelectionChange: onSelectionChange
         )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            onTextChange: callback,
-            onSelectionChange: onSelectionChange
-        )
-        #endif
     }
     
     /// Set a callback for selection changes
     public func onSelectionChange(_ callback: @escaping (NSRange) -> Void) -> CodeEditorSwiftUIView {
-        #if os(iOS) || os(visionOS)
         CodeEditorSwiftUIView(
             text: _text,
             language: language,
             theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: becomeFirstResponderOnAppear,
+            configuration: configuration,
             onTextChange: onTextChange,
             onSelectionChange: callback
         )
-        #else
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            onTextChange: onTextChange,
-            onSelectionChange: callback
-        )
-        #endif
     }
     
     /// Configure whether the editor becomes first responder on appear (iOS only)
-    public func becomeFirstResponder(_ become: Bool) -> CodeEditorSwiftUIView {
+    public func becomeFirstResponder(_ become: Bool) -> some View {
         #if os(iOS) || os(visionOS)
-        CodeEditorSwiftUIView(
-            text: _text,
-            language: language,
-            theme: theme,
-            showLineNumbers: showLineNumbers,
-            highlightSelectedLine: highlightSelectedLine,
-            isEditable: isEditable,
-            becomeFirstResponderOnAppear: become,
-            onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
-        )
+        self.environment(\.codeEditorBecomeFirstResponder, become)
         #else
         // This is iOS-only functionality
         self
         #endif
+    }
+    
+    /// Configure whether to show the minimap
+    public func showMinimap(_ show: Bool) -> CodeEditorSwiftUIView {
+        var newConfig = configuration
+        newConfig.display.showMinimap = show
+        return with(configuration: newConfig)
     }
 }
 
@@ -637,10 +635,22 @@ public struct CodeEditorThemeKey: EnvironmentKey {
 }
 
 @available(macOS 12.0, iOS 16.0, *)
+public struct CodeEditorBecomeFirstResponderKey: EnvironmentKey {
+    public static let defaultValue: Bool = true
+    
+    public typealias Value = Bool
+}
+
+@available(macOS 12.0, iOS 16.0, *)
 extension EnvironmentValues {
     public var codeEditorTheme: CodeEditorSwiftUITheme {
         get { self[CodeEditorThemeKey.self] }
         set { self[CodeEditorThemeKey.self] = newValue }
+    }
+    
+    public var codeEditorBecomeFirstResponder: Bool {
+        get { self[CodeEditorBecomeFirstResponderKey.self] }
+        set { self[CodeEditorBecomeFirstResponderKey.self] = newValue }
     }
 }
 
@@ -651,6 +661,11 @@ extension View {
     /// Set the code editor theme for this view hierarchy
     public func codeEditorTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
         environment(\.codeEditorTheme, theme)
+    }
+    
+    /// Configure whether code editors become first responder on appear (iOS only)
+    public func codeEditorBecomeFirstResponder(_ become: Bool = true) -> some View {
+        environment(\.codeEditorBecomeFirstResponder, become)
     }
 }
 

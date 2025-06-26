@@ -14,7 +14,7 @@ This sample application provides a complete example of:
 - ✅ **Real-Time Configuration** - Live updates without restart using nested configuration structure
 - ✅ **Inline Annotations** - TODO/FIXME/NOTE/WARNING/ERROR detection with hover popups
 - ✅ **Modern Architecture** - Swift 6 actor-based concurrency with full thread safety
-- ✅ **Comprehensive Testing** - 66 tests covering all major functionality
+- ✅ **Comprehensive Testing** - 46 tests covering all major functionality
 
 ## 🚀 Quick Start
 
@@ -131,24 +131,24 @@ manager.scanForAnnotations() // Finds TODO, FIXME, NOTE, WARNING, ERROR
 
 ## 🏗️ Project Architecture
 
-### Sample App Structure
+### Sample App Structure (Simplified)
 
 ```
 CodeEditorSample/
 ├── Sources/CodeEditorSample/
 │   ├── CodeEditorSampleApp.swift          # Main app with menu system
 │   ├── Models/
-│   │   ├── EditorConfiguration.swift      # Uses plugin's EditorConfiguration
-│   │   ├── AppState.swift                 # Global state management
+│   │   ├── EditorConfiguration.swift      # Configuration presets
+│   │   ├── AppState.swift                 # Global state with import/export
 │   │   ├── SampleCodeProvider.swift       # Language sample content
 │   │   └── *Samples.swift                 # Sample code by language
 │   ├── Views/
-│   │   ├── ContentView.swift              # Main UI layout
-│   │   ├── SampleCodeEditorView.swift     # SwiftUI ↔ Plugin bridge
-│   │   ├── CodeEditorViewWrapper.swift    # Cross-platform wrapper
-│   │   ├── EditorConfigurationView.swift  # Settings UI
+│   │   ├── ContentView.swift              # Main entry point
+│   │   ├── UnifiedContentView.swift       # Cross-platform main UI
+│   │   ├── UnifiedConfigurationView.swift # Complete configuration UI
+│   │   ├── SampleCodeEditorView.swift     # Editor with live preview
+│   │   ├── CodeEditorViewWrapper.swift    # Platform wrapper
 │   │   ├── SwiftUIDemoView.swift          # SwiftUI integration demo
-│   │   ├── iOSContentView.swift           # iOS/iPadOS interface
 │   │   └── StatusBarView.swift            # Status information
 │   ├── Services/
 │   │   ├── AnnotationManager.swift        # Annotation detection
@@ -157,13 +157,13 @@ CodeEditorSample/
 │   │   └── ThemeProvider.swift            # Color theme definitions
 │   └── Platform/
 │       └── PlatformTypes.swift            # Platform abstractions
-└── Tests/CodeEditorSampleTests/            # 66 comprehensive tests
-    ├── AnnotationSystemTests.swift         # Annotation testing (20 tests)
+└── Tests/CodeEditorSampleTests/            # 46 comprehensive tests
     ├── BasicFunctionalityTests.swift       # Core functionality (4 tests)
     ├── ConfigurationUITests.swift          # UI configuration (12 tests)
     ├── PluginConfigurationTests.swift      # Plugin integration (11 tests)
     ├── SampleCodeTests.swift              # Language samples (12 tests)
-    └── SimplifiedIntegrationTests.swift    # End-to-end testing (6 tests)
+    ├── SimplifiedIntegrationTests.swift    # End-to-end testing (6 tests)
+    └── QuickIsFlippedTest.swift           # View hierarchy testing (1 test)
 ```
 
 ### Key Integration Patterns
@@ -217,9 +217,8 @@ struct SampleCodeEditorView: View {
 
 ## 🧪 Testing & Quality
 
-### Test Coverage (66 Tests)
+### Test Coverage (46 Tests)
 
-- **20 Annotation Tests** - Comprehensive annotation system testing
 - **12 Configuration Tests** - UI and integration testing
 - **11 Plugin Tests** - Plugin system verification
 - **12 Sample Code Tests** - Language sample validation
@@ -237,7 +236,7 @@ swift test
 swift test --verbose
 
 # Specific test suite
-swift test --filter AnnotationSystemTests
+swift test --filter ConfigurationUITests
 ```
 
 ### Code Quality
@@ -246,7 +245,7 @@ swift test --filter AnnotationSystemTests
 # Lint and format code
 swiftlint --fix && swiftlint  # ✅ 0 violations
 swift build                   # ✅ Clean build
-swift test                    # ✅ 66/66 tests passing
+swift test                    # ✅ 46/46 tests passing
 ```
 
 ## 🛠️ Customization Examples

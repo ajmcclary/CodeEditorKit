@@ -58,11 +58,11 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// Whether to enable the annotation system
         public var enableAnnotations: Bool = true
         
-        /// Whether to show the minimap
-        public var showMinimap: Bool = false
-        
         /// Whether to show indent guides
         public var showIndentGuides: Bool = true
+        
+        /// Whether to show the minimap
+        public var showMinimap: Bool = false
         
         public init() {}
     }
@@ -258,6 +258,9 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         // Set the view's configuration property which will trigger applyConfiguration()
         view.configuration = self
         
+        // Apply cross-platform text input features
+        applyTextInputFeatures(to: view)
+        
         // Also apply additional settings that aren't handled by the internal applyConfiguration
         #if canImport(AppKit)
         view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
@@ -271,10 +274,6 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         }
         #elseif canImport(UIKit)
         view.font = UIFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.spellCheckingType = behavior.isContinuousSpellCheckingEnabled ? .yes : .no
-        view.autocorrectionType = behavior.isAutomaticSpellingCorrectionEnabled ? .yes : .no
-        view.smartQuotesType = behavior.isAutomaticQuoteSubstitutionEnabled ? .yes : .no
-        view.smartDashesType = behavior.isAutomaticDashSubstitutionEnabled ? .yes : .no
         #endif
     }
 }

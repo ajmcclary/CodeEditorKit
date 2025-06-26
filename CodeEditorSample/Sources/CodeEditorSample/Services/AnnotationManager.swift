@@ -22,76 +22,42 @@ final class AnnotationManager: NSObject {
     init(textView: CodeEditorView) {
         self.textView = textView
         super.init()
-        print("DEBUG AnnotationManager: Initializing with textView")
         textView.annotationsDataSource = self
-        print("DEBUG AnnotationManager: Set annotationsDataSource on textView")
     }
     
     // MARK: - Public Methods
     
     /// Scan the text and update annotations
     func scanForAnnotations() {
-        guard let textView else { 
-            print("DEBUG AnnotationManager: No textView")
-            return 
-        }
+        guard let textView else { return }
         
-        print("DEBUG AnnotationManager: Scanning for annotations...")
-        
-        // Clear existing annotations
-        textView.removeAllAnnotations()
-        annotations.removeAll()
+        // Clear existing annotations and views
+        clearAnnotations()
         
         // Get the text
         let text = textView.text ?? ""
-        print("DEBUG AnnotationManager: Text length: \(text.count)")
-        print("DEBUG AnnotationManager: Text preview (first 100 chars): \(String(text.prefix(100)))")
-        
-        guard !text.isEmpty else { 
-            print("DEBUG AnnotationManager: No text to scan")
-            return 
-        }
-        
-        // Simple pattern check first
-        let todoCount = text.components(separatedBy: "TODO:").count - 1
-        let fixmeCount = text.components(separatedBy: "FIXME:").count - 1
-        print("DEBUG AnnotationManager: Found \(todoCount) TODO patterns and \(fixmeCount) FIXME patterns")
+        guard !text.isEmpty else { return }
         
         // Use a TextKit1-compatible approach for annotations
-        print("DEBUG AnnotationManager: Using TextKit1-compatible approach")
         createAnnotationsUsingTextKit1(text: text)
     }
     
     /// Clear all annotations
     func clearAnnotations() {
-        textView?.removeAllAnnotations()
+        // Clear our internal annotation list
         annotations.removeAll()
         
-        // Also remove any manually added annotation views
-        #if canImport(AppKit)
-        textView?.subviews.filter { $0 is AnnotationView }.forEach { $0.removeFromSuperview() }
-        #endif
+        // Clear annotations from the text view
+        textView?.removeAllAnnotations()
     }
     
     /// Create annotations using TextKit1-compatible approach
     private func createAnnotationsUsingTextKit1(text: String) {
-        guard textView != nil else {
-            print("DEBUG AnnotationManager: No textView available")
-            return
-        }
-        
-        print("DEBUG AnnotationManager: Creating annotations using TextKit1 approach")
-        
-        // For now, create a simple test annotation at a fixed position
-        // We'll use NSRange and convert it to NSTextRange manually
+        guard textView != nil else { return }
         
         // Find the first occurrence of "TODO:"
         if let todoRange = text.range(of: "TODO:") {
             let nsRange = NSRange(todoRange, in: text)
-            print("DEBUG AnnotationManager: Found TODO at NSRange: \(nsRange)")
-            
-            // Use the annotation API instead of direct TextKit access
-            print("DEBUG AnnotationManager: Using CodeEditorView annotation API")
             
             // Create annotation through the public API
             createSimpleAnnotationMarker(
@@ -106,102 +72,32 @@ final class AnnotationManager: NSObject {
     private func createSimpleAnnotationMarker(at range: NSRange, type: CodeAnnotation.AnnotationType, message: String) {
         guard let textView = textView else { return }
         
-        print("DEBUG AnnotationManager: Creating simple annotation marker at range: \(range)")
+        // Get line number from the range
+        let text = textView.text ?? ""
+        let lines = text.components(separatedBy: .newlines)
+        var currentLocation = 0
+        var lineNumber = 1
         
-        // Create a dummy NSTextRange using the document start
-        #if canImport(AppKit)
-        guard let textStorage = textView.textStorage,
-              textStorage.length > 0 else { 
-            print("DEBUG AnnotationManager: No text storage or empty text")
-            return 
+        for (index, line) in lines.enumerated() {
+            let lineLength = line.count + 1 // +1 for newline
+            if currentLocation + lineLength > range.location {
+                lineNumber = index + 1
+                break
+            }
+            currentLocation += lineLength
         }
-        #else
-        let textStorage = textView.textStorage
-        guard textStorage.length > 0 else { 
-            print("DEBUG AnnotationManager: Empty text")
-            return 
-        }
-        #endif
-        
-        // Create a simple range at the location we found
-        let location = max(0, min(range.location, textStorage.length - 1))
-        let length = min(range.length, textStorage.length - location)
-        let clampedRange = NSRange(location: location, length: length)
-        
-        // For now, create annotation without the complex NSTextRange
-        // We'll position it manually using the NSRange
-        print("DEBUG AnnotationManager: Creating annotation at clamped range: \(clampedRange)")
         
         let annotation = CodeAnnotation(
-            lineNumber: 1, // We'll calculate this later
+            lineNumber: lineNumber,
             type: type,
             message: message,
-            range: nil // We'll handle positioning differently
+            range: nil
         )
         
         annotations.append(annotation)
         
-        // Calculate proper position using TextKit1 layout
-        #if canImport(AppKit)
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else {
-            print("DEBUG AnnotationManager: No layout manager or text container")
-            return
-        }
-        #else
-        let layoutManager = textView.layoutManager
-        let textContainer = textView.textContainer
-        #endif
-        
-        // Convert NSRange to glyph range
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: clampedRange, actualCharacterRange: nil)
-        print("DEBUG AnnotationManager: Glyph range: \(glyphRange)")
-        
-        // Get the bounding rect for the text
-        let boundingRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        print("DEBUG AnnotationManager: Bounding rect: \(boundingRect)")
-        
-        // Position annotation inline, right after the text
-        let badgeSize: CGFloat = 20
-        let badgePadding: CGFloat = 4
-        #if canImport(AppKit)
-        let annotationX = textView.textContainerInset.width + boundingRect.maxX + badgePadding
-        let annotationY = textView.textContainerInset.height + boundingRect.midY - (badgeSize / 2)
-        #else
-        let annotationX = textView.textContainerInset.left + boundingRect.maxX + badgePadding
-        let annotationY = textView.textContainerInset.top + boundingRect.midY - (badgeSize / 2)
-        #endif
-        
-        let annotationFrame = CGRect(
-            x: annotationX,
-            y: annotationY,
-            width: badgeSize,
-            height: badgeSize
-        )
-        
-        print("DEBUG AnnotationManager: Calculated annotation frame: \(annotationFrame)")
-        
-        // Create a simple annotation view and add it directly to the text view
-        #if canImport(AppKit)
-        let annotationView = AnnotationView(annotation: annotation, frame: annotationFrame)
-        #else
-        // iOS doesn't have AnnotationView yet - create a simple UIView instead
-        let annotationView = UIView(frame: annotationFrame)
-        annotationView.backgroundColor = type.color
-        annotationView.layer.cornerRadius = badgeSize / 2
-        #endif
-        #if canImport(AppKit)
-        annotationView.wantsLayer = true
-        annotationView.layer?.backgroundColor = type.color.cgColor
-        annotationView.layer?.cornerRadius = badgeSize / 2
-        #else
-        // Already configured above for iOS
-        #endif
-        
-        print("DEBUG AnnotationManager: Adding annotation view at calculated position")
-        textView.addSubview(annotationView)
-        
-        print("DEBUG AnnotationManager: Annotation view added, textView subviews: \(textView.subviews.count)")
+        // For now, skip creating visual annotation views to avoid memory issues
+        // The CodeEditorView's annotation system will handle the display
     }
 }
 
@@ -209,17 +105,12 @@ final class AnnotationManager: NSObject {
 
 extension AnnotationManager: @preconcurrency AnnotationsDataSource {
     func annotations(for textRange: NSTextRange) -> [Annotation] {
-        print("DEBUG AnnotationManager: annotations(for:) called with range: \(textRange)")
-        print("DEBUG AnnotationManager: total annotations: \(annotations.count)")
-        
         // Return annotations that intersect with the given range
         let result: [Annotation] = annotations.compactMap { annotation in
             guard let annotationRange = annotation.range else {
-                print("DEBUG AnnotationManager: annotation \(annotation.id) has no range")
                 return nil
             }
             if annotationRange.intersects(textRange) {
-                print("DEBUG AnnotationManager: annotation \(annotation.id) intersects with range")
                 return Annotation(
                     range: annotationRange,
                     content: annotation.message,
@@ -228,7 +119,6 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
             }
             return nil
         }
-        print("DEBUG AnnotationManager: returning \(result.count) annotations for range")
         return result
     }
     
@@ -251,22 +141,14 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> NSView? {
-        print("DEBUG AnnotationManager: textView(_:viewForLineAnnotation:) called")
-        print("DEBUG AnnotationManager: annotation id: \(annotation.id)")
-        print("DEBUG AnnotationManager: proposedViewFrame: \(proposedViewFrame)")
-        
         // Find the matching annotation
         guard let codeAnnotation = annotations.first(where: { $0.id == annotation.id }) else {
-            print("DEBUG AnnotationManager: No matching code annotation found for id: \(annotation.id)")
             return nil
         }
         
         #if canImport(AppKit)
-        print("DEBUG AnnotationManager: Creating AnnotationView for: \(codeAnnotation.type.label)")
-        
         // Create and return annotation view
         let annotationView = AnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
-        print("DEBUG AnnotationManager: Created AnnotationView with frame: \(annotationView.frame)")
         return annotationView
         #else
         // iOS doesn't have AnnotationView yet
@@ -423,6 +305,7 @@ class AnnotationView: NSView {
         // Remove old tracking area
         if let trackingArea {
             removeTrackingArea(trackingArea)
+            self.trackingArea = nil
         }
         
         // Add new tracking area
@@ -434,6 +317,17 @@ class AnnotationView: NSView {
         )
         addTrackingArea(newTrackingArea)
         self.trackingArea = newTrackingArea
+    }
+    
+    override func removeFromSuperview() {
+        // Clean up before removal
+        if let trackingArea {
+            removeTrackingArea(trackingArea)
+            self.trackingArea = nil
+        }
+        hideAnnotationPopup()
+        discardCursorRects()
+        super.removeFromSuperview()
     }
     
     override func mouseEntered(with event: NSEvent) {
@@ -533,7 +427,7 @@ class AnnotationView: NSView {
         self.popover = popover
     }
     
-    private func hideAnnotationPopup() {
+    func hideAnnotationPopup() {
         popover?.close()
         popover = nil
     }

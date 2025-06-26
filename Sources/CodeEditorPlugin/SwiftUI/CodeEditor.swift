@@ -181,6 +181,13 @@ public struct CodeEditor: View {
             config.display.showInvisibleCharacters = show
         }
     }
+    
+    /// Configure whether to show the minimap
+    public func showMinimap(_ show: Bool = true) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.display.showMinimap = show
+        }
+    }
 }
 
 // MARK: - Platform-Specific Representable
@@ -228,11 +235,9 @@ struct CodeEditorRepresentable: NSViewRepresentable {
                 view.string = text
             }
             view.language = language
-            // Apply theme
-            view.showsLineNumbers = configuration.display.showLineNumbers
-            view.highlightSelectedLine = configuration.display.highlightSelectedLine
-            view.isEditable = configuration.behavior.isEditable
-            view.font = NSFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+            
+            // Apply full configuration
+            configuration.apply(to: view)
         }
     }
 }
@@ -280,10 +285,9 @@ struct CodeEditorRepresentable: UIViewRepresentable {
                 view.text = text
             }
             view.language = language
-            container.showsLineNumbers = configuration.display.showLineNumbers
-            view.highlightSelectedLine = configuration.display.highlightSelectedLine
-            view.isEditable = configuration.behavior.isEditable
-            view.font = UIFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+            
+            // Apply full configuration
+            container.configuration = configuration
         }
     }
 }

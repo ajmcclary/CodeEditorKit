@@ -263,12 +263,14 @@ Sources/CodeEditorPlugin/
 
 The comprehensive sample app in `CodeEditorSample/` demonstrates all features:
 
-- ✅ **Full-featured editor** with working syntax highlighting
+- ✅ **Complete configuration system** - All 36+ configuration options with live preview
+- ✅ **Unified cross-platform UI** - Single codebase working on macOS, iOS, and iPadOS
+- ✅ **Full-featured editor** with 15+ languages syntax highlighting
 - ✅ **6 built-in themes** with real-time switching
+- ✅ **Configuration import/export** - Save and share editor settings as JSON
 - ✅ **Configuration presets** (minimal, read-only, markdown, presentation)
 - ✅ **Inline annotations** with TODO/FIXME/NOTE/WARNING/ERROR detection
-- ✅ **Cross-platform support** with iOS and macOS implementations
-- ✅ **Interactive feature tour** and comprehensive documentation
+- ✅ **Visual feature indicators** - Shows active minimap, annotations, and more
 - ✅ **Performance testing** with large files and annotation systems
 
 ### Running the Example
@@ -282,10 +284,10 @@ swift run CodeEditorSample
 
 ### Comprehensive Test Suite
 
-- **172 total tests** across both projects
+- **152 total tests** across both projects
 - **106 main package tests** - Core functionality, syntax highlighting, configuration
-- **66 sample app tests** - Integration testing, UI components, annotation system
-- **Performance benchmarks** - Large file handling and annotation performance
+- **46 sample app tests** - Integration testing, UI components, configuration system
+- **Performance benchmarks** - Large file handling and syntax highlighting performance
 
 ### Code Quality Standards
 
@@ -293,7 +295,7 @@ swift run CodeEditorSample
 # All commands should show zero violations/errors
 swiftlint --fix && swiftlint    # ✅ 0 violations across all files
 swift build                     # ✅ Clean builds
-swift test                      # ✅ 172/172 tests passing
+swift test                      # ✅ 152/152 tests passing
 ```
 
 ### Quality Metrics
