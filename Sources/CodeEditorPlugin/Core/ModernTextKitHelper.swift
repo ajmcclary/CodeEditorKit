@@ -317,10 +317,7 @@ extension NSTextView {
         ModernTextKitHelper.optimizeTextViewPerformance(self)
     }
 
-    /// Check if this text view is using TextKit2
-    var isUsingTextKit2: Bool {
-        textLayoutManager != nil
-    }
+    // Note: isUsingTextKit2 is defined in Extensions/NSTextView+Extensions.swift
 
     /// Get the appropriate text content manager for the current configuration
     var modernTextContentManager: NSTextContentManager? {
@@ -331,19 +328,94 @@ extension NSTextView {
 }
 
 #else
-// MARK: iOS/UIKit Stub
+// MARK: iOS/UIKit Implementation
 
-/// Stub implementation for iOS/UIKit
+import Foundation
+import UIKit
+
+/// iOS implementation of ModernTextKitHelper
 @MainActor
 public final class ModernTextKitHelper: @unchecked Sendable {
-    public static var shouldUseTextKit2: Bool { false }
-
-    public static func configureTextView(_: Any) {}
-    public static func optimizeTextViewPerformance(_: Any) {}
-    public static func ensureTextKit2(for _: Any) -> Bool { false }
+    /// Check if TextKit2 should be used on iOS
+    public static var shouldUseTextKit2: Bool {
+        if #available(iOS 16.0, *) {
+            return true
+        }
+        return false
+    }
+    
+    /// Configure UITextView with optimal settings
+    public static func configureTextView(_ textView: UITextView) {
+        // Basic configuration
+        textView.autocorrectionType = .no
+        textView.autocapitalizationType = .none
+        textView.spellCheckingType = .no
+        textView.smartQuotesType = .no
+        textView.smartDashesType = .no
+        textView.smartInsertDeleteType = .no
+        
+        // iOS 16+ specific configuration
+        if #available(iOS 16.0, *) {
+            configureTextKit2Features(textView)
+        }
+    }
+    
+    /// Apply performance optimizations
+    public static func optimizeTextViewPerformance(_ textView: UITextView) {
+        // Disable expensive features not needed for code editing
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.allowsEditingTextAttributes = true
+        
+        // iOS-specific optimizations
+        textView.dataDetectorTypes = []
+    }
+    
+    /// Ensure TextKit2 is being used if available
+    public static func ensureTextKit2(for textView: UITextView) -> Bool {
+        if #available(iOS 16.0, *) {
+            // Check if TextKit2 is already active
+            if textView.textLayoutManager != nil {
+                return true
+            }
+            
+            // iOS 16+ should use TextKit2 by default for new text views
+            // If it's not active, there might be a reason (e.g., compatibility mode)
+            return textView.textLayoutManager != nil
+        }
+        return false
+    }
+    
+    @available(iOS 16.0, *)
+    private static func configureTextKit2Features(_ textView: UITextView) {
+        // TextKit2 specific configuration for iOS
+        if let textLayoutManager = textView.textLayoutManager {
+            // Configure text layout manager
+            textLayoutManager.limitsLayoutForSuspiciousContents = true
+            textLayoutManager.usesHyphenation = false
+            
+            // Configure text container if available
+            if let textContainer = textLayoutManager.textContainer {
+                textContainer.maximumNumberOfLines = 0
+                textContainer.lineBreakMode = .byWordWrapping
+                textContainer.widthTracksTextView = true
+                textContainer.heightTracksTextView = false
+            }
+        }
+    }
 
     deinit {
         // Cleanup if needed
+    }
+}
+
+// MARK: - UITextView Extension
+
+extension UITextView {
+    /// Apply modern configuration for iOS
+    func applyModernConfiguration() {
+        ModernTextKitHelper.configureTextView(self)
+        ModernTextKitHelper.optimizeTextViewPerformance(self)
     }
 }
 #endif

@@ -6,6 +6,7 @@ import UIKit
 #endif
 import Foundation
 
-public protocol CompletionItem: Identifiable {
+@MainActor
+public protocol CompletionItem: Identifiable, Sendable {
     var view: PlatformView { get }
 }

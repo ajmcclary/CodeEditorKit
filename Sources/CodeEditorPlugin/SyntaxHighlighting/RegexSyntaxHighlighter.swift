@@ -17,7 +17,7 @@ public typealias RegexHighlighterColor = NSColor
 public final class RegexSyntaxHighlighter: @unchecked Sendable {
     // MARK: - Language Definitions
 
-    public struct LanguageDefinition {
+    public struct LanguageDefinition: Sendable {
         public let name: String
         public let fileExtensions: [String]
         public let rules: [HighlightRule]
@@ -29,12 +29,12 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
         }
     }
 
-    public struct HighlightRule {
+    public struct HighlightRule: Sendable {
         public let pattern: NSRegularExpression
-        public let tokenType: TokenType
+        public let tokenType: RegexTokenType
         public let priority: Int
 
-        public init(pattern: String, tokenType: TokenType, priority: Int = 0) throws {
+        public init(pattern: String, tokenType: RegexTokenType, priority: Int = 0) throws {
             self.pattern = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
             self.tokenType = tokenType
             self.priority = priority
@@ -43,7 +43,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
 
     // MARK: - Token Types
 
-    public enum TokenType: String, CaseIterable {
+    public enum RegexTokenType: String, CaseIterable, Sendable {
         case keyword
         case identifier
         case string
@@ -114,19 +114,8 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
         }
     }
 
-    // MARK: - Highlighted Token
-
-    public struct HighlightedToken {
-        public let range: NSRange
-        public let type: TokenType
-        public let text: String
-
-        public init(range: NSRange, type: TokenType, text: String) {
-            self.range = range
-            self.type = type
-            self.text = text
-        }
-    }
+    // Note: HighlightedToken and TokenType are defined in SyntaxHighlightingCoordinator.swift
+// We'll need to explicitly qualify the TokenType to avoid naming conflicts
 
     // MARK: - Properties
 
@@ -173,7 +162,26 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 }
 
                 let text = String(source[Range(matchRange, in: source)!])
-                tokens.append(HighlightedToken(range: matchRange, type: rule.tokenType, text: text))
+                // Convert RegexSyntaxHighlighter.TokenType to SyntaxHighlightingCoordinator.TokenType
+                // Convert from RegexTokenType to the global TokenType used by HighlightedToken
+                let coordinatorTokenType: TokenType = {
+                    switch rule.tokenType {
+                    case .keyword: return .keyword
+                    case .identifier: return .identifier
+                    case .string: return .string
+                    case .number: return .number
+                    case .comment: return .comment
+                    case .type: return .type
+                    case .function: return .function
+                    case .property: return .property
+                    case .operator: return .operator
+                    case .punctuation: return .punctuation
+                    case .whitespace: return .whitespace
+                    case .preprocessor: return .preprocessor
+                    case .unknown: return .unknown
+                    }
+                }()
+                tokens.append(HighlightedToken(range: matchRange, type: coordinatorTokenType, text: text))
                 processedRanges.append(matchRange)
             }
         }
@@ -203,7 +211,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
     // MARK: - Language Definitions
 
     /// Safely creates a HighlightRule, returning nil if the pattern is invalid
-    private static func rule(_ pattern: String, _ tokenType: TokenType, _ priority: Int = 0) -> HighlightRule? {
+    private static func rule(_ pattern: String, _ tokenType: RegexTokenType, _ priority: Int = 0) -> HighlightRule? {
         try? HighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
     }
 
@@ -581,3 +589,5 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
         return LanguageDefinition(name: "Markdown", fileExtensions: ["md", "markdown", "mdown", "mkd"], rules: rules)
     }
 }
+
+// Note: SyntaxHighlighter conformance is declared in LanguageRegistry.swift

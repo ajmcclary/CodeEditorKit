@@ -29,7 +29,7 @@ public typealias CodeEditorAnnotation = LineAnnotation
 public typealias CodeEditorAnnotationDataSource = AnnotationsDataSource
 
 // Highlighting types
-public typealias CodeEditorTheme = Theme
+// Note: CodeEditorTheme is defined in SwiftUI/CodeEditor.swift
 public typealias CodeEditorToken = Token
 public typealias CodeEditorTokenType = TokenType
 public typealias CodeEditorSyntaxHighlighter = SyntaxHighlightingCoordinator
@@ -40,6 +40,29 @@ public typealias CodeEditorAdaptiveColors = AdaptiveColorSystem
 public typealias CodeEditorVersionDetection = MacOSVersionDetection
 public typealias CodeEditorModernTextKit = ModernTextKitHelper
 #endif
+
+// MARK: - New Architecture Types
+
+// Configuration
+public typealias EditorConfig = EditorConfiguration
+
+// Events
+// Note: EditorEventType protocol is defined in Events/EditorEvent.swift
+public typealias EventHandler = EditorEventHandler
+public typealias EventPublisher = EditorEventPublisher
+
+// Layout
+public typealias LayoutCoord = LayoutCoordinator
+public typealias LayoutCtx = LayoutContext
+
+// Language System
+// public typealias LanguageProvider = LanguageProvider // Removed self-referential type alias
+public typealias LanguageReg = LanguageRegistry
+
+// Performance
+public typealias PerfMonitor = PerformanceMonitor
+public typealias PerfMetric = PerformanceMetric
+public typealias PerfReport = PerformanceReport
 
 // MARK: - CodeEditorPluginModule
 

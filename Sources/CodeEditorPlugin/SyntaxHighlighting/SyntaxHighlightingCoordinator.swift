@@ -47,25 +47,13 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     public func highlight(source: String, language: Language) -> [HighlightedToken] {
         switch language {
         case .swift:
-            swiftHighlighter.highlight(source: source).map { token in
-                HighlightedToken(
-                    range: token.range,
-                    type: TokenType(from: token.type),
-                    text: token.text
-                )
-            }
+            return swiftHighlighter.highlight(source: source)
 
         case let .regex(definition):
-            regexHighlighter.highlight(source: source, language: definition).map { token in
-                HighlightedToken(
-                    range: token.range,
-                    type: TokenType(from: token.type),
-                    text: token.text
-                )
-            }
+            return regexHighlighter.highlight(source: source, language: definition)
 
         case .plainText:
-            []
+            return []
         }
     }
 
@@ -104,7 +92,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 
 // MARK: - Language
 
-public enum Language: Equatable, Hashable {
+public enum Language: Equatable, Hashable, Sendable {
     case swift
     case regex(RegexSyntaxHighlighter.LanguageDefinition)
     case plainText
@@ -147,6 +135,40 @@ public enum Language: Equatable, Hashable {
         case .regex(let definition):
             hasher.combine("regex")
             hasher.combine(definition.name)
+        }
+    }
+    
+    /// Unique identifier for the language (used by plugin system)
+    public var identifier: String {
+        switch self {
+        case .swift:
+            return "swift"
+
+        case .regex(let definition):
+            return definition.name.lowercased().replacingOccurrences(of: " ", with: "-")
+
+        case .plainText:
+            return "plaintext"
+        }
+    }
+    
+    /// Create a language instance from identifier and name (used by plugin system)
+    public init(name: String, identifier: String) {
+        switch identifier {
+        case "swift":
+            self = .swift
+
+        case "plaintext":
+            self = .plainText
+
+        default:
+            // For unknown languages, create a basic regex language definition
+            let definition = RegexSyntaxHighlighter.LanguageDefinition(
+                name: name,
+                fileExtensions: [identifier],
+                rules: []
+            )
+            self = .regex(definition)
         }
     }
     
@@ -209,7 +231,7 @@ public enum Language: Equatable, Hashable {
 
 // MARK: - TokenType
 
-public enum TokenType: String, CaseIterable {
+public enum TokenType: String, CaseIterable, Sendable {
     case keyword
     case identifier
     case string
@@ -266,7 +288,7 @@ public enum TokenType: String, CaseIterable {
     #endif
 
     /// Convert from SwiftSyntax token type
-    init(from swiftType: SwiftSyntaxHighlighter.TokenType) {
+    init(fromSwiftType swiftType: SwiftSyntaxHighlighter.TokenType) {
         switch swiftType {
         case .keyword: self = .keyword
         case .identifier: self = .identifier
@@ -284,7 +306,7 @@ public enum TokenType: String, CaseIterable {
     }
 
     /// Convert from regex highlighter token type
-    init(from regexType: RegexSyntaxHighlighter.TokenType) {
+    init(fromRegexType regexType: RegexSyntaxHighlighter.RegexTokenType) {
         switch regexType {
         case .keyword: self = .keyword
         case .identifier: self = .identifier
@@ -305,7 +327,7 @@ public enum TokenType: String, CaseIterable {
 
 // MARK: - HighlightedToken
 
-public struct HighlightedToken {
+public struct HighlightedToken: Sendable {
     public let range: NSRange
     public let type: TokenType
     public let text: String

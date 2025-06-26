@@ -119,10 +119,45 @@ extension TextView {
         #if os(macOS) && !targetEnvironment(macCatalyst)
         !isUsingTextKit2
         #else
-        true // iOS uses TextKit 1
+        // Check if TextKit2 is available on iOS
+        if #available(iOS 16.0, *) {
+            return textLayoutManager == nil
+        } else {
+            return true // iOS < 16 uses TextKit 1
+        }
         #endif
     }
 
+    /// Returns true if TextKit 2 is supported on the current platform
+    var supportsTextKit2: Bool {
+        #if os(macOS)
+        if #available(macOS 12.0, *) {
+            return true
+        }
+        return false
+        #else
+        if #available(iOS 16.0, *) {
+            return true
+        }
+        return false
+        #endif
+    }
+    
+    /// Returns true if TextKit 2 is currently being used
+    var isUsingTextKit2: Bool {
+        #if os(macOS)
+        if #available(macOS 12.0, *) {
+            return textLayoutManager != nil
+        }
+        return false
+        #else
+        if #available(iOS 16.0, *) {
+            return textLayoutManager != nil
+        }
+        return false
+        #endif
+    }
+    
     /// Get the text content manager if using TextKit 2
     @available(macOS 12.0, iOS 16.0, *)
     var textContentManager: NSTextContentManager? {

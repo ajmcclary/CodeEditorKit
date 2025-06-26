@@ -82,19 +82,7 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
         }
     }
 
-    // MARK: - Highlighted Token
-
-    public struct HighlightedToken {
-        public let range: NSRange
-        public let type: TokenType
-        public let text: String
-
-        public init(range: NSRange, type: TokenType, text: String) {
-            self.range = range
-            self.type = type
-            self.text = text
-        }
-    }
+    // Note: HighlightedToken is defined in SyntaxHighlightingCoordinator.swift
 
     // MARK: - Properties
 
@@ -144,7 +132,7 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
 
 private final class SyntaxHighlightVisitor: SyntaxVisitor {
     let source: String
-    private(set) var tokens: [SwiftSyntaxHighlighter.HighlightedToken] = []
+    private(set) var tokens: [HighlightedToken] = []
     private var processedRanges: Set<NSRange> = []
 
     init(source: String) {
@@ -173,7 +161,7 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
         // Extract text from the syntax node
         let text = syntax.description
 
-        tokens.append(SwiftSyntaxHighlighter.HighlightedToken(range: range, type: type, text: text))
+        tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
 
     private func addTriviaToken(piece: TriviaPiece, node: TokenSyntax, type: SwiftSyntaxHighlighter.TokenType) {
@@ -193,7 +181,7 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
             ""
         }
 
-        tokens.append(SwiftSyntaxHighlighter.HighlightedToken(range: range, type: type, text: text))
+        tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
 
     // MARK: - Visitor Methods
@@ -319,3 +307,5 @@ extension NSRange {
         self.init(location: start, length: length)
     }
 }
+
+// Note: SyntaxHighlighter conformance is declared in LanguageRegistry.swift

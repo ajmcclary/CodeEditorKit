@@ -8,9 +8,15 @@ public class CodeEditorContainerView: UIView {
     public let textView: CodeEditorView
     public let gutterView: GutterView
     
-    private var gutterWidth: CGFloat = 60
     private var keyboardObservers: [NSObjectProtocol] = []
     private var keyboardHeight: CGFloat = 0
+    
+    /// Configuration for the editor
+    public var configuration: EditorConfiguration = .default {
+        didSet {
+            applyConfiguration()
+        }
+    }
     
     override public init(frame: CGRect) {
         // Create the text view
@@ -47,9 +53,11 @@ public class CodeEditorContainerView: UIView {
         gutterView.textView = textView
         
         // Set up the text view to account for the gutter
+        let gutterWidth = configuration.layout.gutterWidth
+        let padding = configuration.layout.lineNumberPadding
         textView.textContainerInset = UIEdgeInsets(
             top: textView.textContainerInset.top,
-            left: gutterWidth + 8,
+            left: gutterWidth + padding,
             bottom: textView.textContainerInset.bottom,
             right: textView.textContainerInset.right
         )
@@ -168,6 +176,7 @@ public class CodeEditorContainerView: UIView {
         let contentSize = textView.contentSize
         
         // Position gutter on the left - it should match content height, not bounds
+        let gutterWidth = configuration.layout.gutterWidth
         gutterView.frame = CGRect(
             x: 0,
             y: 0,
@@ -196,22 +205,37 @@ public class CodeEditorContainerView: UIView {
             gutterView.isHidden = !showsLineNumbers
             
             // Update text container inset
+            let gutterWidth = configuration.layout.gutterWidth
+            let padding = configuration.layout.lineNumberPadding
             if showsLineNumbers {
                 textView.textContainerInset = UIEdgeInsets(
                     top: textView.textContainerInset.top,
-                    left: gutterWidth + 8,
+                    left: gutterWidth + padding,
                     bottom: textView.textContainerInset.bottom,
                     right: textView.textContainerInset.right
                 )
             } else {
                 textView.textContainerInset = UIEdgeInsets(
                     top: textView.textContainerInset.top,
-                    left: 8,
+                    left: padding,
                     bottom: textView.textContainerInset.bottom,
                     right: textView.textContainerInset.right
                 )
             }
         }
+    }
+    
+    // MARK: - Configuration
+    
+    private func applyConfiguration() {
+        // Apply configuration to text view
+        textView.configuration = configuration
+        
+        // Update our own properties based on configuration
+        showsLineNumbers = configuration.display.showLineNumbers
+        
+        // Force layout update
+        setNeedsLayout()
     }
     
     // Cleanup happens automatically when observers are deallocated
