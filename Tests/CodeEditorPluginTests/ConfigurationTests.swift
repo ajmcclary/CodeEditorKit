@@ -16,8 +16,8 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertNotNil(textView.backgroundColor)
         XCTAssertTrue(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
-        XCTAssertFalse(textView.showsLineNumbers)
-        XCTAssertFalse(textView.highlightSelectedLine)
+        XCTAssertTrue(textView.showsLineNumbers)
+        XCTAssertTrue(textView.highlightSelectedLine)
     }
 
     @MainActor

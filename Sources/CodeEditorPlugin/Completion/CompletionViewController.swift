@@ -221,9 +221,9 @@ extension CompletionViewController: NSTableViewDelegate {
     }
 }
 
-// MARK: - Completion Cell View
-
 private final class CompletionCellView: NSTableCellView {
+    deinit {}
+    
     private lazy var iconLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
         label.font = NSFont.systemFont(ofSize: 12)
@@ -461,7 +461,9 @@ extension BasicCompletionViewController: UITableViewDataSource {
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CompletionCell", for: indexPath) as! CompletionTableViewCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "CompletionCell", for: indexPath) as? CompletionTableViewCell else {
+            fatalError("Failed to dequeue CompletionTableViewCell")
+        }
         let item = completionItems[indexPath.row]
         cell.configure(with: item)
         return cell
@@ -477,9 +479,9 @@ extension BasicCompletionViewController: UITableViewDelegate {
     }
 }
 
-// MARK: - Completion Table View Cell
-
 private final class CompletionTableViewCell: UITableViewCell {
+    deinit {}
+    
     private lazy var iconLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)

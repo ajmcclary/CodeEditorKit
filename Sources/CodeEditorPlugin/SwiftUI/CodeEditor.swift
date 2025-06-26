@@ -96,91 +96,87 @@ public struct CodeEditor: View {
         guard let range = Range(selection, in: internalText) else { return }
         onSelectionChange?(range)
     }
-}
-
-// MARK: - View Modifiers
-
-@available(macOS 13.0, iOS 16.0, *)
-public extension CodeEditor {
+    
+    // MARK: - View Modifiers
     /// Set the programming language for syntax highlighting
-    func codeLanguage(_ language: Language) -> some View {
+    public func codeLanguage(_ language: Language) -> some View {
         environment(\.codeEditorLanguage, language)
     }
     
     /// Configure line numbers visibility
-    func lineNumbers(_ visible: Bool = true) -> some View {
+    public func lineNumbers(_ visible: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.display.showLineNumbers = visible
         }
     }
     
     /// Configure line highlighting
-    func highlightSelectedLine(_ highlight: Bool = true) -> some View {
+    public func highlightSelectedLine(_ highlight: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.display.highlightSelectedLine = highlight
         }
     }
     
     /// Set the editor theme
-    func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
+    public func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
         environment(\.codeEditorTheme, theme)
     }
     
     /// Configure editor editability
-    func editable(_ isEditable: Bool = true) -> some View {
+    public func editable(_ isEditable: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.behavior.isEditable = isEditable
         }
     }
     
     /// Add text change handler with optional debouncing
-    func onTextChange(
+    public func onTextChange(
         debounce: Duration? = nil,
         perform action: @escaping (String) -> Void
-    ) -> CodeEditor {
+    ) -> Self {
         var copy = self
         copy.onTextChange = action
         if let debounce {
-            copy = CodeEditor(text: _text, debounceInterval: debounce)
+            copy = Self(text: _text, debounceInterval: debounce)
             copy.onTextChange = action
         }
         return copy
     }
     
     /// Add selection change handler
-    func onSelectionChange(
+    public func onSelectionChange(
         perform action: @escaping (Range<String.Index>?) -> Void
-    ) -> CodeEditor {
+    ) -> Self {
         var copy = self
         copy.onSelectionChange = action
         return copy
     }
     
     /// Configure code completion
-    func codeCompletion(
+    public func codeCompletion(
         provider: @escaping (CompletionContext) async -> [SwiftUICompletionItem]
-    ) -> CodeEditor {
+    ) -> Self {
         var copy = self
         copy.completionProvider = provider
         return copy
     }
     
     /// Configure font size
-    func codeFontSize(_ size: CGFloat) -> some View {
+    public func codeFontSize(_ size: CGFloat) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.display.fontSize = size
         }
     }
     
     /// Configure tab width
-    func tabWidth(_ width: Int) -> some View {
+    public func tabWidth(_ width: Int) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.layout.tabWidth = width
         }
     }
     
     /// Show invisible characters
-    func showInvisibleCharacters(_ show: Bool = true) -> some View {
+    public func showInvisibleCharacters(_ show: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.display.showInvisibleCharacters = show
         }
@@ -189,8 +185,9 @@ public extension CodeEditor {
 
 // MARK: - Platform-Specific Representable
 
-@available(macOS 13.0, iOS 16.0, *)
-struct CodeEditorRepresentable {
+#if os(macOS)
+@available(macOS 13.0, *)
+struct CodeEditorRepresentable: NSViewRepresentable {
     @Binding var text: String
     let language: Language
     let theme: CodeEditorSwiftUITheme
@@ -198,11 +195,7 @@ struct CodeEditorRepresentable {
     @Binding var isFocused: Bool
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
-}
-
-#if os(macOS)
-@available(macOS 13.0, *)
-extension CodeEditorRepresentable: NSViewRepresentable {
+    
     func makeNSView(context: Context) -> CodeEditorView {
         let view = CodeEditorView()
         context.coordinator.setup(view: view)
@@ -218,6 +211,8 @@ extension CodeEditorRepresentable: NSViewRepresentable {
     }
     
     class Coordinator: NSObject {
+        deinit {}
+        
         let parent: CodeEditorRepresentable
         
         init(parent: CodeEditorRepresentable) {
@@ -243,7 +238,15 @@ extension CodeEditorRepresentable: NSViewRepresentable {
 }
 #else
 @available(iOS 16.0, *)
-extension CodeEditorRepresentable: UIViewRepresentable {
+struct CodeEditorRepresentable: UIViewRepresentable {
+    @Binding var text: String
+    let language: Language
+    let theme: CodeEditorSwiftUITheme
+    let configuration: EditorConfiguration
+    @Binding var isFocused: Bool
+    let onTextChange: ((String) -> Void)?
+    let onSelectionChange: ((NSRange) -> Void)?
+    
     func makeUIView(context: Context) -> CodeEditorContainerView {
         let container = CodeEditorContainerView()
         context.coordinator.setup(container: container)
@@ -259,6 +262,8 @@ extension CodeEditorRepresentable: UIViewRepresentable {
     }
     
     class Coordinator: NSObject {
+        deinit {}
+        
         let parent: CodeEditorRepresentable
         
         init(parent: CodeEditorRepresentable) {

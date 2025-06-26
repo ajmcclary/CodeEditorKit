@@ -33,7 +33,6 @@ public struct CompletionItemModel: Identifiable, Sendable {
     public let additionalTextEdits: [CompletionTextEdit]
     
     public init(
-        id: String? = nil,
         label: String,
         insertText: String? = nil,
         kind: CompletionItemKind = .text,
@@ -46,7 +45,8 @@ public struct CompletionItemModel: Identifiable, Sendable {
         deprecated: Bool = false,
         preselect: Bool = false,
         textEdit: CompletionTextEdit? = nil,
-        additionalTextEdits: [CompletionTextEdit] = []
+        additionalTextEdits: [CompletionTextEdit] = [],
+        id: String? = nil
     ) {
         self.id = id ?? UUID().uuidString
         self.label = label
@@ -209,8 +209,8 @@ public struct CompletionResult: Sendable {
     
     public init(
         items: [CompletionItemModel],
-        isIncomplete: Bool = false,
         context: CompletionContextModel,
+        isIncomplete: Bool = false,
         processingTime: TimeInterval = 0
     ) {
         self.items = items
@@ -244,21 +244,19 @@ public protocol CompletionProvider: Sendable {
     func resolve(item: CompletionItemModel) async throws -> CompletionItemModel
 }
 
-// MARK: - Default Implementation
-
-public extension CompletionProvider {
-    var supportsSnippets: Bool { false }
+extension CompletionProvider {
+    public var supportsSnippets: Bool { false }
     
-    func resolve(item: CompletionItemModel) async throws -> CompletionItemModel {
+    public func resolve(item: CompletionItemModel) async throws -> CompletionItemModel {
         item // Default: no additional resolution
     }
 }
 
-// MARK: - Completion Manager
-
 /// Manages multiple completion providers and coordinates completion requests
 @MainActor
 public final class CompletionManager: @unchecked Sendable {
+    deinit {}
+    
     private var providers: [String: any CompletionProvider] = [:]
     private var currentRequest: Task<CompletionResult, Error>?
     private let cache: LRUCache<CompletionCacheKey, CachedCompletionResult>
@@ -350,8 +348,8 @@ public final class CompletionManager: @unchecked Sendable {
             guard !applicableProviders.isEmpty else {
                 let result = CompletionResult(
                     items: [],
-                    isIncomplete: false,
                     context: context,
+                    isIncomplete: false,
                     processingTime: 0
                 )
                 statistics.recordRequest(processingTime: 0)
@@ -367,7 +365,7 @@ public final class CompletionManager: @unchecked Sendable {
                             return try await provider.completions(for: context)
                         } catch {
                             // Log error but don't fail the entire request
-                            print("Completion provider \(providerId) failed: \(error)")
+                            // Log error but don't fail the entire request
                             return nil
                         }
                     }
@@ -392,8 +390,8 @@ public final class CompletionManager: @unchecked Sendable {
             
             let result = CompletionResult(
                 items: sortedItems,
-                isIncomplete: isIncomplete,
                 context: context,
+                isIncomplete: isIncomplete,
                 processingTime: processingTime
             )
             
@@ -508,11 +506,11 @@ public final class CompletionManager: @unchecked Sendable {
     }
 }
 
-// MARK: - Completion Statistics
-
 /// Statistics for completion requests and cache performance
 @MainActor
 public final class CompletionStatistics: @unchecked Sendable {
+    deinit {}
+    
     public private(set) var totalRequests: Int = 0
     public private(set) var totalCacheHits: Int = 0
     public private(set) var totalCacheMisses: Int = 0
@@ -562,8 +560,6 @@ public final class CompletionStatistics: @unchecked Sendable {
         processingTimes.removeAll()
     }
 }
-
-// MARK: - Completion Item Adapter
 
 /// Internal adapter for bridging CompletionItemModel to CompletionItem protocol
 @MainActor

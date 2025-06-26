@@ -434,10 +434,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     private func applySyntaxHighlighting() {
+        kLogger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
+        
         guard isSyntaxHighlightingEnabled else {
+            kLogger.debug("❌ Syntax highlighting disabled, cancelling")
             asyncHighlighter.cancelAllHighlighting()
             return
         }
+        
+        kLogger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name)")
         
         // Use async highlighting with debouncing
         asyncHighlighter.scheduleHighlighting(

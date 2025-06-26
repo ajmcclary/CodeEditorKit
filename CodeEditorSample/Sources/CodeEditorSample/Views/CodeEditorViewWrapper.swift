@@ -174,11 +174,12 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     }
 
     private func applyConfiguration(to textView: CodeEditorView) {
-        // Use the plugin's configuration application method
-        configuration.apply(to: textView)
-        
-        // Set language for syntax highlighting using file extension
+        // Set language FIRST, before applying configuration
+        // This ensures syntax highlighting works properly when the configuration enables it
         textView.setLanguage(fileExtension: language)
+        
+        // Then apply the plugin's configuration
+        configuration.apply(to: textView)
     }
 
     // MARK: - Coordinator

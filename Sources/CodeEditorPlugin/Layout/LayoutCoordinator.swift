@@ -10,6 +10,7 @@ import AppKit
 /// Coordinates layout operations to prevent recursive layout cycles
 @MainActor
 public final class LayoutCoordinator {
+    deinit {}
     // MARK: - Properties
     
     private var isPerformingLayout = false

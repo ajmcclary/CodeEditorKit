@@ -5,6 +5,8 @@ import Foundation
 /// Built-in completion provider for Swift language
 @MainActor
 public final class SwiftCompletionProvider: CompletionProvider, @unchecked Sendable {
+    deinit {}
+    
     public let id = "swift-builtin"
     public let supportedLanguages: [Language] = [.swift]
     public let triggerCharacters = [".", "(", "[", "<", " "]
@@ -141,8 +143,8 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
         
         return CompletionResult(
             items: items,
-            isIncomplete: false,
             context: context,
+            isIncomplete: false,
             processingTime: processingTime
         )
     }
@@ -190,61 +192,69 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
     // MARK: - Completion Creation Methods
     
     private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords.filter { keyword in
-            filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-        }.map { keyword in
-            CompletionItemModel(
-                label: keyword,
-                insertText: keyword,
-                kind: .keyword,
-                detail: "Swift keyword",
-                priority: 80,
-                preselect: keyword == filter
-            )
-        }
+        keywords
+            .filter { keyword in
+                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
+            }
+            .map { keyword in
+                CompletionItemModel(
+                    label: keyword,
+                    insertText: keyword,
+                    kind: .keyword,
+                    detail: "Swift keyword",
+                    priority: 80,
+                    preselect: keyword == filter
+                )
+            }
     }
     
     private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
-        types.filter { type in
-            filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
-        }.map { type in
-            CompletionItemModel(
-                label: type,
-                insertText: type,
-                kind: determineTypeKind(type),
-                detail: "Swift type",
-                priority: 70
-            )
-        }
+        types
+            .filter { type in
+                filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
+            }
+            .map { type in
+                CompletionItemModel(
+                    label: type,
+                    insertText: type,
+                    kind: determineTypeKind(type),
+                    detail: "Swift type",
+                    priority: 70
+                )
+            }
     }
     
     private func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
-        literals.filter { literal in
-            filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
-        }.map { literal in
-            CompletionItemModel(
-                label: literal,
-                insertText: literal,
-                kind: .value,
-                detail: "Swift literal",
-                priority: 60
-            )
-        }
+        literals
+            .filter { literal in
+                filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
+            }
+            .map { literal in
+                CompletionItemModel(
+                    label: literal,
+                    insertText: literal,
+                    kind: .value,
+                    detail: "Swift literal",
+                    priority: 60
+                )
+            }
     }
     
     private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets.filter { snippet in
-            filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-        }.map { snippet in
-            CompletionItemModel(
-                label: snippet.label,
-                insertText: snippet.insertText,
-                kind: .snippet,
-                detail: snippet.description,
-                priority: 90,
-                snippetSupport: true
-            )
-        }
+        snippets
+            .filter { snippet in
+                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
+            }
+            .map { snippet in
+                CompletionItemModel(
+                    label: snippet.label,
+                    insertText: snippet.insertText,
+                    kind: .snippet,
+                    detail: snippet.description,
+                    priority: 90,
+                    snippetSupport: true
+                )
+            }
     }
     
     private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
@@ -269,17 +279,19 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
     private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["completion", "handler", "delegate", "error", "result", "value", "index"]
         
-        return commonParameters.filter { param in
-            filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
-        }.map { param in
-            CompletionItemModel(
-                label: param,
-                insertText: param,
-                kind: .variable,
-                detail: "Parameter suggestion",
-                priority: 50
-            )
-        }
+        return commonParameters
+            .filter { param in
+                filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
+            }
+            .map { param in
+                CompletionItemModel(
+                    label: param,
+                    insertText: param,
+                    kind: .variable,
+                    detail: "Parameter suggestion",
+                    priority: 50
+                )
+            }
     }
     
     // MARK: - Type-Specific Members
@@ -296,17 +308,19 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
             ("replacingOccurrences(of:with:)", "method", "Replace occurrences")
         ]
         
-        return members.filter { name, _, _ in
-            filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-        }.map { name, type, description in
-            CompletionItemModel(
-                label: name,
-                insertText: name,
-                kind: type == "method" ? .method : .property,
-                detail: description,
-                priority: 85
-            )
-        }
+        return members
+            .filter { name, _, _ in
+                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
+            }
+            .map { name, type, description in
+                CompletionItemModel(
+                    label: name,
+                    insertText: name,
+                    kind: type == "method" ? .method : .property,
+                    detail: description,
+                    priority: 85
+                )
+            }
     }
     
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -323,17 +337,19 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
             ("forEach(_:)", "method", "Iterate over elements")
         ]
         
-        return members.filter { name, _, _ in
-            filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-        }.map { name, type, description in
-            CompletionItemModel(
-                label: name,
-                insertText: name,
-                kind: type == "method" ? .method : .property,
-                detail: description,
-                priority: 85
-            )
-        }
+        return members
+            .filter { name, _, _ in
+                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
+            }
+            .map { name, type, description in
+                CompletionItemModel(
+                    label: name,
+                    insertText: name,
+                    kind: type == "method" ? .method : .property,
+                    detail: description,
+                    priority: 85
+                )
+            }
     }
     
     private func createDictionaryMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -348,17 +364,19 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
             ("map(_:)", "method", "Transform key-value pairs")
         ]
         
-        return members.filter { name, _, _ in
-            filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-        }.map { name, type, description in
-            CompletionItemModel(
-                label: name,
-                insertText: name,
-                kind: type == "method" ? .method : .property,
-                detail: description,
-                priority: 85
-            )
-        }
+        return members
+            .filter { name, _, _ in
+                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
+            }
+            .map { name, type, description in
+                CompletionItemModel(
+                    label: name,
+                    insertText: name,
+                    kind: type == "method" ? .method : .property,
+                    detail: description,
+                    priority: 85
+                )
+            }
     }
     
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -368,9 +386,11 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
             ("hashValue", "property", "Hash value for Hashable types")
         ]
         
-        return members.filter { name, _, _ in
-            filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-        }.map { name, type, description in
+        return members
+            .filter { name, _, _ in
+                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
+            }
+            .map { name, type, description in
             CompletionItemModel(
                 label: name,
                 insertText: name,
@@ -378,7 +398,7 @@ public final class SwiftCompletionProvider: CompletionProvider, @unchecked Senda
                 detail: description,
                 priority: 40
             )
-        }
+            }
     }
     
     // MARK: - Helper Methods

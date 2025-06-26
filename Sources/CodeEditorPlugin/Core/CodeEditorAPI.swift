@@ -5,8 +5,6 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - CodeEditorAPI
-
 /// Unified API for code editor functionality across platforms
 public protocol CodeEditorAPI: AnyObject {
     // MARK: - Content Management
@@ -120,8 +118,6 @@ public protocol CodeEditorAPI: AnyObject {
     func redo()
 }
 
-// MARK: - FindOptions
-
 /// Options for find operations
 public struct FindOptions: OptionSet, Sendable {
     public let rawValue: Int
@@ -138,10 +134,8 @@ public struct FindOptions: OptionSet, Sendable {
     public static let `default`: FindOptions = []
 }
 
-// MARK: - CodeEditorAPI Extension
-
 /// Default implementations for common functionality
-public extension CodeEditorAPI {
+extension CodeEditorAPI {
     func subscribe(_ handler: EditorEventHandler) {
         eventPublisher.subscribe(handler)
     }
@@ -186,9 +180,7 @@ public extension CodeEditorAPI {
     }
 }
 
-// MARK: - Range Conversion Helpers
-
-public extension CodeEditorAPI {
+extension CodeEditorAPI {
     /// Convert NSRange to Range<String.Index>
     func range(from nsRange: NSRange) -> Range<String.Index>? {
         guard let range = Range(nsRange, in: content) else { return nil }
@@ -201,9 +193,7 @@ public extension CodeEditorAPI {
     }
 }
 
-// MARK: - Convenience Extensions
-
-public extension CodeEditorAPI {
+extension CodeEditorAPI {
     /// Set content and place cursor at end
     func setContent(_ text: String) {
         content = text

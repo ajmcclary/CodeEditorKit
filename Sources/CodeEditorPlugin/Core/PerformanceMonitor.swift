@@ -6,6 +6,7 @@ import os.log
 /// Monitors and reports performance metrics for the code editor
 @MainActor
 public final class PerformanceMonitor {
+    deinit {}
     // MARK: - Singleton
     
     public static let shared = PerformanceMonitor()
@@ -20,7 +21,7 @@ public final class PerformanceMonitor {
     
     /// Start measuring a performance metric
     @discardableResult
-    public func startMeasuring(_ name: String, metadata: [String: Any]? = nil) -> MeasurementToken {
+    public func startMeasuring(_ name: String, metadata: [String: Any] = [:]) -> MeasurementToken {
         let token = MeasurementToken(name: name, startTime: CFAbsoluteTimeGetCurrent())
         
         Task { @MainActor in
@@ -56,14 +57,14 @@ public final class PerformanceMonitor {
     }
     
     /// Measure a block of code
-    public func measure<T>(_ name: String, metadata: [String: Any]? = nil, block: () throws -> T) rethrows -> T {
+    public func measure<T>(_ name: String, metadata: [String: Any] = [:], block: () throws -> T) rethrows -> T {
         let token = startMeasuring(name, metadata: metadata)
         defer { endMeasuring(token) }
         return try block()
     }
     
     /// Measure an async block of code
-    public func measure<T>(_ name: String, metadata: [String: Any]? = nil, block: () async throws -> T) async rethrows -> T {
+    public func measure<T>(_ name: String, metadata: [String: Any] = [:], block: () async throws -> T) async rethrows -> T {
         let token = startMeasuring(name, metadata: metadata)
         defer { endMeasuring(token) }
         return try await block()
@@ -119,7 +120,7 @@ public struct PerformanceMetric {
     public let startTime: CFAbsoluteTime
     public var endTime: CFAbsoluteTime?
     public var duration: TimeInterval?
-    public let metadata: [String: Any]?
+    public let metadata: [String: Any]
     
     public var isComplete: Bool {
         endTime != nil
@@ -144,22 +145,23 @@ public struct PerformanceReport {
         Average Duration: \(String(format: "%.2f", averageDuration * 1_000))ms
         
         Slowest Operations:
-        \(slowestOperations.enumerated().map { index, metric in
-            "\(index + 1). \(metric.name): \(String(format: "%.2f", (metric.duration ?? 0) * 1_000))ms"
-        }.joined(separator: "\n"))
+        \(slowestOperations
+            .enumerated()
+            .map { index, metric in
+                "\(index + 1). \(metric.name): \(String(format: "%.2f", (metric.duration ?? 0) * 1_000))ms"
+            }
+            .joined(separator: "\n"))
         """
     }
 }
 
 // MARK: - Performance Categories
 
-public extension PerformanceMonitor {
-    enum Category {
-        static let syntaxHighlighting = "SyntaxHighlighting"
-        static let textLayout = "TextLayout"
-        static let annotationUpdate = "AnnotationUpdate"
-        static let viewportRendering = "ViewportRendering"
-        static let textInsertion = "TextInsertion"
-        static let configurationUpdate = "ConfigurationUpdate"
-    }
+enum PerformanceCategory {
+    static let syntaxHighlighting = "SyntaxHighlighting"
+    static let textLayout = "TextLayout"
+    static let annotationUpdate = "AnnotationUpdate"
+    static let viewportRendering = "ViewportRendering"
+    static let textInsertion = "TextInsertion"
+    static let configurationUpdate = "ConfigurationUpdate"
 }

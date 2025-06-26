@@ -47,6 +47,11 @@ public final class CompletionDebouncer: ObservableObject {
         self.completionHandler = handler
     }
     
+    deinit {
+        // Note: Cannot call @MainActor isolated methods in deinit
+        // Timer and Task will be cleaned up automatically by ARC
+    }
+    
     // MARK: - Public Methods
     
     /// Request completions with debouncing and throttling
@@ -339,6 +344,8 @@ public final class DebouncingStatistics: ObservableObject {
         droppedRequests = 0
         cancelledRequests = 0
     }
+    
+    deinit {}
 }
 
 /// Analyzes typing patterns for smart debouncing
@@ -378,6 +385,8 @@ private final class TypingPatternAnalyzer {
             return .paused
         }
     }
+    
+    deinit {}
 }
 
 /// Typing pattern classifications

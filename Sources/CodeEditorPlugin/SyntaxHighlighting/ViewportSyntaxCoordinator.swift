@@ -33,6 +33,11 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         registerWithMemoryMonitor()
     }
     
+    deinit {
+        // Note: Cannot access @MainActor isolated properties in deinit
+        // Cache will be cleaned up automatically by ARC
+    }
+    
     /// Update the visible range and trigger highlighting if needed
     /// - Parameters:
     ///   - range: The currently visible text range
@@ -285,6 +290,8 @@ public final class ViewportStatistics: ObservableObject {
         totalHighlights > 0 ? Double(cacheHits) / Double(totalHighlights) : 0
     }
     
+    deinit {}
+    
     internal func recordHighlighting(range _: NSRange, tokenCount: Int, processingTime: TimeInterval) {
         totalHighlights += 1
         lastHighlightTime = Date()
@@ -330,7 +337,7 @@ public final class ViewportStatistics: ObservableObject {
 
 // MARK: - NSRange Extension
 
-private extension NSRange {
+extension NSRange {
     var upperBound: Int {
         location + length
     }

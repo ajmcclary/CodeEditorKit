@@ -1,9 +1,12 @@
 import Foundation
+import os.log
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
+
+private let kLogger = Logger(subsystem: "com.codeeditor.syntaxhighlighting", category: "AsyncSyntaxHighlighter")
 
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
@@ -144,7 +147,8 @@ public final class AsyncSyntaxHighlighter {
         )
         
         // Check cache first
-        if let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey) {
+        let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey)
+        if !cachedTokens.isEmpty {
             applyTokens(cachedTokens, to: textView, visibleRange: visibleRange)
             return
         }
@@ -235,10 +239,14 @@ public final class AsyncSyntaxHighlighter {
         to textView: CodeEditorView,
         visibleRange: NSRange? = nil
     ) {
-        guard textView.textContentStorage != nil else { return }
+        // Get text storage - works for both TextKit1 and TextKit2
+        guard let textStorage = textView.textStorage else { 
+            kLogger.debug("❌ No text storage available for applying tokens")
+            return 
+        }
         
-        // Create attributed string
-        let attributedString = NSMutableAttributedString(string: textView.string)
+        // Log highlighting application
+        kLogger.debug("✅ Applying \(tokens.count) syntax highlighting tokens")
         
         // Determine range to apply
         let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: textView.string.count)
@@ -248,25 +256,23 @@ public final class AsyncSyntaxHighlighter {
             ? tokens.filter { $0.range.intersection(rangeToHighlight) != nil }
             : tokens
         
-        // Apply highlighting
-        coordinator.applyHighlighting(to: attributedString, tokens: tokensToApply)
+        kLogger.debug("📝 Applying \(tokensToApply.count) tokens to range \(rangeToHighlight)")
         
-        // Update text storage efficiently with TextKit1 fallback
-        if let textStorage = textView.textStorage {
-            // Use TextKit1 approach
-            textStorage.beginEditing()
-            
-            // Remove existing syntax highlighting attributes
-            textStorage.removeAttribute(.foregroundColor, range: rangeToHighlight)
-            
-            // Apply new highlighting
-            for token in tokensToApply {
-                guard token.range.location + token.range.length <= textStorage.length else { continue }
-                textStorage.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
-            }
-            
-            textStorage.endEditing()
+        // Update text storage efficiently with both TextKit1 and TextKit2 support
+        textStorage.beginEditing()
+        
+        // Remove existing syntax highlighting attributes
+        textStorage.removeAttribute(.foregroundColor, range: rangeToHighlight)
+        
+        // Apply new highlighting
+        for token in tokensToApply {
+            guard token.range.location + token.range.length <= textStorage.length else { continue }
+            textStorage.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
+        
+        textStorage.endEditing()
+        
+        kLogger.debug("✅ Syntax highlighting applied successfully")
     }
     
     private func clearHighlighting(for textView: CodeEditorView) {
@@ -379,7 +385,7 @@ actor SmartTokenCache {
     
     // MARK: - Public Methods
     
-    func getCachedTokens(for key: CacheKey) -> [HighlightedToken]? {
+    func getCachedTokens(for key: CacheKey) -> [HighlightedToken] {
         if var entry = cache[key] {
             // Check if entry is stale
             if Date().timeIntervalSince(entry.timestamp) > staleThreshold {
@@ -387,7 +393,7 @@ actor SmartTokenCache {
                 cache.removeValue(forKey: key)
                 accessOrder.removeAll { $0 == key }
                 missCount += 1
-                return nil
+                return []
             }
             
             // Update access count and order
@@ -409,7 +415,7 @@ actor SmartTokenCache {
         }
         
         missCount += 1
-        return nil
+        return []
     }
     
     func setCachedTokens(
@@ -558,6 +564,7 @@ public struct TokenCacheStatistics: Sendable {
 /// Simple performance monitoring for syntax highlighting
 @MainActor
 final class SyntaxHighlightingPerformanceMonitor {
+    deinit {}
     enum Category: String {
         case syntaxHighlighting = "SyntaxHighlighting"
         case tokenApplication = "TokenApplication"
@@ -592,7 +599,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         
         // Log slow operations
         if duration > 0.1 {
-            print("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration))s")
+            kLogger.debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration))s")
         }
     }
     

@@ -7,13 +7,13 @@ public struct InitializeParams: Codable, Sendable {
     public let processId: Int32?
     public let rootUri: String?
     public let capabilities: ClientCapabilities
-    public let workspaceFolders: [WorkspaceFolder]?
+    public let workspaceFolders: [WorkspaceFolder]
     
     public init(
         processId: Int32?,
         rootUri: String?,
         capabilities: ClientCapabilities,
-        workspaceFolders: [WorkspaceFolder]? = nil
+        workspaceFolders: [WorkspaceFolder] = []
     ) {
         self.processId = processId
         self.rootUri = rootUri
@@ -137,8 +137,8 @@ public struct LSPCompletionItem: Codable, Sendable {
     public let insertText: String?
     public let insertTextFormat: InsertTextFormat?
     public let textEdit: LSPTextEdit?
-    public let additionalTextEdits: [LSPTextEdit]?
-    public let commitCharacters: [String]?
+    public let additionalTextEdits: [LSPTextEdit]
+    public let commitCharacters: [String]
     public let data: AnyCodable?
     
     public init(
@@ -151,8 +151,8 @@ public struct LSPCompletionItem: Codable, Sendable {
         insertText: String? = nil,
         insertTextFormat: InsertTextFormat? = nil,
         textEdit: LSPTextEdit? = nil,
-        additionalTextEdits: [LSPTextEdit]? = nil,
-        commitCharacters: [String]? = nil,
+        additionalTextEdits: [LSPTextEdit] = [],
+        commitCharacters: [String] = [],
         data: AnyCodable? = nil
     ) {
         self.label = label
@@ -211,9 +211,13 @@ public enum CompletionItemDocumentation: Codable, Sendable {
         } else if let markupValue = try? container.decode(MarkupContent.self) {
             self = .markupContent(markupValue)
         } else {
-            throw DecodingError.typeMismatch(Self.self,
-                DecodingError.Context(codingPath: decoder.codingPath,
-                                    debugDescription: "Expected string or MarkupContent"))
+            throw DecodingError.typeMismatch(
+                Self.self,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Expected string or MarkupContent"
+                )
+            )
         }
     }
     
@@ -286,9 +290,13 @@ public enum HoverContents: Codable, Sendable {
         } else if let markedStringsValue = try? container.decode([MarkedString].self) {
             self = .markedStrings(markedStringsValue)
         } else {
-            throw DecodingError.typeMismatch(Self.self,
-                DecodingError.Context(codingPath: decoder.codingPath,
-                                    debugDescription: "Expected string, MarkupContent, or [MarkedString]"))
+            throw DecodingError.typeMismatch(
+                Self.self,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Expected string, MarkupContent, or [MarkedString]"
+                )
+            )
         }
     }
     
@@ -320,9 +328,13 @@ public enum MarkedString: Codable, Sendable {
         } else {
             let dict = try container.decode([String: String].self)
             guard let language = dict["language"], let value = dict["value"] else {
-                throw DecodingError.typeMismatch(Self.self,
-                    DecodingError.Context(codingPath: decoder.codingPath,
-                                        debugDescription: "Expected language and value keys"))
+                throw DecodingError.typeMismatch(
+                    Self.self,
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Expected language and value keys"
+                    )
+                )
             }
             self = .codeBlock(language: language, value: value)
         }
@@ -331,10 +343,10 @@ public enum MarkedString: Codable, Sendable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
-        case .string(let value):
+        case let .string(value):
             try container.encode(value)
 
-        case .codeBlock(let language, let value):
+        case let .codeBlock(language, value):
             try container.encode(["language": language, "value": value])
         }
     }
@@ -364,24 +376,24 @@ public struct DocumentSymbolParams: Codable, Sendable {
     }
 }
 
-/// Document symbol
-public struct DocumentSymbol: Codable, Sendable {
+/// LSP Document symbol
+public struct LSPDocumentSymbol: Codable, Sendable {
     public let name: String
     public let detail: String?
     public let kind: SymbolKind
-    public let tags: [SymbolTag]?
+    public let tags: [SymbolTag]
     public let range: LSPRange
     public let selectionRange: LSPRange
-    public let children: [Self]?
+    public let children: [Self]
     
     public init(
         name: String,
-        detail: String? = nil,
         kind: SymbolKind,
-        tags: [SymbolTag]? = nil,
         range: LSPRange,
         selectionRange: LSPRange,
-        children: [Self]? = nil
+        detail: String? = nil,
+        tags: [SymbolTag] = [],
+        children: [Self] = []
     ) {
         self.name = name
         self.detail = detail
@@ -436,7 +448,7 @@ public struct PublishDiagnosticsParams: Codable, Sendable {
     public let version: Int?
     public let diagnostics: [Diagnostic]
     
-    public init(uri: String, version: Int? = nil, diagnostics: [Diagnostic]) {
+    public init(uri: String, diagnostics: [Diagnostic], version: Int? = nil) {
         self.uri = uri
         self.version = version
         self.diagnostics = diagnostics
@@ -495,7 +507,7 @@ public enum LSPError: Error, LocalizedError, Sendable {
         case .alreadyConnected:
             return "Already connected to LSP server"
 
-        case .serverError(let code, let message, _):
+        case let .serverError(code, message, _):
             return "LSP server error (\(code)): \(message)"
 
         case .invalidResponse(let message):

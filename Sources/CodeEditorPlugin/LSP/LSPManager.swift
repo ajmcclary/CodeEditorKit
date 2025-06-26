@@ -18,8 +18,8 @@ public final class LSPManager: ObservableObject {
         public init(
             languageId: String,
             serverPath: String,
-            serverArguments: [String] = [],
             fileExtensions: [String],
+            serverArguments: [String] = [],
             capabilities: ClientCapabilities = .default,
             autoStart: Bool = true
         ) {
@@ -72,7 +72,7 @@ public final class LSPManager: ObservableObject {
     }
     
     @MainActor
-    public struct LSPCompletionItem: CompletionItem, Sendable {
+    public struct LSPCompletionItem: CompletionItem {
         public let item: any CompletionItem
         public let languageId: String
         public let client: LSPClient
@@ -97,8 +97,38 @@ public final class LSPManager: ObservableObject {
         self.workspaceRoot = workspaceRoot
         setupDefaultConfigurations()
         
-        // Register with memory monitor
-        registerWithMemoryMonitor()
+        // Register with memory monitor after initialization
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            MemoryMonitor.shared.registerCleanupHandler(
+                identifier: "lsp-manager",
+                priority: .normal
+            ) { @MainActor [weak self] in
+                guard let self else {
+                    return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
+                }
+                
+                let beforeClientCount = self.activeClients.count
+                let beforeDocumentCount = self.openDocuments.count
+                
+                // Disconnect all clients
+                for client in self.activeClients.values {
+                    client.disconnect()
+                }
+                self.activeClients.removeAll()
+                
+                // Clear open documents
+                self.openDocuments.removeAll()
+                
+                // Estimate memory freed (rough estimate)
+                let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
+                
+                return CleanupResult(
+                    memoryFreedMB: estimatedMemoryMB,
+                    description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
+                )
+            }
+        }
     }
     
     deinit {
@@ -140,10 +170,8 @@ public final class LSPManager: ObservableObject {
     public func languageId(for fileExtension: String) -> String? {
         let ext = fileExtension.hasPrefix(".") ? fileExtension : ".\(fileExtension)"
         
-        for (languageId, config) in serverConfigurations {
-            if config.fileExtensions.contains(ext) {
-                return languageId
-            }
+        for (languageId, config) in serverConfigurations where config.fileExtensions.contains(ext) {
+            return languageId
         }
         
         return nil
@@ -265,7 +293,7 @@ public final class LSPManager: ObservableObject {
     public func updateDocument(
         filePath: String,
         content: String,
-        changes: [TextDocumentContentChangeEvent]? = nil
+        changes: [TextDocumentContentChangeEvent] = []
     ) async throws {
         let uri = "file://\(filePath)"
         
@@ -282,9 +310,9 @@ public final class LSPManager: ObservableObject {
             return
         }
         
-        let finalChanges = changes ?? [
+        let finalChanges = changes.isEmpty ? [
             TextDocumentContentChangeEvent(text: content)
-        ]
+        ] : changes
         
         try await client.updateDocument(
             uri: uri,
@@ -338,14 +366,16 @@ public final class LSPManager: ObservableObject {
         let position = Position(line: line, character: character)
         let completionList = try await client.requestCompletion(uri: uri, position: position)
         
-        let items: [LSPCompletionItem] = completionList.items.map { lspItem in
+        return completionList.items.map { lspItem in
             // Convert LSP completion item to our completion item format
             let documentationText: String? = {
                 switch lspItem.documentation {
                 case .string(let text):
                     return text
+
                 case .markupContent(let content):
                     return content.value
+
                 case .none:
                     return nil
                 }
@@ -361,8 +391,7 @@ public final class LSPManager: ObservableObject {
                 )
             )
             return LSPCompletionItem(item: convertedItem, languageId: document.languageId, client: client)
-        }
-        return items
+        } as [LSPCompletionItem]
     }
     
     /// Request hover information
@@ -442,32 +471,32 @@ public final class LSPManager: ObservableObject {
         registerLanguageServer(LanguageServerConfig(
             languageId: "typescript",
             serverPath: "/usr/local/bin/typescript-language-server",
-            serverArguments: ["--stdio"],
-            fileExtensions: [".ts", ".tsx", ".js", ".jsx"]
+            fileExtensions: [".ts", ".tsx", ".js", ".jsx"],
+            serverArguments: ["--stdio"]
         ))
         
         // Python (requires pylsp)
         registerLanguageServer(LanguageServerConfig(
             languageId: "python",
             serverPath: "/usr/local/bin/pylsp",
-            serverArguments: [],
-            fileExtensions: [".py"]
+            fileExtensions: [".py"],
+            serverArguments: []
         ))
         
         // Rust (requires rust-analyzer)
         registerLanguageServer(LanguageServerConfig(
             languageId: "rust",
             serverPath: "/usr/local/bin/rust-analyzer",
-            serverArguments: [],
-            fileExtensions: [".rs"]
+            fileExtensions: [".rs"],
+            serverArguments: []
         ))
         
         // Go (requires gopls)
         registerLanguageServer(LanguageServerConfig(
             languageId: "go",
             serverPath: "/usr/local/bin/gopls",
-            serverArguments: [],
-            fileExtensions: [".go"]
+            fileExtensions: [".go"],
+            serverArguments: []
         ))
     }
     
@@ -496,13 +525,12 @@ public final class LSPManager: ObservableObject {
     private func reopenDocuments(for languageId: String) async {
         guard let client = activeClients[languageId] else { return }
         
-        for document in openDocuments.values {
-            if document.languageId == languageId {
-                do {
-                    // Read current file content
-                    let content = try String(contentsOfFile: document.filePath, encoding: .utf8)
-                    
-                    try await client.openDocument(
+        for document in openDocuments.values where document.languageId == languageId {
+            do {
+                // Read current file content
+                let content = try String(contentsOfFile: document.filePath, encoding: .utf8)
+                
+                try await client.openDocument(
                         uri: document.uri,
                         languageId: document.languageId,
                         version: document.version,
@@ -515,37 +543,3 @@ public final class LSPManager: ObservableObject {
         }
     }
     
-    /// Register with memory monitor for cleanup
-    private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
-                identifier: "lsp-manager",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
-                }
-                
-                let beforeClientCount = self.activeClients.count
-                let beforeDocumentCount = self.openDocuments.count
-                
-                // Disconnect all clients
-                for client in self.activeClients.values {
-                    client.disconnect()
-                }
-                self.activeClients.removeAll()
-                
-                // Clear open documents
-                self.openDocuments.removeAll()
-                
-                // Estimate memory freed (rough estimate)
-                let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
-                
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
-                )
-            }
-        }
-    }
-}

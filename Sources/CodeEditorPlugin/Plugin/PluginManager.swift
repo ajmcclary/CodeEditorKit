@@ -480,12 +480,14 @@ public final class PluginManager: ObservableObject {
     
     /// Get plugins supporting a language
     public func plugins(supporting language: Language) -> [any LanguagePlugin] {
-        plugins.values.filter { plugin in
-            plugin.fileExtensions.contains { ext in
-                // This is a simplified check - in reality you'd want more sophisticated matching
-                language.name.lowercased().contains(ext.lowercased())
+        plugins.values
+            .filter { plugin in
+                plugin.fileExtensions.contains { ext in
+                    // This is a simplified check - in reality you'd want more sophisticated matching
+                    language.name.lowercased().contains(ext.lowercased())
+                }
             }
-        }.sorted { $0.displayName < $1.displayName }
+            .sorted { $0.displayName < $1.displayName }
     }
     
     // MARK: - Error Handling
@@ -543,9 +545,9 @@ public final class PluginManager: ObservableObject {
             let languageName = language.name.lowercased()
             let languageId = language.identifier.lowercased()
             
-            return identifier.contains(languageName) ||
-                   identifier.contains(languageId) ||
-                   languageName.contains(identifier)
+            return identifier.contains(languageName)
+                || identifier.contains(languageId)
+                || languageName.contains(identifier)
         }
         
         for loader in relevantLoaders {
@@ -696,6 +698,8 @@ public struct DefaultLazyPluginLoader: LazyPluginLoader {
 /// Statistics for lazy loading performance
 @MainActor
 public final class LazyLoadingStatistics: ObservableObject {
+    deinit {}
+    
     @Published public private(set) var totalRegistrations: Int = 0
     @Published public private(set) var totalLoads: Int = 0
     @Published public private(set) var successfulLoads: Int = 0

@@ -3,7 +3,10 @@ import Foundation
 /// A thread-safe LRU (Least Recently Used) cache implementation
 @MainActor
 public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
+    deinit {}
     private final class Node {
+        deinit {}
+        
         let key: Key
         var value: Value
         var prev: Node?
@@ -17,8 +20,8 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     
     private var capacity: Int
     private var cache: [Key: Node] = [:]
-    private let head = Node(key: "" as! Key, value: "" as! Value) // Dummy head
-    private let tail = Node(key: "" as! Key, value: "" as! Value) // Dummy tail
+    private var head: Node?
+    private var tail: Node?
     private let cacheId = UUID().uuidString
     
     /// Total number of items currently in cache
@@ -31,8 +34,6 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     /// - Parameter capacity: Maximum number of items to store
     public init(capacity: Int) {
         self.capacity = max(1, capacity)
-        head.next = tail
-        tail.prev = head
         
         // Register with memory monitor for cleanup
         registerWithMemoryMonitor()
@@ -71,8 +72,9 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
             
             // Remove least recently used if over capacity
             if cache.count > capacity {
-                let tail = removeTail()
-                cache.removeValue(forKey: tail.key)
+                if let removedNode = removeTail() {
+                    cache.removeValue(forKey: removedNode.key)
+                }
             }
         }
     }
@@ -90,8 +92,8 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     /// Removes all items from the cache
     public func removeAll() {
         cache.removeAll()
-        head.next = tail
-        tail.prev = head
+        head = nil
+        tail = nil
     }
     
     /// Checks if the cache contains a value for the given key
@@ -104,10 +106,10 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     /// Returns all keys in the cache, ordered from most to least recently used
     public var allKeys: [Key] {
         var keys: [Key] = []
-        var current = head.next
-        while current !== tail {
-            keys.append(current!.key)
-            current = current!.next
+        var current = head
+        while let node = current {
+            keys.append(node.key)
+            current = node.next
         }
         return keys
     }
@@ -124,15 +126,35 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     // MARK: - Private Methods
     
     private func addToHead(_ node: Node) {
-        node.prev = head
-        node.next = head.next
-        head.next?.prev = node
-        head.next = node
+        node.prev = nil
+        node.next = head
+        head?.prev = node
+        head = node
+        
+        // If this is the first node, also set it as tail
+        if tail == nil {
+            tail = node
+        }
     }
     
     private func removeNode(_ node: Node) {
+        // Update head if needed
+        if node === head {
+            head = node.next
+        }
+        
+        // Update tail if needed
+        if node === tail {
+            tail = node.prev
+        }
+        
+        // Update neighbor connections
         node.prev?.next = node.next
         node.next?.prev = node.prev
+        
+        // Clear node's references
+        node.prev = nil
+        node.next = nil
     }
     
     private func moveToHead(_ node: Node) {
@@ -140,8 +162,8 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
         addToHead(node)
     }
     
-    private func removeTail() -> Node {
-        let lastNode = tail.prev!
+    private func removeTail() -> Node? {
+        guard let lastNode = tail else { return nil }
         removeNode(lastNode)
         return lastNode
     }
@@ -162,8 +184,9 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
                 
                 for _ in 0..<itemsToRemove {
                     if !self.isEmpty {
-                        let tail = self.removeTail()
-                        self.cache.removeValue(forKey: tail.key)
+                        if let removedNode = self.removeTail() {
+                            self.cache.removeValue(forKey: removedNode.key)
+                        }
                     } else {
                         break
                     }

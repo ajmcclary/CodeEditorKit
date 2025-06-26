@@ -2,7 +2,80 @@ import Foundation
 
 // MARK: - LanguageFeatures Namespace
 
-public enum LanguageFeatures {}
+public enum LanguageFeatures {
+    // MARK: - Symbol Types
+    
+    /// Document symbol
+    public struct DocumentSymbol: Identifiable, Equatable, Sendable {
+        public let id: String
+        public let name: String
+        public let detail: String?
+        public let kind: LanguageSymbolKind
+        public let range: NSRange
+        public let selectionRange: NSRange
+        public let children: [Self]
+        
+        public init(
+            name: String,
+            kind: LanguageSymbolKind,
+            range: NSRange,
+            selectionRange: NSRange,
+            id: String = UUID().uuidString,
+            detail: String? = nil,
+            children: [Self] = []
+        ) {
+            self.id = id
+            self.name = name
+            self.detail = detail
+            self.kind = kind
+            self.range = range
+            self.selectionRange = selectionRange
+            self.children = children
+        }
+    }
+    
+    /// Workspace symbol
+    public struct WorkspaceSymbol: Identifiable, Equatable, Sendable {
+        public let id: String
+        public let name: String
+        public let kind: LanguageSymbolKind
+        public let location: SymbolLocation
+        public let containerName: String?
+        
+        public init(
+            name: String,
+            kind: LanguageSymbolKind,
+            location: SymbolLocation,
+            id: String = UUID().uuidString,
+            containerName: String? = nil
+        ) {
+            self.id = id
+            self.name = name
+            self.kind = kind
+            self.location = location
+            self.containerName = containerName
+        }
+        
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.id == rhs.id &&
+            lhs.name == rhs.name &&
+            lhs.kind == rhs.kind &&
+            lhs.location == rhs.location &&
+            lhs.containerName == rhs.containerName
+        }
+    }
+    
+    /// Symbol location
+    public struct SymbolLocation: Equatable, Sendable {
+        public let filePath: String
+        public let range: NSRange
+        
+        public init(filePath: String, range: NSRange) {
+            self.filePath = filePath
+            self.range = range
+        }
+    }
+}
 
 // MARK: - Code Formatter Protocol
 
@@ -46,9 +119,9 @@ public struct FormattingOptions: Equatable, Codable, Sendable {
 
 /// Indentation style
 public enum IndentStyle: String, CaseIterable, Codable, Sendable {
-    case spaces = "spaces"
-    case tabs = "tabs"
-    case mixed = "mixed"
+    case spaces
+    case tabs
+    case mixed
 }
 
 /// Bracket placement style
@@ -99,10 +172,10 @@ public struct LintIssue: Identifiable, Equatable, Codable, Sendable {
     public let fixes: [LintFix]
     
     public init(
-        id: String = UUID().uuidString,
         range: NSRange,
         severity: LintSeverity,
         message: String,
+        id: String = UUID().uuidString,
         ruleId: String? = nil,
         source: String? = nil,
         fixes: [LintFix] = []
@@ -119,10 +192,10 @@ public struct LintIssue: Identifiable, Equatable, Codable, Sendable {
 
 /// Severity levels for lint issues
 public enum LintSeverity: String, CaseIterable, Codable, Sendable {
-    case error = "error"
-    case warning = "warning"
-    case info = "info"
-    case hint = "hint"
+    case error
+    case warning
+    case info
+    case hint
 }
 
 /// Automatic fix for a lint issue
@@ -219,8 +292,8 @@ public struct DocumentationResult: Equatable, Sendable {
 /// Documentation format
 public enum DocumentationFormat: String, CaseIterable, Codable, Sendable {
     case plainText = "plaintext"
-    case markdown = "markdown"
-    case html = "html"
+    case markdown
+    case html
 }
 
 /// Documentation item for search results
@@ -233,10 +306,10 @@ public struct DocumentationItem: Identifiable, Equatable, Sendable {
     public let score: Double
     
     public init(
-        id: String = UUID().uuidString,
         title: String,
         summary: String,
         category: String,
+        id: String = UUID().uuidString,
         url: URL? = nil,
         score: Double = 0.0
     ) {
@@ -256,7 +329,7 @@ public struct CodeExample: Equatable, Sendable {
     public let language: String
     public let description: String?
     
-    public init(title: String? = nil, code: String, language: String, description: String? = nil) {
+    public init(code: String, language: String, title: String? = nil, description: String? = nil) {
         self.title = title
         self.code = code
         self.language = language
@@ -289,80 +362,6 @@ public protocol SymbolProvider: Sendable {
     
     /// Find implementations of symbol at position
     func implementations(at position: Int, in source: String) async throws -> [LanguageFeatures.SymbolLocation]
-}
-
-// MARK: - Symbol Types
-
-extension LanguageFeatures {
-    /// Document symbol
-    public struct DocumentSymbol: Identifiable, Equatable, Sendable {
-    public let id: String
-    public let name: String
-    public let detail: String?
-    public let kind: LanguageSymbolKind
-    public let range: NSRange
-    public let selectionRange: NSRange
-    public let children: [Self]
-    
-    public init(
-        id: String = UUID().uuidString,
-        name: String,
-        detail: String? = nil,
-        kind: LanguageSymbolKind,
-        range: NSRange,
-        selectionRange: NSRange,
-        children: [Self] = []
-    ) {
-        self.id = id
-        self.name = name
-        self.detail = detail
-        self.kind = kind
-        self.range = range
-        self.selectionRange = selectionRange
-        self.children = children
-    }
-    }
-    /// Workspace symbol
-    public struct WorkspaceSymbol: Identifiable, Equatable, Sendable {
-        public let id: String
-        public let name: String
-        public let kind: LanguageSymbolKind
-        public let location: SymbolLocation
-        public let containerName: String?
-        
-        public init(
-            id: String = UUID().uuidString,
-            name: String,
-            kind: LanguageSymbolKind,
-            location: SymbolLocation,
-            containerName: String? = nil
-        ) {
-            self.id = id
-            self.name = name
-            self.kind = kind
-            self.location = location
-            self.containerName = containerName
-        }
-        
-        public static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.id == rhs.id &&
-            lhs.name == rhs.name &&
-            lhs.kind == rhs.kind &&
-            lhs.location == rhs.location &&
-            lhs.containerName == rhs.containerName
-        }
-    }
-
-    /// Symbol location
-    public struct SymbolLocation: Equatable, Sendable {
-        public let filePath: String
-        public let range: NSRange
-        
-        public init(filePath: String, range: NSRange) {
-            self.filePath = filePath
-            self.range = range
-        }
-    }
 }
 
 /// Language feature symbol kinds

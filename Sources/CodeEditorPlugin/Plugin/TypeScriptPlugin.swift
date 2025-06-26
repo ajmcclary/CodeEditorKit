@@ -1,10 +1,15 @@
 import Foundation
+import os.log
 
 // MARK: - TypeScript Language Plugin
 
 /// Sample TypeScript language plugin demonstrating the plugin architecture
 @MainActor
 public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
+    // MARK: - Properties
+    
+    private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "TypeScriptPlugin")
+    
     // MARK: - LanguageProvider Implementation
     
     public let identifier = "typescript"
@@ -14,6 +19,8 @@ public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
     nonisolated public var documentationURL: URL? {
         URL(string: "https://www.typescriptlang.org/docs/")
     }
+    
+    deinit {}
     
     public func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -151,12 +158,12 @@ public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
     
     public func activate() async throws {
         // Initialize TypeScript-specific resources
-        print("TypeScript plugin activated")
+        logger.debug("TypeScript plugin activated")
     }
     
     public func deactivate() async {
         // Clean up TypeScript-specific resources
-        print("TypeScript plugin deactivated")
+        logger.debug("TypeScript plugin deactivated")
     }
     
     nonisolated public func validateCompatibility(editorVersion: String) -> PluginValidationResult {
@@ -178,6 +185,8 @@ private final class TypeScriptCompletionProvider: CompletionProvider, @unchecked
         Language(name: "TypeScript React", identifier: "typescriptreact")
     ]
     let triggerCharacters = [".", "(", "[", "<", " ", ":", ","]
+    
+    deinit {}
     
     func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         var completions: [CompletionItemModel] = []
@@ -217,8 +226,8 @@ private final class TypeScriptCompletionProvider: CompletionProvider, @unchecked
         
         return CompletionResult(
             items: completions,
-            isIncomplete: false,
             context: context,
+            isIncomplete: false,
             processingTime: 0
         )
     }
@@ -235,13 +244,18 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
     ]
     let supportsRangeFormatting = true
     
+    deinit {}
+    
     func format(source: String, options: FormattingOptions) async throws -> String {
         // Simple TypeScript formatting (in a real implementation, this would use Prettier or similar)
         formatTypeScript(source: source, options: options)
     }
     
     func formatRange(source: String, range: NSRange, options: FormattingOptions) async throws -> String {
-        let substring = (source as NSString).substring(with: range)
+        guard let swiftRange = Range(range, in: source) else {
+            return source
+        }
+        let substring = String(source[swiftRange])
         return formatTypeScript(source: substring, options: options)
     }
     
@@ -260,8 +274,8 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
         var indentLevel = 0
         let indentString = options.insertSpaces ? String(repeating: " ", count: options.tabSize) : "\t"
         
-        for i in 0..<lines.count {
-            let line = lines[i].trimmingCharacters(in: .whitespaces)
+        for index in 0..<lines.count {
+            let line = lines[index].trimmingCharacters(in: .whitespaces)
             
             // Decrease indent for closing braces
             if line.hasPrefix("}") || line.hasPrefix("]") || line.hasPrefix(")") {
@@ -270,7 +284,7 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
             
             // Apply indentation
             if !line.isEmpty {
-                lines[i] = String(repeating: indentString, count: indentLevel) + line
+                lines[index] = String(repeating: indentString, count: indentLevel) + line
             }
             
             // Increase indent for opening braces
@@ -352,7 +366,7 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
 
 // MARK: - String Extension
 
-private extension String {
+extension String {
     var trimmingCharacters: String {
         trimmingCharacters(in: .whitespaces)
     }
@@ -362,6 +376,6 @@ private extension String {
     }
 }
 
-private extension CharacterSet {
+extension CharacterSet {
     static let leadingWhitespace = CharacterSet(charactersIn: " \t")
 }

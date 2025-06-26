@@ -8,6 +8,8 @@ import UIKit
 /// Optimizes TextKit2 rendering performance for large files
 @MainActor
 public final class TextKit2RenderingOptimizer: ObservableObject {
+    deinit {}
+    
     // MARK: - Configuration
     
     /// Maximum number of text layout fragments to keep in memory
@@ -94,7 +96,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     /// Optimize layout for large files
     public func optimizeLargeFileLayout() {
         guard let textLayoutManager,
-              let _ = textContentStorage else { return }
+              textContentStorage != nil else { return }
         
         let startTime = Date()
         
@@ -120,7 +122,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     ///   - direction: Direction of scrolling/navigation
     ///   - distance: Distance to prefetch (in characters)
     public func prefetchLayout(direction: ScrollDirection, distance: Int = 5_000) {
-        guard let textLayoutManager,
+        guard textLayoutManager != nil,
               enableViewportOptimization else { return }
         
         let prefetchRange: NSRange
@@ -151,11 +153,9 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
         let expandedRange = calculateExpandedRange(visibleRange)
         var removedCount = 0
         
-        for (range, _) in fragmentCache {
-            if !expandedRange.intersects(range) {
-                fragmentCache.removeValue(forKey: range)
-                removedCount += 1
-            }
+        for (range, _) in fragmentCache where NSIntersectionRange(expandedRange, range).length == 0 {
+            fragmentCache.removeValue(forKey: range)
+            removedCount += 1
         }
         
         renderingStats.recordFragmentCleanup(removedCount: removedCount)
@@ -213,10 +213,8 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     private func cleanupFragmentsOutside(_ keepRange: NSRange) {
         var toRemove: [NSRange] = []
         
-        for (range, _) in fragmentCache {
-            if !keepRange.intersects(range) {
-                toRemove.append(range)
-            }
+        for (range, _) in fragmentCache where NSIntersectionRange(keepRange, range).length == 0 {
+            toRemove.append(range)
         }
         
         for range in toRemove {
@@ -255,7 +253,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     
     private func isRangeCached(_ range: NSRange) -> Bool {
         fragmentCache.contains { cachedRange, _ in
-            cachedRange.contains(range)
+            NSLocationInRange(range.location, cachedRange) && NSLocationInRange(NSMaxRange(range) - 1, cachedRange)
         }
     }
     
@@ -374,8 +372,6 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     }
 }
 
-// MARK: - Supporting Types
-
 /// Cached text layout fragment
 private struct CachedFragment {
     let range: NSRange
@@ -390,6 +386,8 @@ private struct CachedFragment {
 /// Rendering performance statistics
 @MainActor
 public final class RenderingStatistics: ObservableObject {
+    deinit {}
+    
     @Published public private(set) var totalOptimizations: Int = 0
     @Published public private(set) var averageOptimizationTime: TimeInterval = 0
     @Published public private(set) var fragmentsCached: Int = 0
@@ -470,21 +468,4 @@ public final class RenderingStatistics: ObservableObject {
     }
 }
 
-// MARK: - NSRange Extensions
-
-private extension NSRange {
-    var upperBound: Int {
-        location + length
-    }
-    
-    func intersects(_ other: NSRange) -> Bool {
-        NSLocationInRange(location, other) || 
-               NSLocationInRange(upperBound - 1, other) ||
-               NSLocationInRange(other.location, self) ||
-               NSLocationInRange(other.upperBound - 1, self)
-    }
-    
-    func contains(_ other: NSRange) -> Bool {
-        other.location >= location && other.upperBound <= upperBound
-    }
-}
+// NSRange extensions moved to NSRange+Extensions.swift

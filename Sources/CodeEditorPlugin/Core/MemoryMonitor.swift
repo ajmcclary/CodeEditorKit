@@ -139,10 +139,12 @@ public final class MemoryMonitor: ObservableObject {
         
         let kerr: kern_return_t = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
-                task_info(mach_task_self_,
-                         task_flavor_t(MACH_TASK_BASIC_INFO),
-                         $0,
-                         &count)
+                task_info(
+                    mach_task_self_,
+                    task_flavor_t(MACH_TASK_BASIC_INFO),
+                    $0,
+                    &count
+                )
             }
         }
         
@@ -209,7 +211,7 @@ public final class MemoryMonitor: ObservableObject {
         if enableAutomaticCleanup && currentUsage > memoryThresholdMB {
             logger.warning("Memory usage (\(currentUsage)MB) exceeded threshold (\(self.memoryThresholdMB)MB)")
             
-            let targetReduction = currentUsage - (memoryThresholdMB * 0.8) // Target 80% of threshold
+            let targetReduction = currentUsage - (self.memoryThresholdMB * 0.8) // Target 80% of threshold
             await performAutomaticCleanup(targetReduction: targetReduction)
         }
     }
@@ -217,7 +219,7 @@ public final class MemoryMonitor: ObservableObject {
     private func performAutomaticCleanup(targetReduction: Double) async {
         let freed = await performCleanup(targetReduction: targetReduction)
         
-        let operation = CleanupOperation(
+        _ = CleanupOperation(
             timestamp: Date(),
             duration: 0, // Will be updated by performCleanup
             memoryBefore: 0, // Will be updated by performCleanup
@@ -232,7 +234,7 @@ public final class MemoryMonitor: ObservableObject {
     private func performPeriodicCleanup() async {
         let freed = await performCleanup()
         
-        let operation = CleanupOperation(
+        _ = CleanupOperation(
             timestamp: Date(),
             duration: 0,
             memoryBefore: 0,
@@ -273,8 +275,6 @@ public final class MemoryMonitor: ObservableObject {
         memoryStats.totalMemoryFreed += operation.memoryFreed
     }
 }
-
-// MARK: - Supporting Types
 
 /// Represents a cleanup handler
 private struct CleanupHandler {
@@ -342,8 +342,6 @@ public struct MemoryStatistics {
         return totalMemoryFreed / Double(totalCleanupOperations)
     }
 }
-
-// MARK: - mach_task_basic_info
 
 private func mach_task_basic_info() -> mach_task_basic_info_data_t {
     mach_task_basic_info_data_t(

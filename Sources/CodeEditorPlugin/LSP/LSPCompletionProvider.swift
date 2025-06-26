@@ -28,6 +28,8 @@ public final class LSPCompletionProvider: CompletionProvider {
         self.supportedLanguages = supportedLanguages.isEmpty ? [] : supportedLanguages
     }
     
+    deinit {}
+    
     // MARK: - CompletionProvider Protocol
     
     public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
@@ -47,8 +49,8 @@ public final class LSPCompletionProvider: CompletionProvider {
               let filePath = currentFilePath else {
             return CompletionResult(
                 items: [],
-                isIncomplete: false,
                 context: context,
+                isIncomplete: false,
                 processingTime: 0
             )
         }
@@ -60,8 +62,8 @@ public final class LSPCompletionProvider: CompletionProvider {
             logger.debug("No LSP client available for language: \(languageId)")
             return CompletionResult(
                 items: [],
-                isIncomplete: false,
                 context: context,
+                isIncomplete: false,
                 processingTime: 0
             )
         }
@@ -94,16 +96,16 @@ public final class LSPCompletionProvider: CompletionProvider {
             
             return CompletionResult(
                 items: completionItems,
-                isIncomplete: false, // LSP handles incremental completion internally
                 context: context,
+                isIncomplete: false, // LSP handles incremental completion internally
                 processingTime: 0
             )
         } catch {
             logger.error("LSP completion failed: \(error.localizedDescription)")
             return CompletionResult(
                 items: [],
-                isIncomplete: false,
                 context: context,
+                isIncomplete: false,
                 processingTime: 0
             )
         }
@@ -197,12 +199,12 @@ public final class LSPCompletionProvider: CompletionProvider {
             sortText: lspItem.sortText,
             filterText: lspItem.filterText,
             textEdit: textEdit,
-            additionalTextEdits: lspItem.additionalTextEdits?.map { lspEdit in
+            additionalTextEdits: lspItem.additionalTextEdits.map { lspEdit in
                 CompletionTextEdit(
                     range: convertLSPRangeToNSRange(lspEdit.range, in: context.text),
                     newText: lspEdit.newText
                 )
-            } ?? []
+            }
         )
     }
     
@@ -300,29 +302,29 @@ public final class LSPCompletionProvider: CompletionProvider {
     }
     
     private func convertLSPRangeToNSRange(_ lspRange: LSPRange, in text: String) -> NSRange {
-        let nsString = text as NSString
+        let utf16Count = text.utf16.count
         
         // Convert line/character positions to string indices
         let lines = text.components(separatedBy: .newlines)
         
         // Calculate start position
         var startIndex = 0
-        for i in 0..<min(lspRange.start.line, lines.count) {
-            startIndex += lines[i].count + 1 // +1 for newline
+        for index in 0..<min(lspRange.start.line, lines.count) {
+            startIndex += lines[index].count + 1 // +1 for newline
         }
         startIndex += lspRange.start.character
-        startIndex = min(startIndex, nsString.length)
+        startIndex = min(startIndex, utf16Count)
         
         // Calculate end position
         var endIndex = 0
-        for i in 0..<min(lspRange.end.line, lines.count) {
-            endIndex += lines[i].count + 1 // +1 for newline
+        for index in 0..<min(lspRange.end.line, lines.count) {
+            endIndex += lines[index].count + 1 // +1 for newline
         }
         endIndex += lspRange.end.character
-        endIndex = min(endIndex, nsString.length)
+        endIndex = min(endIndex, utf16Count)
         
-        let location = min(startIndex, nsString.length)
-        let length = max(0, min(endIndex - startIndex, nsString.length - location))
+        let location = min(startIndex, utf16Count)
+        let length = max(0, min(endIndex - startIndex, utf16Count - location))
         
         return NSRange(location: location, length: length)
     }

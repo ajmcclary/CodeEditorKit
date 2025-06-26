@@ -26,8 +26,9 @@ public protocol LanguageProvider: Sendable {
 }
 
 // Default implementations
-public extension LanguageProvider {
+extension LanguageProvider {
     nonisolated func completionKeywords() -> [String] { [] }
+    
     nonisolated var documentationURL: URL? { nil }
 }
 
@@ -47,10 +48,10 @@ public protocol SyntaxHighlighter {
 }
 
 // Default implementation
-public extension SyntaxHighlighter {
-    var supportsIncrementalHighlighting: Bool { false }
+extension SyntaxHighlighter {
+    public var supportsIncrementalHighlighting: Bool { false }
     
-    func highlightIncremental(source: String, changeRange _: NSRange) -> [HighlightedToken] {
+    public func highlightIncremental(source: String, changeRange _: NSRange) -> [HighlightedToken] {
         // Fall back to full highlighting
         highlight(source: source)
     }
@@ -61,6 +62,7 @@ public extension SyntaxHighlighter {
 /// Registry for managing language providers
 @MainActor
 public final class LanguageRegistry {
+    deinit {}
     // MARK: - Singleton
     
     public static let shared = LanguageRegistry()

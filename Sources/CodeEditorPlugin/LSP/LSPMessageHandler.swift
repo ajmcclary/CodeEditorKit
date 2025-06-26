@@ -53,7 +53,7 @@ actor LSPMessageHandler {
     
     private func extractCompleteMessage() -> Data? {
         // LSP messages have format: "Content-Length: <length>\r\n\r\n<json>"
-        guard let headerEndRange = messageBuffer.range(of: "\r\n\r\n".data(using: .utf8)!) else {
+        guard let headerEndRange = messageBuffer.range(of: Data("\r\n\r\n".utf8)) else {
             return nil // Header not complete
         }
         
@@ -91,13 +91,11 @@ actor LSPMessageHandler {
     private func parseContentLength(from header: String) -> Int? {
         let lines = header.components(separatedBy: "\r\n")
         
-        for line in lines {
-            if line.hasPrefix("Content-Length:") {
-                let parts = line.components(separatedBy: ":")
-                if parts.count >= 2 {
-                    let lengthString = parts[1].trimmingCharacters(in: .whitespaces)
-                    return Int(lengthString)
-                }
+        for line in lines where line.hasPrefix("Content-Length:") {
+            let parts = line.components(separatedBy: ":")
+            if parts.count >= 2 {
+                let lengthString = parts[1].trimmingCharacters(in: .whitespaces)
+                return Int(lengthString)
             }
         }
         

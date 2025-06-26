@@ -1,37 +1,40 @@
 @testable import CodeEditorPlugin
 import XCTest
 
-@MainActor
 final class TextKit2OptimizationTests: XCTestCase {
-    private var renderingOptimizer: TextKit2RenderingOptimizer!
-    private var performanceMonitor: TextKit2PerformanceMonitor!
-    
-    override func setUp() {
-        super.setUp()
-        renderingOptimizer = TextKit2RenderingOptimizer()
-        performanceMonitor = TextKit2PerformanceMonitor()
+    @MainActor
+    private func withOptimizer<T>(_ body: (TextKit2RenderingOptimizer) async throws -> T) async throws -> T {
+        let optimizer = TextKit2RenderingOptimizer()
+        return try await body(optimizer)
     }
     
-    override func tearDown() {
-        renderingOptimizer = nil
-        performanceMonitor = nil
-        super.tearDown()
+    deinit {}
+    
+    @MainActor
+    private func withMonitor<T>(_ body: (TextKit2PerformanceMonitor) async throws -> T) async throws -> T {
+        let monitor = TextKit2PerformanceMonitor()
+        return try await body(monitor)
     }
     
     // MARK: - TextKit2RenderingOptimizer Tests
     
-    func testRenderingOptimizerInitialization() {
-        XCTAssertNotNil(renderingOptimizer)
+    @MainActor
+    func testRenderingOptimizerInitialization() async throws {
+        try await withOptimizer { renderingOptimizer in
+            XCTAssertNotNil(renderingOptimizer)
         XCTAssertEqual(renderingOptimizer.maxCachedFragments, 500)
         XCTAssertEqual(renderingOptimizer.largeFileThreshold, 50_000)
         XCTAssertTrue(renderingOptimizer.enableViewportOptimization)
         XCTAssertEqual(renderingOptimizer.prefetchMultiplier, 1.5)
-        XCTAssertTrue(renderingOptimizer.enableFragmentRecycling)
+            XCTAssertTrue(renderingOptimizer.enableFragmentRecycling)
+        }
     }
     
-    func testRenderingOptimizerConfiguration() {
-        // Test configuration with different settings
-        renderingOptimizer.maxCachedFragments = 1_000
+    @MainActor
+    func testRenderingOptimizerConfiguration() async throws {
+        try await withOptimizer { renderingOptimizer in
+            // Test configuration with different settings
+            renderingOptimizer.maxCachedFragments = 1_000
         renderingOptimizer.largeFileThreshold = 100_000
         renderingOptimizer.enableViewportOptimization = false
         renderingOptimizer.prefetchMultiplier = 2.0
@@ -41,53 +44,66 @@ final class TextKit2OptimizationTests: XCTestCase {
         XCTAssertEqual(renderingOptimizer.largeFileThreshold, 100_000)
         XCTAssertFalse(renderingOptimizer.enableViewportOptimization)
         XCTAssertEqual(renderingOptimizer.prefetchMultiplier, 2.0)
-        XCTAssertFalse(renderingOptimizer.enableFragmentRecycling)
+            XCTAssertFalse(renderingOptimizer.enableFragmentRecycling)
+        }
     }
     
-    func testVisibleRangeUpdates() {
-        let initialRange = NSRange(location: 0, length: 100)
-        renderingOptimizer.updateVisibleRange(initialRange)
-        
-        // Should not crash and should handle the range update
-        XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(initialRange))
-        
-        // Test with different range
-        let newRange = NSRange(location: 50, length: 200)
-        XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(newRange))
+    @MainActor
+    func testVisibleRangeUpdates() async throws {
+        try await withOptimizer { renderingOptimizer in
+            let initialRange = NSRange(location: 0, length: 100)
+            renderingOptimizer.updateVisibleRange(initialRange)
+            
+            // Should not crash and should handle the range update
+            XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(initialRange))
+            
+            // Test with different range
+            let newRange = NSRange(location: 50, length: 200)
+            XCTAssertNoThrow(renderingOptimizer.updateVisibleRange(newRange))
+        }
     }
     
-    func testFragmentCleanup() {
-        // Enable viewport optimization for this test
-        renderingOptimizer.enableViewportOptimization = true
-        
-        // Update visible range to create some cached state
-        renderingOptimizer.updateVisibleRange(NSRange(location: 0, length: 100))
-        
-        // Cleanup should not crash
-        XCTAssertNoThrow(renderingOptimizer.cleanupNonVisibleFragments())
+    @MainActor
+    func testFragmentCleanup() async throws {
+        try await withOptimizer { renderingOptimizer in
+            // Enable viewport optimization for this test
+            renderingOptimizer.enableViewportOptimization = true
+            
+            // Update visible range to create some cached state
+            renderingOptimizer.updateVisibleRange(NSRange(location: 0, length: 100))
+            
+            // Cleanup should not crash
+            XCTAssertNoThrow(renderingOptimizer.cleanupNonVisibleFragments())
+        }
     }
     
-    func testPrefetchLayout() {
-        // Test prefetch in both directions
-        renderingOptimizer.updateVisibleRange(NSRange(location: 1_000, length: 500))
-        
-        XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .up, distance: 1_000))
-        XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .down, distance: 1_000))
+    @MainActor
+    func testPrefetchLayout() async throws {
+        try await withOptimizer { renderingOptimizer in
+            // Test prefetch in both directions
+            renderingOptimizer.updateVisibleRange(NSRange(location: 1_000, length: 500))
+            
+            XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .up, distance: 1_000))
+            XCTAssertNoThrow(renderingOptimizer.prefetchLayout(direction: .down, distance: 1_000))
+        }
     }
     
-    func testReset() {
-        // Set up some state
-        renderingOptimizer.updateVisibleRange(NSRange(location: 100, length: 200))
-        renderingOptimizer.cleanupNonVisibleFragments()
-        
-        // Reset should clear all state
-        renderingOptimizer.reset()
-        
-        // Verify reset worked
-        let stats = renderingOptimizer.renderingStats
-        XCTAssertEqual(stats.totalOptimizations, 0)
-        XCTAssertEqual(stats.fragmentsCached, 0)
-        XCTAssertEqual(stats.fragmentsCleaned, 0)
+    @MainActor
+    func testReset() async throws {
+        try await withOptimizer { renderingOptimizer in
+            // Set up some state
+            renderingOptimizer.updateVisibleRange(NSRange(location: 100, length: 200))
+            renderingOptimizer.cleanupNonVisibleFragments()
+            
+            // Reset should clear all state
+            renderingOptimizer.reset()
+            
+            // Verify reset worked
+            let stats = renderingOptimizer.renderingStats
+            XCTAssertEqual(stats.totalOptimizations, 0)
+            XCTAssertEqual(stats.fragmentsCached, 0)
+            XCTAssertEqual(stats.fragmentsCleaned, 0)
+        }
     }
     
     // MARK: - TextKit2PerformanceHelper Tests
@@ -127,131 +143,156 @@ final class TextKit2OptimizationTests: XCTestCase {
     
     // MARK: - TextKit2PerformanceMonitor Tests
     
-    func testPerformanceMonitorInitialization() {
-        XCTAssertEqual(performanceMonitor.layoutOperations, 0)
-        XCTAssertEqual(performanceMonitor.averageLayoutTime, 0)
-        XCTAssertEqual(performanceMonitor.peakLayoutTime, 0)
-        XCTAssertEqual(performanceMonitor.totalRenderingTime, 0)
-        XCTAssertEqual(performanceMonitor.fragmentsGenerated, 0)
-        XCTAssertEqual(performanceMonitor.fragmentsRecycled, 0)
-        XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
-        XCTAssertEqual(performanceMonitor.memoryUsage, 0)
+    @MainActor
+    func testPerformanceMonitorInitialization() async throws {
+        try await withMonitor { performanceMonitor in
+            XCTAssertEqual(performanceMonitor.layoutOperations, 0)
+            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0)
+            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0)
+            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0)
+            XCTAssertEqual(performanceMonitor.fragmentsGenerated, 0)
+            XCTAssertEqual(performanceMonitor.fragmentsRecycled, 0)
+            XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
+            XCTAssertEqual(performanceMonitor.memoryUsage, 0)
+        }
     }
     
-    func testLayoutOperationRecording() {
-        performanceMonitor.recordLayoutOperation(duration: 0.1)
-        
-        XCTAssertEqual(performanceMonitor.layoutOperations, 1)
-        XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.1)
-        XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.1)
-        XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.1)
-        
-        performanceMonitor.recordLayoutOperation(duration: 0.2)
-        
-        XCTAssertEqual(performanceMonitor.layoutOperations, 2)
-        XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.15) // (0.1 + 0.2) / 2
-        XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.2)
-        XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.3)
+    @MainActor
+    func testLayoutOperationRecording() async throws {
+        try await withMonitor { performanceMonitor in
+            performanceMonitor.recordLayoutOperation(duration: 0.1)
+            
+            XCTAssertEqual(performanceMonitor.layoutOperations, 1)
+            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.1)
+            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.1)
+            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.1)
+            
+            performanceMonitor.recordLayoutOperation(duration: 0.2)
+            
+            XCTAssertEqual(performanceMonitor.layoutOperations, 2)
+            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.15, accuracy: 0.001) // (0.1 + 0.2) / 2
+            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.2)
+            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.3, accuracy: 0.001)
+        }
     }
     
-    func testFragmentRecording() {
-        performanceMonitor.recordFragmentGenerated()
-        performanceMonitor.recordFragmentGenerated()
-        performanceMonitor.recordFragmentRecycled()
-        
-        XCTAssertEqual(performanceMonitor.fragmentsGenerated, 2)
-        XCTAssertEqual(performanceMonitor.fragmentsRecycled, 1)
+    @MainActor
+    func testFragmentRecording() async throws {
+        try await withMonitor { performanceMonitor in
+            performanceMonitor.recordFragmentGenerated()
+            performanceMonitor.recordFragmentGenerated()
+            performanceMonitor.recordFragmentRecycled()
+            
+            XCTAssertEqual(performanceMonitor.fragmentsGenerated, 2)
+            XCTAssertEqual(performanceMonitor.fragmentsRecycled, 1)
+        }
     }
     
-    func testCacheHitRateCalculation() {
-        // Initially no hits or misses
-        XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
-        
-        // Record some hits and misses
-        performanceMonitor.recordCacheHit()
-        performanceMonitor.recordCacheHit()
-        performanceMonitor.recordCacheMiss()
-        
-        // Hit rate should be 2/3 = 0.666...
-        XCTAssertEqual(performanceMonitor.cacheHitRate, 2.0 / 3.0, accuracy: 0.001)
-        
-        performanceMonitor.recordCacheMiss()
-        
-        // Hit rate should be 2/4 = 0.5
-        XCTAssertEqual(performanceMonitor.cacheHitRate, 0.5)
+    @MainActor
+    func testCacheHitRateCalculation() async throws {
+        try await withMonitor { performanceMonitor in
+            // Initially no hits or misses
+            XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
+            
+            // Record some hits and misses
+            performanceMonitor.recordCacheHit()
+            performanceMonitor.recordCacheHit()
+            performanceMonitor.recordCacheMiss()
+            
+            // Hit rate should be 2/3 = 0.666...
+            XCTAssertEqual(performanceMonitor.cacheHitRate, 2.0 / 3.0, accuracy: 0.001)
+            
+            performanceMonitor.recordCacheMiss()
+            
+            // Hit rate should be 2/4 = 0.5
+            XCTAssertEqual(performanceMonitor.cacheHitRate, 0.5)
+        }
     }
     
-    func testMemoryUsageTracking() {
-        performanceMonitor.updateMemoryUsage(15.5)
-        
-        XCTAssertEqual(performanceMonitor.memoryUsage, 15.5)
-        
-        performanceMonitor.updateMemoryUsage(20.0)
-        
-        XCTAssertEqual(performanceMonitor.memoryUsage, 20.0)
+    @MainActor
+    func testMemoryUsageTracking() async throws {
+        try await withMonitor { performanceMonitor in
+            performanceMonitor.updateMemoryUsage(15.5)
+            
+            XCTAssertEqual(performanceMonitor.memoryUsage, 15.5)
+            
+            performanceMonitor.updateMemoryUsage(20.0)
+            
+            XCTAssertEqual(performanceMonitor.memoryUsage, 20.0)
+        }
     }
     
-    func testPerformanceMonitorReset() {
-        // Set up some state
-        performanceMonitor.recordLayoutOperation(duration: 0.1)
-        performanceMonitor.recordFragmentGenerated()
-        performanceMonitor.recordCacheHit()
-        performanceMonitor.updateMemoryUsage(10.0)
-        
-        // Reset should clear all metrics
-        performanceMonitor.reset()
-        
-        XCTAssertEqual(performanceMonitor.layoutOperations, 0)
-        XCTAssertEqual(performanceMonitor.averageLayoutTime, 0)
-        XCTAssertEqual(performanceMonitor.peakLayoutTime, 0)
-        XCTAssertEqual(performanceMonitor.totalRenderingTime, 0)
-        XCTAssertEqual(performanceMonitor.fragmentsGenerated, 0)
-        XCTAssertEqual(performanceMonitor.fragmentsRecycled, 0)
-        XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
-        XCTAssertEqual(performanceMonitor.memoryUsage, 0)
+    @MainActor
+    func testPerformanceMonitorReset() async throws {
+        try await withMonitor { performanceMonitor in
+            // Set up some state
+            performanceMonitor.recordLayoutOperation(duration: 0.1)
+            performanceMonitor.recordFragmentGenerated()
+            performanceMonitor.recordCacheHit()
+            performanceMonitor.updateMemoryUsage(10.0)
+            
+            // Reset should clear all metrics
+            performanceMonitor.reset()
+            
+            XCTAssertEqual(performanceMonitor.layoutOperations, 0)
+            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0)
+            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0)
+            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0)
+            XCTAssertEqual(performanceMonitor.fragmentsGenerated, 0)
+            XCTAssertEqual(performanceMonitor.fragmentsRecycled, 0)
+            XCTAssertEqual(performanceMonitor.cacheHitRate, 0)
+            XCTAssertEqual(performanceMonitor.memoryUsage, 0)
+        }
     }
     
-    func testPerformanceSummary() {
-        // Set up some performance data
-        performanceMonitor.recordLayoutOperation(duration: 0.1)
-        performanceMonitor.recordLayoutOperation(duration: 0.2)
-        performanceMonitor.recordFragmentGenerated()
-        performanceMonitor.recordFragmentRecycled()
-        performanceMonitor.recordCacheHit()
-        performanceMonitor.recordCacheMiss()
-        performanceMonitor.updateMemoryUsage(12.5)
-        
-        let summary = performanceMonitor.performanceSummary
-        
-        XCTAssertTrue(summary.contains("Layout Operations: 2"))
-        XCTAssertTrue(summary.contains("Fragments Generated: 1"))
-        XCTAssertTrue(summary.contains("Fragments Recycled: 1"))
-        XCTAssertTrue(summary.contains("Cache Hit Rate: 50.0%"))
-        XCTAssertTrue(summary.contains("Memory Usage: 12.5MB"))
-        XCTAssertTrue(summary.contains("Recycling Rate: 100.0%"))
+    @MainActor
+    func testPerformanceSummary() async throws {
+        try await withMonitor { performanceMonitor in
+            // Set up some performance data
+            performanceMonitor.recordLayoutOperation(duration: 0.1)
+            performanceMonitor.recordLayoutOperation(duration: 0.2)
+            performanceMonitor.recordFragmentGenerated()
+            performanceMonitor.recordFragmentRecycled()
+            performanceMonitor.recordCacheHit()
+            performanceMonitor.recordCacheMiss()
+            performanceMonitor.updateMemoryUsage(12.5)
+            
+            let summary = performanceMonitor.performanceSummary
+            
+            XCTAssertTrue(summary.contains("Layout Operations: 2"))
+            XCTAssertTrue(summary.contains("Fragments Generated: 1"))
+            XCTAssertTrue(summary.contains("Fragments Recycled: 1"))
+            XCTAssertTrue(summary.contains("Cache Hit Rate: 50.0%"))
+            XCTAssertTrue(summary.contains("Memory Usage: 12.5MB"))
+            XCTAssertTrue(summary.contains("Recycling Rate: 100.0%"))
+        }
     }
     
     // MARK: - RenderingStatistics Tests
     
-    func testRenderingStatisticsInitialization() {
-        let stats = renderingOptimizer.renderingStats
-        
-        XCTAssertEqual(stats.totalOptimizations, 0)
-        XCTAssertEqual(stats.averageOptimizationTime, 0)
-        XCTAssertEqual(stats.fragmentsCached, 0)
-        XCTAssertEqual(stats.fragmentsCleaned, 0)
-        XCTAssertEqual(stats.prefetchOperations, 0)
-        XCTAssertEqual(stats.averagePrefetchTime, 0)
-        XCTAssertEqual(stats.largeFileOptimizationsEnabled, 0)
-        XCTAssertEqual(stats.viewportOptimizationsEnabled, 0)
-        XCTAssertEqual(stats.fragmentRecyclingEnabled, 0)
-        XCTAssertEqual(stats.containerOptimizations, 0)
-        XCTAssertNil(stats.lastOptimizationTime)
+    @MainActor
+    func testRenderingStatisticsInitialization() async throws {
+        try await withOptimizer { renderingOptimizer in
+            let stats = renderingOptimizer.renderingStats
+            
+            XCTAssertEqual(stats.totalOptimizations, 0)
+            XCTAssertEqual(stats.averageOptimizationTime, 0)
+            XCTAssertEqual(stats.fragmentsCached, 0)
+            XCTAssertEqual(stats.fragmentsCleaned, 0)
+            XCTAssertEqual(stats.prefetchOperations, 0)
+            XCTAssertEqual(stats.averagePrefetchTime, 0)
+            XCTAssertEqual(stats.largeFileOptimizationsEnabled, 0)
+            XCTAssertEqual(stats.viewportOptimizationsEnabled, 0)
+            XCTAssertEqual(stats.fragmentRecyclingEnabled, 0)
+            XCTAssertEqual(stats.containerOptimizations, 0)
+            XCTAssertNil(stats.lastOptimizationTime)
+        }
     }
     
     // MARK: - Integration Tests
     
-    func testCodeEditorViewTextKit2Integration() {
+    @MainActor
+    func testCodeEditorViewTextKit2Integration() async throws {
         let codeEditorView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
         // Test that TextKit2 optimization methods are available
@@ -267,7 +308,8 @@ final class TextKit2OptimizationTests: XCTestCase {
         XCTAssertNotNil(performanceStats)
     }
     
-    func testLargeFileOptimization() {
+    @MainActor
+    func testLargeFileOptimization() async throws {
         let codeEditorView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
         // Simulate a large file
@@ -287,17 +329,21 @@ final class TextKit2OptimizationTests: XCTestCase {
     
     // MARK: - Performance Tests
     
-    func testRenderingOptimizerPerformance() {
+    @MainActor
+    func testRenderingOptimizerPerformance() async throws {
+        let renderingOptimizer = TextKit2RenderingOptimizer()
         measure {
             // Test performance of updating visible range multiple times
-            for i in 0..<100 {
-                let range = NSRange(location: i * 100, length: 500)
+            for index in 0..<100 {
+                let range = NSRange(location: index * 100, length: 500)
                 renderingOptimizer.updateVisibleRange(range)
             }
         }
     }
     
-    func testPerformanceMonitorOverhead() {
+    @MainActor
+    func testPerformanceMonitorOverhead() async throws {
+        let performanceMonitor = TextKit2PerformanceMonitor()
         measure {
             // Test overhead of recording many operations
             for _ in 0..<1_000 {

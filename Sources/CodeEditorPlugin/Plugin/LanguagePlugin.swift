@@ -1,9 +1,5 @@
 import Foundation
 
-// MARK: - Forward Type Declarations
-
-// TODO: These should reference the actual protocols from LanguageFeatures.swift
-
 // MARK: - LanguagePlugin Protocol
 
 /// Plugin metadata structure for UI display
@@ -95,8 +91,7 @@ public protocol LanguagePlugin: LanguageProvider {
     @MainActor
     func createSymbolProvider() -> (any SymbolProvider)?
     
-    /// Create an indentation provider for this language (optional)
-    /// TODO: Re-enable once IndentationProvider is properly imported
+    // TODO: Re-enable once IndentationProvider is properly imported
     // @MainActor
     // func createIndentationProvider() -> (any IndentationProvider)?
     
@@ -105,8 +100,7 @@ public protocol LanguagePlugin: LanguageProvider {
     /// Language server configuration (optional)
     var languageServerConfig: LanguageServerConfig? { get }
     
-    /// Create an LSP client for this language (optional)
-    /// TODO: Re-enable once LSPClientProtocol is properly imported
+    // TODO: Re-enable once LSPClientProtocol is properly imported
     // @MainActor
     // func createLSPClient() -> (any LSPClientProtocol)?
     
@@ -124,22 +118,20 @@ public protocol LanguagePlugin: LanguageProvider {
     nonisolated func validateCompatibility(editorVersion: String) -> PluginValidationResult
 }
 
-// MARK: - Default Implementations
-
-public extension LanguagePlugin {
-    var author: String { "Unknown" }
-    var description: String { "Language support for \(displayName)" }
-    var license: String { "Unknown" }
-    var capabilities: PluginCapabilities { PluginCapabilities() }
-    var languageServerConfig: LanguageServerConfig? { nil }
+extension LanguagePlugin {
+    public var author: String { "Unknown" }
+    public var description: String { "Language support for \(displayName)" }
+    public var license: String { "Unknown" }
+    public var capabilities: PluginCapabilities { PluginCapabilities() }
+    public var languageServerConfig: LanguageServerConfig? { nil }
     
-    var id: String { identifier }
+    public var id: String { identifier }
     
-    var supportedLanguages: [Language] {
+    public var supportedLanguages: [Language] {
         [Language(name: displayName, identifier: identifier)]
     }
     
-    var metadata: PluginMetadata {
+    public var metadata: PluginMetadata {
         PluginMetadata(
             name: displayName,
             version: pluginVersion,
@@ -203,8 +195,6 @@ public extension LanguagePlugin {
     }
 }
 
-// MARK: - Plugin Capabilities
-
 /// Describes what features a plugin supports
 public struct PluginCapabilities: Equatable, Codable, Sendable {
     public var supportsSyntaxHighlighting: Bool = true
@@ -257,16 +247,12 @@ public struct PluginCapabilities: Equatable, Codable, Sendable {
     }
 }
 
-// MARK: - Plugin Validation
-
 /// Result of plugin validation
 public enum PluginValidationResult: Equatable, Sendable {
     case compatible
     case incompatible(reason: String)
     case warning(message: String)
 }
-
-// MARK: - Language Server Configuration
 
 /// Configuration for Language Server Protocol integration
 public struct LanguageServerConfig: Equatable, Codable, Sendable {

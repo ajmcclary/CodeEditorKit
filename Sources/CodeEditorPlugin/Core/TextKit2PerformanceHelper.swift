@@ -7,7 +7,7 @@ import UIKit
 
 /// Helper for optimizing TextKit2 performance across different scenarios
 @MainActor
-public final class TextKit2PerformanceHelper {
+public enum TextKit2PerformanceHelper {
     // MARK: - File Size Categories
     
     public enum FileSize {
@@ -125,10 +125,14 @@ public final class TextKit2PerformanceHelper {
         
         #if canImport(AppKit)
         // Configure NSTextView specific optimizations
-        configureNSTextView(textView as! NSTextView, for: config)
+        if let nsTextView = textView as? NSTextView {
+            configureNSTextView(nsTextView, for: config)
+        }
         #elseif canImport(UIKit)
         // Configure UITextView specific optimizations
-        configureUITextView(textView as! UITextView, for: config)
+        if let uiTextView = textView as? UITextView {
+            configureUITextView(uiTextView, for: config)
+        }
         #endif
     }
     
@@ -138,7 +142,7 @@ public final class TextKit2PerformanceHelper {
         guard let textContainer = textView.textContainer else { return }
         
         #if canImport(AppKit)
-        let nsTextView = textView as! NSTextView
+        guard let nsTextView = textView as? NSTextView else { return }
         
         // Disable expensive visual features during editing
         nsTextView.isContinuousSpellCheckingEnabled = false
@@ -155,7 +159,7 @@ public final class TextKit2PerformanceHelper {
         textContainer.lineFragmentPadding = 0
         
         #elseif canImport(UIKit)
-        let uiTextView = textView as! UITextView
+        guard let uiTextView = textView as? UITextView else { return }
         
         // Disable autocorrection features
         uiTextView.autocorrectionType = .no
@@ -172,7 +176,7 @@ public final class TextKit2PerformanceHelper {
     /// - Parameter textView: Text view to optimize
     public static func optimizeForReadOnlyViewing(_ textView: PlatformTextView) {
         #if canImport(AppKit)
-        let nsTextView = textView as! NSTextView
+        guard let nsTextView = textView as? NSTextView else { return }
         
         // Disable editing features
         nsTextView.isEditable = false
@@ -188,7 +192,7 @@ public final class TextKit2PerformanceHelper {
         nsTextView.usesFindPanel = true
         
         #elseif canImport(UIKit)
-        let uiTextView = textView as! UITextView
+        guard let uiTextView = textView as? UITextView else { return }
         
         // Disable editing
         uiTextView.isEditable = false
@@ -347,6 +351,7 @@ public final class TextKit2PerformanceHelper {
 /// Monitors TextKit2 performance metrics
 @MainActor
 public final class TextKit2PerformanceMonitor: ObservableObject {
+    deinit {}
     // MARK: - Metrics
     
     @Published public private(set) var layoutOperations: Int = 0

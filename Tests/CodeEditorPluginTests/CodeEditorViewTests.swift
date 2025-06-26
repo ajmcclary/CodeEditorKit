@@ -66,6 +66,8 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineNumbers() {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        XCTAssertTrue(textView.showsLineNumbers)  // Default is true
+        textView.showsLineNumbers = false
         XCTAssertFalse(textView.showsLineNumbers)
         textView.showsLineNumbers = true
         XCTAssertTrue(textView.showsLineNumbers)
@@ -116,6 +118,8 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineHighlighting() {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        XCTAssertTrue(textView.highlightSelectedLine)  // Default is true
+        textView.highlightSelectedLine = false
         XCTAssertFalse(textView.highlightSelectedLine)
         textView.highlightSelectedLine = true
         XCTAssertTrue(textView.highlightSelectedLine)

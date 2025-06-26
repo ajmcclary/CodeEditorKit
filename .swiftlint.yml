@@ -101,7 +101,7 @@ opt_in_rules:
   - multiline_parameters_brackets
   - nimble_operator
   - no_extension_access_modifier
-  - no_grouping_extension
+  # - no_grouping_extension # Disabled: we use extensions for protocol conformance
   - nslocalizedstring_key
   - nslocalizedstring_require_bundle
   - number_separator

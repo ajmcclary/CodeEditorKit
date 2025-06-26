@@ -1,108 +1,135 @@
 @testable import CodeEditorPlugin
 import XCTest
 
-@MainActor
 final class PluginArchitectureTests: XCTestCase {
-    private var pluginManager: PluginManager!
-    private var mockPlugin: MockLanguagePlugin!
-    
-    override func setUp() {
-        super.setUp()
-        pluginManager = PluginManager.shared
-        mockPlugin = MockLanguagePlugin()
+    deinit {}
+    @MainActor
+    private func withPluginSetup<T>(_ body: (PluginManager, MockLanguagePlugin) async throws -> T) async throws -> T {
+        let pluginManager = PluginManager.shared
+        // Create unique identifier for this test to avoid conflicts
+        let uniqueId = "mock-plugin-\(UUID().uuidString)"
+        let mockPlugin = MockLanguagePlugin(identifier: uniqueId)
         
         // Clear any existing plugins for clean test state
         for plugin in pluginManager.allPlugins {
+            await pluginManager.disablePlugin(plugin.identifier)
             await pluginManager.unregisterPlugin(plugin.identifier)
         }
-    }
-    
-    override func tearDown() {
-        // Clean up test plugins
-        Task {
-            await pluginManager.unregisterPlugin(mockPlugin.identifier)
+        
+        defer {
+            Task { @MainActor in
+                await pluginManager.disablePlugin(mockPlugin.identifier)
+                await pluginManager.unregisterPlugin(mockPlugin.identifier)
+            }
         }
-        mockPlugin = nil
-        super.tearDown()
+        
+        return try await body(pluginManager, mockPlugin)
     }
     
     // MARK: - PluginManager Tests
     
-    func testPluginManagerSingleton() {
+    @MainActor
+    func testPluginManagerSingleton() async throws {
         let manager1 = PluginManager.shared
         let manager2 = PluginManager.shared
         XCTAssertTrue(manager1 === manager2, "PluginManager should be a singleton")
     }
     
+    @MainActor
     func testPluginRegistration() async throws {
-        XCTAssertFalse(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
-        
-        try await pluginManager.registerPlugin(mockPlugin)
-        
-        XCTAssertTrue(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
-        XCTAssertNotNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
-    }
-    
-    func testPluginUnregistration() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        XCTAssertNotNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
-        
-        await pluginManager.unregisterPlugin(mockPlugin.identifier)
-        
-        XCTAssertNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
-        XCTAssertFalse(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
-    }
-    
-    func testPluginActivation() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        
-        XCTAssertFalse(pluginManager.isPluginActive(mockPlugin.identifier))
-        
-        try await pluginManager.enablePlugin(mockPlugin.identifier)
-        
-        XCTAssertTrue(pluginManager.isPluginActive(mockPlugin.identifier))
-        XCTAssertTrue(mockPlugin.isActivated)
-    }
-    
-    func testPluginDeactivation() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        try await pluginManager.enablePlugin(mockPlugin.identifier)
-        
-        XCTAssertTrue(pluginManager.isPluginActive(mockPlugin.identifier))
-        
-        await pluginManager.disablePlugin(mockPlugin.identifier)
-        
-        XCTAssertFalse(pluginManager.isPluginActive(mockPlugin.identifier))
-        XCTAssertTrue(mockPlugin.isDeactivated)
-    }
-    
-    func testPluginVersionConflict() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        
-        // Try to register plugin with same ID but different version
-        let conflictingPlugin = MockLanguagePlugin()
-        conflictingPlugin.pluginVersionOverride = "2.0.0"
-        
-        // Should replace the existing plugin
-        try await pluginManager.registerPlugin(conflictingPlugin)
-        
-        let registeredPlugin = pluginManager.plugin(withIdentifier: mockPlugin.identifier)
-        XCTAssertEqual(registeredPlugin?.pluginVersion, "2.0.0")
-    }
-    
-    func testPluginAlreadyRegisteredError() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        
-        // Try to register the exact same plugin again
-        do {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            XCTAssertFalse(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
+            
             try await pluginManager.registerPlugin(mockPlugin)
-            XCTFail("Should throw alreadyRegistered error")
-        } catch PluginError.alreadyRegistered(let pluginId) {
-            XCTAssertEqual(pluginId, mockPlugin.identifier)
+            
+            XCTAssertTrue(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
+            XCTAssertNotNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
         }
     }
     
+    @MainActor
+    func testPluginUnregistration() async throws {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            XCTAssertNotNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
+            
+            await pluginManager.unregisterPlugin(mockPlugin.identifier)
+            
+            XCTAssertNil(pluginManager.plugin(withIdentifier: mockPlugin.identifier))
+            XCTAssertFalse(pluginManager.allPlugins.contains { $0.identifier == mockPlugin.identifier })
+        }
+    }
+    
+    @MainActor
+    func testPluginActivation() async throws {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            
+            // Plugins are auto-enabled upon registration unless explicitly disabled
+            XCTAssertTrue(pluginManager.isPluginActive(mockPlugin.identifier))
+            XCTAssertTrue(mockPlugin.isActivated)
+            
+            // Test deactivation
+            await pluginManager.disablePlugin(mockPlugin.identifier)
+            XCTAssertFalse(pluginManager.isPluginActive(mockPlugin.identifier))
+            XCTAssertTrue(mockPlugin.isDeactivated)
+            
+            // Test re-activation
+            try await pluginManager.enablePlugin(mockPlugin.identifier)
+            XCTAssertTrue(pluginManager.isPluginActive(mockPlugin.identifier))
+        }
+    }
+    
+    @MainActor
+    func testPluginDeactivation() async throws {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            try await pluginManager.enablePlugin(mockPlugin.identifier)
+            
+            XCTAssertTrue(pluginManager.isPluginActive(mockPlugin.identifier))
+            
+            await pluginManager.disablePlugin(mockPlugin.identifier)
+            
+            XCTAssertFalse(pluginManager.isPluginActive(mockPlugin.identifier))
+            XCTAssertTrue(mockPlugin.isDeactivated)
+        }
+    }
+    
+    @MainActor
+    func testPluginVersionConflict() async throws {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            
+            // Try to register plugin with same ID but different version
+            let conflictingPlugin = MockLanguagePlugin(identifier: mockPlugin.identifier)
+            conflictingPlugin.pluginVersionOverride = "2.0.0"
+            
+            // Should replace the existing plugin
+            try await pluginManager.registerPlugin(conflictingPlugin)
+            
+            let registeredPlugin = pluginManager.plugin(withIdentifier: mockPlugin.identifier)
+            XCTAssertEqual(registeredPlugin?.pluginVersion, "2.0.0")
+        }
+    }
+    
+    @MainActor
+    func testPluginAlreadyRegisteredError() async throws {
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            
+            // Try to register the exact same plugin again
+            do {
+                try await pluginManager.registerPlugin(mockPlugin)
+                XCTFail("Should throw alreadyRegistered error")
+            } catch PluginError.alreadyRegistered(let pluginId) {
+                XCTAssertEqual(pluginId, mockPlugin.identifier)
+            }
+        }
+    }
+    
+    @MainActor
     func testPluginNotFoundError() async throws {
+        let pluginManager = PluginManager.shared
         do {
             try await pluginManager.enablePlugin("non-existent-plugin")
             XCTFail("Should throw notFound error")
@@ -111,7 +138,9 @@ final class PluginArchitectureTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testPluginCompatibilityValidation() async throws {
+        let pluginManager = PluginManager.shared
         let incompatiblePlugin = IncompatibleMockPlugin()
         
         do {
@@ -125,39 +154,45 @@ final class PluginArchitectureTests: XCTestCase {
     
     // MARK: - Feature Provider Tests
     
+    @MainActor
     func testFeatureProviderRegistration() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        try await pluginManager.enablePlugin(mockPlugin.identifier)
-        
-        let language = Language(name: "Mock", identifier: "mock")
-        
-        // Test completion providers
-        let completionProviders = pluginManager.completionProviders(for: language)
-        XCTAssertFalse(completionProviders.isEmpty)
-        
-        // Test formatters
-        let formatters = pluginManager.formatters(for: language)
-        XCTAssertFalse(formatters.isEmpty)
-        
-        // Test linters
-        let linters = pluginManager.linters(for: language)
-        XCTAssertTrue(linters.isEmpty) // Mock plugin doesn't provide linter
-        
-        // Test documentation providers
-        let docProviders = pluginManager.documentationProviders(for: language)
-        XCTAssertTrue(docProviders.isEmpty) // Mock plugin doesn't provide doc provider
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            try await pluginManager.enablePlugin(mockPlugin.identifier)
+            
+            let language = Language(name: "Mock", identifier: "mock")
+            
+            // Test completion providers
+            let completionProviders = pluginManager.completionProviders(for: language)
+            XCTAssertFalse(completionProviders.isEmpty)
+            
+            // Test formatters
+            let formatters = pluginManager.formatters(for: language)
+            XCTAssertFalse(formatters.isEmpty)
+            
+            // Test linters
+            let linters = pluginManager.linters(for: language)
+            XCTAssertTrue(linters.isEmpty) // Mock plugin doesn't provide linter
+            
+            // Test documentation providers
+            let docProviders = pluginManager.documentationProviders(for: language)
+            XCTAssertTrue(docProviders.isEmpty) // Mock plugin doesn't provide doc provider
+        }
     }
     
+    @MainActor
     func testFeatureProviderUnregistration() async throws {
-        try await pluginManager.registerPlugin(mockPlugin)
-        try await pluginManager.enablePlugin(mockPlugin.identifier)
-        
-        let language = Language(name: "Mock", identifier: "mock")
-        XCTAssertFalse(pluginManager.completionProviders(for: language).isEmpty)
-        
-        await pluginManager.disablePlugin(mockPlugin.identifier)
-        
-        XCTAssertTrue(pluginManager.completionProviders(for: language).isEmpty)
+        try await withPluginSetup { pluginManager, mockPlugin in
+            try await pluginManager.registerPlugin(mockPlugin)
+            try await pluginManager.enablePlugin(mockPlugin.identifier)
+            
+            let language = Language(name: "Mock", identifier: "mock")
+            XCTAssertFalse(pluginManager.completionProviders(for: language).isEmpty)
+            
+            await pluginManager.disablePlugin(mockPlugin.identifier)
+            
+            XCTAssertTrue(pluginManager.completionProviders(for: language).isEmpty)
+        }
     }
     
     // MARK: - Plugin Capabilities Tests
@@ -190,7 +225,9 @@ final class PluginArchitectureTests: XCTestCase {
     
     // MARK: - Plugin Validation Tests
     
+    @MainActor
     func testPluginValidationCompatible() {
+        let mockPlugin = MockLanguagePlugin()
         let result = mockPlugin.validateCompatibility(editorVersion: "1.0.0")
         XCTAssertEqual(result, .compatible)
     }
@@ -330,18 +367,20 @@ final class PluginArchitectureTests: XCTestCase {
     }
     
     func testSymbolKinds() {
-        XCTAssertEqual(SymbolKind.function.rawValue, "function")
-        XCTAssertEqual(SymbolKind.class.rawValue, "class")
-        XCTAssertEqual(SymbolKind.variable.rawValue, "variable")
+        XCTAssertEqual(LanguageSymbolKind.function.rawValue, "function")
+        XCTAssertEqual(LanguageSymbolKind.class.rawValue, "class")
+        XCTAssertEqual(LanguageSymbolKind.variable.rawValue, "variable")
         
         // Test all cases are covered
-        XCTAssertFalse(SymbolKind.allCases.isEmpty)
-        XCTAssertTrue(SymbolKind.allCases.contains(.function))
+        XCTAssertFalse(LanguageSymbolKind.allCases.isEmpty)
+        XCTAssertTrue(LanguageSymbolKind.allCases.contains(.function))
     }
     
     // MARK: - Performance Tests
     
+    @MainActor
     func testPluginActivationPerformance() throws {
+        let pluginManager = PluginManager.shared
         measure {
             let expectation = self.expectation(description: "Plugin activation")
             Task {
@@ -360,7 +399,9 @@ final class PluginArchitectureTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testMultiplePluginManagement() async throws {
+        let pluginManager = PluginManager.shared
         let plugins = (0..<10).map { MockLanguagePlugin(identifier: "plugin-\($0)") }
         
         // Register all plugins
@@ -391,6 +432,8 @@ final class PluginArchitectureTests: XCTestCase {
 
 @MainActor
 private class MockLanguagePlugin: LanguagePlugin {
+    deinit {}
+    
     let identifier: String
     let displayName = "Mock Plugin"
     let fileExtensions = ["mock"]
@@ -433,7 +476,7 @@ private class MockLanguagePlugin: LanguagePlugin {
     }
     
     func createCompletionProvider() -> (any CompletionProvider)? {
-        MockCompletionProvider(id: "\(identifier)-completion")
+        MockPluginCompletionProvider(id: "\(identifier)-completion")
     }
     
     func createFormatter() -> (any CodeFormatter)? {
@@ -455,6 +498,8 @@ private class MockLanguagePlugin: LanguagePlugin {
 
 @MainActor
 private class IncompatibleMockPlugin: LanguagePlugin {
+    deinit {}
+    
     let identifier = "incompatible-plugin"
     let displayName = "Incompatible Plugin"
     let fileExtensions = ["incompatible"]
@@ -488,6 +533,8 @@ private struct MockSyntaxHighlighter: SyntaxHighlighter {
 
 @MainActor
 private class MockCodeFormatter: CodeFormatter {
+    deinit {}
+    
     let id = "mock-formatter"
     let supportedLanguages = [Language(name: "Mock", identifier: "mock")]
     let supportsRangeFormatting = true
@@ -497,11 +544,35 @@ private class MockCodeFormatter: CodeFormatter {
     }
     
     func formatRange(source: String, range: NSRange, options _: FormattingOptions) async throws -> String {
-        let substring = (source as NSString).substring(with: range)
+        let start = source.index(source.startIndex, offsetBy: range.location)
+        let end = source.index(start, offsetBy: range.length)
+        let substring = String(source[start..<end])
         return substring.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     func defaultOptions() -> FormattingOptions {
         FormattingOptions()
+    }
+}
+
+@MainActor
+private class MockPluginCompletionProvider: CompletionProvider {
+    deinit {}
+    
+    let id: String
+    let supportedLanguages: [Language] = [Language(name: "Mock", identifier: "mock")]
+    let triggerCharacters: [String] = []
+    
+    init(id: String) {
+        self.id = id
+    }
+    
+    func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        CompletionResult(
+            items: [],
+            context: context,
+            isIncomplete: false,
+            processingTime: 0.001
+        )
     }
 }

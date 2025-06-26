@@ -21,19 +21,19 @@ public enum PluginError: LocalizedError, Sendable {
         case .alreadyRegistered(let pluginId):
             return "Plugin already registered: \(pluginId)"
 
-        case .incompatible(let pluginId, let reason):
+        case let .incompatible(pluginId, reason):
             return "Plugin \(pluginId) is incompatible: \(reason)"
 
-        case .activationFailed(let pluginId, let underlying):
+        case let .activationFailed(pluginId, underlying):
             return "Failed to activate plugin \(pluginId): \(underlying.localizedDescription)"
 
-        case .loadingFailed(let pluginPath, let underlying):
+        case let .loadingFailed(pluginPath, underlying):
             return "Failed to load plugin from \(pluginPath): \(underlying.localizedDescription)"
 
-        case .configurationError(let pluginId, let message):
+        case let .configurationError(pluginId, message):
             return "Plugin \(pluginId) configuration error: \(message)"
 
-        case .dependencyMissing(let pluginId, let dependency):
+        case let .dependencyMissing(pluginId, dependency):
             return "Plugin \(pluginId) is missing dependency: \(dependency)"
 
         case .unsupportedOperation(let message):
@@ -150,19 +150,19 @@ public struct PluginEntryPoint: Codable, Sendable {
 
 /// Plugin types
 public enum PluginType: String, Codable, CaseIterable, Sendable {
-    case swift = "swift"
-    case javascript = "javascript"
-    case python = "python"
-    case executable = "executable"
+    case swift
+    case javascript
+    case python
+    case executable
     case languageServer = "lsp"
 }
 
 /// Plugin runtime environments
 public enum PluginRuntime: String, Codable, CaseIterable, Sendable {
-    case native = "native"
-    case javascript = "javascript"
-    case python = "python"
-    case process = "process"
+    case native
+    case javascript
+    case python
+    case process
 }
 
 // MARK: - Plugin Dependencies
@@ -227,9 +227,9 @@ public enum PluginUtilities {
         
         let maxCount = max(v1Components.count, v2Components.count)
         
-        for i in 0..<maxCount {
-            let v1Part = i < v1Components.count ? v1Components[i] : 0
-            let v2Part = i < v2Components.count ? v2Components[i] : 0
+        for index in 0..<maxCount {
+            let v1Part = index < v1Components.count ? v1Components[index] : 0
+            let v2Part = index < v2Components.count ? v2Components[index] : 0
             
             if v1Part < v2Part {
                 return .orderedAscending

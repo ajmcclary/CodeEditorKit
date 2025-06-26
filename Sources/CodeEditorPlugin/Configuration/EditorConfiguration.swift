@@ -250,12 +250,41 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         
         return Self(layout: layout, display: display, behavior: behavior)
     }()
+    
+    // MARK: - Configuration Application
+    
+    /// Apply configuration to a CodeEditorView
+    @MainActor public func apply(to view: CodeEditorView) {
+        // Set the view's configuration property which will trigger applyConfiguration()
+        view.configuration = self
+        
+        // Also apply additional settings that aren't handled by the internal applyConfiguration
+        #if canImport(AppKit)
+        view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        
+        if layout.wrapLines {
+            view.textContainer?.widthTracksTextView = true
+            view.isHorizontallyResizable = false
+        } else {
+            view.textContainer?.widthTracksTextView = false
+            view.isHorizontallyResizable = true
+        }
+        #elseif canImport(UIKit)
+        view.font = UIFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        view.spellCheckingType = behavior.isContinuousSpellCheckingEnabled ? .yes : .no
+        view.autocorrectionType = behavior.isAutomaticSpellingCorrectionEnabled ? .yes : .no
+        view.smartQuotesType = behavior.isAutomaticQuoteSubstitutionEnabled ? .yes : .no
+        view.smartDashesType = behavior.isAutomaticDashSubstitutionEnabled ? .yes : .no
+        #endif
+    }
 }
 
 // MARK: - Configuration Builder
 
 /// Builder pattern for creating configurations
 public class EditorConfigurationBuilder {
+    deinit {}
+    
     private var configuration = EditorConfiguration()
     
     public init() {}
@@ -383,43 +412,5 @@ public class EditorConfigurationBuilder {
     // Build
     public func build() -> EditorConfiguration {
         configuration
-    }
-}
-
-// MARK: - Configuration Extensions
-
-public extension EditorConfiguration {
-    /// Apply configuration to a CodeEditorView
-    @MainActor func apply(to view: CodeEditorView) {
-        view.showsLineNumbers = display.showLineNumbers
-        view.highlightSelectedLine = display.highlightSelectedLine
-        view.showsInvisibleCharacters = display.showInvisibleCharacters
-        view.isEditable = behavior.isEditable
-        view.isSyntaxHighlightingEnabled = display.enableSyntaxHighlighting
-        
-        #if canImport(AppKit)
-        view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.isContinuousSpellCheckingEnabled = behavior.isContinuousSpellCheckingEnabled
-        view.isGrammarCheckingEnabled = behavior.isGrammarCheckingEnabled
-        view.isAutomaticQuoteSubstitutionEnabled = behavior.isAutomaticQuoteSubstitutionEnabled
-        view.isAutomaticDashSubstitutionEnabled = behavior.isAutomaticDashSubstitutionEnabled
-        view.isAutomaticTextReplacementEnabled = behavior.isAutomaticTextReplacementEnabled
-        view.isAutomaticSpellingCorrectionEnabled = behavior.isAutomaticSpellingCorrectionEnabled
-        view.isAutomaticTextCompletionEnabled = behavior.isAutomaticTextCompletionEnabled
-        
-        if layout.wrapLines {
-            view.textContainer?.widthTracksTextView = true
-            view.isHorizontallyResizable = false
-        } else {
-            view.textContainer?.widthTracksTextView = false
-            view.isHorizontallyResizable = true
-        }
-        #elseif canImport(UIKit)
-        view.font = UIFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.spellCheckingType = behavior.isContinuousSpellCheckingEnabled ? .yes : .no
-        view.autocorrectionType = behavior.isAutomaticSpellingCorrectionEnabled ? .yes : .no
-        view.smartQuotesType = behavior.isAutomaticQuoteSubstitutionEnabled ? .yes : .no
-        view.smartDashesType = behavior.isAutomaticDashSubstitutionEnabled ? .yes : .no
-        #endif
     }
 }

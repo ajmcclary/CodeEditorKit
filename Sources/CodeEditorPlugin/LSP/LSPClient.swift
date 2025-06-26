@@ -283,7 +283,7 @@ public final class LSPClient: ObservableObject {
     /// Request document symbols
     /// - Parameter uri: Document URI
     /// - Returns: Document symbols
-    public func requestDocumentSymbols(uri: String) async throws -> [DocumentSymbol] {
+    public func requestDocumentSymbols(uri: String) async throws -> [LSPDocumentSymbol] {
         guard connectionState == .initialized else {
             throw LSPError.notConnected
         }
@@ -293,7 +293,7 @@ public final class LSPClient: ObservableObject {
         )
         
         let response = try await sendRequest(method: "textDocument/documentSymbol", params: params)
-        return try response.decode(as: [DocumentSymbol].self)
+        return try response.decode(as: [LSPDocumentSymbol].self)
     }
     
     // MARK: - Private Methods

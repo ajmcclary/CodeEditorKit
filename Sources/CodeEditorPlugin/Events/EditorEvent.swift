@@ -49,6 +49,8 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
     public func handle(_ event: EditorEvent) {
         handler(event)
     }
+    
+    deinit {}
 }
 
 /// Publisher for editor events using Combine
@@ -96,6 +98,10 @@ public final class EditorEventPublisher {
             self.handlers.removeAll()
         }
     }
+    
+    deinit {
+        removeAll()
+    }
 }
 
 /// Weak reference wrapper for EditorEventHandler
@@ -105,6 +111,8 @@ private final class WeakHandler {
     init(_ value: any EditorEventHandler) {
         self.value = value
     }
+    
+    deinit {}
 }
 
 // MARK: - Combine Support
@@ -113,7 +121,7 @@ private final class WeakHandler {
 import Combine
 
 @available(macOS 10.15, iOS 13.0, *)
-public extension EditorEventPublisher {
+extension EditorEventPublisher {
     // TODO: Re-enable when Combine integration is fixed
     /*
     /// Create a Combine publisher for editor events
