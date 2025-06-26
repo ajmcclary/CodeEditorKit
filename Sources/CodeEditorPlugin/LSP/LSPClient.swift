@@ -17,14 +17,14 @@ public final class LSPClient: ObservableObject {
         public init(
             languageId: String,
             serverPath: String,
-            serverArguments: [String] = [],
             workspaceRoot: URL,
+            serverArguments: [String] = [],
             capabilities: ClientCapabilities = .default
         ) {
             self.languageId = languageId
             self.serverPath = serverPath
-            self.serverArguments = serverArguments
             self.workspaceRoot = workspaceRoot
+            self.serverArguments = serverArguments
             self.capabilities = capabilities
         }
     }
@@ -60,12 +60,12 @@ public final class LSPClient: ObservableObject {
     // MARK: - Types
     
     public enum ConnectionState: String, CaseIterable, Sendable {
-        case disconnected = "disconnected"
-        case connecting = "connecting"
-        case initializing = "initializing" 
-        case initialized = "initialized"
-        case shuttingDown = "shuttingDown"
-        case error = "error"
+        case disconnected
+        case connecting
+        case initializing
+        case initialized
+        case shuttingDown
+        case error
     }
     
     public typealias LSPRequestCompletion = @Sendable (Result<LSPResponse, LSPError>) -> Void
@@ -293,7 +293,7 @@ public final class LSPClient: ObservableObject {
         )
         
         let response = try await sendRequest(method: "textDocument/documentSymbol", params: params)
-        return try response.decode(as: [CodeEditorPlugin.DocumentSymbol].self)
+        return try response.decode(as: [DocumentSymbol].self)
     }
     
     // MARK: - Private Methods
@@ -419,7 +419,7 @@ public final class LSPClient: ObservableObject {
                 do {
                     try await self.sendMessage(request)
                 } catch {
-                    await MainActor.run {
+                    _ = await MainActor.run {
                         self.pendingRequests.removeValue(forKey: requestId)
                     }
                     continuation.resume(throwing: error)

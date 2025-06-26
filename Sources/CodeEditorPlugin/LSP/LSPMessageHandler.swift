@@ -1,6 +1,13 @@
 import Foundation
 import os.log
 
+/// LSP error response structure
+struct ResponseError: Codable {
+    let code: Int
+    let message: String
+    let data: String?
+}
+
 /// Handles LSP message parsing and protocol communication
 actor LSPMessageHandler {
     // MARK: - Properties
@@ -173,7 +180,7 @@ actor LSPMessageHandler {
 public struct LSPResponse: Sendable {
     private let data: Data
     
-    init(data: Data, messageDict: [String: Any]) {
+    init(data: Data, messageDict _: [String: Any]) {
         self.data = data
     }
     
@@ -182,13 +189,26 @@ public struct LSPResponse: Sendable {
     /// - Returns: Decoded value
     /// - Throws: LSPError if decoding fails
     public func decode<T: Codable>(as type: T.Type) throws -> T {
-        // Decode the response from the raw data
-        let decoder = JSONDecoder()
-        guard let dict = try? decoder.decode([String: AnyCodable].self, from: data),
-              let result = dict["result"] else {
+        // Parse JSON manually since we can't nest generic structs
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []),
+              let dict = json as? [String: Any] else {
+            throw LSPError.invalidResponse("Failed to parse response")
+        }
+        
+        // Check for error response
+        if let errorDict = dict["error"] as? [String: Any] {
+            let code = errorDict["code"] as? Int ?? -1
+            let message = errorDict["message"] as? String ?? "Unknown error"
+            let data = errorDict["data"] as? String
+            throw LSPError.serverError(code: code, message: message, data: data)
+        }
+        
+        // Extract result
+        guard let result = dict["result"] else {
             throw LSPError.invalidResponse("No result in response")
         }
         
+        // Encode result back to data and decode as requested type
         let resultData = try JSONSerialization.data(withJSONObject: result, options: [])
         
         do {
@@ -200,9 +220,8 @@ public struct LSPResponse: Sendable {
     
     /// Get the raw result object
     public var rawResult: Any? {
-        // Decode the response from the raw data
-        let decoder = JSONDecoder()
-        guard let dict = try? decoder.decode([String: AnyCodable].self, from: data) else {
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []),
+              let dict = json as? [String: Any] else {
             return nil
         }
         return dict["result"]

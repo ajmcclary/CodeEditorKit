@@ -71,13 +71,17 @@ public final class LSPManager: ObservableObject {
         }
     }
     
-    @MainActor @preconcurrency 
-    public struct LSPCompletionItem: CompletionItem {
+    @MainActor
+    public struct LSPCompletionItem: CompletionItem, Sendable {
         public let item: any CompletionItem
         public let languageId: String
         public let client: LSPClient
         
-        public var id: String { item.id as? String ?? "" }
+        nonisolated public var id: String { 
+            // Generate a unique ID based on item properties
+            "\(languageId)-\(UUID().uuidString)"
+        }
+        
         public var view: PlatformView { item.view }
         
         public init(item: any CompletionItem, languageId: String, client: LSPClient) {
@@ -169,8 +173,8 @@ public final class LSPManager: ObservableObject {
         let serverConfig = LSPClient.ServerConfiguration(
             languageId: languageId,
             serverPath: config.serverPath,
-            serverArguments: config.serverArguments,
             workspaceRoot: workspaceRoot,
+            serverArguments: config.serverArguments,
             capabilities: config.capabilities
         )
         
@@ -334,19 +338,31 @@ public final class LSPManager: ObservableObject {
         let position = Position(line: line, character: character)
         let completionList = try await client.requestCompletion(uri: uri, position: position)
         
-        return completionList.items.map { lspItem in
+        let items: [LSPCompletionItem] = completionList.items.map { lspItem in
             // Convert LSP completion item to our completion item format
+            let documentationText: String? = {
+                switch lspItem.documentation {
+                case .string(let text):
+                    return text
+                case .markupContent(let content):
+                    return content.value
+                case .none:
+                    return nil
+                }
+            }()
+            
             let convertedItem = CompletionItemAdapter(
                 CompletionItemModel(
                     label: lspItem.label,
                     insertText: lspItem.insertText ?? lspItem.label,
                     kind: .text, // Simplified for now
                     detail: lspItem.detail,
-                    documentation: lspItem.documentation?.string
+                    documentation: documentationText
                 )
             )
             return LSPCompletionItem(item: convertedItem, languageId: document.languageId, client: client)
         }
+        return items
     }
     
     /// Request hover information

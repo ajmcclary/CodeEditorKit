@@ -31,7 +31,7 @@ public final class LSPCompletionProvider: CompletionProvider {
     // MARK: - CompletionProvider Protocol
     
     public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        return await requestCompletions(for: context)
+        await requestCompletions(for: context)
     }
     
     public func canProvideCompletion(for language: Language, in _: CompletionContextModel) -> Bool {
@@ -83,8 +83,8 @@ public final class LSPCompletionProvider: CompletionProvider {
             // Convert LSP completion items to our completion model
             let completionItems = lspItems.compactMap { lspItem in
                 // Extract the actual LSP item from the wrapper
-                if let actualLSPItem = lspItem as? LSPManager.LSPCompletionItem,
-                   let convertedItem = actualLSPItem.item as? CompletionItemAdapter {
+                let actualLSPItem = lspItem
+                if let convertedItem = actualLSPItem.item as? CompletionItemAdapter {
                     return convertedItem.model
                 }
                 return nil

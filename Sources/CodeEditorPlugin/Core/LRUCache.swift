@@ -40,7 +40,7 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     
     /// Check if the cache is empty
     public var isEmpty: Bool {
-        return cache.isEmpty
+        cache.isEmpty
     }
     
     /// Gets a value from the cache, moving it to most recently used

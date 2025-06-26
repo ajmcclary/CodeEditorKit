@@ -68,6 +68,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         // Note: Cannot access MainActor isolated properties from deinit
         // Timer and OperationQueue will be cleaned up automatically
         // The operation queue will cancel all operations when deallocated
+        operationQueue.cancelAllOperations()
     }
     
     // MARK: - Public Methods
@@ -247,7 +248,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
             throw HighlightingError.cancelled
         }
         
-        return operation.result ?? []
+        return operation.result
     }
     
     private func processLargeText(_ request: HighlightingRequest) async throws -> [HighlightedToken] {
@@ -263,7 +264,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
                 language: request.language,
                 priority: request.priority,
                 visibleRange: request.visibleRange
-            )                { _ in } // Empty completion for chunks
+            ) { _ in } // Empty completion for chunks
             
             let chunkTokens = try await processNormalText(chunkRequest)
             
@@ -287,7 +288,8 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     
     private func splitTextIntoChunks(_ text: String, chunkSize: Int) -> [(text: String, offset: Int)] {
         var chunks: [(text: String, offset: Int)] = []
-        let nsString = text as NSString
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = NSString(string: text)
         var currentOffset = 0
         
         while currentOffset < nsString.length {
@@ -413,7 +415,7 @@ public class HighlightingOperation: Operation, @unchecked Sendable {
     let language: Language
     let priority: HighlightingPriority
     
-    private(set) var result: [HighlightedToken]?
+    private(set) var result: [HighlightedToken] = []
     
     init(text: String, language: Language, priority: HighlightingPriority) {
         self.text = text
@@ -461,7 +463,8 @@ public class HighlightingOperation: Operation, @unchecked Sendable {
             keywords = ["function", "var", "if", "else", "for", "while", "return"]
         }
         
-        let nsString = text as NSString
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = NSString(string: text)
         
         for keyword in keywords {
             var searchRange = NSRange(location: 0, length: nsString.length)
@@ -488,6 +491,10 @@ public class HighlightingOperation: Operation, @unchecked Sendable {
         }
         
         return tokens
+    }
+    
+    deinit {
+        // Cleanup if needed
     }
 }
 
@@ -590,6 +597,10 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
         lastCompletionTime = nil
         processingTimes.removeAll()
         tokenCounts.removeAll()
+    }
+    
+    deinit {
+        // Cleanup if needed
     }
 }
 

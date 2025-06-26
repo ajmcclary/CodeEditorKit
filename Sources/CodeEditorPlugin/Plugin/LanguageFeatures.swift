@@ -344,7 +344,7 @@ extension LanguageFeatures {
             self.containerName = containerName
         }
         
-        public static func == (lhs: WorkspaceSymbol, rhs: WorkspaceSymbol) -> Bool {
+        public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.id == rhs.id &&
             lhs.name == rhs.name &&
             lhs.kind == rhs.kind &&

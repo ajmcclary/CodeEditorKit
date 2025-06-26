@@ -232,7 +232,7 @@ public struct PluginCreationView: View {
                     TemplateCard(
                         template: template,
                         isSelected: selectedTemplate == template
-                    )                        { selectedTemplate = template }
+                    ) { selectedTemplate = template }
                 }
             }
         }
@@ -257,7 +257,7 @@ public struct PluginCreationView: View {
                     LanguageToggle(
                         language: language,
                         isSelected: selectedLanguages.contains(language)
-                    )                        { toggleLanguage(language) }
+                    ) { toggleLanguage(language) }
                 }
             }
         }
@@ -393,17 +393,10 @@ public struct PluginCreationView: View {
         errorMessage = nil
         
         Task {
-            do {
-                await generatePluginStructure()
-                
-                await MainActor.run {
-                    dismiss()
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isCreating = false
-                }
+            await generatePluginStructure()
+            
+            await MainActor.run {
+                dismiss()
             }
         }
     }

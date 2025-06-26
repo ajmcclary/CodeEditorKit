@@ -18,8 +18,8 @@ public typealias PlatformView = NSView
 public typealias PlatformViewController = NSViewController
 #endif
 
-import os.log
 import ObjectiveC
+import os.log
 
 // Local logger instance for CodeEditorView
 private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
@@ -634,7 +634,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
         
-        let popoverVC = viewController as! UIViewController
+        guard let popoverVC = viewController as? UIViewController else {
+            assertionFailure("viewController must be a UIViewController on iOS")
+            return
+        }
         popoverVC.modalPresentationStyle = .popover
         
         if let popover = popoverVC.popoverPresentationController {
@@ -1529,6 +1532,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
 // MARK: - CompletionViewControllerDelegate
 
+// swiftlint:disable:next no_grouping_extension
 extension CodeEditorView: CompletionViewControllerDelegate {
     public func completionViewController(
         _: some CompletionViewControllerProtocol,
@@ -1544,7 +1548,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         } else {
             // For items that don't have the adapter pattern, we can't access detailed properties
             // This is a minimal fallback implementation
-            print("Warning: Completion item does not provide detailed information for insertion")
+            kLogger.warning("Completion item does not provide detailed information for insertion")
         }
     }
     
@@ -1576,8 +1580,10 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         }
         #else
         // UITextView text replacement
-        if let textRange = textRange(from: position(from: beginningOfDocument, offset: replaceRange.location)!,
-                                     to: position(from: beginningOfDocument, offset: replaceRange.location + replaceRange.length)!) {
+        if let textRange = textRange(
+            from: position(from: beginningOfDocument, offset: replaceRange.location)!,
+            to: position(from: beginningOfDocument, offset: replaceRange.location + replaceRange.length)!
+        ) {
             replace(textRange, withText: insertText)
         }
         #endif
@@ -1662,7 +1668,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// Current file path for LSP document management
     public var filePath: String? {
         get {
-            return objc_getAssociatedObject(self, &AssociatedKeys.filePath) as? String
+            objc_getAssociatedObject(self, &AssociatedKeys.filePath) as? String
         }
         set {
             let oldValue = filePath
@@ -1673,8 +1679,8 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         }
     }
     
-    private struct AssociatedKeys {
-        @MainActor static var filePath = "filePath"
+    private enum AssociatedKeys {
+        @MainActor static var filePath: UInt8 = 0
     }
     
     /// Set up LSP integration during initialization

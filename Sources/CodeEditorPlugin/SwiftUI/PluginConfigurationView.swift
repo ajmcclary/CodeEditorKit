@@ -109,7 +109,7 @@ public struct PluginConfigurationView: View {
                         PluginRowView(
                             plugin: plugin,
                             pluginManager: pluginManager
-                        )                            { selectedPlugin = plugin; showDetailsSheet = true }
+                        ) { selectedPlugin = plugin; showDetailsSheet = true }
                     }
                 }
             }
@@ -209,7 +209,7 @@ public struct PluginConfigurationView: View {
             .buttonStyle(.borderedProminent)
         }
         
-        ToolbarItemGroup(placement: .secondaryAction) {
+        ToolbarItemGroup(placement: .automatic) {
             Menu("Plugin Actions") {
                 Button("Refresh All") {
                     Task {
@@ -331,6 +331,7 @@ struct PluginRowView: View {
     let onSelect: () -> Void
     
     @State private var isEnabled: Bool
+    private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "PluginRowView")
     
     init(plugin: any LanguagePlugin, pluginManager: PluginManager, onSelect: @escaping () -> Void) {
         self.plugin = plugin
@@ -377,16 +378,20 @@ struct PluginRowView: View {
                     .lineLimit(2)
                 
                 HStack {
-                    Label("Languages: \(plugin.supportedLanguages.map(\.name).joined(separator: ", "))", 
-                          systemImage: "textformat")
+                    Label(
+                        "Languages: \(plugin.supportedLanguages.map(\.name).joined(separator: ", "))", 
+                        systemImage: "textformat"
+                    )
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
                     if let stats = pluginManager.performanceStatistics[plugin.id] {
-                        Label("Score: \(String(format: "%.1f", stats.overallScore))", 
-                              systemImage: "speedometer")
+                        Label(
+                            "Score: \(String(format: "%.1f", stats.overallScore))", 
+                            systemImage: "speedometer"
+                        )
                             .font(.caption)
                             .foregroundColor(scoreColor(stats.overallScore))
                     }
@@ -399,10 +404,14 @@ struct PluginRowView: View {
                     .toggleStyle(SwitchToggleStyle())
                     .onChange(of: isEnabled) { newValue in
                         Task {
-                            if newValue {
-                                await pluginManager.enablePlugin(plugin.id)
-                            } else {
-                                await pluginManager.disablePlugin(plugin.id)
+                            do {
+                                if newValue {
+                                    try await pluginManager.enablePlugin(plugin.id)
+                                } else {
+                                    await pluginManager.disablePlugin(plugin.id)
+                                }
+                            } catch {
+                                logger.error("Failed to toggle plugin: \(error)")
                             }
                         }
                     }
@@ -419,6 +428,7 @@ struct PluginRowView: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityAddTraits(.isButton)
     }
     
     private func scoreColor(_ score: Double) -> Color {
