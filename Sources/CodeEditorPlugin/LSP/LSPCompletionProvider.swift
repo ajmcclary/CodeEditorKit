@@ -9,6 +9,7 @@ public final class LSPCompletionProvider: CompletionProvider {
     public let id: String = "lsp-completion-provider"
     public let displayName: String = "LSP Completion Provider"
     public let supportedLanguages: [Language]
+    public let triggerCharacters: [String] = [".", ":", "(", "[", "<", " "]
     
     /// LSP manager reference
     private weak var lspManager: LSPManager?
@@ -24,10 +25,14 @@ public final class LSPCompletionProvider: CompletionProvider {
     public init(lspManager: LSPManager, supportedLanguages: [Language] = []) {
         self.lspManager = lspManager
         // Support all languages if none specified (LSP servers will determine actual support)
-        self.supportedLanguages = supportedLanguages.isEmpty ? Language.allCases : supportedLanguages
+        self.supportedLanguages = supportedLanguages.isEmpty ? [] : supportedLanguages
     }
     
     // MARK: - CompletionProvider Protocol
+    
+    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        return await requestCompletions(for: context)
+    }
     
     public func canProvideCompletion(for language: Language, in _: CompletionContextModel) -> Bool {
         guard let lspManager else { return false }
@@ -40,7 +45,12 @@ public final class LSPCompletionProvider: CompletionProvider {
     public func requestCompletions(for context: CompletionContextModel) async -> CompletionResult {
         guard let lspManager,
               let filePath = currentFilePath else {
-            return CompletionResult.failure("No LSP manager or file path available")
+            return CompletionResult(
+                items: [],
+                isIncomplete: false,
+                context: context,
+                processingTime: 0
+            )
         }
         
         let languageId = languageIdForLanguage(context.language)
@@ -48,14 +58,19 @@ public final class LSPCompletionProvider: CompletionProvider {
         // Check if LSP client is available
         guard lspManager.client(for: languageId) != nil else {
             logger.debug("No LSP client available for language: \(languageId)")
-            return CompletionResult.failure("No LSP client available for \(languageId)")
+            return CompletionResult(
+                items: [],
+                isIncomplete: false,
+                context: context,
+                processingTime: 0
+            )
         }
         
         do {
             // Convert cursor position to line/character
             let position = convertPositionToLineCharacter(
-                position: context.triggerPosition,
-                in: context.fullText
+                position: context.cursorPosition,
+                in: context.text
             )
             
             // Request completion from LSP server
@@ -66,19 +81,31 @@ public final class LSPCompletionProvider: CompletionProvider {
             )
             
             // Convert LSP completion items to our completion model
-            let completionItems = lspItems.map { lspItem in
-                convertLSPItemToCompletionItem(lspItem.item, context: context)
+            let completionItems = lspItems.compactMap { lspItem in
+                // Extract the actual LSP item from the wrapper
+                if let actualLSPItem = lspItem as? LSPManager.LSPCompletionItem,
+                   let convertedItem = actualLSPItem.item as? CompletionItemAdapter {
+                    return convertedItem.model
+                }
+                return nil
             }
             
             logger.debug("LSP completion returned \(completionItems.count) items")
             
-            return CompletionResult.success(
+            return CompletionResult(
                 items: completionItems,
-                isIncomplete: false // LSP handles incremental completion internally
+                isIncomplete: false, // LSP handles incremental completion internally
+                context: context,
+                processingTime: 0
             )
         } catch {
             logger.error("LSP completion failed: \(error.localizedDescription)")
-            return CompletionResult.failure("LSP completion failed: \(error.localizedDescription)")
+            return CompletionResult(
+                items: [],
+                isIncomplete: false,
+                context: context,
+                processingTime: 0
+            )
         }
     }
     
@@ -114,11 +141,12 @@ public final class LSPCompletionProvider: CompletionProvider {
         case .regex(let pattern):
             // Try to infer language from regex pattern context
             // This is a simplified mapping - could be improved
-            if pattern.description.contains("javascript") || pattern.description.contains("js") {
+            let name = pattern.name.lowercased()
+            if name.contains("javascript") || name.contains("js") {
                 return "javascript"
-            } else if pattern.description.contains("typescript") || pattern.description.contains("ts") {
+            } else if name.contains("typescript") || name.contains("ts") {
                 return "typescript"
-            } else if pattern.description.contains("python") || pattern.description.contains("py") {
+            } else if name.contains("python") || name.contains("py") {
                 return "python"
             } else {
                 return "plaintext"
@@ -154,7 +182,7 @@ public final class LSPCompletionProvider: CompletionProvider {
         var textEdit: CompletionTextEdit?
         if let lspTextEdit = lspItem.textEdit {
             textEdit = CompletionTextEdit(
-                range: convertLSPRangeToNSRange(lspTextEdit.range, in: context.fullText),
+                range: convertLSPRangeToNSRange(lspTextEdit.range, in: context.text),
                 newText: lspTextEdit.newText
             )
         }
@@ -162,21 +190,19 @@ public final class LSPCompletionProvider: CompletionProvider {
         // Create completion item
         return CompletionItemModel(
             label: lspItem.label,
+            insertText: insertText,
             kind: kind,
             detail: lspItem.detail,
             documentation: documentation,
-            insertText: insertText,
             sortText: lspItem.sortText,
             filterText: lspItem.filterText,
             textEdit: textEdit,
             additionalTextEdits: lspItem.additionalTextEdits?.map { lspEdit in
                 CompletionTextEdit(
-                    range: convertLSPRangeToNSRange(lspEdit.range, in: context.fullText),
+                    range: convertLSPRangeToNSRange(lspEdit.range, in: context.text),
                     newText: lspEdit.newText
                 )
-            },
-            commitCharacters: lspItem.commitCharacters,
-            data: nil // LSP-specific data could be stored here if needed
+            } ?? []
         )
     }
     
@@ -306,7 +332,7 @@ public final class LSPCompletionProvider: CompletionProvider {
 
 extension CompletionItemKind {
     /// Convert to LSP completion item kind  
-    public var asLSPKind: CodeEditorPlugin.LSPCompletionItemKind {
+    public var asLSPKind: LSPCompletionItemKind {
         switch self {
         case .text: return .text
         case .method: return .method

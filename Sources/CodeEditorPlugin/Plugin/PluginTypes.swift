@@ -42,6 +42,23 @@ public enum PluginError: LocalizedError, Sendable {
     }
 }
 
+// MARK: - Plugin Performance Statistics
+
+/// Performance statistics for a plugin
+public struct PluginPerformanceStatistics: Sendable {
+    public let overallScore: Double
+    public let startupTime: TimeInterval
+    public let memoryUsage: Double // in MB
+    public let errorCount: Int
+    
+    public init(overallScore: Double, startupTime: TimeInterval, memoryUsage: Double, errorCount: Int) {
+        self.overallScore = overallScore
+        self.startupTime = startupTime
+        self.memoryUsage = memoryUsage
+        self.errorCount = errorCount
+    }
+}
+
 // MARK: - Plugin Manifest
 
 /// Plugin manifest for dynamic loading

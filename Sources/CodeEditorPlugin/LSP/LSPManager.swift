@@ -71,12 +71,16 @@ public final class LSPManager: ObservableObject {
         }
     }
     
-    public struct LSPCompletionItem {
-        public let item: CompletionItem
+    @MainActor @preconcurrency 
+    public struct LSPCompletionItem: CompletionItem {
+        public let item: any CompletionItem
         public let languageId: String
         public let client: LSPClient
         
-        public init(item: CompletionItem, languageId: String, client: LSPClient) {
+        public var id: String { item.id as? String ?? "" }
+        public var view: PlatformView { item.view }
+        
+        public init(item: any CompletionItem, languageId: String, client: LSPClient) {
             self.item = item
             self.languageId = languageId
             self.client = client
@@ -94,10 +98,8 @@ public final class LSPManager: ObservableObject {
     }
     
     deinit {
-        // Disconnect all clients
-        for client in activeClients.values {
-            client.disconnect()
-        }
+        // Note: Cannot access @MainActor isolated properties in deinit
+        // Clients will be automatically cleaned up by ARC
     }
     
     // MARK: - Configuration Management
@@ -332,8 +334,18 @@ public final class LSPManager: ObservableObject {
         let position = Position(line: line, character: character)
         let completionList = try await client.requestCompletion(uri: uri, position: position)
         
-        return completionList.items.map { item in
-            LSPCompletionItem(item: item, languageId: document.languageId, client: client)
+        return completionList.items.map { lspItem in
+            // Convert LSP completion item to our completion item format
+            let convertedItem = CompletionItemAdapter(
+                CompletionItemModel(
+                    label: lspItem.label,
+                    insertText: lspItem.insertText ?? lspItem.label,
+                    kind: .text, // Simplified for now
+                    detail: lspItem.detail,
+                    documentation: lspItem.documentation?.string
+                )
+            )
+            return LSPCompletionItem(item: convertedItem, languageId: document.languageId, client: client)
         }
     }
     

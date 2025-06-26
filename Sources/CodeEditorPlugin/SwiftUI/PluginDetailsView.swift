@@ -68,7 +68,9 @@ public struct PluginDetailsView: View {
                     logsTab
                         .tag(DetailTab.logs)
                 }
+                #if os(iOS)
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                #endif
             }
             .navigationTitle(plugin.metadata.name)
 #if os(iOS)
@@ -241,8 +243,8 @@ public struct PluginDetailsView: View {
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 8) {
-                        ForEach(plugin.supportedLanguages, id: \.rawValue) { language in
-                            Text(language.rawValue)
+                        ForEach(plugin.supportedLanguages, id: \.identifier) { language in
+                            Text(language.name)
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -385,9 +387,15 @@ public struct PluginDetailsView: View {
     // MARK: - Computed Properties
     
     private var tabIndicatorOffset: CGFloat {
-        let tabWidth = UIScreen.main.bounds.width / CGFloat(DetailTab.allCases.count)
+        #if os(iOS)
+        let screenWidth = UIScreen.main.bounds.width
+        #else
+        let screenWidth: CGFloat = 800 // Default width for macOS
+        #endif
+        
+        let tabWidth = screenWidth / CGFloat(DetailTab.allCases.count)
         let selectedIndex = DetailTab.allCases.firstIndex(of: selectedTab) ?? 0
-        return tabWidth * CGFloat(selectedIndex) - UIScreen.main.bounds.width / 2 + tabWidth / 2
+        return tabWidth * CGFloat(selectedIndex) - screenWidth / 2 + tabWidth / 2
     }
     
     private var capabilityList: [(name: String, enabled: Bool)] {
@@ -408,7 +416,7 @@ public struct PluginDetailsView: View {
             if isPluginEnabled {
                 await pluginManager.disablePlugin(plugin.id)
             } else {
-                await pluginManager.enablePlugin(plugin.id)
+                try? await pluginManager.enablePlugin(plugin.id)
             }
             
             await MainActor.run {

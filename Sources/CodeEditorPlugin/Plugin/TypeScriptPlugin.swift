@@ -136,14 +136,16 @@ public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
         nil
     }
     
-    public func createIndentationProvider() -> (any IndentationProvider)? {
-        TypeScriptIndentationProvider()
-    }
+    // TODO: Re-enable once IndentationProvider is properly imported
+    // public func createIndentationProvider() -> (any IndentationProvider)? {
+    //     TypeScriptIndentationProvider()
+    // }
     
-    public func createLSPClient() -> (any LSPClientProtocol)? {
-        // Could implement TypeScript LSP client
-        nil
-    }
+    // TODO: Re-enable once LSPClientProtocol is properly imported
+    // public func createLSPClient() -> (any LSPClientProtocol)? {
+    //     // Could implement TypeScript LSP client
+    //     nil
+    // }
     
     // MARK: - Lifecycle
     
@@ -297,55 +299,56 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
 
 // MARK: - TypeScript Indentation Provider
 
-@MainActor
-private final class TypeScriptIndentationProvider: IndentationProvider, @unchecked Sendable {
-    let id = "typescript-indentation"
-    let supportedLanguages: [Language] = [
-        Language(name: "TypeScript", identifier: "typescript"),
-        Language(name: "TypeScript React", identifier: "typescriptreact")
-    ]
-    let supportsAutomaticIndentation = true
-    
-    func indentationForNewLine(after lineText: String, in _: String, at _: Int) -> Int {
-        let trimmedLine = lineText.trimmingCharacters(in: .whitespaces)
-        let currentIndent = lineText.count - lineText.trimmingCharacters(in: .leadingWhitespace).count
-        
-        // Increase indentation after opening braces
-        if trimmedLine.hasSuffix("{") || trimmedLine.hasSuffix("[") || trimmedLine.hasSuffix("(") {
-            return currentIndent + 2 // TypeScript commonly uses 2 spaces
-        }
-        
-        // Maintain current indentation for most cases
-        return currentIndent
-    }
-    
-    func indentationForLine(at lineNumber: Int, in source: String) -> Int {
-        let lines = source.components(separatedBy: .newlines)
-        guard lineNumber < lines.count else { return 0 }
-        
-        let line = lines[lineNumber]
-        let trimmedLine = line.trimmingCharacters(in: .whitespaces)
-        
-        // Calculate base indentation from previous lines
-        var indentLevel = 0
-        for i in 0..<lineNumber {
-            let prevLine = lines[i].trimmingCharacters(in: .whitespaces)
-            if prevLine.hasSuffix("{") || prevLine.hasSuffix("[") || prevLine.hasSuffix("(") {
-                indentLevel += 1
-            }
-            if prevLine.hasPrefix("}") || prevLine.hasPrefix("]") || prevLine.hasPrefix(")") {
-                indentLevel = max(0, indentLevel - 1)
-            }
-        }
-        
-        // Decrease indent for closing braces on current line
-        if trimmedLine.hasPrefix("}") || trimmedLine.hasPrefix("]") || trimmedLine.hasPrefix(")") {
-            indentLevel = max(0, indentLevel - 1)
-        }
-        
-        return indentLevel * 2 // TypeScript commonly uses 2 spaces
-    }
-}
+// TODO: Re-enable once IndentationProvider is properly imported
+// @MainActor
+// private final class TypeScriptIndentationProvider: IndentationProvider, @unchecked Sendable {
+//     let id = "typescript-indentation"
+//     let supportedLanguages: [Language] = [
+//         Language(name: "TypeScript", identifier: "typescript"),
+//         Language(name: "TypeScript React", identifier: "typescriptreact")
+//     ]
+//     let supportsAutomaticIndentation = true
+//     
+//     func indentationForNewLine(after lineText: String, in _: String, at _: Int) -> Int {
+//         let trimmedLine = lineText.trimmingCharacters(in: .whitespaces)
+//         let currentIndent = lineText.count - lineText.trimmingCharacters(in: .leadingWhitespace).count
+//         
+//         // Increase indentation after opening braces
+//         if trimmedLine.hasSuffix("{") || trimmedLine.hasSuffix("[") || trimmedLine.hasSuffix("(") {
+//             return currentIndent + 2 // TypeScript commonly uses 2 spaces
+//         }
+//         
+//         // Maintain current indentation for most cases
+//         return currentIndent
+//     }
+//     
+//     func indentationForLine(at lineNumber: Int, in source: String) -> Int {
+//         let lines = source.components(separatedBy: .newlines)
+//         guard lineNumber < lines.count else { return 0 }
+//         
+//         let line = lines[lineNumber]
+//         let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+//         
+//         // Calculate base indentation from previous lines
+//         var indentLevel = 0
+//         for i in 0..<lineNumber {
+//             let prevLine = lines[i].trimmingCharacters(in: .whitespaces)
+//             if prevLine.hasSuffix("{") || prevLine.hasSuffix("[") || prevLine.hasSuffix("(") {
+//                 indentLevel += 1
+//             }
+//             if prevLine.hasPrefix("}") || prevLine.hasPrefix("]") || prevLine.hasPrefix(")") {
+//                 indentLevel = max(0, indentLevel - 1)
+//             }
+//         }
+//         
+//         // Decrease indent for closing braces on current line
+//         if trimmedLine.hasPrefix("}") || trimmedLine.hasPrefix("]") || trimmedLine.hasPrefix(")") {
+//             indentLevel = max(0, indentLevel - 1)
+//         }
+//         
+//         return indentLevel * 2 // TypeScript commonly uses 2 spaces
+//     }
+// }
 
 // MARK: - String Extension
 

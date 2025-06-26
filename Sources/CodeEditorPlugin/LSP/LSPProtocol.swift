@@ -136,8 +136,8 @@ public struct LSPCompletionItem: Codable, Sendable {
     public let filterText: String?
     public let insertText: String?
     public let insertTextFormat: InsertTextFormat?
-    public let textEdit: TextEdit?
-    public let additionalTextEdits: [TextEdit]?
+    public let textEdit: LSPTextEdit?
+    public let additionalTextEdits: [LSPTextEdit]?
     public let commitCharacters: [String]?
     public let data: AnyCodable?
     
@@ -150,8 +150,8 @@ public struct LSPCompletionItem: Codable, Sendable {
         filterText: String? = nil,
         insertText: String? = nil,
         insertTextFormat: InsertTextFormat? = nil,
-        textEdit: TextEdit? = nil,
-        additionalTextEdits: [TextEdit]? = nil,
+        textEdit: LSPTextEdit? = nil,
+        additionalTextEdits: [LSPTextEdit]? = nil,
         commitCharacters: [String]? = nil,
         data: AnyCodable? = nil
     ) {
@@ -235,8 +235,8 @@ public enum InsertTextFormat: Int, Codable, Sendable {
     case snippet = 2
 }
 
-/// Text edit
-public struct TextEdit: Codable, Sendable {
+/// LSP Text edit
+public struct LSPTextEdit: Codable, Sendable {
     public let range: LSPRange
     public let newText: String
     
@@ -481,7 +481,7 @@ public struct ShowMessageParams: Codable, Sendable {
 public enum LSPError: Error, LocalizedError, Sendable {
     case notConnected
     case alreadyConnected
-    case serverError(code: Int, message: String, data: Any?)
+    case serverError(code: Int, message: String, data: String?)
     case invalidResponse(String)
     case decodingError(String)
     case connectionFailed(String)

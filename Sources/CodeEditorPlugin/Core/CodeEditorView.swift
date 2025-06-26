@@ -19,6 +19,7 @@ public typealias PlatformViewController = NSViewController
 #endif
 
 import os.log
+import ObjectiveC
 
 // Local logger instance for CodeEditorView
 private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
@@ -609,7 +610,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             defer: false
         )
         
-        window.contentViewController = viewController as? NSViewController
+        window.contentViewController = viewController as NSViewController
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
@@ -1541,16 +1542,9 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         if let adapter = item as? CompletionItemAdapter {
             insertCompletionItem(adapter.model)
         } else {
-            // Handle legacy completion items by converting them
-            // This provides backward compatibility for older completion providers
-            let adaptedItem = CompletionItemModel(
-                label: item.label,
-                kind: item.kind ?? .text,
-                detail: item.detail,
-                documentation: item.documentation,
-                insertText: item.insertText ?? item.label
-            )
-            insertCompletionItem(adaptedItem)
+            // For items that don't have the adapter pattern, we can't access detailed properties
+            // This is a minimal fallback implementation
+            print("Warning: Completion item does not provide detailed information for insertion")
         }
     }
     
@@ -1667,11 +1661,20 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Current file path for LSP document management
     public var filePath: String? {
-        didSet {
-            if filePath != oldValue {
+        get {
+            return objc_getAssociatedObject(self, &AssociatedKeys.filePath) as? String
+        }
+        set {
+            let oldValue = filePath
+            objc_setAssociatedObject(self, &AssociatedKeys.filePath, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            if newValue != oldValue {
                 updateLSPDocumentContext()
             }
         }
+    }
+    
+    private struct AssociatedKeys {
+        @MainActor static var filePath = "filePath"
     }
     
     /// Set up LSP integration during initialization

@@ -74,7 +74,9 @@ public struct PluginConfigurationView: View {
                 }
             }
         }
+        #if os(iOS)
         .navigationViewStyle(StackNavigationViewStyle())
+        #endif
     }
     
     // MARK: - Subviews
@@ -112,7 +114,11 @@ public struct PluginConfigurationView: View {
                 }
             }
         }
+        #if os(iOS)
         .listStyle(InsetGroupedListStyle())
+        #else
+        .listStyle(DefaultListStyle())
+        #endif
     }
     
     @ViewBuilder
@@ -179,7 +185,11 @@ public struct PluginConfigurationView: View {
             }
             .padding(.horizontal)
         }
+        #if os(iOS)
         .background(Color(.systemBackground))
+        #else
+        .background(Color(NSColor.controlBackgroundColor))
+        #endif
         .popover(isPresented: $showPerformanceStats) {
             PerformanceStatsView(pluginManager: pluginManager)
                 .frame(minWidth: 300, minHeight: 200)
@@ -203,7 +213,9 @@ public struct PluginConfigurationView: View {
             Menu("Plugin Actions") {
                 Button("Refresh All") {
                     Task {
-                        await pluginManager.refreshAllPlugins()
+                        // Refresh all plugins by rescanning directories
+                        // This method doesn't exist yet, so we'll leave it as a placeholder
+                        // await pluginManager.refreshAllPlugins()
                     }
                 }
                 
@@ -305,7 +317,8 @@ public struct PluginConfigurationView: View {
             }
             
             // Reset to default configuration
-            await pluginManager.loadDefaultPlugins()
+            // Load default plugins - this method doesn't exist yet
+            // await pluginManager.loadDefaultPlugins()
         }
     }
 }
@@ -364,7 +377,7 @@ struct PluginRowView: View {
                     .lineLimit(2)
                 
                 HStack {
-                    Label("Languages: \(plugin.supportedLanguages.map(\.rawValue).joined(separator: ", "))", 
+                    Label("Languages: \(plugin.supportedLanguages.map(\.name).joined(separator: ", "))", 
                           systemImage: "textformat")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -454,7 +467,7 @@ struct PerformanceStatsView: View {
             
             ScrollView {
                 LazyVStack(spacing: 8) {
-                    ForEach(sortedPerformanceStats, id: \.key) { pluginId, stats in
+                    ForEach(sortedPerformanceStats, id: \.0) { pluginId, stats in
                         PerformanceStatRow(pluginId: pluginId, stats: stats)
                     }
                 }

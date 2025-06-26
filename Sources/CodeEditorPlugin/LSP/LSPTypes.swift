@@ -9,7 +9,11 @@ public struct LSPRequest: Codable {
     public let method: String
     public let params: AnyCodable
     
-    public init(id: RequestId, method: String, params: any Codable) {
+    enum CodingKeys: String, CodingKey {
+        case jsonrpc, id, method, params
+    }
+    
+    public init(id: RequestId, method: String, params: any Codable & Sendable) {
         self.id = id
         self.method = method
         self.params = AnyCodable(params)
@@ -22,7 +26,11 @@ public struct LSPNotification: Codable {
     public let method: String
     public let params: AnyCodable
     
-    public init(method: String, params: any Codable) {
+    enum CodingKeys: String, CodingKey {
+        case jsonrpc, method, params
+    }
+    
+    public init(method: String, params: any Codable & Sendable) {
         self.method = method
         self.params = AnyCodable(params)
     }
@@ -59,10 +67,10 @@ public enum RequestId: Codable, Sendable {
 }
 
 /// Type-erased codable wrapper
-public struct AnyCodable: Codable {
-    private let value: Any
+public struct AnyCodable: Codable, Sendable {
+    private let value: any Codable & Sendable
     
-    public init(_ value: any Codable) {
+    public init(_ value: any Codable & Sendable) {
         self.value = value
     }
     

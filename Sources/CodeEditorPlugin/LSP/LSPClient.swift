@@ -283,7 +283,7 @@ public final class LSPClient: ObservableObject {
     /// Request document symbols
     /// - Parameter uri: Document URI
     /// - Returns: Document symbols
-    public func requestDocumentSymbols(uri: String) async throws -> [CodeEditorPlugin.DocumentSymbol] {
+    public func requestDocumentSymbols(uri: String) async throws -> [DocumentSymbol] {
         guard connectionState == .initialized else {
             throw LSPError.notConnected
         }
@@ -398,7 +398,7 @@ public final class LSPClient: ObservableObject {
         }
     }
     
-    private func sendRequest(method: String, params: any Codable) async throws -> LSPResponse {
+    private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
         let requestId = nextRequestId
         nextRequestId += 1
         
@@ -428,7 +428,7 @@ public final class LSPClient: ObservableObject {
         }
     }
     
-    private func sendNotification(method: String, params: any Codable) async throws {
+    private func sendNotification(method: String, params: any Codable & Sendable) async throws {
         let notification = LSPNotification(method: method, params: params)
         try await sendMessage(notification)
     }
@@ -484,7 +484,7 @@ public final class LSPClient: ObservableObject {
     private func handleLogMessage(params: Data) async {
         do {
             let logMessage = try JSONDecoder().decode(LogMessageParams.self, from: params)
-            logger.info("LSP Server Log: [\(logMessage.type)] \(logMessage.message)")
+            logger.info("LSP Server Log: [\(logMessage.type.rawValue)] \(logMessage.message)")
         } catch {
             logger.error("Failed to decode log message: \(error.localizedDescription)")
         }
@@ -493,7 +493,7 @@ public final class LSPClient: ObservableObject {
     private func handleShowMessage(params: Data) async {
         do {
             let showMessage = try JSONDecoder().decode(ShowMessageParams.self, from: params)
-            logger.info("LSP Server Message: [\(showMessage.type)] \(showMessage.message)")
+            logger.info("LSP Server Message: [\(showMessage.type.rawValue)] \(showMessage.message)")
         } catch {
             logger.error("Failed to decode show message: \(error.localizedDescription)")
         }

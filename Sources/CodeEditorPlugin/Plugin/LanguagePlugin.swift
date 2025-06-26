@@ -1,6 +1,45 @@
 import Foundation
 
+// MARK: - Forward Type Declarations
+
+// TODO: These should reference the actual protocols from LanguageFeatures.swift
+
 // MARK: - LanguagePlugin Protocol
+
+/// Plugin metadata structure for UI display
+public struct PluginMetadata: Sendable {
+    public let name: String
+    public let version: String
+    public let author: String
+    public let description: String
+    public let license: String
+    public let category: String
+    public let iconName: String
+    public let capabilities: [String]
+    public let dependencies: [String]
+    
+    public init(
+        name: String,
+        version: String,
+        author: String,
+        description: String,
+        license: String,
+        category: String = "Language Support",
+        iconName: String = "doc.text",
+        capabilities: [String] = [],
+        dependencies: [String] = []
+    ) {
+        self.name = name
+        self.version = version
+        self.author = author
+        self.description = description
+        self.license = license
+        self.category = category
+        self.iconName = iconName
+        self.capabilities = capabilities
+        self.dependencies = dependencies
+    }
+}
 
 /// Enhanced protocol for comprehensive language support plugins
 @MainActor
@@ -25,6 +64,15 @@ public protocol LanguagePlugin: LanguageProvider {
     /// Plugin capabilities flags
     var capabilities: PluginCapabilities { get }
     
+    /// Plugin ID (defaults to identifier)
+    var id: String { get }
+    
+    /// Structured metadata for UI display
+    var metadata: PluginMetadata { get }
+    
+    /// Supported languages (for UI display)
+    var supportedLanguages: [Language] { get }
+    
     // MARK: - Advanced Language Features
     
     /// Create a completion provider for this language (optional)
@@ -48,8 +96,9 @@ public protocol LanguagePlugin: LanguageProvider {
     func createSymbolProvider() -> (any SymbolProvider)?
     
     /// Create an indentation provider for this language (optional)
-    @MainActor
-    func createIndentationProvider() -> (any IndentationProvider)?
+    /// TODO: Re-enable once IndentationProvider is properly imported
+    // @MainActor
+    // func createIndentationProvider() -> (any IndentationProvider)?
     
     // MARK: - Language Server Protocol Support
     
@@ -57,8 +106,9 @@ public protocol LanguagePlugin: LanguageProvider {
     var languageServerConfig: LanguageServerConfig? { get }
     
     /// Create an LSP client for this language (optional)
-    @MainActor
-    func createLSPClient() -> (any LSPClientProtocol)?
+    /// TODO: Re-enable once LSPClientProtocol is properly imported
+    // @MainActor
+    // func createLSPClient() -> (any LSPClientProtocol)?
     
     // MARK: - Lifecycle
     
@@ -83,6 +133,37 @@ public extension LanguagePlugin {
     var capabilities: PluginCapabilities { PluginCapabilities() }
     var languageServerConfig: LanguageServerConfig? { nil }
     
+    var id: String { identifier }
+    
+    var supportedLanguages: [Language] {
+        [Language(name: displayName, identifier: identifier)]
+    }
+    
+    var metadata: PluginMetadata {
+        PluginMetadata(
+            name: displayName,
+            version: pluginVersion,
+            author: author,
+            description: description,
+            license: license,
+            category: "Language Support",
+            iconName: "doc.text",
+            capabilities: capabilitiesArray,
+            dependencies: []
+        )
+    }
+    
+    private var capabilitiesArray: [String] {
+        var caps: [String] = []
+        if capabilities.supportsSyntaxHighlighting { caps.append("syntax") }
+        if capabilities.supportsCodeCompletion { caps.append("completion") }
+        if capabilities.supportsCodeFormatting { caps.append("formatting") }
+        if capabilities.supportsLinting { caps.append("linting") }
+        if capabilities.supportsDocumentationLookup { caps.append("documentation") }
+        if capabilities.supportsSymbolNavigation { caps.append("navigation") }
+        return caps
+    }
+    
     @MainActor
     func createCompletionProvider() -> (any CompletionProvider)? { nil }
     
@@ -98,11 +179,13 @@ public extension LanguagePlugin {
     @MainActor
     func createSymbolProvider() -> (any SymbolProvider)? { nil }
     
-    @MainActor
-    func createIndentationProvider() -> (any IndentationProvider)? { nil }
+    // TODO: Re-enable once IndentationProvider is properly imported
+    // @MainActor
+    // func createIndentationProvider() -> (any IndentationProvider)? { nil }
     
-    @MainActor
-    func createLSPClient() -> (any LSPClientProtocol)? { nil }
+    // TODO: Re-enable once LSPClientProtocol is properly imported
+    // @MainActor
+    // func createLSPClient() -> (any LSPClientProtocol)? { nil }
     
     @MainActor
     func activate() async throws {

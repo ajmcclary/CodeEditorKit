@@ -382,7 +382,7 @@ public enum HighlightingPriority: Int, CaseIterable, Sendable {
 }
 
 /// Highlighting request data
-public struct HighlightingRequest {
+public struct HighlightingRequest: Sendable {
     let id: String
     let text: String
     let language: Language

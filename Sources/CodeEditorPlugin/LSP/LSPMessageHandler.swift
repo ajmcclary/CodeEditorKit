@@ -165,18 +165,16 @@ actor LSPMessageHandler {
         let message = errorDict["message"] as? String ?? "Unknown error"
         let data = errorDict["data"]
         
-        return LSPError.serverError(code: code, message: message, data: data)
+        return LSPError.serverError(code: code, message: message, data: data as? String)
     }
 }
 
 /// LSP response wrapper that provides type-safe decoding
 public struct LSPResponse: Sendable {
     private let data: Data
-    private let messageDict: [String: Any]
     
     init(data: Data, messageDict: [String: Any]) {
         self.data = data
-        self.messageDict = messageDict
     }
     
     /// Decode the response result as a specific type
@@ -184,7 +182,10 @@ public struct LSPResponse: Sendable {
     /// - Returns: Decoded value
     /// - Throws: LSPError if decoding fails
     public func decode<T: Codable>(as type: T.Type) throws -> T {
-        guard let result = messageDict["result"] else {
+        // Decode the response from the raw data
+        let decoder = JSONDecoder()
+        guard let dict = try? decoder.decode([String: AnyCodable].self, from: data),
+              let result = dict["result"] else {
             throw LSPError.invalidResponse("No result in response")
         }
         
@@ -199,6 +200,11 @@ public struct LSPResponse: Sendable {
     
     /// Get the raw result object
     public var rawResult: Any? {
-        messageDict["result"]
+        // Decode the response from the raw data
+        let decoder = JSONDecoder()
+        guard let dict = try? decoder.decode([String: AnyCodable].self, from: data) else {
+            return nil
+        }
+        return dict["result"]
     }
 }
