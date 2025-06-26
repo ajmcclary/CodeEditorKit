@@ -16,10 +16,10 @@ final class BasicFunctionalityTests: XCTestCase {
     func testEditorConfiguration() {
         // Test configuration creation
         let config = EditorConfiguration()
-        XCTAssertTrue(config.showLineNumbers)
-        XCTAssertTrue(config.isEditable)
-        XCTAssertEqual(config.fontSize, 14)
-        XCTAssertEqual(config.tabWidth, 4)
+        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.behavior.isEditable)
+        XCTAssertEqual(config.display.fontSize, 14)
+        XCTAssertEqual(config.layout.tabWidth, 4)
     }
 
     func testConfigurationPresets() {
@@ -29,21 +29,21 @@ final class BasicFunctionalityTests: XCTestCase {
 
             switch preset {
             case .fullFeatured:
-                XCTAssertTrue(config.showLineNumbers)
-                XCTAssertTrue(config.isEditable)
+                XCTAssertTrue(config.display.showLineNumbers)
+                XCTAssertTrue(config.behavior.isEditable)
 
             case .minimal:
-                XCTAssertFalse(config.showLineNumbers)
-                XCTAssertTrue(config.isEditable)
+                XCTAssertFalse(config.display.showLineNumbers)
+                XCTAssertTrue(config.behavior.isEditable)
 
             case .readOnly:
-                XCTAssertFalse(config.isEditable)
+                XCTAssertFalse(config.behavior.isEditable)
 
             case .markdown:
-                XCTAssertTrue(config.wrapLines)
+                XCTAssertTrue(config.layout.wrapLines)
 
             case .presentation:
-                XCTAssertGreaterThan(config.fontSize, 16)
+                XCTAssertGreaterThan(config.display.fontSize, 16)
             }
         }
     }

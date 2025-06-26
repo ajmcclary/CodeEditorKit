@@ -93,8 +93,8 @@ struct IOSContentView: View {
             CodeEditorSwiftUIView(
                 text: $selectedCodeSample,
                 language: currentLanguage,
-                showLineNumbers: appState.currentConfiguration.showLineNumbers,
-                highlightSelectedLine: appState.currentConfiguration.highlightSelectedLine
+                showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+                highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine
             )
             .ignoresSafeArea(.keyboard)
         }
@@ -141,7 +141,9 @@ struct LanguageExamplesView: View {
                     CodeEditorSwiftUIView(
                         text: .constant(samples[key] ?? ""),
                         language: language,
-                        configuration: appState.currentConfiguration
+                        showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+                        highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine,
+                        isEditable: appState.currentConfiguration.behavior.isEditable
                     )
                     .navigationTitle(key)
                     .navigationBarTitleDisplayMode(.inline)
@@ -237,7 +239,9 @@ struct TextKit2DemoView: View {
             CodeEditorSwiftUIView(
                 text: $demoText,
                 language: .swift,
-                configuration: appState.currentConfiguration
+                showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+                highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine,
+                isEditable: appState.currentConfiguration.behavior.isEditable
             )
         }
         .navigationTitle("TextKit 2 Demo")
@@ -267,7 +271,9 @@ struct PerformanceTestView: View {
             CodeEditorSwiftUIView(
                 text: $largeText,
                 language: .swift,
-                configuration: appState.currentConfiguration
+                showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+                highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine,
+                isEditable: appState.currentConfiguration.behavior.isEditable
             )
         }
         .navigationTitle("Performance Test")
@@ -336,7 +342,9 @@ struct AnnotationDemoView: View {
             CodeEditorSwiftUIView(
                 text: $annotatedCode,
                 language: .swift,
-                configuration: appState.currentConfiguration
+                showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+                highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine,
+                isEditable: appState.currentConfiguration.behavior.isEditable
             )
         }
         .navigationTitle("Annotations")
@@ -354,17 +362,22 @@ struct EditorSettingsView: View {
         NavigationView {
             Form {
                 Section("Display") {
-                    Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.showLineNumbers)
-                    Toggle("Highlight Selected Line", isOn: $appState.currentConfiguration.highlightSelectedLine)
+                    Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
+                    Toggle("Highlight Selected Line", 
+                           isOn: $appState.currentConfiguration.display.highlightSelectedLine)
                 }
                 
                 Section("Editor") {
-                    // TODO: Add syntax highlighting toggle when available
-                    Toggle("Show Invisible Characters", isOn: $appState.currentConfiguration.showInvisibleCharacters)
+                    Toggle("Syntax Highlighting", 
+                           isOn: $appState.currentConfiguration.display.enableSyntaxHighlighting)
+                    Toggle("Show Invisible Characters", 
+                           isOn: $appState.currentConfiguration.display.showInvisibleCharacters)
+                    Toggle("Enable Annotations", isOn: $appState.currentConfiguration.display.enableAnnotations)
                 }
                 
                 Section("Performance") {
-                    Toggle("Hardware Acceleration", isOn: $appState.currentConfiguration.useHardwareAcceleration)
+                    Toggle("Hardware Acceleration", 
+                           isOn: $appState.currentConfiguration.performance.useHardwareAcceleration)
                 }
             }
             .navigationTitle("Settings")
@@ -391,7 +404,9 @@ struct ConfigurationView: View {
         CodeEditorSwiftUIView(
             text: $configText,
             language: .json,
-            configuration: appState.currentConfiguration
+            showLineNumbers: appState.currentConfiguration.display.showLineNumbers,
+            highlightSelectedLine: appState.currentConfiguration.display.highlightSelectedLine,
+            isEditable: appState.currentConfiguration.behavior.isEditable
         )
         .navigationTitle("Configuration")
     }
@@ -428,9 +443,9 @@ extension CodeEditorSwiftUIView {
         self.init(
             text: text,
             language: language,
-            showLineNumbers: configuration.showLineNumbers,
-            highlightSelectedLine: configuration.highlightSelectedLine,
-            isEditable: configuration.isEditable,
+            showLineNumbers: configuration.display.showLineNumbers,
+            highlightSelectedLine: configuration.display.highlightSelectedLine,
+            isEditable: configuration.behavior.isEditable,
             theme: theme,
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange

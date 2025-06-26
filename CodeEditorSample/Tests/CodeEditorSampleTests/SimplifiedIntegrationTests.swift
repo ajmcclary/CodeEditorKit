@@ -13,14 +13,8 @@ final class SimplifiedIntegrationTests: XCTestCase {
             let config = preset.configuration
             let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
-            // Apply configuration
-            textView.showsLineNumbers = config.showLineNumbers
-            textView.isEditable = config.isEditable
-            textView.showsInvisibleCharacters = config.showInvisibleCharacters
-            textView.highlightSelectedLine = config.highlightSelectedLine
-            textView.font = NSFont.monospacedSystemFont(ofSize: config.fontSize, weight: .regular)
-            textView.backgroundColor = config.theme.backgroundColor
-            textView.textColor = config.theme.textColor
+            // Apply configuration using the plugin's apply method
+            config.apply(to: textView)
 
             // Verify configuration
             switch preset {
@@ -37,7 +31,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
                 XCTAssertTrue(textView.showsLineNumbers)
 
             case .markdown:
-                XCTAssertTrue(config.wrapLines)
+                XCTAssertTrue(config.layout.wrapLines)
                 XCTAssertTrue(textView.isEditable)
 
             case .presentation:
@@ -77,8 +71,8 @@ final class SimplifiedIntegrationTests: XCTestCase {
 
         // 1. Start with full featured config
         let config = ConfigurationPreset.fullFeatured.configuration
-        textView.showsLineNumbers = config.showLineNumbers
-        textView.isEditable = config.isEditable
+        textView.showsLineNumbers = config.display.showLineNumbers
+        textView.isEditable = config.behavior.isEditable
         textView.text = "Initial code"
 
         XCTAssertTrue(textView.showsLineNumbers)
@@ -87,7 +81,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
 
         // 2. Switch to read-only
         let readOnlyConfig = ConfigurationPreset.readOnly.configuration
-        textView.isEditable = readOnlyConfig.isEditable
+        textView.isEditable = readOnlyConfig.behavior.isEditable
 
         XCTAssertFalse(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
@@ -136,7 +130,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
         XCTAssertEqual(appState.code, "# Python code")
 
         // Modify configuration
-        appState.currentConfiguration.fontSize = 20
-        XCTAssertEqual(appState.currentConfiguration.fontSize, 20)
+        appState.currentConfiguration.display.fontSize = 20
+        XCTAssertEqual(appState.currentConfiguration.display.fontSize, 20)
     }
 }

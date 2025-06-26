@@ -156,10 +156,10 @@ struct MacOSContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleLineNumbers)) { _ in
-            configuration.showLineNumbers.toggle()
+            configuration.display.showLineNumbers.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleInvisibleCharacters)) { _ in
-            configuration.showInvisibleCharacters.toggle()
+            configuration.display.showInvisibleCharacters.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .resetLayout)) { _ in
             applyPreset(.fullFeatured)
@@ -244,64 +244,29 @@ struct ConfigurationSidebar: View {
 
             // Editor settings
             Section("Editor Settings") {
-                Toggle("Show Line Numbers", isOn: $configuration.showLineNumbers)
-                Toggle("Show Invisible Characters", isOn: $configuration.showInvisibleCharacters)
-                Toggle("Wrap Lines", isOn: $configuration.wrapLines)
-                Toggle("Highlight Current Line", isOn: $configuration.highlightSelectedLine)
-                Toggle("Enable Editing", isOn: $configuration.isEditable)
-                Toggle("Auto Indent", isOn: $configuration.autoIndent)
-                Toggle("Insert Spaces for Tabs", isOn: $configuration.insertSpacesForTabs)
+                Toggle("Show Line Numbers", isOn: $configuration.display.showLineNumbers)
+                Toggle("Show Invisible Characters", isOn: $configuration.display.showInvisibleCharacters)
+                Toggle("Wrap Lines", isOn: $configuration.layout.wrapLines)
+                Toggle("Highlight Current Line", isOn: $configuration.display.highlightSelectedLine)
+                Toggle("Enable Editing", isOn: $configuration.behavior.isEditable)
+                Toggle("Auto Indent", isOn: $configuration.behavior.autoIndent)
+                Toggle("Insert Spaces for Tabs", isOn: $configuration.layout.insertSpacesForTabs)
             }
 
             // Appearance settings
             Section("Appearance") {
                 // Font size
                 VStack(alignment: .leading) {
-                    Text("Font Size: \(Int(configuration.fontSize))pt")
+                    Text("Font Size: \(Int(configuration.display.fontSize))pt")
                         .font(.caption)
-                    Slider(value: $configuration.fontSize, in: 10 ... 32, step: 1)
+                    Slider(value: $configuration.display.fontSize, in: 10 ... 32, step: 1)
                 }
 
-                // Theme selection
-                ForEach(ColorTheme.allCases, id: \.self) { theme in
-                    HStack {
-                        // Theme preview
-                        HStack(spacing: 2) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Color(theme.backgroundColor))
-                                .frame(width: 16, height: 16)
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Color(theme.textColor))
-                                .frame(width: 16, height: 16)
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Color(theme.keywordColor))
-                                .frame(width: 16, height: 16)
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Color(theme.stringColor))
-                                .frame(width: 16, height: 16)
-                        }
-                        .padding(4)
-                        #if canImport(AppKit)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        #else
-                        .background(Color(.systemGray6))
-                        #endif
-                        .cornerRadius(4)
-
-                        Text(theme.displayName)
-
-                        Spacer()
-
-                        if configuration.theme == theme {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        configuration.theme = theme
-                    }
-                }
+                // Note: Theme selection removed as it's now handled through SwiftUI environment
+                // Will be implemented through CodeEditor view modifiers
+                Text("Theme selection available through CodeEditor view modifiers")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .listStyle(.sidebar)

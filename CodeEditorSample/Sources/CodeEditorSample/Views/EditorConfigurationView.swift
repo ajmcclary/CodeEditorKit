@@ -58,139 +58,104 @@ struct EditorConfigurationView: View {
             // Editor settings
             Section("Editor Settings") {
                 // Line numbers
-                Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.showLineNumbers)
+                Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
 
                 // Invisible characters
-                Toggle("Show Invisible Characters", isOn: $appState.currentConfiguration.showInvisibleCharacters)
+                Toggle("Show Invisible Characters",
+                       isOn: $appState.currentConfiguration.display.showInvisibleCharacters)
 
                 // Line wrapping
-                Toggle("Wrap Lines", isOn: $appState.currentConfiguration.wrapLines)
+                Toggle("Wrap Lines", isOn: $appState.currentConfiguration.layout.wrapLines)
 
                 // Line highlighting
-                Toggle("Highlight Current Line", isOn: $appState.currentConfiguration.highlightSelectedLine)
+                Toggle("Highlight Current Line", isOn: $appState.currentConfiguration.display.highlightSelectedLine)
 
                 // Editing
-                Toggle("Enable Editing", isOn: $appState.currentConfiguration.isEditable)
+                Toggle("Enable Editing", isOn: $appState.currentConfiguration.behavior.isEditable)
 
                 // Auto-indent
-                Toggle("Auto Indent", isOn: $appState.currentConfiguration.autoIndent)
+                Toggle("Auto Indent", isOn: $appState.currentConfiguration.behavior.autoIndent)
                 
                 // Insert spaces for tabs
-                Toggle("Insert Spaces for Tabs", isOn: $appState.currentConfiguration.insertSpacesForTabs)
+                Toggle("Insert Spaces for Tabs", isOn: $appState.currentConfiguration.layout.insertSpacesForTabs)
             }
 
             // Appearance settings
             Section("Appearance") {
                 // Font size
                 VStack(alignment: .leading) {
-                    Text("Font Size: \(Int(appState.currentConfiguration.fontSize))pt")
+                    Text("Font Size: \(Int(appState.currentConfiguration.display.fontSize))pt")
                         .font(.caption)
-                    Slider(value: $appState.currentConfiguration.fontSize, in: 10 ... 32, step: 1)
+                    Slider(value: $appState.currentConfiguration.display.fontSize, in: 10 ... 32, step: 1)
                 }
 
                 // Tab width
                 VStack(alignment: .leading) {
-                    Text("Tab Width: \(appState.currentConfiguration.tabWidth) spaces")
+                    Text("Tab Width: \(appState.currentConfiguration.layout.tabWidth) spaces")
                         .font(.caption)
                     Slider(value: Binding(
-                        get: { Double(appState.currentConfiguration.tabWidth) },
-                        set: { appState.currentConfiguration.tabWidth = Int($0) }
+                        get: { Double(appState.currentConfiguration.layout.tabWidth) },
+                        set: { appState.currentConfiguration.layout.tabWidth = Int($0) }
                     ), in: 2 ... 8, step: 1)
                 }
 
                 // Line spacing
                 VStack(alignment: .leading) {
-                    Text("Line Spacing: \(appState.currentConfiguration.lineSpacing, specifier: "%.1f")")
+                    Text("Line Spacing: \(appState.currentConfiguration.layout.lineSpacing, specifier: "%.1f")")
                         .font(.caption)
-                    Slider(value: $appState.currentConfiguration.lineSpacing, in: 0 ... 10, step: 0.5)
+                    Slider(value: $appState.currentConfiguration.layout.lineSpacing, in: 0 ... 10, step: 0.5)
                 }
                 
-                // Text container inset
-                VStack(alignment: .leading) {
-                    Text("Text Container Inset: \(Int(appState.currentConfiguration.textContainerInset.width))pt")
-                        .font(.caption)
-                    Slider(value: Binding(
-                        get: { appState.currentConfiguration.textContainerInset.width },
-                        set: { 
-                            #if canImport(AppKit)
-                            appState.currentConfiguration.textContainerInset = NSSize(width: $0, height: $0)
-                            #else
-                            appState.currentConfiguration.textContainerInset = CGSize(width: $0, height: $0)
-                            #endif
-                        }
-                    ), in: 0 ... 20, step: 1)
-                }
-                
-                // Line fragment padding
-                VStack(alignment: .leading) {
-                    Text("Line Fragment Padding: \(Int(appState.currentConfiguration.lineFragmentPadding))pt")
-                        .font(.caption)
-                    Slider(value: $appState.currentConfiguration.lineFragmentPadding, in: 0 ... 20, step: 1)
-                }
+                // Note: Text container inset and line fragment padding are now handled internally by the plugin
+                Text("Text container inset and line fragment padding are now handled internally")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
-            // Theme selection
+            // Note: Theme selection is now handled through SwiftUI environment
             Section("Color Theme") {
-                ForEach(ColorTheme.allCases, id: \.self) { theme in
-                    ThemeRow(theme: theme, isSelected: appState.currentConfiguration.theme == theme)
-                        .onTapGesture {
-                            appState.currentConfiguration.theme = theme
-                        }
-                }
+                Text("Theme selection available through CodeEditor view modifiers")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             // Plugin settings
             Section("Plugins") {
-                Toggle("Enable Annotations", isOn: $appState.currentConfiguration.enableAnnotations)
-                Toggle("Enable Custom Plugin", isOn: $appState.currentConfiguration.enableCustomPlugin)
+                Toggle("Enable Annotations", isOn: $appState.currentConfiguration.display.enableAnnotations)
+                Toggle("Enable Syntax Highlighting",
+                       isOn: $appState.currentConfiguration.display.enableSyntaxHighlighting)
             }
 
             // Performance options
             Section("Performance") {
-                Toggle("Use Hardware Acceleration", isOn: $appState.currentConfiguration.useHardwareAcceleration)
-                Toggle("Enable Smooth Scrolling", isOn: $appState.currentConfiguration.smoothScrolling)
+                Toggle("Use Hardware Acceleration",
+                       isOn: $appState.currentConfiguration.performance.useHardwareAcceleration)
+                Toggle("Enable Smooth Scrolling", isOn: $appState.currentConfiguration.performance.smoothScrolling)
             }
             
             // Text Processing
             Section("Text Processing") {
                 Toggle("Continuous Spell Checking", 
-                       isOn: $appState.currentConfiguration.isContinuousSpellCheckingEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isContinuousSpellCheckingEnabled)
                 Toggle("Grammar Checking", 
-                       isOn: $appState.currentConfiguration.isGrammarCheckingEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isGrammarCheckingEnabled)
                 Toggle("Automatic Quote Substitution", 
-                       isOn: $appState.currentConfiguration.isAutomaticQuoteSubstitutionEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isAutomaticQuoteSubstitutionEnabled)
                 Toggle("Automatic Dash Substitution", 
-                       isOn: $appState.currentConfiguration.isAutomaticDashSubstitutionEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isAutomaticDashSubstitutionEnabled)
                 Toggle("Automatic Text Replacement", 
-                       isOn: $appState.currentConfiguration.isAutomaticTextReplacementEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isAutomaticTextReplacementEnabled)
                 Toggle("Automatic Spelling Correction", 
-                       isOn: $appState.currentConfiguration.isAutomaticSpellingCorrectionEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isAutomaticSpellingCorrectionEnabled)
                 Toggle("Automatic Text Completion", 
-                       isOn: $appState.currentConfiguration.isAutomaticTextCompletionEnabled)
-                Toggle("Incremental Searching", 
-                       isOn: $appState.currentConfiguration.isIncrementalSearchingEnabled)
+                       isOn: $appState.currentConfiguration.behavior.isAutomaticTextCompletionEnabled)
             }
             
-            // Advanced Settings
+            // Note: Advanced Settings removed as they are not part of the new configuration structure
             Section("Advanced Settings") {
-                Toggle("Allow Document Background Color Change", 
-                       isOn: $appState.currentConfiguration.allowsDocumentBackgroundColorChange)
-                Toggle("Allow Image Editing", 
-                       isOn: $appState.currentConfiguration.allowsImageEditing)
-                Toggle("Allow Character Picker Touch Bar Item", 
-                       isOn: $appState.currentConfiguration.allowsCharacterPickerTouchBarItem)
-                Toggle("Rich Text Mode", 
-                       isOn: $appState.currentConfiguration.isRichText)
-                Toggle("Import Graphics", 
-                       isOn: $appState.currentConfiguration.importsGraphics)
-                Toggle("Use Inspector Bar", 
-                       isOn: $appState.currentConfiguration.usesInspectorBar)
-                Toggle("Use Find Bar", 
-                       isOn: $appState.currentConfiguration.usesFindBar)
-                Toggle("Allow Non-Contiguous Layout", 
-                       isOn: $appState.currentConfiguration.allowsNonContiguousLayout)
-                Toggle("Display Link Tool Tips", 
-                       isOn: $appState.currentConfiguration.displaysLinkToolTips)
+                Text("Advanced text view settings are now handled internally by the plugin")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .listStyle(.sidebar)

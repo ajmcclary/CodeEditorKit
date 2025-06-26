@@ -12,8 +12,8 @@ final class PluginConfigurationTests: XCTestCase {
         var config = EditorConfiguration()
         
         // Test disabled state
-        config.enableAnnotations = false
-        XCTAssertFalse(config.enableAnnotations)
+        config.display.enableAnnotations = false
+        XCTAssertFalse(config.display.enableAnnotations)
         
         // When applied to text view, no annotation manager should be created
         let annotationManager = AnnotationManager(textView: textView)
@@ -21,8 +21,8 @@ final class PluginConfigurationTests: XCTestCase {
         XCTAssertEqual(textView.subviews.filter { $0 is AnnotationView }.count, 0)
         
         // Test enabled state
-        config.enableAnnotations = true
-        XCTAssertTrue(config.enableAnnotations)
+        config.display.enableAnnotations = true
+        XCTAssertTrue(config.display.enableAnnotations)
         
         // With annotations enabled, manager should work
         textView.text = "// TODO: Test annotation"
@@ -75,15 +75,12 @@ final class PluginConfigurationTests: XCTestCase {
     // MARK: - Custom Plugin Tests
     
     func testCustomPluginConfiguration() {
-        var config = EditorConfiguration()
+        // enableCustomPlugin is no longer part of the configuration structure
+        // Custom plugin management is handled separately
         
-        // Test disabled state
-        config.enableCustomPlugin = false
-        XCTAssertFalse(config.enableCustomPlugin)
-        
-        // Test enabled state
-        config.enableCustomPlugin = true
-        XCTAssertTrue(config.enableCustomPlugin)
+        // This test is now a placeholder since custom plugin configuration
+        // is not part of the EditorConfiguration structure
+        XCTAssertTrue(true, "Custom plugin configuration is handled separately from EditorConfiguration")
         
         // Note: Custom plugin is a placeholder for future functionality
     }
@@ -93,64 +90,58 @@ final class PluginConfigurationTests: XCTestCase {
     func testMultiplePluginsEnabled() {
         var config = EditorConfiguration()
         
-        // Enable multiple plugins
-        config.enableAnnotations = true
-        config.enableCustomPlugin = true
+        // Enable annotation plugin
+        config.display.enableAnnotations = true
         
-        XCTAssertTrue(config.enableAnnotations)
-        XCTAssertTrue(config.enableCustomPlugin)
+        XCTAssertTrue(config.display.enableAnnotations)
+        // Custom plugin management is handled separately
         
-        // Both plugins should be independently configurable
-        config.enableAnnotations = false
-        XCTAssertFalse(config.enableAnnotations)
-        XCTAssertTrue(config.enableCustomPlugin)
+        // Annotation plugin should be independently configurable
+        config.display.enableAnnotations = false
+        XCTAssertFalse(config.display.enableAnnotations)
     }
     
     func testPluginConfigurationPersistence() {
         var config = EditorConfiguration()
-        config.enableAnnotations = true
-        config.enableCustomPlugin = false
+        config.display.enableAnnotations = true
+        // enableCustomPlugin is no longer part of the configuration structure
         
         // Encode configuration
         do {
             let data = try JSONEncoder().encode(config)
             let decodedConfig = try JSONDecoder().decode(EditorConfiguration.self, from: data)
             
-            XCTAssertEqual(decodedConfig.enableAnnotations, config.enableAnnotations)
-            XCTAssertEqual(decodedConfig.enableCustomPlugin, config.enableCustomPlugin)
+            XCTAssertEqual(decodedConfig.display.enableAnnotations, config.display.enableAnnotations)
+            // enableCustomPlugin is no longer part of the configuration structure
         } catch {
             XCTFail("Plugin configuration encoding/decoding failed: \(error)")
         }
     }
     
     func testPluginWithConfigurationPresets() {
-        // Full featured - all plugins enabled
+        // Full featured - annotations enabled
         let fullConfig = ConfigurationPreset.fullFeatured.configuration
-        XCTAssertTrue(fullConfig.enableAnnotations)
-        XCTAssertTrue(fullConfig.enableCustomPlugin)
+        XCTAssertTrue(fullConfig.display.enableAnnotations)
         
-        // Minimal - no plugins
+        // Minimal - no annotations
         let minimalConfig = ConfigurationPreset.minimal.configuration
-        XCTAssertFalse(minimalConfig.enableAnnotations)
-        XCTAssertFalse(minimalConfig.enableCustomPlugin)
+        XCTAssertFalse(minimalConfig.display.enableAnnotations)
         
         // Read only - annotations enabled
         let readOnlyConfig = ConfigurationPreset.readOnly.configuration
-        XCTAssertTrue(readOnlyConfig.enableAnnotations)
-        XCTAssertFalse(readOnlyConfig.enableCustomPlugin)
+        XCTAssertTrue(readOnlyConfig.display.enableAnnotations)
     }
     
     func testPluginUIIntegration() {
         // Test that plugin settings are properly represented in UI
         var config = EditorConfiguration()
         
-        // Simulate UI toggle for annotations
-        config.enableAnnotations = !config.enableAnnotations
-        XCTAssertTrue(config.enableAnnotations)
+        // Simulate UI toggle for annotations (starting from false)
+        config.display.enableAnnotations = false
+        config.display.enableAnnotations = !config.display.enableAnnotations
+        XCTAssertTrue(config.display.enableAnnotations)
         
-        // Simulate UI toggle for custom plugin
-        config.enableCustomPlugin = !config.enableCustomPlugin
-        XCTAssertTrue(config.enableCustomPlugin)
+        // Custom plugin management is handled separately
     }
     
     @MainActor

@@ -389,6 +389,25 @@ config.enableSyntaxHighlighting = false  // For very large files
 - **Dependencies**: swift-syntax 510.0.0+
 - **Concurrency**: Full Swift 6 Actor-Based Concurrency with Sendable conformance
 
+## 🐛 Known Issues
+
+### Syntax Highlighting Not Working
+**Status**: Under Investigation
+**Impact**: Code appears without syntax highlighting despite configuration
+
+**Details**: After the recent refactoring to integrate the unified EditorConfiguration system, syntax highlighting is not being applied in the sample application. The issue appears to be related to:
+- Configuration application flow between SwiftUI and AppKit layers
+- Language detection and setting mechanism in CodeEditorViewWrapper
+- Potential timing issues with syntax highlighting coordinator initialization
+
+**Workaround**: None currently available. All other editor features (line numbers, themes, editing) work correctly.
+
+**Investigation Progress**:
+- ✅ Confirmed configuration is being applied correctly
+- ✅ Verified `setLanguage(fileExtension:)` is being called  
+- ⏳ Investigating SyntaxHighlightingCoordinator initialization timing
+- ⏳ Checking syntax highlighting application vs. text setting order
+
 ## 🐛 Troubleshooting
 
 ### Common Solutions

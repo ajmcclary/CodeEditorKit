@@ -64,9 +64,9 @@ struct SwiftUIDemoView: View {
             
             // Configuration toggles
             VStack(spacing: 8) {
-                Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.showLineNumbers)
-                Toggle("Highlight Selected Line", isOn: $appState.currentConfiguration.highlightSelectedLine)
-                Toggle("Editable", isOn: $appState.currentConfiguration.isEditable)
+                Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
+                Toggle("Highlight Selected Line", isOn: $appState.currentConfiguration.display.highlightSelectedLine)
+                Toggle("Editable", isOn: $appState.currentConfiguration.behavior.isEditable)
             }
             
             // Sample code buttons

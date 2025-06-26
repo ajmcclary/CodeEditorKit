@@ -35,7 +35,7 @@ struct CodeEditorViewWrapper: View {
             language: language,
             onTextViewReady: onTextViewReady
         )
-        .background(Color(configuration.theme.backgroundColor))
+        // Note: Background color now managed by the plugin's theme system
     }
 }
 
@@ -51,12 +51,12 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Create NSScrollView
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = !configuration.wrapLines
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
         scrollView.autohidesScrollers = false
         scrollView.borderType = .noBorder
         
         // Configure smooth scrolling
-        if configuration.smoothScrolling {
+        if configuration.performance.smoothScrolling {
             scrollView.scrollerStyle = .overlay
             scrollView.verticalScrollElasticity = .automatic
             scrollView.horizontalScrollElasticity = .automatic
@@ -78,19 +78,19 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         applyConfiguration(to: textView)
         
         // Set up annotation manager if enabled
-        if configuration.enableAnnotations {
+        if configuration.display.enableAnnotations {
             context.coordinator.annotationManager = AnnotationManager(textView: textView)
             context.coordinator.annotationManager?.scanForAnnotations()
         }
 
         // Configure text view for scroll view based on word wrap setting
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = !configuration.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.wrapLines
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
         textView.textContainer?.heightTracksTextView = false
         
         // Set container width for non-wrapping mode
-        if !configuration.wrapLines {
+        if !configuration.layout.wrapLines {
             textView.textContainer?.containerSize = NSSize(
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
@@ -123,10 +123,10 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         applyConfiguration(to: textView)
         
         // Update scroll view settings based on word wrap
-        scrollView.hasHorizontalScroller = !configuration.wrapLines
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
         
         // Update smooth scrolling settings
-        if configuration.smoothScrolling {
+        if configuration.performance.smoothScrolling {
             scrollView.scrollerStyle = .overlay
             scrollView.verticalScrollElasticity = .automatic
             scrollView.horizontalScrollElasticity = .automatic
@@ -137,11 +137,11 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
         
         // Update text container settings for word wrap
-        textView.isHorizontallyResizable = !configuration.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.wrapLines
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
         
         // Set container width for non-wrapping mode
-        if !configuration.wrapLines {
+        if !configuration.layout.wrapLines {
             textView.textContainer?.containerSize = NSSize(
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
@@ -157,7 +157,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
         
         // Update annotations
-        if configuration.enableAnnotations {
+        if configuration.display.enableAnnotations {
             if context.coordinator.annotationManager == nil {
                 context.coordinator.annotationManager = AnnotationManager(textView: textView)
             }
@@ -174,79 +174,9 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     }
 
     private func applyConfiguration(to textView: CodeEditorView) {
-        // Basic settings
-        textView.isEditable = configuration.isEditable
-        textView.isSelectable = true
-        textView.allowsUndo = true
-
-        // Line numbers
-        textView.showsLineNumbers = configuration.showLineNumbers
-
-        // Font
-        textView.font = NSFont.monospacedSystemFont(
-            ofSize: configuration.fontSize,
-            weight: .regular
-        )
-
-        // Colors
-        textView.textColor = configuration.theme.textColor
-        textView.backgroundColor = configuration.theme.backgroundColor
-        textView.selectedLineHighlightColor = configuration.theme.selectedLineColor
-        textView.insertionPointColor = configuration.insertionPointColor
+        // Use the plugin's configuration application method
+        configuration.apply(to: textView)
         
-        // Selection attributes based on theme
-        textView.selectedTextAttributes = [
-            .backgroundColor: PlatformColor.selectedTextBackgroundColor,
-            .foregroundColor: PlatformColor.selectedTextColor
-        ]
-
-        // Line highlighting
-        textView.highlightSelectedLine = configuration.highlightSelectedLine
-
-        // Invisible characters
-        textView.showsInvisibleCharacters = configuration.showInvisibleCharacters
-
-        // Text container settings
-        textView.textContainerInset = configuration.textContainerInset
-        textView.textContainer?.lineFragmentPadding = configuration.lineFragmentPadding
-
-        // Make sure the text view is properly sized
-        textView.isVerticallyResizable = true
-
-        // Tab settings
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.tabStops = []
-        paragraphStyle.defaultTabInterval = CGFloat(configuration.tabWidth) * 7.0
-        paragraphStyle.lineSpacing = configuration.lineSpacing
-        textView.defaultParagraphStyle = paragraphStyle
-        
-        // Text processing settings
-        textView.isContinuousSpellCheckingEnabled = configuration.isContinuousSpellCheckingEnabled
-        textView.isGrammarCheckingEnabled = configuration.isGrammarCheckingEnabled
-        textView.isAutomaticQuoteSubstitutionEnabled = configuration.isAutomaticQuoteSubstitutionEnabled
-        textView.isAutomaticDashSubstitutionEnabled = configuration.isAutomaticDashSubstitutionEnabled
-        textView.isAutomaticTextReplacementEnabled = configuration.isAutomaticTextReplacementEnabled
-        textView.isAutomaticSpellingCorrectionEnabled = configuration.isAutomaticSpellingCorrectionEnabled
-        textView.isAutomaticTextCompletionEnabled = configuration.isAutomaticTextCompletionEnabled
-        textView.isIncrementalSearchingEnabled = configuration.isIncrementalSearchingEnabled
-        
-        // Advanced text settings
-        textView.allowsDocumentBackgroundColorChange = configuration.allowsDocumentBackgroundColorChange
-        textView.allowsImageEditing = configuration.allowsImageEditing
-        textView.allowsCharacterPickerTouchBarItem = configuration.allowsCharacterPickerTouchBarItem
-        textView.isRichText = configuration.isRichText
-        textView.importsGraphics = configuration.importsGraphics
-        textView.usesInspectorBar = configuration.usesInspectorBar
-        textView.usesFindBar = configuration.usesFindBar
-        // Note: allowsNonContiguousLayout is not available on CodeEditorView
-        textView.displaysLinkToolTips = configuration.displaysLinkToolTips
-        
-        // Performance settings
-        if configuration.useHardwareAcceleration {
-            textView.wantsLayer = true
-            textView.layer?.drawsAsynchronously = true
-        }
-
         // Set language for syntax highlighting using file extension
         textView.setLanguage(fileExtension: language)
     }
@@ -278,7 +208,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
                 parent.text = textView.text ?? ""
                 
                 // Re-scan for annotations if enabled
-                if parent.configuration.enableAnnotations {
+                if parent.configuration.display.enableAnnotations {
                     annotationManager?.scanForAnnotations()
                 }
             }
@@ -381,10 +311,10 @@ struct CodeEditorViewWrapper: View {
         CodeEditorSwiftUIView(
             text: $text,
             language: detectLanguage(from: language),
-            showLineNumbers: configuration.showLineNumbers,
-            highlightSelectedLine: configuration.highlightSelectedLine,
-            isEditable: configuration.isEditable,
-            becomeFirstResponderOnAppear: configuration.isEditable
+            showLineNumbers: configuration.display.showLineNumbers,
+            highlightSelectedLine: configuration.display.highlightSelectedLine,
+            isEditable: configuration.behavior.isEditable,
+            becomeFirstResponderOnAppear: configuration.behavior.isEditable
         )
     }
     

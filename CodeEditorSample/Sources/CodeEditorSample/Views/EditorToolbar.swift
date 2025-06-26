@@ -1,3 +1,4 @@
+import CodeEditorPlugin
 import SwiftUI
 #if canImport(AppKit)
 import AppKit
@@ -15,19 +16,19 @@ struct EditorToolbar: View {
     var body: some View {
         HStack {
             // Quick toggles
-            Toggle(isOn: $configuration.showLineNumbers) {
+            Toggle(isOn: $configuration.display.showLineNumbers) {
                 Label("Line Numbers", systemImage: "number")
             }
             .toggleStyle(.button)
             .help("Toggle line numbers")
 
-            Toggle(isOn: $configuration.showInvisibleCharacters) {
+            Toggle(isOn: $configuration.display.showInvisibleCharacters) {
                 Label("Invisibles", systemImage: "text.append")
             }
             .toggleStyle(.button)
             .help("Show invisible characters")
 
-            Toggle(isOn: $configuration.highlightSelectedLine) {
+            Toggle(isOn: $configuration.display.highlightSelectedLine) {
                 Label("Highlight Line", systemImage: "text.line.first.and.arrowtriangle.forward")
             }
             .toggleStyle(.button)
@@ -39,19 +40,19 @@ struct EditorToolbar: View {
             // Font size controls
             HStack(spacing: 4) {
                 Button {
-                    configuration.fontSize = max(10, configuration.fontSize - 1)
+                    configuration.display.fontSize = max(10, configuration.display.fontSize - 1)
                 } label: {
                     Image(systemName: "textformat.size.smaller")
                 }
                 .help("Decrease font size")
 
-                Text("\(Int(configuration.fontSize))pt")
+                Text("\(Int(configuration.display.fontSize))pt")
                     .font(.caption)
                     .frame(width: 35)
                     .monospacedDigit()
 
                 Button {
-                    configuration.fontSize = min(32, configuration.fontSize + 1)
+                    configuration.display.fontSize = min(32, configuration.display.fontSize + 1)
                 } label: {
                     Image(systemName: "textformat.size.larger")
                 }
