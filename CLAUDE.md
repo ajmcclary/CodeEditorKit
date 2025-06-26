@@ -220,3 +220,11 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - Hover popups for annotation details with styled presentation
 - TextKit1-compatible annotation positioning for broad platform support
 - Performance testing with large files and many annotations
+
+**Sample Application Refactoring (Latest)**
+- Migrated CodeEditorSample to use unified EditorConfiguration from plugin
+- Updated all SwiftUI views to use new nested configuration structure
+- Fixed all SwiftLint violations and test failures
+- Comprehensive testing with 66 tests passing
+- All platform wrappers (macOS, iOS) updated for new API
+
