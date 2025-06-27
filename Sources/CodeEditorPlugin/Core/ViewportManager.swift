@@ -1,0 +1,374 @@
+import Combine
+import Foundation
+
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
+
+// MARK: - ViewportManager
+
+/// Manages viewport-based rendering and optimization for large files
+@MainActor
+public final class ViewportManager: ObservableObject {
+    // MARK: - Properties
+    
+    private weak var textView: PlatformTextView?
+    private let textKitBridge: TextKitBridge
+    private var cancellables = Set<AnyCancellable>()
+    
+    /// Current viewport information
+    @Published public private(set) var viewport: Viewport = .zero
+    
+    /// Performance metrics
+    @Published public private(set) var metrics = ViewportMetrics()
+    
+    /// Update throttle interval (seconds)
+    public var updateInterval: TimeInterval = 0.1
+    
+    /// Prefetch distance multiplier
+    public var prefetchMultiplier: CGFloat = 1.5
+    
+    /// Maximum cached ranges
+    public var maxCachedRanges: Int = 10
+    
+    /// Cached visible ranges for quick access
+    private var rangeCache = LRUCache<ViewportManagerCacheKey, CachedViewportData>(capacity: 10)
+    
+    /// Active rendering tasks
+    private var renderingTasks: [UUID: Task<Void, Never>] = [:]
+    
+    // MARK: - Initialization
+    
+    public init(textView: PlatformTextView) {
+        self.textView = textView
+        self.textKitBridge = textView.createTextKitBridge()
+        
+        setupObservers()
+        updateViewport()
+    }
+    
+    deinit {
+        // Cancel all active tasks
+        renderingTasks.values.forEach { $0.cancel() }
+    }
+    
+    // MARK: - Setup
+    
+    private func setupObservers() {
+        // Observe scroll changes
+        #if canImport(AppKit)
+        NotificationCenter.default.publisher(for: NSView.boundsDidChangeNotification)
+            .compactMap { [weak self] _ in self?.textView }
+            .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateViewport()
+                }
+            }
+            .store(in: &cancellables)
+        #elseif canImport(UIKit)
+        NotificationCenter.default.publisher(for: UIScrollView.contentOffsetDidChangeNotification)
+            .compactMap { [weak self] _ in self?.textView }
+            .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateViewport()
+                }
+            }
+            .store(in: &cancellables)
+        #endif
+        
+        // Observe text changes
+        NotificationCenter.default.publisher(for: NSTextStorage.didProcessEditingNotification)
+            .compactMap { [weak self] _ in self?.textView }
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.invalidateCache()
+                    self?.updateViewport()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Viewport Updates
+    
+    /// Update the current viewport
+    public func updateViewport() {
+        guard let textView else { return }
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Get visible bounds
+        #if canImport(AppKit)
+        let visibleBounds = textView.visibleRect
+        #elseif canImport(UIKit)
+        let visibleBounds = textView.bounds
+        #endif
+        
+        // Calculate viewport with prefetch area
+        let prefetchBounds = calculatePrefetchBounds(from: visibleBounds)
+        
+        // Get visible range from TextKitBridge
+        if let visibleRange = textKitBridge.visibleRange {
+            // Check cache first
+            let cacheKey = ViewportManagerCacheKey(bounds: visibleBounds, textLength: textView.string.count)
+            
+            if let cachedData = rangeCache.get(cacheKey) {
+                // Use cached data
+                viewport = Viewport(
+                    visibleBounds: visibleBounds,
+                    prefetchBounds: prefetchBounds,
+                    visibleRange: cachedData.visibleRange,
+                    prefetchRange: cachedData.prefetchRange
+                )
+                metrics.cacheHits += 1
+            } else {
+                // Calculate new viewport data
+                let prefetchRange = calculatePrefetchRange(from: visibleRange)
+                
+                viewport = Viewport(
+                    visibleBounds: visibleBounds,
+                    prefetchBounds: prefetchBounds,
+                    visibleRange: visibleRange,
+                    prefetchRange: prefetchRange
+                )
+                
+                // Cache the result
+                let cachedData = CachedViewportData(
+                    visibleRange: visibleRange,
+                    prefetchRange: prefetchRange
+                )
+                rangeCache.set(cachedData, forKey: cacheKey)
+                metrics.cacheMisses += 1
+            }
+            
+            // Update metrics
+            let updateTime = CFAbsoluteTimeGetCurrent() - startTime
+            metrics.averageUpdateTime = (metrics.averageUpdateTime * Double(metrics.updateCount) + updateTime) / Double(metrics.updateCount + 1)
+            metrics.updateCount += 1
+            
+            // Trigger viewport-based rendering
+            performViewportRendering()
+        }
+    }
+    
+    // MARK: - Rendering
+    
+    /// Perform viewport-based rendering optimizations
+    private func performViewportRendering() {
+        guard let textView else { return }
+        
+        // Cancel any existing rendering tasks outside the new viewport
+        cancelRenderingOutsideViewport()
+        
+        // Create a new rendering task
+        let taskId = UUID()
+        let renderingTask = Task { [weak self] in
+            guard let self else { return }
+            
+            // Ensure layout for visible range
+            self.textKitBridge.ensureLayout(for: self.viewport.visibleRange)
+            
+            // Prefetch layout for prefetch range if not cancelled
+            if !Task.isCancelled {
+                let prefetchRanges = self.splitRangeForBatchProcessing(self.viewport.prefetchRange)
+                for range in prefetchRanges {
+                    if Task.isCancelled { break }
+                    self.textKitBridge.ensureLayout(for: range)
+                    
+                    // Small delay between batches
+                    try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                }
+            }
+            
+            // Remove task when complete
+            await MainActor.run {
+                self.renderingTasks.removeValue(forKey: taskId)
+            }
+        }
+        
+        renderingTasks[taskId] = renderingTask
+    }
+    
+    /// Cancel rendering tasks outside the current viewport
+    private func cancelRenderingOutsideViewport() {
+        // Cancel all tasks for now (could be optimized to check ranges)
+        renderingTasks.values.forEach { $0.cancel() }
+        renderingTasks.removeAll()
+    }
+    
+    // MARK: - Range Calculations
+    
+    /// Calculate prefetch bounds based on visible bounds
+    private func calculatePrefetchBounds(from visibleBounds: CGRect) -> CGRect {
+        let prefetchHeight = visibleBounds.height * prefetchMultiplier
+        let extraHeight = (prefetchHeight - visibleBounds.height) / 2
+        
+        return CGRect(
+            x: visibleBounds.origin.x,
+            y: max(0, visibleBounds.origin.y - extraHeight),
+            width: visibleBounds.width,
+            height: prefetchHeight
+        )
+    }
+    
+    /// Calculate prefetch range based on visible range
+    private func calculatePrefetchRange(from visibleRange: NSRange) -> NSRange {
+        guard let textLength = textView?.string.count else { return visibleRange }
+        
+        let prefetchLength = Int(CGFloat(visibleRange.length) * prefetchMultiplier)
+        let extraLength = (prefetchLength - visibleRange.length) / 2
+        
+        let location = max(0, visibleRange.location - extraLength)
+        let maxLength = textLength - location
+        let length = min(prefetchLength, maxLength)
+        
+        return NSRange(location: location, length: length)
+    }
+    
+    /// Split a range into smaller batches for processing
+    private func splitRangeForBatchProcessing(_ range: NSRange) -> [NSRange] {
+        let batchSize = 1_000 // Default batch size
+        var ranges: [NSRange] = []
+        
+        var currentLocation = range.location
+        let endLocation = NSMaxRange(range)
+        
+        while currentLocation < endLocation {
+            let remainingLength = endLocation - currentLocation
+            let currentLength = min(batchSize, remainingLength)
+            ranges.append(NSRange(location: currentLocation, length: currentLength))
+            currentLocation += currentLength
+        }
+        
+        return ranges
+    }
+    
+    // MARK: - Cache Management
+    
+    /// Invalidate the viewport cache
+    public func invalidateCache() {
+        rangeCache.removeAll()
+        metrics.cacheInvalidations += 1
+    }
+    
+    /// Get cache statistics
+    public var cacheStatistics: CacheStatistics {
+        rangeCache.statistics
+    }
+    
+    // MARK: - Optimization Hints
+    
+    /// Provide optimization hints based on current usage
+    public func getOptimizationHints() -> [OptimizationHint] {
+        var hints: [OptimizationHint] = []
+        
+        // Check cache performance
+        let cacheHitRate = metrics.cacheHits > 0 ? Double(metrics.cacheHits) / Double(metrics.cacheHits + metrics.cacheMisses) : 0
+        if cacheHitRate < 0.5 {
+            hints.append(.increaseCacheSize)
+        }
+        
+        // Check update frequency
+        if metrics.averageUpdateTime > 0.05 { // 50ms
+            hints.append(.reduceUpdateFrequency)
+        }
+        
+        // Check viewport size
+        if viewport.prefetchRange.length > 50_000 {
+            hints.append(.reducePrefetchMultiplier)
+        }
+        
+        return hints
+    }
+    
+    /// Optimization hints
+    public enum OptimizationHint {
+        case increaseCacheSize
+        case reduceUpdateFrequency
+        case reducePrefetchMultiplier
+        case enableAsyncRendering
+        
+        var description: String {
+            switch self {
+            case .increaseCacheSize:
+                return "Consider increasing cache size for better performance"
+
+            case .reduceUpdateFrequency:
+                return "Reduce viewport update frequency to improve performance"
+
+            case .reducePrefetchMultiplier:
+                return "Reduce prefetch area for large documents"
+
+            case .enableAsyncRendering:
+                return "Enable async rendering for better responsiveness"
+            }
+        }
+    }
+}
+
+// MARK: - Supporting Types
+
+/// Viewport information
+public struct Viewport: Equatable, Sendable {
+    public let visibleBounds: CGRect
+    public let prefetchBounds: CGRect
+    public let visibleRange: NSRange
+    public let prefetchRange: NSRange
+    
+    @MainActor
+    public static let zero = Self(
+        visibleBounds: .zero,
+        prefetchBounds: .zero,
+        visibleRange: NSRange(location: 0, length: 0),
+        prefetchRange: NSRange(location: 0, length: 0)
+    )
+}
+
+/// Viewport performance metrics
+public struct ViewportMetrics {
+    public var updateCount: Int = 0
+    public var averageUpdateTime: TimeInterval = 0
+    public var cacheHits: Int = 0
+    public var cacheMisses: Int = 0
+    public var cacheInvalidations: Int = 0
+    
+    public var cacheHitRate: Double {
+        let total = cacheHits + cacheMisses
+        return total > 0 ? Double(cacheHits) / Double(total) : 0
+    }
+}
+
+/// Cache key for viewport data
+private struct ViewportManagerCacheKey: Hashable {
+    let bounds: CGRect
+    let textLength: Int
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(bounds.origin.x)
+        hasher.combine(bounds.origin.y)
+        hasher.combine(bounds.size.width)
+        hasher.combine(bounds.size.height)
+        hasher.combine(textLength)
+    }
+}
+
+/// Cached viewport data
+private struct CachedViewportData {
+    let visibleRange: NSRange
+    let prefetchRange: NSRange
+}
+
+// MARK: - ViewportManager Integration
+
+extension CodeEditorView {
+    /// Create or get the viewport manager for this text view
+    public func getViewportManager() -> ViewportManager {
+        // This would need to be stored as a property in CodeEditorView
+        // For now, return a new instance
+        ViewportManager(textView: self)
+    }
+}

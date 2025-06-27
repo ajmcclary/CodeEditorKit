@@ -187,6 +187,19 @@ public struct CompletionContextModel: Sendable {
         self.wordRange = wordRange
         self.timestamp = Date()
     }
+    
+    /// Get the current word being typed
+    public var currentWord: String {
+        guard let wordRange,
+              wordRange.location != NSNotFound,
+              wordRange.location + wordRange.length <= text.count else {
+            return ""
+        }
+        
+        let startIndex = text.index(text.startIndex, offsetBy: wordRange.location)
+        let endIndex = text.index(startIndex, offsetBy: wordRange.length)
+        return String(text[startIndex..<endIndex])
+    }
 }
 
 // MARK: - Completion Trigger Kind
@@ -281,7 +294,7 @@ public final class CompletionManager: @unchecked Sendable {
         // Wire up the debouncer to use this manager's completion logic
         self.debouncer.setCompletionHandler { [weak self] context in
             guard let self else {
-                throw CompletionError.cancelled
+                throw CompletionDebouncingError.cancelled
             }
             return try await self.requestCompletions(for: context)
         }
@@ -359,7 +372,7 @@ public final class CompletionManager: @unchecked Sendable {
             // Request from all applicable providers concurrently
             let results = await withTaskGroup(of: CompletionResult?.self) { group in
                 for provider in applicableProviders {
-                    let providerId = provider.id // Capture the id on the main actor
+                    _ = provider.id // Capture the id on the main actor
                     group.addTask {
                         do {
                             return try await provider.completions(for: context)

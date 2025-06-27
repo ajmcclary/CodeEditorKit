@@ -1,0 +1,600 @@
+@testable import CodeEditorPlugin
+import XCTest
+
+/// Comprehensive performance test suite covering all major components
+final class ComprehensivePerformanceTests: XCTestCase {
+    // MARK: - Text Processing Performance
+    
+    @MainActor
+    func testTextProcessingPerformance() throws {
+        let processor = AsyncTextProcessor()
+        
+        // Simple test operation
+        struct TestOperation: ProcessingOperation {
+            let name = "test-operation"
+
+            func process(_ text: String, _: NSRange) async throws -> Any {
+                // Simple processing: count characters
+                text.count
+            }
+        }
+        
+        // Test with large text size
+        let text = String(repeating: "a", count: 100_000)
+        
+        measure {
+            let expectation = self.expectation(description: "Text processing")
+            Task {
+                await processor.submit(
+                    text: text,
+                    range: NSRange(location: 0, length: text.count),
+                    operation: TestOperation(),
+                    priority: .normal
+                ) { _ in
+                    expectation.fulfill()
+                }
+            }
+            wait(for: [expectation], timeout: 5.0)
+        }
+    }
+    
+    @MainActor
+    func testRangeProcessingPerformance() throws {
+        // Create a simple configuration for testing
+        let config = RangeProcessor.Configuration(
+            lengthProvider: { 1_000 }, // Return fixed length for testing
+            changeHandler: { _, _ in }
+        )
+        let processor = RangeProcessor(configuration: config)
+        let text = String(repeating: "Hello World\n", count: 10_000)
+        
+        // Generate ranges
+        var ranges: [NSRange] = []
+        for index in stride(from: 0, to: text.count, by: 100) {
+            ranges.append(NSRange(location: index, length: min(50, text.count - index)))
+        }
+        
+        measure {
+            // Test range processing performance using actual API
+            for range in ranges.prefix(100) { // Limit to avoid timeout
+                _ = processor.processLocation(range.location)
+                _ = processor.processed(range)
+            }
+        }
+    }
+    
+    // MARK: - Smart Features Performance
+    
+    @MainActor
+    func testSmartCompletionEnginePerformance() throws {
+        let engine = SmartCompletionEngine()
+        
+        // Create test context
+        let context = CompletionContextModel(
+            text: "import Foundation\nlet str = String.",
+            cursorPosition: 34,
+            language: .swift,
+            triggerKind: .character,
+            triggerCharacter: "."
+        )
+        
+        // Warm up the cache
+        let warmupExpectation = expectation(description: "Warmup")
+        engine.requestCompletions(for: context) { _ in
+            warmupExpectation.fulfill()
+        }
+        wait(for: [warmupExpectation], timeout: 2.0)
+        
+        // Test cached performance
+        measure {
+            let expectation = self.expectation(description: "Smart completion")
+            engine.requestCompletions(for: context) { result in
+                XCTAssertFalse(result.items.isEmpty)
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 1.0)
+        }
+    }
+    
+    @MainActor
+    func testFuzzyMatcherPerformance() throws {
+        let matcher = FuzzyMatcher()
+        
+        // Generate candidates
+        let candidates = (0..<10_000).map { "function\($0)WithLongName" }
+        
+        measure {
+            // Test multiple patterns in single measure block
+            let patterns = ["func", "with", "name", "f100", "fwln"]
+            for pattern in patterns {
+                let results = matcher.match(pattern: pattern, candidates: candidates)
+                XCTAssertFalse(results.isEmpty)
+            }
+        }
+    }
+    
+    @MainActor
+    func testSymbolNavigatorPerformance() throws {
+        let navigator = SymbolNavigator()
+        let textView = CodeEditorView()
+        
+        // Generate large code file
+        var largeCode = """
+        import Foundation
+        
+        // File-level documentation
+        
+        """
+        
+        for index in 0..<100 {
+            largeCode += """
+            
+            /// Documentation for class \(index)
+            class TestClass\(index): NSObject {
+                // Properties
+                var property1: String = ""
+                var property2: Int = 0
+                
+                /// Method documentation
+                func method1() {
+                    // Implementation
+                }
+                
+                func method2(param: String) -> Bool {
+                    return param.isEmpty
+                }
+                
+                // Nested class
+                class NestedClass {
+                    var nestedProperty: Double = 0.0
+                }
+            }
+            
+            struct TestStruct\(index) {
+                let id: Int
+                var name: String
+            }
+            
+            enum TestEnum\(index) {
+                case option1
+                case option2(String)
+                case option3(Int, String)
+            }
+            
+            """
+        }
+        
+        textView.string = largeCode
+        textView.language = .swift
+        navigator.attach(to: textView)
+        
+        measure {
+            let expectation = self.expectation(description: "Symbol detection")
+            navigator.updateSymbols()
+            
+            // Wait a bit for async processing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 2.0)
+        }
+    }
+    
+    @MainActor
+    func testSmartEditingEnginePerformance() throws {
+        let engine = SmartEditingEngine()
+        let textView = CodeEditorView()
+        
+        engine.attach(to: textView)
+        
+        measure {
+            // Test bracket matching performance for all bracket types
+            let testCases = [
+                ("(", ")"),
+                ("[", "]"),
+                ("{", "}"),
+                ("\"", "\""),
+                ("'", "'")
+            ]
+            
+            for (open, close) in testCases {
+                textView.string = ""
+                
+                // Simulate typing many brackets
+                for index in 0..<200 { // Reduced count for combined test
+                    let range = NSRange(location: textView.string.count, length: 0)
+                    if index.isMultiple(of: 2) {
+                        _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: open)
+                    } else {
+                        _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: close)
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Code Folding Performance
+    
+    @MainActor
+    func testCodeFoldingEnginePerformance() throws {
+        let engine = CodeFoldingEngine()
+        
+        // Generate complex nested code
+        var complexCode = """
+        class OuterClass {
+            func method1() {
+                if true {
+                    for i in 0..<10 {
+                        switch i {
+                        case 0:
+                            print("zero")
+
+                        case 1:
+                            print("one")
+
+                        default:
+                            print("other")
+                        }
+                    }
+                }
+            }
+        """
+        
+        // Add more nested structures
+        for index in 0..<50 {
+            complexCode += """
+            
+            
+            func method\(index)() {
+                guard let value = optionalValue else {
+                    return
+                }
+                
+                do {
+                    try performOperation()
+                } catch {
+                    handleError(error)
+                }
+            }
+            """
+        }
+        
+        complexCode += "\n}"
+        
+        measure {
+            // Test the performance of the folding engine operations
+            // Since we can't directly call detectFoldingRegions, test other operations
+            engine.foldAll()
+            engine.unfoldAll()
+            
+            for line in 0..<100 {
+                _ = engine.foldableRegion(at: line)
+                _ = engine.isLineFolded(line)
+            }
+        }
+    }
+    
+    // MARK: - Configuration Performance
+    
+    @MainActor
+    func testConfigurationValidatorPerformance() throws {
+        let validator = ConfigurationValidator()
+        var configuration = EditorConfiguration()
+        
+        // Create complex configuration
+        configuration.display.fontSize = 16
+        configuration.display.showLineNumbers = true
+        configuration.display.highlightSelectedLine = true
+        configuration.layout.tabWidth = 4
+        configuration.behavior.autoIndent = true
+        configuration.performance.useHardwareAcceleration = true
+        
+        measure {
+            // Validate many times
+            for _ in 0..<10_000 {
+                let issues = validator.validate(configuration)
+                _ = issues.isEmpty
+            }
+        }
+    }
+    
+    @MainActor
+    func testConfigurationMigrationPerformance() throws {
+        let migrator = ConfigurationMigrator()
+        
+        // Create old configuration format
+        let oldConfig: [String: Any] = [
+            "fontSize": 14.0,
+            "showLineNumbers": true,
+            "tabWidth": 4,
+            "theme": "dark"
+        ]
+        
+        measure {
+            let expectation = self.expectation(description: "Configuration migration")
+            Task {
+                for _ in 0..<1_000 {
+                    _ = migrator.migrate(from: oldConfig, version: "1.0")
+                }
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 2.0)
+        }
+    }
+    
+    // MARK: - Platform Performance
+    
+    @MainActor
+    func testPlatformCapabilitiesPerformance() throws {
+        let capabilities = PlatformCapabilities.shared
+        
+        measure {
+            // Test frequent capability checks
+            for _ in 0..<100_000 {
+                _ = capabilities.currentPlatform == .macOS
+                _ = capabilities.supportsTextKit2
+                _ = capabilities.supportsHardwareAcceleration
+                _ = capabilities.supportsGestureRecognizers
+                _ = capabilities.maxRecommendedFileSize
+            }
+        }
+    }
+    
+    @MainActor
+    func testUnifiedPerformanceSystemOverhead() throws {
+        let performanceSystem = UnifiedPerformanceSystem.shared
+        
+        // Test performance tracking overhead
+        measure {
+            let expectation = self.expectation(description: "Performance tracking")
+            Task {
+                do {
+                    for index in 0..<1_000 {
+                        _ = try await performanceSystem.track(.syntaxHighlighting) {
+                            // Simulate some work
+                            try await Task.sleep(nanoseconds: 1_000) // 1 microsecond
+                            return index
+                        }
+                    }
+                    expectation.fulfill()
+                } catch {
+                    XCTFail("Performance tracking failed: \(error)")
+                    expectation.fulfill()
+                }
+            }
+            wait(for: [expectation], timeout: 5.0)
+        }
+    }
+    
+    // MARK: - Utility Performance
+    
+    @MainActor
+    func testRangeUtilitiesPerformance() throws {
+        // Generate many ranges
+        var ranges: [NSRange] = []
+        for index in stride(from: 0, to: 100_000, by: 100) {
+            ranges.append(NSRange(location: index, length: 50))
+        }
+        
+        measure {
+            // Test merge performance
+            let merged = RangeUtilities.merge(ranges)
+            XCTAssertFalse(merged.isEmpty)
+            
+            // Test intersection performance
+            for index in 0..<100 {
+                let testRange = NSRange(location: index * 1_000, length: 500)
+                let intersecting = ranges.filter { RangeUtilities.overlaps(testRange, $0) }
+                _ = intersecting.count
+            }
+        }
+    }
+    
+    @MainActor
+    func testTextMetricsCalculatorPerformance() throws {
+        // TextMetricsCalculator is an enum with static methods
+        let font = PlatformFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        
+        // Generate text with varying line lengths
+        var text = ""
+        for index in 0..<1_000 {
+            text += String(repeating: "a", count: index % 100) + "\n"
+        }
+        
+        measure {
+            // Calculate metrics using static methods
+            let lineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+            let textWidth = TextMetricsCalculator.measureTextWidth(text, font: font)
+            let charWidth = TextMetricsCalculator.calculateAverageCharacterWidth(for: font)
+            let memoryEstimate = TextMetricsCalculator.estimateMemoryUsage(for: text)
+            
+            XCTAssertGreaterThan(lineHeight, 0)
+            XCTAssertGreaterThan(textWidth, 0)
+            XCTAssertGreaterThan(charWidth, 0)
+            XCTAssertGreaterThan(memoryEstimate, 0)
+        }
+    }
+    
+    @MainActor
+    func testSearchReplaceEnginePerformance() throws {
+        let engine = SearchReplaceEngine()
+        
+        measure {
+            let searchExpectation = self.expectation(description: "Search")
+            let regexExpectation = self.expectation(description: "Regex search")
+            
+            Task {
+                // Test regular search performance
+                let results = await engine.findAll(
+                    pattern: "fox",
+                    options: SearchOptions()
+                )
+                XCTAssertFalse(results.isEmpty)
+                searchExpectation.fulfill()
+                
+                // Test regex search performance
+                var regexOptions = SearchOptions()
+                regexOptions.useRegularExpression = true
+                let regexResults = await engine.findAll(
+                    pattern: "\\b\\w{5}\\b",
+                    options: regexOptions
+                )
+                XCTAssertFalse(regexResults.isEmpty)
+                regexExpectation.fulfill()
+            }
+            wait(for: [searchExpectation, regexExpectation], timeout: 5.0)
+        }
+    }
+    
+    // MARK: - LSP Performance
+    
+    @MainActor
+    func testLSPManagerPerformance() throws {
+        let lspManager = LSPManager()
+        
+        // Test document management performance
+        let testFiles = (0..<100).map { index in
+            (
+                path: "/test/file\(index).swift",
+                content: "import Foundation\nclass Test\(index) {}"
+            )
+        }
+        
+        measure {
+            let expectation = self.expectation(description: "LSP document management")
+            Task {
+                // Open many documents
+                for file in testFiles {
+                    try? await lspManager.openDocument(
+                        filePath: file.path,
+                        content: file.content,
+                        languageId: "swift"
+                    )
+                }
+                
+                // Update them
+                for file in testFiles {
+                    try? await lspManager.updateDocument(
+                        filePath: file.path,
+                        content: file.content + "\n// Updated"
+                    )
+                }
+                
+                // Close them
+                for file in testFiles {
+                    try? await lspManager.closeDocument(filePath: file.path)
+                }
+                
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 10.0)
+        }
+    }
+    
+    // MARK: - Memory Stress Tests
+    
+    @MainActor
+    func testMemoryUnderPressure() throws {
+        let monitor = MemoryMonitor.shared
+        
+        measure(metrics: [XCTMemoryMetric()]) {
+            let expectation = self.expectation(description: "Memory pressure test")
+            Task {
+                // Simulate memory pressure
+                var largeAllocations: [[Int]] = []
+                
+                for index in 0..<50 {
+                    // Allocate ~4MB each iteration
+                    largeAllocations.append(Array(repeating: index, count: 500_000))
+                    
+                    // Check memory usage and perform cleanup if needed
+                    let currentUsage = monitor.getCurrentMemoryUsage()
+                    if currentUsage > 500 { // MB threshold
+                        let memoryFreed = await monitor.performCleanup()
+                        print("Cleanup freed \(memoryFreed)MB")
+                        
+                        // Clear some allocations
+                        if largeAllocations.count > 10 {
+                            largeAllocations.removeFirst(10)
+                        }
+                    }
+                }
+                
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 30.0)
+        }
+    }
+    
+    // MARK: - Concurrent Operations Performance
+    
+    @MainActor
+    func testConcurrentCompletionRequests() throws {
+        let completionManager = CompletionManager()
+        completionManager.registerProvider(SwiftCompletionProvider())
+        
+        let contexts = (0..<10).map { index in
+            CompletionContextModel(
+                text: "let x\(index) = String.",
+                cursorPosition: 20,
+                language: .swift,
+                triggerKind: .character,
+                triggerCharacter: "."
+            )
+        }
+        
+        measure {
+            let expectation = self.expectation(description: "Concurrent completions")
+            Task {
+                // Launch concurrent completion requests
+                await withTaskGroup(of: Void.self) { group in
+                    for context in contexts {
+                        group.addTask {
+                            _ = try? await completionManager.requestCompletions(for: context)
+                        }
+                    }
+                }
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 5.0)
+        }
+    }
+    
+    @MainActor
+    func testAsyncOperationManagerPerformance() throws {
+        let manager = AsyncOperationManager()
+        
+        measure {
+            let debounceExpectation = self.expectation(description: "Debouncing")
+            let throttleExpectation = self.expectation(description: "Throttling")
+            
+            Task {
+                // Test debouncing performance
+                for index in 0..<500 { // Reduced count for combined test
+                    try? await manager.debounce(key: "test-debounce", delay: 0.001) {
+                        _ = index
+                    }
+                }
+                debounceExpectation.fulfill()
+                
+                // Test throttling performance
+                do {
+                    for index in 0..<500 { // Reduced count for combined test
+                        _ = try await manager.throttle(key: "test-throttle", interval: 0.001) { @Sendable in
+                            index
+                        }
+                    }
+                    throttleExpectation.fulfill()
+                } catch {
+                    XCTFail("Throttling failed: \(error)")
+                    throttleExpectation.fulfill()
+                }
+            }
+            wait(for: [debounceExpectation, throttleExpectation], timeout: 4.0)
+        }
+    }
+    
+    deinit {
+        // Cleanup is handled automatically by ARC
+    }
+}

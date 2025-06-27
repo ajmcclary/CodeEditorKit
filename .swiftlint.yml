@@ -301,6 +301,13 @@ custom_rules:
     
   # Removed store_scope_deprecation - was incorrectly flagging valid TCA 1.0+ syntax
 
+  allow_nsstring_drawing:
+    included: '.*\.swift'
+    name: "Allow NSString Drawing"
+    regex: 'NSString\(string:\s*[^)]+\)\.(?!draw)'
+    message: "Use Swift String methods instead of NSString, except for drawing APIs"
+    severity: warning
+
 
 
 # Reporting

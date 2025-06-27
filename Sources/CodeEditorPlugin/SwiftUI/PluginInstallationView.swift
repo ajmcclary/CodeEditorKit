@@ -77,7 +77,7 @@ public struct PluginInstallationView: View {
             .navigationBarTitleDisplayMode(.large)
 #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItemGroup(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }

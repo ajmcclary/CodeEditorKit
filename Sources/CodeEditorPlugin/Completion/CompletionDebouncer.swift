@@ -113,7 +113,7 @@ public final class CompletionDebouncer: ObservableObject {
         
         // Clear queue and notify cancellation
         for request in requestQueue {
-            request.completion(.failure(CompletionError.cancelled))
+            request.completion(.failure(CompletionDebouncingError.cancelled))
         }
         requestQueue.removeAll()
         
@@ -155,7 +155,7 @@ public final class CompletionDebouncer: ObservableObject {
         // Remove oldest requests if queue is full
         while requestQueue.count >= maxQueuedRequests {
             let removedRequest = requestQueue.removeFirst()
-            removedRequest.completion(.failure(CompletionError.queueFull))
+            removedRequest.completion(.failure(CompletionDebouncingError.queueFull))
             statistics.recordDropped()
         }
         
@@ -224,7 +224,7 @@ public final class CompletionDebouncer: ObservableObject {
     
     private func performCompletionRequest(_ context: CompletionContextModel) async throws -> CompletionResult {
         guard let handler = completionHandler else {
-            throw CompletionError.noHandlerConfigured
+            throw CompletionDebouncingError.noHandlerConfigured
         }
         
         return try await handler(context)
@@ -266,7 +266,7 @@ public enum CompletionPriority: Int, CaseIterable, Sendable {
 }
 
 /// Errors related to completion debouncing
-public enum CompletionError: Error, Sendable {
+public enum CompletionDebouncingError: Error, Sendable {
     case cancelled
     case queueFull
     case timeout

@@ -75,18 +75,16 @@ public struct PluginDetailsView: View {
             .navigationTitle(plugin.metadata.name)
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-#endif
-            .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button(isPluginEnabled ? "Disable" : "Enable") {
-                        togglePluginEnabled()
+            .navigationBarItems(trailing: HStack {
+                Button(isPluginEnabled ? "Disable" : "Enable") {
+                    togglePluginEnabled()
+                }
+                .buttonStyle(.bordered)
+                
+                Menu("Actions") {
+                    Button("Configure") {
+                        showingConfigurationSheet = true
                     }
-                    .buttonStyle(.bordered)
-                    
-                    Menu("Actions") {
-                        Button("Configure") {
-                            showingConfigurationSheet = true
-                        }
                         
                         Button("View Documentation") {
                             openDocumentation()
@@ -107,16 +105,10 @@ public struct PluginDetailsView: View {
                         Button("Uninstall", role: .destructive) {
                             showingUninstallAlert = true
                         }
-                    }
+                }
                     .buttonStyle(.bordered)
-                }
-                
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            })
+#endif
             .alert("Uninstall Plugin", isPresented: $showingUninstallAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Uninstall", role: .destructive) {
@@ -544,14 +536,10 @@ struct PluginConfigurationSheet: View {
             .navigationTitle("Configure \(plugin.metadata.name)")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(leading: Button("Done") {
+                // Dismiss sheet
+            })
 #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        // Dismiss sheet
-                    }
-                }
-            }
         }
     }
 }

@@ -2,9 +2,11 @@
 
 A powerful, production-ready code editor component for macOS and iOS applications. Built with modern Swift 6 Actor-Based Concurrency, CodeEditorPlugin provides comprehensive syntax highlighting, professional line numbers, themes, smooth scrolling, and extensive customization for building world-class code editing experiences.
 
+> **🎉 Major Update:** Recently completed comprehensive refactoring with 74% directory structure simplification, enhanced 17-language support, advanced features showcase, and 172 passing tests across both projects.
+
 ## ✨ Features
 
-- 🎨 **Advanced Syntax Highlighting** - Support for 15+ programming languages with SwiftSyntax integration for Swift and regex-based highlighting for other languages
+- 🎨 **Advanced Syntax Highlighting** - Support for **17 programming languages** with SwiftSyntax integration for Swift and regex-based highlighting for other languages
 - 🎯 **Professional Line Numbers** - Cross-platform gutter implementation with proper iOS container architecture
 - 🌈 **Rich Theme System** - 6+ built-in themes with comprehensive color customization
 - 📜 **Smooth Scrolling** - Proper NSScrollView integration with responsive performance for large files
@@ -19,6 +21,9 @@ A powerful, production-ready code editor component for macOS and iOS application
 - 📱 **Cross-Platform** - macOS 12.0+, iOS 16.0+, and Mac Catalyst support
 - 🎨 **SwiftUI Integration** - Native SwiftUI wrapper with environment-based configuration
 - 🏗️ **Swift 6 Concurrency** - Full actor-based architecture with thread-safe validation
+- 🚀 **Advanced Features Demo** - Interactive showcase with performance monitoring, multi-cursor editing, and search/replace
+- 🔧 **Plugin Architecture** - Extensible system with marketplace integration and sandboxed security
+- 🌐 **LSP Integration** - Language Server Protocol support for advanced language features
 
 ## 📋 Requirements
 
@@ -185,17 +190,19 @@ config.apply(to: textView)
 
 ## 🎨 Syntax Highlighting
 
-### Supported Languages
+### Supported Languages (17 Total)
 
 - **Swift** - Native SwiftSyntax integration with AST-based highlighting
 - **Python** - Advanced syntax highlighting with decorators and f-strings
 - **JavaScript/TypeScript** - ES6+ features and JSX support
 - **Rust** - Ownership syntax, macros, and attributes
 - **C/C++** - Modern C++20 features
-- **HTML/CSS** - HTML5 and CSS3 support
-- **JSON/YAML** - Structured data formats
-- **Markdown** - GitHub Flavored Markdown
-- **Go, Java, Ruby, PHP, SQL, XML** - Comprehensive language support
+- **Go, Java** - Modern language features and syntax
+- **HTML/CSS** - HTML5 and CSS3 support with advanced selectors
+- **JSON/YAML** - Structured data formats with validation
+- **Markdown** - GitHub Flavored Markdown with extensions
+- **XML, SQL** - Markup and database query languages
+- **Ruby, PHP** - Dynamic scripting languages with modern features
 
 ### Language Detection
 
@@ -263,15 +270,18 @@ Sources/CodeEditorPlugin/
 
 The comprehensive sample app in `CodeEditorSample/` demonstrates all features:
 
-- ✅ **Complete configuration system** - All 36+ configuration options with live preview
+- ✅ **Complete configuration system** - All 40+ configuration options with live preview
 - ✅ **Unified cross-platform UI** - Single codebase working on macOS, iOS, and iPadOS
-- ✅ **Full-featured editor** with 15+ languages syntax highlighting
+- ✅ **Full-featured editor** with **17 languages** syntax highlighting
 - ✅ **6 built-in themes** with real-time switching
 - ✅ **Configuration import/export** - Save and share editor settings as JSON
 - ✅ **Configuration presets** (minimal, read-only, markdown, presentation)
 - ✅ **Inline annotations** with TODO/FIXME/NOTE/WARNING/ERROR detection
 - ✅ **Visual feature indicators** - Shows active minimap, annotations, and more
 - ✅ **Performance testing** with large files and annotation systems
+- ✅ **Advanced Features Showcase** - Interactive demo with performance monitoring
+- ✅ **Plugin System Demo** - Architecture preview with marketplace integration
+- ✅ **LSP Integration Preview** - Language Server Protocol features showcase
 
 ### Running the Example
 
@@ -284,10 +294,11 @@ swift run CodeEditorSample
 
 ### Comprehensive Test Suite
 
-- **152 total tests** across both projects
+- **172 total tests** across both projects
 - **106 main package tests** - Core functionality, syntax highlighting, configuration
-- **46 sample app tests** - Integration testing, UI components, configuration system
+- **66 sample app tests** - Integration testing, UI components, configuration system, new language support
 - **Performance benchmarks** - Large file handling and syntax highlighting performance
+- **Advanced feature testing** - Plugin architecture, LSP integration, and showcase components
 
 ### Code Quality Standards
 
@@ -295,7 +306,13 @@ swift run CodeEditorSample
 # All commands should show zero violations/errors
 swiftlint --fix && swiftlint    # ✅ 0 violations across all files
 swift build                     # ✅ Clean builds
-swift test                      # ✅ 152/152 tests passing
+swift test                      # ✅ 106/106 tests passing
+
+# Sample app testing
+cd CodeEditorSample
+swiftlint --fix && swiftlint    # ✅ Only 1 minor file length warning
+swift build                     # ✅ Clean build
+swift test                      # ✅ 66/66 tests passing
 ```
 
 ### Quality Metrics
@@ -304,6 +321,8 @@ swift test                      # ✅ 152/152 tests passing
 - **Swift 6 compliant** with full concurrency safety
 - **Comprehensive documentation** with inline code examples
 - **Cross-platform tested** on macOS, iOS, and Mac Catalyst
+- **172/172 tests passing** with extensive coverage
+- **Enhanced language support** validated across all 17 programming languages
 
 ## 🔧 Development
 

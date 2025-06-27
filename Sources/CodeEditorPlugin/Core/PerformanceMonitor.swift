@@ -14,7 +14,7 @@ public final class PerformanceMonitor {
     // MARK: - Properties
     
     private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "Performance")
-    private var metrics: [String: PerformanceMetric] = [:]
+    private var metrics: [String: MonitoringPerformanceMetric] = [:]
     private let metricsQueue = DispatchQueue(label: "com.codeeditor.performance", attributes: .concurrent)
     
     // MARK: - Public Methods
@@ -25,7 +25,7 @@ public final class PerformanceMonitor {
         let token = MeasurementToken(name: name, startTime: CFAbsoluteTimeGetCurrent())
         
         Task { @MainActor in
-            self.metrics[name] = PerformanceMetric(
+            self.metrics[name] = MonitoringPerformanceMetric(
                 name: name,
                 startTime: token.startTime,
                 metadata: metadata
@@ -72,7 +72,7 @@ public final class PerformanceMonitor {
     
     /// Get all recorded metrics
     @MainActor
-    public func getAllMetrics() -> [PerformanceMetric] {
+    public func getAllMetrics() -> [MonitoringPerformanceMetric] {
         Array(metrics.values)
     }
     
@@ -112,10 +112,10 @@ public struct MeasurementToken: Sendable {
     let startTime: CFAbsoluteTime
 }
 
-// MARK: - PerformanceMetric
+// MARK: - MonitoringPerformanceMetric
 
-/// A single performance metric
-public struct PerformanceMetric {
+/// A single performance metric for monitoring
+public struct MonitoringPerformanceMetric {
     public let name: String
     public let startTime: CFAbsoluteTime
     public var endTime: CFAbsoluteTime?
@@ -134,7 +134,7 @@ public struct PerformanceReport {
     public let totalOperations: Int
     public let totalDuration: TimeInterval
     public let averageDuration: TimeInterval
-    public let slowestOperations: [PerformanceMetric]
+    public let slowestOperations: [MonitoringPerformanceMetric]
     
     public var summary: String {
         """

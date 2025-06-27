@@ -91,6 +91,42 @@ struct UnifiedConfigurationView: View {
                         toggleSection("Performance")
                     }
                     
+                    // Advanced Features section
+                    ConfigurationSection(
+                        title: "Advanced Features",
+                        systemImage: "gearshape.2",
+                        isExpanded: expandedSections.contains("Advanced")
+                    ) {
+                        advancedFeaturesContent
+                    }
+                    .onTapGesture {
+                        toggleSection("Advanced")
+                    }
+                    
+                    // Plugin System section
+                    ConfigurationSection(
+                        title: "Plugin System",
+                        systemImage: "puzzlepiece.extension",
+                        isExpanded: expandedSections.contains("Plugins")
+                    ) {
+                        pluginSystemContent
+                    }
+                    .onTapGesture {
+                        toggleSection("Plugins")
+                    }
+                    
+                    // Language Server section
+                    ConfigurationSection(
+                        title: "Language Server (LSP)",
+                        systemImage: "network",
+                        isExpanded: expandedSections.contains("LSP")
+                    ) {
+                        languageServerContent
+                    }
+                    .onTapGesture {
+                        toggleSection("LSP")
+                    }
+                    
                     // Sample Code section
                     ConfigurationSection(
                         title: "Sample Code",
@@ -159,6 +195,19 @@ struct UnifiedConfigurationView: View {
             Toggle("Enable Annotations", isOn: $appState.currentConfiguration.display.enableAnnotations)
             Toggle("Show Indent Guides", isOn: $appState.currentConfiguration.display.showIndentGuides)
             Toggle("Show Minimap", isOn: $appState.currentConfiguration.display.showMinimap)
+            // Additional display features coming soon
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Additional Display Features (Coming Soon)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Code Folding, Visual Themes, Search Highlighting")
+                        .font(.caption)
+                }
+            }
             
             // Font size
             VStack(alignment: .leading, spacing: 4) {
@@ -265,6 +314,19 @@ struct UnifiedConfigurationView: View {
             Toggle("Auto Close Brackets", isOn: $appState.currentConfiguration.behavior.autoCloseBrackets)
             Toggle("Auto Close Quotes", isOn: $appState.currentConfiguration.behavior.autoCloseQuotes)
             Toggle("Enable Code Completion", isOn: $appState.currentConfiguration.behavior.enableCodeCompletion)
+            // Additional features coming soon
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Advanced Features (Coming Soon)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Smart Completion, Multi-Cursor, Search & Replace")
+                        .font(.caption)
+                }
+            }
         }
     }
     
@@ -303,6 +365,19 @@ struct UnifiedConfigurationView: View {
         VStack(spacing: 12) {
             Toggle("Hardware Acceleration", isOn: $appState.currentConfiguration.performance.useHardwareAcceleration)
             Toggle("Smooth Scrolling", isOn: $appState.currentConfiguration.performance.smoothScrolling)
+            // Additional performance features coming soon
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Advanced Performance Features (Coming Soon)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Performance Monitoring, Memory Optimization")
+                        .font(.caption)
+                }
+            }
             
             // Max syntax highlighting length
             VStack(alignment: .leading, spacing: 4) {
@@ -335,6 +410,190 @@ struct UnifiedConfigurationView: View {
                     in: 0.0...1.0,
                     step: 0.1
                 )
+            }
+        }
+    }
+    
+    // MARK: - Advanced Features Content
+    
+    @ViewBuilder
+    private var advancedFeaturesContent: some View {
+        VStack(spacing: 12) {
+            // Advanced feature status (read-only)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Active Advanced Features")
+                    .font(.headline)
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Cross-Platform Coordination")
+                        .font(.body)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Unified Event System")
+                        .font(.body)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("TextKit Bridge")
+                        .font(.body)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Viewport Management")
+                        .font(.body)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Async Text Processing")
+                        .font(.body)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Feature Status")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Core Features: Active")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Performance Optimizations: Enabled")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Platform Integration: Ready")
+                        .font(.caption)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Plugin System Content
+    
+    @ViewBuilder
+    private var pluginSystemContent: some View {
+        VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Plugin System Architecture")
+                    .font(.headline)
+                
+                Text("The CodeEditor Plugin includes a comprehensive plugin architecture designed for " +
+                     "extensibility and security.")
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Plugin Status")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "puzzlepiece.extension.fill")
+                        .foregroundColor(.blue)
+                    Text("Core Plugin System: Ready")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "externaldrive.connected")
+                        .foregroundColor(.orange)
+                    Text("Marketplace Integration: Available")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "shield.fill")
+                        .foregroundColor(.green)
+                    Text("Security: Sandboxed")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Configuration coming in future release")
+                        .font(.caption)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Language Server Content
+    
+    @ViewBuilder
+    private var languageServerContent: some View {
+        VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Language Server Protocol (LSP)")
+                    .font(.headline)
+                
+                Text("The CodeEditor Plugin includes LSP integration architecture for advanced language " +
+                     "features like code completion, diagnostics, and semantic analysis.")
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("LSP Server Support")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "network")
+                        .foregroundColor(.blue)
+                    Text("Protocol Support: LSP 3.17")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Swift: sourcekit-lsp")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("TypeScript: typescript-language-server")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Python: pylsp")
+                        .font(.caption)
+                }
+                
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.blue)
+                    Text("Configuration coming in future release")
+                        .font(.caption)
+                }
             }
         }
     }

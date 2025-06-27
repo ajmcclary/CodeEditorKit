@@ -135,14 +135,10 @@ public struct PluginCreationView: View {
             .navigationTitle("Create Plugin")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+            .navigationBarItems(leading: Button("Cancel") {
+                dismiss()
+            })
 #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
             .alert("Creation Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") {
                     errorMessage = nil

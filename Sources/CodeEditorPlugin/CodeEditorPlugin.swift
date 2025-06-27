@@ -48,8 +48,7 @@ public typealias EditorConfig = EditorConfiguration
 
 // Events
 // Note: EditorEventType protocol is defined in Events/EditorEvent.swift
-public typealias EventHandler = EditorEventHandler
-public typealias EventPublisher = EditorEventPublisher
+// Note: EditorEventHandler and EditorEventPublisher are defined in Events/EditorEvent.swift
 
 // Layout
 public typealias LayoutCoord = LayoutCoordinator
@@ -61,7 +60,7 @@ public typealias LanguageReg = LanguageRegistry
 
 // Performance
 public typealias PerfMonitor = PerformanceMonitor
-public typealias PerfMetric = PerformanceMetric
+// Note: PerformanceMetric type alias removed due to ambiguity - use specific types directly
 public typealias PerfReport = PerformanceReport
 
 // MARK: - CodeEditorPluginModule

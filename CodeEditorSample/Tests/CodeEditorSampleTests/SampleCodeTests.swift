@@ -7,7 +7,7 @@ final class SampleCodeTests: XCTestCase {
     func testSampleCodeCases() {
         let allCases = SampleCode.allCases
 
-        XCTAssertEqual(allCases.count, 11, "Should have 11 sample code types")
+        XCTAssertEqual(allCases.count, 17, "Should have 17 sample code types")
 
         // Verify all cases exist
         XCTAssertTrue(allCases.contains(.swift))
@@ -21,6 +21,12 @@ final class SampleCodeTests: XCTestCase {
         XCTAssertTrue(allCases.contains(.html))
         XCTAssertTrue(allCases.contains(.css))
         XCTAssertTrue(allCases.contains(.json))
+        XCTAssertTrue(allCases.contains(.markdown))
+        XCTAssertTrue(allCases.contains(.yaml))
+        XCTAssertTrue(allCases.contains(.xml))
+        XCTAssertTrue(allCases.contains(.sql))
+        XCTAssertTrue(allCases.contains(.ruby))
+        XCTAssertTrue(allCases.contains(.php))
     }
 
     func testSampleCodeProperties() {
@@ -53,6 +59,12 @@ final class SampleCodeTests: XCTestCase {
         XCTAssertEqual(SampleCode.html.fileExtension, "html")
         XCTAssertEqual(SampleCode.css.fileExtension, "css")
         XCTAssertEqual(SampleCode.json.fileExtension, "json")
+        XCTAssertEqual(SampleCode.markdown.fileExtension, "md")
+        XCTAssertEqual(SampleCode.yaml.fileExtension, "yaml")
+        XCTAssertEqual(SampleCode.xml.fileExtension, "xml")
+        XCTAssertEqual(SampleCode.sql.fileExtension, "sql")
+        XCTAssertEqual(SampleCode.ruby.fileExtension, "rb")
+        XCTAssertEqual(SampleCode.php.fileExtension, "php")
     }
 
     // MARK: - Sample Code Provider Tests
@@ -134,8 +146,9 @@ final class SampleCodeTests: XCTestCase {
 
             XCTAssertGreaterThan(lines.count, 5, "\(sample) should have at least 5 lines")
 
-            // Check for comments (most languages use // or # or <!-- -->)
-            let hasComments = code.contains("//") || code.contains("#") || code.contains("/*") || code.contains("<!--")
+            // Check for comments (most languages use // or # or /* or <!-- --> or --)
+            let hasComments = code.contains("//") || code.contains("#") || code.contains("/*") ||
+                code.contains("<!--") || code.contains("--")
             XCTAssertTrue(hasComments, "\(sample) should include comments for demonstration")
         }
     }
@@ -171,6 +184,36 @@ final class SampleCodeTests: XCTestCase {
             case .json:
                 // JSON should be properly formatted
                 XCTAssertTrue(code.contains("\""), "JSON should contain quoted keys")
+
+            case .markdown:
+                // Markdown should contain headers or links
+                XCTAssertTrue(code.contains("#") || code.contains("["), "Markdown should contain headers or links")
+
+            case .yaml:
+                // YAML should contain key-value pairs
+                XCTAssertTrue(code.contains(":"), "YAML should contain key-value pairs")
+
+            case .xml:
+                // XML should have tags
+                XCTAssertTrue(code.contains("<") && code.contains(">"), "XML should contain tags")
+
+            case .sql:
+                // SQL should contain keywords
+                XCTAssertTrue(
+                    code.uppercased().contains("SELECT") || code.uppercased().contains("CREATE"),
+                    "SQL should contain SQL keywords"
+                )
+
+            case .ruby:
+                // Ruby should contain classes or methods
+                XCTAssertTrue(code.contains("class") || code.contains("def"), "Ruby should contain classes or methods")
+
+            case .php:
+                // PHP should contain PHP tags
+                XCTAssertTrue(
+                    code.contains("<?php") || code.contains("class"),
+                    "PHP should contain PHP tags or classes"
+                )
             }
         }
     }

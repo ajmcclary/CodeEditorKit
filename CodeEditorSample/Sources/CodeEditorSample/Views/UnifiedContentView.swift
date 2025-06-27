@@ -118,6 +118,18 @@ struct UnifiedContentView: View {
             
             Spacer()
             
+            // Advanced Features Demo button
+            #if os(macOS)
+            NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
+                HStack(spacing: 4) {
+                    Image(systemName: "gearshape.2.fill")
+                    Text("Advanced Demo")
+                        .font(.caption)
+                }
+            }
+            .buttonStyle(.borderless)
+            #endif
+            
             // Platform-specific actions
             Menu {
                 Button(action: copyConfiguration) {
@@ -133,6 +145,14 @@ struct UnifiedContentView: View {
                 Button(action: refreshEditor) {
                     Label("Refresh Editor", systemImage: "arrow.clockwise")
                 }
+                
+                #if os(iOS)
+                Divider()
+                
+                NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
+                    Label("Advanced Demo", systemImage: "gearshape.2.fill")
+                }
+                #endif
             } label: {
                 Image(systemName: "ellipsis.circle")
             }

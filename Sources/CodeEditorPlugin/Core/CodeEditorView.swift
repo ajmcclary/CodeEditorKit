@@ -1,20 +1,10 @@
+import Foundation
+
 #if canImport(UIKit)
 import UIKit
-
-public typealias PlatformTextView = UITextView
-public typealias PlatformScrollView = UIScrollView
-public typealias PlatformColor = UIColor
-public typealias PlatformFont = UIFont
-public typealias PlatformView = UIView
 public typealias PlatformViewController = UIViewController
 #elseif canImport(AppKit)
 import AppKit
-
-public typealias PlatformTextView = NSTextView
-public typealias PlatformScrollView = NSScrollView
-public typealias PlatformColor = NSColor
-public typealias PlatformFont = NSFont
-public typealias PlatformView = NSView
 public typealias PlatformViewController = NSViewController
 #endif
 
@@ -1096,11 +1086,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         let badgeSize = configuration.layout.annotationBadgeSize
         let badgePadding = configuration.layout.annotationBadgePadding
         #if canImport(AppKit)
-        let inlineX = textContainerInset.width + segmentFrame.maxX + badgePadding
-        let inlineY = textContainerInset.height + segmentFrame.midY - (badgeSize / 2)
+        let inlineX = crossPlatformTextContainerInset.width + segmentFrame.maxX + badgePadding
+        let inlineY = crossPlatformTextContainerInset.height + segmentFrame.midY - (badgeSize / 2)
         #else
-        let inlineX = textContainerInset.left + segmentFrame.maxX + badgePadding
-        let inlineY = textContainerInset.top + segmentFrame.midY - (badgeSize / 2)
+        let inlineX = crossPlatformTextContainerInset.width + segmentFrame.maxX + badgePadding
+        let inlineY = crossPlatformTextContainerInset.height + segmentFrame.midY - (badgeSize / 2)
         #endif
         
         let proposedFrame = CGRect(
@@ -1111,7 +1101,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         ).integral
         
         kLogger.debug("Calculated proposedFrame: \(String(describing: proposedFrame))")
-        kLogger.debug("textContainerInset: \(String(describing: self.textContainerInset))")
+        kLogger.debug("textContainerInset: \(String(describing: self.crossPlatformTextContainerInset))")
 
         // Create annotation view
         if let annotationView = dataSource.textView(

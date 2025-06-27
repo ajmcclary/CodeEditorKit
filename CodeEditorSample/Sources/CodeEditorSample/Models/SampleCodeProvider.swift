@@ -16,6 +16,12 @@ enum SampleCode: String, CaseIterable {
     case html
     case css
     case json
+    case markdown
+    case yaml
+    case xml
+    case sql
+    case ruby
+    case php
 
     var displayName: String {
         switch self {
@@ -30,6 +36,12 @@ enum SampleCode: String, CaseIterable {
         case .html: "HTML"
         case .css: "CSS"
         case .json: "JSON"
+        case .markdown: "Markdown"
+        case .yaml: "YAML"
+        case .xml: "XML"
+        case .sql: "SQL"
+        case .ruby: "Ruby"
+        case .php: "PHP"
         }
     }
 
@@ -46,6 +58,12 @@ enum SampleCode: String, CaseIterable {
         case .html: "html"
         case .css: "css"
         case .json: "json"
+        case .markdown: "md"
+        case .yaml: "yaml"
+        case .xml: "xml"
+        case .sql: "sql"
+        case .ruby: "rb"
+        case .php: "php"
         }
     }
 
@@ -62,6 +80,12 @@ enum SampleCode: String, CaseIterable {
         case .html: "safari"
         case .css: "paintbrush"
         case .json: "doc.text"
+        case .markdown: "text.alignleft"
+        case .yaml: "list.bullet"
+        case .xml: "chevron.left.forwardslash.chevron.right"
+        case .sql: "server.rack"
+        case .ruby: "r.square"
+        case .php: "p.square"
         }
     }
 
@@ -78,6 +102,12 @@ enum SampleCode: String, CaseIterable {
         case .html: .orange
         case .css: .blue
         case .json: .gray
+        case .markdown: .purple
+        case .yaml: .green
+        case .xml: .orange
+        case .sql: .mint
+        case .ruby: .red
+        case .php: .purple
         }
     }
 }
@@ -109,6 +139,18 @@ enum SampleCodeProvider {
             cssSample
         case .json:
             jsonSample
+        case .markdown:
+            markdownSample
+        case .yaml:
+            yamlSample
+        case .xml:
+            xmlSample
+        case .sql:
+            sqlSample
+        case .ruby:
+            rubySample
+        case .php:
+            phpSample
         }
     }
 
@@ -1621,6 +1663,1362 @@ enum SampleCodeProvider {
           "swift"
         ]
       }
+    }
+    """
+
+    // MARK: - Markdown Sample
+
+    private static let markdownSample = """
+    # CodeEditor Plugin Documentation
+
+    <!-- TODO: Add installation guide -->
+    <!-- FIXME: Update API documentation -->
+
+    The CodeEditor Plugin provides comprehensive code editing capabilities with advanced features like
+    syntax highlighting, code completion, and multi-language support.
+
+    ## Features
+
+    ### Syntax Highlighting
+    - **15+ languages** supported including Swift, Python, JavaScript, TypeScript, Rust, Go, C++, Java,
+      HTML, CSS, JSON, Markdown, YAML, XML, SQL, Ruby, and PHP
+    - **SwiftSyntax integration** for Swift AST-based highlighting
+    - **Regex-based highlighting** for other languages
+    - **Performance optimized** with viewport-based rendering
+
+    ### Code Completion
+    - Smart completion suggestions
+    - Context-aware proposals
+    - Fuzzy matching algorithm
+    - Performance monitoring
+
+    ### Advanced Features
+    1. **Multi-cursor editing**
+    2. **Code folding**
+    3. **Search and replace with regex**
+    4. **Annotation system** (TODO/FIXME/NOTE/WARNING/ERROR)
+    5. **Performance monitoring**
+    6. **Plugin marketplace**
+    7. **LSP integration**
+    8. **Cross-platform support** (macOS/iOS)
+
+    ## Code Examples
+
+    ### Swift
+    ```swift
+    import SwiftUI
+
+    struct ContentView: View {
+        @State private var text = "Hello, World!"
+        
+        var body: some View {
+            Text(text)
+                .font(.largeTitle)
+        }
+    }
+    ```
+
+    ### Python
+    ```python
+    def fibonacci(n):
+        if n <= 1:
+            return n
+        return fibonacci(n-1) + fibonacci(n-2)
+    
+    # Generate sequence
+    sequence = [fibonacci(i) for i in range(10)]
+    print(sequence)
+    ```
+
+    ### JavaScript
+    ```javascript
+    const users = [
+        { name: 'Alice', age: 30 },
+        { name: 'Bob', age: 25 }
+    ];
+
+    const adults = users.filter(user => user.age >= 18);
+    console.log(adults);
+    ```
+
+    ## Configuration
+
+    | Feature | Description | Default |
+    |---------|-------------|---------|
+    | Line Numbers | Show line numbers | `true` |
+    | Syntax Highlighting | Enable highlighting | `true` |
+    | Code Completion | Smart suggestions | `true` |
+    | Annotations | Show TODO/FIXME | `true` |
+    | Minimap | Document overview | `false` |
+
+    ## Links
+
+    - [GitHub Repository](https://github.com/example/CodeEditorPlugin)
+    - [Documentation](https://docs.example.com)
+    - [API Reference](https://api.example.com)
+
+    ---
+
+    > **Note**: This plugin requires Swift 6.0+ and supports macOS 12.0+, iOS 16.0+
+    """
+
+    // MARK: - YAML Sample
+
+    private static let yamlSample = """
+    # CodeEditor Plugin Configuration
+    # TODO: Add environment-specific configs
+    # FIXME: Validate configuration schema
+
+    name: CodeEditorPlugin
+    version: 1.0.0
+    description: A comprehensive code editor plugin with syntax highlighting
+
+    author:
+      name: Developer
+      email: developer@example.com
+      url: https://example.com
+
+    license: MIT
+
+    keywords:
+      - editor
+      - syntax-highlighting
+      - code
+      - ide
+      - plugin
+
+    repository:
+      type: git
+      url: https://github.com/example/code-editor-plugin.git
+
+    engines:
+      swift: ">=6.0.0"
+      xcode: ">=15.0"
+
+    # Platform support
+    platforms:
+      macOS:
+        minimum: "12.0"
+        recommended: "14.0"
+      iOS:
+        minimum: "16.0"
+        recommended: "17.0"
+      catalyst:
+        minimum: "16.0"
+
+    # Feature configuration
+    features:
+      syntax_highlighting:
+        enabled: true
+        languages:
+          - swift
+          - python
+          - javascript
+          - typescript
+          - rust
+          - go
+          - cpp
+          - java
+          - html
+          - css
+          - json
+          - markdown
+          - yaml
+          - xml
+          - sql
+          - ruby
+          - php
+        
+      code_completion:
+        enabled: true
+        fuzzy_matching: true
+        max_suggestions: 20
+        debounce_ms: 150
+        
+      annotations:
+        enabled: true
+        types:
+          - TODO
+          - FIXME
+          - NOTE
+          - WARNING
+          - ERROR
+        styles:
+          TODO:
+            color: "#007AFF"
+            icon: "info.circle"
+          FIXME:
+            color: "#FF3B30"
+            icon: "exclamationmark.triangle"
+          NOTE:
+            color: "#34C759"
+            icon: "note.text"
+          WARNING:
+            color: "#FF9500"
+            icon: "exclamationmark.triangle.fill"
+          ERROR:
+            color: "#FF3B30"
+            icon: "xmark.circle.fill"
+
+    # Performance settings
+    performance:
+      hardware_acceleration: true
+      smooth_scrolling: true
+      viewport_rendering: true
+      max_file_size_mb: 50
+      syntax_highlighting_limit: 100000
+
+    # UI Configuration
+    ui:
+      theme: auto # auto, light, dark
+      font:
+        family: "SF Mono"
+        size: 14
+        weight: regular
+      line_numbers:
+        enabled: true
+        relative: false
+      minimap:
+        enabled: false
+        width: 120
+      invisible_characters:
+        enabled: false
+        show_tabs: true
+        show_spaces: false
+        show_newlines: false
+
+    # Development settings
+    development:
+      hot_reload: true
+      debug_mode: false
+      performance_monitoring: true
+      logging:
+        level: info
+        file: "editor.log"
+    """
+
+    // MARK: - XML Sample
+
+    private static let xmlSample = """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!-- TODO: Add schema validation -->
+    <!-- FIXME: Namespace declarations -->
+
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                                 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        
+        <modelVersion>4.0.0</modelVersion>
+        
+        <groupId>com.example</groupId>
+        <artifactId>code-editor-plugin</artifactId>
+        <version>1.0.0</version>
+        <packaging>jar</packaging>
+        
+        <name>CodeEditor Plugin</name>
+        <description>A comprehensive code editor plugin with syntax highlighting</description>
+        <url>https://github.com/example/code-editor-plugin</url>
+        
+        <licenses>
+            <license>
+                <name>MIT License</name>
+                <url>https://opensource.org/licenses/MIT</url>
+                <distribution>repo</distribution>
+            </license>
+        </licenses>
+        
+        <developers>
+            <developer>
+                <id>developer</id>
+                <name>Developer</name>
+                <email>developer@example.com</email>
+                <url>https://example.com</url>
+                <roles>
+                    <role>architect</role>
+                    <role>developer</role>
+                </roles>
+            </developer>
+        </developers>
+        
+        <scm>
+            <connection>scm:git:git://github.com/example/code-editor-plugin.git</connection>
+            <developerConnection>scm:git:ssh://github.com:example/code-editor-plugin.git</developerConnection>
+            <url>https://github.com/example/code-editor-plugin/tree/main</url>
+        </scm>
+        
+        <properties>
+            <maven.compiler.source>17</maven.compiler.source>
+            <maven.compiler.target>17</maven.compiler.target>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            <junit.version>5.9.2</junit.version>
+            <mockito.version>5.1.1</mockito.version>
+        </properties>
+        
+        <dependencies>
+            <!-- Core dependencies -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>6.0.6</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>6.0.6</version>
+            </dependency>
+            
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>2.0.6</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.4.5</version>
+            </dependency>
+            
+            <!-- Test dependencies -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+        
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>17</source>
+                        <target>17</target>
+                    </configuration>
+                </plugin>
+                
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.0.0-M9</version>
+                </plugin>
+                
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.8</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+        
+        <profiles>
+            <profile>
+                <id>release</id>
+                <build>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-source-plugin</artifactId>
+                            <version>3.2.1</version>
+                            <executions>
+                                <execution>
+                                    <id>attach-sources</id>
+                                    <goals>
+                                        <goal>jar-no-fork</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <version>3.5.0</version>
+                            <executions>
+                                <execution>
+                                    <id>attach-javadocs</id>
+                                    <goals>
+                                        <goal>jar</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </build>
+            </profile>
+        </profiles>
+    </project>
+    """
+
+    // MARK: - SQL Sample
+
+    private static let sqlSample = """
+    -- Database schema for CodeEditor Plugin
+    -- TODO: Add indexing strategy
+    -- FIXME: Optimize query performance
+
+    -- Users table
+    CREATE TABLE users (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        display_name VARCHAR(100),
+        avatar_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_login TIMESTAMP WITH TIME ZONE,
+        is_active BOOLEAN DEFAULT TRUE,
+        is_verified BOOLEAN DEFAULT FALSE,
+        preferences JSONB DEFAULT '{}'::jsonb
+    );
+
+    -- User roles
+    CREATE TABLE roles (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE,
+        description TEXT,
+        permissions JSONB DEFAULT '[]'::jsonb
+    );
+
+    -- User-role association
+    CREATE TABLE user_roles (
+        user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+        granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        granted_by BIGINT REFERENCES users(id),
+        PRIMARY KEY (user_id, role_id)
+    );
+
+    -- Projects table
+    CREATE TABLE projects (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        owner_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        visibility VARCHAR(20) DEFAULT 'private' CHECK (visibility IN ('public', 'private', 'internal')),
+        language VARCHAR(50),
+        repository_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        is_archived BOOLEAN DEFAULT FALSE,
+        settings JSONB DEFAULT '{}'::jsonb
+    );
+
+    -- Code files
+    CREATE TABLE files (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        path TEXT NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        content TEXT,
+        language VARCHAR(50),
+        size_bytes BIGINT DEFAULT 0,
+        line_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        created_by BIGINT REFERENCES users(id),
+        updated_by BIGINT REFERENCES users(id),
+        UNIQUE(project_id, path)
+    );
+
+    -- Code annotations (TODO, FIXME, etc.)
+    CREATE TABLE annotations (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        file_id BIGINT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+        line_number INTEGER NOT NULL,
+        column_start INTEGER,
+        column_end INTEGER,
+        type VARCHAR(20) NOT NULL CHECK (type IN ('TODO', 'FIXME', 'NOTE', 'WARNING', 'ERROR')),
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        created_by BIGINT REFERENCES users(id),
+        resolved_at TIMESTAMP WITH TIME ZONE,
+        resolved_by BIGINT REFERENCES users(id)
+    );
+
+    -- User sessions
+    CREATE TABLE user_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        ip_address INET,
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        is_active BOOLEAN DEFAULT TRUE
+    );
+
+    -- Audit log
+    CREATE TABLE audit_log (
+        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        user_id BIGINT REFERENCES users(id),
+        action VARCHAR(100) NOT NULL,
+        resource_type VARCHAR(50),
+        resource_id BIGINT,
+        details JSONB,
+        ip_address INET,
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    );
+
+    -- Indexes for performance
+    CREATE INDEX idx_users_email ON users(email);
+    CREATE INDEX idx_users_username ON users(username);
+    CREATE INDEX idx_users_created_at ON users(created_at);
+
+    CREATE INDEX idx_projects_owner_id ON projects(owner_id);
+    CREATE INDEX idx_projects_visibility ON projects(visibility);
+    CREATE INDEX idx_projects_language ON projects(language);
+    CREATE INDEX idx_projects_updated_at ON projects(updated_at);
+
+    CREATE INDEX idx_files_project_id ON files(project_id);
+    CREATE INDEX idx_files_language ON files(language);
+    CREATE INDEX idx_files_updated_at ON files(updated_at);
+
+    CREATE INDEX idx_annotations_file_id ON annotations(file_id);
+    CREATE INDEX idx_annotations_type ON annotations(type);
+    CREATE INDEX idx_annotations_created_at ON annotations(created_at);
+
+    CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+    CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at);
+
+    CREATE INDEX idx_audit_log_user_id ON audit_log(user_id);
+    CREATE INDEX idx_audit_log_action ON audit_log(action);
+    CREATE INDEX idx_audit_log_created_at ON audit_log(created_at);
+
+    -- Sample data
+    INSERT INTO roles (name, description, permissions) VALUES
+    ('admin', 'System administrator', '["system:admin", "users:manage", "projects:manage"]'::jsonb),
+    ('user', 'Regular user', '["projects:create", "files:edit"]'::jsonb),
+    ('viewer', 'Read-only access', '["projects:view", "files:view"]'::jsonb);
+
+    INSERT INTO users (username, email, password_hash, display_name) VALUES
+    ('admin', 'admin@example.com', '$2b$12$hash1', 'Administrator'),
+    ('developer', 'developer@example.com', '$2b$12$hash2', 'Lead Developer'),
+    ('user1', 'user1@example.com', '$2b$12$hash3', 'John Doe');
+
+    INSERT INTO user_roles (user_id, role_id) VALUES
+    (1, 1), -- admin role
+    (2, 2), -- user role
+    (3, 2); -- user role
+
+    -- Complex queries
+    WITH project_stats AS (
+        SELECT 
+            p.id,
+            p.name,
+            p.owner_id,
+            COUNT(f.id) as file_count,
+            SUM(f.size_bytes) as total_size,
+            SUM(f.line_count) as total_lines,
+            COUNT(a.id) as annotation_count
+        FROM projects p
+        LEFT JOIN files f ON p.id = f.project_id
+        LEFT JOIN annotations a ON f.id = a.file_id AND a.resolved_at IS NULL
+        WHERE p.is_archived = FALSE
+        GROUP BY p.id, p.name, p.owner_id
+    )
+    SELECT 
+        ps.*,
+        u.display_name as owner_name,
+        ROUND(ps.total_size / 1024.0 / 1024.0, 2) as size_mb
+    FROM project_stats ps
+    JOIN users u ON ps.owner_id = u.id
+    ORDER BY ps.total_size DESC
+    LIMIT 10;
+
+    -- Performance monitoring query
+    SELECT 
+        schemaname,
+        tablename,
+        attname,
+        n_distinct,
+        correlation
+    FROM pg_stats 
+    WHERE schemaname = 'public' 
+    AND tablename IN ('users', 'projects', 'files', 'annotations')
+    ORDER BY tablename, attname;
+    """
+
+    // MARK: - Ruby Sample
+
+    private static let rubySample = """
+    #!/usr/bin/env ruby
+    # frozen_string_literal: true
+
+    # CodeEditor Plugin - Ruby Implementation
+    # TODO: Add RuboCop configuration
+    # FIXME: Handle encoding issues
+
+    require 'json'
+    require 'uri'
+    require 'net/http'
+    require 'logger'
+
+    # Base repository module
+    module Repository
+      # Generic repository interface
+      class Base
+        attr_reader :items
+
+        def initialize
+          @items = {}
+          @logger = Logger.new($stdout)
+        end
+
+        def save(item)
+          raise NotImplementedError, 'Subclasses must implement save method'
+        end
+
+        def find_by_id(id)
+          @items[id]
+        end
+
+        def find_all
+          @items.values
+        end
+
+        def delete(id)
+          @items.delete(id)
+        end
+
+        def count
+          @items.size
+        end
+
+        private
+
+        attr_reader :logger
+      end
+    end
+
+    # User model
+    class User
+      attr_accessor :id, :name, :email, :roles, :created_at
+
+      def initialize(id:, name:, email:, roles: [])
+        @id = id
+        @name = name
+        @email = email
+        @roles = roles
+        @created_at = Time.now
+      end
+
+      def has_role?(role)
+        @roles.include?(role.to_s)
+      end
+
+      def admin?
+        has_role?(:admin)
+      end
+
+      def to_h
+        {
+          id: @id,
+          name: @name,
+          email: @email,
+          roles: @roles,
+          created_at: @created_at.iso8601
+        }
+      end
+
+      def to_json(*args)
+        to_h.to_json(*args)
+      end
+
+      def self.from_json(json_str)
+        data = JSON.parse(json_str, symbolize_names: true)
+        new(
+          id: data[:id],
+          name: data[:name],
+          email: data[:email],
+          roles: data[:roles] || []
+        )
+      end
+    end
+
+    # User repository implementation
+    class UserRepository < Repository::Base
+      def save(user)
+        validate!(user)
+        @items[user.id] = user
+        logger.info("Saved user: #{user.name} (#{user.id})")
+        user
+      end
+
+      def find_by_email(email)
+        @items.values.find { |user| user.email == email }
+      end
+
+      def find_by_role(role)
+        @items.values.select { |user| user.has_role?(role) }
+      end
+
+      def admins
+        find_by_role(:admin)
+      end
+
+      private
+
+      def validate!(user)
+        raise ArgumentError, 'User cannot be nil' if user.nil?
+        raise ArgumentError, 'User must have an ID' if user.id.nil?
+        raise ArgumentError, 'User must have a name' if user.name.nil? || user.name.empty?
+        raise ArgumentError, 'User must have an email' if user.email.nil? || user.email.empty?
+        raise ArgumentError, 'Invalid email format' unless valid_email?(user.email)
+      end
+
+      def valid_email?(email)
+        email.match?(/\\A[\\w+\\-.]+@[a-z\\d\\-]+(\\.[a-z\\d\\-]+)*\\.[a-z]+\\z/i)
+      end
+    end
+
+    # Service class with error handling
+    class UserService
+      def initialize(repository: UserRepository.new)
+        @repository = repository
+        @logger = Logger.new($stdout)
+      end
+
+      def create_user(name:, email:, roles: [])
+        id = SecureRandom.uuid
+        user = User.new(id: id, name: name, email: email, roles: roles)
+        
+        @repository.save(user)
+        @logger.info("Created user: #{user.name}")
+        user
+      rescue StandardError => e
+        @logger.error("Failed to create user: #{e.message}")
+        raise
+      end
+
+      def get_user_stats
+        total_users = @repository.count
+        admin_count = @repository.admins.size
+        user_count = total_users - admin_count
+
+        {
+          total: total_users,
+          admins: admin_count,
+          users: user_count,
+          latest: @repository.find_all.max_by(&:created_at)&.name
+        }
+      end
+
+      def bulk_import(user_data)
+        successful = 0
+        failed = 0
+        errors = []
+
+        user_data.each do |data|
+          begin
+            create_user(**data.transform_keys(&:to_sym))
+            successful += 1
+          rescue StandardError => e
+            failed += 1
+            errors << { data: data, error: e.message }
+          end
+        end
+
+        {
+          successful: successful,
+          failed: failed,
+          errors: errors
+        }
+      end
+
+      private
+
+      attr_reader :repository
+    end
+
+    # Configuration class using method_missing
+    class Configuration
+      def initialize
+        @settings = {}
+      end
+
+      def method_missing(method_name, *args)
+        if method_name.to_s.end_with?('=')
+          setting_name = method_name.to_s.chomp('=').to_sym
+          @settings[setting_name] = args.first
+        elsif @settings.key?(method_name)
+          @settings[method_name]
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(method_name, include_private = false)
+        method_name.to_s.end_with?('=') || @settings.key?(method_name) || super
+      end
+
+      def to_h
+        @settings.dup
+      end
+    end
+
+    # Mixin module for observable behavior
+    module Observable
+      def self.included(base)
+        base.extend(ClassMethods)
+      end
+
+      module ClassMethods
+        def observable(*methods)
+          methods.each do |method|
+            alias_method :"#{method}_without_observer", method
+
+            define_method(method) do |*args, &block|
+              result = send(:"#{method}_without_observer", *args, &block)
+              notify_observers(method, *args)
+              result
+            end
+          end
+        end
+      end
+
+      def add_observer(observer)
+        @observers ||= []
+        @observers << observer
+      end
+
+      def notify_observers(method, *args)
+        @observers&.each do |observer|
+          observer.call(method, *args) if observer.respond_to?(:call)
+        end
+      end
+    end
+
+    # Example usage with blocks and metaprogramming
+    class ApplicationRunner
+      include Observable
+
+      observable :start, :stop
+
+      def initialize
+        @config = Configuration.new
+        setup_defaults
+      end
+
+      def run
+        puts "🚀 Starting CodeEditor Plugin Ruby Demo"
+        start
+
+        service = UserService.new
+        
+        # Create sample users
+        users_data = [
+          { name: 'Alice Johnson', email: 'alice@example.com', roles: %w[admin user] },
+          { name: 'Bob Smith', email: 'bob@example.com', roles: %w[user] },
+          { name: 'Charlie Brown', email: 'charlie@example.com', roles: %w[user] }
+        ]
+
+        puts "\\n📝 Creating users..."
+        result = service.bulk_import(users_data)
+        puts "✅ Created #{result[:successful]} users successfully"
+        puts "❌ Failed to create #{result[:failed]} users" if result[:failed] > 0
+
+        puts "\\n📊 User Statistics:"
+        stats = service.get_user_stats
+        stats.each { |key, value| puts "  #{key}: #{value}" }
+
+        puts "\\n🔍 Finding users by role:"
+        service.repository.find_by_role(:admin).each do |user|
+          puts "  Admin: #{user.name} (#{user.email})"
+        end
+
+        puts "\\n💾 Configuration:"
+        puts @config.to_h.map { |k, v| "  #{k}: #{v}" }.join("\\n")
+
+        stop
+        puts "\\n🏁 Demo completed successfully!"
+      rescue StandardError => e
+        puts "💥 Error: #{e.message}"
+        puts e.backtrace.first(5).map { |line| "  #{line}" }
+      end
+
+      private
+
+      def setup_defaults
+        @config.app_name = 'CodeEditor Plugin'
+        @config.version = '1.0.0'
+        @config.debug = true
+        @config.max_users = 1000
+        
+        add_observer(lambda do |method, *args|
+          puts "🔔 Observer: #{method} called with #{args}"
+        end)
+      end
+
+      def start
+        puts "▶️  Application started at #{Time.now}"
+      end
+
+      def stop
+        puts "⏹️  Application stopped at #{Time.now}"
+      end
+    end
+
+    # Run the application if this file is executed directly
+    if __FILE__ == $PROGRAM_NAME
+      ApplicationRunner.new.run
+    end
+    """
+
+    // MARK: - PHP Sample
+
+    private static let phpSample = """
+    <?php
+    declare(strict_types=1);
+
+    namespace CodeEditor\\Plugin;
+
+    // TODO: Add PSR-4 autoloading
+    // FIXME: Implement proper error handling
+
+    use DateTime;
+    use Exception;
+    use JsonSerializable;
+    use InvalidArgumentException;
+
+    /**
+     * User entity class
+     */
+    class User implements JsonSerializable
+    {
+        private int $id;
+        private string $name;
+        private string $email;
+        private array $roles;
+        private DateTime $createdAt;
+
+        public function __construct(int $id, string $name, string $email, array $roles = [])
+        {
+            $this->validateInput($name, $email);
+            
+            $this->id = $id;
+            $this->name = $name;
+            $this->email = $email;
+            $this->roles = $roles;
+            $this->createdAt = new DateTime();
+        }
+
+        public function getId(): int
+        {
+            return $this->id;
+        }
+
+        public function getName(): string
+        {
+            return $this->name;
+        }
+
+        public function getEmail(): string
+        {
+            return $this->email;
+        }
+
+        public function getRoles(): array
+        {
+            return $this->roles;
+        }
+
+        public function hasRole(string $role): bool
+        {
+            return in_array($role, $this->roles, true);
+        }
+
+        public function isAdmin(): bool
+        {
+            return $this->hasRole('admin');
+        }
+
+        public function addRole(string $role): void
+        {
+            if (!$this->hasRole($role)) {
+                $this->roles[] = $role;
+            }
+        }
+
+        public function removeRole(string $role): void
+        {
+            $this->roles = array_values(array_filter(
+                $this->roles,
+                fn($r) => $r !== $role
+            ));
+        }
+
+        public function jsonSerialize(): array
+        {
+            return [
+                'id' => $this->id,
+                'name' => $this->name,
+                'email' => $this->email,
+                'roles' => $this->roles,
+                'created_at' => $this->createdAt->format('c')
+            ];
+        }
+
+        private function validateInput(string $name, string $email): void
+        {
+            if (empty(trim($name))) {
+                throw new InvalidArgumentException('Name cannot be empty');
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new InvalidArgumentException('Invalid email format');
+            }
+        }
+    }
+
+    /**
+     * Generic repository interface
+     */
+    interface RepositoryInterface
+    {
+        public function save(object $entity): object;
+        public function findById(int $id): ?object;
+        public function findAll(): array;
+        public function delete(int $id): bool;
+        public function count(): int;
+    }
+
+    /**
+     * User repository implementation
+     */
+    class UserRepository implements RepositoryInterface
+    {
+        private array $users = [];
+        private int $nextId = 1;
+
+        public function save(object $user): User
+        {
+            if (!$user instanceof User) {
+                throw new InvalidArgumentException('Expected User instance');
+            }
+
+            // Generate ID for new users
+            if ($user->getId() === 0) {
+                $user = new User(
+                    $this->nextId++,
+                    $user->getName(),
+                    $user->getEmail(),
+                    $user->getRoles()
+                );
+            }
+
+            $this->users[$user->getId()] = $user;
+            return $user;
+        }
+
+        public function findById(int $id): ?User
+        {
+            return $this->users[$id] ?? null;
+        }
+
+        public function findByEmail(string $email): ?User
+        {
+            foreach ($this->users as $user) {
+                if ($user->getEmail() === $email) {
+                    return $user;
+                }
+            }
+            return null;
+        }
+
+        public function findByRole(string $role): array
+        {
+            return array_filter(
+                $this->users,
+                fn(User $user) => $user->hasRole($role)
+            );
+        }
+
+        public function findAll(): array
+        {
+            return array_values($this->users);
+        }
+
+        public function delete(int $id): bool
+        {
+            if (isset($this->users[$id])) {
+                unset($this->users[$id]);
+                return true;
+            }
+            return false;
+        }
+
+        public function count(): int
+        {
+            return count($this->users);
+        }
+    }
+
+    /**
+     * User service with business logic
+     */
+    class UserService
+    {
+        private UserRepository $repository;
+
+        public function __construct(UserRepository $repository = null)
+        {
+            $this->repository = $repository ?? new UserRepository();
+        }
+
+        public function createUser(string $name, string $email, array $roles = ['user']): User
+        {
+            // Check if user already exists
+            if ($this->repository->findByEmail($email) !== null) {
+                throw new Exception("User with email '{$email}' already exists");
+            }
+
+            $user = new User(0, $name, $email, $roles);
+            return $this->repository->save($user);
+        }
+
+        public function promoteToAdmin(int $userId): bool
+        {
+            $user = $this->repository->findById($userId);
+            if ($user === null) {
+                throw new Exception("User with ID {$userId} not found");
+            }
+
+            if (!$user->hasRole('admin')) {
+                $user->addRole('admin');
+                $this->repository->save($user);
+                return true;
+            }
+
+            return false;
+        }
+
+        public function getUserStats(): array
+        {
+            $allUsers = $this->repository->findAll();
+            $admins = $this->repository->findByRole('admin');
+
+            return [
+                'total' => count($allUsers),
+                'admins' => count($admins),
+                'regular_users' => count($allUsers) - count($admins),
+                'latest_user' => $this->getLatestUser($allUsers)?->getName()
+            ];
+        }
+
+        public function bulkImport(array $userData): array
+        {
+            $successful = 0;
+            $failed = 0;
+            $errors = [];
+
+            foreach ($userData as $data) {
+                try {
+                    $this->createUser(
+                        $data['name'] ?? '',
+                        $data['email'] ?? '',
+                        $data['roles'] ?? ['user']
+                    );
+                    $successful++;
+                } catch (Exception $e) {
+                    $failed++;
+                    $errors[] = [
+                        'data' => $data,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            return [
+                'successful' => $successful,
+                'failed' => $failed,
+                'errors' => $errors
+            ];
+        }
+
+        private function getLatestUser(array $users): ?User
+        {
+            if (empty($users)) {
+                return null;
+            }
+
+            usort($users, function (User $a, User $b) {
+                return $a->getId() <=> $b->getId();
+            });
+
+            return end($users);
+        }
+    }
+
+    /**
+     * Configuration class using magic methods
+     */
+    class Configuration
+    {
+        private array $settings = [];
+
+        public function __get(string $name)
+        {
+            return $this->settings[$name] ?? null;
+        }
+
+        public function __set(string $name, $value): void
+        {
+            $this->settings[$name] = $value;
+        }
+
+        public function __isset(string $name): bool
+        {
+            return isset($this->settings[$name]);
+        }
+
+        public function __unset(string $name): void
+        {
+            unset($this->settings[$name]);
+        }
+
+        public function toArray(): array
+        {
+            return $this->settings;
+        }
+
+        public function loadFromArray(array $config): void
+        {
+            $this->settings = array_merge($this->settings, $config);
+        }
+    }
+
+    /**
+     * Application runner
+     */
+    class Application
+    {
+        private UserService $userService;
+        private Configuration $config;
+
+        public function __construct()
+        {
+            $this->userService = new UserService();
+            $this->config = new Configuration();
+            $this->setupConfiguration();
+        }
+
+        public function run(): void
+        {
+            echo "🚀 Starting CodeEditor Plugin PHP Demo\\n";
+            
+            try {
+                $this->createSampleUsers();
+                $this->displayStats();
+                $this->demonstrateFeatures();
+                
+                echo "\\n🏁 Demo completed successfully!\\n";
+            } catch (Exception $e) {
+                echo "💥 Error: " . $e->getMessage() . "\\n";
+                echo "Stack trace:\\n" . $e->getTraceAsString() . "\\n";
+            }
+        }
+
+        private function setupConfiguration(): void
+        {
+            $this->config->loadFromArray([
+                'app_name' => 'CodeEditor Plugin',
+                'version' => '1.0.0',
+                'debug' => true,
+                'max_users' => 1000,
+                'timezone' => 'UTC'
+            ]);
+        }
+
+        private function createSampleUsers(): void
+        {
+            echo "\\n📝 Creating sample users...\\n";
+            
+            $usersData = [
+                ['name' => 'Alice Johnson', 'email' => 'alice@example.com', 'roles' => ['admin', 'user']],
+                ['name' => 'Bob Smith', 'email' => 'bob@example.com', 'roles' => ['user']],
+                ['name' => 'Charlie Brown', 'email' => 'charlie@example.com', 'roles' => ['user']],
+                ['name' => 'Diana Prince', 'email' => 'diana@example.com', 'roles' => ['moderator', 'user']]
+            ];
+
+            $result = $this->userService->bulkImport($usersData);
+            
+            echo "✅ Created {$result['successful']} users successfully\\n";
+            if ($result['failed'] > 0) {
+                echo "❌ Failed to create {$result['failed']} users\\n";
+                foreach ($result['errors'] as $error) {
+                    echo "  - Error: {$error['error']}\\n";
+                }
+            }
+        }
+
+        private function displayStats(): void
+        {
+            echo "\\n📊 User Statistics:\\n";
+            $stats = $this->userService->getUserStats();
+            
+            foreach ($stats as $key => $value) {
+                echo "  {$key}: {$value}\\n";
+            }
+        }
+
+        private function demonstrateFeatures(): void
+        {
+            echo "\\n🔍 Demonstrating features:\\n";
+            
+            // Find admin users
+            $repository = new UserRepository();
+            $adminUsers = $repository->findByRole('admin');
+            echo "  Admin users: " . count($adminUsers) . "\\n";
+            
+            // Configuration demo
+            echo "\\n💾 Configuration:\\n";
+            foreach ($this->config->toArray() as $key => $value) {
+                echo "  {$key}: {$value}\\n";
+            }
+            
+            // JSON serialization demo
+            if (!empty($adminUsers)) {
+                echo "\\n📋 Sample user JSON:\\n";
+                echo json_encode($adminUsers[0], JSON_PRETTY_PRINT) . "\\n";
+            }
+        }
+    }
+
+    // Run the application if this file is executed directly
+    if (basename(__FILE__) === basename($_SERVER['SCRIPT_NAME'])) {
+        $app = new Application();
+        $app->run();
     }
     """
 }
