@@ -18,41 +18,25 @@ public struct Theme {
         self.fonts = fonts
     }
 
-    #if canImport(AppKit)
-    public func color(forToken tokenName: TokenName) -> NSColor? {
+    public func color(forToken tokenName: TokenName) -> PlatformColor? {
         colors.color(forToken: tokenName)
     }
 
-    public func font(forToken tokenName: TokenName) -> NSFont? {
+    public func font(forToken tokenName: TokenName) -> PlatformFont? {
         fonts.font(forToken: tokenName)
     }
-    #elseif canImport(UIKit)
-    public func color(forToken tokenName: TokenName) -> UIColor? {
-        colors.color(forToken: tokenName)
-    }
-
-    public func font(forToken tokenName: TokenName) -> UIFont? {
-        fonts.font(forToken: tokenName)
-    }
-    #endif
 
     public struct Colors {
-        #if canImport(AppKit)
-        public let colors: [TokenName: NSColor]
+        public let colors: [TokenName: PlatformColor]
 
-        public init(colors: [String: NSColor]) {
-            self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in (TokenName(key), value) })
+        public init(colors: [String: PlatformColor]) {
+            self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in 
+                (TokenName(key), value)
+            })
         }
-        #elseif canImport(UIKit)
-        public let colors: [TokenName: UIColor]
 
-        public init(colors: [String: UIColor]) {
-            self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in (TokenName(key), value) })
-        }
-        #endif
-
-        #if canImport(AppKit)
         public init(bundle: Bundle, name: String) {
+            #if canImport(AppKit)
             colors = [
                 "plain": NSColor(named: "\(name)/plain", bundle: bundle)!,
                 "boolean": NSColor(named: "\(name)/boolean", bundle: bundle)!,
@@ -75,13 +59,7 @@ public struct Theme {
                 "variable.builtin": NSColor(named: "\(name)/variable.builtin", bundle: bundle)!,
                 "variable": NSColor(named: "\(name)/variable", bundle: bundle)!
             ]
-        }
-
-        public func color(forToken tokenName: TokenName) -> NSColor? {
-            colors[tokenName]
-        }
-        #elseif canImport(UIKit)
-        public init(bundle: Bundle, name: String) {
+            #else
             colors = [
                 "plain": UIColor(named: "\(name)/plain", in: bundle, compatibleWith: nil)!,
                 "boolean": UIColor(named: "\(name)/boolean", in: bundle, compatibleWith: nil)!,
@@ -104,87 +82,58 @@ public struct Theme {
                 "variable.builtin": UIColor(named: "\(name)/variable.builtin", in: bundle, compatibleWith: nil)!,
                 "variable": UIColor(named: "\(name)/variable", in: bundle, compatibleWith: nil)!
             ]
+            #endif
         }
 
-        public func color(forToken tokenName: TokenName) -> UIColor? {
+        public func color(forToken tokenName: TokenName) -> PlatformColor? {
             colors[tokenName]
         }
-        #endif
     }
 
     public struct Fonts {
-        #if canImport(AppKit)
-        public let fonts: [TokenName: NSFont]
+        public let fonts: [TokenName: PlatformFont]
 
-        public init(fonts: [String: NSFont]) {
-            self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in (TokenName(key), value) })
+        public init(fonts: [String: PlatformFont]) {
+            self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in 
+                (TokenName(key), value)
+            })
         }
-        #elseif canImport(UIKit)
-        public let fonts: [TokenName: UIFont]
 
-        public init(fonts: [String: UIFont]) {
-            self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in (TokenName(key), value) })
-        }
-        #endif
-
-        #if canImport(AppKit)
         public init(bundle _: Bundle, name _: String) {
+            func createMonospacedFont(weight: PlatformFont.Weight) -> PlatformFont {
+                #if canImport(AppKit)
+                return NSFont.monospacedSystemFont(ofSize: 0, weight: weight)
+                #else
+                return UIFont.monospacedSystemFont(ofSize: 0, weight: weight)
+                #endif
+            }
+            
             fonts = [
-                "plain": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "boolean": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "comment": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "constructor": NSFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "function.call": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "include": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "keyword": NSFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "keyword.function": NSFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "keyword.return": NSFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "method": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "number": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "operator": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "parameter": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "punctuation.special": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "string": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "text.literal": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "text.title": NSFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "type": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "variable.builtin": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "variable": NSFont.monospacedSystemFont(ofSize: 0, weight: .regular)
+                "plain": createMonospacedFont(weight: .regular),
+                "boolean": createMonospacedFont(weight: .regular),
+                "comment": createMonospacedFont(weight: .regular),
+                "constructor": createMonospacedFont(weight: .medium),
+                "function.call": createMonospacedFont(weight: .regular),
+                "include": createMonospacedFont(weight: .regular),
+                "keyword": createMonospacedFont(weight: .medium),
+                "keyword.function": createMonospacedFont(weight: .medium),
+                "keyword.return": createMonospacedFont(weight: .medium),
+                "method": createMonospacedFont(weight: .regular),
+                "number": createMonospacedFont(weight: .regular),
+                "operator": createMonospacedFont(weight: .regular),
+                "parameter": createMonospacedFont(weight: .regular),
+                "punctuation.special": createMonospacedFont(weight: .regular),
+                "string": createMonospacedFont(weight: .regular),
+                "text.literal": createMonospacedFont(weight: .regular),
+                "text.title": createMonospacedFont(weight: .medium),
+                "type": createMonospacedFont(weight: .regular),
+                "variable.builtin": createMonospacedFont(weight: .regular),
+                "variable": createMonospacedFont(weight: .regular)
             ]
         }
 
-        public func font(forToken tokenName: TokenName) -> NSFont? {
+        public func font(forToken tokenName: TokenName) -> PlatformFont? {
             fonts[tokenName]
         }
-        #elseif canImport(UIKit)
-        public init(bundle _: Bundle, name _: String) {
-            fonts = [
-                "plain": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "boolean": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "comment": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "constructor": UIFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "function.call": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "include": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "keyword": UIFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "keyword.function": UIFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "keyword.return": UIFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "method": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "number": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "operator": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "parameter": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "punctuation.special": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "string": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "text.literal": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "text.title": UIFont.monospacedSystemFont(ofSize: 0, weight: .medium),
-                "type": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "variable.builtin": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular),
-                "variable": UIFont.monospacedSystemFont(ofSize: 0, weight: .regular)
-            ]
-        }
-
-        public func font(forToken tokenName: TokenName) -> UIFont? {
-            fonts[tokenName]
-        }
-        #endif
     }
 }

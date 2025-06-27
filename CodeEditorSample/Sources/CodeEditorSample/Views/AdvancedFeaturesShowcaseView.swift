@@ -97,7 +97,7 @@ struct AdvancedFeaturesShowcaseView: View {
             .buttonStyle(.borderless)
         }
         .padding()
-        .background(Color(PlatformColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
     }
     
     // MARK: - Demo Editor View
@@ -182,7 +182,7 @@ struct AdvancedFeaturesShowcaseView: View {
             }
             .padding()
         }
-        .background(Color(PlatformColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
     }
     
     // MARK: - Configuration Section
@@ -365,7 +365,7 @@ struct AdvancedFeaturesShowcaseView: View {
             }
         }
         .padding()
-        .background(Color(PlatformColor.secondarySystemBackground))
+        .background(Color(PlatformColors.secondarySystemBackground))
         .cornerRadius(8)
         .padding(.horizontal)
     }
@@ -413,7 +413,7 @@ struct AdvancedFeaturesShowcaseView: View {
                     .foregroundColor(selectedDemo.accentColor)
             }
             .padding(12)
-            .background(Color(PlatformColor.systemBackground).opacity(0.9))
+            .background(Color(PlatformColors.systemBackground).opacity(0.9))
             .cornerRadius(8)
             .shadow(radius: 4)
             .padding()

@@ -46,7 +46,7 @@ enum ColorTheme: String, CaseIterable {
     var textColor: PlatformColor {
         switch self {
         case .xcode:
-            PlatformColor.labelColor
+            PlatformColors.label
         case .vsDark:
             PlatformColor(red: 0.84, green: 0.84, blue: 0.84, alpha: 1.0)
         case .github:
@@ -169,7 +169,7 @@ enum ColorTheme: String, CaseIterable {
     var selectedLineColor: PlatformColor {
         switch self {
         case .xcode:
-            PlatformColor.selectedTextBackgroundColor.withAlphaComponent(0.1)
+            PlatformColors.textBackgroundColor.withAlphaComponent(0.1)
         case .vsDark:
             PlatformColor(white: 1.0, alpha: 0.05)
         case .github:
@@ -186,7 +186,7 @@ enum ColorTheme: String, CaseIterable {
     var selectionColor: PlatformColor {
         switch self {
         case .xcode:
-            PlatformColor.selectedTextBackgroundColor
+            PlatformColors.textBackgroundColor
         case .vsDark:
             PlatformColor(red: 0.26, green: 0.43, blue: 0.64, alpha: 1.0)
         case .github:
@@ -194,7 +194,7 @@ enum ColorTheme: String, CaseIterable {
         case .solarizedDark:
             PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 0.4)
         case .minimal:
-            PlatformColor.selectedTextBackgroundColor
+            PlatformColors.textBackgroundColor
         case .presentation:
             PlatformColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 0.5)
         }
@@ -220,7 +220,7 @@ enum ColorTheme: String, CaseIterable {
     var gutterTextColor: PlatformColor {
         switch self {
         case .xcode:
-            PlatformColor.secondaryLabelColor
+            PlatformColors.secondaryLabel
         case .vsDark:
             PlatformColor(white: 0.5, alpha: 1.0)
         case .github:
@@ -228,7 +228,7 @@ enum ColorTheme: String, CaseIterable {
         case .solarizedDark:
             PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 1.0)
         case .minimal:
-            PlatformColor.tertiaryLabelColor
+            PlatformColors.tertiaryLabel
         case .presentation:
             PlatformColor(white: 0.4, alpha: 1.0)
         }

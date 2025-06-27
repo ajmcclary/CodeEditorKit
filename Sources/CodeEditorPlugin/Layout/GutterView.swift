@@ -1,4 +1,5 @@
 import Foundation
+
 #if canImport(AppKit)
 import AppKit
 
@@ -20,7 +21,7 @@ public class GutterView: NSView {
 
     private func setup() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        layer?.backgroundColor = PlatformColors.controlBackground.cgColor
 
         // Ensure the view clips to its bounds
         layer?.masksToBounds = true
@@ -39,15 +40,15 @@ public class GutterView: NSView {
         }
 
         // Clear background - only fill the gutter's bounds, not the dirty rect
-        NSColor.controlBackgroundColor.setFill()
+        PlatformColors.controlBackground.setFill()
         bounds.fill()
 
         // Set up text attributes for line numbers
-        let font = NSFont.monospacedSystemFont(
-            ofSize: (textView.font?.pointSize ?? NSFont.systemFontSize) * 0.9,
+        let font = PlatformFonts.monospacedSystemFont(
+            ofSize: (textView.font?.pointSize ?? PlatformFonts.systemFontSize) * 0.9,
             weight: .regular
         )
-        let textColor = NSColor.secondaryLabelColor
+        let textColor = PlatformColors.secondaryLabel
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .right
 
@@ -277,13 +278,13 @@ public class GutterView: UIView {
         let text = textStorage.string
         
         // Use the same font as the text view to ensure line heights match
-        let font = textView.font ?? UIFont.monospacedSystemFont(
-            ofSize: UIFont.systemFontSize,
+        let font = textView.font ?? PlatformFonts.monospacedSystemFont(
+            ofSize: PlatformFonts.systemFontSize,
             weight: .regular
         )
         
         // Create line number font that's slightly smaller
-        let lineNumberFont = UIFont.monospacedSystemFont(
+        let lineNumberFont = PlatformFonts.monospacedSystemFont(
             ofSize: font.pointSize * 0.9,
             weight: .regular
         )
@@ -293,7 +294,7 @@ public class GutterView: UIView {
         
         let attributes: [NSAttributedString.Key: Any] = [
             .font: lineNumberFont,
-            .foregroundColor: UIColor.secondaryLabel,
+            .foregroundColor: PlatformColors.secondaryLabel,
             .paragraphStyle: paragraphStyle
         ]
         

@@ -33,7 +33,7 @@ public final class CompletionViewController: NSViewController, CompletionViewCon
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
-        scrollView.backgroundColor = NSColor.controlBackgroundColor
+        scrollView.backgroundColor = PlatformColors.controlBackground
         return scrollView
     }()
     
@@ -42,7 +42,7 @@ public final class CompletionViewController: NSViewController, CompletionViewCon
         tableView.style = .plain
         tableView.headerView = nil
         tableView.intercellSpacing = NSSize(width: 0, height: 1)
-        tableView.backgroundColor = NSColor.controlBackgroundColor
+        tableView.backgroundColor = PlatformColors.controlBackground
         tableView.selectionHighlightStyle = .regular
         tableView.allowsEmptySelection = false
         tableView.allowsMultipleSelection = false
@@ -103,14 +103,14 @@ public final class CompletionViewController: NSViewController, CompletionViewCon
     private func configureAppearance() {
         // Configure visual appearance
         view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        view.layer?.backgroundColor = PlatformColors.controlBackground.cgColor
         view.layer?.cornerRadius = 6
         view.layer?.borderWidth = 1
-        view.layer?.borderColor = NSColor.separatorColor.cgColor
+        view.layer?.borderColor = PlatformColors.separator.cgColor
         
         // Add shadow
         view.shadow = NSShadow()
-        view.layer?.shadowColor = NSColor.black.cgColor
+        view.layer?.shadowColor = PlatformColors.black.cgColor
         view.layer?.shadowOpacity = 0.2
         view.layer?.shadowOffset = NSSize(width: 0, height: -2)
         view.layer?.shadowRadius = 4
@@ -226,8 +226,8 @@ private final class CompletionCellView: NSTableCellView {
     
     private lazy var iconLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = NSFont.systemFont(ofSize: 12)
-        label.textColor = NSColor.secondaryLabelColor
+        label.font = PlatformFonts.systemFont(ofSize: 12)
+        label.textColor = PlatformColors.secondaryLabel
         label.alignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -235,8 +235,8 @@ private final class CompletionCellView: NSTableCellView {
     
     private lazy var titleLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = NSFont.systemFont(ofSize: 13)
-        label.textColor = NSColor.labelColor
+        label.font = PlatformFonts.systemFont(ofSize: 13)
+        label.textColor = PlatformColors.label
         label.lineBreakMode = .byTruncatingTail
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -244,8 +244,8 @@ private final class CompletionCellView: NSTableCellView {
     
     private lazy var detailLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = NSFont.systemFont(ofSize: 11)
-        label.textColor = NSColor.secondaryLabelColor
+        label.font = PlatformFonts.systemFont(ofSize: 11)
+        label.textColor = PlatformColors.secondaryLabel
         label.lineBreakMode = .byTruncatingTail
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -295,11 +295,11 @@ private final class CompletionCellView: NSTableCellView {
         
         // Highlight deprecated items
         if item.deprecated {
-            titleLabel.textColor = NSColor.disabledControlTextColor
-            titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .light)
+            titleLabel.textColor = PlatformColors.disabledControlText
+            titleLabel.font = PlatformFonts.systemFont(ofSize: 13, weight: .light)
         } else {
-            titleLabel.textColor = NSColor.labelColor
-            titleLabel.font = NSFont.systemFont(ofSize: 13)
+            titleLabel.textColor = PlatformColors.label
+            titleLabel.font = PlatformFonts.systemFont(ofSize: 13)
         }
     }
 }
@@ -334,7 +334,7 @@ public final class BasicCompletionViewController: UIViewController, CompletionVi
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
-        tableView.backgroundColor = UIColor.systemBackground
+        tableView.backgroundColor = PlatformColors.systemBackground
         tableView.separatorStyle = .singleLine
         tableView.allowsSelection = true
         tableView.allowsMultipleSelection = false
@@ -384,13 +384,13 @@ public final class BasicCompletionViewController: UIViewController, CompletionVi
     }
     
     private func configureAppearance() {
-        view.backgroundColor = UIColor.systemBackground
+        view.backgroundColor = PlatformColors.systemBackground
         view.layer.cornerRadius = 8
         view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.separator.cgColor
+        view.layer.borderColor = PlatformColors.separator.cgColor
         
         // Add shadow
-        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowColor = PlatformColors.black.cgColor
         view.layer.shadowOpacity = 0.2
         view.layer.shadowOffset = CGSize(width: 0, height: 2)
         view.layer.shadowRadius = 4
@@ -484,8 +484,8 @@ private final class CompletionTableViewCell: UITableViewCell {
     
     private lazy var iconLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = UIColor.secondaryLabel
+        label.font = PlatformFonts.systemFont(ofSize: 16)
+        label.textColor = PlatformColors.secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -493,16 +493,16 @@ private final class CompletionTableViewCell: UITableViewCell {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = UIColor.label
+        label.font = PlatformFonts.systemFont(ofSize: 16)
+        label.textColor = PlatformColors.label
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private lazy var detailLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = UIColor.secondaryLabel
+        label.font = PlatformFonts.systemFont(ofSize: 14)
+        label.textColor = PlatformColors.secondaryLabel
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -551,11 +551,11 @@ private final class CompletionTableViewCell: UITableViewCell {
         
         // Handle deprecated items
         if item.deprecated {
-            titleLabel.textColor = UIColor.tertiaryLabel
-            titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .light)
+            titleLabel.textColor = PlatformColors.tertiaryLabel
+            titleLabel.font = PlatformFonts.systemFont(ofSize: 16, weight: .light)
         } else {
-            titleLabel.textColor = UIColor.label
-            titleLabel.font = UIFont.systemFont(ofSize: 16)
+            titleLabel.textColor = PlatformColors.label
+            titleLabel.font = PlatformFonts.systemFont(ofSize: 16)
         }
     }
 }

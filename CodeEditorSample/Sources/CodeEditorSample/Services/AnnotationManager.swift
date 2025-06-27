@@ -382,7 +382,7 @@ class AnnotationView: NSView {
         let containerView = NSView()
         containerView.wantsLayer = true
         containerView.layer?.cornerRadius = 6
-        containerView.layer?.backgroundColor = PlatformColor.controlBackgroundColor.cgColor
+        containerView.layer?.backgroundColor = PlatformColors.controlBackground.cgColor
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
         
@@ -395,7 +395,7 @@ class AnnotationView: NSView {
         // Message label
         let messageLabel = NSTextField(labelWithString: annotation.message)
         messageLabel.font = .systemFont(ofSize: 11)
-        messageLabel.textColor = .labelColor
+        messageLabel.textColor = PlatformColors.label
         messageLabel.lineBreakMode = .byWordWrapping
         messageLabel.maximumNumberOfLines = 0
         messageLabel.translatesAutoresizingMaskIntoConstraints = false

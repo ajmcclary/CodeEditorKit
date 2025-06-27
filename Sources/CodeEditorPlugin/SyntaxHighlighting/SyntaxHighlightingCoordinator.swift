@@ -1,10 +1,9 @@
 import Foundation
 import SwiftParser
 import SwiftSyntax
+
 #if canImport(UIKit)
 import UIKit
-
-public typealias NSColor = UIColor
 #elseif canImport(AppKit)
 import AppKit
 #endif
@@ -247,18 +246,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     case unknown
 
     /// Cross-platform adaptive color property
-    #if canImport(AppKit)
-    @MainActor public var adaptiveColor: NSColor {
-        AdaptiveColorSystem.syntaxColor(for: self)
-    }
-    #else
-    @MainActor public var adaptiveColor: UIColor {
-        defaultColor
-    }
-    #endif
-    
-    /// Legacy color property - use adaptiveColor for macOS 26 compatibility
-    @MainActor public var color: NSColor {
+    @MainActor public var adaptiveColor: PlatformColor {
         #if canImport(AppKit)
         AdaptiveColorSystem.syntaxColor(for: self)
         #else
@@ -266,9 +254,14 @@ public enum TokenType: String, CaseIterable, Sendable {
         #endif
     }
     
+    /// Legacy color property - use adaptiveColor for macOS 26 compatibility
+    @MainActor public var color: PlatformColor {
+        adaptiveColor
+    }
+    
     #if canImport(UIKit)
     /// Default colors for iOS
-    @MainActor public var defaultColor: UIColor {
+    @MainActor public var defaultColor: PlatformColor {
         switch self {
         case .keyword: return .systemPurple
         case .identifier: return .label

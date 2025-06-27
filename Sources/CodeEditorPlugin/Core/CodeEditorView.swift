@@ -1,15 +1,12 @@
 import Foundation
+import ObjectiveC
+import os.log
 
 #if canImport(UIKit)
 import UIKit
-public typealias PlatformViewController = UIViewController
 #elseif canImport(AppKit)
 import AppKit
-public typealias PlatformViewController = NSViewController
 #endif
-
-import ObjectiveC
-import os.log
 
 // Local logger instance for CodeEditorView
 private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
@@ -113,7 +110,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #if canImport(UIKit)
         return UIColor.tintColor.withAlphaComponent(0.15)
         #else
-        return NSColor.controlAccentColor.withAlphaComponent(0.15)
+        return PlatformColors.controlAccentColor.withAlphaComponent(0.15)
         #endif
     }() {
         didSet {
@@ -375,9 +372,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func setupDefaultTheme() {
         #if canImport(AppKit)
-        backgroundColor = NSColor.textBackgroundColor
-        textColor = NSColor.labelColor
-        font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        backgroundColor = PlatformColors.textBackgroundColor
+        textColor = PlatformColors.label
+        font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
         #endif
     }
 
@@ -608,7 +605,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         window.contentViewController = viewController as NSViewController
         window.level = .floating
         window.isOpaque = false
-        window.backgroundColor = NSColor.clear
+        window.backgroundColor = PlatformColors.clear
         window.hasShadow = true
         
         // Position window relative to text view

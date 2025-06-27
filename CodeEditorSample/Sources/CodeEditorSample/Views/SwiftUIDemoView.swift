@@ -99,7 +99,7 @@ struct SwiftUIDemoView: View {
         }
         .padding()
         #if canImport(AppKit)
-        .background(Color(PlatformColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
         #else
         .background(Color(.systemGray6))
         #endif

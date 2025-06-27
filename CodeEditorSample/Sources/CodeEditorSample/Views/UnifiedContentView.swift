@@ -160,7 +160,7 @@ struct UnifiedContentView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(PlatformColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
     }
     
     // MARK: - Status Bar
@@ -230,7 +230,7 @@ struct UnifiedContentView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-        .background(Color(PlatformColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
     }
     
     // MARK: - Helper Methods
