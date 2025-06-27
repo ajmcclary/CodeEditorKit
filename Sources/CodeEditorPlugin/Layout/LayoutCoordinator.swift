@@ -47,7 +47,7 @@ public final class LayoutCoordinator {
         duration: TimeInterval = 0.25,
         options: AnimationOptions = .default,
         _ operation: @escaping () -> Void,
-        completion: ((Bool) -> Void)? = nil
+        completion: (@Sendable (Bool) -> Void)? = nil
     ) {
         performLayout {
             #if canImport(AppKit)

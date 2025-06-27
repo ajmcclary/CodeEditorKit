@@ -127,17 +127,8 @@ public struct AnyCodable: Codable, Sendable {
             try container.encode(dictValue)
 
         default:
-            if let codableValue = value as? any Codable {
-                try codableValue.encode(to: encoder)
-            } else {
-                throw EncodingError.invalidValue(
-                    value,
-                    EncodingError.Context(
-                        codingPath: encoder.codingPath,
-                        debugDescription: "Value is not Codable"
-                    )
-                )
-            }
+            // Value is already Codable & Sendable, so we can encode it directly
+            try value.encode(to: encoder)
         }
     }
 }

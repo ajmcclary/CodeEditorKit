@@ -91,7 +91,17 @@ public final class SmartCompletionEngine: ObservableObject {
 
                 case .failure:
                     // If debouncer fails, perform completion directly
-                    await self?.performCompletion(session: session, context: context, completion: completion)
+                    if let self {
+                        await self.performCompletion(session: session, context: context, completion: completion)
+                    } else {
+                        // Engine was deallocated, return empty result
+                        completion(CompletionResult(
+                            items: [],
+                            context: context,
+                            isIncomplete: false,
+                            processingTime: 0
+                        ))
+                    }
                 }
             }
         }
@@ -201,6 +211,13 @@ public final class SmartCompletionEngine: ObservableObject {
         // Check if session is still current
         guard currentSession?.id == session.id else {
             logger.debug("Completion session cancelled")
+            // Always call completion to avoid hanging
+            completion(CompletionResult(
+                items: [],
+                context: context,
+                isIncomplete: false,
+                processingTime: 0
+            ))
             return
         }
         

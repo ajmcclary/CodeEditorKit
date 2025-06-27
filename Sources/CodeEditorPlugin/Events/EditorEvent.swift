@@ -55,52 +55,49 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
 
 /// Publisher for editor events using Combine
 @available(macOS 10.15, iOS 13.0, *)
-public final class EditorEventPublisher {
+public final class EditorEventPublisher: @unchecked Sendable {
+    private let lock = NSLock()
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
-    private let queue = DispatchQueue(label: "com.codeeditor.events", attributes: .concurrent)
     
     public init() {}
+    
+    deinit {}
     
     /// Subscribe to editor events
     public func subscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
-        queue.async(flags: .barrier) {
-            self.handlers[id] = WeakHandler(handler)
-        }
+        lock.lock()
+        defer { lock.unlock() }
+        handlers[id] = WeakHandler(handler)
     }
     
     /// Unsubscribe from editor events
     public func unsubscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
-        queue.async(flags: .barrier) {
-            self.handlers.removeValue(forKey: id)
-        }
+        lock.lock()
+        defer { lock.unlock() }
+        handlers.removeValue(forKey: id)
     }
     
     /// Publish an event to all subscribers
     public func publish(_ event: EditorEvent) {
-        queue.sync {
-            // Clean up deallocated handlers and get active ones
-            let activeHandlers = handlers.values.compactMap { $0.value }
-            
-            // Publish to all active handlers
-            for handler in activeHandlers {
-                Task { @MainActor in
-                    handler.handle(event)
-                }
+        lock.lock()
+        let activeHandlers = handlers.values.compactMap { $0.value }
+        lock.unlock()
+        
+        // Publish to all active handlers
+        for handler in activeHandlers {
+            Task { @MainActor in
+                handler.handle(event)
             }
         }
     }
     
     /// Remove all handlers
     public func removeAll() {
-        queue.async(flags: .barrier) {
-            self.handlers.removeAll()
-        }
-    }
-    
-    deinit {
-        removeAll()
+        lock.lock()
+        defer { lock.unlock() }
+        handlers.removeAll()
     }
 }
 

@@ -515,8 +515,8 @@ public class CrossPlatformCoordinator: ObservableObject {
                 return false
             }
         }
-        #endif
         return false
+        #endif
     }
     
     private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in textView: CodeEditorView) -> Bool {
