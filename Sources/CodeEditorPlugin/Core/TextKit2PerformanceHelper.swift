@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -123,7 +123,7 @@ public enum TextKit2PerformanceHelper {
             configureTextLayoutManager(textLayoutManager, for: config)
         }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Configure NSTextView specific optimizations
         if let nsTextView = textView as? NSTextView {
             configureNSTextView(nsTextView, for: config)
@@ -141,7 +141,7 @@ public enum TextKit2PerformanceHelper {
     public static func optimizeForRealTimeEditing(_ textView: PlatformTextView) {
         guard let textContainer = textView.textContainer else { return }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let nsTextView = textView as? NSTextView else { return }
         
         // Disable expensive visual features during editing
@@ -175,7 +175,7 @@ public enum TextKit2PerformanceHelper {
     /// Optimize text view for read-only viewing performance
     /// - Parameter textView: Text view to optimize
     public static func optimizeForReadOnlyViewing(_ textView: PlatformTextView) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let nsTextView = textView as? NSTextView else { return }
         
         // Disable editing features
@@ -247,7 +247,7 @@ public enum TextKit2PerformanceHelper {
     ) {
         guard let textContainer else { return }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Configure container for performance
         textContainer.heightTracksTextView = false
         textContainer.widthTracksTextView = true
@@ -262,7 +262,7 @@ public enum TextKit2PerformanceHelper {
         
         // Set size constraints for large files
         if config.maxCachedFragments > 500 {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textContainer.containerSize = NSSize(width: 1_000, height: 10_000_000)
             #endif
         }
@@ -285,7 +285,7 @@ public enum TextKit2PerformanceHelper {
         }
     }
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private static func configureNSTextView(
         _ textView: NSTextView,
         for config: PerformanceConfiguration

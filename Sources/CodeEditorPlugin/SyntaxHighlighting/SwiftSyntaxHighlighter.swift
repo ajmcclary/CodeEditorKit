@@ -4,7 +4,7 @@ import SwiftSyntax
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit)
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
 
@@ -29,55 +29,43 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
         case whitespace
         case unknown
 
-        public var color: NSColor {
+        public var color: PlatformColor {
             switch self {
             case .keyword:
-                NSColor.systemPurple
+                PlatformColors.systemPurple
 
             case .identifier:
-                #if canImport(AppKit)
-                NSColor.labelColor
-                #else
-                UIColor.label
-                #endif
+                PlatformColors.label
 
             case .string:
-                NSColor.systemRed
+                PlatformColors.systemRed
 
             case .number:
-                NSColor.systemBlue
+                PlatformColors.systemBlue
 
             case .comment:
-                NSColor.systemGreen
+                PlatformColors.systemGreen
 
             case .type:
-                NSColor.systemTeal
+                PlatformColors.systemTeal
 
             case .function:
-                NSColor.systemIndigo
+                PlatformColors.systemIndigo
 
             case .property:
-                NSColor.systemOrange
+                PlatformColors.systemOrange
 
             case .operator:
-                NSColor.systemBrown
+                PlatformColors.systemPink
 
             case .punctuation:
-                #if canImport(AppKit)
-                NSColor.secondaryLabelColor
-                #else
-                UIColor.secondaryLabel
-                #endif
+                PlatformColors.secondaryLabel
 
             case .whitespace:
-                NSColor.clear
+                PlatformColors.clear
 
             case .unknown:
-                #if canImport(AppKit)
-                NSColor.labelColor
-                #else
-                UIColor.label
-                #endif
+                PlatformColors.label
             }
         }
     }

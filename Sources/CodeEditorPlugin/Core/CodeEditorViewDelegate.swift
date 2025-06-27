@@ -117,7 +117,7 @@ extension CodeEditorViewDelegate {
 
     @MainActor
     func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         CompletionViewController()
         #else
         BasicCompletionViewController()

@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
 // MARK: - TextLayoutFragmentView
@@ -29,7 +29,7 @@ public class TextLayoutFragmentView: NSView {
     }
 
     private func setup() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         wantsLayer = true
         #endif
         #if canImport(UIKit)

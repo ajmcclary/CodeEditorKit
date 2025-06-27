@@ -1,4 +1,4 @@
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 @preconcurrency import AppKit
 #endif
 #if canImport(UIKit)
@@ -8,7 +8,7 @@ import Foundation
 
 @MainActor
 class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate {
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     // NSTextViewDelegate methods will be implemented
     #elseif canImport(UIKit)
     // UITextViewDelegate methods will be implemented
@@ -99,7 +99,7 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
     }
 
     func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return source?.textViewCompletionViewController(textView) ?? CompletionViewController()
         #else
         // iOS stub - return a minimal implementation
@@ -133,7 +133,7 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
 
     // MARK: - Platform-specific delegate forwarding
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
         if let textView = notification.object as? CodeEditorView {
@@ -176,7 +176,7 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
     }
 }
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 // swiftlint:disable:next no_grouping_extension
 extension CodeEditorViewDelegateProxy: NSTextViewDelegate {}
 #elseif canImport(UIKit)

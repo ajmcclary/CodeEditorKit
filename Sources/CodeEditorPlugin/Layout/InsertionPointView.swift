@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
 // MARK: - InsertionPointView
@@ -25,7 +25,7 @@ public class InsertionPointView: NSView {
         #endif
     }
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Text views need a flipped coordinate system on macOS
     override public var isFlipped: Bool {
         true

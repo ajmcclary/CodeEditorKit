@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - Cross-Platform Minimap Types
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 public typealias MinimapPlatformView = NSView
 public typealias MinimapPlatformColor = NSColor
 public typealias MinimapPlatformFont = NSFont
@@ -45,7 +45,7 @@ public struct MinimapConfiguration: Sendable {
     
     // Default colors
     public static var defaultBackgroundColor: MinimapPlatformColor {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.controlBackgroundColor
         #else
         return UIColor.systemBackground
@@ -53,7 +53,7 @@ public struct MinimapConfiguration: Sendable {
     }
     
     public static var defaultTextColor: MinimapPlatformColor {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.secondaryLabelColor
         #else
         return UIColor.secondaryLabel
@@ -61,7 +61,7 @@ public struct MinimapConfiguration: Sendable {
     }
     
     public static var defaultViewportColor: MinimapPlatformColor {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.selectedControlColor.withAlphaComponent(0.3)
         #else
         return UIColor.systemBlue.withAlphaComponent(0.3)
@@ -69,7 +69,7 @@ public struct MinimapConfiguration: Sendable {
     }
     
     public static var defaultViewportBorderColor: MinimapPlatformColor {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.selectedControlColor
         #else
         return UIColor.systemBlue
@@ -141,7 +141,7 @@ public struct MinimapData: Sendable {
 /// Shared minimap rendering logic
 public enum MinimapRenderer {
     public static func calculateCharacterMetrics(font: MinimapPlatformFont) -> (width: CGFloat, height: CGFloat) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
         let size = ("M" as String).size(withAttributes: attributes)
         return (size.width, size.height)
@@ -166,7 +166,7 @@ public enum MinimapRenderer {
         let startY = CGFloat(visibleRange.lowerBound) * lineHeight
         let height = CGFloat(visibleRange.count) * lineHeight
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, coordinate system is flipped
         let adjustedY = minimapHeight - startY - height
         return NSRect(x: 0, y: adjustedY, width: minimapWidth, height: height)
@@ -181,7 +181,7 @@ public enum MinimapRenderer {
         totalLines: Int,
         minimapHeight: CGFloat
     ) -> Int {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, coordinate system is flipped
         let adjustedY = minimapHeight - point.y
         let line = Int(adjustedY / lineHeight)
@@ -195,7 +195,7 @@ public enum MinimapRenderer {
 
 // MARK: - Platform-Specific Implementations
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 /// AppKit implementation of minimap view
 @MainActor
 public final class AppKitMinimapView: NSView, MinimapViewProtocol {
@@ -514,7 +514,7 @@ public typealias MinimapView = UIKitMinimapView
     private func getVisibleLineRange(textView: CodeEditorView, totalLines: Int) -> Range<Int> {
         // This is a simplified implementation
         // In a real implementation, you would calculate based on scroll position and view height
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let scrollView = textView.enclosingScrollView {
             let visibleRect = scrollView.documentVisibleRect
             let lineHeight = textView.font?.pointSize ?? 16.0

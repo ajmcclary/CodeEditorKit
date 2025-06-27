@@ -6,10 +6,6 @@ import AppKit
 // MARK: - GutterView AppKit Implementation Details
 
 extension GutterView {
-    
-    /// Text views need a flipped coordinate system on macOS
-    override public var isFlipped: Bool { true }
-    
     /// Track text view changes
     func observeTextView() {
         guard let textView else { return }
@@ -113,6 +109,5 @@ extension GutterView {
         
         return lineRanges
     }
-
 }
 #endif

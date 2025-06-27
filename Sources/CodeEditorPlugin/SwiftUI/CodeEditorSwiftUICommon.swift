@@ -118,7 +118,7 @@ public func setupTextChangeObservers<T: BaseCodeEditorCoordinator<Parent>, Paren
     for textView: CodeEditorView,
     coordinator: T
 ) {
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     NotificationCenter.default.addObserver(
         coordinator,
         selector: #selector(T.textDidChange(_:)),
@@ -198,7 +198,7 @@ extension MinimapSupport {
         containerView.addSubview(minimap)
         
         // Set up observers
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
@@ -250,7 +250,7 @@ extension MinimapSupport {
         let targetPosition = lineNumber > 0 ? lineStart + 1 : lineStart
         
         // Navigate to position
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let nsRange = NSRange(location: targetPosition, length: 0)
         textView.setSelectedRange(nsRange)
         textView.scrollRangeToVisible(nsRange)

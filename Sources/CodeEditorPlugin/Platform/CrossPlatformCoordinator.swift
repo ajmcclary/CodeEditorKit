@@ -330,7 +330,7 @@ public class CrossPlatformCoordinator: ObservableObject {
             keyEquivalent: "x",
             isEnabled: textView.isEditable && range.length > 0
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView?.cut(nil)
             #else
             if let selectedRange = textView?.selectedTextRange,
@@ -346,7 +346,7 @@ public class CrossPlatformCoordinator: ObservableObject {
             keyEquivalent: "c",
             isEnabled: range.length > 0
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView?.copy(nil)
             #else
             if let selectedRange = textView?.selectedTextRange,
@@ -361,7 +361,7 @@ public class CrossPlatformCoordinator: ObservableObject {
             keyEquivalent: "v",
             isEnabled: textView.isEditable
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView?.paste(nil)
             #else
             if let pasteString = UIPasteboard.general.string {

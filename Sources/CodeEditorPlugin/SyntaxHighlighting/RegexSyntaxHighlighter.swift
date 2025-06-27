@@ -64,7 +64,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemPurple
 
             case .identifier:
-                #if canImport(AppKit)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .labelColor
                 #else
                 .label
@@ -92,7 +92,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemBrown
 
             case .punctuation:
-                #if canImport(AppKit)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .secondaryLabelColor
                 #else
                 .secondaryLabel
@@ -105,7 +105,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
                 .systemPink
 
             case .unknown:
-                #if canImport(AppKit)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .labelColor
                 #else
                 .label

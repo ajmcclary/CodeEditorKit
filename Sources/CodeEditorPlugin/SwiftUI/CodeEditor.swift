@@ -192,7 +192,7 @@ public struct CodeEditor: View {
 
 // MARK: - Platform-Specific Representable
 
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 @available(macOS 13.0, *)
 struct CodeEditorRepresentable: NSViewRepresentable {
     @Binding var text: String

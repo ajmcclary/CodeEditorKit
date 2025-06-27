@@ -1,4 +1,4 @@
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
 import SwiftUI
@@ -7,18 +7,18 @@ import SwiftUI
 
 @main
 struct CodeEditorSampleApp: App {
-    #if os(macOS)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     #endif
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                #if os(macOS)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .frame(minWidth: 1200, minHeight: 800)
                 #endif
         }
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         .windowStyle(.titleBar)
         .windowToolbarStyle(.automatic)
         .commands {
@@ -50,7 +50,7 @@ struct CodeEditorSampleApp: App {
         #endif
     }
 
-    #if os(macOS)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func showAboutWindow() {
         let alert = NSAlert()
         alert.messageText = "CodeEditor Sample"
@@ -68,7 +68,7 @@ struct CodeEditorSampleApp: App {
     #endif
 }
 
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 // MARK: - AppDelegate
 
 class AppDelegate: NSObject, NSApplicationDelegate {

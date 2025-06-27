@@ -20,7 +20,7 @@ struct UnifiedContentView: View {
                     ideal: 350,
                     max: 400
                 )
-                #if os(macOS)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .navigationSplitViewStyle(.prominentDetail)
                 #endif
         } detail: {
@@ -29,7 +29,7 @@ struct UnifiedContentView: View {
                 .environmentObject(appState)
         }
         .navigationTitle("CodeEditor Configuration Demo")
-        #if os(iOS)
+        #if canImport(UIKit)
         .navigationBarTitleDisplayMode(.inline)
         #endif
     }
@@ -57,7 +57,7 @@ struct UnifiedContentView: View {
             // Status bar
             statusBar
         }
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         .frame(minWidth: 600, minHeight: 400)
         #endif
     }
@@ -68,7 +68,7 @@ struct UnifiedContentView: View {
     private var editorToolbar: some View {
         HStack {
             // Configuration visibility toggle
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             Button(action: toggleSidebar) {
                 Image(systemName: "sidebar.left")
                     .help("Toggle Configuration Sidebar")
@@ -119,7 +119,7 @@ struct UnifiedContentView: View {
             Spacer()
             
             // Advanced Features Demo button
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
                 HStack(spacing: 4) {
                     Image(systemName: "gearshape.2.fill")
@@ -146,7 +146,7 @@ struct UnifiedContentView: View {
                     Label("Refresh Editor", systemImage: "arrow.clockwise")
                 }
                 
-                #if os(iOS)
+                #if canImport(UIKit)
                 Divider()
                 
                 NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
@@ -236,7 +236,7 @@ struct UnifiedContentView: View {
     // MARK: - Helper Methods
     
     private func toggleSidebar() {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
         #endif
     }
@@ -254,7 +254,7 @@ struct UnifiedContentView: View {
     }
     
     private func shareConfiguration() {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         exportConfiguration()
         #else
         // iOS share sheet implementation

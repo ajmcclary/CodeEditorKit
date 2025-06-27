@@ -20,6 +20,7 @@ import UIKit
 @MainActor
 public protocol GutterViewProtocol: AnyObject {
     var textView: CodeEditorView? { get set }
+    
     func setNeedsDisplayLineNumbers()
 }
 
@@ -29,6 +30,9 @@ public protocol GutterViewProtocol: AnyObject {
 /// macOS implementation for displaying line numbers
 public class GutterView: NSView, GutterViewProtocol {
     public weak var textView: CodeEditorView?
+    
+    /// Text views need a flipped coordinate system on macOS
+    override public var isFlipped: Bool { true }
 
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

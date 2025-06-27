@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -586,7 +586,7 @@ internal struct CompletionItemAdapter: CompletionItem {
     }
     
     var view: PlatformView {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let view = NSView()
         view.wantsLayer = true
         return view

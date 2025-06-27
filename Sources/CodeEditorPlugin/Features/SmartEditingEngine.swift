@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -492,7 +492,7 @@ public struct SmartEditingConfiguration {
     // Multi-cursor
     public var enableMultiCursor = true
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public var multiCursorModifierKey: NSEvent.ModifierFlags = .option
     #else
     public var multiCursorModifierKey: UIKeyModifierFlags = .alternate

@@ -1,64 +1,40 @@
 # Review 4
 
-The main Swift package (CodeEditorPlugin) is organized by feature. Cross‑platform abstractions live under Sources/CodeEditorPlugin/Platform/, with extensive conditional compilation to support AppKit and UIKit.
+The project contains a full-featured code editor library (`CodeEditorPlugin`) and a demonstration application (`CodeEditorSample`). Platform abstraction utilities live under `Sources/CodeEditorPlugin/Platform`. The design guidelines are documented in `Platform/README.md`, which recommends detecting platforms with `#if canImport(AppKit) && !targetEnvironment(macCatalyst)` and `#elseif canImport(UIKit)` instead of `#if os(...)` statements.
 
-The sample application (CodeEditorSample) demonstrates usage across macOS, iOS, and Catalyst with 66 tests and various SwiftUI views.
+`PlatformImports.swift` implements these guidelines, providing aliases like `PlatformColor`, `PlatformFont`, and semantic color helpers so higher‑level code can remain platform neutral.
 
-Platform checks consistently rely on `#if canImport(AppKit)` / `#if canImport(UIKit)` with additional `targetEnvironment(macCatalyst)` logic in some areas.
+`PlatformCapabilities.swift` determines the current platform and exposes feature information; the logic correctly checks for Catalyst before falling back to AppKit or UIKit.
 
-## Key Cross‑Platform Implementations
+The sample app adapts to macOS and iOS. For example, `UnifiedContentView` uses conditional compilation to customize layout and navigation behavior on each system.
 
-**Platform Typealiases** – PlatformImports.swift defines unified types for colors, fonts, views, events, etc. All code references these types rather than directly using AppKit/UIKit classes.
-
-**Runtime Detection** – PlatformCapabilities reports the current platform and system version, exposing features such as TextKit2 support or CADisplayLink availability.
-
-**Coordinator** – CrossPlatformCoordinator manages a feature matrix and platform‑specific adjustments like default font size and gutter width.
-
-**Text Input Features** – TextInputFeatures provides separate AppKit and UIKit implementations while sharing a common protocol.
-
-**Version Utilities** – MacOSVersionDetection centralizes macOS feature checks with iOS stubs for the same API surface.
-
-**Sample App Wrappers** – The sample's CodeEditorViewWrapper defines distinct AppKit and UIKit code paths for embedding the editor in SwiftUI.
-
-**Configuration Export/Share** – UnifiedContentView switches between AppKit pasteboard and UIKit share sheets using conditional compilation.
+Configuration export/import has separate implementations for AppKit and UIKit, guarded with `canImport(AppKit) && !targetEnvironment(macCatalyst)` and `canImport(UIKit)` respectively.
 
 ## Observations
 
-### Conditional Compilation Usage
-The codebase relies heavily on `#if canImport(AppKit)` and `#if canImport(UIKit)`. This approach preserves Catalyst compatibility and is generally consistent. However, large files like CodeEditorView.swift and GutterView.swift contain lengthy blocks of platform‑specific code, which can be harder to maintain.
+### 1. Inconsistent platform checks
+Some files still use `#if os(macOS)` or `#if os(iOS)` rather than the recommended `canImport` approach. Examples include the annotation model definitions and numerous sections of `CoordinateSystemHelper.swift`. In the sample app, `UnifiedContentView` also uses `#if os(macOS)` and `#if os(iOS)` in several places.
 
-### Feature Detection
-PlatformCapabilities exposes many runtime checks for features and recommended settings, which is a robust approach. For example, features such as text layout fragment support or CADisplayLink availability are determined at runtime, allowing code to adapt gracefully.
+### 2. Missing Catalyst exclusions
+Several source files import AppKit using `#if canImport(AppKit)` without `!targetEnvironment(macCatalyst)` (e.g., `TextKit2RenderingOptimizer.swift` and `CodeEditorAPI.swift` lines 1‑7). If compiled for Mac Catalyst, these branches would be taken even though Catalyst should rely on UIKit, potentially leading to compilation errors.
 
-### Separate Implementations
-The sample app segregates AppKit and UIKit logic for complex views. AnnotationManager includes platform‑specific annotation popup code and conditionally creates NSView or UIView subclasses for annotation badges.
+### 3. Catalyst detection is handled in many areas but not everywhere
+The platform abstraction guidelines discuss explicit Catalyst branches, yet some view files rely on `os(iOS)` or `os(macOS)` instead. This could produce subtle issues when building Catalyst targets.
 
-### Tests Primarily Target AppKit
-Many test files import AppKit directly. UIKit paths exist but appear less tested. PlatformAbstractionTests exercise both branches through conditional checks, yet additional UIKit‑specific tests might help prevent regressions.
+### 4. Strong cross-platform abstractions
+`PlatformImports.swift`, `TextInputFeatures.swift`, `CrossPlatformCoordinator`, and `PlatformCapabilities` provide good separation of AppKit/UIKit specific logic. Colors and fonts are resolved via aliases, and features such as context menus and keyboard handling are exposed with platform-neutral APIs.
 
-### Documentation
-The repository includes detailed guidance (Documentation/CATALYST_SUPPORT.md) on building for Mac Catalyst and demonstrates usage patterns. The Platform/README.md explains the rationale for using canImport checks and provides examples of recommended patterns.
+### 5. Platform-specific README guidance is thorough
+The documentation details best practices for platform checks and shows sample code. Following it consistently would make the project easier to maintain.
 
 ## Suggestions
 
-### Consider Splitting Platform‑Specific Files
-Files such as CodeEditorView.swift and GutterView.swift contain substantial platform‑specific code. Creating separate CodeEditorView+AppKit.swift and CodeEditorView+UIKit.swift (or similar) would reduce conditional blocks and improve readability. This would align with the platform abstraction guidance mentioned in Review_2.md.
+* **Audit conditional compilation statements.** Replace remaining `#if os(macOS)` and `#if os(iOS)` checks with `canImport(AppKit)`/`canImport(UIKit)` plus explicit `!targetEnvironment(macCatalyst)` where appropriate to ensure Catalyst builds compile the UIKit paths.
 
-### Enhance UIKit Test Coverage
-Add dedicated unit tests for UIKit paths (e.g., iOS annotation popups and context menus). This ensures that iOS behavior remains stable and avoids regressions observed in AppKit‑focused tests.
+* **Review AppKit imports.** Ensure any `#if canImport(AppKit)` region includes `&& !targetEnvironment(macCatalyst)` so Catalyst never uses AppKit‑only types.
 
-### Audit Version Checks
-MacOSVersionDetection relies on compile‑time availability checks for macOS versions. Ensure these checks degrade gracefully on future macOS releases and verify the stubs for iOS remain up to date.
+* **Unify style across plugin and sample.** Update sample code (e.g., `UnifiedContentView`, `CodeEditorSampleApp`) to match the platform detection approach used in the plugin. This consistency helps avoid Catalyst‑specific bugs.
 
-### Consistent Catalyst Handling
-The codebase sometimes uses `canImport(AppKit)` without verifying `!targetEnvironment(macCatalyst)`. Continue using explicit Catalyst checks (as done in PlatformCapabilities.currentPlatform) to avoid misclassifying Catalyst as macOS.
+* **Consider wrappers or extensions for macOS‑only utilities.** Where iOS does not implement a feature (e.g., grammar checking or advanced text replacement), document or stub behavior so the API surface stays consistent.
 
-### Performance Considerations
-PlatformCapabilities.recommendedConfiguration() adjusts settings by platform, but large files may still have performance impacts on iOS. Monitor memory usage and consider further optimizations for low‑resource devices.
-
-### Simplify SwiftUI Wrappers
-Where possible, unify AppKit and UIKit SwiftUI wrappers to minimize duplicate logic. In CodeEditorViewWrapper, both branches share configuration code; extracting common pieces into helper functions could reduce duplication.
-
-## Testing
-
-Codex couldn't run certain commands due to environment limitations. Consider configuring a setup script or internet access in your Codex environment to install dependencies.
+Overall the repository demonstrates a solid cross‑platform architecture, but a small number of files still use older `os(...)` checks or omit Catalyst exclusions. Cleaning up those remaining spots will ensure predictable behavior across macOS, iOS, and Mac Catalyst.

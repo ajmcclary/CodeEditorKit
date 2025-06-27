@@ -1,7 +1,7 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-#if os(macOS) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
 /// SwiftUI wrapper for CodeEditorView on macOS
@@ -167,7 +167,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
     }
 }
 
-#elseif os(iOS) || os(visionOS)
+#elseif canImport(UIKit)
 import UIKit
 
 /// SwiftUI wrapper for CodeEditorView on iOS/iPadOS
@@ -414,7 +414,7 @@ extension CodeEditorSwiftUIView {
     
     /// Configure whether the editor becomes first responder on appear (iOS only)
     public func becomeFirstResponder(_ become: Bool) -> some View {
-        #if os(iOS) || os(visionOS)
+        #if canImport(UIKit)
         self.environment(\.codeEditorBecomeFirstResponder, become)
         #else
         // This is iOS-only functionality
@@ -465,7 +465,7 @@ public struct CodeEditorSwiftUITheme: Sendable, Hashable {
     public static let `default` = Self(name: "default")
     
     public static let dark: Self = {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return Self(
             name: "dark",
             backgroundColor: Color(.controlBackgroundColor),

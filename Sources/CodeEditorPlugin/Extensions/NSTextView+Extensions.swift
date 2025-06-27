@@ -1,28 +1,28 @@
-#if os(macOS) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
 typealias TextView = NSTextView
-#elseif os(iOS) || os(visionOS)
+#elseif canImport(UIKit)
 import UIKit
 
 typealias TextView = UITextView
 #endif
 
-#if os(macOS) || os(iOS) || os(visionOS)
+#if canImport(AppKit) || canImport(UIKit)
 extension TextView {
     /// Returns the visible container rectangle
     var visibleContainerRect: CGRect {
-#if os(macOS) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let origin = textContainerOrigin
         return visibleRect.offsetBy(dx: -origin.x, dy: -origin.y)
-#elseif os(iOS) || os(visionOS)
+#elseif canImport(UIKit)
         return CGRect(origin: contentOffset, size: bounds.size)
 #endif
     }
 
     /// Returns the bounding rectangle for the given text range using layout manager
     public func boundingRect(for range: NSRange) -> CGRect? {
-#if os(macOS) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager,
               let textContainer else {
             return nil
@@ -32,7 +32,7 @@ extension TextView {
         let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
         let origin = textContainerOrigin
         return rect.offsetBy(dx: origin.x, dy: origin.y)
-#elseif os(iOS) || os(visionOS)
+#elseif canImport(UIKit)
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
 #endif
@@ -54,7 +54,7 @@ extension TextView {
             }
 
             // Apply a workaround to force rendering attributes to be applied immediately
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
             let selection = self.selectedRanges
 #else
             let selection = self.selectedRange
@@ -63,7 +63,7 @@ extension TextView {
             textLayoutManager.setRenderingAttributes(attributes, for: textRange)
 
             // Force refresh by temporarily changing selection
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
             self.selectedRanges = [NSValue(range: range)]
             self.selectedRanges = selection
 #else
@@ -74,7 +74,7 @@ extension TextView {
         }
 
         // Fallback to TextKit 1 for macOS
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         layoutManager?.setTemporaryAttributes(attributes, forCharacterRange: range)
 #endif
     }
@@ -102,7 +102,7 @@ extension TextView {
         }
         
         if !layoutAttributes.isEmpty {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textStorage?.addAttributes(layoutAttributes, range: range)
 #else
             textStorage.addAttributes(layoutAttributes, range: range)
@@ -116,7 +116,7 @@ extension TextView {
 extension TextView {
     /// Returns true if TextKit 1 is being used
     var isUsingTextKit1: Bool {
-        #if os(macOS) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         !isUsingTextKit2
         #else
         // Check if TextKit2 is available on iOS
@@ -130,7 +130,7 @@ extension TextView {
 
     /// Returns true if TextKit 2 is supported on the current platform
     var supportsTextKit2: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if #available(macOS 12.0, *) {
             return true
         }
@@ -145,7 +145,7 @@ extension TextView {
     
     /// Returns true if TextKit 2 is currently being used
     var isUsingTextKit2: Bool {
-        #if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if #available(macOS 12.0, *) {
             return textLayoutManager != nil
         }
@@ -170,7 +170,7 @@ extension TextView {
 extension TextView {
     /// Get selected text ranges in a cross-platform way
     var selectedTextRanges: [NSRange] {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return selectedRanges.compactMap { value in
             value.rangeValue
         }
@@ -181,7 +181,7 @@ extension TextView {
 
     /// Set selected text ranges in a cross-platform way
     func setSelectedTextRanges(_ ranges: [NSRange]) {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         selectedRanges = ranges.map { NSValue(range: $0) }
 #else
         if let firstRange = ranges.first {
@@ -192,7 +192,7 @@ extension TextView {
 
     /// Get the primary selected range
     var primarySelectedRange: NSRange {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return selectedRanges.first?.rangeValue ?? NSRange(location: 0, length: 0)
 #else
         return selectedRange
@@ -207,7 +207,7 @@ extension TextView {
     public func insertTextAtSelection(_ text: String) {
         let selectedRange = primarySelectedRange
         
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let textStorage {
             textStorage.replaceCharacters(in: selectedRange, with: text)
             setSelectedTextRanges([NSRange(location: selectedRange.location + text.count, length: 0)])
@@ -225,7 +225,7 @@ extension TextView {
 
     /// Replace text in range with new text
     public func replaceText(in range: NSRange, with newText: String) {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textStorage?.replaceCharacters(in: range, with: newText)
 #else
         textStorage.replaceCharacters(in: range, with: newText)
@@ -234,7 +234,7 @@ extension TextView {
 
     /// Get text content as string
     public var textContent: String {
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return textStorage?.string ?? ""
 #else
         return textStorage.string

@@ -247,7 +247,7 @@ public enum TokenType: String, CaseIterable, Sendable {
 
     /// Cross-platform adaptive color property
     @MainActor public var adaptiveColor: PlatformColor {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         AdaptiveColorSystem.syntaxColor(for: self)
         #else
         defaultColor

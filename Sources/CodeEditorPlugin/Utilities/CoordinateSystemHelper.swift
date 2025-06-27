@@ -16,7 +16,7 @@ public class CoordinateSystemHelper {
     
     /// Current coordinate system type
     public var coordinateSystem: CoordinateSystemType {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return .macOS
         #else
         return .iOS
@@ -197,7 +197,7 @@ public class CoordinateSystemHelper {
     
     /// Calculate visible rect in text coordinates
     public func visibleTextRect(for scrollView: PlatformScrollView) -> UnifiedRect {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let visibleRect = scrollView.visibleRect
         #else
         let visibleRect = CGRect(
@@ -220,7 +220,7 @@ public class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         from view: PlatformView
     ) -> UnifiedPoint? {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let windowPoint = view.convert(point.platformPoint, to: nil)
         return UnifiedPoint(x: windowPoint.x, y: windowPoint.y, in: .macOS)
         #else
@@ -235,7 +235,7 @@ public class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         from window: PlatformWindow
     ) -> UnifiedPoint? {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let screenPoint = window.convertPoint(toScreen: point.platformPoint)
         return UnifiedPoint(x: screenPoint.x, y: screenPoint.y, in: .macOS)
         #else
@@ -257,7 +257,7 @@ public class CoordinateSystemHelper {
         let targetRect = rect.cgRect(in: coordinateSystem, containerHeight: containerHeight)
         let currentVisible = visibleRect.cgRect(in: coordinateSystem, containerHeight: containerHeight)
         
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         var newOffset = scrollView.contentView.bounds.origin
         #else
         var newOffset = scrollView.contentOffset
@@ -278,7 +278,7 @@ public class CoordinateSystemHelper {
         }
         
         // Clamp to valid range
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let contentSize = scrollView.documentView?.bounds.size ?? CGSize.zero
         #else
         let contentSize = scrollView.contentSize
@@ -294,7 +294,7 @@ public class CoordinateSystemHelper {
         _ event: PlatformEvent,
         view: PlatformView
     ) -> UnifiedPoint {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let locationInWindow = event.locationInWindow
         let locationInView = view.convert(locationInWindow, from: nil)
         return UnifiedPoint(x: locationInView.x, y: locationInView.y, in: .macOS)
@@ -363,7 +363,7 @@ public class CoordinateSystemHelper {
         for view: PlatformView,
         in context: CGContext
     ) -> DrawingContext {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS contexts may need flipping
         if view.isFlipped {
             context.scaleBy(x: 1, y: -1)
@@ -450,7 +450,7 @@ public struct DrawingContext {
     ) {
         let drawPoint = point.cgPoint(in: coordinateSystem, containerHeight: bounds.height)
         
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // swiftlint:disable:next legacy_objc_type
         let nsText = NSString(string: text)
         nsText.draw(at: drawPoint, withAttributes: attributes)
@@ -465,7 +465,7 @@ public struct DrawingContext {
 // MARK: - Platform Type Aliases
 
 // Note: Platform type aliases are defined in PlatformImports.swift
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 public typealias PlatformWindow = NSWindow
 #else
 public typealias PlatformWindow = UIWindow
@@ -483,7 +483,7 @@ extension CGRect {
 extension CodeEditorView {
     /// Get text container inset in a cross-platform way
     var crossPlatformTextContainerInset: CGSize {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return textContainer?.lineFragmentPadding ?? 0 > 0 ? 
             CGSize(width: textContainer?.lineFragmentPadding ?? 0, height: 0) : 
             CGSize.zero
@@ -494,7 +494,7 @@ extension CodeEditorView {
     
     /// Get enclosing scroll view
     var crossPlatformEnclosingScrollView: PlatformScrollView? {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return super.enclosingScrollView
         #else
         // On iOS, UITextView is itself a UIScrollView
@@ -504,7 +504,7 @@ extension CodeEditorView {
     
     /// Platform-specific content offset
     var crossPlatformContentOffset: CGPoint {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return crossPlatformEnclosingScrollView?.contentView.bounds.origin ?? .zero
         #else
         return super.contentOffset

@@ -28,7 +28,7 @@ struct SwiftUIDemoView: View {
             }
         }
         .navigationTitle("SwiftUI Demo")
-        #if os(iOS)
+        #if canImport(UIKit)
         .navigationBarTitleDisplayMode(.inline)
         #endif
     }

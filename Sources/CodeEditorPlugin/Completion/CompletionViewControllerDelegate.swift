@@ -1,4 +1,4 @@
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 @preconcurrency import AppKit
 public typealias PlatformTextMovement = NSTextMovement
 #endif

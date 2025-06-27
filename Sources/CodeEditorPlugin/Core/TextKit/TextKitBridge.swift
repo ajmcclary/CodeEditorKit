@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -74,7 +74,7 @@ public final class TextKitBridge {
     }
     
     private func ensureLayoutTextKit1(for range: NSRange) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView?.layoutManager,
               let textContainer = textView?.textContainer else { return }
         
@@ -169,7 +169,7 @@ public final class TextKitBridge {
     }
     
     private func enumerateLineFragmentsTextKit1(in range: NSRange, using block: @escaping (CGRect, NSRange) -> Void) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView?.layoutManager else { return }
         
         layoutManager.enumerateLineFragments(forGlyphRange: range) { rect, _, _, glyphRange, _ in
@@ -218,7 +218,7 @@ public final class TextKitBridge {
     }
     
     private func visibleRangeTextKit1() -> NSRange? {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView?.layoutManager,
               let textContainer = textView?.textContainer,
               let scrollView = textView?.enclosingScrollView else { return nil }
@@ -239,7 +239,7 @@ public final class TextKitBridge {
     private func visibleRangeTextKit2() -> NSRange? {
         guard let textLayoutManager = textView?.textLayoutManager else { return nil }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let visibleRect = textView?.visibleRect ?? .zero
         #elseif canImport(UIKit)
         let visibleRect = textView?.bounds ?? .zero
@@ -304,7 +304,7 @@ public final class TextKitBridge {
             }
         } else {
             // TextKit1 fallback optimizations
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let layoutManager = textView.layoutManager {
                 layoutManager.allowsNonContiguousLayout = true
             }
@@ -316,7 +316,7 @@ public final class TextKitBridge {
         // Standard optimizations for normal-sized files
         guard let textView else { return }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let layoutManager = textView.layoutManager {
             layoutManager.allowsNonContiguousLayout = true
         }
@@ -338,7 +338,7 @@ public final class TextKitBridge {
         } else {
             info += "  TextKit1 Features:\n"
             info += "    - LayoutManager: \(textView?.layoutManager != nil)\n"
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             info += "    - Non-contiguous Layout: \(textView?.layoutManager?.allowsNonContiguousLayout ?? false)\n"
             #endif
         }

@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -84,7 +84,7 @@ public class CodeFoldingEngine: ObservableObject {
         }
         
         // Update gutter
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.setNeedsDisplay(textView.bounds)
         #else
         textView.setNeedsDisplay()
@@ -109,7 +109,7 @@ public class CodeFoldingEngine: ObservableObject {
         }
         
         // Update gutter
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.setNeedsDisplay(textView.bounds)
         #else
         textView.setNeedsDisplay()
@@ -359,11 +359,7 @@ public struct CodeFoldingConfiguration {
     public var minimumLineCount = 3
     public var foldedIndicator = " ⋯ "
 
-    #if canImport(AppKit)
-    public var indicatorColor = NSColor.secondaryLabelColor
-    #else
-    public var indicatorColor = UIColor.secondaryLabel
-    #endif
+    public var indicatorColor = PlatformColors.secondaryLabel
 
     public var animatesFolding = true
     public var saveFoldState = true

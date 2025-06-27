@@ -6,7 +6,7 @@ import SwiftUI
 struct ContentView: View {
     
     var body: some View {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if #available(macOS 13.0, *) {
             UnifiedContentView()
         } else {

@@ -152,7 +152,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     private var completionViewController: (any CompletionViewControllerProtocol)?
     
     /// Completion popup window/container
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private var completionWindow: NSWindow?
     #else
     private var completionPopover: UIViewController?
@@ -176,7 +176,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - Coordinate System
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// NSTextView requires flipped coordinates for proper text rendering
     override public var isFlipped: Bool {
         true
@@ -185,7 +185,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - Initialization
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
@@ -222,18 +222,18 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     private func setupTextView() {
         kLogger.debug("CodeEditorView setupTextView: Starting setup")
         kLogger.debug("CodeEditorView setupTextView: textStorage = exists")
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         kLogger.debug("CodeEditorView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
         #else
         kLogger.debug("CodeEditorView setupTextView: layoutManager = exists")
         #endif
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         kLogger.debug("CodeEditorView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
         #else
         kLogger.debug("CodeEditorView setupTextView: textContainer = exists")
         #endif
         kLogger.debug("CodeEditorView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         kLogger.debug("CodeEditorView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
         #endif
         
@@ -241,7 +241,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         if textLayoutManager != nil {
             kLogger.debug("CodeEditorView setupTextView: Using TextKit2")
         } else {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if layoutManager != nil {
                 kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (fallback)")
             } else {
@@ -260,7 +260,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         // Set up the text view
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isAutomaticQuoteSubstitutionEnabled = false
         isAutomaticDashSubstitutionEnabled = false
         isAutomaticTextReplacementEnabled = false
@@ -283,7 +283,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
 
         // Set up text storage observation for syntax highlighting
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let textStorage {
             NotificationCenter.default.addObserver(
                 self,
@@ -302,7 +302,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
 
         // Set up selection change observation
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleTextViewDidChangeSelection(_:)),
@@ -326,7 +326,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         kLogger.debug("CodeEditorView setupTextView: Using TextKit2: \(usingTextKit2)")
 
         // Ensure proper sizing and layout
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isVerticallyResizable = true
         isHorizontallyResizable = false
         textContainer?.widthTracksTextView = true
@@ -336,13 +336,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
 
         // Make sure we have reasonable size constraints
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         minSize = NSSize(width: 0, height: 0)
         maxSize = NSSize(width: 10_000, height: 10_000)
         #endif
 
         kLogger.debug("CodeEditorView setupTextView: Final frame = \(String(describing: self.frame))")
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? .zero))")
         #else
         kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer.size))")
@@ -371,7 +371,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     // MARK: - Theme Setup
 
     private func setupDefaultTheme() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         backgroundColor = PlatformColors.textBackgroundColor
         textColor = PlatformColors.label
         font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
@@ -389,7 +389,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         // Update gutter when text changes
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         _gutterView?.needsDisplay = true
         #else
         _gutterView?.setNeedsDisplay()
@@ -406,7 +406,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // Publish text changed event
         let editedRange = textStorage.editedRange
         if editedRange.location != NSNotFound {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             eventPublisher.publish(.textDidChange(string))
             #else
             eventPublisher.publish(.textDidChange(text ?? ""))
@@ -457,7 +457,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     private func removeSyntaxHighlighting() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage else {
             return
         }
@@ -469,7 +469,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         textStorage.removeAttribute(.foregroundColor, range: fullRange)
 
         // Restore default text color
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColor.labelColor, range: fullRange)
         #else
         textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColor.label, range: fullRange)
@@ -487,7 +487,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
         
         // Get current cursor position
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let cursorPosition = selectedRange().location
         let text = string
         #else
@@ -511,7 +511,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public func requestCompletion(triggerKind: CompletionTriggerKind = .manual, triggerCharacter: String? = nil) {
         guard isCompletionEnabled else { return }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let cursorPosition = selectedRange().location
         let text = string
         #else
@@ -574,7 +574,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer,
               let layoutManager else {
             return CGRect(x: 0, y: 0, width: 1, height: 16)
@@ -593,7 +593,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Show completion window/popover at the specified rectangle
     private func showCompletionWindow(with viewController: any CompletionViewControllerProtocol, at rect: CGRect) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Create completion window
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
@@ -647,7 +647,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public func hideCompletionPopup() {
         guard isCompletionActive else { return }
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         completionWindow?.close()
         completionWindow = nil
         #else
@@ -661,7 +661,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Handle keyboard input for completion navigation
     override public func keyDown(with event: NSEvent) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Handle completion navigation
         if isCompletionActive, let completionVC = completionViewController {
             switch event.keyCode {
@@ -695,7 +695,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Get current line range at position
     private func currentLineRange(at position: Int) -> Range<String.Index> {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = string
         #else
         let text = self.text ?? ""
@@ -707,7 +707,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Get current word range at position
     private func currentWordRange(at position: Int) -> NSRange? {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = string
         #else
         let text = self.text ?? ""
@@ -744,7 +744,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     // MARK: - Line Numbers and Gutter
 
     private func updateGutterVisibility() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if showsLineNumbers {
             createGutterIfNeeded()
         } else {
@@ -762,7 +762,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         let gutter = GutterView()
         gutter.textView = self
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         gutter.autoresizingMask = NSView.AutoresizingMask.height // Only resize height, not width
         #else
         gutter.autoresizingMask = [.flexibleHeight] // Only resize height, not width
@@ -770,7 +770,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         // Add gutter directly to the text view since we might not be in a scroll view
         // Position it at the front so it doesn't get covered
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         addSubview(gutter, positioned: .above, relativeTo: nil)
         #else
         addSubview(gutter)
@@ -796,7 +796,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             let gutterWidth = self.configuration.layout.gutterWidth
             let padding = self.configuration.layout.lineNumberPadding
             
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             gutter.frame = NSRect(
                 x: 0,
                 y: 0,
@@ -815,7 +815,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             #endif
 
             // Update text container inset to make room for gutter
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             self.textContainerInset = NSSize(width: gutterWidth + padding, height: self.textContainerInset.height)
             #else
             self.textContainerInset = UIEdgeInsets(top: self.textContainerInset.top, left: gutterWidth + padding, bottom: self.textContainerInset.bottom, right: self.textContainerInset.right)
@@ -823,7 +823,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
             // Don't update text container size here - let NSTextView handle it
 
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             gutter.needsDisplay = true
             #else
             gutter.setNeedsDisplay()
@@ -836,7 +836,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     private func applyConfiguration() {
         // Apply display settings
         if configuration.display.showLineNumbers {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             updateGutterVisibility()
             #endif
         } else {
@@ -858,7 +858,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         updateLayoutManagerSettings()
         
         // Apply behavior settings
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
         #else
@@ -884,7 +884,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         NotificationCenter.default.post(stNotification)
         
         // Publish selection changed event
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let selection = selectedRange()
         #else
         let selection = selectedRange
@@ -908,7 +908,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         let highlight = PlatformView()
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         highlight.wantsLayer = true
         highlight.layer?.backgroundColor = selectedLineHighlightColor.cgColor
         #else
@@ -916,7 +916,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
 
         // Add as background overlay
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         addSubview(highlight, positioned: .below, relativeTo: nil)
         #else
         addSubview(highlight)
@@ -935,7 +935,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             return
         }
 
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let selectedRange = selectedRange()
         #else
         let selectedRange = self.selectedRange
@@ -945,7 +945,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         // Get the line range for the selection
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let range = Range(selectedRange, in: string) else { return }
         let stringLineRange = string.lineRange(for: range)
         let lineRange = NSRange(stringLineRange, in: string)
@@ -965,14 +965,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         var frame = lineRect
         frame.origin.x = 0
         frame.size.width = bounds.width
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         frame.origin.y += textContainerInset.height
         #else
         frame.origin.y += textContainerInset.top
         #endif
 
         highlightView.frame = frame
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         highlightView.layer?.backgroundColor = selectedLineHighlightColor.cgColor
         #else
         highlightView.layer.backgroundColor = selectedLineHighlightColor.cgColor
@@ -982,7 +982,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     // MARK: - Layout Manager Settings
 
     private func updateLayoutManagerSettings() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let layoutManager {
             layoutManager.showsInvisibleCharacters = showsInvisibleCharacters
         }
@@ -1082,7 +1082,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // Calculate inline annotation position using configuration values
         let badgeSize = configuration.layout.annotationBadgeSize
         let badgePadding = configuration.layout.annotationBadgePadding
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let inlineX = crossPlatformTextContainerInset.width + segmentFrame.maxX + badgePadding
         let inlineY = crossPlatformTextContainerInset.height + segmentFrame.midY - (badgeSize / 2)
         #else
@@ -1118,7 +1118,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             kLogger.debug("Added annotation view, new subviews count: \(self.subviews.count)")
             
             // Force view update
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             annotationView.needsDisplay = true
             needsDisplay = true
             #else
@@ -1141,7 +1141,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - Text Changes
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func insertText(_ string: Any, replacementRange: NSRange) {
         super.insertText(string, replacementRange: replacementRange)
 
@@ -1157,7 +1157,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - Layout
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func layout() {
         super.layout()
         updateGutterFrame()
@@ -1173,14 +1173,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     #endif
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func viewDidEndLiveResize() {
         super.viewDidEndLiveResize()
         updateGutterFrame()
     }
     #endif
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         updateGutterFrame()
@@ -1201,7 +1201,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     
     /// Get the text content storage for TextKit2 operations
     override public var textContentStorage: NSTextContentStorage? {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return textLayoutManager?.textContentManager as? NSTextContentStorage
         #else
         return textLayoutManager?.textContentManager as? NSTextContentStorage
@@ -1210,7 +1210,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     /// Get the visible range of text in the text view
     public func visibleRange() -> NSRange {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let scrollView = enclosingScrollView {
             let visibleRect = scrollView.contentView.visibleRect
             return textRangeForVisibleRect(visibleRect)
@@ -1256,7 +1256,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         } else {
             // Fallback to TextKit1 approach only if TextKit2 is not available
             // Note: This access to layoutManager should only happen as a last resort
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let layoutManager = self.layoutManager,
                let textContainer = self.textContainer {
                 let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
@@ -1271,7 +1271,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
         
         // Final fallback
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSRange(location: 0, length: string.count)
         #else
         return NSRange(location: 0, length: text?.count ?? 0)
@@ -1284,14 +1284,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     public var widthTracksTextView: Bool {
         get {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             super.textContainer?.widthTracksTextView ?? false
             #else
             false // UITextView doesn't have this property
             #endif
         }
         set {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             super.textContainer?.widthTracksTextView = newValue
             #else
             // UITextView doesn't have this property
@@ -1299,7 +1299,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
     }
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public var isHorizontallyResizable: Bool {
         get {
             super.isHorizontallyResizable
@@ -1312,14 +1312,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     public var heightTracksTextView: Bool {
         get {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             super.textContainer?.heightTracksTextView ?? true
             #else
             true // UITextView doesn't have this property
             #endif
         }
         set {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             super.textContainer?.heightTracksTextView = newValue
             #else
             // UITextView doesn't have this property
@@ -1327,7 +1327,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
     }
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public var isVerticallyResizable: Bool {
         get {
             super.isVerticallyResizable
@@ -1338,7 +1338,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     #endif
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public var text: String? {
         get {
             string
@@ -1353,7 +1353,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     #endif
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public var attributedText: NSAttributedString? {
         get {
             textStorage
@@ -1370,14 +1370,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     public var textSelection: NSRange {
         get {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             selectedRange()
             #else
             selectedRange
             #endif
         }
         set {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             setSelectedRange(newValue)
             #else
             selectedRange = newValue
@@ -1389,7 +1389,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         _gutterView
     }
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func toggleRuler(_: Any?) {
         showsLineNumbers.toggle()
     }
@@ -1404,7 +1404,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public func replaceCharacters(in _: NSTextRange, with string: String) {
         // Convert NSTextRange to NSRange for NSTextView compatibility
         // This is a simplified implementation
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let textStorage {
             // For now, replace at current selection
             let selectedRange = selectedRange()
@@ -1441,7 +1441,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         } else {
             // Fallback to TextKit1 approach only if TextKit2 is not available
             // Note: This access to layoutManager should only happen as a last resort
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             guard let layoutManager = self.layoutManager,
                   let textContainer = self.textContainer else {
                 return nil
@@ -1496,7 +1496,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - NSTextLayoutOrientationProvider
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public nonisolated var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
         // For NSTextView, we'll default to horizontal layout
         .horizontal
@@ -1505,7 +1505,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - NSTextLayoutManagerDelegate
 
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public nonisolated func textLayoutManager(
         _: NSTextLayoutManager,
         textLayoutFragmentFor _: NSTextLocation,
@@ -1546,7 +1546,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Insert a completion item into the text
     private func insertCompletionItem(_ item: CompletionItemModel) {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let currentPosition = selectedRange().location
         let text = string
         #else
@@ -1562,7 +1562,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         let replaceRange = item.textEdit?.range ?? wordRange
         
         // Perform the text replacement
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if shouldChangeText(in: convertNSRangeToTextRange(replaceRange), replacementString: insertText) {
             textStorage?.replaceCharacters(in: replaceRange, with: insertText)
             
@@ -1581,7 +1581,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         #endif
     }
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Convert NSRange to NSTextRange for modern TextKit compatibility
     private func convertNSRangeToTextRange(_ range: NSRange) -> NSTextRange {
         // This is a simplified implementation - for proper TextKit2 conversion
@@ -1843,7 +1843,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Set up scroll view observation for viewport-based optimization
     private func setupScrollViewObservation() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Observe scroll view changes on macOS
         if let scrollView = enclosingScrollView {
             NotificationCenter.default.addObserver(
@@ -1859,7 +1859,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         #endif
     }
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Handle scroll view scrolling for viewport optimization
     @objc private func handleScrollViewDidScroll(_: Notification) {
         guard let scrollView = enclosingScrollView else { return }
@@ -1881,7 +1881,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Calculate visible text range for a given visible rectangle
     private func calculateVisibleTextRange(for visibleRect: CGRect) -> NSRange {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer,
               let layoutManager else {
             return NSRange(location: 0, length: 0)

@@ -6,7 +6,6 @@ import UIKit
 // MARK: - GutterView UIKit Implementation Details
 
 extension GutterView {
-    
     func setupDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(displayLinkFired))
         displayLink?.add(to: .main, forMode: .common)
@@ -120,13 +119,12 @@ extension GutterView {
         
         return lineRanges
     }
-    
 }
 
 // MARK: - UIScrollViewDelegate
 
 extension GutterView: UIScrollViewDelegate {
-    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    public func scrollViewDidScroll(_: UIScrollView) {
         displayLink?.isPaused = false
     }
 }

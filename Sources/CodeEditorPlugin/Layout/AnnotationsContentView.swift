@@ -8,7 +8,7 @@ import AppKit
 // MARK: - AnnotationsContentView
 
 /// View for displaying annotation content
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 public class AnnotationsContentView: NSView {
     public var annotations: [Annotation] = [] {
         didSet {

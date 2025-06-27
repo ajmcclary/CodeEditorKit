@@ -16,7 +16,7 @@ struct SampleCodeEditorView: View {
 
     var body: some View {
         ZStack {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if #available(macOS 13.0, *) {
                 CodeEditor(text: $text)
                     .codeLanguage(detectLanguage(from: language))

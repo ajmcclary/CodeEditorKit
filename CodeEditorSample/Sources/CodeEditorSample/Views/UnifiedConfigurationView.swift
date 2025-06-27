@@ -145,7 +145,7 @@ struct UnifiedConfigurationView: View {
             }
             .padding()
         }
-        #if os(iOS)
+        #if canImport(UIKit)
         .navigationTitle("Configuration")
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -159,7 +159,7 @@ struct UnifiedConfigurationView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
             TextField("Search configuration options...", text: $searchText)
-                #if os(macOS)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .textFieldStyle(.squareBorder)
                 #else
                 .textFieldStyle(.roundedBorder)
@@ -350,7 +350,7 @@ struct UnifiedConfigurationView: View {
             Toggle("Automatic Text Completion", 
                    isOn: $appState.currentConfiguration.behavior.isAutomaticTextCompletionEnabled)
             
-            #if os(iOS)
+            #if canImport(UIKit)
             Text("Note: Some text input features may have limited support on iOS")
                 .font(.caption)
                 .foregroundColor(.secondary)

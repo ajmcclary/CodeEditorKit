@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -262,7 +262,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         applyTextInputFeatures(to: view)
         
         // Also apply additional settings that aren't handled by the internal applyConfiguration
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
         
         if layout.wrapLines {

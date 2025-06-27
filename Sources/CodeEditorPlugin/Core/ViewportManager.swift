@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -58,7 +58,7 @@ public final class ViewportManager: ObservableObject {
     
     private func setupObservers() {
         // Observe scroll changes
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.publisher(for: NSView.boundsDidChangeNotification)
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
@@ -102,7 +102,7 @@ public final class ViewportManager: ObservableObject {
         let startTime = CFAbsoluteTimeGetCurrent()
         
         // Get visible bounds
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let visibleBounds = textView.visibleRect
         #elseif canImport(UIKit)
         let visibleBounds = textView.bounds
