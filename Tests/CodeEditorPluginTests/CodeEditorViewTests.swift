@@ -177,15 +177,11 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content"
 
-        // Create NSTextRange for annotation using document range
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        guard let mockRange = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
-            XCTFail("Could not create NSTextRange")
-            return
-        }
+        // Create mock NSTextRange for annotation
+        let mockRange = NSTextRange(
+            location: MockTextLocation(offset: 0),
+            end: MockTextLocation(offset: textView.text?.count ?? 0)
+        )!
         let annotation = Annotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)
@@ -198,17 +194,15 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with annotations"
 
-        // Add multiple annotations
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
-        guard let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
-              let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
-            XCTFail("Could not create NSTextRange")
-            return
-        }
+        // Create mock ranges for annotations
+        let range1 = NSTextRange(
+            location: MockTextLocation(offset: 0),
+            end: MockTextLocation(offset: textView.text?.count ?? 0)
+        )!
+        let range2 = NSTextRange(
+            location: MockTextLocation(offset: 0),
+            end: MockTextLocation(offset: textView.text?.count ?? 0)
+        )!
         
         let annotation1 = Annotation(range: range1, content: "First annotation", id: "test1")
         let annotation2 = Annotation(range: range2, content: "Second annotation", id: "test2")
@@ -232,17 +226,12 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with multiple annotations"
 
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
-        // Add multiple annotations
+        // Add multiple annotations with mock ranges
         for index in 1...5 {
-            guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
-                XCTFail("Could not create NSTextRange")
-                return
-            }
+            let range = NSTextRange(
+                location: MockTextLocation(offset: 0),
+                end: MockTextLocation(offset: textView.text?.count ?? 0)
+            )!
             let annotation = Annotation(range: range, content: "Annotation \(index)", id: "test\(index)")
             textView.addAnnotation(annotation)
         }

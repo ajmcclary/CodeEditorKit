@@ -35,7 +35,7 @@ public final class PlatformCapabilities {
     public var currentPlatform: Platform {
         #if targetEnvironment(macCatalyst)
         return .catalyst
-        #elseif os(macOS)
+        #elseif canImport(AppKit)
         return .macOS
         #else
         return .iOS
@@ -43,10 +43,12 @@ public final class PlatformCapabilities {
     }
     
     public var systemVersion: String {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return ProcessInfo.processInfo.operatingSystemVersionString
-        #else
+        #elseif canImport(UIKit)
         return UIDevice.current.systemVersion
+        #else
+        return "Unknown"
         #endif
     }
     
@@ -58,22 +60,26 @@ public final class PlatformCapabilities {
     // MARK: - TextKit Capabilities
     
     public var supportsTextKit2: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // TextKit2 is stable on macOS 13.0+
         return systemVersionComponents.major >= 13
-        #else
+        #elseif canImport(UIKit)
         // TextKit2 is available on iOS 16.0+
         return systemVersionComponents.major >= 16
+        #else
+        return false
         #endif
     }
     
     public var preferTextKit2: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Prefer TextKit2 on macOS 14.0+ for better stability
         return systemVersionComponents.major >= 14
-        #else
+        #elseif canImport(UIKit)
         // Always prefer TextKit2 on iOS when available
         return supportsTextKit2
+        #else
+        return false
         #endif
     }
     
@@ -97,7 +103,7 @@ public final class PlatformCapabilities {
     }
     
     public var supportsTouchBar: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return true
         #else
         return false
@@ -105,7 +111,7 @@ public final class PlatformCapabilities {
     }
     
     public var supportsHapticFeedback: Bool {
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return UIDevice.current.userInterfaceIdiom == .phone
         #else
         return false
@@ -117,23 +123,27 @@ public final class PlatformCapabilities {
     }
     
     public var supportsContextMenus: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return true
-        #else
+        #elseif canImport(UIKit)
         // iOS 13.0+ supports context menus
         return systemVersionComponents.major >= 13
+        #else
+        return false
         #endif
     }
     
     // MARK: - Performance Capabilities
     
     public var supportsHardwareAcceleration: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Metal is available on all supported macOS versions
         return true
-        #else
+        #elseif canImport(UIKit)
         // Check for Metal support on iOS
         return UIDevice.current.userInterfaceIdiom != .tv
+        #else
+        return false
         #endif
     }
     
@@ -171,9 +181,9 @@ public final class PlatformCapabilities {
     
     public var supportsCADisplayLink: Bool {
         // Available on all iOS versions, macOS 14.0+
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return true
-        #elseif os(macOS)
+        #elseif canImport(AppKit)
         return systemVersionComponents.major >= 14
         #else
         return false
@@ -181,21 +191,25 @@ public final class PlatformCapabilities {
     }
     
     public var supportsVibrantMaterials: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return true
-        #else
+        #elseif canImport(UIKit)
         // iOS 13.0+ supports materials
         return systemVersionComponents.major >= 13
+        #else
+        return false
         #endif
     }
     
     public var supportsSmoothScrolling: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // ProMotion displays and smooth scrolling
         return true
-        #else
+        #elseif canImport(UIKit)
         // iOS devices with ProMotion
         return UIScreen.main.maximumFramesPerSecond > 60
+        #else
+        return false
         #endif
     }
     
@@ -206,7 +220,7 @@ public final class PlatformCapabilities {
     }
     
     public var supportsPencilInput: Bool {
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return UIDevice.current.userInterfaceIdiom == .pad
         #else
         return false
@@ -214,9 +228,9 @@ public final class PlatformCapabilities {
     }
     
     public var supportsTrackpad: Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return true
-        #elseif os(iOS)
+        #elseif canImport(UIKit)
         // iPadOS 13.4+ supports trackpad
         return UIDevice.current.userInterfaceIdiom == .pad && 
                systemVersionComponents.major >= 13 && 
@@ -229,7 +243,7 @@ public final class PlatformCapabilities {
     // MARK: - Device Capabilities
     
     public var isAppleSilicon: Bool {
-        #if os(macOS) && arch(arm64)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst) && arch(arm64)
         return true
         #else
         return false
@@ -237,9 +251,9 @@ public final class PlatformCapabilities {
     }
     
     public var deviceType: String {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return "Mac"
-        #else
+        #elseif canImport(UIKit)
         switch UIDevice.current.userInterfaceIdiom {
         case .phone: return "iPhone"
         case .pad: return "iPad"
@@ -247,11 +261,13 @@ public final class PlatformCapabilities {
         case .mac: return "Mac"
         default: return "Unknown"
         }
+        #else
+        return "Unknown"
         #endif
     }
     
     public var hasNotch: Bool {
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if #available(iOS 13.0, *) {
             guard let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
@@ -272,9 +288,21 @@ public final class PlatformCapabilities {
         var config = EditorConfiguration.default
         
         // Adjust based on platform
-        if currentPlatform == .iOS {
+        switch currentPlatform {
+        case .iOS:
             config.display.fontSize = 16.0 // Larger for touch
-            config.layout.gutterWidth = 40.0 // Wider for touch targets
+            config.layout.gutterWidth = 50.0 // Wider for touch targets
+            // Touch-specific behaviors would be configured here
+            
+        case .catalyst:
+            // Catalyst apps run on Mac but may support touch
+            config.display.fontSize = 14.0 // Between macOS and iOS
+            config.layout.gutterWidth = 45.0 // Slightly wider for potential touch
+            config.performance.useHardwareAcceleration = true
+            
+        case .macOS:
+            // Default configuration is already optimized for macOS
+            break
         }
         
         // Adjust based on performance

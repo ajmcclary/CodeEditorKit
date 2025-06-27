@@ -7,7 +7,9 @@ import UIKit
 
 // https://github.com/thii/SwiftHEXColors
 
-extension NSColor {
+// MARK: - Platform Color Extension for Hex Support
+
+extension PlatformColor {
     private convenience init?(hex3: Int64, alpha: Float) {
         self.init(
             red: CGFloat(((hex3 & 0xF00) >> 8).duplicate4bits()) / 255.0,
@@ -44,6 +46,10 @@ extension NSColor {
         )
     }
 
+    /// Create a color from a hex string
+    /// - Parameters:
+    ///   - hexString: The hex string (with or without #)
+    ///   - alpha: Optional alpha value (0.0-1.0)
     convenience init?(hexString: String, alpha: Float? = nil) {
         var hex = hexString
 
@@ -80,6 +86,8 @@ extension NSColor {
         }
     }
 }
+
+// MARK: - Helper Extension
 
 extension Int64 {
     func duplicate4bits() -> Int64 {

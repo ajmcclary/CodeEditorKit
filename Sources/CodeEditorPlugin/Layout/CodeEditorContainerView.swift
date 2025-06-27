@@ -8,6 +8,7 @@ public class CodeEditorContainerView: UIView {
     public let textView: CodeEditorView
     public let gutterView: GutterView
     public let minimapView: MinimapView
+    public let contentView: ContentView
     private var minimapDataProvider: MinimapDataProvider?
     
     private var keyboardObservers: [NSObjectProtocol] = []
@@ -30,6 +31,9 @@ public class CodeEditorContainerView: UIView {
         // Create the minimap view
         minimapView = MinimapView(frame: .zero)
         
+        // Create the content view
+        contentView = ContentView(frame: .zero)
+        
         super.init(frame: frame)
         
         setupViews()
@@ -46,6 +50,9 @@ public class CodeEditorContainerView: UIView {
         // Create the minimap view
         minimapView = MinimapView(frame: .zero)
         
+        // Create the content view
+        contentView = ContentView(frame: .zero)
+        
         super.init(coder: coder)
         
         setupViews()
@@ -54,12 +61,19 @@ public class CodeEditorContainerView: UIView {
     
     private func setupViews() {
         // Add all views
-        addSubview(textView)
+        addSubview(contentView)
+        contentView.addSubview(textView)
         addSubview(gutterView)
         addSubview(minimapView)
         
-        // Connect gutter to text view
+        // Connect components
+        contentView.setTextView(textView)
         gutterView.textView = textView
+        
+        // Set up input accessory
+        if configuration.behavior.isEditable {
+            textView.inputAccessoryView = contentView.createInputAccessory()
+        }
         
         // Set up minimap
         setupMinimap()
@@ -67,12 +81,14 @@ public class CodeEditorContainerView: UIView {
         // Set up the text view to account for the gutter
         let gutterWidth = configuration.layout.gutterWidth
         let padding = configuration.layout.lineNumberPadding
-        textView.textContainerInset = UIEdgeInsets(
-            top: textView.textContainerInset.top,
+        let currentInsets = textView.textContainerEdgeInsets
+        let newInsets = EdgeInsets(
+            top: currentInsets.top,
             left: gutterWidth + padding,
-            bottom: textView.textContainerInset.bottom,
-            right: textView.textContainerInset.right
+            bottom: currentInsets.bottom,
+            right: currentInsets.right
         )
+        textView.setTextContainerEdgeInsets(newInsets)
         
         // Ensure text view scrolls and doesn't resize with keyboard
         textView.alwaysBounceVertical = true
@@ -226,12 +242,13 @@ public class CodeEditorContainerView: UIView {
         // This keeps the content scrollable without compressing the view
         let bottomInset = keyboardHeight > 0 ? keyboardHeight : 0
         
-        textView.contentInset = UIEdgeInsets(
+        let contentInsets = EdgeInsets(
             top: 0,
             left: 0,
             bottom: bottomInset,
             right: 0
         )
+        textView.contentInset = contentInsets.uiEdgeInsets
         
         // Also adjust the scroll indicator insets
         textView.scrollIndicatorInsets = textView.contentInset
@@ -262,6 +279,9 @@ public class CodeEditorContainerView: UIView {
         let gutterWidth = configuration.layout.gutterWidth
         let minimapWidth = configuration.display.showMinimap ? 120 : 0
         
+        // Position content view to fill the container
+        contentView.frame = bounds
+        
         // Position gutter on the left - it should match content height, not bounds
         gutterView.frame = CGRect(
             x: 0,
@@ -283,7 +303,7 @@ public class CodeEditorContainerView: UIView {
             minimapView.isHidden = true
         }
         
-        // Position text view to take remaining space between gutter and minimap
+        // Position text view within content view to take remaining space between gutter and minimap
         let textViewWidth = bounds.width - minimapWidth
         textView.frame = CGRect(
             x: 0,  // Text view starts at 0, but has inset for gutter
@@ -312,20 +332,24 @@ public class CodeEditorContainerView: UIView {
             // Update text container inset
             let gutterWidth = configuration.layout.gutterWidth
             let padding = configuration.layout.lineNumberPadding
+            let currentInsets = textView.textContainerEdgeInsets
+            
             if showsLineNumbers {
-                textView.textContainerInset = UIEdgeInsets(
-                    top: textView.textContainerInset.top,
+                let newInsets = EdgeInsets(
+                    top: currentInsets.top,
                     left: gutterWidth + padding,
-                    bottom: textView.textContainerInset.bottom,
-                    right: textView.textContainerInset.right
+                    bottom: currentInsets.bottom,
+                    right: currentInsets.right
                 )
+                textView.setTextContainerEdgeInsets(newInsets)
             } else {
-                textView.textContainerInset = UIEdgeInsets(
-                    top: textView.textContainerInset.top,
+                let newInsets = EdgeInsets(
+                    top: currentInsets.top,
                     left: padding,
-                    bottom: textView.textContainerInset.bottom,
-                    right: textView.textContainerInset.right
+                    bottom: currentInsets.bottom,
+                    right: currentInsets.right
                 )
+                textView.setTextContainerEdgeInsets(newInsets)
             }
         }
     }

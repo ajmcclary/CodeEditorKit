@@ -319,7 +319,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         
         // Apply modern TextKit configuration
         ModernTextKitHelper.configureTextView(self)
-        ModernTextKitHelper.optimizeTextViewPerformance(self)
+        ModernTextKitHelper.applyPerformanceOptimizations(to: self)
         
         // Ensure TextKit2 is used if available and beneficial
         let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)

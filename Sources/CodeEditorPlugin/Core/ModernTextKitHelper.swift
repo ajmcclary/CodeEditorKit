@@ -1,47 +1,29 @@
 #if canImport(AppKit)
 import AppKit
 import Foundation
-import os.log
+import os
 
 // MARK: - ModernTextKitHelper
 
-/// Helper class to handle TextKit2 API changes and compatibility across macOS versions
+/// Helper for managing TextKit2 and modern macOS features
 @MainActor
-public final class ModernTextKitHelper: @unchecked Sendable {
-    // MARK: - TextKit2 Detection
-
-    /// Check if TextKit2 should be used (and is stable)
+public enum ModernTextKitHelper {
+    /// Check if TextKit2 should be used
     public static var shouldUseTextKit2: Bool {
         MacOSVersionDetection.hasStableTextKit2
     }
-
-    /// Check if we can safely opt into TextKit2 for a text view
+    
+    /// Check if we can opt into TextKit2 for a specific text view
     public static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
-        // Only opt into TextKit2 on macOS 23+ where it's more stable
+        // Basic requirement checks
+        guard textView.textContainer != nil else { return false }
+        
+        // Only opt into TextKit2 on macOS 13+ where it's more stable
         guard MacOSVersionDetection.hasStableTextKit2 else {
             return false
         }
-
-        // Additional checks for macOS 26+ compatibility
-        if MacOSVersionDetection.isMacOS26OrLater {
-            return canUseTextKit2OnMacOS26(textView)
-        }
-
+        
         // Additional checks can be added here for specific compatibility requirements
-        return true
-    }
-    
-    /// Enhanced TextKit2 compatibility check for macOS 26+
-    private static func canUseTextKit2OnMacOS26(_ textView: NSTextView) -> Bool {
-        // macOS 26 has improved TextKit2 stability
-        // Check for any known issues or requirements
-        
-        // Ensure the text view is properly configured
-        guard textView.textStorage != nil else {
-            return false
-        }
-        
-        // macOS 26+ should handle TextKit2 well for most use cases
         return true
     }
     
@@ -57,12 +39,12 @@ public final class ModernTextKitHelper: @unchecked Sendable {
             return false
         }
         
-        // On macOS 26+, TextKit2 should be the default
+        // TextKit2 should be default on macOS 13+
         // If it's not active, there might be a specific reason
-        if MacOSVersionDetection.isMacOS26OrLater {
+        if MacOSVersionDetection.hasStableTextKit2 {
             // Log the situation for debugging
             os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
-                .debug("TextKit2 not active on macOS 26+, using TextKit1 fallback")
+                .debug("TextKit2 not active, using TextKit1 fallback")
         }
         
         return false
@@ -82,12 +64,12 @@ public final class ModernTextKitHelper: @unchecked Sendable {
         textView.isAutomaticLinkDetectionEnabled = false
 
         // macOS version-specific optimizations
-        if MacOSVersionDetection.isMacOS26OrLater {
-            configureForMacOS26(textView)
-        } else if MacOSVersionDetection.isMacOS25OrLater {
-            configureForMacOS25(textView)
-        } else if MacOSVersionDetection.isMacOS24OrLater {
-            configureForMacOS24(textView)
+        if MacOSVersionDetection.isMacOS14OrLater {
+            configureForModernMacOS(textView)
+        } else if MacOSVersionDetection.isMacOS13OrLater {
+            configureForMacOS13(textView)
+        } else {
+            configureForLegacyMacOS(textView)
         }
 
         // TextKit2 specific configuration
@@ -98,324 +80,120 @@ public final class ModernTextKitHelper: @unchecked Sendable {
 
     // MARK: - Version-Specific Configuration
 
-    private static func configureForMacOS26(_ textView: NSTextView) {
-        // macOS 26 Tahoe specific optimizations
-
-        // Enable sound attachment support if available
-        if MacOSVersionDetection.supportsTextViewSoundAttachments {
-            // Sound attachments are automatically supported in macOS 26
-            // No additional configuration needed
-        }
-
-        // Optimize for Liquid Glass design
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Use adaptive background colors
-            textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
-            textView.insertionPointColor = NSColor.controlAccentColor
-
-            // Configure selection appearance for Liquid Glass
-            textView.selectedTextAttributes = [
-                .backgroundColor: AdaptiveColorSystem.selectionColor,
-                .foregroundColor: NSColor.selectedTextColor
-            ]
-        }
-    }
-
-    private static func configureForMacOS25(_ textView: NSTextView) {
-        // macOS 25 specific optimizations
-        textView.backgroundColor = NSColor.textBackgroundColor
+    private static func configureForModernMacOS(_ textView: NSTextView) {
+        // macOS 14+ specific optimizations
+        
+        // Use adaptive colors for better appearance
+        textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
         textView.insertionPointColor = NSColor.controlAccentColor
+
+        // Configure selection appearance
+        textView.selectedTextAttributes = [
+            .backgroundColor: AdaptiveColorSystem.selectionColor,
+            .foregroundColor: NSColor.selectedTextColor
+        ]
+
+        // Enhanced text smoothing for high-resolution displays
+        textView.allowsDocumentBackgroundColorChange = false
+        
+        // Optimize for performance
+        textView.isAutomaticTextCompletionEnabled = false
+        textView.usesAdaptiveColorMappingForDarkAppearance = true
     }
 
-    private static func configureForMacOS24(_ textView: NSTextView) {
-        // macOS 24 specific optimizations
-        textView.backgroundColor = NSColor.textBackgroundColor
+    private static func configureForMacOS13(_ textView: NSTextView) {
+        // macOS 13 Ventura specific settings
+        
+        // Basic TextKit2 optimizations
+        textView.allowsDocumentBackgroundColorChange = false
+        textView.usesAdaptiveColorMappingForDarkAppearance = true
+        
+        // Performance tuning
+        textView.isAutomaticTextCompletionEnabled = false
     }
+
+    private static func configureForLegacyMacOS(_ textView: NSTextView) {
+        // macOS 12 and earlier
+        
+        // Legacy performance optimizations
+        textView.isAutomaticTextCompletionEnabled = false
+    }
+
+    // MARK: - TextKit2 Features
 
     private static func configureTextKit2Features(_ textView: NSTextView) {
-        // TextKit2 specific configuration
+        guard let textLayoutManager = textView.textLayoutManager else { return }
         
-        // Check if we're on macOS 26+ for enhanced TextKit2 features
-        if MacOSVersionDetection.isMacOS26OrLater {
-            configureTextKit2ForMacOS26(textView)
-        }
-
-        // Ensure we're using TextKit2 layout manager
-        if let textLayoutManager = textView.textLayoutManager {
-            // TextKit2 is active
-            configureTextLayoutManager(textLayoutManager)
-            
-            // Enable advanced TextKit2 features if available
-            if MacOSVersionDetection.isMacOS26OrLater {
-                configureAdvancedTextLayoutFeatures(textLayoutManager)
-            }
-        } else {
-            // Fallback to TextKit1 if needed
-            if let layoutManager = textView.layoutManager {
-                configureLayoutManager(layoutManager)
-            }
-        }
+        // Configure TextKit2 specific features
+        // Note: TextKit2 configuration is handled automatically by the system
+        // Additional configuration can be added here as needed
+        
+        // Ensure layout manager is properly configured
+        _ = textLayoutManager.usageBoundsForTextContainer
     }
-    
-    /// Configure TextKit2 features specific to macOS 26+
-    private static func configureTextKit2ForMacOS26(_ textView: NSTextView) {
-        // macOS 26 introduced improved TextKit2 stability and new features
-        
-        // Enable enhanced text rendering if available
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Optimize text rendering for Liquid Glass design
-            // Use available properties that improve rendering
-            textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
-            textView.insertionPointColor = NSColor.controlAccentColor
-        }
-        
-        // Configure for better performance with large documents
-        textView.allowsUndo = true
-        textView.isAutomaticTextCompletionEnabled = false
-        
-        // Disable features that can impact performance in code editing
-        textView.isAutomaticQuoteSubstitutionEnabled = false
-        textView.isAutomaticDashSubstitutionEnabled = false
-        textView.isAutomaticTextReplacementEnabled = false
+
+    // MARK: - Control Size Support
+
+    /// Get the recommended control size based on macOS version
+    public static func recommendedControlSize(for priority: MacOSVersionDetection.ControlPriority) -> NSControl.ControlSize {
+        MacOSVersionDetection.recommendedControlSize(for: priority)
+    }
+
+    // MARK: - Performance Optimizations
+
+    /// Apply performance optimizations based on system capabilities
+    public static func applyPerformanceOptimizations(to textView: NSTextView) {
+        // Disable expensive features during editing
         textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isGrammarCheckingEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
         
-        // Enhanced text view features
-        textView.usesFindBar = true
-        textView.usesFontPanel = true
-        textView.usesRuler = false // Disable ruler for code editing
+        // Configure layout manager if using TextKit1
+        if let layoutManager = textView.layoutManager {
+            layoutManager.allowsNonContiguousLayout = true
+            layoutManager.backgroundLayoutEnabled = true
+        }
+        
+        // Configure text container
+        if let textContainer = textView.textContainer {
+            textContainer.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            textContainer.widthTracksTextView = true
+            textContainer.heightTracksTextView = false
+        }
     }
+
+    // MARK: - Color System Integration
+
+    /// Configure text view with adaptive colors
+    public static func applyAdaptiveColors(to textView: NSTextView) {
+        textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
+        textView.insertionPointColor = NSColor.controlAccentColor
+        
+        // Configure selection colors
+        textView.selectedTextAttributes = [
+            .backgroundColor: AdaptiveColorSystem.selectionColor,
+            .foregroundColor: NSColor.selectedTextColor
+        ]
+    }
+
+    // MARK: - Layout Region Support
     
-    /// Configure advanced TextKit2 layout features for macOS 26+
-    private static func configureAdvancedTextLayoutFeatures(_ textLayoutManager: NSTextLayoutManager) {
-        // Configure text layout manager for optimal performance on macOS 26+
-        
-        // Enable enhanced layout caching if available
-        if let textContainer = textLayoutManager.textContainer {
-            textContainer.maximumNumberOfLines = 0 // No line limit
-            textContainer.lineBreakMode = .byWordWrapping
-            
-            // Optimize for large documents
-            textContainer.widthTracksTextView = true
-            textContainer.heightTracksTextView = false
-        }
-        
-        // Configure text selection behavior
-        textLayoutManager.limitsLayoutForSuspiciousContents = true
-        
-        // Enable text rendering optimizations if available
-        textLayoutManager.usesHyphenation = false
-    }
-
-    // MARK: - TextKit2 Layout Manager Configuration
-
-    private static func configureTextLayoutManager(_ textLayoutManager: NSTextLayoutManager) {
-        // Configure TextKit2 layout manager for optimal performance
-
-        // Enable text container configurations that work well with modern macOS
-        if let textContainer = textLayoutManager.textContainer {
-            textContainer.widthTracksTextView = true
-            textContainer.heightTracksTextView = false
-            textContainer.lineFragmentPadding = 0
-        }
-    }
-
-    // MARK: - TextKit1 Layout Manager Configuration (Fallback)
-
-    private static func configureLayoutManager(_ layoutManager: NSLayoutManager) {
-        // Configure TextKit1 layout manager for compatibility
-        layoutManager.allowsNonContiguousLayout = true
-        // Use default hyphenation instead of deprecated hyphenationFactor
-        layoutManager.usesDefaultHyphenation = false
-
-        if let textContainer = layoutManager.textContainers.first {
-            textContainer.widthTracksTextView = true
-            textContainer.heightTracksTextView = false
-            textContainer.lineFragmentPadding = 0
-        }
-    }
-
-    // MARK: - Text Container Utilities
-
-    /// Create a properly configured text container for the current macOS version
-    public static func createTextContainer(size: NSSize) -> NSTextContainer {
-        let textContainer = NSTextContainer(size: size)
-
-        textContainer.widthTracksTextView = true
-        textContainer.heightTracksTextView = false
-        textContainer.lineFragmentPadding = 0
-
-        // macOS version-specific optimizations
-        if MacOSVersionDetection.isMacOS26OrLater {
-            // Optimize for Liquid Glass design
-            textContainer.lineBreakMode = .byWordWrapping
-        }
-
-        return textContainer
-    }
-
-    // MARK: - Performance Optimization
-
-    /// Apply performance optimizations based on macOS version
-    public static func optimizeTextViewPerformance(_ textView: NSTextView) {
-        // Disable expensive features that aren't needed for code editing
-        textView.isRichText = true // We need this for syntax highlighting
-        textView.importsGraphics = false
-        textView.allowsDocumentBackgroundColorChange = false
-        textView.allowsUndo = true
-
-        // Version-specific optimizations
-        if MacOSVersionDetection.isMacOS26OrLater {
-            // macOS 26+ optimizations
-            optimizeForModernMacOS(textView)
-        } else {
-            // Legacy macOS optimizations
-            optimizeForLegacyMacOS(textView)
-        }
-    }
-
-    private static func optimizeForModernMacOS(_ textView: NSTextView) {
-        // Modern macOS performance optimizations
-        textView.usesInspectorBar = false
-        textView.isAutomaticTextCompletionEnabled = false
-    }
-
-    private static func optimizeForLegacyMacOS(_ textView: NSTextView) {
-        // Legacy macOS performance optimizations
-        textView.isAutomaticTextCompletionEnabled = false
-    }
-
-    // MARK: - Layout Region Support (macOS 26+)
-
-    /// Configure layout guides for corner-avoiding layouts if available
-    public static func configureLayoutRegions(for _: NSView) {
-        guard MacOSVersionDetection.supportsLayoutRegionAPI else {
-            return
-        }
-
-        // This would use the new NSView.LayoutRegion API in macOS 26
-        // Implementation would depend on the actual API when available
-
-        // Placeholder for when the API is available:
-        // if #available(macOS 26.0, *) {
-        //     // Use new layout region API
-        //     view.layoutRegions = [.safeArea, .cornerAvoidance]
-        // }
-    }
-
-    deinit {
-        // Cleanup if needed
-    }
-}
-
-// MARK: - NSTextView Extension
-
-extension NSTextView {
-    /// Apply modern configuration for the current macOS version
-    func applyModernConfiguration() {
-        ModernTextKitHelper.configureTextView(self)
-        ModernTextKitHelper.optimizeTextViewPerformance(self)
-    }
-
-    // Note: isUsingTextKit2 is defined in Extensions/NSTextView+Extensions.swift
-
-    /// Get the appropriate text content manager for the current configuration
-    var modernTextContentManager: NSTextContentManager? {
-        // This property should be accessed from the text view directly
-        // as the helper doesn't store a reference to the text view
-        nil
-    }
+    // NOTE: Layout region API support has been removed as it was based on
+    // speculative future macOS versions. This functionality can be added
+    // when/if such APIs become available in future macOS releases.
 }
 
 #else
-// MARK: iOS/UIKit Implementation
 
-import Foundation
-import UIKit
+// MARK: - IOS Stub
 
-/// iOS implementation of ModernTextKitHelper
-@MainActor
-public final class ModernTextKitHelper: @unchecked Sendable {
-    /// Check if TextKit2 should be used on iOS
-    public static var shouldUseTextKit2: Bool {
-        if #available(iOS 16.0, *) {
-            return true
-        }
-        return false
-    }
+/// iOS stub for ModernTextKitHelper
+public enum ModernTextKitHelper {
+    public static var shouldUseTextKit2: Bool { false }
     
-    /// Configure UITextView with optimal settings
-    public static func configureTextView(_ textView: UITextView) {
-        // Basic configuration
-        textView.autocorrectionType = .no
-        textView.autocapitalizationType = .none
-        textView.spellCheckingType = .no
-        textView.smartQuotesType = .no
-        textView.smartDashesType = .no
-        textView.smartInsertDeleteType = .no
-        
-        // iOS 16+ specific configuration
-        if #available(iOS 16.0, *) {
-            configureTextKit2Features(textView)
-        }
-    }
+    public static func canOptIntoTextKit2(for _: Any) -> Bool { false }
     
-    /// Apply performance optimizations
-    public static func optimizeTextViewPerformance(_ textView: UITextView) {
-        // Disable expensive features not needed for code editing
-        textView.isEditable = true
-        textView.isSelectable = true
-        textView.allowsEditingTextAttributes = true
-        
-        // iOS-specific optimizations
-        textView.dataDetectorTypes = []
-    }
-    
-    /// Ensure TextKit2 is being used if available
-    public static func ensureTextKit2(for textView: UITextView) -> Bool {
-        if #available(iOS 16.0, *) {
-            // Check if TextKit2 is already active
-            if textView.textLayoutManager != nil {
-                return true
-            }
-            
-            // iOS 16+ should use TextKit2 by default for new text views
-            // If it's not active, there might be a reason (e.g., compatibility mode)
-            return textView.textLayoutManager != nil
-        }
-        return false
-    }
-    
-    @available(iOS 16.0, *)
-    private static func configureTextKit2Features(_ textView: UITextView) {
-        // TextKit2 specific configuration for iOS
-        if let textLayoutManager = textView.textLayoutManager {
-            // Configure text layout manager
-            textLayoutManager.limitsLayoutForSuspiciousContents = true
-            textLayoutManager.usesHyphenation = false
-            
-            // Configure text container if available
-            if let textContainer = textLayoutManager.textContainer {
-                textContainer.maximumNumberOfLines = 0
-                textContainer.lineBreakMode = .byWordWrapping
-                textContainer.widthTracksTextView = true
-                textContainer.heightTracksTextView = false
-            }
-        }
-    }
-
-    deinit {
-        // Cleanup if needed
-    }
+    public static func ensureTextKit2(for _: Any) -> Bool { false }
 }
 
-// MARK: - UITextView Extension
-
-extension UITextView {
-    /// Apply modern configuration for iOS
-    func applyModernConfiguration() {
-        ModernTextKitHelper.configureTextView(self)
-        ModernTextKitHelper.optimizeTextViewPerformance(self)
-    }
-}
 #endif

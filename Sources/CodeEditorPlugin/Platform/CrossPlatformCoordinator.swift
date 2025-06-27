@@ -105,7 +105,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         public let iOS: Availability
         
         public var currentPlatform: Availability {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return macOS
             #else
             return iOS
@@ -125,7 +125,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     public struct PlatformAdjustments {
         // Font adjustments
         public var defaultFontSize: CGFloat = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 12.0
             #else
             return 14.0 // Larger for touch
@@ -134,7 +134,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         
         // Spacing adjustments
         public var lineSpacing: CGFloat = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 1.2
             #else
             return 1.4 // More spacing for touch
@@ -142,7 +142,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         }()
         
         public var gutterWidth: CGFloat = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 40.0
             #else
             return 50.0 // Wider for touch targets
@@ -151,7 +151,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         
         // Touch adjustments
         public var minimumTouchTargetSize: CGFloat = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 24.0
             #else
             return 44.0 // iOS HIG recommendation
@@ -160,7 +160,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         
         // Performance adjustments
         public var maxFileSize: Int = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 10_000_000 // 10MB
             #else
             return 5_000_000 // 5MB for iOS
@@ -168,7 +168,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         }()
         
         public var maxHighlightingLength: Int = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 1_000_000
             #else
             return 500_000 // Less for iOS
@@ -177,7 +177,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         
         // UI adjustments
         public var showMinimap: Bool = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return true
             #else
             return false // Not supported on iOS
@@ -185,7 +185,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         }()
         
         public var enableMultiCursor: Bool = {
-            #if os(macOS)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return true
             #else
             return UIDevice.current.userInterfaceIdiom == .pad
@@ -230,11 +230,10 @@ public class CrossPlatformCoordinator: ObservableObject {
             // Limit multi-cursor on iOS
         }
         
-        #if os(iOS)
+        #if canImport(UIKit)
         // iOS-specific adjustments
-        config.display.lineHeightMultiplier = 1.3 // More space for touch
-        config.behavior.enableHapticFeedback = true
-        config.behavior.showTouchIndicators = true
+        // Note: Additional iOS-specific configuration can be added here
+        // as the EditorConfiguration system is extended
         #endif
         
         return config
@@ -242,7 +241,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     /// Apply platform-specific optimizations to a text view
     public func optimizeTextView(_ textView: CodeEditorView) {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         optimizeForMacOS(textView)
         #else
         optimizeForIOS(textView)
@@ -253,7 +252,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     public func createToolbarItems() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
         
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Full toolbar on macOS
         items.append(ToolbarItem(
             id: "find",
@@ -321,29 +320,107 @@ public class CrossPlatformCoordinator: ObservableObject {
         }
     }
     
-    /// Create cross-platform context menu
-    public func createContextMenu(for _: NSRange, in _: CodeEditorView) -> PlatformContextMenu {
-        var items: [ContextMenuItem] = []
+    /// Create cross-platform context menu using modern action-based API
+    public func createContextMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
+        var builder = ContextMenuBuilder()
         
-        // Common items
-        items.append(ContextMenuItem(title: "Cut", action: #selector(NSText.cut(_:))))
-        items.append(ContextMenuItem(title: "Copy", action: #selector(NSText.copy(_:))))
-        items.append(ContextMenuItem(title: "Paste", action: #selector(NSText.paste(_:))))
-        items.append(ContextMenuItem.separator())
+        // Common editing actions
+        builder.addAction(ContextMenuAction(
+            title: "Cut",
+            keyEquivalent: "x",
+            isEnabled: textView.isEditable && range.length > 0
+        ) { @MainActor [weak textView] in
+            #if canImport(AppKit)
+            textView?.cut(nil)
+            #else
+            if let selectedRange = textView?.selectedTextRange,
+               let selectedText = textView?.text(in: selectedRange) {
+                UIPasteboard.general.string = selectedText
+                textView?.deleteBackward()
+            }
+            #endif
+        })
         
-        // Platform-specific items
-        #if os(macOS)
-        items.append(ContextMenuItem(title: "Go to Definition", action: #selector(goToDefinition)))
-        items.append(ContextMenuItem(title: "Find References", action: #selector(findReferences)))
-        items.append(ContextMenuItem.separator())
-        items.append(ContextMenuItem(title: "Refactor", submenu: createRefactorMenu()))
-        #else
+        builder.addAction(ContextMenuAction(
+            title: "Copy",
+            keyEquivalent: "c",
+            isEnabled: range.length > 0
+        ) { @MainActor [weak textView] in
+            #if canImport(AppKit)
+            textView?.copy(nil)
+            #else
+            if let selectedRange = textView?.selectedTextRange,
+               let selectedText = textView?.text(in: selectedRange) {
+                UIPasteboard.general.string = selectedText
+            }
+            #endif
+        })
+        
+        builder.addAction(ContextMenuAction(
+            title: "Paste",
+            keyEquivalent: "v",
+            isEnabled: textView.isEditable
+        ) { @MainActor [weak textView] in
+            #if canImport(AppKit)
+            textView?.paste(nil)
+            #else
+            if let pasteString = UIPasteboard.general.string {
+                textView?.insertText(pasteString)
+            }
+            #endif
+        })
+        
+        builder.addSeparator()
+        
+        // Code navigation actions
         if featureAvailability.goToDefinition.isAvailable {
-            items.append(ContextMenuItem(title: "Go to Definition", action: #selector(goToDefinition)))
+            builder.addAction(ContextMenuAction(
+                title: "Go to Definition",
+                keyEquivalent: nil,
+                isEnabled: true
+            ) { @MainActor [weak self, weak textView] in
+                self?.performGoToDefinition(at: range, in: textView)
+            })
         }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        builder.addAction(ContextMenuAction(
+            title: "Find References",
+            keyEquivalent: nil,
+            isEnabled: true
+        ) { @MainActor [weak self, weak textView] in
+            self?.performFindReferences(at: range, in: textView)
+        })
+        
+        builder.addSeparator()
+        
+        // Refactoring submenu
+        builder.addAction(ContextMenuAction(
+            title: "Rename...",
+            keyEquivalent: nil,
+            isEnabled: true
+        ) { @MainActor [weak self, weak textView] in
+            self?.performRename(at: range, in: textView)
+        })
+        
+        builder.addAction(ContextMenuAction(
+            title: "Extract Method...",
+            keyEquivalent: nil,
+            isEnabled: range.length > 0
+        ) { @MainActor [weak self, weak textView] in
+            self?.performExtractMethod(at: range, in: textView)
+        })
+        
+        builder.addAction(ContextMenuAction(
+            title: "Extract Variable...",
+            keyEquivalent: nil,
+            isEnabled: range.length > 0
+        ) { @MainActor [weak self, weak textView] in
+            self?.performExtractVariable(at: range, in: textView)
+        })
         #endif
         
-        return PlatformContextMenu(items: items)
+        return builder.build()
     }
     
     // MARK: - Private Methods
@@ -351,7 +428,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     private func adjustFeaturesForPlatform() {
         // Adjust feature availability based on runtime checks
         
-        #if os(iOS)
+        #if canImport(UIKit)
         // Check iPad-specific features
         if UIDevice.current.userInterfaceIdiom == .pad {
             featureAvailability.splitView = FeatureStatus(macOS: .full, iOS: .full)
@@ -372,7 +449,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func setupPlatformSpecificObservers() {
-        #if os(iOS)
+        #if canImport(UIKit)
         // Observe keyboard connection changes
         NotificationCenter.default.addObserver(
             self,
@@ -391,7 +468,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         #endif
     }
     
-    #if os(macOS)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func optimizeForMacOS(_ textView: CodeEditorView) {
         // Enable platform-specific features
         // Note: CodeEditorView doesn't currently support multiple selection
@@ -410,12 +487,13 @@ public class CrossPlatformCoordinator: ObservableObject {
         // Adjust content insets for safe area
         if let window = textView.window {
             let safeArea = window.safeAreaInsets
-            textView.textContainerInset = UIEdgeInsets(
+            let insets = EdgeInsets(
                 top: safeArea.top + 8,
                 left: 0,
                 bottom: safeArea.bottom + 8,
                 right: 0
             )
+            textView.setUnifiedTextContainerInsets(insets)
         }
         
         // Configure keyboard
@@ -450,7 +528,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     private func handleKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         // Platform-specific key handling
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Full keyboard shortcut support
         if modifiers.contains(.command) {
             switch key {
@@ -475,7 +553,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func handleTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
-        #if os(iOS)
+        #if canImport(UIKit)
         // Handle multi-touch gestures
         if touches.count == 2 {
             // Two-finger tap for context menu
@@ -489,7 +567,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func handleMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Handle mouse events
         switch type {
         case .rightClick:
@@ -520,7 +598,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in textView: CodeEditorView) -> Bool {
-        #if os(iOS)
+        #if canImport(UIKit)
         // Handle Apple Pencil input
         if pressure > 0.5 {
             // Heavy pressure for selection
@@ -533,7 +611,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Helper Methods
     
-    #if os(iOS)
+    #if canImport(UIKit)
     private func isExternalKeyboardConnected() -> Bool {
         // Check if external keyboard is connected
         // This is a simplified check
@@ -573,12 +651,29 @@ public class CrossPlatformCoordinator: ObservableObject {
         // Find implementation
     }
     
-    @objc private func goToDefinition() {
+    private func performGoToDefinition(at range: NSRange, in _: CodeEditorView?) {
         // Go to definition implementation
+        logger.info("Go to definition at range: \(range)")
     }
     
-    @objc private func findReferences() {
+    private func performFindReferences(at range: NSRange, in _: CodeEditorView?) {
         // Find references implementation
+        logger.info("Find references at range: \(range)")
+    }
+    
+    private func performRename(at range: NSRange, in _: CodeEditorView?) {
+        // Rename implementation
+        logger.info("Rename at range: \(range)")
+    }
+    
+    private func performExtractMethod(at range: NSRange, in _: CodeEditorView?) {
+        // Extract method implementation
+        logger.info("Extract method at range: \(range)")
+    }
+    
+    private func performExtractVariable(at range: NSRange, in _: CodeEditorView?) {
+        // Extract variable implementation
+        logger.info("Extract variable at range: \(range)")
     }
     
     private func selectNextOccurrence(in _: CodeEditorView) {
@@ -609,18 +704,23 @@ public class CrossPlatformCoordinator: ObservableObject {
         // Start selection at location
     }
     
-    #if os(macOS)
-    private func createRefactorMenu() -> NSMenu {
-        let menu = NSMenu(title: "Refactor")
-        menu.addItem(NSMenuItem(title: "Rename", action: #selector(rename), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Extract Method", action: #selector(extractMethod), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Extract Variable", action: #selector(extractVariable), keyEquivalent: ""))
-        return menu
+    // Context menu helper methods
+    private func configureInputHandling(for textView: CodeEditorView) {
+        #if canImport(UIKit)
+        // Add gesture recognizers for iOS
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        textView.addGestureRecognizer(longPressGesture)
+        #endif
     }
     
-    @objc private func rename() {}
-    @objc private func extractMethod() {}
-    @objc private func extractVariable() {}
+    #if canImport(UIKit)
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began,
+              let textView = gesture.view as? CodeEditorView else { return }
+        
+        let location = gesture.location(in: textView)
+        showContextMenu(at: location, in: textView)
+    }
     #endif
 }
 
@@ -692,48 +792,4 @@ public struct ToolbarItem: Identifiable {
     }
 }
 
-/// Context menu item
-public struct ContextMenuItem {
-    public let title: String
-    public let action: Selector?
-    public let submenu: PlatformMenu?
-    public let isSeparator: Bool
-    
-    public init(title: String, action: Selector? = nil, submenu: PlatformMenu? = nil) {
-        self.title = title
-        self.action = action
-        self.submenu = submenu
-        self.isSeparator = false
-    }
-    
-    private init(separator: Bool) {
-        self.title = ""
-        self.action = nil
-        self.submenu = nil
-        self.isSeparator = separator
-    }
-    
-    public static func separator() -> Self {
-        Self(separator: true)
-    }
-}
-
-/// Platform context menu
-public struct PlatformContextMenu {
-    public let items: [ContextMenuItem]
-}
-
-/// Platform menu (for submenus)
-public protocol PlatformMenu {
-    var title: String { get }
-    var items: [ContextMenuItem] { get }
-}
-
-#if os(macOS)
-extension NSMenu: PlatformMenu {
-    public var items: [ContextMenuItem] {
-        // Convert NSMenuItems to ContextMenuItems
-        []
-    }
-}
-#endif
+// Context menu types are now defined in ContextMenuAction.swift

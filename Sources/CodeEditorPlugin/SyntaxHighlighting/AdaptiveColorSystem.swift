@@ -4,26 +4,27 @@ import Foundation
 
 // MARK: - AdaptiveColorSystem
 
-/// Provides adaptive colors that work well with macOS 26's Liquid Glass design
+/// Provides adaptive colors that work well with modern macOS designs
 @MainActor
 public enum AdaptiveColorSystem {
     // MARK: - Syntax Highlighting Colors
 
-    /// Adaptive syntax highlighting colors that work with Liquid Glass
+    /// Adaptive syntax highlighting colors
     public static func syntaxColor(for tokenType: TokenType) -> NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            liquidGlassColor(for: tokenType)
+        // Use enhanced colors on macOS 14+ for better contrast
+        if MacOSVersionDetection.isMacOS14OrLater {
+            enhancedColor(for: tokenType)
         } else {
             traditionalColor(for: tokenType)
         }
     }
 
-    // MARK: - Liquid Glass Colors (macOS 26+)
+    // MARK: - Enhanced Colors (macOS 14+)
 
-    private static func liquidGlassColor(for tokenType: TokenType) -> NSColor {
+    private static func enhancedColor(for tokenType: TokenType) -> NSColor {
         switch tokenType {
         case .keyword:
-            // Enhanced purple with better contrast for translucent surfaces
+            // Enhanced purple with better contrast
             NSColor(displayP3Red: 0.65, green: 0.31, blue: 0.85, alpha: 1.0)
 
         case .identifier:
@@ -31,11 +32,11 @@ public enum AdaptiveColorSystem {
             NSColor.labelColor.withAlphaComponent(0.95)
 
         case .string:
-            // Warmer red that works well with Liquid Glass
+            // Warmer red for better visibility
             NSColor(displayP3Red: 0.85, green: 0.25, blue: 0.30, alpha: 1.0)
 
         case .number:
-            // Vivid blue optimized for translucent backgrounds
+            // Vivid blue
             NSColor(displayP3Red: 0.15, green: 0.45, blue: 0.90, alpha: 1.0)
 
         case .comment:
@@ -43,11 +44,11 @@ public enum AdaptiveColorSystem {
             NSColor(displayP3Red: 0.25, green: 0.70, blue: 0.35, alpha: 0.85)
 
         case .type:
-            // Enhanced teal with better depth
+            // Enhanced teal
             NSColor(displayP3Red: 0.20, green: 0.65, blue: 0.75, alpha: 1.0)
 
         case .function:
-            // Rich indigo that works with glass materials
+            // Rich indigo
             NSColor(displayP3Red: 0.35, green: 0.25, blue: 0.80, alpha: 1.0)
 
         case .property:
@@ -55,7 +56,7 @@ public enum AdaptiveColorSystem {
             NSColor(displayP3Red: 0.90, green: 0.50, blue: 0.15, alpha: 1.0)
 
         case .operator:
-            // Earth tone brown that complements Liquid Glass
+            // Earth tone brown
             NSColor(displayP3Red: 0.65, green: 0.45, blue: 0.25, alpha: 1.0)
 
         case .punctuation:
@@ -74,7 +75,7 @@ public enum AdaptiveColorSystem {
         }
     }
 
-    // MARK: - Traditional Colors (macOS < 26)
+    // MARK: - Traditional Colors (macOS < 14)
 
     private static func traditionalColor(for tokenType: TokenType) -> NSColor {
         switch tokenType {
@@ -123,9 +124,9 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive background color for text editing areas
     public static var textBackgroundColor: NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Use a slightly translucent background that works with Liquid Glass
-            NSColor.textBackgroundColor.withAlphaComponent(0.95)
+        if MacOSVersionDetection.isMacOS14OrLater {
+            // Use a slightly enhanced background for newer systems
+            NSColor.textBackgroundColor.withAlphaComponent(0.98)
         } else {
             NSColor.textBackgroundColor
         }
@@ -133,9 +134,9 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive selection color
     public static var selectionColor: NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Enhanced selection color for better visibility on glass
-            NSColor.selectedTextBackgroundColor.withAlphaComponent(0.85)
+        if MacOSVersionDetection.isMacOS14OrLater {
+            // Enhanced selection color for better visibility
+            NSColor.selectedTextBackgroundColor.withAlphaComponent(0.90)
         } else {
             NSColor.selectedTextBackgroundColor
         }
@@ -143,9 +144,9 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive line number color
     public static var lineNumberColor: NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Softer line numbers that don't compete with glass effects
-            NSColor.secondaryLabelColor.withAlphaComponent(0.70)
+        if MacOSVersionDetection.isMacOS14OrLater {
+            // Slightly enhanced line numbers
+            NSColor.secondaryLabelColor.withAlphaComponent(0.75)
         } else {
             NSColor.secondaryLabelColor
         }
@@ -153,9 +154,9 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive gutter background color
     public static var gutterBackgroundColor: NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
-            // Subtle gutter that complements Liquid Glass
-            NSColor.controlBackgroundColor.withAlphaComponent(0.60)
+        if MacOSVersionDetection.isMacOS14OrLater {
+            // Subtle gutter enhancement
+            NSColor.controlBackgroundColor.withAlphaComponent(0.70)
         } else {
             NSColor.controlBackgroundColor
         }
@@ -165,7 +166,7 @@ public enum AdaptiveColorSystem {
 
     /// Get adaptive color for annotation types
     public static func annotationColor(for severity: AnnotationSeverity) -> NSColor {
-        if MacOSVersionDetection.supportsLiquidGlassDesign {
+        if MacOSVersionDetection.isMacOS14OrLater {
             switch severity {
             case .info:
                 NSColor.systemBlue.withAlphaComponent(0.75)

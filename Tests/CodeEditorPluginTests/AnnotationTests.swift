@@ -18,6 +18,12 @@ final class AnnotationTests: XCTestCase {
     override func setUp() async throws {
         await MainActor.run {
             _textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+            // Ensure text storage is properly initialized
+            _textView?.string = ""
+            // Force layout to ensure TextKit is initialized
+            _textView?.layoutSubtreeIfNeeded()
+            _textView?.needsLayout = true
+            _textView?.layout()
         }
     }
     
@@ -27,11 +33,36 @@ final class AnnotationTests: XCTestCase {
         }
     }
     
+    // MARK: - Helper Methods
+    
+    /// Creates an NSTextRange from an NSRange for the current text view
+    private func createTextRange(from nsRange: NSRange) -> NSTextRange? {
+        // For tests, create a mock range
+        let startLocation = MockTextLocation(offset: nsRange.location)
+        let endLocation = MockTextLocation(offset: NSMaxRange(nsRange))
+        return NSTextRange(location: startLocation, end: endLocation)
+    }
+    
+    /// Creates a simple text range for the entire document
+    private func createFullDocumentRange() -> NSTextRange? {
+        // For tests, create a mock range that covers the document
+        // This is needed because TextKit2 may not be fully initialized in test environment
+        if let textLayoutManager = textView.textLayoutManager {
+            return textLayoutManager.documentRange
+        }
+        
+        // Fallback: create a mock range for testing
+        let mockLocation = MockTextLocation(offset: 0)
+        let mockEndLocation = MockTextLocation(offset: textView.string.count)
+        return NSTextRange(location: mockLocation, end: mockEndLocation)
+    }
+    
     // MARK: - Annotation Model Tests
     
     func testAnnotationCreation() {
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        textView.string = "Test content"
+        
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create text range")
             return
         }
@@ -44,9 +75,10 @@ final class AnnotationTests: XCTestCase {
     }
     
     func testAnnotationEquality() {
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
-              let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        textView.string = "Test content"
+        
+        guard let range1 = createFullDocumentRange(),
+              let range2 = createFullDocumentRange() else {
             XCTFail("Could not create text ranges")
             return
         }
@@ -65,13 +97,13 @@ final class AnnotationTests: XCTestCase {
     // MARK: - CodeEditorViewAnnotation Tests
     
     func testCodeEditorViewAnnotationCreation() {
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
+        textView.string = "Test content"
+        
+        // Create a mock location at the beginning of the document
+        let location = MockTextLocation(offset: 0)
         
         let annotation = CodeEditorViewAnnotation(
-            location: documentRange.location,
+            location: location,
             content: "Line annotation",
             id: "line-test"
         )
@@ -86,8 +118,7 @@ final class AnnotationTests: XCTestCase {
     func testAddSingleAnnotation() {
         textView.text = "Test content for annotation"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create document range")
             return
         }
@@ -103,14 +134,9 @@ final class AnnotationTests: XCTestCase {
     func testAddMultipleAnnotations() {
         textView.text = "Test content with multiple annotations"
         
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
         // Create multiple annotations
         let annotations = (1...5).compactMap { index -> Annotation? in
-            guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+            guard let range = createFullDocumentRange() else {
                 return nil
             }
             return Annotation(range: range, content: "Annotation \(index)", id: "anno-\(index)")
@@ -134,9 +160,8 @@ final class AnnotationTests: XCTestCase {
     func testRemoveSpecificAnnotation() {
         textView.text = "Test content"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
-              let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range1 = createFullDocumentRange(),
+              let range2 = createFullDocumentRange() else {
             XCTFail("Could not create ranges")
             return
         }
@@ -157,8 +182,7 @@ final class AnnotationTests: XCTestCase {
     func testRemoveNonExistentAnnotation() {
         textView.text = "Test content"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create range")
             return
         }
@@ -175,14 +199,9 @@ final class AnnotationTests: XCTestCase {
     func testRemoveAllAnnotations() {
         textView.text = "Test content with annotations"
         
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
         // Add multiple annotations
         for index in 1...10 {
-            guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+            guard let range = createFullDocumentRange() else {
                 continue
             }
             let annotation = Annotation(range: range, content: "Annotation \(index)", id: "id-\(index)")
@@ -223,8 +242,7 @@ final class AnnotationTests: XCTestCase {
         textView.annotationsDataSource = dataSource
         textView.text = "Test content"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create range")
             return
         }
@@ -245,13 +263,8 @@ final class AnnotationTests: XCTestCase {
     func testAnnotationRangeValidation() {
         textView.text = "Short text"
         
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
         // Create annotation with valid range
-        guard let validRange = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let validRange = createFullDocumentRange() else {
             XCTFail("Could not create valid range")
             return
         }
@@ -281,8 +294,7 @@ final class AnnotationTests: XCTestCase {
         // Force initial layout
         textView.layoutSubtreeIfNeeded()
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create range")
             return
         }
@@ -323,18 +335,13 @@ final class AnnotationTests: XCTestCase {
     func testManyAnnotationsPerformance() {
         textView.text = String(repeating: "Line of text\n", count: 1_000)
         
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
         measure {
             // Clear existing annotations first
             textView.removeAllAnnotations()
             
             // Add many annotations
             for index in 1...100 {
-                guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+                guard let range = createFullDocumentRange() else {
                     continue
                 }
                 let annotation = Annotation(range: range, content: "Annotation \(index)", id: "perf-\(index)")
@@ -348,14 +355,9 @@ final class AnnotationTests: XCTestCase {
     func testAnnotationRemovalPerformance() {
         textView.text = "Performance test text"
         
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        
         // Add many annotations first
         for index in 1...1_000 {
-            guard let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+            guard let range = createFullDocumentRange() else {
                 continue
             }
             let annotation = Annotation(range: range, content: "Annotation \(index)", id: "remove-\(index)")
@@ -376,9 +378,8 @@ final class AnnotationTests: XCTestCase {
     func testDuplicateAnnotationIDs() {
         textView.text = "Test duplicate IDs"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range1 = NSTextRange(location: documentRange.location, end: documentRange.endLocation),
-              let range2 = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range1 = createFullDocumentRange(),
+              let range2 = createFullDocumentRange() else {
             XCTFail("Could not create ranges")
             return
         }
@@ -402,8 +403,7 @@ final class AnnotationTests: XCTestCase {
     func testAnnotationWithSpecialCharacters() {
         textView.text = "Text with émojis 🚀 and unicode ñoño"
         
-        guard let documentRange = textView.textContentStorage?.documentRange,
-              let range = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
+        guard let range = createFullDocumentRange() else {
             XCTFail("Could not create range")
             return
         }

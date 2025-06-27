@@ -85,7 +85,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
         }
         
         // Set up simplified delegate using notification observation
-        setupNotificationObservers(for: editorView, coordinator: context.coordinator)
+        setupTextChangeObservers(for: editorView, coordinator: context.coordinator)
         
         return containerView
     }
@@ -93,16 +93,8 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
     public func updateNSView(_: NSView, context: Context) {
         guard let editorView = context.coordinator.editorView else { return }
         
-        // Update text if it changed externally
-        if editorView.string != text {
-            editorView.string = text
-        }
-        
-        // Apply configuration updates
-        configuration.apply(to: editorView)
-        
-        // Update language
-        editorView.language = language
+        // Apply common updates
+        updateTextView(editorView, text: text, language: language, configuration: configuration)
         
         // Update minimap if needed
         context.coordinator.updateMinimapVisibility(configuration.display.showMinimap)
@@ -113,36 +105,14 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
         Coordinator(self)
     }
     
-    private func setupNotificationObservers(for editorView: CodeEditorView, coordinator: Coordinator) {
-        // Use NotificationCenter instead of delegate for simplicity
-        NotificationCenter.default.addObserver(
-            coordinator,
-            selector: #selector(coordinator.textDidChange(_:)),
-            name: NSText.didChangeNotification,
-            object: editorView
-        )
-        
-        NotificationCenter.default.addObserver(
-            coordinator,
-            selector: #selector(coordinator.selectionDidChange(_:)),
-            name: NSTextView.didChangeSelectionNotification,
-            object: editorView
-        )
-    }
-    
     @MainActor
-    public class Coordinator: NSObject {
-        var parent: CodeEditorSwiftUIView
+    public class Coordinator: BaseCodeEditorCoordinator<CodeEditorSwiftUIView>, MinimapSupport {
         weak var containerView: NSView?
         weak var editorView: CodeEditorView?
-        private var minimapView: MinimapView?
-        private var minimapDataProvider: MinimapDataProvider?
+        public var minimapView: MinimapView?
+        public var minimapDataProvider: MinimapDataProvider?
         
-        init(_ parent: CodeEditorSwiftUIView) {
-            self.parent = parent
-        }
-        
-        @objc func textDidChange(_ notification: Notification) {
+        override public func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? CodeEditorView else { return }
             let newText = textView.text ?? ""
             if parent.text != newText {
@@ -151,7 +121,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
             }
         }
         
-        @objc func selectionDidChange(_ notification: Notification) {
+        override public func selectionDidChange(_ notification: Notification) {
             guard let textView = notification.object as? CodeEditorView else { return }
             let selectedRange = textView.selectedRange()
             parent.onSelectionChange?(selectedRange)
@@ -161,38 +131,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
             guard let editorView,
                   let containerView else { return }
             
-            // Create minimap
-            let minimap = MinimapView()
-            minimapView = minimap
-            
-            // Create data provider
-            minimapDataProvider = MinimapDataProvider(textView: editorView)
-            
-            // Set up navigation callback
-            minimap.onNavigate = { [weak self] lineNumber in
-                self?.navigateToLine(lineNumber)
-            }
-            
-            // Add to container
-            containerView.addSubview(minimap)
-            
-            // Set up observers
-            NotificationCenter.default.addObserver(
-                forName: NSText.didChangeNotification,
-                object: editorView,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in
-                    self?.updateMinimap()
-                }
-            }
-        }
-        
-        func updateMinimapVisibility(_ shouldShow: Bool) {
-            if shouldShow && minimapView == nil {
-                setupMinimap()
-            }
-            minimapView?.isHidden = !shouldShow
+            setupMinimap(for: editorView, in: containerView)
         }
         
         func layoutViews() {
@@ -222,36 +161,8 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
             }
         }
         
-        private func navigateToLine(_ lineNumber: Int) {
-            guard let editorView else { return }
-            
-            let text = editorView.text ?? ""
-            let lines = text.components(separatedBy: .newlines)
-            
-            guard lineNumber < lines.count else { return }
-            
-            // Calculate character position for the line
-            let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-            let targetPosition = lineNumber > 0 ? lineStart + 1 : lineStart
-            
-            // Navigate to position  
-            let nsRange = NSRange(location: targetPosition, length: 0)
-            editorView.setSelectedRange(nsRange)
-            editorView.scrollRangeToVisible(nsRange)
-        }
-        
-        private func updateMinimap() {
-            guard let minimapView,
-                  let dataProvider = minimapDataProvider,
-                  let data = dataProvider.generateData() else {
-                return
-            }
-            
-            minimapView.updateData(data)
-        }
-        
         deinit {
-            NotificationCenter.default.removeObserver(self)
+            // Cleanup is handled by base class
         }
     }
 }
@@ -336,7 +247,7 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         context.coordinator.containerView = containerView
         
         // Set up simplified delegate using notification observation
-        setupNotificationObservers(for: editorView, coordinator: context.coordinator)
+        setupTextChangeObservers(for: editorView, coordinator: context.coordinator)
         
         // Make the text view focusable by tapping on it when editable
         if configuration.behavior.isEditable {
@@ -373,16 +284,11 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
             return
         }
         
-        // Update text if it changed externally
-        if uiView.text != text {
-            uiView.text = text
-        }
+        // Apply common updates
+        updateTextView(uiView, text: text, language: language, configuration: configuration)
         
-        // Apply configuration updates
+        // Apply configuration to container
         containerView.configuration = configuration
-        
-        // Update language
-        uiView.language = language
         
         // Update coordinator state
         context.coordinator.updateState(
@@ -396,57 +302,11 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         Coordinator(self)
     }
     
-    private func setupNotificationObservers(for editorView: CodeEditorView, coordinator: Coordinator) {
-        // Store reference to container view in coordinator
-        // This is done in makeUIView instead
-        
-        // Use NotificationCenter instead of delegate for simplicity
-        NotificationCenter.default.addObserver(
-            coordinator,
-            selector: #selector(coordinator.textDidChange(_:)),
-            name: UITextView.textDidChangeNotification,
-            object: editorView
-        )
-        
-        // Note: iOS doesn't have the same selection change notification as macOS
-        // We could use a timer-based approach or KVO for selection changes if needed
-    }
-    
     @MainActor
-    public class Coordinator: NSObject {
-        var parent: CodeEditorSwiftUIView
+    public class Coordinator: BaseCodeEditorCoordinator<CodeEditorSwiftUIView> {
         weak var containerView: CodeEditorContainerView?
         
-        // State tracking to prevent unnecessary updates
-        private var lastText: String = ""
-        private var lastLanguage: Language = .plainText
-        private var lastConfiguration: EditorConfiguration = .default
-        
-        init(_ parent: CodeEditorSwiftUIView) {
-            self.parent = parent
-        }
-        
-        func shouldUpdate(
-            text: String,
-            language: Language,
-            configuration: EditorConfiguration
-        ) -> Bool {
-            text != lastText ||
-                   language != lastLanguage ||
-                   configuration != lastConfiguration
-        }
-        
-        func updateState(
-            text: String,
-            language: Language,
-            configuration: EditorConfiguration
-        ) {
-            lastText = text
-            lastLanguage = language
-            lastConfiguration = configuration
-        }
-        
-        @objc func textDidChange(_ notification: Notification) {
+        override public func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? CodeEditorView else { return }
             let newText = textView.text ?? ""
             if parent.text != newText {
@@ -472,7 +332,7 @@ public struct CodeEditorSwiftUIView: UIViewRepresentable {
         }
         
         deinit {
-            NotificationCenter.default.removeObserver(self)
+            // Cleanup is handled by base class
         }
     }
 }

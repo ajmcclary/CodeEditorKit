@@ -94,15 +94,11 @@ final class ConfigurationTests: XCTestCase {
         let textView = CodeEditorView()
         textView.text = "Test content"
 
-        // Create NSTextRange for annotation using document range
-        guard let documentRange = textView.textContentStorage?.documentRange else {
-            XCTFail("Could not get document range")
-            return
-        }
-        guard let mockRange = NSTextRange(location: documentRange.location, end: documentRange.endLocation) else {
-            XCTFail("Could not create NSTextRange")
-            return
-        }
+        // Create mock NSTextRange for annotation
+        let mockRange = NSTextRange(
+            location: MockTextLocation(offset: 0),
+            end: MockTextLocation(offset: textView.text?.count ?? 0)
+        )!
         let annotation = Annotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)

@@ -13,6 +13,7 @@ public typealias PlatformTouch = NSTouch
 public typealias PlatformGestureRecognizer = NSGestureRecognizer
 public typealias PlatformPasteboard = NSPasteboard
 public typealias PlatformViewController = NSViewController
+public typealias PlatformContextMenu = NSMenu
 #else
 import UIKit
 public typealias PlatformColor = UIColor
@@ -27,6 +28,7 @@ public typealias PlatformTouch = UITouch
 public typealias PlatformGestureRecognizer = UIGestureRecognizer
 public typealias PlatformPasteboard = UIPasteboard
 public typealias PlatformViewController = UIViewController
+public typealias PlatformContextMenu = UIMenu
 #endif
 
 // Cross-platform color aliases

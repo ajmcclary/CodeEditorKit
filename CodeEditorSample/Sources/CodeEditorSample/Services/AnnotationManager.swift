@@ -162,8 +162,14 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> UIView? {
-        // iOS stub implementation
-        return nil
+        // Find the matching code annotation
+        guard let codeAnnotation = annotations.first(where: { $0.range == annotation.range }) else {
+            return nil
+        }
+        
+        // Create and return annotation view
+        let annotationView = AnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
+        return annotationView
     }
     #endif
 }
@@ -430,6 +436,228 @@ class AnnotationView: NSView {
     func hideAnnotationPopup() {
         popover?.close()
         popover = nil
+    }
+}
+#endif
+
+// MARK: - AnnotationView (iOS)
+
+#if canImport(UIKit)
+class AnnotationView: UIView {
+    private let annotation: CodeAnnotation
+    private var popoverController: UIViewController?
+    
+    init(annotation: CodeAnnotation, frame: CGRect) {
+        self.annotation = annotation
+        super.init(frame: frame)
+        setupView()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupView() {
+        // Create circular badge
+        layer.cornerRadius = bounds.width / 2
+        backgroundColor = annotation.type.color
+        
+        // Add icon
+        let iconImageView = UIImageView(frame: bounds.insetBy(dx: 4, dy: 4))
+        iconImageView.image = UIImage(systemName: getIconName())
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.tintColor = .white
+        addSubview(iconImageView)
+        
+        // Add tap gesture
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        addGestureRecognizer(tapGesture)
+        
+        // Add long press gesture for more details
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+        longPressGesture.minimumPressDuration = 0.5
+        addGestureRecognizer(longPressGesture)
+        
+        // Make accessible
+        isAccessibilityElement = true
+        accessibilityLabel = "\(annotation.type.label): \(annotation.message)"
+        accessibilityTraits = .button
+    }
+    
+    private func getIconName() -> String {
+        switch annotation.type {
+        case .todo:
+            return "checkmark.circle"
+        case .fixme:
+            return "wrench"
+        case .warning:
+            return "exclamationmark.triangle"
+        case .note:
+            return "info.circle"
+        case .error:
+            return "xmark.circle"
+        }
+    }
+    
+    @objc private func handleTap() {
+        showAnnotationPopup()
+    }
+    
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        
+        // Haptic feedback
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+        
+        showAnnotationPopup(detachable: true)
+    }
+    
+    private func showAnnotationPopup(detachable: Bool = false) {
+        guard let window = self.window,
+              let rootViewController = window.rootViewController else { return }
+        
+        // Dismiss existing popover if any
+        hideAnnotationPopup()
+        
+        // Create content view controller
+        let contentVC = UIViewController()
+        contentVC.preferredContentSize = CGSize(width: 300, height: 80)
+        
+        // Create content view
+        let contentView = UIView()
+        contentView.backgroundColor = .secondarySystemBackground
+        contentView.layer.cornerRadius = 12
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentVC.view.addSubview(contentView)
+        
+        // Type label
+        let typeLabel = UILabel()
+        typeLabel.text = annotation.type.label + ":"
+        typeLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        typeLabel.textColor = annotation.type.color
+        typeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Message label
+        let messageLabel = UILabel()
+        messageLabel.text = annotation.message
+        messageLabel.font = .systemFont(ofSize: 13)
+        messageLabel.textColor = .label
+        messageLabel.numberOfLines = 0
+        messageLabel.lineBreakMode = .byWordWrapping
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Stack view for labels
+        let stackView = UIStackView(arrangedSubviews: [typeLabel, messageLabel])
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .top
+        stackView.distribution = .fill
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stackView)
+        
+        // Close button for detachable popover
+        if detachable {
+            let closeButton = UIButton(type: .close)
+            closeButton.translatesAutoresizingMaskIntoConstraints = false
+            closeButton.addTarget(self, action: #selector(closePopover), for: .touchUpInside)
+            contentView.addSubview(closeButton)
+            
+            NSLayoutConstraint.activate([
+                closeButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+                closeButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+                closeButton.widthAnchor.constraint(equalToConstant: 24),
+                closeButton.heightAnchor.constraint(equalToConstant: 24)
+            ])
+        }
+        
+        NSLayoutConstraint.activate([
+            contentView.leadingAnchor.constraint(equalTo: contentVC.view.leadingAnchor, constant: 8),
+            contentView.trailingAnchor.constraint(equalTo: contentVC.view.trailingAnchor, constant: -8),
+            contentView.topAnchor.constraint(equalTo: contentVC.view.topAnchor, constant: 8),
+            contentView.bottomAnchor.constraint(equalTo: contentVC.view.bottomAnchor, constant: -8),
+            
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: detachable ? -40 : -16),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            
+            messageLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 200)
+        ])
+        
+        // Present as popover on iPad or modal on iPhone
+        if UIDevice.current.userInterfaceIdiom == .pad || detachable {
+            contentVC.modalPresentationStyle = .popover
+            
+            if let popover = contentVC.popoverPresentationController {
+                popover.sourceView = self
+                popover.sourceRect = bounds
+                popover.permittedArrowDirections = [.up, .down, .left, .right]
+                popover.delegate = detachable ? nil : NonDetachablePopoverDelegate.shared
+                
+                // Style the popover
+                popover.backgroundColor = .secondarySystemBackground
+            }
+            
+            rootViewController.present(contentVC, animated: true)
+        } else {
+            // On iPhone, show as a temporary overlay
+            showTemporaryOverlay(contentView: contentView, in: window)
+        }
+        
+        self.popoverController = contentVC
+    }
+    
+    private func showTemporaryOverlay(contentView: UIView, in window: UIWindow) {
+        // Convert position to window coordinates
+        let annotationFrame = convert(bounds, to: window)
+        
+        // Position the overlay above or below the annotation
+        let overlayY = annotationFrame.maxY + 8
+        let overlayFrame = CGRect(
+            x: max(8, annotationFrame.midX - 150),
+            y: overlayY,
+            width: 300,
+            height: 80
+        )
+        
+        contentView.frame = overlayFrame
+        contentView.alpha = 0
+        window.addSubview(contentView)
+        
+        // Animate in
+        UIView.animate(withDuration: 0.3) {
+            contentView.alpha = 1
+        }
+        
+        // Auto-dismiss after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak contentView] in
+            UIView.animate(withDuration: 0.3, animations: {
+                contentView?.alpha = 0
+            }, completion: { _ in
+                contentView?.removeFromSuperview()
+            })
+        }
+    }
+    
+    @objc private func closePopover() {
+        hideAnnotationPopup()
+    }
+    
+    func hideAnnotationPopup() {
+        popoverController?.dismiss(animated: true)
+        popoverController = nil
+    }
+}
+
+// Helper for non-detachable popovers on iPad
+private class NonDetachablePopoverDelegate: NSObject, UIPopoverPresentationControllerDelegate {
+    static let shared = NonDetachablePopoverDelegate()
+    
+    func popoverPresentationControllerShouldDismissPopover(
+        _ popoverPresentationController: UIPopoverPresentationController
+    ) -> Bool {
+        true
     }
 }
 #endif
