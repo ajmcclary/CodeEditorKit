@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 public typealias PlatformColor = NSColor
 public typealias PlatformFont = NSFont
@@ -33,7 +33,7 @@ public typealias PlatformContextMenu = UIMenu
 
 // Cross-platform color aliases
 public enum PlatformColors {
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public static var label: PlatformColor { NSColor.labelColor }
     public static var secondaryLabel: PlatformColor { NSColor.secondaryLabelColor }
     public static var tertiaryLabel: PlatformColor { NSColor.tertiaryLabelColor }
@@ -46,6 +46,16 @@ public enum PlatformColors {
     public static var clear: PlatformColor { NSColor.clear }
     public static var controlAccentColor: PlatformColor { NSColor.controlAccentColor }
     public static var textBackgroundColor: PlatformColor { NSColor.textBackgroundColor }
+    
+    // System colors
+    public static var systemRed: PlatformColor { NSColor.systemRed }
+    public static var systemBlue: PlatformColor { NSColor.systemBlue }
+    public static var systemGreen: PlatformColor { NSColor.systemGreen }
+    public static var systemPurple: PlatformColor { NSColor.systemPurple }
+    public static var systemOrange: PlatformColor { NSColor.systemOrange }
+    public static var systemTeal: PlatformColor { NSColor.systemTeal }
+    public static var systemIndigo: PlatformColor { NSColor.systemIndigo }
+    public static var systemPink: PlatformColor { NSColor.systemPink }
     #else
     public static var label: PlatformColor { UIColor.label }
     public static var secondaryLabel: PlatformColor { UIColor.secondaryLabel }
@@ -59,13 +69,23 @@ public enum PlatformColors {
     public static var clear: PlatformColor { UIColor.clear }
     public static var controlAccentColor: PlatformColor { UIColor.systemBlue }
     public static var textBackgroundColor: PlatformColor { UIColor.systemBackground }
+    
+    // System colors
+    public static var systemRed: PlatformColor { UIColor.systemRed }
+    public static var systemBlue: PlatformColor { UIColor.systemBlue }
+    public static var systemGreen: PlatformColor { UIColor.systemGreen }
+    public static var systemPurple: PlatformColor { UIColor.systemPurple }
+    public static var systemOrange: PlatformColor { UIColor.systemOrange }
+    public static var systemTeal: PlatformColor { UIColor.systemTeal }
+    public static var systemIndigo: PlatformColor { UIColor.systemIndigo }
+    public static var systemPink: PlatformColor { UIColor.systemPink }
     #endif
 }
 
 // Cross-platform font helpers
 public enum PlatformFonts {
     public static func monospacedSystemFont(ofSize size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSFont.monospacedSystemFont(ofSize: size, weight: weight)
         #else
         return UIFont.monospacedSystemFont(ofSize: size, weight: weight)
@@ -73,7 +93,7 @@ public enum PlatformFonts {
     }
     
     public static func systemFont(ofSize size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSFont.systemFont(ofSize: size, weight: weight)
         #else
         return UIFont.systemFont(ofSize: size, weight: weight)
@@ -81,7 +101,7 @@ public enum PlatformFonts {
     }
     
     public static var systemFontSize: CGFloat {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSFont.systemFontSize
         #else
         return UIFont.systemFontSize

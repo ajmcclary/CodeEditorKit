@@ -1,116 +1,71 @@
 # Review 2
 
-The repository offers a cross‑platform code editor supporting macOS (AppKit) and iOS (UIKit). The main abstractions are in Sources/CodeEditorPlugin/Platform, providing typealiases for common UI types and capability checks:
+The repository has a well‑structured platform abstraction layer with guidance in `Platform/README.md`. The README emphasizes using `#if canImport(AppKit) && !targetEnvironment(macCatalyst)` to detect macOS and `#elseif canImport(UIKit)` for iOS/Catalyst, avoiding `#if os(...)` checks. Example lines from the README:
 
 ```swift
-public typealias PlatformColor = NSColor      // or UIColor on iOS
-public typealias PlatformFont  = NSFont       // or UIFont
-…
-public enum PlatformFonts {
-    public static func monospacedSystemFont(ofSize size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
-        #if canImport(AppKit)
-        return NSFont.monospacedSystemFont(ofSize: size, weight: weight)
-        #else
-        return UIFont.monospacedSystemFont(ofSize: size, weight: weight)
-        #endif
-    }
-}
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// macOS-specific code
+#elseif canImport(UIKit)
+// iOS and Catalyst code
+#endif
 ```
 
-Runtime feature detection and platform-specific behaviors are centralized in PlatformCapabilities and CrossPlatformCoordinator. Keyboard and context‑menu handling on iOS is shown below:
-
-```swift
-private func setupKeyboardObservers() {
-    let willShow = NotificationCenter.default.addObserver(
-        forName: UIResponder.keyboardWillShowNotification,
-        object: nil,
-        queue: .main
-    ) { [weak self] notification in
-        …
-        self.handleKeyboardWillShow(keyboardFrame: keyboardFrame, duration: duration)
-    }
-    …
-}
-
-public func createContextMenu(for _: NSRange, in _: CodeEditorView) -> PlatformContextMenu {
-    var items: [ContextMenuItem] = []
-
-    // Common items
-    items.append(ContextMenuItem(title: "Cut", action: #selector(NSText.cut(_:))))
-    …
-
-    // Platform-specific items
-    #if os(macOS)
-    items.append(ContextMenuItem(title: "Go to Definition", action: #selector(goToDefinition)))
-    …
-    #else
-    if featureAvailability.goToDefinition.isAvailable {
-        items.append(ContextMenuItem(title: "Go to Definition", action: #selector(goToDefinition)))
-    }
-    #endif
-    return PlatformContextMenu(items: items)
-}
-```
-
-The abstraction layer also supports TextKit‑specific features:
-
-```swift
-@MainActor extension CodeEditorView: TextInputFeatureTarget {
-    public var nsTextView: NSTextView? { self }       // macOS
-    #if canImport(UIKit)
-    public var uiTextView: UITextView? { nil }
-    #endif
-}
-```
-
-## Areas for Improvement
-
-### Color extensions are macOS‑only.
-NSColor+Extensions.swift declares extensions on NSColor without guarding the extension itself. When the package is built for iOS, NSColor is undefined, causing a compilation failure.
+However, several files currently use `#if canImport(AppKit)` without excluding Mac Catalyst, which would cause Catalyst builds to compile the macOS branch instead of the UIKit branch. In `PlatformImports.swift`, Catalyst would see NS types because the condition does not check `!targetEnvironment(macCatalyst)`:
 
 ```swift
 #if canImport(AppKit)
 import AppKit
-#endif
-#if canImport(UIKit)
+public typealias PlatformColor = NSColor
+...
+#else
 import UIKit
+...
 #endif
-
-extension NSColor { … }   // unguarded – no counterpart for UIColor
 ```
 
-### Incomplete iOS implementation of ContentView.
-The macOS version forwards mouse and keyboard events to the editor, whereas the iOS stub only sets backgroundColor:
+The sample app shows the same pattern in `ThemeProvider.swift`:
 
 ```swift
-#if canImport(UIKit)
-// MARK: - ContentView (iOS Stub)
-public class ContentView: UIView {
-    …
-    private func setup() {
-        backgroundColor = .clear
-    }
-}
+#if canImport(AppKit)
+import AppKit
+...
+#else
+import UIKit
+...
 #endif
 ```
 
-### High OS version checks in MacOSVersionDetection.
-The file references future macOS versions ("26.0", "25.0"). Ensure these checks degrade gracefully or use feature availability rather than hardcoded version numbers.
+These sections should exclude Mac Catalyst from the AppKit branch so Catalyst correctly uses UIKit types.
 
-### Heavy usage of #if canImport/#if os macros.
-Large files such as GutterView.swift and CodeEditorView.swift mix macOS and iOS code extensively. Splitting implementations into dedicated platform files could simplify maintenance.
+The project's platform capability checks are otherwise thorough. `PlatformCapabilities.swift` determines the current platform with:
 
-### Testing focus.
-Tests import AppKit directly (`import AppKit`), so the UIKit pathways are mostly untested. Consider adding tests for the UIKit implementations to guard against regressions.
+```swift
+#if targetEnvironment(macCatalyst)
+return .catalyst
+#elseif canImport(AppKit)
+return .macOS
+#else
+return .iOS
+#endif
+```
 
-## Recommended Tasks
+The sample application also relies on simple `#if os(macOS)` checks (for example in `CodeEditorSampleApp.swift` and `UnifiedContentView.swift`). These could be revised to `canImport(AppKit)` with Catalyst exclusions for consistency.
 
-**Suggested task**
-Provide cross-platform color extensions
+## Testing
 
-**Suggested task**
-Enhance iOS ContentView functionality
+Running `swift test` fails because dependencies are fetched from the network:
 
-## Overall Assessment
+```
+error: Failed to clone repository https://github.com/apple/swift-syntax.git:
+fatal: unable to access 'https://github.com/apple/swift-syntax.git/': CONNECT tunnel failed, response 403
+```
 
-The project demonstrates a well‑structured approach to platform abstraction. Features such as PlatformImports, PlatformCapabilities, and CrossPlatformCoordinator are good foundations for maintaining a shared code base across AppKit and UIKit. Addressing the noted platform gaps—particularly the color extension and the minimal iOS ContentView—would improve portability and reliability. Potentially splitting large cross‑platform files into separate platform-specific implementations may also help reduce conditional compilation complexity.
+Codex couldn't run certain commands due to environment limitations. Consider configuring a setup script or internet access in your Codex environment to install dependencies.
+
+## Suggested Improvements
+
+* Update all platform checks to follow the guidance from `Platform/README.md`. Ensure Mac Catalyst uses the UIKit branches by adding `&& !targetEnvironment(macCatalyst)` where needed.
+* Review files such as `PlatformImports.swift`, `ThemeProvider.swift`, `AnnotationManager.swift`, `ConfigurationExporter.swift`, `StatusBarView.swift`, and `CodeEditorViewWrapper.swift` to apply the revised conditions consistently.
+* Provide iOS/Catalyst stubs (even minimal) for macOS‑only services like `ConfigurationExporter` so that the sample app builds cleanly across targets.
+
+These adjustments will ensure AppKit and UIKit logic remain clearly separated and the codebase works reliably across macOS, iOS, and Mac Catalyst.

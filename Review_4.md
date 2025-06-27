@@ -1,145 +1,64 @@
 # Review 4
 
-The repository contains a robust abstraction layer for handling AppKit (macOS) and UIKit (iOS) code paths. Platform-specific APIs are wrapped behind conditional compilation and platform-aware types. Below are key observations and suggestions.
+The main Swift package (CodeEditorPlugin) is organized by feature. Cross‑platform abstractions live under Sources/CodeEditorPlugin/Platform/, with extensive conditional compilation to support AppKit and UIKit.
 
-## Platform Abstractions
+The sample application (CodeEditorSample) demonstrates usage across macOS, iOS, and Catalyst with 66 tests and various SwiftUI views.
 
-### Unified Typealiases
-The PlatformImports.swift file defines typealiases for colors, fonts, views, events, etc., providing one common set of names regardless of AppKit or UIKit:
+Platform checks consistently rely on `#if canImport(AppKit)` / `#if canImport(UIKit)` with additional `targetEnvironment(macCatalyst)` logic in some areas.
 
-```swift
-#if canImport(AppKit)
-import AppKit
-public typealias PlatformColor = NSColor
-public typealias PlatformFont = NSFont
-…
-#else
-import UIKit
-public typealias PlatformColor = UIColor
-public typealias PlatformFont = UIFont
-…
-#endif
-```
+## Key Cross‑Platform Implementations
 
-### Runtime Capability Checks
-PlatformCapabilities exposes properties such as supportsTextKit2 and supportsHardwareAcceleration, enabling runtime feature detection:
+**Platform Typealiases** – PlatformImports.swift defines unified types for colors, fonts, views, events, etc. All code references these types rather than directly using AppKit/UIKit classes.
 
-```swift
-public var supportsTextKit2: Bool {
-    #if os(macOS)
-    return systemVersionComponents.major >= 13
-    #else
-    return systemVersionComponents.major >= 16
-    #endif
-}
-```
+**Runtime Detection** – PlatformCapabilities reports the current platform and system version, exposing features such as TextKit2 support or CADisplayLink availability.
 
-### Platform‑Aware Coordinator
-CrossPlatformCoordinator centralizes feature availability and platform optimizations. It builds recommended configurations and handles input differences:
+**Coordinator** – CrossPlatformCoordinator manages a feature matrix and platform‑specific adjustments like default font size and gutter width.
 
-```swift
-public func recommendedConfiguration() -> EditorConfiguration {
-    var config = EditorConfiguration()
-    config.display.fontSize = platformAdjustments.defaultFontSize
-    …
-    #if os(iOS)
-    config.behavior.enableHapticFeedback = true
-    #endif
-    return config
-}
-```
+**Text Input Features** – TextInputFeatures provides separate AppKit and UIKit implementations while sharing a common protocol.
 
-## UI Components
+**Version Utilities** – MacOSVersionDetection centralizes macOS feature checks with iOS stubs for the same API surface.
 
-### Container & Gutter
-The CodeEditorContainerView manages a text view, gutter, and minimap with iOS‑specific keyboard adjustments:
+**Sample App Wrappers** – The sample's CodeEditorViewWrapper defines distinct AppKit and UIKit code paths for embedding the editor in SwiftUI.
 
-```swift
-private func handleKeyboardWillShow(keyboardFrame: CGRect?, duration: Double?) {
-    let convertedFrame = convert(keyboardFrame, from: nil)
-    keyboardHeight = bounds.maxY - convertedFrame.minY
-    UIView.animate(withDuration: duration) { self.updateContentInsets() }
-}
-```
+**Configuration Export/Share** – UnifiedContentView switches between AppKit pasteboard and UIKit share sheets using conditional compilation.
 
-### SwiftUI Wrappers
-CodeEditorSwiftUIView provides NSViewRepresentable and UIViewRepresentable implementations:
+## Observations
 
-```swift
-#if os(macOS) && !targetEnvironment(macCatalyst)
-public struct CodeEditorSwiftUIView: NSViewRepresentable { … }
-#elseif os(iOS) || os(visionOS)
-public struct CodeEditorSwiftUIView: UIViewRepresentable { … }
-#endif
-```
+### Conditional Compilation Usage
+The codebase relies heavily on `#if canImport(AppKit)` and `#if canImport(UIKit)`. This approach preserves Catalyst compatibility and is generally consistent. However, large files like CodeEditorView.swift and GutterView.swift contain lengthy blocks of platform‑specific code, which can be harder to maintain.
 
-## Text Input Features
+### Feature Detection
+PlatformCapabilities exposes many runtime checks for features and recommended settings, which is a robust approach. For example, features such as text layout fragment support or CADisplayLink availability are determined at runtime, allowing code to adapt gracefully.
 
-### AppKit vs. UIKit Behavior
-TextInputFeatures defines per-platform implementations. UIKit lacks grammar checking and text replacement:
+### Separate Implementations
+The sample app segregates AppKit and UIKit logic for complex views. AnnotationManager includes platform‑specific annotation popup code and conditionally creates NSView or UIView subclasses for annotation badges.
 
-```swift
-public struct UIKitTextInputFeatures: TextInputFeatures {
-    public let supportsGrammarChecking = false // UIKit doesn't have native grammar checking
-    public let supportsTextReplacement = false // Would need custom implementation
-    …
-}
-```
+### Tests Primarily Target AppKit
+Many test files import AppKit directly. UIKit paths exist but appear less tested. PlatformAbstractionTests exercise both branches through conditional checks, yet additional UIKit‑specific tests might help prevent regressions.
 
-## Platform-Specific Enhancements
-
-### macOS Version Helpers
-MacOSVersionDetection provides feature flags (e.g., Liquid Glass design support):
-
-```swift
-public static var supportsLiquidGlassDesign: Bool {
-    isMacOS26OrLater
-}
-```
-
-### AppKit Text View Differences
-CodeEditorView uses conditional logic for AppKit's flipped coordinate system and completion popups:
-
-```swift
-#if canImport(AppKit)
-override public var isFlipped: Bool { true }
-private var completionWindow: NSWindow?
-#else
-private var completionPopover: UIViewController?
-#endif
-```
-
-## Documentation
-
-The README includes instructions for direct AppKit usage and highlights cross-platform architecture:
-
-### AppKit Integration
-```swift
-import CodeEditorPlugin
-import AppKit
-…
-```
-
-The architecture section explicitly lists platform-related components such as GutterView.swift and CodeEditorContainerView.swift.
+### Documentation
+The repository includes detailed guidance (Documentation/CATALYST_SUPPORT.md) on building for Mac Catalyst and demonstrates usage patterns. The Platform/README.md explains the rationale for using canImport checks and provides examples of recommended patterns.
 
 ## Suggestions
 
-### Explicit Observer Removal
-CodeEditorContainerView stores keyboard observers but relies on deallocation for cleanup. Consider removing observers in deinit to avoid potential leaks on iOS.
+### Consider Splitting Platform‑Specific Files
+Files such as CodeEditorView.swift and GutterView.swift contain substantial platform‑specific code. Creating separate CodeEditorView+AppKit.swift and CodeEditorView+UIKit.swift (or similar) would reduce conditional blocks and improve readability. This would align with the platform abstraction guidance mentioned in Review_2.md.
 
-### Complete iOS Stub Implementations
-Some files provide minimal iOS stubs (ContentView, TextInputFeatures). If feature parity is a goal, plan for full implementations or document limitations.
+### Enhance UIKit Test Coverage
+Add dedicated unit tests for UIKit paths (e.g., iOS annotation popups and context menus). This ensures that iOS behavior remains stable and avoids regressions observed in AppKit‑focused tests.
 
-### Consistent Conditional Checks
-Ensure all platform checks use consistent patterns (`os(macOS)` vs. `canImport(AppKit)`) especially when targeting Mac Catalyst or future platforms.
+### Audit Version Checks
+MacOSVersionDetection relies on compile‑time availability checks for macOS versions. Ensure these checks degrade gracefully on future macOS releases and verify the stubs for iOS remain up to date.
 
-### Test Coverage for Platform Differences
-While tests exist, verify that behaviors specific to AppKit and UIKit (e.g., keyboard handling, minimap visibility) are covered to prevent regressions.
+### Consistent Catalyst Handling
+The codebase sometimes uses `canImport(AppKit)` without verifying `!targetEnvironment(macCatalyst)`. Continue using explicit Catalyst checks (as done in PlatformCapabilities.currentPlatform) to avoid misclassifying Catalyst as macOS.
 
-### Graceful Fallbacks
-Where a feature is unavailable on one platform (e.g., iOS grammar checking), surface clear warnings or UI indicators so the user knows the limitation.
+### Performance Considerations
+PlatformCapabilities.recommendedConfiguration() adjusts settings by platform, but large files may still have performance impacts on iOS. Monitor memory usage and consider further optimizations for low‑resource devices.
 
-### Centralize Notification Handling
-Some notifications are observed directly in multiple places. Reviewing them under the coordinator could simplify cleanup and platform-specific logic.
+### Simplify SwiftUI Wrappers
+Where possible, unify AppKit and UIKit SwiftUI wrappers to minimize duplicate logic. In CodeEditorViewWrapper, both branches share configuration code; extracting common pieces into helper functions could reduce duplication.
 
-Overall, the project demonstrates careful handling of AppKit and UIKit differences through dedicated abstractions and conditional compilation. Incorporating the suggested cleanups and ensuring test coverage for platform nuances will further strengthen cross-platform reliability.
+## Testing
+
+Codex couldn't run certain commands due to environment limitations. Consider configuring a setup script or internet access in your Codex environment to install dependencies.
