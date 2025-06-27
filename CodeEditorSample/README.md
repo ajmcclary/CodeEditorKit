@@ -2,21 +2,24 @@
 
 A comprehensive demonstration application showcasing the full capabilities of the **CodeEditorPlugin**. This sample app serves as both a functional code editor and a reference implementation for developers learning to integrate CodeEditorPlugin into their own applications.
 
-> **🎉 Recently Enhanced:** Major Phase 1 enhancement completed with 17-language support, Advanced Features Showcase, enhanced configuration UI, and comprehensive testing with 66 passing tests.
+> **🎉 Recently Enhanced:** Cross-platform compatibility improvements with Mac Catalyst fixes, iOS ConfigurationExporter implementation, enhanced platform abstractions, and 66 comprehensive tests. Demonstrates the complete refactored architecture with modular platform-specific components.
 
 ## 🎯 What This Demonstrates
 
 This sample application provides a complete example of:
 
+- ✅ **Cross-Platform Compatibility** - Complete Mac Catalyst support with proper platform detection patterns
+- ✅ **iOS Feature Parity** - Native iOS ConfigurationExporter using UIDocumentPickerViewController
+- ✅ **Modular Architecture** - Platform-specific file organization with clean separation of concerns
+- ✅ **Enhanced Platform Abstractions** - Semantic color system with 8 new system colors
 - ✅ **Unified Configuration Integration** - How to use the plugin's EditorConfiguration system
 - ✅ **Working Syntax Highlighting** - **17 programming languages** with SwiftUI and AppKit
 - ✅ **Professional UI Components** - Line numbers, themes, status bars, and toolbars
-- ✅ **Cross-Platform Support** - macOS, iOS, and iPadOS implementations
 - ✅ **Configuration Presets** - Pre-built editor configurations for different use cases
 - ✅ **Real-Time Configuration** - Live updates without restart using nested configuration structure
 - ✅ **Inline Annotations** - TODO/FIXME/NOTE/WARNING/ERROR detection with hover popups
 - ✅ **Modern Architecture** - Swift 6 actor-based concurrency with full thread safety
-- ✅ **Comprehensive Testing** - **66 tests** covering all major functionality
+- ✅ **Comprehensive Testing** - **66 tests** covering all major functionality including cross-platform features
 - ✅ **Advanced Features Showcase** - Interactive demo with performance monitoring and feature exploration
 - ✅ **Plugin System Preview** - Architecture demonstration with marketplace integration
 - ✅ **Language Server Protocol** - LSP integration showcase for future language features
@@ -138,7 +141,7 @@ manager.scanForAnnotations() // Finds TODO, FIXME, NOTE, WARNING, ERROR
 
 ## 🏗️ Project Architecture
 
-### Sample App Structure (Enhanced)
+### Sample App Structure (Cross-Platform Enhanced)
 
 ```
 CodeEditorSample/
@@ -159,10 +162,10 @@ CodeEditorSample/
 │   │   ├── SwiftUIDemoView.swift          # SwiftUI integration demo
 │   │   └── StatusBarView.swift            # Status information
 │   ├── Services/
-│   │   ├── AnnotationManager.swift        # Annotation detection
-│   │   └── ConfigurationExporter.swift    # Settings import/export
+│   │   ├── AnnotationManager.swift        # Annotation detection with performance testing
+│   │   └── ConfigurationExporter.swift    # Cross-platform settings import/export (macOS+iOS)
 │   ├── Themes/
-│   │   └── ThemeProvider.swift            # Color theme definitions
+│   │   └── ThemeProvider.swift            # Color theme definitions with Mac Catalyst fixes
 │   └── Platform/
 │       └── PlatformTypes.swift            # Platform abstractions
 └── Tests/CodeEditorSampleTests/            # 66 comprehensive tests
