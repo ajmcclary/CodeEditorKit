@@ -1,13 +1,19 @@
-#if canImport(AppKit)
-import AppKit
 import CodeEditorPlugin
 import Foundation
+
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+import UniformTypeIdentifiers
+#endif
 
 // MARK: - ConfigurationExporter
 
 enum ConfigurationExporter {
     // MARK: - Export Configuration
 
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @MainActor
     static func exportConfiguration(_ config: EditorConfiguration, from window: NSWindow?) {
         let savePanel = NSSavePanel()
@@ -108,7 +114,113 @@ enum ConfigurationExporter {
         alert.addButton(withTitle: "OK")
         alert.beginSheetModal(for: window, completionHandler: nil)
     }
+
+#elseif canImport(UIKit)
+    @MainActor
+    static func exportConfiguration(_ config: EditorConfiguration, from viewController: UIViewController?) {
+        guard let viewController else { return }
+        
+        do {
+            let data = try JSONEncoder().encode(config)
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("editor-config.json")
+            try data.write(to: tempURL)
+            
+            let documentPicker = UIDocumentPickerViewController(forExporting: [tempURL])
+            documentPicker.modalPresentationStyle = .pageSheet
+            
+            // Handle completion
+            documentPicker.completionHandler = { [weak viewController] urls in
+                Task { @MainActor in
+                    // Clean up temp file
+                    try? FileManager.default.removeItem(at: tempURL)
+                    
+                    if !urls.isEmpty {
+                        showAlert(
+                            title: "Configuration Exported",
+                            message: "Your configuration has been saved successfully.",
+                            in: viewController
+                        )
+                    }
+                }
+            }
+            
+            viewController.present(documentPicker, animated: true)
+        } catch {
+            showAlert(
+                title: "Export Failed",
+                message: "Could not save configuration: \(error.localizedDescription)",
+                style: .alert,
+                in: viewController
+            )
+        }
+    }
+    
+    // MARK: - Import Configuration
+    
+    @MainActor
+    static func importConfiguration(
+        from viewController: UIViewController?,
+        completion: @escaping @Sendable (EditorConfiguration?) -> Void
+    ) {
+        guard let viewController else {
+            completion(nil)
+            return
+        }
+        
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.json])
+        documentPicker.allowsMultipleSelection = false
+        documentPicker.modalPresentationStyle = .pageSheet
+        
+        // Handle completion
+        documentPicker.completionHandler = { [weak viewController] urls in
+            Task { @MainActor in
+                guard let url = urls.first else {
+                    completion(nil)
+                    return
+                }
+                
+                do {
+                    let data = try Data(contentsOf: url)
+                    let config = try JSONDecoder().decode(EditorConfiguration.self, from: data)
+                    
+                    showAlert(
+                        title: "Configuration Imported",
+                        message: "Your configuration has been loaded successfully.",
+                        in: viewController
+                    )
+                    completion(config)
+                } catch {
+                    showAlert(
+                        title: "Import Failed",
+                        message: "Could not load configuration: \(error.localizedDescription)",
+                        style: .alert,
+                        in: viewController
+                    )
+                    completion(nil)
+                }
+            }
+        }
+        
+        viewController.present(documentPicker, animated: true)
+    }
+    
+    // MARK: - Helper Methods
+    
+    @MainActor
+    private static func showAlert(
+        title: String,
+        message: String,
+        style: UIAlertController.Style = .alert,
+        in viewController: UIViewController?
+    ) {
+        guard let viewController else { return }
+        
+        let alert = UIAlertController(title: title, message: message, preferredStyle: style)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        viewController.present(alert, animated: true)
+    }
+#endif
 }
 
 // Note: EditorConfiguration is already Codable in the plugin, so no additional extension needed
-#endif

@@ -1,6 +1,6 @@
 import CodeEditorPlugin
 import SwiftUI
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -46,7 +46,7 @@ struct StatusBarView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         .background(Color(NSColor.controlBackgroundColor))
         #else
         .background(Color(.secondarySystemBackground))
@@ -59,7 +59,7 @@ struct StatusBarView: View {
 
     private func setupObservers() {
         // Listen for text changes
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
@@ -82,7 +82,7 @@ struct StatusBarView: View {
         #endif
 
         // Listen for selection changes
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             forName: NSTextView.didChangeSelectionNotification,
             object: textView,

@@ -1,4 +1,4 @@
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 import CodeEditorPlugin
 import Foundation
@@ -294,7 +294,7 @@ enum ColorTheme: String, CaseIterable {
 
 extension PlatformColor {
     var hexString: String {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let color = usingColorSpace(.deviceRGB) else {
             return "#000000"
         }
