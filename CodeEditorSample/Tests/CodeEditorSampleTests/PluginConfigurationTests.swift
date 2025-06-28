@@ -18,7 +18,10 @@ final class PluginConfigurationTests: XCTestCase {
         // When applied to text view, no annotation manager should be created
         let annotationManager = AnnotationManager(textView: textView)
         annotationManager.clearAnnotations()
-        XCTAssertEqual(textView.subviews.filter { $0 is AnnotationView }.count, 0)
+        // Check for any annotation views (both plugin's and sample's)
+        XCTAssertEqual(textView.subviews.filter { view in
+            type(of: view).description().contains("AnnotationView")
+        }.count, 0)
         
         // Test enabled state
         config.display.enableAnnotations = true
@@ -170,7 +173,10 @@ final class PluginConfigurationTests: XCTestCase {
         // Test with empty text
         textView.text = ""
         annotationManager.scanForAnnotations()
-        XCTAssertEqual(textView.subviews.filter { $0 is AnnotationView }.count, 0)
+        // Check for any annotation views (both plugin's and sample's)
+        XCTAssertEqual(textView.subviews.filter { view in
+            type(of: view).description().contains("AnnotationView")
+        }.count, 0)
         
         // Test with very long lines
         let longLine = "// TODO: " + String(repeating: "x", count: 1000)
@@ -195,6 +201,9 @@ final class PluginConfigurationTests: XCTestCase {
         manager.clearAnnotations()
         
         // Verify annotations are cleared
-        XCTAssertEqual(textView.subviews.filter { $0 is AnnotationView }.count, 0)
+        // Check for any annotation views (both plugin's and sample's)
+        XCTAssertEqual(textView.subviews.filter { view in
+            type(of: view).description().contains("AnnotationView")
+        }.count, 0)
     }
 }

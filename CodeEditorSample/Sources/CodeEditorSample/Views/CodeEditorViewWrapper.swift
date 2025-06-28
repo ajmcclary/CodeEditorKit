@@ -47,67 +47,20 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     let language: String
     let onTextViewReady: ((CodeEditorView) -> Void)?
 
-    func makeNSView(context: Context) -> NSScrollView {
-        // Create NSScrollView
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
-        scrollView.autohidesScrollers = false
-        scrollView.borderType = .noBorder
-        
-        // Configure smooth scrolling
-        if configuration.performance.smoothScrolling {
-            scrollView.scrollerStyle = .overlay
-            scrollView.verticalScrollElasticity = .automatic
-            scrollView.horizontalScrollElasticity = .automatic
-        } else {
-            scrollView.scrollerStyle = .legacy
-            scrollView.verticalScrollElasticity = .none
-            scrollView.horizontalScrollElasticity = .none
-        }
-
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+    func makeNSView(context: Context) -> CodeEditorContainerView {
+        // Create the container view which manages the text view, gutter, and minimap
+        let containerView = CodeEditorContainerView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        let textView = containerView.textView
 
         // Set delegate
         textView.textDelegate = context.coordinator
         
-        // Ensure autoresizing mask is properly set
-        textView.autoresizingMask = [.width, .height]
-
-        // Apply configuration FIRST before setting text
-        applyConfiguration(to: textView)
+        // Apply configuration to the container view
+        containerView.configuration = configuration
         
-        // Configure text view for scroll view based on word wrap setting
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = !configuration.layout.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
-        textView.textContainer?.heightTracksTextView = false
-        
-        // Set container width for non-wrapping mode
-        if !configuration.layout.wrapLines {
-            textView.textContainer?.containerSize = NSSize(
-                width: CGFloat.greatestFiniteMagnitude,
-                height: CGFloat.greatestFiniteMagnitude
-            )
-        }
-
-        // Set the text view as the document view
-        scrollView.documentView = textView
-        
-        // NOW set the text content after the view is in the hierarchy
+        // Set language and text
+        textView.setLanguage(fileExtension: language)
         textView.string = text
-        
-        // Ensure text attributes are set
-        textView.textColor = PlatformColors.label
-        textView.font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        textView.backgroundColor = PlatformColors.textBackgroundColor
-        textView.drawsBackground = true
-        
-        // Force layout update after setting text
-        if let layoutManager = textView.layoutManager,
-           let textContainer = textView.textContainer {
-            layoutManager.ensureLayout(for: textContainer)
-        }
         
         // Set up annotation manager if enabled
         if configuration.display.enableAnnotations {
@@ -115,81 +68,24 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             context.coordinator.annotationManager?.scanForAnnotations()
         }
 
-        // Ensure the text view is properly laid out
-        textView.invalidateIntrinsicContentSize()
-        textView.needsLayout = true
-        textView.needsDisplay = true
-        
-        // Schedule a layout update after a brief delay to ensure proper rendering
-        DispatchQueue.main.async {
-            textView.needsDisplay = true
-            textView.needsLayout = true
-            
-            // Force a complete re-render by triggering a text change
-            let currentText = textView.string
-            textView.string = ""
-            textView.string = currentText
-            
-            if let layoutManager = textView.layoutManager,
-               let textContainer = textView.textContainer {
-                layoutManager.ensureLayout(for: textContainer)
-            }
-        }
-
         // Notify that text view is ready if callback provided
         onTextViewReady?(textView)
 
-        return scrollView
+        return containerView
     }
 
-    func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? CodeEditorView else { return }
+    func updateNSView(_ containerView: CodeEditorContainerView, context: Context) {
+        let textView = containerView.textView
         
         // Update text if changed
         if textView.string != text {
             textView.string = text
-            // Force a layout update after setting text
-            textView.needsLayout = true
-            textView.needsDisplay = true
         }
 
-        // Check if configuration actually changed before applying
-        if textView.configuration != configuration {
-            applyConfiguration(to: textView)
-        }
-        
-        // Update scroll view settings based on word wrap
-        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
-        
-        // Update smooth scrolling settings
-        if configuration.performance.smoothScrolling {
-            scrollView.scrollerStyle = .overlay
-            scrollView.verticalScrollElasticity = .automatic
-            scrollView.horizontalScrollElasticity = .automatic
-        } else {
-            scrollView.scrollerStyle = .legacy
-            scrollView.verticalScrollElasticity = .none
-            scrollView.horizontalScrollElasticity = .none
-        }
-        
-        // Update text container settings for word wrap
-        textView.isHorizontallyResizable = !configuration.layout.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
-        
-        // Set container width for non-wrapping mode
-        if !configuration.layout.wrapLines {
-            textView.textContainer?.containerSize = NSSize(
-                width: CGFloat.greatestFiniteMagnitude,
-                height: CGFloat.greatestFiniteMagnitude
-            )
-        } else {
-            // Reset container size for wrapping mode
-            if let scrollViewWidth = scrollView.enclosingScrollView?.contentSize.width {
-                textView.textContainer?.containerSize = NSSize(
-                    width: scrollViewWidth,
-                    height: CGFloat.greatestFiniteMagnitude
-                )
-            }
+        // Update configuration on the container view
+        if containerView.configuration != configuration {
+            containerView.configuration = configuration
+            textView.setLanguage(fileExtension: language)
         }
         
         // Update annotations
@@ -207,15 +103,6 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
-    }
-
-    private func applyConfiguration(to textView: CodeEditorView) {
-        // Set language FIRST, before applying configuration
-        // This ensures syntax highlighting works properly when the configuration enables it
-        textView.setLanguage(fileExtension: language)
-        
-        // Apply the full configuration
-        configuration.apply(to: textView)
     }
 
     // MARK: - Coordinator

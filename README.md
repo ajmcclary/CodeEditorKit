@@ -2,8 +2,6 @@
 
 A powerful, production-ready code editor component for macOS and iOS applications. Built with modern Swift 6 Actor-Based Concurrency, CodeEditorPlugin provides comprehensive syntax highlighting, professional line numbers, themes, smooth scrolling, and extensive customization for building world-class code editing experiences.
 
-> **🎉 Major Update:** Successfully completed comprehensive refactoring with fixed text rendering and line number display issues. The codebase now features a simplified architecture with feature-based organization (74% directory reduction), proper cross-platform support for iOS and macOS, and all 172 tests passing with zero SwiftLint violations.
-
 ## ✨ Features
 
 - 🎨 **Advanced Syntax Highlighting** - Support for **17 programming languages** with SwiftSyntax integration for Swift and regex-based highlighting for other languages
@@ -28,7 +26,7 @@ A powerful, production-ready code editor component for macOS and iOS application
 ## 📋 Requirements
 
 - **Swift**: 6.0+ (with full actor-based concurrency support)
-- **Platforms**: 
+- **Platforms**:
   - **macOS**: 12.0+ (optimized for macOS 14+)
   - **iOS**: 16.0+ (with proper container architecture)
   - **Mac Catalyst**: 16.0+
@@ -71,7 +69,7 @@ struct ContentView: View {
         }
         """
     @State private var configuration = EditorConfiguration()
-    
+
     var body: some View {
         VStack {
             CodeEditorSwiftUIView(
@@ -104,18 +102,18 @@ import UIKit
 class ViewController: PlatformViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         // Create text view
         let textView = CodeEditorView()
         textView.text = "// Your Swift code here\nprint(\"Hello, World!\")"
-        
+
         // Apply configuration
         let config = EditorConfiguration()
         config.apply(to: textView)
-        
+
         // Set language for syntax highlighting
         textView.setLanguage(fileExtension: "swift")
-        
+
         // Configure for scrolling (platform-aware)
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let scrollView = NSScrollView()
@@ -144,13 +142,13 @@ var config = EditorConfiguration()
 
 // Display Settings
 config.display.showLineNumbers = true
-config.display.highlightSelectedLine = true  
+config.display.highlightSelectedLine = true
 config.display.showInvisibleCharacters = false
 config.display.fontSize = 14.0
 config.display.enableSyntaxHighlighting = true
 config.display.enableAnnotations = true
 
-// Layout Settings  
+// Layout Settings
 config.layout.wrapLines = false
 config.layout.tabWidth = 4
 config.layout.insertSpacesForTabs = true
@@ -189,7 +187,7 @@ Use predefined configurations for common scenarios:
 ```swift
 // Built-in presets
 let defaultConfig = EditorConfiguration.default
-let minimalConfig = EditorConfiguration.minimal  
+let minimalConfig = EditorConfiguration.minimal
 let readOnlyConfig = EditorConfiguration.readOnly
 let markdownConfig = EditorConfiguration.markdown
 let presentationConfig = EditorConfiguration.presentation
@@ -219,7 +217,7 @@ config.apply(to: textView)
 ```swift
 // Automatic detection from file extension
 textView.setLanguage(fileExtension: "swift")
-textView.setLanguage(fileExtension: "py") 
+textView.setLanguage(fileExtension: "py")
 textView.setLanguage(fileExtension: "js")
 
 // Direct language setting
@@ -261,16 +259,6 @@ Sources/CodeEditorPlugin/
 └── Platform/                # Platform abstraction layer
 ```
 
-### Key Architecture Improvements
-
-- **74% Directory Reduction** - From 39 to 10 directories for simpler navigation
-- **Fixed Text Rendering** - Resolved line number clipping and text display issues on both platforms
-- **Proper Cross-Platform Support** - Working iOS container architecture and macOS smooth scrolling
-- **Feature-Based Organization** - Related code co-located for better maintainability
-- **Unified Configuration** - Single EditorConfiguration with nested structure
-- **Swift 6 Compliance** - Full actor-based concurrency throughout
-- **Zero Technical Debt** - All known issues resolved with comprehensive test coverage
-
 ### Actor-Based Concurrency
 
 - **Thread-Safe Validation** - All text processing uses Swift 6 actors
@@ -288,6 +276,7 @@ CodeEditorPlugin uses a comprehensive platform abstraction layer for true cross-
 - **Cross-Platform Patterns** - Always use `#if canImport()` instead of `#if os()` for better Catalyst support
 
 Example:
+
 ```swift
 // Cross-platform code
 let textColor = PlatformColors.label
@@ -350,45 +339,14 @@ swift build                     # ✅ Clean build
 swift test                      # ✅ 66/66 tests passing
 ```
 
-### Quality Metrics
-
-- **Zero SwiftLint violations** across entire codebase
-- **Swift 6 compliant** with full concurrency safety
-- **Comprehensive documentation** with inline code examples
-- **Cross-platform tested** on macOS, iOS, and Mac Catalyst
-- **172/172 tests passing** with extensive coverage
-- **Enhanced language support** validated across all 17 programming languages
-
-## 🔧 Development
-
-### Recent Refactoring Success
-
-The latest refactoring delivers significant improvements:
-
-- **Fixed Text Rendering Issues** - Resolved all line number clipping and text display problems
-- **Simplified Architecture** - Reduced complexity with feature-based organization (74% fewer directories)
-- **True Cross-Platform Support** - iOS and macOS now work flawlessly with proper container architecture
-- **Performance Optimizations** - Improved rendering performance with viewport-based updates
-- **Zero Regressions** - All 172 tests passing with zero SwiftLint violations
-- **Clean Codebase** - Removed redundant code and consolidated related functionality
-- **Future-Proof Design** - Modern Swift 6 patterns throughout with actor-based concurrency
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Run quality checks: `swiftlint --fix && swift test`
-4. Commit changes (`git commit -m 'Add amazing feature'`)
-5. Push to branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
 ## 📄 License
 
-CodeEditorPlugin is available under the MIT license. See the [LICENSE](LICENSE) file for details.
+CodeEditorPlugin is proprietary software. All rights are reserved and it may not be used, copied, distributed, or modified without explicit written permission from the owner.
+
+It was created by AJ McClary in 2025.
 
 ## 🙏 Acknowledgments
 
-- **STTextView** by Marcin Krzyzanowski - Inspiration for TextKit2 integration
 - **Apple's TextKit2** - Foundation framework providing modern text handling
 - **SwiftSyntax** - Enabling native Swift AST-based syntax highlighting
 - **Swift 6 Concurrency** - Actor-based architecture patterns from Apple's documentation

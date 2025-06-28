@@ -148,10 +148,10 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         
         #if canImport(AppKit)
         // Create and return annotation view
-        let annotationView = AnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
+        let annotationView = SampleAnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
         return annotationView
         #else
-        // iOS doesn't have AnnotationView yet
+        // iOS doesn't have SampleAnnotationView yet
         return nil
         #endif
     }
@@ -168,7 +168,7 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         }
         
         // Create and return annotation view
-        let annotationView = AnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
+        let annotationView = SampleAnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
         return annotationView
     }
     #endif
@@ -190,37 +190,20 @@ struct CodeAnnotation {
         case note
         case error
         
-        #if canImport(AppKit)
         var color: PlatformColor {
             switch self {
             case .todo:
-                return .systemBlue
+                return PlatformColors.systemBlue
             case .fixme:
-                return .systemOrange
+                return PlatformColors.systemOrange
             case .warning:
-                return .systemYellow
+                return PlatformColors.systemYellow
             case .note:
-                return .systemGray
+                return PlatformColors.secondaryLabel
             case .error:
-                return .systemRed
+                return PlatformColors.systemRed
             }
         }
-        #else
-        var color: PlatformColor {
-            switch self {
-            case .todo:
-                return .systemBlue
-            case .fixme:
-                return .systemOrange
-            case .warning:
-                return .systemYellow
-            case .note:
-                return .systemGray
-            case .error:
-                return .systemRed
-            }
-        }
-        #endif
         
         var icon: String {
             switch self {
@@ -254,10 +237,10 @@ struct CodeAnnotation {
     }
 }
 
-// MARK: - AnnotationView
+// MARK: - SampleAnnotationView
 
 #if canImport(AppKit)
-class AnnotationView: NSView {
+class SampleAnnotationView: NSView {
     private let annotation: CodeAnnotation
     private var trackingArea: NSTrackingArea?
     private var popover: NSPopover?
@@ -282,7 +265,7 @@ class AnnotationView: NSView {
         // Add icon or symbol
         let iconView = NSImageView(frame: bounds.insetBy(dx: 4, dy: 4))
         iconView.image = NSImage(systemSymbolName: getIconName(), accessibilityDescription: annotation.type.label)
-        iconView.contentTintColor = .white
+        iconView.contentTintColor = PlatformColors.white
         iconView.imageScaling = .scaleProportionallyUpOrDown
         addSubview(iconView)
         
@@ -440,10 +423,10 @@ class AnnotationView: NSView {
 }
 #endif
 
-// MARK: - AnnotationView (iOS)
+// MARK: - SampleAnnotationView (iOS)
 
 #if canImport(UIKit)
-class AnnotationView: UIView {
+class SampleAnnotationView: UIView {
     private let annotation: CodeAnnotation
     private var popoverController: UIViewController?
     
@@ -466,7 +449,7 @@ class AnnotationView: UIView {
         let iconImageView = UIImageView(frame: bounds.insetBy(dx: 4, dy: 4))
         iconImageView.image = UIImage(systemName: getIconName())
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
+        iconImageView.tintColor = PlatformColors.white
         addSubview(iconImageView)
         
         // Add tap gesture

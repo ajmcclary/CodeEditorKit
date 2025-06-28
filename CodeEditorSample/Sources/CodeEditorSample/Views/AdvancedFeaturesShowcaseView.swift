@@ -70,29 +70,35 @@ struct AdvancedFeaturesShowcaseView: View {
             
             Spacer()
             
-            // Performance toggle
-            Toggle(isOn: $showPerformanceMonitor) {
-                HStack(spacing: 4) {
-                    Image(systemName: "speedometer")
-                    Text("Performance")
-                }
-            }
-            .toggleStyle(.button)
+            // Performance toggle - using PlatformSafeToggle to avoid MainActor crashes
+            PlatformSafeToggle("Performance Monitor", isOn: $showPerformanceMonitor)
             
-            // Animation controls
+            // Animation controls - using PlatformSafeButton to avoid MainActor crashes
             HStack(spacing: 8) {
-                Button(action: startAnimation) {
+                PlatformSafeButton(action: startAnimation) {
                     Image(systemName: "play.fill")
+                        .foregroundColor(animationState == .running ? .secondary : .accentColor)
+                        .padding(8)
+                        .background(Color.accentColor.opacity(animationState == .running ? 0.1 : 0.2))
+                        .cornerRadius(8)
                 }
                 .disabled(animationState == .running)
                 
-                Button(action: stopAnimation) {
+                PlatformSafeButton(action: stopAnimation) {
                     Image(systemName: "stop.fill")
+                        .foregroundColor(animationState == .idle ? .secondary : .accentColor)
+                        .padding(8)
+                        .background(Color.accentColor.opacity(animationState == .idle ? 0.1 : 0.2))
+                        .cornerRadius(8)
                 }
                 .disabled(animationState == .idle)
                 
-                Button(action: resetDemo) {
+                PlatformSafeButton(action: resetDemo) {
                     Image(systemName: "arrow.clockwise")
+                        .foregroundColor(.accentColor)
+                        .padding(8)
+                        .background(Color.accentColor.opacity(0.2))
+                        .cornerRadius(8)
                 }
             }
             .buttonStyle(.borderless)
@@ -237,8 +243,8 @@ struct AdvancedFeaturesShowcaseView: View {
             
             Spacer()
             
-            Toggle("", isOn: binding)
-                .toggleStyle(.switch)
+            // Use SafeToggleSwitch for a switch-like appearance
+            SafeToggleSwitch("", isOn: binding)
         }
     }
     
@@ -682,8 +688,15 @@ enum FeatureDemo: String, CaseIterable {
                                 Text(item)
                                     .font(.headline)
                                 Spacer()
-                                Button("Action") {
+                                SafeButton(action: {
                                     performAction(item)
+                                }) {
+                                    Text("Action")
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentColor.opacity(0.1))
+                                        .foregroundColor(.accentColor)
+                                        .cornerRadius(4)
                                 }
                             }
                         }

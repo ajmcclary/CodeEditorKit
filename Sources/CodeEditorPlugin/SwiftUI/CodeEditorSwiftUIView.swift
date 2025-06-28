@@ -465,23 +465,13 @@ public struct CodeEditorSwiftUITheme: Sendable, Hashable {
     public static let `default` = Self(name: "default")
     
     public static let dark: Self = {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return Self(
+        Self(
             name: "dark",
-            backgroundColor: Color(.controlBackgroundColor),
+            backgroundColor: Color(PlatformColors.controlBackground),
             textColor: .white,
             lineNumberColor: .gray,
             selectedLineColor: .blue.opacity(0.2)
         )
-        #else
-        return Self(
-            name: "dark",
-            backgroundColor: Color(.systemBackground),
-            textColor: .white,
-            lineNumberColor: .gray,
-            selectedLineColor: .blue.opacity(0.2)
-        )
-        #endif
     }()
 }
 

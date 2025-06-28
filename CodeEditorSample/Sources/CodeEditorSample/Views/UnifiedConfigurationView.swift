@@ -175,6 +175,7 @@ struct UnifiedConfigurationView: View {
         VStack(spacing: 8) {
             ForEach(ConfigurationPreset.allCases, id: \.self) { preset in
                 PresetRow(preset: preset, isSelected: appState.selectedPreset == preset)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         appState.applyPreset(preset)
                     }
@@ -187,14 +188,14 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var displayContent: some View {
         VStack(spacing: 12) {
-            // Core display options
-            Toggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
-            Toggle("Highlight Selected Line", isOn: $appState.currentConfiguration.display.highlightSelectedLine)
-            Toggle("Show Invisible Characters", isOn: $appState.currentConfiguration.display.showInvisibleCharacters)
-            Toggle("Enable Syntax Highlighting", isOn: $appState.currentConfiguration.display.enableSyntaxHighlighting)
-            Toggle("Enable Annotations", isOn: $appState.currentConfiguration.display.enableAnnotations)
-            Toggle("Show Indent Guides", isOn: $appState.currentConfiguration.display.showIndentGuides)
-            Toggle("Show Minimap", isOn: $appState.currentConfiguration.display.showMinimap)
+            // Core display options - using PlatformSafeToggle to avoid MainActor crashes
+            PlatformSafeToggle("Show Line Numbers", isOn: $appState.coordinator.configuration.display.showLineNumbers)
+            PlatformSafeToggle("Highlight Selected Line", isOn: $appState.coordinator.configuration.display.highlightSelectedLine)
+            PlatformSafeToggle("Show Invisible Characters", isOn: $appState.coordinator.configuration.display.showInvisibleCharacters)
+            PlatformSafeToggle("Enable Syntax Highlighting", isOn: $appState.coordinator.configuration.display.enableSyntaxHighlighting)
+            PlatformSafeToggle("Enable Annotations", isOn: $appState.coordinator.configuration.display.enableAnnotations)
+            PlatformSafeToggle("Show Indent Guides", isOn: $appState.coordinator.configuration.display.showIndentGuides)
+            PlatformSafeToggle("Show Minimap", isOn: $appState.coordinator.configuration.display.showMinimap)
             // Additional display features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Additional Display Features (Coming Soon)")
@@ -210,15 +211,16 @@ struct UnifiedConfigurationView: View {
             }
             
             // Font size
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Font Size")
-                    Spacer()
-                    Text("\(Int(appState.currentConfiguration.display.fontSize))pt")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.display.fontSize, in: 10...32, step: 1)
-            }
+            SafeSlider(
+                "Font Size",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.display.fontSize) },
+                    set: { appState.coordinator.configuration.display.fontSize = CGFloat($0) }
+                ),
+                in: 10...32,
+                step: 1.0,
+                formatter: { "\(Int($0))pt" }
+            )
         }
     }
     
@@ -228,78 +230,77 @@ struct UnifiedConfigurationView: View {
     private var layoutContent: some View {
         VStack(spacing: 12) {
             // Tab settings
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Tab Width")
-                    Spacer()
-                    Text("\(appState.currentConfiguration.layout.tabWidth) spaces")
-                        .foregroundColor(.secondary)
-                }
-                Slider(
-                    value: Binding(
-                        get: { Double(appState.currentConfiguration.layout.tabWidth) },
-                        set: { appState.currentConfiguration.layout.tabWidth = Int($0) }
-                    ),
-                    in: 2...8,
-                    step: 1
-                )
-            }
+            SafeSlider(
+                "Tab Width",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.tabWidth) },
+                    set: { appState.coordinator.configuration.layout.tabWidth = Int($0) }
+                ),
+                in: 2...8,
+                step: 1.0,
+                formatter: { "\(Int($0)) spaces" }
+            )
             
-            Toggle("Insert Spaces for Tabs", isOn: $appState.currentConfiguration.layout.insertSpacesForTabs)
-            Toggle("Wrap Lines", isOn: $appState.currentConfiguration.layout.wrapLines)
+            PlatformSafeToggle("Insert Spaces for Tabs", isOn: $appState.coordinator.configuration.layout.insertSpacesForTabs)
+            PlatformSafeToggle("Wrap Lines", isOn: $appState.coordinator.configuration.layout.wrapLines)
             
             // Line spacing
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Line Spacing")
-                    Spacer()
-                    Text("\(appState.currentConfiguration.layout.lineSpacing, specifier: "%.1f")")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.layout.lineSpacing, in: 1.0...3.0, step: 0.1)
-            }
+            SafeSlider(
+                "Line Spacing",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.lineSpacing) },
+                    set: { appState.coordinator.configuration.layout.lineSpacing = CGFloat($0) }
+                ),
+                in: 1.0...3.0,
+                step: 0.1,
+                formatter: { String(format: "%.1f", $0) }
+            )
             
             // Gutter settings
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Gutter Width")
-                    Spacer()
-                    Text("\(Int(appState.currentConfiguration.layout.gutterWidth))pt")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.layout.gutterWidth, in: 40...100, step: 5)
-            }
+            SafeSlider(
+                "Gutter Width",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.gutterWidth) },
+                    set: { appState.coordinator.configuration.layout.gutterWidth = CGFloat($0) }
+                ),
+                in: 40...100,
+                step: 5.0,
+                formatter: { "\(Int($0))pt" }
+            )
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Line Number Padding")
-                    Spacer()
-                    Text("\(Int(appState.currentConfiguration.layout.lineNumberPadding))pt")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.layout.lineNumberPadding, in: 4...16, step: 1)
-            }
+            SafeSlider(
+                "Line Number Padding",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.lineNumberPadding) },
+                    set: { appState.coordinator.configuration.layout.lineNumberPadding = CGFloat($0) }
+                ),
+                in: 4...16,
+                step: 1.0,
+                formatter: { "\(Int($0))pt" }
+            )
             
             // Annotation settings
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Annotation Badge Size")
-                    Spacer()
-                    Text("\(Int(appState.currentConfiguration.layout.annotationBadgeSize))pt")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.layout.annotationBadgeSize, in: 12...24, step: 1)
-            }
+            SafeSlider(
+                "Annotation Badge Size",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.annotationBadgeSize) },
+                    set: { appState.coordinator.configuration.layout.annotationBadgeSize = CGFloat($0) }
+                ),
+                in: 12...24,
+                step: 1.0,
+                formatter: { "\(Int($0))pt" }
+            )
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Annotation Badge Padding")
-                    Spacer()
-                    Text("\(Int(appState.currentConfiguration.layout.annotationBadgePadding))pt")
-                        .foregroundColor(.secondary)
-                }
-                Slider(value: $appState.currentConfiguration.layout.annotationBadgePadding, in: 2...8, step: 1)
-            }
+            SafeSlider(
+                "Annotation Badge Padding",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.layout.annotationBadgePadding) },
+                    set: { appState.coordinator.configuration.layout.annotationBadgePadding = CGFloat($0) }
+                ),
+                in: 2...8,
+                step: 1.0,
+                formatter: { "\(Int($0))pt" }
+            )
         }
     }
     
@@ -308,12 +309,12 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var behaviorContent: some View {
         VStack(spacing: 12) {
-            Toggle("Editable", isOn: $appState.currentConfiguration.behavior.isEditable)
-            Toggle("Selectable", isOn: $appState.currentConfiguration.behavior.isSelectable)
-            Toggle("Auto Indent", isOn: $appState.currentConfiguration.behavior.autoIndent)
-            Toggle("Auto Close Brackets", isOn: $appState.currentConfiguration.behavior.autoCloseBrackets)
-            Toggle("Auto Close Quotes", isOn: $appState.currentConfiguration.behavior.autoCloseQuotes)
-            Toggle("Enable Code Completion", isOn: $appState.currentConfiguration.behavior.enableCodeCompletion)
+            PlatformSafeToggle("Editable", isOn: $appState.coordinator.configuration.behavior.isEditable)
+            PlatformSafeToggle("Selectable", isOn: $appState.coordinator.configuration.behavior.isSelectable)
+            PlatformSafeToggle("Auto Indent", isOn: $appState.coordinator.configuration.behavior.autoIndent)
+            PlatformSafeToggle("Auto Close Brackets", isOn: $appState.coordinator.configuration.behavior.autoCloseBrackets)
+            PlatformSafeToggle("Auto Close Quotes", isOn: $appState.coordinator.configuration.behavior.autoCloseQuotes)
+            PlatformSafeToggle("Enable Code Completion", isOn: $appState.coordinator.configuration.behavior.enableCodeCompletion)
             // Additional features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Advanced Features (Coming Soon)")
@@ -335,20 +336,20 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var textInputContent: some View {
         VStack(spacing: 12) {
-            Toggle("Continuous Spell Checking", 
-                   isOn: $appState.currentConfiguration.behavior.isContinuousSpellCheckingEnabled)
-            Toggle("Grammar Checking", 
-                   isOn: $appState.currentConfiguration.behavior.isGrammarCheckingEnabled)
-            Toggle("Automatic Quote Substitution", 
-                   isOn: $appState.currentConfiguration.behavior.isAutomaticQuoteSubstitutionEnabled)
-            Toggle("Automatic Dash Substitution", 
-                   isOn: $appState.currentConfiguration.behavior.isAutomaticDashSubstitutionEnabled)
-            Toggle("Automatic Text Replacement", 
-                   isOn: $appState.currentConfiguration.behavior.isAutomaticTextReplacementEnabled)
-            Toggle("Automatic Spelling Correction", 
-                   isOn: $appState.currentConfiguration.behavior.isAutomaticSpellingCorrectionEnabled)
-            Toggle("Automatic Text Completion", 
-                   isOn: $appState.currentConfiguration.behavior.isAutomaticTextCompletionEnabled)
+            PlatformSafeToggle("Continuous Spell Checking", 
+                       isOn: $appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled)
+            PlatformSafeToggle("Grammar Checking", 
+                       isOn: $appState.coordinator.configuration.behavior.isGrammarCheckingEnabled)
+            PlatformSafeToggle("Automatic Quote Substitution", 
+                       isOn: $appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled)
+            PlatformSafeToggle("Automatic Dash Substitution", 
+                       isOn: $appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled)
+            PlatformSafeToggle("Automatic Text Replacement", 
+                       isOn: $appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled)
+            PlatformSafeToggle("Automatic Spelling Correction", 
+                       isOn: $appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled)
+            PlatformSafeToggle("Automatic Text Completion", 
+                       isOn: $appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled)
             
             #if canImport(UIKit)
             Text("Note: Some text input features may have limited support on iOS")
@@ -363,8 +364,8 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var performanceContent: some View {
         VStack(spacing: 12) {
-            Toggle("Hardware Acceleration", isOn: $appState.currentConfiguration.performance.useHardwareAcceleration)
-            Toggle("Smooth Scrolling", isOn: $appState.currentConfiguration.performance.smoothScrolling)
+            PlatformSafeToggle("Hardware Acceleration", isOn: $appState.coordinator.configuration.performance.useHardwareAcceleration)
+            PlatformSafeToggle("Smooth Scrolling", isOn: $appState.coordinator.configuration.performance.smoothScrolling)
             // Additional performance features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Advanced Performance Features (Coming Soon)")
@@ -380,37 +381,25 @@ struct UnifiedConfigurationView: View {
             }
             
             // Max syntax highlighting length
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Max Syntax Highlighting")
-                    Spacer()
-                    Text("\(formatBytes(appState.currentConfiguration.performance.maxSyntaxHighlightingLength))")
-                        .foregroundColor(.secondary)
-                }
-                Slider(
-                    value: Binding(
-                        get: { Double(appState.currentConfiguration.performance.maxSyntaxHighlightingLength) },
-                        set: { appState.currentConfiguration.performance.maxSyntaxHighlightingLength = Int($0) }
-                    ),
-                    in: 10_000...1_000_000,
-                    step: 10_000
-                )
-            }
+            SafeSlider(
+                "Max Syntax Highlighting",
+                value: Binding(
+                    get: { Double(appState.coordinator.configuration.performance.maxSyntaxHighlightingLength) },
+                    set: { appState.coordinator.configuration.performance.maxSyntaxHighlightingLength = Int($0) }
+                ),
+                in: 10_000...1_000_000,
+                step: 10_000,
+                formatter: { formatBytes(Int($0)) }
+            )
             
             // Text change debounce interval
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Text Change Debounce")
-                    Spacer()
-                    Text("\(appState.currentConfiguration.performance.textChangeDebounceInterval, specifier: "%.1f")s")
-                        .foregroundColor(.secondary)
-                }
-                Slider(
-                    value: $appState.currentConfiguration.performance.textChangeDebounceInterval,
-                    in: 0.0...1.0,
-                    step: 0.1
-                )
-            }
+            SafeSlider(
+                "Text Change Debounce",
+                value: $appState.coordinator.configuration.performance.textChangeDebounceInterval,
+                in: 0.0...1.0,
+                step: 0.1,
+                formatter: { String(format: "%.1fs", $0) }
+            )
         }
     }
     
@@ -643,23 +632,32 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var importExportButtons: some View {
         HStack(spacing: 12) {
-            Button(action: exportConfiguration) {
+            PlatformSafeButton(action: exportConfiguration) {
                 Label("Export", systemImage: "square.and.arrow.up")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentColor.opacity(0.1))
+                    .cornerRadius(6)
             }
-            .buttonStyle(.bordered)
             
-            Button(action: importConfiguration) {
+            PlatformSafeButton(action: importConfiguration) {
                 Label("Import", systemImage: "square.and.arrow.down")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentColor.opacity(0.1))
+                    .cornerRadius(6)
             }
-            .buttonStyle(.bordered)
             
             Spacer()
             
-            Button(action: resetConfiguration) {
+            PlatformSafeButton(action: resetConfiguration) {
                 Label("Reset All", systemImage: "arrow.counterclockwise")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(6)
+                    .foregroundColor(.red)
             }
-            .buttonStyle(.bordered)
-            .foregroundColor(.red)
         }
         .padding(.horizontal)
     }
@@ -689,11 +687,11 @@ struct UnifiedConfigurationView: View {
     private func exportConfiguration() {
         #if canImport(AppKit)
         if let window = NSApp.keyWindow {
-            ConfigurationExporter.exportConfiguration(appState.currentConfiguration, from: window)
+            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
         }
         #else
         // iOS export implementation would go here
-        print("Export configuration: \(appState.currentConfiguration)")
+        print("Export configuration: \(appState.coordinator.configuration)")
         #endif
     }
     
@@ -715,7 +713,7 @@ struct UnifiedConfigurationView: View {
     }
     
     private func resetConfiguration() {
-        appState.currentConfiguration = EditorConfiguration()
+        appState.coordinator.reset()
         appState.selectedPreset = .fullFeatured
     }
 }

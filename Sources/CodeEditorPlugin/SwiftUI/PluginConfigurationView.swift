@@ -185,11 +185,7 @@ public struct PluginConfigurationView: View {
             }
             .padding(.horizontal)
         }
-        #if canImport(UIKit)
-        .background(Color(.systemBackground))
-        #else
-        .background(Color(PlatformColors.controlBackground))
-        #endif
+        .background(Color(PlatformColors.systemBackground))
         .popover(isPresented: $showPerformanceStats) {
             PerformanceStatsView(pluginManager: pluginManager)
                 .frame(minWidth: 300, minHeight: 200)

@@ -76,7 +76,7 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testFont() {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
-        let customFont = NSFont.monospacedSystemFont(ofSize: 16, weight: .regular)
+        let customFont = PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular)
         textView.font = customFont
         XCTAssertEqual(textView.font, customFont)
     }
@@ -84,7 +84,7 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testTextColor() {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
-        let customColor = NSColor.blue
+        let customColor = PlatformColors.systemBlue
         textView.textColor = customColor
         XCTAssertEqual(textView.textColor, customColor)
     }
@@ -92,7 +92,7 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testBackgroundColor() {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
-        let customBgColor = NSColor.darkGray
+        let customBgColor = PlatformColors.systemGray
         textView.backgroundColor = customBgColor
         XCTAssertEqual(textView.backgroundColor, customBgColor)
     }

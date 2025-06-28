@@ -178,7 +178,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// NSTextView requires flipped coordinates for proper text rendering
-    override public var isFlipped: Bool {
+    nonisolated override public var isFlipped: Bool {
         true
     }
     #endif
@@ -470,11 +470,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         textStorage.removeAttribute(.foregroundColor, range: fullRange)
 
         // Restore default text color
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColor.labelColor, range: fullRange)
-        #else
-        textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColor.label, range: fullRange)
-        #endif
+        textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColors.label, range: fullRange)
     }
 
     // MARK: - Code Completion
@@ -1174,10 +1170,18 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func layout() {
-        super.layout()
-        updateGutterFrame()
-        updateLineHighlightFrame()
-        updateAnnotationViews()
+        // Ensure we're on the main thread for layout operations
+        if Thread.isMainThread {
+            super.layout()
+            updateGutterFrame()
+            updateLineHighlightFrame()
+            updateAnnotationViews()
+        } else {
+            // Dispatch to main thread if called from background
+            DispatchQueue.main.async { [weak self] in
+                self?.layout()
+            }
+        }
     }
     #else
     override public func layoutSubviews() {

@@ -1,18 +1,28 @@
-#if canImport(UIKit)
+import Foundation
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
 import UIKit
+#endif
 
-/// Container view that holds both the text view and the gutter view side by side
-/// This allows the gutter to remain fixed while the text view scrolls
+/// Cross-platform container view that holds the text view, gutter view, and minimap
+/// This allows the gutter and minimap to remain fixed while the text view scrolls
 @MainActor
-public class CodeEditorContainerView: UIView {
+public class CodeEditorContainerView: PlatformView {
+    // MARK: - Properties
+    
     public let textView: CodeEditorView
     public let gutterView: GutterView
     public let minimapView: MinimapView
-    public let contentView: ContentView
     private var minimapDataProvider: MinimapDataProvider?
     
+    #if canImport(UIKit)
+    public let contentView: ContentView
     private var keyboardObservers: [NSObjectProtocol] = []
     private var keyboardHeight: CGFloat = 0
+    #else
+    public let scrollView: NSScrollView
+    #endif
     
     /// Configuration for the editor
     public var configuration: EditorConfiguration = .default {
@@ -20,6 +30,8 @@ public class CodeEditorContainerView: UIView {
             applyConfiguration()
         }
     }
+    
+    // MARK: - Initialization
     
     override public init(frame: CGRect) {
         // Create the text view
@@ -31,13 +43,18 @@ public class CodeEditorContainerView: UIView {
         // Create the minimap view
         minimapView = MinimapView(frame: .zero)
         
-        // Create the content view
+        #if canImport(UIKit)
+        // Create the content view for iOS
         contentView = ContentView(frame: .zero)
+        #else
+        // Create scroll view for macOS
+        scrollView = NSScrollView(frame: .zero)
+        #endif
         
         super.init(frame: frame)
         
         setupViews()
-        setupKeyboardObservers()
+        setupObservers()
     }
     
     public required init?(coder: NSCoder) {
@@ -50,16 +67,84 @@ public class CodeEditorContainerView: UIView {
         // Create the minimap view
         minimapView = MinimapView(frame: .zero)
         
-        // Create the content view
+        #if canImport(UIKit)
+        // Create the content view for iOS
         contentView = ContentView(frame: .zero)
+        #else
+        // Create scroll view for macOS
+        scrollView = NSScrollView(frame: .zero)
+        #endif
         
         super.init(coder: coder)
         
         setupViews()
-        setupKeyboardObservers()
+        setupObservers()
     }
     
+    // MARK: - Setup
+    
     private func setupViews() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        setupMacOSViews()
+        #else
+        setupIOSViews()
+        #endif
+        
+        // Common setup
+        gutterView.textView = textView
+        setupMinimap()
+        
+        // Apply initial text container insets
+        updateTextContainerInsets()
+        
+        // Set container background using platform colors
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS uses layer background
+        wantsLayer = true
+        layer?.backgroundColor = PlatformColors.systemBackground.cgColor
+        #else
+        backgroundColor = PlatformColors.systemBackground
+        #endif
+    }
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    private func setupMacOSViews() {
+        // Configure scroll view
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
+        scrollView.autohidesScrollers = false
+        scrollView.borderType = .noBorder
+        
+        // Configure text view for scroll view
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        textView.textContainer?.heightTracksTextView = false
+        textView.autoresizingMask = [.width, .height]
+        
+        // Set container width for non-wrapping mode
+        if !configuration.layout.wrapLines {
+            textView.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
+        
+        // Set text view as document view
+        scrollView.documentView = textView
+        
+        // Add subviews
+        addSubview(scrollView)
+        addSubview(gutterView)
+        addSubview(minimapView)
+        
+        // Ensure text view background is transparent where gutter is
+        textView.backgroundColor = PlatformColors.clear
+    }
+    #endif
+    
+    #if canImport(UIKit)
+    private func setupIOSViews() {
         // Add all views
         addSubview(contentView)
         contentView.addSubview(textView)
@@ -68,40 +153,28 @@ public class CodeEditorContainerView: UIView {
         
         // Connect components
         contentView.setTextView(textView)
-        gutterView.textView = textView
         
         // Set up input accessory
         if configuration.behavior.isEditable {
             textView.inputAccessoryView = contentView.createInputAccessory()
         }
         
-        // Set up minimap
-        setupMinimap()
-        
-        // Set up the text view to account for the gutter
-        let gutterWidth = configuration.layout.gutterWidth
-        let padding = configuration.layout.lineNumberPadding
-        let currentInsets = textView.textContainerEdgeInsets
-        let newInsets = EdgeInsets(
-            top: currentInsets.top,
-            left: gutterWidth + padding,
-            bottom: currentInsets.bottom,
-            right: currentInsets.right
-        )
-        textView.setTextContainerEdgeInsets(newInsets)
-        
         // Ensure text view scrolls and doesn't resize with keyboard
         textView.alwaysBounceVertical = true
         textView.isScrollEnabled = true
         
         // Ensure text view background is transparent where gutter is
-        textView.backgroundColor = .clear
-        
-        // Set container background
-        backgroundColor = .systemBackground
+        textView.backgroundColor = PlatformColors.clear
         
         // Ensure gutter stays on top
         bringSubviewToFront(gutterView)
+    }
+    #endif
+    
+    private func setupObservers() {
+        #if canImport(UIKit)
+        setupKeyboardObservers()
+        #endif
     }
     
     private func setupMinimap() {
@@ -117,6 +190,17 @@ public class CodeEditorContainerView: UIView {
         minimapView.isHidden = !configuration.display.showMinimap
         
         // Set up text change observer to update minimap
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        NotificationCenter.default.addObserver(
+            forName: NSText.didChangeNotification,
+            object: textView,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updateMinimap()
+            }
+        }
+        #else
         NotificationCenter.default.addObserver(
             forName: UITextView.textDidChangeNotification,
             object: textView,
@@ -126,8 +210,20 @@ public class CodeEditorContainerView: UIView {
                 self?.updateMinimap()
             }
         }
+        #endif
         
-        // Set up scroll observer to update minimap  
+        // Set up scroll observer to update minimap
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        NotificationCenter.default.addObserver(
+            forName: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updateMinimap()
+            }
+        }
+        #else
         NotificationCenter.default.addObserver(
             forName: UIScrollView.contentOffsetDidChangeNotification,
             object: textView,
@@ -137,10 +233,33 @@ public class CodeEditorContainerView: UIView {
                 self?.updateMinimap()
             }
         }
+        #endif
     }
     
+    // MARK: - Navigation
+    
     private func navigateToLine(_ lineNumber: Int) {
-        // Navigate text view to the specified line
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS navigation
+        let text = textView.string
+        let lines = text.components(separatedBy: .newlines)
+        
+        guard lineNumber < lines.count else { return }
+        
+        // Calculate character position for the line
+        let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
+        if lineNumber > 0 {
+            // Add 1 for the newline character
+            let targetPosition = lineStart + 1
+            textView.setSelectedRange(NSRange(location: targetPosition, length: 0))
+            textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+        } else {
+            // First line
+            textView.setSelectedRange(NSRange(location: 0, length: 0))
+            textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+        }
+        #else
+        // iOS navigation
         let text = textView.text ?? ""
         let lines = text.components(separatedBy: .newlines)
         
@@ -163,6 +282,7 @@ public class CodeEditorContainerView: UIView {
             textView.selectedTextRange = textView.textRange(from: textView.beginningOfDocument, to: textView.beginningOfDocument)
             textView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: true)
         }
+        #endif
     }
     
     private func updateMinimap() {
@@ -175,6 +295,200 @@ public class CodeEditorContainerView: UIView {
         minimapView.updateData(data)
     }
     
+    // MARK: - Layout
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    override public func layout() {
+        // Ensure we're on the main thread for layout operations
+        if Thread.isMainThread {
+            super.layout()
+            layoutViews()
+        } else {
+            // Dispatch to main thread if called from background
+            DispatchQueue.main.async { [weak self] in
+                self?.layout()
+            }
+        }
+    }
+    #else
+    override public func layoutSubviews() {
+        super.layoutSubviews()
+        layoutViews()
+    }
+    #endif
+    
+    private func layoutViews() {
+        // Calculate layout dimensions
+        let gutterWidth = configuration.layout.gutterWidth
+        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS layout
+        
+        // Position scroll view to take remaining space between gutter and minimap
+        scrollView.frame = CGRect(
+            x: gutterWidth,
+            y: 0,
+            width: bounds.width - gutterWidth - minimapWidth,
+            height: bounds.height
+        )
+        
+        // Position gutter on the left
+        gutterView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: gutterWidth,
+            height: bounds.height
+        )
+        
+        // Position minimap on the right
+        if configuration.display.showMinimap {
+            minimapView.frame = CGRect(
+                x: bounds.width - minimapWidth,
+                y: 0,
+                width: minimapWidth,
+                height: bounds.height
+            )
+            minimapView.isHidden = false
+        } else {
+            minimapView.isHidden = true
+        }
+        #else
+        // iOS layout
+        
+        // Get the text view's content size
+        let contentSize = textView.contentSize
+        
+        // Position content view to fill the container
+        contentView.frame = bounds
+        
+        // Position gutter on the left - it should match content height, not bounds
+        gutterView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: gutterWidth,
+            height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
+        )
+        
+        // Position minimap on the right
+        if configuration.display.showMinimap {
+            minimapView.frame = CGRect(
+                x: bounds.width - minimapWidth,
+                y: 0,
+                width: minimapWidth,
+                height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
+            )
+            minimapView.isHidden = false
+        } else {
+            minimapView.isHidden = true
+        }
+        
+        // Position text view within content view to take remaining space between gutter and minimap
+        let textViewWidth = bounds.width - minimapWidth
+        textView.frame = CGRect(
+            x: 0,  // Text view starts at 0, but has inset for gutter
+            y: 0,
+            width: textViewWidth,
+            height: bounds.height
+        )
+        
+        // Ensure content insets are maintained
+        updateContentInsets()
+        #endif
+        
+        // Force gutter to update when layout changes
+        gutterView.setNeedsDisplayLineNumbers()
+        
+        // Update minimap if shown
+        if configuration.display.showMinimap {
+            updateMinimap()
+        }
+    }
+    
+    // MARK: - Text Container Insets
+    
+    private func updateTextContainerInsets() {
+        let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
+        let padding = configuration.layout.lineNumberPadding
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let currentInsets = textView.textContainerInset
+        textView.textContainerInset = NSSize(
+            width: gutterWidth + padding,
+            height: currentInsets.height
+        )
+        #else
+        let currentInsets = textView.textContainerEdgeInsets
+        let newInsets = EdgeInsets(
+            top: currentInsets.top,
+            left: gutterWidth + padding,
+            bottom: currentInsets.bottom,
+            right: currentInsets.right
+        )
+        textView.setTextContainerEdgeInsets(newInsets)
+        #endif
+    }
+    
+    // MARK: - Configuration
+    
+    /// Updates whether line numbers are shown
+    public var showsLineNumbers: Bool = false {
+        didSet {
+            gutterView.isHidden = !showsLineNumbers
+            updateTextContainerInsets()
+            
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            needsLayout = true
+            #else
+            setNeedsLayout()
+            #endif
+        }
+    }
+    
+    private func applyConfiguration() {
+        // Apply configuration to text view, but disable its internal line numbers
+        // since we manage the gutter externally
+        var textViewConfig = configuration
+        textViewConfig.display.showLineNumbers = false
+        textView.configuration = textViewConfig
+        
+        // Update our own properties based on configuration
+        showsLineNumbers = configuration.display.showLineNumbers
+        
+        // Update minimap visibility
+        minimapView.isHidden = !configuration.display.showMinimap
+        
+        // Update scroll view settings on macOS
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        
+        if !configuration.layout.wrapLines {
+            textView.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
+        #endif
+        
+        // Force layout update
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        needsLayout = true
+        #else
+        setNeedsLayout()
+        #endif
+        
+        // Update minimap if it's now visible
+        if configuration.display.showMinimap {
+            updateMinimap()
+        }
+    }
+    
+    // MARK: - Platform-Specific Extensions
+    
+    #if canImport(UIKit)
+    // iOS-specific keyboard handling and content insets
     private func setupKeyboardObservers() {
         // Listen for keyboard notifications
         let willShow = NotificationCenter.default.addObserver(
@@ -265,120 +579,9 @@ public class CodeEditorContainerView: UIView {
             }
         }
     }
-    
-    override public func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // IMPORTANT: We need to maintain the text view's natural content size
-        // even when the container is resized by SwiftUI for keyboard
-        
-        // Get the text view's content size
-        let contentSize = textView.contentSize
-        
-        // Calculate layout dimensions
-        let gutterWidth = configuration.layout.gutterWidth
-        let minimapWidth = configuration.display.showMinimap ? 120 : 0
-        
-        // Position content view to fill the container
-        contentView.frame = bounds
-        
-        // Position gutter on the left - it should match content height, not bounds
-        gutterView.frame = CGRect(
-            x: 0,
-            y: 0,
-            width: gutterWidth,
-            height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
-        )
-        
-        // Position minimap on the right
-        if configuration.display.showMinimap {
-            minimapView.frame = CGRect(
-                x: bounds.width - minimapWidth,
-                y: 0,
-                width: minimapWidth,
-                height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
-            )
-            minimapView.isHidden = false
-        } else {
-            minimapView.isHidden = true
-        }
-        
-        // Position text view within content view to take remaining space between gutter and minimap
-        let textViewWidth = bounds.width - minimapWidth
-        textView.frame = CGRect(
-            x: 0,  // Text view starts at 0, but has inset for gutter
-            y: 0,
-            width: textViewWidth,
-            height: bounds.height
-        )
-        
-        // Ensure content insets are maintained
-        updateContentInsets()
-        
-        // Force gutter to update when layout changes
-        gutterView.setNeedsDisplay()
-        
-        // Update minimap if shown
-        if configuration.display.showMinimap {
-            updateMinimap()
-        }
-    }
-    
-    /// Updates whether line numbers are shown
-    public var showsLineNumbers: Bool = false {
-        didSet {
-            gutterView.isHidden = !showsLineNumbers
-            
-            // Update text container inset
-            let gutterWidth = configuration.layout.gutterWidth
-            let padding = configuration.layout.lineNumberPadding
-            let currentInsets = textView.textContainerEdgeInsets
-            
-            if showsLineNumbers {
-                let newInsets = EdgeInsets(
-                    top: currentInsets.top,
-                    left: gutterWidth + padding,
-                    bottom: currentInsets.bottom,
-                    right: currentInsets.right
-                )
-                textView.setTextContainerEdgeInsets(newInsets)
-            } else {
-                let newInsets = EdgeInsets(
-                    top: currentInsets.top,
-                    left: padding,
-                    bottom: currentInsets.bottom,
-                    right: currentInsets.right
-                )
-                textView.setTextContainerEdgeInsets(newInsets)
-            }
-        }
-    }
-    
-    // MARK: - Configuration
-    
-    private func applyConfiguration() {
-        // Apply configuration to text view
-        textView.configuration = configuration
-        
-        // Update our own properties based on configuration
-        showsLineNumbers = configuration.display.showLineNumbers
-        
-        // Update minimap visibility
-        minimapView.isHidden = !configuration.display.showMinimap
-        
-        // Force layout update
-        setNeedsLayout()
-        
-        // Update minimap if it's now visible
-        if configuration.display.showMinimap {
-            updateMinimap()
-        }
-    }
-    
-    // Cleanup happens automatically when observers are deallocated
+    #endif
     
     deinit {
         // Observers are automatically removed when deallocated
     }
 }
-#endif

@@ -60,55 +60,43 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
         public var color: RegexHighlighterColor {
             switch self {
             case .keyword:
-                .systemPurple
+                PlatformColors.systemPurple
 
             case .identifier:
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .labelColor
-                #else
-                .label
-                #endif
+                PlatformColors.label
 
             case .string:
-                .systemRed
+                PlatformColors.systemRed
 
             case .number:
-                .systemBlue
+                PlatformColors.systemBlue
 
             case .comment:
-                .systemGreen
+                PlatformColors.systemGreen
 
             case .type:
-                .systemTeal
+                PlatformColors.systemTeal
 
             case .function:
-                .systemIndigo
+                PlatformColors.systemIndigo
 
             case .property:
-                .systemOrange
+                PlatformColors.systemOrange
 
             case .operator:
-                .systemBrown
+                PlatformColors.systemBrown
 
             case .punctuation:
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .secondaryLabelColor
-                #else
-                .secondaryLabel
-                #endif
+                PlatformColors.secondaryLabel
 
             case .whitespace:
-                .clear
+                PlatformColors.clear
 
             case .preprocessor:
-                .systemPink
+                PlatformColors.systemPink
 
             case .unknown:
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .labelColor
-                #else
-                .label
-                #endif
+                PlatformColors.label
             }
         }
     }

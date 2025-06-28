@@ -3,11 +3,17 @@ import SwiftUI
 
 @MainActor
 class AppState: ObservableObject {
-    @Published var currentConfiguration = EditorConfiguration()
+    @Published var coordinator = ConfigurationCoordinator()
     @Published var selectedPreset: ConfigurationPreset = .fullFeatured
     @Published var selectedSample: SampleCode = .swift
     @Published var customCode: String = ""
     @Published var code: String = ""
+    
+    // Computed property for backward compatibility
+    var currentConfiguration: EditorConfiguration {
+        get { coordinator.configuration }
+        set { coordinator.update { $0 = newValue } }
+    }
 
     init() {
         applyPreset(.fullFeatured)
@@ -16,7 +22,7 @@ class AppState: ObservableObject {
 
     func applyPreset(_ preset: ConfigurationPreset) {
         selectedPreset = preset
-        currentConfiguration = preset.configuration
+        coordinator.applyPreset(preset)
     }
 
     func updateCode() {
@@ -69,7 +75,7 @@ class AppState: ObservableObject {
     }
     
     func resetConfiguration() {
-        currentConfiguration = EditorConfiguration()
+        coordinator.reset()
         selectedPreset = .fullFeatured
     }
 }

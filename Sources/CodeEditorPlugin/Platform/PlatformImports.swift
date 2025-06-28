@@ -43,6 +43,7 @@ public enum PlatformColors {
     public static var separator: PlatformColor { NSColor.separatorColor }
     public static var disabledControlText: PlatformColor { NSColor.disabledControlTextColor }
     public static var black: PlatformColor { NSColor.black }
+    public static var white: PlatformColor { NSColor.white }
     public static var clear: PlatformColor { NSColor.clear }
     public static var controlAccentColor: PlatformColor { NSColor.controlAccentColor }
     public static var tintColor: PlatformColor { NSColor.controlAccentColor } // macOS doesn't have tintColor, using controlAccentColor
@@ -61,6 +62,8 @@ public enum PlatformColors {
     public static var systemIndigo: PlatformColor { NSColor.systemIndigo }
     public static var systemPink: PlatformColor { NSColor.systemPink }
     public static var systemBrown: PlatformColor { NSColor.systemBrown }
+    public static var systemYellow: PlatformColor { NSColor.systemYellow }
+    public static var systemGray: PlatformColor { NSColor.systemGray }
     #else
     public static var label: PlatformColor { UIColor.label }
     public static var secondaryLabel: PlatformColor { UIColor.secondaryLabel }
@@ -71,6 +74,7 @@ public enum PlatformColors {
     public static var separator: PlatformColor { UIColor.separator }
     public static var disabledControlText: PlatformColor { UIColor.tertiaryLabel }
     public static var black: PlatformColor { UIColor.black }
+    public static var white: PlatformColor { UIColor.white }
     public static var clear: PlatformColor { UIColor.clear }
     public static var controlAccentColor: PlatformColor { UIColor.systemBlue }
     public static var tintColor: PlatformColor { UIColor.tintColor }
@@ -89,6 +93,8 @@ public enum PlatformColors {
     public static var systemIndigo: PlatformColor { UIColor.systemIndigo }
     public static var systemPink: PlatformColor { UIColor.systemPink }
     public static var systemBrown: PlatformColor { UIColor.systemBrown }
+    public static var systemYellow: PlatformColor { UIColor.systemYellow }
+    public static var systemGray: PlatformColor { UIColor.systemGray }
     #endif
 }
 

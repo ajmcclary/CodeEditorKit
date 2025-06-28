@@ -46,7 +46,7 @@ struct UnifiedContentView: View {
             
             // Main editor with live preview
             SampleCodeEditorView(
-                configuration: appState.currentConfiguration,
+                configuration: appState.coordinator.configuration,
                 text: $appState.code,
                 language: appState.selectedSample.fileExtension
             )
@@ -69,7 +69,7 @@ struct UnifiedContentView: View {
         HStack {
             // Configuration visibility toggle
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            Button(action: toggleSidebar) {
+            PlatformSafeButton(action: toggleSidebar) {
                 Image(systemName: "sidebar.left")
                     .help("Toggle Configuration Sidebar")
             }
@@ -91,29 +91,37 @@ struct UnifiedContentView: View {
             
             // Quick toggles for frequently used options
             HStack(spacing: 12) {
-                Toggle(isOn: $appState.currentConfiguration.display.showLineNumbers) {
+                PlatformSafeButton(action: {
+                    appState.coordinator.configuration.display.showLineNumbers.toggle()
+                }) {
                     Image(systemName: "number")
+                        .foregroundColor(appState.coordinator.configuration.display.showLineNumbers ? .accentColor : .secondary)
+                        .help("Toggle Line Numbers")
                 }
-                .toggleStyle(.button)
-                .help("Toggle Line Numbers")
                 
-                Toggle(isOn: $appState.currentConfiguration.display.showMinimap) {
+                PlatformSafeButton(action: {
+                    appState.coordinator.configuration.display.showMinimap.toggle()
+                }) {
                     Image(systemName: "map")
+                        .foregroundColor(appState.coordinator.configuration.display.showMinimap ? .accentColor : .secondary)
+                        .help("Toggle Minimap")
                 }
-                .toggleStyle(.button)
-                .help("Toggle Minimap")
                 
-                Toggle(isOn: $appState.currentConfiguration.display.showInvisibleCharacters) {
+                PlatformSafeButton(action: {
+                    appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+                }) {
                     Image(systemName: "paragraph")
+                        .foregroundColor(appState.coordinator.configuration.display.showInvisibleCharacters ? .accentColor : .secondary)
+                        .help("Toggle Invisible Characters")
                 }
-                .toggleStyle(.button)
-                .help("Toggle Invisible Characters")
                 
-                Toggle(isOn: $appState.currentConfiguration.behavior.isEditable) {
-                    Image(systemName: appState.currentConfiguration.behavior.isEditable ? "pencil" : "pencil.slash")
+                PlatformSafeButton(action: {
+                    appState.coordinator.configuration.behavior.isEditable.toggle()
+                }) {
+                    Image(systemName: appState.coordinator.configuration.behavior.isEditable ? "pencil" : "pencil.slash")
+                        .foregroundColor(appState.coordinator.configuration.behavior.isEditable ? .accentColor : .secondary)
+                        .help("Toggle Editing")
                 }
-                .toggleStyle(.button)
-                .help("Toggle Editing")
             }
             
             Spacer()
@@ -202,25 +210,25 @@ struct UnifiedContentView: View {
             
             // Active features indicator
             HStack(spacing: 8) {
-                if appState.currentConfiguration.display.enableSyntaxHighlighting {
+                if appState.coordinator.configuration.display.enableSyntaxHighlighting {
                     Image(systemName: "paintbrush.fill")
                         .foregroundColor(.green)
                         .help("Syntax Highlighting Active")
                 }
                 
-                if appState.currentConfiguration.display.enableAnnotations {
+                if appState.coordinator.configuration.display.enableAnnotations {
                     Image(systemName: "text.bubble.fill")
                         .foregroundColor(.orange)
                         .help("Annotations Active")
                 }
                 
-                if appState.currentConfiguration.behavior.enableCodeCompletion {
+                if appState.coordinator.configuration.behavior.enableCodeCompletion {
                     Image(systemName: "text.insert")
                         .foregroundColor(.blue)
                         .help("Code Completion Active")
                 }
                 
-                if appState.currentConfiguration.display.showMinimap {
+                if appState.coordinator.configuration.display.showMinimap {
                     Image(systemName: "map.fill")
                         .foregroundColor(.purple)
                         .help("Minimap Active")
@@ -242,7 +250,7 @@ struct UnifiedContentView: View {
     }
     
     private func copyConfiguration() {
-        if let jsonData = try? JSONEncoder().encode(appState.currentConfiguration),
+        if let jsonData = try? JSONEncoder().encode(appState.coordinator.configuration),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             #if canImport(AppKit)
             NSPasteboard.general.clearContents()
@@ -272,17 +280,17 @@ struct UnifiedContentView: View {
     private func exportConfiguration() {
         #if canImport(AppKit)
         if let window = NSApp.keyWindow {
-            ConfigurationExporter.exportConfiguration(appState.currentConfiguration, from: window)
+            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
         }
         #endif
     }
     
     private func refreshEditor() {
         // Force editor refresh by toggling a benign setting
-        let current = appState.currentConfiguration.display.enableSyntaxHighlighting
-        appState.currentConfiguration.display.enableSyntaxHighlighting = !current
-        DispatchQueue.main.async {
-            appState.currentConfiguration.display.enableSyntaxHighlighting = current
+        let current = appState.coordinator.configuration.display.enableSyntaxHighlighting
+        appState.coordinator.configuration.display.enableSyntaxHighlighting = !current
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            appState.coordinator.configuration.display.enableSyntaxHighlighting = current
         }
     }
 }

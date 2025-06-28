@@ -7,52 +7,67 @@
 
 @testable import CodeEditorPlugin
 import XCTest
-#if canImport(UIKit)
-import UIKit
 
-@MainActor
 final class CodeEditorContainerViewTests: XCTestCase {
     // MARK: - Properties
     
-    private var containerView: CodeEditorContainerView?
-    
-    // MARK: - Setup
-    
-    override func setUp() {
-        super.setUp()
-        containerView = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
-    }
-    
-    override func tearDown() {
-        containerView = nil
-        super.tearDown()
+    @MainActor
+    private func createContainerView() -> CodeEditorContainerView {
+        CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
     }
     
     // MARK: - Initialization Tests
     
+    @MainActor
     func testInitialization() {
+        let containerView = createContainerView()
         XCTAssertNotNil(containerView.textView)
         XCTAssertNotNil(containerView.gutterView)
         XCTAssertNotNil(containerView.minimapView)
+        #if canImport(UIKit)
         XCTAssertNotNil(containerView.contentView)
+        #else
+        XCTAssertNotNil(containerView.scrollView)
+        #endif
         
         // Check initial configuration
         XCTAssertEqual(containerView.configuration.display.showLineNumbers, EditorConfiguration.default.display.showLineNumbers)
     }
     
+    @MainActor
     func testViewHierarchy() {
+        let containerView = createContainerView()
+        #if canImport(UIKit)
         // Content view should contain text view
-        XCTAssertTrue(containerView.contentView.subviews.contains(containerView.textView))
+        let contentView = containerView.contentView
+        let textView = containerView.textView
+        XCTAssertTrue(contentView.subviews.contains(textView))
         
         // Container should have gutter and minimap
-        XCTAssertTrue(containerView.subviews.contains(containerView.gutterView))
-        XCTAssertTrue(containerView.subviews.contains(containerView.minimapView))
-        XCTAssertTrue(containerView.subviews.contains(containerView.contentView))
+        let gutterView = containerView.gutterView
+        let minimapView = containerView.minimapView
+        XCTAssertTrue(containerView.subviews.contains(gutterView))
+        XCTAssertTrue(containerView.subviews.contains(minimapView))
+        XCTAssertTrue(containerView.subviews.contains(contentView))
+        #else
+        // macOS: Check scroll view contains text view
+        XCTAssertEqual(containerView.scrollView.documentView, containerView.textView)
+        
+        // Container should have gutter, minimap, and scroll view
+        let gutterView = containerView.gutterView
+        let minimapView = containerView.minimapView
+        let scrollView = containerView.scrollView
+        XCTAssertTrue(containerView.subviews.contains(gutterView))
+        XCTAssertTrue(containerView.subviews.contains(minimapView))
+        XCTAssertTrue(containerView.subviews.contains(scrollView))
+        #endif
     }
     
     // MARK: - Configuration Tests
     
+    @MainActor
     func testConfigurationApplication() {
+        let containerView = createContainerView()
         var config = EditorConfiguration()
         config.display.showLineNumbers = true
         config.display.showMinimap = true
@@ -60,12 +75,14 @@ final class CodeEditorContainerViewTests: XCTestCase {
         
         containerView.configuration = config
         
-        XCTAssertTrue(containerView.textView.configuration.display.showLineNumbers)
+        XCTAssertTrue(containerView.showsLineNumbers)
         XCTAssertFalse(containerView.textView.configuration.behavior.isEditable)
         XCTAssertFalse(containerView.minimapView.isHidden)
     }
     
+    @MainActor
     func testLineNumberToggle() {
+        let containerView = createContainerView()
         // Initially show line numbers
         containerView.showsLineNumbers = true
         XCTAssertFalse(containerView.gutterView.isHidden)
@@ -75,15 +92,26 @@ final class CodeEditorContainerViewTests: XCTestCase {
         XCTAssertTrue(containerView.gutterView.isHidden)
         
         // Verify text container inset adjusted
+        #if canImport(UIKit)
         let insets = containerView.textView.textContainerEdgeInsets
         XCTAssertLessThan(insets.left, 50) // Should be less than gutter width
+        #else
+        let insets = containerView.textView.textContainerInset
+        XCTAssertLessThan(insets.width, 50) // Should be less than gutter width
+        #endif
     }
     
     // MARK: - Layout Tests
     
+    @MainActor
     func testLayoutWithGutter() {
+        let containerView = createContainerView()
         containerView.showsLineNumbers = true
+        #if canImport(UIKit)
         containerView.layoutSubviews()
+        #else
+        containerView.layout()
+        #endif
         
         let gutterWidth = containerView.configuration.layout.gutterWidth
         
@@ -92,25 +120,40 @@ final class CodeEditorContainerViewTests: XCTestCase {
         XCTAssertEqual(containerView.gutterView.frame.width, gutterWidth)
         
         // Text view should account for gutter in its insets
-        let textInsets = containerView.textView.textContainerInset
+        #if canImport(UIKit)
+        let textInsets = containerView.textView.textContainerEdgeInsets
         XCTAssertGreaterThan(textInsets.left, gutterWidth)
+        #else
+        let textInsets = containerView.textView.textContainerInset
+        XCTAssertGreaterThan(textInsets.width, gutterWidth)
+        #endif
     }
     
+    @MainActor
     func testLayoutWithMinimap() {
+        let containerView = createContainerView()
         var config = containerView.configuration
         config.display.showMinimap = true
         containerView.configuration = config
+        #if canImport(UIKit)
         containerView.layoutSubviews()
+        #else
+        containerView.layout()
+        #endif
         
         // Minimap should be visible
         XCTAssertFalse(containerView.minimapView.isHidden)
         
         // Minimap should be on the right
-        let expectedX = containerView.bounds.width - 120 // Minimap width
+        let minimapWidth = containerView.configuration.layout.minimapWidth
+        let expectedX = containerView.bounds.width - minimapWidth
         XCTAssertEqual(containerView.minimapView.frame.origin.x, expectedX, accuracy: 1.0)
     }
     
+    @MainActor
     func testLayoutWithKeyboard() {
+        let containerView = createContainerView()
+        #if canImport(UIKit)
         // Simulate keyboard appearance
         let keyboardHeight: CGFloat = 300
         let keyboardFrame = CGRect(
@@ -138,11 +181,15 @@ final class CodeEditorContainerViewTests: XCTestCase {
         // Content inset should be adjusted
         let contentInset = containerView.textView.contentInset
         XCTAssertGreaterThan(contentInset.bottom, 0)
+        #endif
     }
     
     // MARK: - ContentView Tests
     
+    @MainActor
     func testContentViewGestureRecognizers() {
+        let containerView = createContainerView()
+        #if canImport(UIKit)
         let textView = containerView.textView
         containerView.contentView.setTextView(textView)
         
@@ -156,9 +203,13 @@ final class CodeEditorContainerViewTests: XCTestCase {
         // Should have long press gesture
         let hasLongPressGesture = gestureRecognizers.contains { $0 is UILongPressGestureRecognizer }
         XCTAssertTrue(hasLongPressGesture)
+        #endif
     }
     
+    @MainActor
     func testContentViewInputAccessory() {
+        let containerView = createContainerView()
+        #if canImport(UIKit)
         let toolbar = containerView.contentView.createInputAccessory()
         XCTAssertNotNil(toolbar)
         
@@ -171,18 +222,25 @@ final class CodeEditorContainerViewTests: XCTestCase {
             item.style == .done || item.tag == 1_001 // Done button tag
         }
         XCTAssertTrue(hasDoneButton)
+        #endif
     }
     
     // MARK: - Minimap Tests
     
+    @MainActor
     func testMinimapNavigation() {
+        let containerView = createContainerView()
         var config = containerView.configuration
         config.display.showMinimap = true
         containerView.configuration = config
         
         // Add some text
         containerView.textView.text = Array(repeating: "Line\n", count: 100).joined()
+        #if canImport(UIKit)
         containerView.layoutSubviews()
+        #else
+        containerView.layout()
+        #endif
         
         // Test navigation callback
         var navigatedToLine: Int?
@@ -197,19 +255,28 @@ final class CodeEditorContainerViewTests: XCTestCase {
     
     // MARK: - Performance Tests
     
+    @MainActor
     func testLayoutPerformance() {
+        let containerView = createContainerView()
         // Add substantial content
         containerView.textView.text = Array(repeating: "This is a test line\n", count: 1_000).joined()
         
         measure {
             for _ in 0..<100 {
+                #if canImport(UIKit)
                 containerView.setNeedsLayout()
                 containerView.layoutIfNeeded()
+                #else
+                containerView.needsLayout = true
+                containerView.layout()
+                #endif
             }
         }
     }
     
+    @MainActor
     func testConfigurationChangePerformance() {
+        let containerView = createContainerView()
         var config = containerView.configuration
         
         measure {
@@ -223,30 +290,42 @@ final class CodeEditorContainerViewTests: XCTestCase {
     
     // MARK: - Edge Cases
     
+    @MainActor
     func testSmallFrameLayout() {
+        let containerView = createContainerView()
         containerView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        #if canImport(UIKit)
         containerView.layoutSubviews()
+        #else
+        containerView.layout()
+        #endif
         
         // Ensure no negative dimensions
         XCTAssertGreaterThan(containerView.textView.frame.width, 0)
         XCTAssertGreaterThan(containerView.textView.frame.height, 0)
     }
     
+    @MainActor
     func testLargeContentScroll() {
+        let containerView = createContainerView()
         // Add very large content
         let largeText = Array(repeating: "Line\n", count: 10_000).joined()
         containerView.textView.text = largeText
         
         // Ensure scrolling is enabled
+        #if canImport(UIKit)
         XCTAssertTrue(containerView.textView.isScrollEnabled)
         XCTAssertTrue(containerView.textView.alwaysBounceVertical)
         
         // Content size should be larger than frame
         XCTAssertGreaterThan(containerView.textView.contentSize.height, containerView.textView.frame.height)
+        #else
+        // macOS: Check that text view is set up for scrolling
+        XCTAssertTrue(containerView.textView.isVerticallyResizable)
+        #endif
     }
     
     deinit {
         // Cleanup
     }
 }
-#endif

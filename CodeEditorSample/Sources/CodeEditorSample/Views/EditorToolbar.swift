@@ -15,59 +15,43 @@ struct EditorToolbar: View {
 
     var body: some View {
         HStack {
-            // Quick toggles
-            Toggle(isOn: $configuration.display.showLineNumbers) {
-                Label("Line Numbers", systemImage: "number")
-            }
-            .toggleStyle(.button)
-            .help("Toggle line numbers")
-
-            Toggle(isOn: $configuration.display.showInvisibleCharacters) {
-                Label("Invisibles", systemImage: "text.append")
-            }
-            .toggleStyle(.button)
-            .help("Show invisible characters")
-
-            Toggle(isOn: $configuration.display.highlightSelectedLine) {
-                Label("Highlight Line", systemImage: "text.line.first.and.arrowtriangle.forward")
-            }
-            .toggleStyle(.button)
-            .help("Highlight current line")
+            // Quick toggles - using SafeToggle to avoid MainActor crashes
+            SafeToggle("Line Numbers", isOn: $configuration.display.showLineNumbers)
+            SafeToggle("Invisible Characters", isOn: $configuration.display.showInvisibleCharacters)
+            SafeToggle("Highlight Line", isOn: $configuration.display.highlightSelectedLine)
 
             Divider()
                 .frame(height: 20)
 
-            // Font size controls
+            // Font size controls - using SafeButton to avoid MainActor crashes
             HStack(spacing: 4) {
-                Button {
+                SafeButton(action: {
                     configuration.display.fontSize = max(10, configuration.display.fontSize - 1)
-                } label: {
+                }) {
                     Image(systemName: "textformat.size.smaller")
+                        .foregroundColor(.accentColor)
+                        .padding(4)
                 }
-                .help("Decrease font size")
 
                 Text("\(Int(configuration.display.fontSize))pt")
                     .font(.caption)
                     .frame(width: 35)
                     .monospacedDigit()
 
-                Button {
+                SafeButton(action: {
                     configuration.display.fontSize = min(32, configuration.display.fontSize + 1)
-                } label: {
+                }) {
                     Image(systemName: "textformat.size.larger")
+                        .foregroundColor(.accentColor)
+                        .padding(4)
                 }
-                .help("Increase font size")
             }
 
             Divider()
                 .frame(height: 20)
 
             // View options
-            Toggle(isOn: $showSplitView) {
-                Label("Split View", systemImage: "rectangle.split.2x1")
-            }
-            .toggleStyle(.button)
-            .help("Show split view to compare configurations")
+            SafeToggle("Split View", isOn: $showSplitView)
 
             Spacer()
 
@@ -75,12 +59,13 @@ struct EditorToolbar: View {
             PerformanceIndicator()
 
             // Help button
-            Button {
+            SafeButton(action: {
                 showFeatureTour = true
-            } label: {
+            }) {
                 Image(systemName: "questionmark.circle")
+                    .foregroundColor(.accentColor)
+                    .padding(4)
             }
-            .help("Show feature tour")
         }
         .padding(.horizontal)
         .padding(.vertical, 8)

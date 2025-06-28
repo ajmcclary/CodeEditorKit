@@ -24,7 +24,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         _ = textView.textContainerInset
         // Just verify we can get and set the inset
         
-        let customInset = NSSize(width: 10, height: 15)
+        let customInset = CGSize(width: 10, height: 15)
         textView.textContainerInset = customInset
         XCTAssertEqual(textView.textContainerInset, customInset)
     }
@@ -225,9 +225,9 @@ final class ConfigurationIntegrationTests: XCTestCase {
     func testInsertionPointColor() {
         let textView = CodeEditorView()
         let defaultColor = textView.insertionPointColor
-        XCTAssertEqual(defaultColor, NSColor.controlAccentColor)
+        XCTAssertEqual(defaultColor, PlatformColors.controlAccentColor)
         
-        let customColor = NSColor.systemRed
+        let customColor = PlatformColors.systemRed
         textView.insertionPointColor = customColor
         XCTAssertEqual(textView.insertionPointColor, customColor)
     }
@@ -236,18 +236,18 @@ final class ConfigurationIntegrationTests: XCTestCase {
     func testSelectedTextAttributes() {
         let textView = CodeEditorView()
         let attributes: [NSAttributedString.Key: Any] = [
-            .backgroundColor: NSColor.systemBlue,
-            .foregroundColor: NSColor.white
+            .backgroundColor: PlatformColors.systemBlue,
+            .foregroundColor: PlatformColors.white
         ]
         
         textView.selectedTextAttributes = attributes
         
-        if let bgColor = textView.selectedTextAttributes[.backgroundColor] as? NSColor {
-            XCTAssertEqual(bgColor, NSColor.systemBlue)
+        if let bgColor = textView.selectedTextAttributes[.backgroundColor] as? PlatformColor {
+            XCTAssertEqual(bgColor, PlatformColors.systemBlue)
         }
         
-        if let fgColor = textView.selectedTextAttributes[.foregroundColor] as? NSColor {
-            XCTAssertEqual(fgColor, NSColor.white)
+        if let fgColor = textView.selectedTextAttributes[.foregroundColor] as? PlatformColor {
+            XCTAssertEqual(fgColor, PlatformColors.white)
         }
     }
     
@@ -299,8 +299,8 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.widthTracksTextView = false
         textView.isHorizontallyResizable = true
         textView.isEditable = true
-        textView.font = NSFont.monospacedSystemFont(ofSize: 16, weight: .regular)
-        textView.textContainerInset = NSSize(width: 10, height: 10)
+        textView.font = PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular)
+        textView.textContainerInset = CGSize(width: 10, height: 10)
         textView.textContainer?.lineFragmentPadding = 8.0
         
         // Apply text processing settings
@@ -323,7 +323,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.importsGraphics = false
         textView.usesFindBar = true
         textView.displaysLinkToolTips = true
-        textView.insertionPointColor = NSColor.systemGreen
+        textView.insertionPointColor = PlatformColors.systemGreen
         
         // Apply paragraph style
         let paragraphStyle = NSMutableParagraphStyle()
@@ -342,8 +342,8 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertFalse(textView.widthTracksTextView)
         XCTAssertTrue(textView.isHorizontallyResizable)
         XCTAssertTrue(textView.isEditable)
-        XCTAssertEqual(textView.font, NSFont.monospacedSystemFont(ofSize: 16, weight: .regular))
-        XCTAssertEqual(textView.textContainerInset, NSSize(width: 10, height: 10))
+        XCTAssertEqual(textView.font, PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular))
+        XCTAssertEqual(textView.textContainerInset, CGSize(width: 10, height: 10))
         XCTAssertEqual(textView.textContainer?.lineFragmentPadding, 8.0)
         // Note: CodeEditorView may override spell/grammar checking settings
         // We can only verify we can set them, not that they persist
@@ -359,7 +359,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertFalse(textView.importsGraphics)
         XCTAssertTrue(textView.usesFindBar)
         XCTAssertTrue(textView.displaysLinkToolTips)
-        XCTAssertEqual(textView.insertionPointColor, NSColor.systemGreen)
+        XCTAssertEqual(textView.insertionPointColor, PlatformColors.systemGreen)
         XCTAssertEqual(textView.defaultParagraphStyle?.lineSpacing, 1.5)
         XCTAssertEqual(textView.defaultParagraphStyle?.defaultTabInterval, 56.0)
         XCTAssertTrue(textView.wantsLayer)

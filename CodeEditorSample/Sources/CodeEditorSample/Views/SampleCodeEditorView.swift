@@ -17,24 +17,18 @@ struct SampleCodeEditorView: View {
     var body: some View {
         ZStack {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if #available(macOS 13.0, *) {
-                CodeEditor(text: $text)
-                    .codeLanguage(detectLanguage(from: language))
-                    .environment(\.codeEditorConfiguration, configuration)
-            } else {
-                // Fallback for older macOS versions
-                CodeEditorViewWrapper(
-                    configuration: configuration,
-                    text: $text,
-                    language: language
-                ) { textView in
-                    editorView = textView
-                }
-                .onChange(of: configuration) { newConfig in
-                    // Reapply configuration when it changes
-                    if let editor = editorView {
-                        newConfig.apply(to: editor)
-                    }
+            // Temporarily bypass CodeEditor due to concurrency issues with accessibility
+            CodeEditorViewWrapper(
+                configuration: configuration,
+                text: $text,
+                language: language
+            ) { textView in
+                editorView = textView
+            }
+            .onChange(of: configuration) { newConfig in
+                // Reapply configuration when it changes
+                if let editor = editorView {
+                    newConfig.apply(to: editor)
                 }
             }
             #else

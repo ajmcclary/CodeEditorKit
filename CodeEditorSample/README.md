@@ -2,8 +2,6 @@
 
 A comprehensive demonstration application showcasing the full capabilities of the **CodeEditorPlugin**. This sample app serves as both a functional code editor and a reference implementation for developers learning to integrate CodeEditorPlugin into their own applications.
 
-> **🎉 Recently Enhanced:** Successfully demonstrates the refactored CodeEditorPlugin with all text rendering and line number issues resolved. Features simplified architecture, working cross-platform support for iOS and macOS, and 66 comprehensive tests validating all functionality.
-
 ## 🎯 What This Demonstrates
 
 This sample application provides a complete example of:
@@ -68,7 +66,7 @@ config.apply(to: textView)
 Pre-built configurations for common scenarios using EditorConfigurationBuilder:
 
 - **Full Featured** - All features enabled for development
-- **Minimal** - Clean interface for focused writing  
+- **Minimal** - Clean interface for focused writing
 - **Read Only** - Syntax-highlighted viewer mode
 - **Markdown** - Optimized for Markdown editing with spell check
 - **Presentation** - Large fonts and high contrast for demos
@@ -122,7 +120,7 @@ Professional themes with real-time switching:
 // Theme management (see Themes/ThemeProvider.swift)
 enum ColorTheme: String, CaseIterable {
     case xcode, vsDark, github, solarizedDark, minimal, presentation
-    
+
     var backgroundColor: PlatformColor { /* theme colors */ }
     var textColor: PlatformColor { /* theme colors */ }
     // ... complete theme definitions
@@ -179,6 +177,7 @@ CodeEditorSample/
 ### Key Integration Patterns
 
 **1. Plugin Configuration Integration:**
+
 ```swift
 // Sample uses plugin's EditorConfiguration via typealias
 typealias EditorConfiguration = CodeEditorPlugin.EditorConfiguration
@@ -192,13 +191,14 @@ return EditorConfigurationBuilder()
 ```
 
 **2. Cross-Platform SwiftUI Wrapper:**
+
 ```swift
 // Unified wrapper handling macOS and iOS differences
 struct SampleCodeEditorView: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    
+
     var body: some View {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if #available(macOS 13.0, *) {
@@ -216,6 +216,7 @@ struct SampleCodeEditorView: View {
 ```
 
 **3. Real-Time Configuration Updates:**
+
 ```swift
 // Live configuration updates (see Views/ContentView.swift)
 @Published var currentConfiguration = EditorConfiguration() {
@@ -368,6 +369,7 @@ let config = EditorConfigurationBuilder()
 ### Common Issues & Solutions
 
 **Configuration not applying:**
+
 ```swift
 // Ensure proper configuration application
 config.apply(to: textView)
@@ -376,6 +378,7 @@ config.apply(to: textView)
 ```
 
 **Performance with large files:**
+
 ```swift
 // Optimize settings
 config.performance.useHardwareAcceleration = true
@@ -384,6 +387,7 @@ config.performance.maxSyntaxHighlightingLength = 100_000
 ```
 
 **Syntax highlighting not working:**
+
 ```swift
 // Verify language setting
 textView.setLanguage(fileExtension: "swift")
@@ -410,6 +414,7 @@ This sample app welcomes improvements:
 5. Submit a pull request
 
 Focus areas for contributions:
+
 - Additional language samples (targeting 20+ languages)
 - Advanced feature implementations (multi-cursor, search/replace)
 - New configuration presets and themes
@@ -418,10 +423,6 @@ Focus areas for contributions:
 - Cross-platform improvements (iOS/iPadOS)
 - Plugin system development
 - LSP integration features
-
-## 📄 License
-
-This sample application is part of the CodeEditorPlugin package and follows the same MIT license terms.
 
 ---
 

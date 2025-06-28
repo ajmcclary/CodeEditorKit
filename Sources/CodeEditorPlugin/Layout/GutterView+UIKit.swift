@@ -45,9 +45,8 @@ extension GutterView {
         }
     }
     
-    func drawLineNumbers(in rect: CGRect) {
-        guard let textView = textView as? UITextView,
-              let textContainer = textView.textContainer,
+    func drawLineNumbersUIKit(in rect: CGRect, textView: CodeEditorView) {
+        guard let textContainer = textView.textContainer,
               let layoutManager = textView.layoutManager,
               let textStorage = textView.textStorage else { return }
         

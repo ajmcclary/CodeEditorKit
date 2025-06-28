@@ -35,6 +35,9 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// Padding around annotation badges
         public var annotationBadgePadding: CGFloat = 4.0
         
+        /// Width of the minimap view
+        public var minimapWidth: CGFloat = 120.0
+        
         public init() {}
     }
     
