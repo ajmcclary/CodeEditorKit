@@ -9,21 +9,11 @@ import UIKit
 
 // MARK: - Cross-Platform Minimap Types
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-public typealias MinimapPlatformView = NSView
-public typealias MinimapPlatformColor = NSColor
-public typealias MinimapPlatformFont = NSFont
-public typealias MinimapPlatformRect = NSRect
-public typealias MinimapPlatformSize = NSSize
-public typealias MinimapPlatformPoint = NSPoint
-#elseif canImport(UIKit)
-public typealias MinimapPlatformView = UIView
-public typealias MinimapPlatformColor = UIColor
-public typealias MinimapPlatformFont = UIFont
+// Use centralized platform types from PlatformImports
+// PlatformView, PlatformColor, and PlatformFont are imported from PlatformImports.swift
+public typealias MinimapPlatformView = PlatformView
 public typealias MinimapPlatformRect = CGRect
-public typealias MinimapPlatformSize = CGSize
 public typealias MinimapPlatformPoint = CGPoint
-#endif
 
 // MARK: - Minimap Configuration
 
@@ -44,35 +34,35 @@ public struct MinimapConfiguration: Sendable {
     public init() {}
     
     // Default colors
-    public static var defaultBackgroundColor: MinimapPlatformColor {
+    public static var defaultBackgroundColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return NSColor.controlBackgroundColor
+        return PlatformColors.controlBackground
         #else
-        return UIColor.systemBackground
+        return PlatformColors.systemBackground
         #endif
     }
     
-    public static var defaultTextColor: MinimapPlatformColor {
+    public static var defaultTextColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return NSColor.secondaryLabelColor
+        return PlatformColors.secondaryLabel
         #else
-        return UIColor.secondaryLabel
+        return PlatformColors.secondaryLabel
         #endif
     }
     
-    public static var defaultViewportColor: MinimapPlatformColor {
+    public static var defaultViewportColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return NSColor.selectedControlColor.withAlphaComponent(0.3)
+        return PlatformColors.controlAccentColor.withAlphaComponent(0.3)
         #else
-        return UIColor.systemBlue.withAlphaComponent(0.3)
+        return PlatformColors.systemBlue.withAlphaComponent(0.3)
         #endif
     }
     
-    public static var defaultViewportBorderColor: MinimapPlatformColor {
+    public static var defaultViewportBorderColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return NSColor.selectedControlColor
+        return PlatformColors.controlAccentColor
         #else
-        return UIColor.systemBlue
+        return PlatformColors.systemBlue
         #endif
     }
 }
@@ -140,7 +130,7 @@ public struct MinimapData: Sendable {
 
 /// Shared minimap rendering logic
 public enum MinimapRenderer {
-    public static func calculateCharacterMetrics(font: MinimapPlatformFont) -> (width: CGFloat, height: CGFloat) {
+    public static func calculateCharacterMetrics(font: PlatformFont) -> (width: CGFloat, height: CGFloat) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
         let size = ("M" as String).size(withAttributes: attributes)
@@ -267,7 +257,7 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     }
     
     private func drawTextLines(data: MinimapData, context _: CGContext) {
-        let font = NSFont.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
+        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
         let textColor = MinimapConfiguration.defaultTextColor
         
         for (index, line) in data.displayLines.enumerated() {
@@ -390,7 +380,7 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
     }
     
     private func drawTextLines(data: MinimapData, context _: CGContext) {
-        let font = UIFont.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
+        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
         let textColor = MinimapConfiguration.defaultTextColor
         
         for (index, line) in data.displayLines.enumerated() {
@@ -472,7 +462,7 @@ public typealias MinimapView = UIKitMinimapView
         let lines = text.components(separatedBy: .newlines)
         
         // Calculate font metrics
-        let font = MinimapPlatformFont.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
+        let font = PlatformFont.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
         let metrics = MinimapRenderer.calculateCharacterMetrics(font: font)
         let lineHeight = metrics.height * configuration.lineHeight
         

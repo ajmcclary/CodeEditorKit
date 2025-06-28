@@ -68,12 +68,12 @@ public struct PluginDetailsView: View {
                     logsTab
                         .tag(DetailTab.logs)
                 }
-                #if os(iOS)
+                #if canImport(UIKit)
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 #endif
             }
             .navigationTitle(plugin.metadata.name)
-#if os(iOS)
+#if canImport(UIKit)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(trailing: HStack {
                 Button(isPluginEnabled ? "Disable" : "Enable") {
@@ -379,7 +379,7 @@ public struct PluginDetailsView: View {
     // MARK: - Computed Properties
     
     private var tabIndicatorOffset: CGFloat {
-        #if os(iOS)
+        #if canImport(UIKit)
         let screenWidth = UIScreen.main.bounds.width
         #else
         let screenWidth: CGFloat = 800 // Default width for macOS
@@ -534,7 +534,7 @@ struct PluginConfigurationSheet: View {
                 Spacer()
             }
             .navigationTitle("Configure \(plugin.metadata.name)")
-#if os(iOS)
+#if canImport(UIKit)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(leading: Button("Done") {
                 // Dismiss sheet

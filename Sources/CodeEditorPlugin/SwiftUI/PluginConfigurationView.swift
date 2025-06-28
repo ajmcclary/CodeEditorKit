@@ -74,7 +74,7 @@ public struct PluginConfigurationView: View {
                 }
             }
         }
-        #if os(iOS)
+        #if canImport(UIKit)
         .navigationViewStyle(StackNavigationViewStyle())
         #endif
     }
@@ -114,7 +114,7 @@ public struct PluginConfigurationView: View {
                 }
             }
         }
-        #if os(iOS)
+        #if canImport(UIKit)
         .listStyle(InsetGroupedListStyle())
         #else
         .listStyle(DefaultListStyle())
@@ -185,10 +185,10 @@ public struct PluginConfigurationView: View {
             }
             .padding(.horizontal)
         }
-        #if os(iOS)
+        #if canImport(UIKit)
         .background(Color(.systemBackground))
         #else
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
         #endif
         .popover(isPresented: $showPerformanceStats) {
             PerformanceStatsView(pluginManager: pluginManager)

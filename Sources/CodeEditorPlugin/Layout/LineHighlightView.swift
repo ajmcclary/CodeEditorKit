@@ -6,7 +6,7 @@ import AppKit
 
 /// View for highlighting the current line
 public class LineHighlightView: NSView {
-    public var highlightColor: NSColor = .controlAccentColor.withAlphaComponent(0.1) {
+    public var highlightColor: PlatformColor = PlatformColors.controlAccentColor.withAlphaComponent(0.1) {
         didSet {
             wantsLayer = true
             layer?.backgroundColor = highlightColor.cgColor
@@ -45,7 +45,7 @@ import UIKit
 
 /// Stub implementation for iOS
 public class LineHighlightView: UIView {
-    public var highlightColor: UIColor = .tintColor.withAlphaComponent(0.1) {
+    public var highlightColor: PlatformColor = PlatformColors.tintColor.withAlphaComponent(0.1) {
         didSet {
             backgroundColor = highlightColor
         }

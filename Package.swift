@@ -25,6 +25,7 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax")
             ],
+            exclude: ["Platform/README.md"],
             swiftSettings: settings
         ),
         .testTarget(

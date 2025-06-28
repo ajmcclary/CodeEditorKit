@@ -46,7 +46,7 @@ final class LineCountingTests: XCTestCase {
     }
     
     func testLineNumbersInGutterViewiOS() {
-        #if os(iOS)
+        #if canImport(UIKit)
         let editor = CodeEditorView()
         editor.text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
         editor.showsLineNumbers = true
@@ -66,7 +66,7 @@ final class LineCountingTests: XCTestCase {
     }
     
     func testLineNumbersInGutterViewMacOS() {
-        #if os(macOS)
+        #if canImport(AppKit)
         let editor = CodeEditorView()
         editor.text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
         editor.showsLineNumbers = true

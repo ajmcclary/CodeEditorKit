@@ -6,6 +6,7 @@
 //
 
 #if canImport(SwiftUI)
+import ObjectiveC
 import SwiftUI
 
 // MARK: - Common SwiftUI Types and Extensions
@@ -169,6 +170,29 @@ public func updateTextView(
 
 // MARK: - Minimap Support
 
+// Associated object key for storing the observer
+@MainActor
+private var minimapObserverKey: UInt8 = 0
+
+// Observer class to handle notifications without Sendable issues
+@MainActor
+private final class MinimapUpdateObserver: NSObject {
+    let updateHandler: () -> Void
+    
+    init(updateHandler: @escaping () -> Void) {
+        self.updateHandler = updateHandler
+        super.init()
+    }
+    
+    @objc func handleNotification() {
+        updateHandler()
+    }
+    
+    deinit {
+        // Cleanup handled by NotificationCenter
+    }
+}
+
 @MainActor
 public protocol MinimapSupport: AnyObject {
     var minimapView: MinimapView? { get set }
@@ -198,27 +222,27 @@ extension MinimapSupport {
         containerView.addSubview(minimap)
         
         // Set up observers
+        // Note: Using selector-based observer to avoid Swift 6 Sendable warnings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
-            forName: NSText.didChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-            }
-        }
+        let notificationName = NSText.didChangeNotification
         #else
-        NotificationCenter.default.addObserver(
-            forName: UITextView.textDidChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-            }
-        }
+        let notificationName = UITextView.textDidChangeNotification
         #endif
+        
+        // Create a wrapper class for the observer
+        let observer = MinimapUpdateObserver { [weak self] in
+            self?.updateMinimap()
+        }
+        
+        NotificationCenter.default.addObserver(
+            observer,
+            selector: #selector(MinimapUpdateObserver.handleNotification),
+            name: notificationName,
+            object: textView
+        )
+        
+        // Store the observer to keep it alive
+        objc_setAssociatedObject(textView, &minimapObserverKey, observer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
     
     public func updateMinimapVisibility(_ shouldShow: Bool) {

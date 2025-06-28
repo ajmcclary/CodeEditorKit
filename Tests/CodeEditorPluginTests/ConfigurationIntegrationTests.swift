@@ -146,7 +146,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     @MainActor
     func testAutomaticTextCompletion() {
         let textView = CodeEditorView()
-        #if os(macOS)
+        #if canImport(AppKit)
         if #available(macOS 12.0, *) {
             textView.isAutomaticTextCompletionEnabled = true
             XCTAssertTrue(textView.isAutomaticTextCompletionEnabled)
@@ -310,7 +310,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
         textView.isAutomaticSpellingCorrectionEnabled = false
-        #if os(macOS)
+        #if canImport(AppKit)
         if #available(macOS 12.0, *) {
             textView.isAutomaticTextCompletionEnabled = false
         }

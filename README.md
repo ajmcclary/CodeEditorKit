@@ -89,15 +89,19 @@ struct ContentView: View {
 }
 ```
 
-### AppKit Integration
+### AppKit/UIKit Integration
 
-For direct AppKit usage:
+For direct framework usage with platform abstractions:
 
 ```swift
 import CodeEditorPlugin
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
-class ViewController: NSViewController {
+class ViewController: PlatformViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -112,12 +116,18 @@ class ViewController: NSViewController {
         // Set language for syntax highlighting
         textView.setLanguage(fileExtension: "swift")
         
-        // Configure for scrolling
+        // Configure for scrolling (platform-aware)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let scrollView = NSScrollView()
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
-        
         view.addSubview(scrollView)
+        #else
+        // iOS/Catalyst uses CodeEditorContainerView
+        let containerView = CodeEditorContainerView()
+        containerView.textView = textView
+        view.addSubview(containerView)
+        #endif
         // Setup constraints...
     }
 }
@@ -248,7 +258,7 @@ Sources/CodeEditorPlugin/
 ├── TextProcessing/          # Actor-based text processing
 ├── RangeProcessing/         # Actor-based range validation
 ├── Completion/              # Code completion system
-└── Platform/                # Platform-specific code
+└── Platform/                # Platform abstraction layer
 ```
 
 ### Key Architecture Improvements
@@ -267,6 +277,29 @@ Sources/CodeEditorPlugin/
 - **Background Processing** - Syntax highlighting and validation run on background actors
 - **Sendable Conformance** - Complete thread-safety in all operations
 - **Isolation Parameters** - Advanced actor communication patterns
+
+### Platform Abstraction System
+
+CodeEditorPlugin uses a comprehensive platform abstraction layer for true cross-platform support:
+
+- **Platform Type Aliases** - `PlatformColor`, `PlatformFont`, `PlatformView`, `PlatformViewController`
+- **Semantic Colors** - Adaptive colors like `PlatformColors.label`, `.systemBackground`
+- **Runtime Capabilities** - Detection of features available on current platform
+- **Cross-Platform Patterns** - Always use `#if canImport()` instead of `#if os()` for better Catalyst support
+
+Example:
+```swift
+// Cross-platform code
+let textColor = PlatformColors.label
+let font = PlatformFonts.monospacedSystemFont(ofSize: 14)
+
+// Platform-specific behavior
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    // macOS-specific implementation
+#elseif canImport(UIKit)
+    // iOS and Catalyst implementation
+#endif
+```
 
 ## 📱 Example Application
 

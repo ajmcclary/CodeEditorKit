@@ -134,7 +134,7 @@ final class CodeEditorSwiftUIViewTests: XCTestCase {
     
     // MARK: - Platform-Specific Tests
     
-    #if os(macOS)
+    #if canImport(AppKit)
     func testMacOSViewCreation() {
         let view = CodeEditorSwiftUIView(text: .constant("Test"))
         let coordinator = view.makeCoordinator()
@@ -158,7 +158,7 @@ final class CodeEditorSwiftUIViewTests: XCTestCase {
     }
     #endif
     
-    #if os(iOS)
+    #if canImport(UIKit)
     func testIOSViewCreation() {
         let view = CodeEditorSwiftUIView(text: .constant("Test"))
         let coordinator = view.makeCoordinator()

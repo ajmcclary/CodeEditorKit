@@ -45,7 +45,11 @@ public enum PlatformColors {
     public static var black: PlatformColor { NSColor.black }
     public static var clear: PlatformColor { NSColor.clear }
     public static var controlAccentColor: PlatformColor { NSColor.controlAccentColor }
+    public static var tintColor: PlatformColor { NSColor.controlAccentColor } // macOS doesn't have tintColor, using controlAccentColor
     public static var textBackgroundColor: PlatformColor { NSColor.textBackgroundColor }
+    public static var placeholderTextColor: PlatformColor { NSColor.placeholderTextColor }
+    public static var selectedTextColor: PlatformColor { NSColor.selectedTextColor }
+    public static var selectedTextBackgroundColor: PlatformColor { NSColor.selectedTextBackgroundColor }
     
     // System colors
     public static var systemRed: PlatformColor { NSColor.systemRed }
@@ -56,6 +60,7 @@ public enum PlatformColors {
     public static var systemTeal: PlatformColor { NSColor.systemTeal }
     public static var systemIndigo: PlatformColor { NSColor.systemIndigo }
     public static var systemPink: PlatformColor { NSColor.systemPink }
+    public static var systemBrown: PlatformColor { NSColor.systemBrown }
     #else
     public static var label: PlatformColor { UIColor.label }
     public static var secondaryLabel: PlatformColor { UIColor.secondaryLabel }
@@ -68,7 +73,11 @@ public enum PlatformColors {
     public static var black: PlatformColor { UIColor.black }
     public static var clear: PlatformColor { UIColor.clear }
     public static var controlAccentColor: PlatformColor { UIColor.systemBlue }
+    public static var tintColor: PlatformColor { UIColor.tintColor }
     public static var textBackgroundColor: PlatformColor { UIColor.systemBackground }
+    public static var placeholderTextColor: PlatformColor { UIColor.placeholderText }
+    public static var selectedTextColor: PlatformColor { UIColor.label } // iOS doesn't have selectedTextColor, using label
+    public static var selectedTextBackgroundColor: PlatformColor { UIColor.systemBlue.withAlphaComponent(0.3) } // iOS doesn't have selectedTextBackgroundColor
     
     // System colors
     public static var systemRed: PlatformColor { UIColor.systemRed }
@@ -79,6 +88,7 @@ public enum PlatformColors {
     public static var systemTeal: PlatformColor { UIColor.systemTeal }
     public static var systemIndigo: PlatformColor { UIColor.systemIndigo }
     public static var systemPink: PlatformColor { UIColor.systemPink }
+    public static var systemBrown: PlatformColor { UIColor.systemBrown }
     #endif
 }
 

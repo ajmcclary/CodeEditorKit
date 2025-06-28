@@ -170,11 +170,8 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
     
     /// Register with memory monitor for automatic cleanup
     private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
-                identifier: "lru-cache-\(cacheId)",
-                priority: .normal
-            ) { @MainActor [weak self] in
+        let id = cacheId
+        let handler: @MainActor () -> CleanupResult = { [weak self] in
                 guard let self else {
                     return CleanupResult(memoryFreedMB: 0, description: "Cache deallocated")
                 }
@@ -202,7 +199,14 @@ public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
                     memoryFreedMB: estimatedMemoryMB,
                     description: "Removed \(itemsRemoved) cache items"
                 )
-            }
+        }
+        
+        Task { @MainActor in
+            MemoryMonitor.shared.registerCleanupHandler(
+                identifier: "lru-cache-\(id)",
+                priority: .normal,
+                handler: handler
+            )
         }
     }
 }

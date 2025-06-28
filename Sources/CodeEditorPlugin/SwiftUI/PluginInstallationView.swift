@@ -73,7 +73,7 @@ public struct PluginInstallationView: View {
             }
             .padding()
             .navigationTitle("Install Plugin")
-#if os(iOS)
+#if canImport(UIKit)
             .navigationBarTitleDisplayMode(.large)
 #endif
             .toolbar {
@@ -338,7 +338,7 @@ public struct PluginInstallationView: View {
     }
     
     private func browseForLocalPlugin() {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true

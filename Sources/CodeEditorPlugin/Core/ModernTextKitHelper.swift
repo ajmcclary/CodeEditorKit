@@ -85,12 +85,12 @@ public enum ModernTextKitHelper {
         
         // Use adaptive colors for better appearance
         textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
-        textView.insertionPointColor = NSColor.controlAccentColor
+        textView.insertionPointColor = PlatformColors.controlAccentColor
 
         // Configure selection appearance
         textView.selectedTextAttributes = [
             .backgroundColor: AdaptiveColorSystem.selectionColor,
-            .foregroundColor: NSColor.selectedTextColor
+            .foregroundColor: PlatformColors.selectedTextColor
         ]
 
         // Enhanced text smoothing for high-resolution displays
@@ -167,12 +167,12 @@ public enum ModernTextKitHelper {
     /// Configure text view with adaptive colors
     public static func applyAdaptiveColors(to textView: NSTextView) {
         textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
-        textView.insertionPointColor = NSColor.controlAccentColor
+        textView.insertionPointColor = PlatformColors.controlAccentColor
         
         // Configure selection colors
         textView.selectedTextAttributes = [
             .backgroundColor: AdaptiveColorSystem.selectionColor,
-            .foregroundColor: NSColor.selectedTextColor
+            .foregroundColor: PlatformColors.selectedTextColor
         ]
     }
 

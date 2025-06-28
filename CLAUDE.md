@@ -163,7 +163,7 @@ Sources/CodeEditorPlugin/
 
 **Extension Naming Convention:**
 - Use `+Extensions` suffix for extension files
-- Example: `NSColor+Extensions.swift`, `String+Extensions.swift`
+- Example: `PlatformColor+Extensions.swift`, `String+Extensions.swift`
 - SwiftLint `file_name` rule disabled to allow this pattern
 
 **Feature-Based Organization Benefits:**
@@ -410,6 +410,7 @@ The annotation system detects and displays TODO/FIXME/NOTE/WARNING/ERROR comment
 - **Check capabilities before using features** - Use `PlatformCapabilities.shared.supportsTextKit2`
 - **Leverage semantic colors** - Use adaptive colors that respond to light/dark mode
 - **Use cross-platform coordinator** - Let `CrossPlatformCoordinator` handle input differences
+- **Prefer `#if canImport()` over `#if os()`** - Better compatibility with Mac Catalyst
 
 ## Platform Abstraction System
 
@@ -461,6 +462,14 @@ let backgroundColor: PlatformColor = PlatformColors.systemBackground
 
 // Create cross-platform fonts
 let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
+
+// Platform-aware view controllers
+class MyEditorViewController: PlatformViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Your cross-platform code here
+    }
+}
 ```
 
 **Runtime Capability Detection:**

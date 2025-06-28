@@ -266,8 +266,8 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         
         // Also apply additional settings that aren't handled by the internal applyConfiguration
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.textColor = NSColor.labelColor
+        view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        view.textColor = PlatformColors.label
         
         if layout.wrapLines {
             view.textContainer?.widthTracksTextView = true
@@ -277,8 +277,8 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             view.isHorizontallyResizable = true
         }
         #elseif canImport(UIKit)
-        view.font = UIFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.textColor = UIColor.label
+        view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        view.textColor = PlatformColors.label
         #endif
     }
 }

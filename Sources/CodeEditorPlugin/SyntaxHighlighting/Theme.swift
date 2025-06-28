@@ -51,14 +51,14 @@ public struct Theme {
             for tokenType in tokenTypes {
                 let colorName = "\(name)/\(tokenType)"
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                if let color = NSColor(named: colorName, bundle: bundle) {
+                if let color = PlatformColor(named: colorName, bundle: bundle) {
                     colorDict[tokenType] = color
                 } else {
                     // Fallback to semantic color based on token type
                     colorDict[tokenType] = Self.semanticFallbackColor(for: tokenType)
                 }
                 #elseif canImport(UIKit)
-                if let color = UIColor(named: colorName, in: bundle, compatibleWith: nil) {
+                if let color = PlatformColor(named: colorName, in: bundle, compatibleWith: nil) {
                     colorDict[tokenType] = color
                 } else {
                     // Fallback to semantic color based on token type

@@ -3,7 +3,7 @@
 
 /// Custom insertion point indicator view. Optional.
 public protocol InsertionPointIndicatorProtocol: NSView {
-    var insertionPointColor: NSColor { get set }
+    var insertionPointColor: PlatformColor { get set }
 
     func blinkStart()
     func blinkStop()
@@ -14,7 +14,7 @@ import UIKit
 
 /// Custom insertion point indicator view. Optional.
 public protocol InsertionPointIndicatorProtocol: UIView {
-    var insertionPointColor: UIColor { get set }
+    var insertionPointColor: PlatformColor { get set }
 
     func blinkStart()
     func blinkStop()

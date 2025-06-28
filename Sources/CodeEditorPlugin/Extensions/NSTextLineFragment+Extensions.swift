@@ -1,11 +1,7 @@
-#if os(macOS) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-#elseif os(iOS) || os(visionOS)
-#if canImport(UIKit)
+#elseif canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
 #endif
 
 extension NSTextLineFragment {

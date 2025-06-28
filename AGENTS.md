@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex and Codex CLI when working with code in this repository.
 
 ## Build and Development Commands
 
@@ -56,7 +56,7 @@ swift run CodeEditorSample
 
 ### Current Directory Structure (Feature-Based Organization)
 
-After major refactoring, the project now uses a feature-based organization (reduced from 39 to 10 directories):
+After successful refactoring completed today, the project now uses a feature-based organization (reduced from 39 to 10 directories):
 
 ```
 Sources/CodeEditorPlugin/
@@ -71,8 +71,8 @@ Sources/CodeEditorPlugin/
 │   ├── SwiftSyntaxHighlighter.swift        # Swift AST highlighting
 │   └── RegexSyntaxHighlighter.swift        # Regex-based highlighting
 ├── Layout/                  # Layout and view components
-│   ├── GutterView.swift             # Cross-platform line numbers
-│   └── CodeEditorContainerView.swift # iOS container architecture
+│   ├── GutterView.swift             # Cross-platform line numbers (fixed rendering issues)
+│   └── CodeEditorContainerView.swift # iOS container architecture (resolved clipping)
 ├── SwiftUI/                 # SwiftUI integration
 │   ├── CodeEditorSwiftUIView.swift  # Main SwiftUI wrapper
 │   └── CodeEditor.swift             # Modern SwiftUI view
@@ -118,11 +118,12 @@ Sources/CodeEditorPlugin/
    - `AnnotationsDataSource` for data source pattern integration
    - Performance tested with large files and many annotations
 
-5. **Cross-Platform Layout** - Proper iOS and macOS support
-   - `GutterView.swift` for cross-platform line number display
-   - `CodeEditorContainerView.swift` for iOS container architecture
-   - Separates gutter from text view to prevent scrolling/clipping issues
+5. **Cross-Platform Layout** - Fixed iOS and macOS support with proper text rendering
+   - `GutterView.swift` for cross-platform line number display (no more clipping issues)
+   - `CodeEditorContainerView.swift` for iOS container architecture (proper text alignment)
+   - Successfully separates gutter from text view with correct scrolling behavior
    - Handles keyboard appearance with proper content insets
+   - All text rendering issues resolved on both platforms
 
 
 ### Key Design Patterns
@@ -162,7 +163,7 @@ Sources/CodeEditorPlugin/
 
 **Extension Naming Convention:**
 - Use `+Extensions` suffix for extension files
-- Example: `NSColor+Extensions.swift`, `String+Extensions.swift`
+- Example: `PlatformColor+Extensions.swift`, `String+Extensions.swift`
 - SwiftLint `file_name` rule disabled to allow this pattern
 
 **Feature-Based Organization Benefits:**
@@ -230,12 +231,13 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 
 ### Architecture Achievements and Lessons Learned
 
-**Major Refactoring Completed (Latest State)**
+**Major Refactoring Completed Today**
 - **Directory Structure Simplification**: Reduced from 39 to 10 directories (74% reduction)
 - **Feature-Based Organization**: Transitioned from type-based to feature-based organization
+- **Fixed Text Rendering Issues**: Resolved all line number clipping and text display problems
+- **Working Cross-Platform Support**: Both iOS and macOS now render correctly without issues
 - **Unified Configuration System**: Complete implementation of nested EditorConfiguration
 - **Working Syntax Highlighting**: Fully functional multi-language support
-- **Cross-Platform Excellence**: Proper iOS container architecture with line number fixes
 - **Swift 6 Compliance**: Full actor-based concurrency throughout codebase
 
 **Configuration System Evolution**
@@ -245,6 +247,14 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **SwiftUI Integration**: Environment-based configuration passing
 - **Type Safety**: Full Codable and Sendable conformance
 
+**Comprehensive Platform Abstraction System**
+- **Runtime Capability Detection**: `PlatformCapabilities` for feature availability checking
+- **Semantic Color System**: `PlatformColors` enum with adaptive light/dark mode support
+- **Cross-Platform Font System**: `PlatformFonts` with consistent font creation across platforms
+- **Input Handling Abstraction**: `CrossPlatformCoordinator` for mouse, touch, and pencil input
+- **Performance Optimization**: Memory-aware configuration and hardware acceleration detection
+- **Platform-Appropriate UI**: Context menus, keyboard shortcuts, and gesture handling
+
 **Performance and Quality Achievements**
 - **Zero SwiftLint Violations**: Maintained across all 102+ files
 - **172 Comprehensive Tests**: 106 main package + 66 sample app tests
@@ -252,11 +262,13 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **TextKit2 Integration**: Modern text handling with proper synchronization
 - **Viewport Optimization**: Efficient rendering for large files
 
-**Cross-Platform Success**
-- **iOS Container Architecture**: Proper line number display without clipping
-- **Keyboard Handling**: Content insets instead of frame resizing
+**Cross-Platform Success (Fixed Today)**
+- **iOS Container Architecture**: Fixed line number display - no more clipping issues
+- **Text Rendering**: Resolved all text alignment and display problems on both platforms
+- **Keyboard Handling**: Content insets working correctly without frame resizing
 - **SwiftUI Wrappers**: Native SwiftUI integration with environment configuration
 - **macOS Optimization**: Smooth scrolling and proper gutter display
+- **Zero Known Issues**: All rendering problems have been resolved
 
 **Development Process Insights**
 - **Feature-based organization** significantly improves maintainability
@@ -264,6 +276,7 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **Comprehensive testing** prevents regressions during major refactoring
 - **Actor-based concurrency** requires careful design but provides excellent thread safety
 - **SwiftLint configuration** with custom rules maintains code quality at scale
+- **Iterative refinement** - Today's successful fixes show the value of focused problem-solving
 
 ## Current Working Systems
 
@@ -391,4 +404,95 @@ The annotation system detects and displays TODO/FIXME/NOTE/WARNING/ERROR comment
 - **Set appropriate limits** - Configure `maxSyntaxHighlightingLength` for large files
 - **Use viewport rendering** - Leverage the built-in viewport optimization
 - **Test with large files** - Verify performance with realistic content sizes
+
+### Platform Abstraction Usage
+- **Always use platform abstractions** - Use `PlatformColors.label` instead of `NSColor.labelColor`/`UIColor.label`
+- **Check capabilities before using features** - Use `PlatformCapabilities.shared.supportsTextKit2`
+- **Leverage semantic colors** - Use adaptive colors that respond to light/dark mode
+- **Use cross-platform coordinator** - Let `CrossPlatformCoordinator` handle input differences
+- **Prefer `#if canImport()` over `#if os()`** - Better compatibility with Mac Catalyst
+
+## Platform Abstraction System
+
+The CodeEditorPlugin includes a comprehensive platform abstraction system located in `Sources/CodeEditorPlugin/Platform/`. This system provides seamless cross-platform development while maintaining access to platform-specific optimizations.
+
+### Core Components
+
+**PlatformImports.swift** - Type aliases and semantic color system:
+```swift
+// Platform-agnostic types
+PlatformColor, PlatformFont, PlatformView, PlatformViewController
+
+// Semantic color system
+PlatformColors.label                    // Adaptive text color
+PlatformColors.systemBackground         // Adaptive background color
+PlatformColors.controlBackground        // Adaptive control background
+```
+
+**PlatformCapabilities.swift** - Runtime feature detection:
+```swift
+let capabilities = PlatformCapabilities.shared
+
+// Check feature availability
+if capabilities.supportsTextKit2 {
+    // Use TextKit2 features
+}
+
+// Get optimal configuration
+let config = capabilities.recommendedPerformanceConfiguration
+```
+
+**CrossPlatformCoordinator.swift** - UI pattern abstraction:
+```swift
+let coordinator = CrossPlatformCoordinator()
+
+// Handle platform-specific input
+coordinator.configureInputHandling(for: textView)
+coordinator.handleTouchInput(event: touchEvent)    // iOS
+coordinator.handleMouseInput(event: mouseEvent)    // macOS
+```
+
+### Usage Examples
+
+**Basic Platform Types:**
+```swift
+// Use semantic colors that adapt to light/dark mode
+let textColor: PlatformColor = PlatformColors.label
+let backgroundColor: PlatformColor = PlatformColors.systemBackground
+
+// Create cross-platform fonts
+let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
+
+// Platform-aware view controllers
+class MyEditorViewController: PlatformViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Your cross-platform code here
+    }
+}
+```
+
+**Runtime Capability Detection:**
+```swift
+// Check platform capabilities before using features
+if PlatformCapabilities.shared.supportsHardwareAcceleration {
+    textView.enableHardwareAcceleration()
+}
+
+// Use memory-aware configuration
+let memoryConfig = PlatformCapabilities.shared.recommendedMemoryConfiguration
+```
+
+**Cross-Platform Input Handling:**
+```swift
+let coordinator = CrossPlatformCoordinator()
+
+// Automatically configure appropriate input handling
+coordinator.configureInputHandling(for: textView)
+
+// Create platform-appropriate context menus
+let contextMenu = coordinator.createContextMenu(for: selectedText)
+```
+
+For detailed documentation, see `Sources/CodeEditorPlugin/Platform/README.md`.
 

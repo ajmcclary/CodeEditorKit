@@ -35,14 +35,13 @@ extension GutterView {
         }
     }
     
-    func drawLineNumbers(in rect: NSRect) {
+    func drawLineNumbers(in _: NSRect) {
         guard let textView,
               let textContainer = textView.textContainer,
               let layoutManager = textView.layoutManager,
               let textStorage = textView.textStorage else { 
             return 
         }
-        
         
         // Don't fill the entire background - keep it transparent
         // Only draw the line numbers themselves

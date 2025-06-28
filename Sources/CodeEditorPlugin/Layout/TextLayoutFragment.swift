@@ -120,7 +120,7 @@ final class TextLayoutFragment: NSTextLayoutFragment {
                         .font,
                         at: offset,
                         effectiveRange: nil
-                    ) as? NSFont
+                    ) as? PlatformFont
                 else {
                     continue
                 }
@@ -143,7 +143,7 @@ final class TextLayoutFragment: NSTextLayoutFragment {
                 let symbolString = String(symbol)
                 let attributes: [NSAttributedString.Key: Any] = [
                     .font: font,
-                    .foregroundColor: NSColor.placeholderTextColor
+                    .foregroundColor: PlatformColors.placeholderTextColor
                 ]
 
                 let charSize = symbolString.size(withAttributes: attributes)

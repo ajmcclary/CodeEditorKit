@@ -49,9 +49,11 @@ The CodeEditorPlugin uses a sophisticated platform abstraction system that ensur
 
 ```swift
 import CodeEditorPlugin
+#if canImport(UIKit)
 import UIKit
+#endif
 
-class CatalystViewController: UIViewController {
+class CatalystViewController: PlatformViewController {
     private var editorView: CodeEditorView!
     
     override func viewDidLoad() {
@@ -70,7 +72,7 @@ class CatalystViewController: UIViewController {
     
     private func configureCatalystEditor() {
         // Apply Catalyst-optimized configuration
-        var config = CrossPlatformCoordinator.shared.recommendedConfiguration()
+        var config = PlatformCapabilities.shared.recommendedConfiguration()
         
         // Catalyst-specific adjustments
         config.display.fontSize = 14.0 // Slightly larger for desktop
@@ -88,7 +90,7 @@ class CatalystViewController: UIViewController {
 For iOS-style layout with gutter separation, use `CodeEditorContainerView`:
 
 ```swift
-class CatalystEditorViewController: UIViewController {
+class CatalystEditorViewController: PlatformViewController {
     private var containerView: CodeEditorContainerView!
     
     override func viewDidLoad() {
@@ -372,7 +374,7 @@ class CatalystUITests: XCTestCase {
 let textView = CodeEditorView()
 textView.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
-// After (Catalyst-aware)
+// After (Catalyst-aware with platform abstractions)
 let textView = CodeEditorView()
 let fontSize: CGFloat = {
     #if targetEnvironment(macCatalyst)
@@ -406,7 +408,7 @@ textView.smartQuotesType = .no
 ### Custom Tool Palette
 
 ```swift
-class CatalystToolPaletteViewController: UIViewController {
+class CatalystToolPaletteViewController: PlatformViewController {
     override func buildMenu(with builder: UIMenuBuilder) {
         super.buildMenu(with: builder)
         

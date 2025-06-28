@@ -206,7 +206,7 @@ struct CodeAnnotation {
             }
         }
         #else
-        var color: UIColor {
+        var color: PlatformColor {
             switch self {
             case .todo:
                 return .systemBlue

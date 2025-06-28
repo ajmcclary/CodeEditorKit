@@ -1,12 +1,7 @@
-#if os(macOS)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-#endif
-#if os(iOS) || targetEnvironment(macCatalyst)
-#if canImport(UIKit)
+#elseif canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
 #endif
 
 // MARK: - LineAnnotation

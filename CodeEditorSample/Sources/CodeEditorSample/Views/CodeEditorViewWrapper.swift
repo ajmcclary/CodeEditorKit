@@ -98,9 +98,9 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         textView.string = text
         
         // Ensure text attributes are set
-        textView.textColor = NSColor.labelColor
-        textView.font = NSFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        textView.backgroundColor = NSColor.textBackgroundColor
+        textView.textColor = PlatformColors.label
+        textView.font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        textView.backgroundColor = PlatformColors.textBackgroundColor
         textView.drawsBackground = true
         
         // Force layout update after setting text

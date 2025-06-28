@@ -133,7 +133,7 @@ public struct PluginCreationView: View {
                 .padding()
             }
             .navigationTitle("Create Plugin")
-#if os(iOS)
+#if canImport(UIKit)
             .navigationBarTitleDisplayMode(.large)
             .navigationBarItems(leading: Button("Cancel") {
                 dismiss()
@@ -368,7 +368,7 @@ public struct PluginCreationView: View {
     }
     
     private func browseForOutputPath() {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true

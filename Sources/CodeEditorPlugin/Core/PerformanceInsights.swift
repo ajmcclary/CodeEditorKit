@@ -783,7 +783,7 @@ public struct PerformanceInsightsPanel: View {
             }
         }
         .padding()
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(Color(PlatformColors.controlBackground))
         .cornerRadius(8)
         .sheet(isPresented: $showingDetailedReport) {
             // Detailed report view would go here

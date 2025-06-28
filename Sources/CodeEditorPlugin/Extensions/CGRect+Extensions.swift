@@ -8,7 +8,7 @@ import AppKit
 extension CGRect {
     /// Returns a pixel-aligned rect
     var pixelAligned: CGRect {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSIntegralRectWithOptions(self, .alignAllEdgesNearest)
         #else
         return integral

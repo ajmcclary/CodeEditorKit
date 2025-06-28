@@ -28,7 +28,7 @@ public class AnnotationsContentView: NSView {
 
     private func setup() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.backgroundColor = PlatformColors.clear.cgColor
     }
 
     /// Text views need a flipped coordinate system on macOS

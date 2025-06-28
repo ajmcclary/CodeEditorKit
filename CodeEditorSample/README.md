@@ -123,8 +123,8 @@ Professional themes with real-time switching:
 enum ColorTheme: String, CaseIterable {
     case xcode, vsDark, github, solarizedDark, minimal, presentation
     
-    var backgroundColor: NSColor { /* theme colors */ }
-    var textColor: NSColor { /* theme colors */ }
+    var backgroundColor: PlatformColor { /* theme colors */ }
+    var textColor: PlatformColor { /* theme colors */ }
     // ... complete theme definitions
 }
 ```
@@ -164,10 +164,8 @@ CodeEditorSample/
 │   ├── Services/
 │   │   ├── AnnotationManager.swift        # Annotation detection with performance testing
 │   │   └── ConfigurationExporter.swift    # Cross-platform settings import/export
-│   ├── Themes/
-│   │   └── ThemeProvider.swift            # Color theme definitions
-│   └── Platform/
-│       └── PlatformTypes.swift            # Platform abstractions
+│   └── Themes/
+│       └── ThemeProvider.swift            # Color theme definitions
 └── Tests/CodeEditorSampleTests/            # 66 comprehensive tests
     ├── AnnotationSystemTests.swift        # Comprehensive annotation testing (20 tests)
     ├── BasicFunctionalityTests.swift       # Core functionality (4 tests)
@@ -202,7 +200,7 @@ struct SampleCodeEditorView: View {
     let language: String
     
     var body: some View {
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if #available(macOS 13.0, *) {
             CodeEditor(text: $text)
                 .codeLanguage(detectLanguage(from: language))
@@ -289,12 +287,12 @@ textView.setLanguage(fileExtension: "newlang")
 ```swift
 // Add to Themes/ThemeProvider.swift
 static let customTheme = ColorTheme(
-    backgroundColor: NSColor.black,
-    textColor: NSColor.white,
-    selectedLineColor: NSColor.darkGray,
-    keywordColor: NSColor.systemBlue,
-    stringColor: NSColor.systemGreen,
-    commentColor: NSColor.systemGray
+    backgroundColor: PlatformColor.black,
+    textColor: PlatformColor.white,
+    selectedLineColor: PlatformColor.darkGray,
+    keywordColor: PlatformColor.systemBlue,
+    stringColor: PlatformColor.systemGreen,
+    commentColor: PlatformColor.systemGray
 )
 ```
 

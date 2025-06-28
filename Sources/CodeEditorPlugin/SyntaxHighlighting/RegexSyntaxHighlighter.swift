@@ -2,13 +2,12 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-
-public typealias RegexHighlighterColor = UIColor
 #else
 import AppKit
-
-public typealias RegexHighlighterColor = NSColor
 #endif
+
+// Use centralized platform color type
+public typealias RegexHighlighterColor = PlatformColor
 
 // MARK: - RegexSyntaxHighlighter
 

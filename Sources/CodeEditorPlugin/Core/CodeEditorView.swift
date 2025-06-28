@@ -108,7 +108,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     /// The color for highlighting the selected line
     public var selectedLineHighlightColor: PlatformColor = {
         #if canImport(UIKit)
-        return UIColor.tintColor.withAlphaComponent(0.15)
+        return PlatformColors.tintColor.withAlphaComponent(0.15)
         #else
         return PlatformColors.controlAccentColor.withAlphaComponent(0.15)
         #endif
