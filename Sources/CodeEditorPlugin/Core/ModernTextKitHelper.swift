@@ -10,7 +10,7 @@ import os
 public enum ModernTextKitHelper {
     /// Check if TextKit2 should be used
     public static var shouldUseTextKit2: Bool {
-        MacOSVersionDetection.hasStableTextKit2
+        PlatformCapabilities.shared.preferTextKit2
     }
     
     /// Check if we can opt into TextKit2 for a specific text view
@@ -19,7 +19,7 @@ public enum ModernTextKitHelper {
         guard textView.textContainer != nil else { return false }
         
         // Only opt into TextKit2 on macOS 13+ where it's more stable
-        guard MacOSVersionDetection.hasStableTextKit2 else {
+        guard PlatformCapabilities.shared.preferTextKit2 else {
             return false
         }
         
@@ -41,7 +41,7 @@ public enum ModernTextKitHelper {
         
         // TextKit2 should be default on macOS 13+
         // If it's not active, there might be a specific reason
-        if MacOSVersionDetection.hasStableTextKit2 {
+        if PlatformCapabilities.shared.preferTextKit2 {
             // Log the situation for debugging
             os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
                 .debug("TextKit2 not active, using TextKit1 fallback")
@@ -64,9 +64,10 @@ public enum ModernTextKitHelper {
         textView.isAutomaticLinkDetectionEnabled = false
 
         // macOS version-specific optimizations
-        if MacOSVersionDetection.isMacOS14OrLater {
+        let capabilities = PlatformCapabilities.shared
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             configureForModernMacOS(textView)
-        } else if MacOSVersionDetection.isMacOS13OrLater {
+        } else if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 13 {
             configureForMacOS13(textView)
         } else {
             configureForLegacyMacOS(textView)
@@ -134,9 +135,15 @@ public enum ModernTextKitHelper {
 
     // MARK: - Control Size Support
 
-    /// Get the recommended control size based on macOS version
-    public static func recommendedControlSize(for priority: MacOSVersionDetection.ControlPriority) -> NSControl.ControlSize {
-        MacOSVersionDetection.recommendedControlSize(for: priority)
+    /// Get the recommended control size based on platform capabilities
+    public static func recommendedControlSize() -> NSControl.ControlSize {
+        // Use platform capabilities to determine appropriate size
+        let capabilities = PlatformCapabilities.shared
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
+            return .regular
+        } else {
+            return .small
+        }
     }
 
     // MARK: - Performance Optimizations

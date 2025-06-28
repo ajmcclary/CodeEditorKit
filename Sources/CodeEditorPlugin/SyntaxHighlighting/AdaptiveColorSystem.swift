@@ -12,7 +12,7 @@ public enum AdaptiveColorSystem {
     /// Adaptive syntax highlighting colors
     public static func syntaxColor(for tokenType: TokenType) -> PlatformColor {
         // Use enhanced colors on macOS 14+ for better contrast
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             enhancedColor(for: tokenType)
         } else {
             traditionalColor(for: tokenType)
@@ -124,7 +124,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive background color for text editing areas
     public static var textBackgroundColor: PlatformColor {
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             // Use a slightly enhanced background for newer systems
             PlatformColors.textBackgroundColor.withAlphaComponent(0.98)
         } else {
@@ -134,7 +134,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive selection color
     public static var selectionColor: PlatformColor {
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             // Enhanced selection color for better visibility
             PlatformColors.selectedTextBackgroundColor.withAlphaComponent(0.90)
         } else {
@@ -144,7 +144,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive line number color
     public static var lineNumberColor: PlatformColor {
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             // Slightly enhanced line numbers
             PlatformColors.secondaryLabel.withAlphaComponent(0.75)
         } else {
@@ -154,7 +154,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive gutter background color
     public static var gutterBackgroundColor: PlatformColor {
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             // Subtle gutter enhancement
             PlatformColors.controlBackground.withAlphaComponent(0.70)
         } else {
@@ -166,7 +166,7 @@ public enum AdaptiveColorSystem {
 
     /// Get adaptive color for annotation types
     public static func annotationColor(for severity: AnnotationSeverity) -> PlatformColor {
-        if MacOSVersionDetection.isMacOS14OrLater {
+        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
             switch severity {
             case .info:
                 PlatformColors.systemBlue.withAlphaComponent(0.75)

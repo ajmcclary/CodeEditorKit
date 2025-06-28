@@ -92,6 +92,7 @@ public class CodeEditorContainerView: PlatformView {
         
         // Common setup
         gutterView.textView = textView
+        gutterView.observeTextView()          // start listening for changes
         setupMinimap()
         
         // Apply initial text container insets
@@ -168,6 +169,11 @@ public class CodeEditorContainerView: PlatformView {
         
         // Ensure gutter stays on top
         bringSubviewToFront(gutterView)
+        
+        // Set up scroll delegate for minimap updates
+        if let scrollView = textView as? UIScrollView {
+            scrollView.delegate = self
+        }
     }
     #endif
     
@@ -224,15 +230,9 @@ public class CodeEditorContainerView: PlatformView {
             }
         }
         #else
-        NotificationCenter.default.addObserver(
-            forName: UIScrollView.contentOffsetDidChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-            }
-        }
+        // On iOS, set up scroll delegate for minimap updates
+        // The textView (UITextView) handles scrolling internally
+        // We'll monitor scroll changes through the delegate pattern in setupIOSViews
         #endif
     }
     
@@ -582,6 +582,24 @@ public class CodeEditorContainerView: PlatformView {
     #endif
     
     deinit {
-        // Observers are automatically removed when deallocated
+        #if canImport(UIKit)
+        // Remove keyboard observers - block-based observers must be removed manually
+        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        keyboardObservers.removeAll()
+        #endif
+        
+        // Remove any selector-based observers
+        NotificationCenter.default.removeObserver(self)
     }
 }
+
+// MARK: - UIScrollViewDelegate
+
+#if canImport(UIKit)
+extension CodeEditorContainerView: UIScrollViewDelegate {
+    public func scrollViewDidScroll(_: UIScrollView) {
+        // Update minimap when text view scrolls
+        updateMinimap()
+    }
+}
+#endif

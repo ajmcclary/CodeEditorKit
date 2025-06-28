@@ -7,8 +7,6 @@ public struct CodeEditor: View {
     // MARK: - Properties
     
     @Binding private var text: String
-    @State private var internalText: String = ""
-    @State private var isUpdatingText = false
     
     // Focus management
     @FocusState private var isFocused: Bool
@@ -44,7 +42,7 @@ public struct CodeEditor: View {
     
     public var body: some View {
         CodeEditorRepresentable(
-            text: $internalText,
+            text: $text,  // Pass the binding directly
             language: language,
             theme: theme,
             configuration: configuration,
@@ -58,42 +56,19 @@ public struct CodeEditor: View {
         .searchable(text: $searchText)
         .focusable()
         .focused($isFocused)
-        .onAppear {
-            if !isUpdatingText {
-                internalText = text
-            }
-        }
-        .task(id: text) {
-            // Handle external text changes with debouncing
-            if text != internalText && !isUpdatingText {
-                try? await Task.sleep(for: textDebounceInterval)
-                if !Task.isCancelled && !isUpdatingText {
-                    await MainActor.run {
-                        internalText = text
-                    }
-                }
-            }
-        }
     }
     
     // MARK: - Private Methods
     
     private func handleTextChange(_ newText: String) {
-        Task { @MainActor in
-            isUpdatingText = true
-            defer { isUpdatingText = false }
-            
-            // Update binding with debouncing
-            if newText != text {
-                text = newText
-                onTextChange?(newText)
-            }
-        }
+        // The coordinator will handle this, so this can be simplified
+        // The text binding is updated directly by the coordinator
+        onTextChange?(newText)
     }
     
     private func handleSelectionChange(_ selection: NSRange) {
         // Convert NSRange to Range<String.Index>
-        guard let range = Range(selection, in: internalText) else { return }
+        guard let range = Range(selection, in: text) else { return }
         onSelectionChange?(range)
     }
     
@@ -218,12 +193,16 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     }
     
     class Coordinator: NSObject {
-        deinit {}
-        
         let parent: CodeEditorRepresentable
+        private var observers: [Any] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
+        }
+        
+        deinit {
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+            observers.removeAll()
         }
         
         @MainActor func setup(container: CodeEditorContainerView) {
@@ -244,6 +223,23 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             parent.configuration.apply(to: view)
             container.configuration = parent.configuration
             
+            // Set up text change observer
+            let textObserver = NotificationCenter.default.addObserver(
+                forName: NSText.didChangeNotification,
+                object: view,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    let newText = view.string
+                    if self.parent.text != newText {
+                        self.parent.text = newText
+                        self.parent.onTextChange?(newText)
+                    }
+                }
+            }
+            observers.append(textObserver)
+            
             // Force initial layout
             view.needsLayout = true
             view.needsDisplay = true
@@ -252,6 +248,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
             let view = container.textView
             
+            // Prevent recursive updates by checking if text already matches
             if view.string != text {
                 view.string = text
             }
@@ -292,13 +289,17 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         Coordinator(parent: self)
     }
     
-    class Coordinator: NSObject {
-        deinit {}
-        
+    class Coordinator: NSObject, UITextViewDelegate {
         let parent: CodeEditorRepresentable
+        private var observers: [Any] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
+        }
+        
+        deinit {
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+            observers.removeAll()
         }
         
         func setup(container: CodeEditorContainerView) {
@@ -314,13 +315,41 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             // Apply initial configuration
             container.configuration = parent.configuration
             
+            // Set up delegate for selection change detection
+            view.delegate = self
+            
+            // Set up text change observer
+            let textObserver = NotificationCenter.default.addObserver(
+                forName: UITextView.textDidChangeNotification,
+                object: view,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    let newText = view.text ?? ""
+                    if self.parent.text != newText {
+                        self.parent.text = newText
+                        self.parent.onTextChange?(newText)
+                    }
+                }
+            }
+            observers.append(textObserver)
+            
             // Force initial layout
             view.setNeedsLayout()
             view.setNeedsDisplay()
         }
         
+        // MARK: - UITextViewDelegate
+        
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            parent.onSelectionChange?(textView.selectedRange)
+        }
+        
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
             let view = container.textView
+            
+            // Prevent recursive updates by checking if text already matches
             if view.text != text {
                 view.text = text
             }

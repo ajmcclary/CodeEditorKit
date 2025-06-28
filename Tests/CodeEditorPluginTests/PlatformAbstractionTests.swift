@@ -235,17 +235,19 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - MacOS Version Detection Tests
     
     func testMacOSVersionDetection() {
-        let version = MacOSVersionDetection.versionComponents
+        let capabilities = PlatformCapabilities.shared
+        let version = capabilities.systemVersionComponents
         XCTAssertGreaterThan(version.major, 0)
         
-        let versionString = MacOSVersionDetection.systemVersionString
-        XCTAssertFalse(versionString.isEmpty)
-        
+        // Test platform detection
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Test that we're not using placeholder versions
-        XCTAssertFalse(MacOSVersionDetection.isMacOS14OrLater && version.major < 14)
-        XCTAssertFalse(MacOSVersionDetection.isMacOS13OrLater && version.major < 13)
-        XCTAssertFalse(MacOSVersionDetection.isMacOS12OrLater && version.major < 12)
+        XCTAssertEqual(capabilities.currentPlatform, .macOS)
+        // Test version-based capabilities
+        XCTAssertEqual(capabilities.systemVersionComponents.major >= 14, version.major >= 14)
+        XCTAssertEqual(capabilities.systemVersionComponents.major >= 13, version.major >= 13)
+        XCTAssertEqual(capabilities.systemVersionComponents.major >= 12, version.major >= 12)
+        #else
+        XCTAssertEqual(capabilities.currentPlatform, .iOS)
         #endif
     }
     

@@ -207,36 +207,28 @@ public class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Public Methods
     
     /// Check if a specific feature is available on the current platform
+    /// This method now delegates to PlatformCapabilities for unified capability detection
     public func isFeatureAvailable(_ keyPath: KeyPath<FeatureAvailabilityMatrix, FeatureStatus>) -> Bool {
-        featureAvailability[keyPath: keyPath].isAvailable
+        // Legacy method - delegate to PlatformCapabilities for consistency
+        // Map common features to the unified system
+        if keyPath == \.minimap {
+            return capabilities.isFeatureAvailable(.minimap)
+        } else if keyPath == \.syntaxHighlighting {
+            return capabilities.isFeatureAvailable(.syntaxHighlighting)
+        } else if keyPath == \.codeCompletion {
+            return capabilities.isFeatureAvailable(.codeCompletion)
+        } else if keyPath == \.multiCursor {
+            return capabilities.isFeatureAvailable(.multipleCursors)
+        } else {
+            // Fallback to legacy logic for other features
+            return featureAvailability[keyPath: keyPath].isAvailable
+        }
     }
     
     /// Get recommended configuration for current platform
     public func recommendedConfiguration() -> EditorConfiguration {
-        var config = EditorConfiguration()
-        
-        // Apply platform-specific defaults
-        config.display.fontSize = platformAdjustments.defaultFontSize
-        config.layout.lineSpacing = platformAdjustments.lineSpacing
-        config.layout.gutterWidth = platformAdjustments.gutterWidth
-        config.performance.maxSyntaxHighlightingLength = platformAdjustments.maxHighlightingLength
-        
-        // Disable unavailable features
-        if !featureAvailability.minimap.isAvailable {
-            // config.display.showMinimap = false
-        }
-        
-        if !featureAvailability.multiCursor.isFullyAvailable {
-            // Limit multi-cursor on iOS
-        }
-        
-        #if canImport(UIKit)
-        // iOS-specific adjustments
-        // Note: Additional iOS-specific configuration can be added here
-        // as the EditorConfiguration system is extended
-        #endif
-        
-        return config
+        // Delegate to PlatformCapabilities for unified capability detection
+        PlatformCapabilities.shared.recommendedConfiguration()
     }
     
     /// Apply platform-specific optimizations to a text view
@@ -324,50 +316,29 @@ public class CrossPlatformCoordinator: ObservableObject {
     public func createContextMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
         var builder = ContextMenuBuilder()
         
-        // Common editing actions
+        // Common editing actions - now using abstracted methods
         builder.addAction(ContextMenuAction(
             title: "Cut",
             keyEquivalent: "x",
-            isEnabled: textView.isEditable && range.length > 0
+            isEnabled: textView.canCut
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            textView?.cut(nil)
-            #else
-            if let selectedRange = textView?.selectedTextRange,
-               let selectedText = textView?.text(in: selectedRange) {
-                UIPasteboard.general.string = selectedText
-                textView?.deleteBackward()
-            }
-            #endif
+            textView?.performCut()
         })
         
         builder.addAction(ContextMenuAction(
             title: "Copy",
             keyEquivalent: "c",
-            isEnabled: range.length > 0
+            isEnabled: textView.canCopy
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            textView?.copy(nil)
-            #else
-            if let selectedRange = textView?.selectedTextRange,
-               let selectedText = textView?.text(in: selectedRange) {
-                UIPasteboard.general.string = selectedText
-            }
-            #endif
+            textView?.performCopy()
         })
         
         builder.addAction(ContextMenuAction(
             title: "Paste",
             keyEquivalent: "v",
-            isEnabled: textView.isEditable
+            isEnabled: textView.canPaste
         ) { @MainActor [weak textView] in
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            textView?.paste(nil)
-            #else
-            if let pasteString = UIPasteboard.general.string {
-                textView?.insertText(pasteString)
-            }
-            #endif
+            textView?.performPaste()
         })
         
         builder.addSeparator()

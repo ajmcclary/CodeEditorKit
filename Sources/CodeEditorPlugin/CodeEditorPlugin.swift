@@ -37,7 +37,7 @@ public typealias CodeEditorSyntaxHighlighter = SyntaxHighlightingCoordinator
 // macOS 26 Compatibility types
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 public typealias CodeEditorAdaptiveColors = AdaptiveColorSystem
-public typealias CodeEditorVersionDetection = MacOSVersionDetection
+// CodeEditorVersionDetection removed - use PlatformCapabilities.shared instead
 public typealias CodeEditorModernTextKit = ModernTextKitHelper
 #endif
 

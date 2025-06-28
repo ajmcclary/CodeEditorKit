@@ -581,10 +581,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
         #else
         // UITextView cursor positioning
-        guard let textRange = textRange(from: beginningOfDocument, offset: position) else {
+        guard let textPosition = position(from: beginningOfDocument, offset: position) else {
             return CGRect(x: 0, y: 0, width: 1, height: 16)
         }
-        return caretRect(for: textRange.start)
+        return caretRect(for: textPosition)
         #endif
     }
     
