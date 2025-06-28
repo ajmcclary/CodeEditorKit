@@ -46,7 +46,8 @@ public class GutterView: NSView, GutterViewProtocol {
     
     private func setup() {
         wantsLayer = true
-        layer?.backgroundColor = PlatformColors.controlBackground.cgColor
+        // Make gutter transparent so it doesn't block text
+        layer?.backgroundColor = NSColor.clear.cgColor
     }
     
     public func setNeedsDisplayLineNumbers() {

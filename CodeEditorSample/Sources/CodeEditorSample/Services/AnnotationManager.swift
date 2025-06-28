@@ -526,7 +526,7 @@ class AnnotationView: UIView {
         
         // Create content view
         let contentView = UIView()
-        contentView.backgroundColor = .secondarySystemBackground
+        contentView.backgroundColor = PlatformColors.secondarySystemBackground
         contentView.layer.cornerRadius = 12
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentVC.view.addSubview(contentView)
@@ -596,7 +596,7 @@ class AnnotationView: UIView {
                 popover.delegate = detachable ? nil : NonDetachablePopoverDelegate.shared
                 
                 // Style the popover
-                popover.backgroundColor = .secondarySystemBackground
+                popover.backgroundColor = PlatformColors.secondarySystemBackground
             }
             
             rootViewController.present(contentVC, animated: true)

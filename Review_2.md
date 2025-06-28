@@ -1,114 +1,122 @@
 # Review 2
 
-The repository contains a fully featured code editor written in Swift with a large focus on cross‑platform support (macOS, iOS, and Catalyst). `Sources/CodeEditorPlugin/Platform` implements platform abstractions using `PlatformImports.swift`, `PlatformCapabilities.swift`, and `CrossPlatformCoordinator.swift`. The `README` in this folder explicitly recommends using `#if canImport(AppKit)` and `#if canImport(UIKit)` with Catalyst checks when writing platform‑specific code:
+# Repository: CodeEditorPlugin
 
-```swift
-**Always use `#if canImport(AppKit)` or `#if canImport(UIKit)` instead of `#if os()`** ...
-// ✅ Correct
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// macOS-specific code
-#elif canImport(UIKit)
-// iOS and Catalyst code
-#endif
+## General Impressions
 
-// ❌ Avoid
-#if os(macOS)
-...
-#endif
-```
+CodeEditorSample is a demonstration package that showcases how to use the CodeEditorPlugin API across macOS, iOS and Mac Catalyst. The sample code is organized under Sources/CodeEditorSample with subdirectories for models, services, themes and views. Platform-specific code paths are wrapped in `#if canImport(AppKit)` or `#if canImport(UIKit)` blocks so the same sources compile on both platforms. Tests in CodeEditorSampleTests validate core functionality and plugin integration.
 
-Most of the plugin follows this guidance. For example, `PlatformImports.swift` defines platform‑agnostic types and colors using these checks:
+## Cross‑Platform Handling
+
+The project consistently checks for AppKit vs. UIKit using conditional compilation.
+Example from the configuration exporter service:
 
 ```swift
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-public typealias PlatformColor = NSColor
-...
-#else
+#elseif canImport(UIKit)
 import UIKit
-public typealias PlatformColor = UIColor
-...
+import UniformTypeIdentifiers
 #endif
 ```
 
-The plugin also includes a comprehensive capability detector (`PlatformCapabilities`) and an extensive coordinator (`CrossPlatformCoordinator`) to adjust features and UI between platforms. The sample application (`CodeEditorSample`) demonstrates these features.
+The macOS path uses NSSavePanel/NSOpenPanel to export or import configuration files, while the iOS path uses UIDocumentPickerViewController.
 
-## Areas for Improvement
-
-### 1. Inconsistent Platform Checks
-Some files still use `#if os(...)` rather than the recommended `canImport` pattern. Example from the sample app:
+macOS portion:
 
 ```swift
-var body: some View {
-    #if os(macOS)
-    if #available(macOS 13.0, *) {
-        UnifiedContentView()
-    } else {
-        Text("macOS 13.0 or later required")
-    }
-    #elseif os(iOS) || os(visionOS)
+@MainActor
+static func exportConfiguration(_ config: EditorConfiguration, from window: NSWindow?) {
+    let savePanel = NSSavePanel()
     ...
+}
 ```
 
-Another instance in the plugin:
+iOS portion:
 
 ```swift
-#if os(macOS)
-import AppKit
+@MainActor
+static func importConfiguration(
+    from viewController: UIViewController?,
+    completion: @escaping @Sendable (EditorConfiguration?) -> Void
+) {
+    let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.json])
+    ...
+}
+```
+
+Views also handle platform differences. SampleCodeEditorView embeds either the native CodeEditor (AppKit) or the SwiftUI wrapper (UIKit):
+
+```swift
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+if #available(macOS 13.0, *) {
+    CodeEditor(text: $text)
+        .codeLanguage(detectLanguage(from: language))
+        .environment(\.codeEditorConfiguration, configuration)
+} else {
+    CodeEditorViewWrapper(...)
+}
 #else
-import UIKit
+CodeEditorViewWrapper(...)
 #endif
 ```
 
-And within `CoordinateSystemHelper`:
+The main application file CodeEditorSampleApp sets up AppKit‑specific menus and window configuration inside guarded blocks:
 
 ```swift
-public var coordinateSystem: CoordinateSystemType {
-    #if os(macOS)
-    return .macOS
-    #else
-    return .iOS
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+@NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+#endif
+
+var body: some Scene {
+    WindowGroup {
+        ContentView()
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            .frame(minWidth: 1200, minHeight: 800)
+            #endif
+    }
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    .windowStyle(.titleBar)
+    .windowToolbarStyle(.automatic)
+    ...
     #endif
 }
 ```
 
-Using `os(macOS)` will also match Mac Catalyst, which may not be desired. Updating these to the canonical checks (e.g., `#if canImport(AppKit) && !targetEnvironment(macCatalyst)`) ensures proper Catalyst behavior.
+## Use of CodeEditorPlugin API
 
-### 2. Direct Use of NSColor/UIColor
-Some components still reference platform colors directly:
+The sample relies heavily on the plugin's public API:
 
-```swift
-#if canImport(AppKit)
-public var indicatorColor = NSColor.secondaryLabelColor
-#else
-public var indicatorColor = UIColor.secondaryLabel
-#endif
-```
+- Configurations are created with EditorConfiguration and builder methods.
+- Configurations are applied to CodeEditorView via `configuration.apply(to: view)` (e.g. in CodeEditorViewWrapper).
+- CodeEditorSwiftUIView is used for the SwiftUI interface on iOS.
+- The annotation system demonstrates AnnotationManager as the AnnotationsDataSource.
 
-The platform README recommends using semantic colors through `PlatformColors`:
+Example applying configuration:
 
 ```swift
-**Solution**: Use semantic colors from `PlatformColors` instead of hard-coded colors.
+private func applyConfiguration(to textView: CodeEditorView) {
+    textView.setLanguage(fileExtension: language)
+    configuration.apply(to: textView)
+}
 ```
 
-Replacing `NSColor`/`UIColor` usage with `PlatformColors` keeps color handling consistent and ensures dark‑mode compatibility across platforms.
+## Observed Issues and Suggestions
 
-### 3. Sample Project Checks
-The sample project also relies on `#if os(...)` conditions and mixes AppKit/UIKit imports directly. Aligning these with the `canImport` approach will keep the examples consistent with the plugin's guidelines.
+**Observer Cleanup** – StatusBarView registers NotificationCenter observers in onAppear but never removes them. Consider removing observers in onDisappear to avoid potential leaks.
+File: StatusBarView.swift around the setupObservers method.
 
-Example:
+**Platform Optimization Helper** – The plugin provides `PlatformCapabilities.recommendedConfiguration()` and `CodeEditorView.applyPlatformOptimizations()` (see PlatformCapabilities.swift). The sample could show this API when creating default configurations to illustrate platform‑specific tuning.
 
-```swift
-@main
-struct CodeEditorSampleApp: App {
-    #if os(macOS)
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    #endif
-    ...
+**Color Abstraction** – On iOS the theme code uses UIColor directly. Using the plugin's PlatformColor alias would reduce conditional code and keep theming consistent.
+
+**Mac Catalyst Behavior** – Mac Catalyst currently follows the UIKit path. If Catalyst‑specific window behaviors or menu commands are desired, additional checks using `targetEnvironment(macCatalyst)` could be added.
+
+**AnnotationManager Memory Considerations** – AnnotationManager attaches annotation views but there's no explicit cleanup when a text view is deallocated. Confirm that deinit or explicit clearing is triggered to avoid stray observers or views.
+
+**Sample README** – The README mentions a Platform folder with PlatformTypes.swift, but that file is not present. Ensure documentation and code match.
+
+## Overall
+
+CodeEditorSample effectively demonstrates the CodeEditorPlugin across macOS and iOS with appropriate conditional compilation blocks. The application uses the plugin's configuration and annotation APIs, and provides UI wrappers for both AppKit and UIKit. Addressing the cleanup of observers and leveraging platform helpers would further strengthen the cross‑platform implementation.
 ```
-
-## Overall Assessment
-
-The codebase demonstrates a strong cross‑platform architecture. Platform abstractions are clearly defined, and major components like `CodeEditorView`, `GutterView`, and the SwiftUI wrappers use conditional compilation to provide macOS and iOS implementations. Tests and documentation indicate wide platform coverage.
-
-Addressing the inconsistent use of `#if os(...)` checks and replacing remaining direct `NSColor`/`UIColor` usages with `PlatformColors` will further strengthen Catalyst compatibility and maintainability. This should be a straightforward refactor, following the guidance already outlined in `Sources/CodeEditorPlugin/Platform/README.md`.

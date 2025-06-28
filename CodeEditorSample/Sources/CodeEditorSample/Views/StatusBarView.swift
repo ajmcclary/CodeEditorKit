@@ -12,6 +12,7 @@ struct StatusBarView: View {
     @State private var selectionLength: Int = 0
     @State private var totalLines: Int = 0
     @State private var language: String = "Plain Text"
+    @State private var observers: [NSObjectProtocol] = []
 
     var body: some View {
         HStack {
@@ -46,21 +47,23 @@ struct StatusBarView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        .background(Color(NSColor.controlBackgroundColor))
-        #else
-        .background(Color(.secondarySystemBackground))
-        #endif
+        .background(Color(PlatformColors.controlBackground))
         .onAppear {
             setupObservers()
             updateStatus()
         }
+        .onDisappear {
+            cleanupObservers()
+        }
     }
 
     private func setupObservers() {
+        // Clean up any existing observers first
+        cleanupObservers()
+        
         // Listen for text changes
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
+        let textChangeObserver = NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
             queue: .main
@@ -69,21 +72,10 @@ struct StatusBarView: View {
                 updateStatus()
             }
         }
-        #else
-        NotificationCenter.default.addObserver(
-            forName: UITextView.textDidChangeNotification,
-            object: textView,
-            queue: .main
-        ) { _ in
-            Task { @MainActor in
-                updateStatus()
-            }
-        }
-        #endif
-
+        observers.append(textChangeObserver)
+        
         // Listen for selection changes
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
+        let selectionChangeObserver = NotificationCenter.default.addObserver(
             forName: NSTextView.didChangeSelectionNotification,
             object: textView,
             queue: .main
@@ -92,9 +84,27 @@ struct StatusBarView: View {
                 updateStatus()
             }
         }
-        #else
+        observers.append(selectionChangeObserver)
+        #elseif canImport(UIKit)
+        let textChangeObserver = NotificationCenter.default.addObserver(
+            forName: UITextView.textDidChangeNotification,
+            object: textView,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                updateStatus()
+            }
+        }
+        observers.append(textChangeObserver)
         // iOS doesn't have a separate selection change notification
         #endif
+    }
+    
+    private func cleanupObservers() {
+        for observer in observers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        observers.removeAll()
     }
 
     private func updateStatus() {

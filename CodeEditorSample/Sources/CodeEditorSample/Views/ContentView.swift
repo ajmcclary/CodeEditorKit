@@ -12,8 +12,8 @@ struct ContentView: View {
         } else {
             Text("macOS 13.0 or later required")
         }
-        #elseif os(iOS) || os(visionOS)
-        if #available(iOS 16.0, *) {
+        #elseif canImport(UIKit)
+        if #available(iOS 16.0, visionOS 1.0, *) {
             UnifiedContentView()
         } else {
             Text("iOS 16.0 or later required")

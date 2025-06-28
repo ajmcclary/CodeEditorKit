@@ -39,11 +39,13 @@ extension GutterView {
         guard let textView,
               let textContainer = textView.textContainer,
               let layoutManager = textView.layoutManager,
-              let textStorage = textView.textStorage else { return }
+              let textStorage = textView.textStorage else { 
+            return 
+        }
         
-        let backgroundColor = PlatformColors.controlBackground
-        backgroundColor.setFill()
-        rect.fill()
+        
+        // Don't fill the entire background - keep it transparent
+        // Only draw the line numbers themselves
         
         let text = textStorage.string
         let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: textView.visibleRect, in: textContainer)

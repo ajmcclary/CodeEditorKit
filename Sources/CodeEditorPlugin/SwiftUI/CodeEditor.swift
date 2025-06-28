@@ -203,14 +203,69 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
     
-    func makeNSView(context: Context) -> CodeEditorView {
+    func makeNSView(context: Context) -> NSScrollView {
+        // Create scroll view container
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
+        scrollView.autohidesScrollers = false
+        scrollView.borderType = .noBorder
+        
+        // Create text view
         let view = CodeEditorView()
+        
+        // Configure text view for scroll view
+        view.isVerticallyResizable = true
+        view.isHorizontallyResizable = !configuration.layout.wrapLines
+        view.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        view.textContainer?.heightTracksTextView = false
+        view.autoresizingMask = [.width, .height]
+        
+        // Set container width for non-wrapping mode
+        if !configuration.layout.wrapLines {
+            view.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
+        
+        // Set as document view
+        scrollView.documentView = view
+        
+        // Set initial text first
+        view.string = text
+        
+        // Set language
+        view.language = language
+        
+        // Apply initial configuration (this will set up line numbers)
+        configuration.apply(to: view)
+        
+        // Force initial layout
+        view.needsLayout = true
+        view.needsDisplay = true
+        
+        // Ensure gutter is properly initialized if line numbers are enabled
+        if configuration.display.showLineNumbers {
+            view.updateGutterVisibility()
+            
+            // Schedule another update after the view is fully laid out
+            DispatchQueue.main.async {
+                view.updateGutterVisibility()
+                view.needsDisplay = true
+            }
+        }
+        
+        // Setup coordinator
+        context.coordinator.textView = view
         context.coordinator.setup(view: view)
-        return view
+        
+        return scrollView
     }
     
-    func updateNSView(_ nsView: CodeEditorView, context: Context) {
-        context.coordinator.update(view: nsView, text: text, language: language, theme: theme, configuration: configuration)
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        guard let textView = nsView.documentView as? CodeEditorView else { return }
+        context.coordinator.update(view: textView, text: text, language: language, theme: theme, configuration: configuration)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -221,13 +276,15 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         deinit {}
         
         let parent: CodeEditorRepresentable
+        weak var textView: CodeEditorView?
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
         }
         
-        func setup(view _: CodeEditorView) {
+        func setup(view: CodeEditorView) {
             // Initial setup
+            self.textView = view
         }
         
         @MainActor func update(view: CodeEditorView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
@@ -275,8 +332,22 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             self.parent = parent
         }
         
-        func setup(container _: CodeEditorContainerView) {
+        func setup(container: CodeEditorContainerView) {
             // Initial setup
+            let view = container.textView
+            
+            // Set initial text
+            view.text = parent.text
+            
+            // Set language
+            view.language = parent.language
+            
+            // Apply initial configuration
+            container.configuration = parent.configuration
+            
+            // Force initial layout
+            view.setNeedsLayout()
+            view.setNeedsDisplay()
         }
         
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {

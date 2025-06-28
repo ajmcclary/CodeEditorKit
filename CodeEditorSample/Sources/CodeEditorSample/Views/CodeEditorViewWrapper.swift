@@ -70,19 +70,13 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 
         // Set delegate
         textView.textDelegate = context.coordinator
+        
+        // Ensure autoresizing mask is properly set
+        textView.autoresizingMask = [.width, .height]
 
-        // Set the text content
-        textView.text = text
-
-        // Apply configuration
+        // Apply configuration FIRST before setting text
         applyConfiguration(to: textView)
         
-        // Set up annotation manager if enabled
-        if configuration.display.enableAnnotations {
-            context.coordinator.annotationManager = AnnotationManager(textView: textView)
-            context.coordinator.annotationManager?.scanForAnnotations()
-        }
-
         // Configure text view for scroll view based on word wrap setting
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = !configuration.layout.wrapLines
@@ -99,11 +93,48 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 
         // Set the text view as the document view
         scrollView.documentView = textView
+        
+        // NOW set the text content after the view is in the hierarchy
+        textView.string = text
+        
+        // Ensure text attributes are set
+        textView.textColor = NSColor.labelColor
+        textView.font = NSFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        textView.backgroundColor = NSColor.textBackgroundColor
+        textView.drawsBackground = true
+        
+        // Force layout update after setting text
+        if let layoutManager = textView.layoutManager,
+           let textContainer = textView.textContainer {
+            layoutManager.ensureLayout(for: textContainer)
+        }
+        
+        // Set up annotation manager if enabled
+        if configuration.display.enableAnnotations {
+            context.coordinator.annotationManager = AnnotationManager(textView: textView)
+            context.coordinator.annotationManager?.scanForAnnotations()
+        }
 
         // Ensure the text view is properly laid out
         textView.invalidateIntrinsicContentSize()
         textView.needsLayout = true
         textView.needsDisplay = true
+        
+        // Schedule a layout update after a brief delay to ensure proper rendering
+        DispatchQueue.main.async {
+            textView.needsDisplay = true
+            textView.needsLayout = true
+            
+            // Force a complete re-render by triggering a text change
+            let currentText = textView.string
+            textView.string = ""
+            textView.string = currentText
+            
+            if let layoutManager = textView.layoutManager,
+               let textContainer = textView.textContainer {
+                layoutManager.ensureLayout(for: textContainer)
+            }
+        }
 
         // Notify that text view is ready if callback provided
         onTextViewReady?(textView)
@@ -115,12 +146,17 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? CodeEditorView else { return }
         
         // Update text if changed
-        if textView.text != text {
-            textView.text = text
+        if textView.string != text {
+            textView.string = text
+            // Force a layout update after setting text
+            textView.needsLayout = true
+            textView.needsDisplay = true
         }
 
-        // Update configuration
-        applyConfiguration(to: textView)
+        // Check if configuration actually changed before applying
+        if textView.configuration != configuration {
+            applyConfiguration(to: textView)
+        }
         
         // Update scroll view settings based on word wrap
         scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
@@ -178,7 +214,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // This ensures syntax highlighting works properly when the configuration enables it
         textView.setLanguage(fileExtension: language)
         
-        // Then apply the plugin's configuration
+        // Apply the full configuration
         configuration.apply(to: textView)
     }
 

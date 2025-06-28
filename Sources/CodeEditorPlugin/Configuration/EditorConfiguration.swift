@@ -255,8 +255,11 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     
     /// Apply configuration to a CodeEditorView
     @MainActor public func apply(to view: CodeEditorView) {
-        // Set the view's configuration property which will trigger applyConfiguration()
-        view.configuration = self
+        // Only set configuration if it's different
+        if view.configuration != self {
+            // Set the view's configuration property which will trigger applyConfiguration()
+            view.configuration = self
+        }
         
         // Apply cross-platform text input features
         applyTextInputFeatures(to: view)
@@ -264,6 +267,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         // Also apply additional settings that aren't handled by the internal applyConfiguration
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.font = NSFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        view.textColor = NSColor.labelColor
         
         if layout.wrapLines {
             view.textContainer?.widthTracksTextView = true
@@ -274,6 +278,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         }
         #elseif canImport(UIKit)
         view.font = UIFont.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
+        view.textColor = UIColor.label
         #endif
     }
 }

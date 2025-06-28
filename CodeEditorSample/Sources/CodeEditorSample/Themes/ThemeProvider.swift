@@ -326,7 +326,7 @@ import CodeEditorPlugin
 import Foundation
 import UIKit
 
-// iOS stub - basic theme enum
+// iOS implementation - enhanced theme support
 enum ColorTheme: String, CaseIterable {
     case xcode
     case vsDark
@@ -346,14 +346,150 @@ enum ColorTheme: String, CaseIterable {
         }
     }
     
-    var backgroundColor: UIColor { .systemBackground }
-    var textColor: UIColor { .label }
-    var keywordColor: UIColor { .systemPurple }
-    var stringColor: UIColor { .systemRed }
-    var commentColor: UIColor { .systemGreen }
-    var numberColor: UIColor { .systemBlue }
-    var lineNumberColor: UIColor { .secondaryLabel }
-    var selectedLineColor: UIColor { UIColor.systemBlue.withAlphaComponent(0.1) }
-    var insertionPointColor: UIColor { .systemBlue }
+    // MARK: - Background Colors
+    
+    var backgroundColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemBackground
+        case .vsDark:
+            return PlatformColor(red: 0.12, green: 0.12, blue: 0.12, alpha: 1.0)
+        case .github:
+            return PlatformColors.systemBackground
+        case .solarizedDark:
+            return PlatformColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemBackground
+        case .presentation:
+            return PlatformColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1.0)
+        }
+    }
+    
+    var textColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.label
+        case .vsDark:
+            return PlatformColor(red: 0.84, green: 0.84, blue: 0.84, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.label
+        case .presentation:
+            return PlatformColors.label
+        }
+    }
+    
+    // MARK: - Syntax Colors
+    
+    var keywordColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemPurple
+        case .vsDark:
+            return PlatformColor(red: 0.33, green: 0.61, blue: 0.84, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.84, green: 0.2, blue: 0.5, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.15, green: 0.55, blue: 0.82, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemPurple
+        case .presentation:
+            return PlatformColor(red: 0.68, green: 0.78, blue: 0.91, alpha: 1.0)
+        }
+    }
+    
+    var stringColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemRed
+        case .vsDark:
+            return PlatformColor(red: 0.82, green: 0.54, blue: 0.44, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.52, green: 0.6, blue: 0.0, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemRed
+        case .presentation:
+            return PlatformColor(red: 0.78, green: 0.91, blue: 0.68, alpha: 1.0)
+        }
+    }
+    
+    var numberColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemBlue
+        case .vsDark:
+            return PlatformColor(red: 0.71, green: 0.84, blue: 0.66, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.0, green: 0.53, blue: 0.75, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.16, green: 0.63, blue: 0.6, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemBlue
+        case .presentation:
+            return PlatformColor(red: 0.91, green: 0.78, blue: 0.68, alpha: 1.0)
+        }
+    }
+    
+    var commentColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemGreen
+        case .vsDark:
+            return PlatformColor(red: 0.42, green: 0.47, blue: 0.53, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.secondaryLabel
+        case .presentation:
+            return PlatformColor(red: 0.55, green: 0.55, blue: 0.55, alpha: 1.0)
+        }
+    }
+    
+    // MARK: - UI Colors
+    
+    var selectedLineColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemBlue.withAlphaComponent(0.1)
+        case .vsDark:
+            return PlatformColor(white: 1.0, alpha: 0.05)
+        case .github:
+            return PlatformColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.03, green: 0.21, blue: 0.26, alpha: 1.0)
+        case .minimal:
+            return PlatformColor.clear
+        case .presentation:
+            return PlatformColor(white: 1.0, alpha: 0.08)
+        }
+    }
+    
+    var lineNumberColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.secondaryLabel
+        case .vsDark:
+            return PlatformColor(white: 0.5, alpha: 1.0)
+        case .github:
+            return PlatformColor(white: 0.6, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.tertiaryLabel
+        case .presentation:
+            return PlatformColor(white: 0.4, alpha: 1.0)
+        }
+    }
+    
+    var insertionPointColor: PlatformColor {
+        return PlatformColors.systemBlue
+    }
 }
 #endif

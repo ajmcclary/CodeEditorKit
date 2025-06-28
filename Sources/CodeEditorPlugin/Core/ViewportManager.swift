@@ -69,7 +69,9 @@ public final class ViewportManager: ObservableObject {
             }
             .store(in: &cancellables)
         #elseif canImport(UIKit)
-        NotificationCenter.default.publisher(for: UIScrollView.contentOffsetDidChangeNotification)
+        // For iOS, we'll update viewport when text changes since UITextView doesn't have
+        // a direct content offset notification
+        NotificationCenter.default.publisher(for: UITextView.textDidChangeNotification)
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
@@ -114,7 +116,12 @@ public final class ViewportManager: ObservableObject {
         // Get visible range from TextKitBridge
         if let visibleRange = textKitBridge.visibleRange {
             // Check cache first
-            let cacheKey = ViewportManagerCacheKey(bounds: visibleBounds, textLength: textView.string.count)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            let textLength = textView.string.count
+            #else
+            let textLength = textView.text?.count ?? 0
+            #endif
+            let cacheKey = ViewportManagerCacheKey(bounds: visibleBounds, textLength: textLength)
             
             if let cachedData = rangeCache.get(cacheKey) {
                 // Use cached data

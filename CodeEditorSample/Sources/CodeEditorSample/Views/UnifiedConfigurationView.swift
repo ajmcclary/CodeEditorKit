@@ -760,11 +760,7 @@ struct ConfigurationSection<Content: View>: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                #if canImport(AppKit)
-                .fill(Color(NSColor.controlBackgroundColor))
-                #else
-                .fill(Color(.secondarySystemBackground))
-                #endif
+                .fill(Color(PlatformColors.controlBackground))
         )
     }
 }

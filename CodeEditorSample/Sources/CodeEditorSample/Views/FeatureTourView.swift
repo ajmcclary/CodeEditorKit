@@ -1,3 +1,4 @@
+import CodeEditorPlugin
 import SwiftUI
 #if canImport(AppKit)
 import AppKit
@@ -104,11 +105,7 @@ struct FeatureTourView: View {
                 .foregroundColor(.secondary)
             }
             .padding()
-            #if canImport(AppKit)
-            .background(Color(NSColor.windowBackgroundColor))
-            #else
-            .background(Color(.systemBackground))
-            #endif
+            .background(Color(PlatformColors.systemBackground))
 
             Divider()
 
@@ -179,11 +176,7 @@ struct FeatureTourView: View {
             .padding()
         }
         .frame(width: 500, height: 400)
-        #if canImport(AppKit)
-        .background(Color(NSColor.windowBackgroundColor))
-        #else
-        .background(Color(.systemBackground))
-        #endif
+        .background(Color(PlatformColors.systemBackground))
         .onAppear {
             highlightFeature()
         }

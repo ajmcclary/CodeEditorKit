@@ -375,6 +375,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         backgroundColor = PlatformColors.textBackgroundColor
         textColor = PlatformColors.label
         font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
+        kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
         #endif
     }
 
@@ -743,7 +744,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     // MARK: - Line Numbers and Gutter
 
-    private func updateGutterVisibility() {
+    public func updateGutterVisibility() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if showsLineNumbers {
             createGutterIfNeeded()
@@ -760,6 +761,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             return
         }
 
+        // First update text container inset to make room for gutter
+        let gutterWidth = configuration.layout.gutterWidth
+        let padding = configuration.layout.lineNumberPadding
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textContainerInset = NSSize(width: gutterWidth + padding, height: textContainerInset.height)
+        #else
+        textContainerInset = UIEdgeInsets(top: textContainerInset.top, left: gutterWidth + padding, bottom: textContainerInset.bottom, right: textContainerInset.right)
+        #endif
+
         let gutter = GutterView()
         gutter.textView = self
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -769,12 +780,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
 
         // Add gutter directly to the text view since we might not be in a scroll view
-        // Position it at the front so it doesn't get covered
+        // Position it below the text content so it doesn't block text
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        addSubview(gutter, positioned: .above, relativeTo: nil)
+        addSubview(gutter, positioned: .below, relativeTo: nil)
         #else
         addSubview(gutter)
-        bringSubviewToFront(gutter)
+        sendSubviewToBack(gutter)
         #endif
 
         _gutterView = gutter
@@ -784,6 +795,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     private func removeGutter() {
         _gutterView?.removeFromSuperview()
         _gutterView = nil
+        
+        // Reset text container inset when gutter is removed
+        let padding = configuration.layout.lineNumberPadding
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textContainerInset = NSSize(width: padding, height: textContainerInset.height)
+        #else
+        textContainerInset = UIEdgeInsets(top: textContainerInset.top, left: padding, bottom: textContainerInset.bottom, right: textContainerInset.right)
+        #endif
     }
 
     private func updateGutterFrame() {
@@ -794,7 +813,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         layoutCoordinator.performLayout {
             // Use configuration values instead of magic numbers
             let gutterWidth = self.configuration.layout.gutterWidth
-            let padding = self.configuration.layout.lineNumberPadding
+            _ = self.configuration.layout.lineNumberPadding
             
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             gutter.frame = NSRect(
@@ -814,12 +833,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             )
             #endif
 
-            // Update text container inset to make room for gutter
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            self.textContainerInset = NSSize(width: gutterWidth + padding, height: self.textContainerInset.height)
-            #else
-            self.textContainerInset = UIEdgeInsets(top: self.textContainerInset.top, left: gutterWidth + padding, bottom: self.textContainerInset.bottom, right: self.textContainerInset.right)
-            #endif
+            // Text container inset is already set in createGutterIfNeeded
+            // No need to update it here
 
             // Don't update text container size here - let NSTextView handle it
 
@@ -1344,11 +1359,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             string
         }
         set {
-            kLogger.debug("CodeEditorView text setter: Setting text to '\(newValue ?? "nil")'")
-            kLogger.debug("CodeEditorView text setter: Current string length = \(self.string.count)")
             string = newValue ?? ""
-            kLogger.debug("CodeEditorView text setter: After setting, string length = \(self.string.count)")
-            kLogger.debug("CodeEditorView text setter: textStorage length = \(self.textStorage?.length ?? -1)")
         }
     }
     #endif

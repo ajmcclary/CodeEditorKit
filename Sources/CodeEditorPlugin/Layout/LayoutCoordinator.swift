@@ -165,7 +165,7 @@ public struct LayoutContext {
     
     public init(
         bounds: CGRect,
-        safeAreaInsets: EdgeInsets = .zero,
+        safeAreaInsets: EdgeInsets = EdgeInsets(),
         configuration: EditorConfiguration = .default,
         isRTL: Bool = false
     ) {

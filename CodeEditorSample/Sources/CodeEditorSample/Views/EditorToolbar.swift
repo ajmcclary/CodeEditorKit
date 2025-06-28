@@ -84,11 +84,7 @@ struct EditorToolbar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        #if canImport(AppKit)
-        .background(Color(NSColor.controlBackgroundColor))
-        #else
-        .background(Color(.systemGray6))
-        #endif
+        .background(Color(PlatformColors.controlBackground))
     }
 }
 

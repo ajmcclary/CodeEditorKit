@@ -98,11 +98,7 @@ struct SwiftUIDemoView: View {
             .buttonStyle(.bordered)
         }
         .padding()
-        #if canImport(AppKit)
         .background(Color(PlatformColors.controlBackground))
-        #else
-        .background(Color(.systemGray6))
-        #endif
     }
 }
 
