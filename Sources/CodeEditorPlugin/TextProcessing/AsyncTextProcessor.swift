@@ -200,7 +200,10 @@ actor AsyncTextProcessor {
         let batchSize = settings.batchSize
         var results: [Any] = []
         
-        let textArray = Array(task.text)
+        // Optimized: work with String.Index directly instead of converting to array
+        let startIndex = task.text.index(task.text.startIndex, offsetBy: task.range.location)
+        
+        var currentIndex = startIndex
         var currentLocation = task.range.location
         let endLocation = NSMaxRange(task.range)
         
@@ -209,15 +212,20 @@ actor AsyncTextProcessor {
             try Task.checkCancellation()
             
             let batchEnd = min(currentLocation + batchSize, endLocation)
-            let batchRange = NSRange(location: currentLocation, length: batchEnd - currentLocation)
+            let batchLength = batchEnd - currentLocation
+            let batchRange = NSRange(location: currentLocation, length: batchLength)
+            
+            // Calculate batch end index efficiently
+            let batchEndIndex = task.text.index(currentIndex, offsetBy: batchLength)
+            
+            // Extract substring without array conversion
+            let batchText = String(task.text[currentIndex..<batchEndIndex])
             
             // Process batch
-            let batchResult = try await task.operation.process(
-                String(textArray[batchRange.location..<batchEnd]),
-                batchRange
-            )
+            let batchResult = try await task.operation.process(batchText, batchRange)
             results.append(batchResult)
             
+            currentIndex = batchEndIndex
             currentLocation = batchEnd
             
             // Adaptive delay between batches

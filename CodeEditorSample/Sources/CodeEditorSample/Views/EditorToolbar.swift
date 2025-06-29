@@ -25,26 +25,32 @@ struct EditorToolbar: View {
 
             // Font size controls - using SafeButton to avoid MainActor crashes
             HStack(spacing: 4) {
-                SafeButton(action: {
-                    configuration.display.fontSize = max(10, configuration.display.fontSize - 1)
-                }) {
-                    Image(systemName: "textformat.size.smaller")
-                        .foregroundColor(.accentColor)
-                        .padding(4)
-                }
+                SafeButton(
+                    action: {
+                        configuration.display.fontSize = max(10, configuration.display.fontSize - 1)
+                    },
+                    label: {
+                        Image(systemName: "textformat.size.smaller")
+                            .foregroundColor(.accentColor)
+                            .padding(4)
+                    }
+                )
 
                 Text("\(Int(configuration.display.fontSize))pt")
                     .font(.caption)
                     .frame(width: 35)
                     .monospacedDigit()
 
-                SafeButton(action: {
-                    configuration.display.fontSize = min(32, configuration.display.fontSize + 1)
-                }) {
-                    Image(systemName: "textformat.size.larger")
-                        .foregroundColor(.accentColor)
-                        .padding(4)
-                }
+                SafeButton(
+                    action: {
+                        configuration.display.fontSize = min(32, configuration.display.fontSize + 1)
+                    },
+                    label: {
+                        Image(systemName: "textformat.size.larger")
+                            .foregroundColor(.accentColor)
+                            .padding(4)
+                    }
+                )
             }
 
             Divider()
@@ -59,13 +65,16 @@ struct EditorToolbar: View {
             PerformanceIndicator()
 
             // Help button
-            SafeButton(action: {
-                showFeatureTour = true
-            }) {
-                Image(systemName: "questionmark.circle")
-                    .foregroundColor(.accentColor)
-                    .padding(4)
-            }
+            SafeButton(
+                action: {
+                    showFeatureTour = true
+                },
+                label: {
+                    Image(systemName: "questionmark.circle")
+                        .foregroundColor(.accentColor)
+                        .padding(4)
+                }
+            )
         }
         .padding(.horizontal)
         .padding(.vertical, 8)

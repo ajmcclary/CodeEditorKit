@@ -190,10 +190,22 @@ struct UnifiedConfigurationView: View {
         VStack(spacing: 12) {
             // Core display options - using PlatformSafeToggle to avoid MainActor crashes
             PlatformSafeToggle("Show Line Numbers", isOn: $appState.coordinator.configuration.display.showLineNumbers)
-            PlatformSafeToggle("Highlight Selected Line", isOn: $appState.coordinator.configuration.display.highlightSelectedLine)
-            PlatformSafeToggle("Show Invisible Characters", isOn: $appState.coordinator.configuration.display.showInvisibleCharacters)
-            PlatformSafeToggle("Enable Syntax Highlighting", isOn: $appState.coordinator.configuration.display.enableSyntaxHighlighting)
-            PlatformSafeToggle("Enable Annotations", isOn: $appState.coordinator.configuration.display.enableAnnotations)
+            PlatformSafeToggle(
+                "Highlight Selected Line",
+                isOn: $appState.coordinator.configuration.display.highlightSelectedLine
+            )
+            PlatformSafeToggle(
+                "Show Invisible Characters",
+                isOn: $appState.coordinator.configuration.display.showInvisibleCharacters
+            )
+            PlatformSafeToggle(
+                "Enable Syntax Highlighting",
+                isOn: $appState.coordinator.configuration.display.enableSyntaxHighlighting
+            )
+            PlatformSafeToggle(
+                "Enable Annotations",
+                isOn: $appState.coordinator.configuration.display.enableAnnotations
+            )
             PlatformSafeToggle("Show Indent Guides", isOn: $appState.coordinator.configuration.display.showIndentGuides)
             PlatformSafeToggle("Show Minimap", isOn: $appState.coordinator.configuration.display.showMinimap)
             // Additional display features coming soon
@@ -241,7 +253,10 @@ struct UnifiedConfigurationView: View {
                 formatter: { "\(Int($0)) spaces" }
             )
             
-            PlatformSafeToggle("Insert Spaces for Tabs", isOn: $appState.coordinator.configuration.layout.insertSpacesForTabs)
+            PlatformSafeToggle(
+                "Insert Spaces for Tabs",
+                isOn: $appState.coordinator.configuration.layout.insertSpacesForTabs
+            )
             PlatformSafeToggle("Wrap Lines", isOn: $appState.coordinator.configuration.layout.wrapLines)
             
             // Line spacing
@@ -294,8 +309,12 @@ struct UnifiedConfigurationView: View {
             SafeSlider(
                 "Annotation Badge Padding",
                 value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.annotationBadgePadding) },
-                    set: { appState.coordinator.configuration.layout.annotationBadgePadding = CGFloat($0) }
+                    get: {
+                        Double(appState.coordinator.configuration.layout.annotationBadgePadding)
+                    },
+                    set: {
+                        appState.coordinator.configuration.layout.annotationBadgePadding = CGFloat($0)
+                    }
                 ),
                 in: 2...8,
                 step: 1.0,
@@ -312,9 +331,18 @@ struct UnifiedConfigurationView: View {
             PlatformSafeToggle("Editable", isOn: $appState.coordinator.configuration.behavior.isEditable)
             PlatformSafeToggle("Selectable", isOn: $appState.coordinator.configuration.behavior.isSelectable)
             PlatformSafeToggle("Auto Indent", isOn: $appState.coordinator.configuration.behavior.autoIndent)
-            PlatformSafeToggle("Auto Close Brackets", isOn: $appState.coordinator.configuration.behavior.autoCloseBrackets)
-            PlatformSafeToggle("Auto Close Quotes", isOn: $appState.coordinator.configuration.behavior.autoCloseQuotes)
-            PlatformSafeToggle("Enable Code Completion", isOn: $appState.coordinator.configuration.behavior.enableCodeCompletion)
+            PlatformSafeToggle(
+                "Auto Close Brackets",
+                isOn: $appState.coordinator.configuration.behavior.autoCloseBrackets
+            )
+            PlatformSafeToggle(
+                "Auto Close Quotes",
+                isOn: $appState.coordinator.configuration.behavior.autoCloseQuotes
+            )
+            PlatformSafeToggle(
+                "Enable Code Completion",
+                isOn: $appState.coordinator.configuration.behavior.enableCodeCompletion
+            )
             // Additional features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Advanced Features (Coming Soon)")
@@ -344,10 +372,14 @@ struct UnifiedConfigurationView: View {
                        isOn: $appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled)
             PlatformSafeToggle("Automatic Dash Substitution", 
                        isOn: $appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled)
-            PlatformSafeToggle("Automatic Text Replacement", 
-                       isOn: $appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled)
-            PlatformSafeToggle("Automatic Spelling Correction", 
-                       isOn: $appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled)
+            PlatformSafeToggle(
+                "Automatic Text Replacement",
+                isOn: $appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled
+            )
+            PlatformSafeToggle(
+                "Automatic Spelling Correction",
+                isOn: $appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled
+            )
             PlatformSafeToggle("Automatic Text Completion", 
                        isOn: $appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled)
             
@@ -364,8 +396,14 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var performanceContent: some View {
         VStack(spacing: 12) {
-            PlatformSafeToggle("Hardware Acceleration", isOn: $appState.coordinator.configuration.performance.useHardwareAcceleration)
-            PlatformSafeToggle("Smooth Scrolling", isOn: $appState.coordinator.configuration.performance.smoothScrolling)
+            PlatformSafeToggle(
+                "Hardware Acceleration",
+                isOn: $appState.coordinator.configuration.performance.useHardwareAcceleration
+            )
+            PlatformSafeToggle(
+                "Smooth Scrolling",
+                isOn: $appState.coordinator.configuration.performance.smoothScrolling
+            )
             // Additional performance features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Advanced Performance Features (Coming Soon)")

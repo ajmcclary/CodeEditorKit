@@ -13,6 +13,94 @@ private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "Code
 
 // MARK: - CodeEditorView
 
+/// A powerful, cross-platform text view designed specifically for code editing.
+///
+/// `CodeEditorView` provides advanced features for code editing including:
+/// - **Syntax highlighting** with support for 15+ programming languages
+/// - **Code completion** with LSP integration and custom providers
+/// - **Line numbers** with customizable gutter display
+/// - **Annotations** for displaying TODOs, FIXMEs, and custom markers
+/// - **Cross-platform support** for iOS, macOS, and Mac Catalyst
+/// - **Modern TextKit2** integration with fallback to TextKit1
+/// - **Configurable appearance** with themes and layout options
+/// - **Performance optimization** for large files and real-time editing
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// let editor = CodeEditorView()
+/// editor.string = "func hello() {\n    logger.debug(\"Hello, World!\")\n}"
+/// editor.language = .swift
+/// editor.showsLineNumbers = true
+/// editor.enablesCodeCompletion = true
+/// ```
+///
+/// ## Configuration
+///
+/// Use `EditorConfiguration` for comprehensive customization:
+///
+/// ```swift
+/// var config = EditorConfiguration()
+/// config.display.fontSize = 16
+/// config.display.syntaxHighlighting = true
+/// config.layout.tabWidth = 4
+/// config.behavior.autoIndent = true
+/// config.apply(to: editor)
+/// ```
+///
+/// ## SwiftUI Integration
+///
+/// For SwiftUI apps, use `CodeEditor` or `CodeEditorSwiftUIView`:
+///
+/// ```swift
+/// struct ContentView: View {
+///     @State private var code = "// Your code here"
+///     
+///     var body: some View {
+///         CodeEditor(text: $code, language: .swift)
+///             .showsLineNumbers(true)
+///             .enablesCodeCompletion(true)
+///     }
+/// }
+/// ```
+///
+/// ## Language Server Protocol Support
+///
+/// Connect to language servers for advanced features:
+///
+/// ```swift
+/// // Configure LSP for Swift
+/// try await editor.languageServerManager.configureLanguageServer(
+///     for: .swift,
+///     serverPath: "/usr/bin/sourcekit-lsp"
+/// )
+/// 
+/// // Request hover information
+/// let hover = try await editor.requestHoverSafe(at: cursorPosition)
+/// ```
+///
+/// ## Performance Considerations
+///
+/// - Files larger than 500KB disable syntax highlighting by default
+/// - Hardware acceleration is enabled automatically when available
+/// - Use `EditorConfiguration.Performance` to customize limits
+/// - Consider read-only mode for display-only scenarios
+///
+/// ## Error Handling
+///
+/// Most methods provide both safe (throwing) and non-throwing variants:
+///
+/// ```swift
+/// // Non-throwing (returns nil on error)
+/// let hover = await editor.requestHover(at: position)
+/// 
+/// // Throwing (provides detailed error information)
+/// do {
+///     let hover = try await editor.requestHoverSafe(at: position)
+/// } catch let error as CodeEditorError {
+///     logger.error("Error: \(error.localizedDescription)")
+/// }
+/// ```
 @objc @MainActor
 open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     // CodeEditorViewProtocol conformance  
@@ -169,6 +257,26 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             behavior.enableCodeCompletion = newValue
             configuration = configuration.with(behavior: behavior)
         }
+    }
+    
+    // MARK: - Improved Boolean Property Aliases (Consistent Naming)
+    
+    /// Improved alias for isSyntaxHighlightingEnabled (consistent with shows* pattern)
+    public var showsSyntaxHighlighting: Bool {
+        get { isSyntaxHighlightingEnabled }
+        set { isSyntaxHighlightingEnabled = newValue }
+    }
+    
+    /// Improved alias for highlightSelectedLine (consistent with shows* pattern)  
+    public var showsSelectedLineHighlight: Bool {
+        get { highlightSelectedLine }
+        set { highlightSelectedLine = newValue }
+    }
+    
+    /// Improved alias for isCompletionEnabled (consistent with enables* pattern)
+    public var enablesCodeCompletion: Bool {
+        get { isCompletionEnabled }
+        set { isCompletionEnabled = newValue }
     }
     
     /// Completion trigger characters for the current language
@@ -1665,6 +1773,78 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         updateCompletionTriggerCharacters()
     }
     
+    // MARK: - Parameter Validation Helpers
+    
+    /// Validate that a position is within the text bounds
+    private func validatePosition(_ position: Int) throws {
+        let textLength = string.count
+        guard position >= 0 && position <= textLength else {
+            throw CodeEditorError.invalidPosition(position, textLength: textLength)
+        }
+    }
+    
+    /// Validate that a range is within the text bounds
+    private func validateRange(_ range: NSRange) throws {
+        let textLength = string.count
+        guard range.location >= 0,
+              range.length >= 0,
+              range.location <= textLength,
+              NSMaxRange(range) <= textLength else {
+            throw CodeEditorError.invalidRange(range, textLength: textLength)
+        }
+    }
+    
+    // MARK: - Safe API Methods (With Error Handling)
+    
+    /// Safe version of requestHover that throws on invalid parameters
+    /// - Parameter position: Character position in the text
+    /// - Returns: Hover information if available
+    /// - Throws: CodeEditorError if position is invalid
+    public func requestHoverSafe(at position: Int) async throws -> Hover? {
+        try validatePosition(position)
+        guard let filePath else { return nil }
+        
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        
+        do {
+            return try await lspManager.requestHover(
+                filePath: filePath,
+                line: lineCharPos.line,
+                character: lineCharPos.character
+            )
+        } catch {
+            throw CodeEditorError.languageServerCommunicationFailed(error)
+        }
+    }
+    
+    /// Safe version of requestDefinition that throws on invalid parameters
+    /// - Parameter position: Character position in the text
+    /// - Returns: Definition locations
+    /// - Throws: CodeEditorError if position is invalid
+    public func requestDefinitionSafe(at position: Int) async throws -> [Location] {
+        try validatePosition(position)
+        guard let filePath else { return [] }
+        
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        
+        do {
+            return try await lspManager.requestDefinition(
+                filePath: filePath,
+                line: lineCharPos.line,
+                character: lineCharPos.character
+            )
+        } catch {
+            throw CodeEditorError.languageServerCommunicationFailed(error)
+        }
+    }
+    
+    // MARK: - Improved Method Aliases (Consistent Parameter Naming)
+    
+    /// Improved alias for requestCompletion with shorter, clearer parameter names
+    public func requestCompletion(trigger: CompletionTriggerKind = .manual, character: String? = nil) {
+        requestCompletion(triggerKind: trigger, triggerCharacter: character)
+    }
+    
     // MARK: - LSP Integration
     
     /// Get the LSP manager for external configuration
@@ -1752,6 +1932,14 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     public func requestHover(at position: Int) async -> Hover? {
         guard let filePath else { return nil }
         
+        // Validate position parameter
+        do {
+            try validatePosition(position)
+        } catch {
+            kLogger.error("Invalid position for hover request: \(error.localizedDescription)")
+            return nil
+        }
+        
         let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
         
         do {
@@ -1772,6 +1960,14 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// - Returns: Definition locations
     public func requestDefinition(at position: Int) async -> [Location] {
         guard let filePath else { return [] }
+        
+        // Validate position parameter
+        do {
+            try validatePosition(position)
+        } catch {
+            kLogger.error("Invalid position for definition request: \(error.localizedDescription)")
+            return []
+        }
         
         let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
         

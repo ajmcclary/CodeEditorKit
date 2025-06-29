@@ -334,12 +334,24 @@ actor SmartTokenCache {
         let version: Int
         
         func hash(into hasher: inout Hasher) {
-            // Hash only essential properties to avoid hashing entire text
+            // Optimized hashing without substring allocations
             hasher.combine(text.count)
-            hasher.combine(text.prefix(100))
-            hasher.combine(text.suffix(100))
             hasher.combine(language)
             hasher.combine(version)
+            
+            // Hash first and last characters instead of creating substrings
+            if !text.isEmpty {
+                hasher.combine(text.first!)
+                if text.count > 1 {
+                    hasher.combine(text.last!)
+                }
+                
+                // Hash a few strategic characters for better distribution
+                if text.count > 100 {
+                    let midIndex = text.index(text.startIndex, offsetBy: text.count / 2)
+                    hasher.combine(text[midIndex])
+                }
+            }
         }
     }
     

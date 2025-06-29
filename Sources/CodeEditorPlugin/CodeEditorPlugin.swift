@@ -46,6 +46,14 @@ public typealias CodeEditorModernTextKit = ModernTextKitHelper
 // Configuration
 public typealias EditorConfig = EditorConfiguration
 
+// MARK: - Convenience Type Aliases for Improved API
+
+/// Shorter alias for the main editor view
+public typealias Editor = CodeEditorView
+
+/// Shorter alias for editor theme
+public typealias EditorTheme = CodeEditorSwiftUITheme
+
 // Events
 // Note: EditorEventType protocol is defined in Events/EditorEvent.swift
 // Note: EditorEventHandler and EditorEventPublisher are defined in Events/EditorEvent.swift

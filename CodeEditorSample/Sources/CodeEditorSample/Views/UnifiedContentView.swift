@@ -91,37 +91,59 @@ struct UnifiedContentView: View {
             
             // Quick toggles for frequently used options
             HStack(spacing: 12) {
-                PlatformSafeButton(action: {
-                    appState.coordinator.configuration.display.showLineNumbers.toggle()
-                }) {
-                    Image(systemName: "number")
-                        .foregroundColor(appState.coordinator.configuration.display.showLineNumbers ? .accentColor : .secondary)
-                        .help("Toggle Line Numbers")
-                }
+                PlatformSafeButton(
+                    action: {
+                        appState.coordinator.configuration.display.showLineNumbers.toggle()
+                    },
+                    label: {
+                        Image(systemName: "number")
+                            .foregroundColor(
+                                appState.coordinator.configuration.display.showLineNumbers
+                                    ? .accentColor : .secondary
+                            )
+                            .help("Toggle Line Numbers")
+                    }
+                )
                 
-                PlatformSafeButton(action: {
-                    appState.coordinator.configuration.display.showMinimap.toggle()
-                }) {
-                    Image(systemName: "map")
-                        .foregroundColor(appState.coordinator.configuration.display.showMinimap ? .accentColor : .secondary)
-                        .help("Toggle Minimap")
-                }
+                PlatformSafeButton(
+                    action: {
+                        appState.coordinator.configuration.display.showMinimap.toggle()
+                    },
+                    label: {
+                        Image(systemName: "map")
+                            .foregroundColor(
+                                appState.coordinator.configuration.display.showMinimap
+                                    ? .accentColor : .secondary
+                            )
+                            .help("Toggle Minimap")
+                    }
+                )
                 
-                PlatformSafeButton(action: {
-                    appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
-                }) {
-                    Image(systemName: "paragraph")
-                        .foregroundColor(appState.coordinator.configuration.display.showInvisibleCharacters ? .accentColor : .secondary)
-                        .help("Toggle Invisible Characters")
-                }
+                PlatformSafeButton(
+                    action: {
+                        appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+                    },
+                    label: {
+                        Image(systemName: "paragraph")
+                            .foregroundColor(
+                                appState.coordinator.configuration.display.showInvisibleCharacters
+                                    ? .accentColor : .secondary
+                            )
+                            .help("Toggle Invisible Characters")
+                    }
+                )
                 
-                PlatformSafeButton(action: {
-                    appState.coordinator.configuration.behavior.isEditable.toggle()
-                }) {
-                    Image(systemName: appState.coordinator.configuration.behavior.isEditable ? "pencil" : "pencil.slash")
-                        .foregroundColor(appState.coordinator.configuration.behavior.isEditable ? .accentColor : .secondary)
-                        .help("Toggle Editing")
-                }
+                PlatformSafeButton(
+                    action: {
+                        appState.coordinator.configuration.behavior.isEditable.toggle()
+                    },
+                    label: {
+                        let isEditable = appState.coordinator.configuration.behavior.isEditable
+                        Image(systemName: isEditable ? "pencil" : "pencil.slash")
+                            .foregroundColor(isEditable ? .accentColor : .secondary)
+                            .help("Toggle Editing")
+                    }
+                )
             }
             
             Spacer()

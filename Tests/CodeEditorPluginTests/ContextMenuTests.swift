@@ -154,6 +154,13 @@ final class ContextMenuTests: XCTestCase {
             XCTFail("Test setup failed")
             return
         }
+        
+        // Put something in the pasteboard to test paste functionality
+        #if canImport(AppKit)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString("Test paste content", forType: .string)
+        #endif
+        
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         #if canImport(AppKit)
@@ -172,7 +179,7 @@ final class ContextMenuTests: XCTestCase {
         XCTAssertNotNil(copyItem)
         XCTAssertFalse(copyItem!.isEnabled)
         
-        // Paste should be enabled
+        // Paste should be enabled (because we have content in pasteboard and text view is editable)
         let pasteItem = nsMenu.items.first { $0.title == "Paste" }
         XCTAssertNotNil(pasteItem)
         XCTAssertTrue(pasteItem!.isEnabled)
@@ -186,6 +193,16 @@ final class ContextMenuTests: XCTestCase {
         }
         textView.isEditable = false
         let range = NSRange(location: 0, length: 5)
+        
+        // Set the selected range in the text view
+        #if canImport(AppKit)
+        textView.setSelectedRange(range)
+        #else
+        if let textRange = textView.textRange(from: textView.beginningOfDocument, offset: range.location, length: range.length) {
+            textView.selectedTextRange = textRange
+        }
+        #endif
+        
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         #if canImport(AppKit)

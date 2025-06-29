@@ -65,62 +65,77 @@ struct SwiftUIDemoView: View {
             // Configuration toggles - using SafeToggle to avoid MainActor crashes
             VStack(spacing: 8) {
                 SafeToggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
-                SafeToggle("Highlight Selected Line", isOn: $appState.currentConfiguration.display.highlightSelectedLine)
+                SafeToggle(
+                    "Highlight Selected Line",
+                    isOn: $appState.currentConfiguration.display.highlightSelectedLine
+                )
                 SafeToggle("Editable", isOn: $appState.currentConfiguration.behavior.isEditable)
             }
             
             // Sample code buttons - using SafeButton to avoid MainActor crashes
             VStack(spacing: 8) {
                 HStack {
-                    SafeButton(action: {
-                        selectedLanguage = .swift
-                        sampleCode = SwiftSamples.swiftSample
-                    }) {
-                        Text("Swift Sample")
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
-                            .cornerRadius(6)
-                    }
+                    SafeButton(
+                        action: {
+                            selectedLanguage = .swift
+                            sampleCode = SwiftSamples.swiftSample
+                        },
+                        label: {
+                            Text("Swift Sample")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(6)
+                        }
+                    )
                     
-                    SafeButton(action: {
-                        selectedLanguage = .python
-                        sampleCode = PythonSamples.pythonSample
-                    }) {
-                        Text("Python Sample")
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
-                            .cornerRadius(6)
-                    }
+                    SafeButton(
+                        action: {
+                            selectedLanguage = .python
+                            sampleCode = PythonSamples.pythonSample
+                        },
+                        label: {
+                            Text("Python Sample")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(6)
+                        }
+                    )
                 }
                 
                 HStack {
-                    SafeButton(action: {
-                        selectedLanguage = .javascript
-                        sampleCode = WebSamples.javascriptSample
-                    }) {
-                        Text("JavaScript Sample")
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
-                            .cornerRadius(6)
-                    }
+                    SafeButton(
+                        action: {
+                            selectedLanguage = .javascript
+                            sampleCode = WebSamples.javascriptSample
+                        },
+                        label: {
+                            Text("JavaScript Sample")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(6)
+                        }
+                    )
                     
-                    SafeButton(action: {
-                        selectedLanguage = .json
-                        sampleCode = jsonSample
-                    }) {
-                        Text("JSON Sample")
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
-                            .cornerRadius(6)
-                    }
+                    SafeButton(
+                        action: {
+                            selectedLanguage = .json
+                            sampleCode = jsonSample
+                        },
+                        label: {
+                            Text("JSON Sample")
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(6)
+                        }
+                    )
                 }
             }
         }

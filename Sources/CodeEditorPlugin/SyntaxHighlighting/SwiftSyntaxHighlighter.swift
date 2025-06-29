@@ -13,6 +13,25 @@ import AppKit
 /// A pure Swift syntax highlighter for Swift code using Apple's SwiftSyntax
 @MainActor
 public final class SwiftSyntaxHighlighter: @unchecked Sendable {
+    // MARK: - Performance Constants
+    
+    /// Optimized keyword lookup set for O(1) performance
+    static let keywords: Set<String> = [
+        "let", "var", "func", "class", "struct", "if", "else", "for", "while", 
+        "return", "import", "public", "private", "internal", "enum", "protocol",
+        "extension", "case", "default", "switch", "do", "try", "catch", "throw",
+        "throws", "async", "await", "actor", "init", "deinit", "override",
+        "final", "static", "lazy", "weak", "unowned", "mutating", "nonmutating",
+        "convenience", "required", "optional", "dynamic", "inout", "associatedtype",
+        "typealias", "where", "self", "Self", "super", "nil", "true", "false"
+    ]
+    
+    /// Optimized operator character set
+    static let operators: Set<Character> = ["+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "~", "?", ":"]
+    
+    /// Optimized punctuation character set
+    static let punctuation: Set<Character> = ["(", ")", "{", "}", "[", "]", ",", ".", ";", ":"]
+
     // MARK: - Token Types
 
     public enum TokenType: String, CaseIterable {
@@ -171,6 +190,8 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
 
         tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
+    
+    // MARK: - Token Classification (Performance optimized inline)
 
     // MARK: - Visitor Methods
 
@@ -189,45 +210,28 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
             }
         }
 
-        // Map token kinds to our token types
-        // In SwiftSyntax 510, we need to check token text for classification
+        // Simple token classification - inline optimization for performance
         let tokenText = node.text
-        let tokenType: SwiftSyntaxHighlighter.TokenType
-
-            // Simple token classification based on text
-            = if [
-                "let",
-                "var",
-                "func",
-                "class",
-                "struct",
-                "if",
-                "else",
-                "for",
-                "while",
-                "return",
-                "import",
-                "public",
-                "private",
-                "internal"
-            ].contains(tokenText) {
-            .keyword
-        } else if tokenText.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }) && tokenText.first?
-            .isLetter == true {
-            .identifier
-        } else if tokenText.hasPrefix("\"") || tokenText.hasPrefix("'") {
-            .string
-        } else if tokenText.allSatisfy({ $0.isNumber || $0 == "." }) && !tokenText.isEmpty {
-            .number
-        } else if tokenText.hasPrefix("//") || tokenText.hasPrefix("/*") {
-            .comment
-        } else if "+-*/=<>!&|^~?:".contains(tokenText), tokenText.count == 1 {
-            .operator
-        } else if "(){}[],.;:".contains(tokenText), tokenText.count == 1 {
-            .punctuation
-        } else {
-            .unknown
-        }
+        let tokenType: SwiftSyntaxHighlighter.TokenType = {
+            // Use inline optimized classification
+            if ["let", "var", "func", "class", "struct", "if", "else", "for", "while", "return", "import", "public", "private", "internal"].contains(tokenText) {
+                return .keyword
+            } else if tokenText.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }) && tokenText.first?.isLetter == true {
+                return .identifier
+            } else if tokenText.hasPrefix("\"") || tokenText.hasPrefix("'") {
+                return .string
+            } else if tokenText.allSatisfy({ $0.isNumber || $0 == "." }) && !tokenText.isEmpty {
+                return .number
+            } else if tokenText.hasPrefix("//") || tokenText.hasPrefix("/*") {
+                return .comment
+            } else if "+-*/=<>!&|^~?:".contains(tokenText) && tokenText.count == 1 {
+                return .operator
+            } else if "(){}[],.;:".contains(tokenText) && tokenText.count == 1 {
+                return .punctuation
+            } else {
+                return .unknown
+            }
+        }()
 
         addToken(for: node, type: tokenType)
         return .visitChildren

@@ -7,6 +7,9 @@ import UIKit
 
 /// Unified range handling utilities for consistent range operations across the codebase
 public enum RangeUtilities {
+    // MARK: - Performance Cache
+    
+    // Cache removed for concurrency compliance - will be re-implemented with actor-based cache later
     // MARK: - Range Conversion
     
     /// Convert NSRange to NSTextRange
@@ -260,8 +263,11 @@ public enum RangeUtilities {
     }
     
     /// Get all line ranges in a string
+    /// Get line ranges with performance optimizations
     public static func lineRanges(in string: String) -> [NSRange] {
+        // Optimized: pre-allocate array with estimated capacity
         var ranges: [NSRange] = []
+        ranges.reserveCapacity(string.count / 50) // Estimate lines
         
         string.enumerateSubstrings(
             in: string.startIndex..<string.endIndex,
@@ -273,12 +279,23 @@ public enum RangeUtilities {
         return ranges
     }
     
-    /// Get line number for a given character index (0-based)
+    /// Get line number for a given character index (0-based) - optimized version
     public static func lineNumber(for index: Int, in string: String) -> Int {
         guard index >= 0 && index <= string.count else { return 0 }
         
-        let substring = String(string.prefix(index))
-        return substring.components(separatedBy: .newlines).count - 1
+        // Optimized: count newlines directly without creating substring or array
+        var lineCount = 0
+        var currentIndex = string.startIndex
+        let targetIndex = string.index(string.startIndex, offsetBy: min(index, string.count))
+        
+        while currentIndex < targetIndex {
+            if string[currentIndex] == "\n" {
+                lineCount += 1
+            }
+            currentIndex = string.index(after: currentIndex)
+        }
+        
+        return lineCount
     }
     
     /// Get character index for start of line (0-based line number)

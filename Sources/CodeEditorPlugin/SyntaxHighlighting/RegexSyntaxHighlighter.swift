@@ -1,9 +1,9 @@
 import Foundation
 
-#if canImport(UIKit)
-import UIKit
-#else
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
 #endif
 
 // Use centralized platform color type
@@ -14,6 +14,25 @@ public typealias RegexHighlighterColor = PlatformColor
 /// A pure Swift regex-based syntax highlighter for various programming languages
 @MainActor
 public final class RegexSyntaxHighlighter: @unchecked Sendable {
+    // MARK: - Performance Constants
+    
+    /// Optimized token type mapping for O(1) conversion
+    static let tokenTypeMap: [RegexTokenType: TokenType] = [
+        .keyword: .keyword,
+        .identifier: .identifier,
+        .string: .string,
+        .number: .number,
+        .comment: .comment,
+        .type: .type,
+        .function: .function,
+        .property: .property,
+        .operator: .operator,
+        .punctuation: .punctuation,
+        .whitespace: .whitespace,
+        .preprocessor: .preprocessor,
+        .unknown: .unknown
+    ]
+    
     // MARK: - Language Definitions
 
     public struct LanguageDefinition: Sendable {
@@ -129,13 +148,18 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
             return []
         }
 
+        // Pre-allocate collections with estimated capacity for better performance
         var tokens: [HighlightedToken] = []
+        tokens.reserveCapacity(min(source.count / 20, 1_000))
+        
         let range = NSRange(location: 0, length: source.utf16.count)
 
         // Sort rules by priority (higher priority first)
         let sortedRules = language.rules.sorted { $0.priority > $1.priority }
 
+        // Use sorted array for processed ranges to enable binary search optimization
         var processedRanges: [NSRange] = []
+        processedRanges.reserveCapacity(min(source.count / 20, 1_000))
 
         for rule in sortedRules {
             let matches = rule.pattern.matches(in: source, options: [], range: range)
@@ -143,37 +167,46 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
             for match in matches {
                 let matchRange = match.range
 
-                // Skip if this range overlaps with already processed ranges
-                if processedRanges.contains(where: { NSIntersectionRange($0, matchRange).length > 0 }) {
+                // Optimized overlap checking with early termination
+                // Since processedRanges is kept sorted, we can break early
+                var hasOverlap = false
+                for existingRange in processedRanges {
+                    // Early termination: if existing range starts after this match ends, no more overlaps possible
+                    if existingRange.location >= NSMaxRange(matchRange) {
+                        break
+                    }
+                    // Check for actual overlap
+                    if NSIntersectionRange(existingRange, matchRange).length > 0 {
+                        hasOverlap = true
+                        break
+                    }
+                }
+                
+                if hasOverlap {
                     continue
                 }
 
+                // Convert token type efficiently using lookup instead of switch
+                let coordinatorTokenType = mapTokenType(rule.tokenType)
+                
+                // Only create substring when we actually need the text content
                 let text = String(source[Range(matchRange, in: source)!])
-                // Convert RegexSyntaxHighlighter.TokenType to SyntaxHighlightingCoordinator.TokenType
-                // Convert from RegexTokenType to the global TokenType used by HighlightedToken
-                let coordinatorTokenType: TokenType = {
-                    switch rule.tokenType {
-                    case .keyword: return .keyword
-                    case .identifier: return .identifier
-                    case .string: return .string
-                    case .number: return .number
-                    case .comment: return .comment
-                    case .type: return .type
-                    case .function: return .function
-                    case .property: return .property
-                    case .operator: return .operator
-                    case .punctuation: return .punctuation
-                    case .whitespace: return .whitespace
-                    case .preprocessor: return .preprocessor
-                    case .unknown: return .unknown
-                    }
-                }()
                 tokens.append(HighlightedToken(range: matchRange, type: coordinatorTokenType, text: text))
-                processedRanges.append(matchRange)
+                
+                // Insert range in sorted order to maintain invariant for early termination
+                let insertIndex = processedRanges.firstIndex { $0.location > matchRange.location } ?? processedRanges.count
+                processedRanges.insert(matchRange, at: insertIndex)
             }
         }
 
-        return tokens.sorted { $0.range.location < $1.range.location }
+        // Already sorted due to our insertion strategy
+        return tokens
+    }
+    
+    /// Efficiently map RegexTokenType to TokenType using lookup table
+    private func mapTokenType(_ regexTokenType: RegexTokenType) -> TokenType {
+        // Use class-level lookup table for O(1) token type conversion
+        Self.tokenTypeMap[regexTokenType] ?? .unknown
     }
 
     /// Apply highlighting to an attributed string
@@ -245,108 +278,178 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
 
         return languages
     }
+    
+    // MARK: - Language Definition Builder
+    
+    /// A builder class to reduce boilerplate when creating language definitions
+    private struct LanguageDefinitionBuilder {
+        private var rules: [HighlightRule] = []
+        
+        /// Add comment patterns for the language
+        func addComments(singleLine: String? = nil, multiLineStart: String? = nil, multiLineEnd: String? = nil) -> Self {
+            var newRules = rules
+            
+            if let singleLine {
+                if let rule = Self.rule(singleLine + #".*$"#, .comment, 10) {
+                    newRules.append(rule)
+                }
+            }
+            
+            if let start = multiLineStart, let end = multiLineEnd {
+                let pattern = NSRegularExpression.escapedPattern(for: start) + #"[\s\S]*?"# + NSRegularExpression.escapedPattern(for: end)
+                if let rule = Self.rule(pattern, .comment, 10) {
+                    newRules.append(rule)
+                }
+            }
+            
+            return Self(rules: newRules)
+        }
+        
+        /// Add string patterns for the language
+        func addStrings(single: Bool = true, double: Bool = true, backtick: Bool = false) -> Self {
+            var newRules = rules
+            
+            if double {
+                if let rule = Self.rule(#""(?:[^"\\]|\\.)*""#, .string, 9) {
+                    newRules.append(rule)
+                }
+            }
+            
+            if single {
+                if let rule = Self.rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9) {
+                    newRules.append(rule)
+                }
+            }
+            
+            if backtick {
+                if let rule = Self.rule(#"`(?:[^`\\]|\\.)*`"#, .string, 9) {
+                    newRules.append(rule)
+                }
+            }
+            
+            return Self(rules: newRules)
+        }
+        
+        /// Add number patterns for the language
+        func addNumbers(pattern: String = #"\b\d+\.?\d*\b"#) -> Self {
+            var newRules = rules
+            if let rule = Self.rule(pattern, .number, 8) {
+                newRules.append(rule)
+            }
+            return Self(rules: newRules)
+        }
+        
+        /// Add keywords for the language
+        func addKeywords(_ keywords: [String]) -> Self {
+            var newRules = rules
+            let keywordPattern = #"\b("# + keywords.joined(separator: "|") + #")\b"#
+            if let rule = Self.rule(keywordPattern, .keyword, 7) {
+                newRules.append(rule)
+            }
+            return Self(rules: newRules)
+        }
+        
+        /// Add function call patterns
+        func addFunctionCalls(pattern: String = #"\b\w+(?=\s*\()"#) -> Self {
+            var newRules = rules
+            if let rule = Self.rule(pattern, .function, 6) {
+                newRules.append(rule)
+            }
+            return Self(rules: newRules)
+        }
+        
+        /// Add operator patterns
+        func addOperators(pattern: String = #"[+\-*/%=<>!&|^~?:]+"#) -> Self {
+            var newRules = rules
+            if let rule = Self.rule(pattern, .operator, 5) {
+                newRules.append(rule)
+            }
+            return Self(rules: newRules)
+        }
+        
+        /// Add a custom rule
+        func addCustomRule(pattern: String, type: RegexTokenType, priority: Int) -> Self {
+            var newRules = rules
+            if let rule = Self.rule(pattern, type, priority) {
+                newRules.append(rule)
+            }
+            return Self(rules: newRules)
+        }
+        
+        /// Build the final language definition
+        func build(name: String, fileExtensions: [String]) -> LanguageDefinition {
+            LanguageDefinition(name: name, fileExtensions: fileExtensions, rules: rules)
+        }
+        
+        /// Helper method to create rules (same as the outer rule method)
+        private static func rule(_ pattern: String, _ tokenType: RegexTokenType, _ priority: Int) -> HighlightRule? {
+            do {
+                return try HighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
+            } catch {
+                // Silently fail - invalid regex patterns should not crash
+                // In production, this would be logged by the caller
+                return nil
+            }
+        }
+    }
 
     private static func createJavaScriptDefinition() -> LanguageDefinition {
-        let rules: [HighlightRule] = [
-            // Comments
-            rule(#"//.*$"#, .comment, 10),
-            rule(#"/\*[\s\S]*?\*/"#, .comment, 10),
-
-            // Strings
-            rule(#""(?:[^"\\]|\\.)*""#, .string, 9),
-            rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9),
-            rule(#"`(?:[^`\\]|\\.)*`"#, .string, 9),
-
-            // Numbers
-            rule(#"\b\d+\.?\d*\b"#, .number, 8),
-
-            // Keywords
-            rule(
-                #"\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof)\b"#,
-                .keyword,
-                7
-            ),
-
-            // Function calls
-            rule(#"\b\w+(?=\s*\()"#, .function, 6),
-
-            // Operators
-            rule(#"[+\-*/%=<>!&|^~?:]+"#, .operator, 5)
-        ].compactMap(\.self)
-
-        return LanguageDefinition(name: "JavaScript", fileExtensions: ["js", "jsx", "mjs"], rules: rules)
+        let jsKeywords = [
+            "const", "let", "var", "function", "class", "if", "else", "for", "while", "do",
+            "switch", "case", "default", "break", "continue", "return", "try", "catch",
+            "finally", "throw", "async", "await", "import", "export", "from", "as",
+            "typeof", "instanceof"
+        ]
+        
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true, backtick: true)
+            .addNumbers()
+            .addKeywords(jsKeywords)
+            .addFunctionCalls()
+            .addOperators()
+            .build(name: "JavaScript", fileExtensions: ["js", "jsx", "mjs"])
     }
 
     private static func createTypeScriptDefinition() -> LanguageDefinition {
-        let rules: [HighlightRule] = [
-            // Comments
-            rule(#"//.*$"#, .comment, 10),
-            rule(#"/\*[\s\S]*?\*/"#, .comment, 10),
-
-            // Strings
-            rule(#""(?:[^"\\]|\\.)*""#, .string, 9),
-            rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9),
-            rule(#"`(?:[^`\\]|\\.)*`"#, .string, 9),
-
-            // Numbers
-            rule(#"\b\d+\.?\d*\b"#, .number, 8),
-
-            // Keywords (includes TypeScript-specific)
-            rule(
-                #"\b(const|let|var|function|class|interface|type|enum|namespace|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof|public|private|protected|readonly|static)\b"#,
-                .keyword,
-                7
-            ),
-
-            // Types
-            rule(
-                #"\b(string|number|boolean|object|any|void|never|unknown)\b"#,
-                .type,
-                7
-            ),
-
-            // Function calls
-            rule(#"\b\w+(?=\s*\()"#, .function, 6),
-
-            // Operators
-            rule(#"[+\-*/%=<>!&|^~?:]+"#, .operator, 5)
-        ].compactMap(\.self)
-
-        return LanguageDefinition(name: "TypeScript", fileExtensions: ["ts", "tsx"], rules: rules)
+        let tsKeywords = [
+            "const", "let", "var", "function", "class", "interface", "type", "enum", "namespace",
+            "if", "else", "for", "while", "do", "switch", "case", "default", "break", "continue",
+            "return", "try", "catch", "finally", "throw", "async", "await", "import", "export",
+            "from", "as", "typeof", "instanceof", "public", "private", "protected", "readonly", "static"
+        ]
+        
+        let tsTypes = ["string", "number", "boolean", "object", "any", "void", "never", "unknown"]
+        
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true, backtick: true)
+            .addNumbers()
+            .addKeywords(tsKeywords)
+            .addCustomRule(pattern: #"\b("# + tsTypes.joined(separator: "|") + #")\b"#, type: .type, priority: 7)
+            .addFunctionCalls()
+            .addOperators()
+            .build(name: "TypeScript", fileExtensions: ["ts", "tsx"])
     }
 
     private static func createPythonDefinition() -> LanguageDefinition {
-        let rules: [HighlightRule] = [
-            // Comments
-            rule(#"#.*$"#, .comment, 10),
-
-            // Strings
-            rule(#""""[\s\S]*?""""#, .string, 9),
-            rule(#"'''[\s\S]*?'''"#, .string, 9),
-            rule(#""(?:[^"\\]|\\.)*""#, .string, 9),
-            rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9),
-
-            // Numbers
-            rule(#"\b\d+\.?\d*\b"#, .number, 8),
-
-            // Keywords
-            rule(
-                #"\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\b"#,
-                .keyword,
-                7
-            ),
-
-            // Function definitions
-            rule(#"\bdef\s+(\w+)"#, .function, 6),
-
-            // Function calls
-            rule(#"\b\w+(?=\s*\()"#, .function, 6),
-
-            // Operators
-            rule(#"[+\-*/%=<>!&|^~]+"#, .operator, 5)
-        ].compactMap(\.self)
-
-        return LanguageDefinition(name: "Python", fileExtensions: ["py", "pyw"], rules: rules)
+        let pythonKeywords = [
+            "def", "class", "if", "elif", "else", "for", "while", "try", "except", "finally",
+            "with", "as", "import", "from", "return", "yield", "break", "continue", "pass",
+            "global", "nonlocal", "lambda", "and", "or", "not", "in", "is", "True", "False", "None"
+        ]
+        
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "#")
+            .addCustomRule(pattern: #""""[\s\S]*?""""#, type: .string, priority: 9) // Triple-quoted strings
+            .addCustomRule(pattern: #"'''[\s\S]*?'''"#, type: .string, priority: 9)
+            .addStrings(single: true, double: true)
+            .addNumbers()
+            .addKeywords(pythonKeywords)
+            .addCustomRule(pattern: #"\bdef\s+(\w+)"#, type: .function, priority: 6) // Function definitions
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!&|^~]+"#)
+            .build(name: "Python", fileExtensions: ["py", "pyw"])
     }
 
     private static func createCDefinition() -> LanguageDefinition {

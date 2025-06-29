@@ -5,7 +5,85 @@ import AppKit
 import UIKit
 #endif
 
-/// Unified configuration for the code editor
+/// Comprehensive configuration system for customizing code editor behavior and appearance.
+///
+/// `EditorConfiguration` provides a structured, type-safe way to configure all aspects of the code editor.
+/// The configuration is organized into four main categories:
+///
+/// - **Layout**: Text formatting, spacing, and visual layout
+/// - **Display**: Visual elements like syntax highlighting, line numbers, and annotations
+/// - **Behavior**: Editing behavior, auto-completion, and text processing
+/// - **Performance**: Optimization settings and resource limits
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// var config = EditorConfiguration()
+/// config.display.fontSize = 16
+/// config.display.syntaxHighlighting = true
+/// config.layout.tabWidth = 4
+/// config.behavior.autoIndent = true
+/// 
+/// // Apply to an editor
+/// config.apply(to: editor)
+/// ```
+///
+/// ## Preset Configurations
+///
+/// Use built-in presets for common scenarios:
+///
+/// ```swift
+/// let readOnly = EditorConfiguration.readOnly        // For display-only
+/// let minimal = EditorConfiguration.minimal          // Lightweight editing
+/// let markdown = EditorConfiguration.markdown        // Markdown optimized
+/// let presentation = EditorConfiguration.presentation // Presentation mode
+/// ```
+///
+/// ## Immutable Updates
+///
+/// Use the `with()` methods for immutable configuration updates:
+///
+/// ```swift
+/// let newConfig = config.with(display: modifiedDisplay)
+///                      .with(layout: modifiedLayout)
+/// ```
+///
+/// ## Builder Pattern
+///
+/// Use `EditorConfigurationBuilder` for fluent configuration:
+///
+/// ```swift
+/// let config = EditorConfigurationBuilder()
+///     .showLineNumbers(true)
+///     .fontSize(16)
+///     .tabWidth(4)
+///     .wrapLines(false)
+///     .build()
+/// ```
+///
+/// ## Validation
+///
+/// Validate configuration before applying:
+///
+/// ```swift
+/// let errors = config.validate()
+/// if errors.isEmpty {
+///     config.apply(to: editor)
+/// } else {
+///     // Handle configuration errors appropriately
+///     logger.error("Configuration errors: \(errors)")
+/// }
+/// 
+/// // Or throw on validation failure
+/// try config.validateAndThrow()
+/// ```
+///
+/// ## Performance Considerations
+///
+/// - Large `maxHighlightingLength` values may impact performance
+/// - Hardware acceleration is enabled by default when available
+/// - Adjust `textChangeDebounceInterval` for responsive vs. efficient highlighting
+/// - Use read-only presets for display scenarios to optimize performance
 public struct EditorConfiguration: Equatable, Codable, Sendable {
     // MARK: - Nested Configuration Structures
     
@@ -58,8 +136,20 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// Whether to enable syntax highlighting
         public var enableSyntaxHighlighting: Bool = true
         
+        /// Shorter alias for enableSyntaxHighlighting
+        public var syntaxHighlighting: Bool {
+            get { enableSyntaxHighlighting }
+            set { enableSyntaxHighlighting = newValue }
+        }
+        
         /// Whether to enable the annotation system
         public var enableAnnotations: Bool = true
+        
+        /// Shorter alias for enableAnnotations
+        public var annotations: Bool {
+            get { enableAnnotations }
+            set { enableAnnotations = newValue }
+        }
         
         /// Whether to show indent guides
         public var showIndentGuides: Bool = true
@@ -90,6 +180,12 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// Whether to enable code completion
         public var enableCodeCompletion: Bool = true
         
+        /// Shorter alias for enableCodeCompletion
+        public var codeCompletion: Bool {
+            get { enableCodeCompletion }
+            set { enableCodeCompletion = newValue }
+        }
+        
         /// Whether to enable continuous spell checking
         public var isContinuousSpellCheckingEnabled: Bool = false
         
@@ -98,6 +194,12 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         
         /// Whether to enable automatic quote substitution
         public var isAutomaticQuoteSubstitutionEnabled: Bool = false
+        
+        /// Shorter alias for isAutomaticQuoteSubstitutionEnabled
+        public var autoQuoteSubstitution: Bool {
+            get { isAutomaticQuoteSubstitutionEnabled }
+            set { isAutomaticQuoteSubstitutionEnabled = newValue }
+        }
         
         /// Whether to enable automatic dash substitution
         public var isAutomaticDashSubstitutionEnabled: Bool = false
@@ -118,6 +220,12 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     public struct Performance: Equatable, Codable, Sendable {
         /// Maximum file size for syntax highlighting (in bytes)
         public var maxSyntaxHighlightingLength: Int = 500_000
+        
+        /// Shorter alias for maxSyntaxHighlightingLength
+        public var maxHighlightingLength: Int {
+            get { maxSyntaxHighlightingLength }
+            set { maxSyntaxHighlightingLength = newValue }
+        }
         
         /// Whether to use hardware acceleration
         public var useHardwareAcceleration: Bool = true
@@ -253,6 +361,62 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         
         return Self(layout: layout, display: display, behavior: behavior)
     }()
+    
+    // MARK: - Validation
+    
+    /// Validate the configuration and return any validation errors
+    public func validate() -> [ValidationError] {
+        var errors: [ValidationError] = []
+        
+        // Validate display settings
+        if display.fontSize <= 0 {
+            errors.append(ValidationError(field: "display.fontSize", value: display.fontSize, constraint: "must be greater than 0"))
+        }
+        if display.fontSize > 100 {
+            errors.append(ValidationError(field: "display.fontSize", value: display.fontSize, constraint: "must be 100 or less"))
+        }
+        
+        // Validate layout settings
+        if layout.tabWidth <= 0 {
+            errors.append(ValidationError(field: "layout.tabWidth", value: layout.tabWidth, constraint: "must be greater than 0"))
+        }
+        if layout.tabWidth > 32 {
+            errors.append(ValidationError(field: "layout.tabWidth", value: layout.tabWidth, constraint: "must be 32 or less"))
+        }
+        
+        if layout.lineSpacing < 0 {
+            errors.append(ValidationError(field: "layout.lineSpacing", value: layout.lineSpacing, constraint: "must be 0 or greater"))
+        }
+        if layout.lineSpacing > 50 {
+            errors.append(ValidationError(field: "layout.lineSpacing", value: layout.lineSpacing, constraint: "must be 50 or less"))
+        }
+        
+        if layout.gutterWidth < 0 {
+            errors.append(ValidationError(field: "layout.gutterWidth", value: layout.gutterWidth, constraint: "must be 0 or greater"))
+        }
+        
+        // Validate performance settings
+        if performance.maxSyntaxHighlightingLength < 0 {
+            errors.append(ValidationError(field: "performance.maxSyntaxHighlightingLength", value: performance.maxSyntaxHighlightingLength, constraint: "must be 0 or greater"))
+        }
+        
+        if performance.textChangeDebounceInterval < 0 {
+            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval, constraint: "must be 0 or greater"))
+        }
+        if performance.textChangeDebounceInterval > 5.0 {
+            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval, constraint: "must be 5 seconds or less"))
+        }
+        
+        return errors
+    }
+    
+    /// Validate the configuration and throw an error if invalid
+    public func validateAndThrow() throws {
+        let errors = validate()
+        if !errors.isEmpty {
+            throw CodeEditorError.configurationValidationFailed(errors)
+        }
+    }
     
     // MARK: - Configuration Application
     
