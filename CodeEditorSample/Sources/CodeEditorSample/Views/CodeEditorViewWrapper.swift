@@ -245,18 +245,8 @@ struct CodeEditorViewWrapper: View {
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {
-        switch fileExtension.lowercased() {
-        case "swift":
-            return .swift
-        case "py", "python":
-            return .python
-        case "js", "javascript":
-            return .javascript
-        case "json":
-            return .json
-        default:
-            return .plainText
-        }
+        let coordinator = SyntaxHighlightingCoordinator()
+        return coordinator.detectLanguage(from: fileExtension)
     }
 }
 #endif

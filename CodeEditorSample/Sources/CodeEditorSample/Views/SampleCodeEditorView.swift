@@ -69,22 +69,8 @@ struct SampleCodeEditorView: View {
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {
-        switch fileExtension.lowercased() {
-        case "swift":
-            return .swift
-        case "py", "python":
-            return .python
-        case "js", "javascript":
-            return .javascript
-        case "json":
-            return .json
-        case "md", "markdown":
-            // Use the coordinator to detect language for markdown files
-            let coordinator = SyntaxHighlightingCoordinator()
-            return coordinator.detectLanguage(from: fileExtension)
-        default:
-            return .plainText
-        }
+        let coordinator = SyntaxHighlightingCoordinator()
+        return coordinator.detectLanguage(from: fileExtension)
     }
 }
 
