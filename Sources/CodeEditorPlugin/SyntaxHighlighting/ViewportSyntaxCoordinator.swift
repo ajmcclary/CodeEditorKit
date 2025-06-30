@@ -290,8 +290,6 @@ public final class ViewportStatistics: ObservableObject {
         totalHighlights > 0 ? Double(cacheHits) / Double(totalHighlights) : 0
     }
     
-    deinit {}
-    
     internal func recordHighlighting(range _: NSRange, tokenCount: Int, processingTime: TimeInterval) {
         totalHighlights += 1
         lastHighlightTime = Date()

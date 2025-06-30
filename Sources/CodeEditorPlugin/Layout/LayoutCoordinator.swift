@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit)
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
 
@@ -10,7 +10,6 @@ import AppKit
 /// Coordinates layout operations to prevent recursive layout cycles
 @MainActor
 public final class LayoutCoordinator {
-    deinit {}
     // MARK: - Properties
     
     private var isPerformingLayout = false

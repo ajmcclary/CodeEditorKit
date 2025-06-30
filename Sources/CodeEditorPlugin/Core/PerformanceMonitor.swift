@@ -6,7 +6,6 @@ import os.log
 /// Monitors and reports performance metrics for the code editor
 @MainActor
 public final class PerformanceMonitor {
-    deinit {}
     // MARK: - Singleton
     
     public static let shared = PerformanceMonitor()
@@ -85,7 +84,7 @@ public final class PerformanceMonitor {
     
     /// Generate a performance report
     public func generateReport() async -> PerformanceReport {
-        let allMetrics = await getAllMetrics()
+        let allMetrics = getAllMetrics()
         
         let totalDuration = allMetrics.reduce(0.0) { $0 + ($1.duration ?? 0) }
         let averageDuration = allMetrics.isEmpty ? 0 : totalDuration / Double(allMetrics.count)

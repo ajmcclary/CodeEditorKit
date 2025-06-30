@@ -62,7 +62,6 @@ extension SyntaxHighlighter {
 /// Registry for managing language providers
 @MainActor
 public final class LanguageRegistry {
-    deinit {}
     // MARK: - Singleton
     
     public static let shared = LanguageRegistry()

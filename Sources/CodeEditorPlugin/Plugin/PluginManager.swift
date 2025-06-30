@@ -30,10 +30,8 @@ public final class PluginManager: ObservableObject {
     private var linters: [String: any CodeLinter] = [:]
     private var documentationProviders: [String: any DocumentationProvider] = [:]
     private var symbolProviders: [String: any SymbolProvider] = [:]
-    // TODO: Re-enable once IndentationProvider is properly imported
-    // private var indentationProviders: [String: any IndentationProvider] = [:]
-    // TODO: Re-enable once LSPClientProtocol is properly imported
-    // private var lspClients: [String: any LSPClientProtocol] = [:]
+    private var indentationProviders: [String: any IndentationProvider] = [:]
+    private var lspClients: [String: any LSPClientProtocol] = [:]
     
     /// Lazy loading statistics
     @Published public private(set) var lazyLoadingStats = LazyLoadingStatistics()
@@ -263,11 +261,36 @@ public final class PluginManager: ObservableObject {
     }
     
     /// Create a plugin instance from manifest
+    /// 
+    /// - Note: Dynamic plugin loading is planned for a future release.
+    /// 
+    /// Current implementation supports only built-in plugins registered via the `register()` method.
+    /// Future plugin loading mechanisms will include:
+    /// - **Binary Plugins**: Load from compiled frameworks using Bundle APIs
+    /// - **Script Plugins**: Execute JavaScript/Python scripts via language runtimes
+    /// - **WebAssembly Plugins**: Run sandboxed WASM modules for cross-platform compatibility
+    /// 
+    /// Plugin security considerations for future implementation:
+    /// - Code signing verification for binary plugins
+    /// - Sandboxed execution environment for scripts
+    /// - Permission-based API access control
+    /// - Resource usage limits and monitoring
+    /// 
+    /// - Parameters:
+    ///   - manifest: The plugin manifest containing metadata
+    ///   - bundleURL: The URL to the plugin bundle (unused in current implementation)
+    /// - Returns: A plugin instance if loading succeeds, nil otherwise
     private func createPlugin(from manifest: PluginManifest, bundleURL _: URL) async -> (any LanguagePlugin)? {
-        // This would be implemented based on your plugin architecture
-        // For example, loading Swift Package Manager plugins, script-based plugins, etc.
-        logger.info("Creating plugin from manifest: \(manifest.identifier)")
-        return nil // Placeholder
+        // TODO: Implement dynamic plugin loading in future release
+        // This is a planned enhancement that requires:
+        // 1. Plugin sandbox architecture design
+        // 2. Security model implementation
+        // 3. Plugin API versioning system
+        // 4. Hot-reload capability
+        
+        logger.info("Dynamic plugin loading not yet implemented for: \(manifest.identifier)")
+        logger.info("Use PluginManager.shared.register() to add built-in plugins")
+        return nil
     }
     
     // MARK: - Feature Provider Management
@@ -306,32 +329,29 @@ public final class PluginManager: ObservableObject {
             logger.debug("Registered symbol provider for plugin: \(identifier)")
         }
         
-        // TODO: Re-enable once IndentationProvider is properly imported
         // Register indentation provider
-        // if let indentProvider = plugin.createIndentationProvider() {
-        //     indentationProviders[identifier] = indentProvider
-        //     logger.debug("Registered indentation provider for plugin: \(identifier)")
-        // }
+        if let indentProvider = plugin.createIndentationProvider() {
+            indentationProviders[identifier] = indentProvider
+            logger.debug("Registered indentation provider for plugin: \(identifier)")
+        }
         
-        // TODO: Re-enable once LSPClientProtocol is properly imported
         // Register LSP client
-        // if let lspClient = plugin.createLSPClient() {
-        //     lspClients[identifier] = lspClient
-        //     try? await lspClient.start()
-        //     logger.debug("Registered and started LSP client for plugin: \(identifier)")
-        // }
+        if let lspClient = plugin.createLSPClient() {
+            lspClients[identifier] = lspClient
+            try? await lspClient.start()
+            logger.debug("Registered and started LSP client for plugin: \(identifier)")
+        }
     }
     
     /// Unregister feature providers for a plugin
     private func unregisterFeatureProviders(for plugin: any LanguagePlugin) async {
         let identifier = plugin.identifier
         
-        // TODO: Re-enable once LSPClientProtocol is properly imported
         // Stop LSP client
-        // if let lspClient = lspClients[identifier] {
-        //     await lspClient.stop()
-        //     lspClients.removeValue(forKey: identifier)
-        // }
+        if let lspClient = lspClients[identifier] {
+            await lspClient.stop()
+            lspClients.removeValue(forKey: identifier)
+        }
         
         // Remove other providers
         completionProviders.removeValue(forKey: identifier)
@@ -339,8 +359,7 @@ public final class PluginManager: ObservableObject {
         linters.removeValue(forKey: identifier)
         documentationProviders.removeValue(forKey: identifier)
         symbolProviders.removeValue(forKey: identifier)
-        // TODO: Re-enable once IndentationProvider is properly imported
-        // indentationProviders.removeValue(forKey: identifier)
+        indentationProviders.removeValue(forKey: identifier)
         
         logger.debug("Unregistered all feature providers for plugin: \(identifier)")
     }
@@ -404,25 +423,23 @@ public final class PluginManager: ObservableObject {
         }
     }
     
-    // TODO: Re-enable once IndentationProvider is properly imported
-    // /// Get indentation providers for a language (with lazy loading)
-    // public func indentationProviders(for language: Language) -> [any IndentationProvider] {
-    //     Task {
-    //         await lazyLoadRelevantPlugins(for: language)
-    //     }
-    //     
-    //     return indentationProviders.values.filter { provider in
-    //         provider.supportedLanguages.contains(language)
-    //     }
-    // }
+    /// Get indentation providers for a language (with lazy loading)
+    public func indentationProviders(for language: Language) -> [any IndentationProvider] {
+        Task {
+            await lazyLoadRelevantPlugins(for: language)
+        }
+        
+        return indentationProviders.values.filter { provider in
+            provider.supportedLanguages.contains(language)
+        }
+    }
     
-    // TODO: Re-enable once LSPClientProtocol is properly imported
-    // /// Get LSP clients for a language
-    // public func lspClients(for language: Language) -> [any LSPClientProtocol] {
-    //     lspClients.values.filter { client in
-    //         client.supportedLanguages.contains(language)
-    //     }
-    // }
+    /// Get LSP clients for a language
+    public func lspClients(for language: Language) -> [any LSPClientProtocol] {
+        lspClients.values.filter { client in
+            client.supportedLanguages.contains(language)
+        }
+    }
     
     // MARK: - Plugin Information
     
@@ -625,21 +642,17 @@ public final class PluginManager: ObservableObject {
                                      self.formatters.count +
                                      self.linters.count +
                                      self.documentationProviders.count +
-                                     self.symbolProviders.count
-                                     // TODO: Re-enable once IndentationProvider is properly imported
-                                     // + self.indentationProviders.count
-                                     // TODO: Re-enable once LSPClientProtocol is properly imported
-                                     // + self.lspClients.count
+                                     self.symbolProviders.count +
+                                     self.indentationProviders.count +
+                                     self.lspClients.count
                 
                 self.completionProviders.removeAll()
                 self.formatters.removeAll()
                 self.linters.removeAll()
                 self.documentationProviders.removeAll()
                 self.symbolProviders.removeAll()
-                // TODO: Re-enable once IndentationProvider is properly imported
-                // self.indentationProviders.removeAll()
-                // TODO: Re-enable once LSPClientProtocol is properly imported
-                // self.lspClients.removeAll()
+                self.indentationProviders.removeAll()
+                self.lspClients.removeAll()
                 
                 // Reset lazy loading statistics
                 self.lazyLoadingStats.reset()
@@ -698,8 +711,6 @@ public struct DefaultLazyPluginLoader: LazyPluginLoader {
 /// Statistics for lazy loading performance
 @MainActor
 public final class LazyLoadingStatistics: ObservableObject {
-    deinit {}
-    
     @Published public private(set) var totalRegistrations: Int = 0
     @Published public private(set) var totalLoads: Int = 0
     @Published public private(set) var successfulLoads: Int = 0

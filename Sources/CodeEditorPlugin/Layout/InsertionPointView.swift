@@ -19,7 +19,7 @@ public class InsertionPointView: NSView {
     private func setup() {
         #if canImport(UIKit)
         backgroundColor = PlatformColors.label
-        #elseif canImport(AppKit)
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         wantsLayer = true
         layer?.backgroundColor = PlatformColors.label.cgColor
         #endif

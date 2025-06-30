@@ -73,7 +73,7 @@ public final class PerformanceInsights: ObservableObject {
     public func generateDetailedReport() async -> DetailedPerformanceReport {
         let performanceReport = await performanceMonitor.generateReport()
         let textKitSummary = textKit2Monitor.performanceSummary
-        let memoryStatus = await memoryMonitor.getMemoryStatistics()
+        let memoryStatus = memoryMonitor.getMemoryStatistics()
         
         return DetailedPerformanceReport(
             timestamp: Date(),

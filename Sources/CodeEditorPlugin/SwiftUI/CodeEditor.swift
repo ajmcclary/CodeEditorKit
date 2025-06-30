@@ -114,7 +114,7 @@ import SwiftUI
 /// - **iOS**: 16.0+ (native UITextView-based implementation) 
 /// - **Mac Catalyst**: 16.0+ (UIKit implementation)
 ///
-/// Use `CodeEditorSwiftUIView` for older platform versions (macOS 12.0+, iOS 15.0+).
+/// For older platform versions (macOS 12.0+, iOS 15.0+), this view may have limited functionality.
 @available(macOS 13.0, iOS 16.0, *)
 public struct CodeEditor: View {
     // MARK: - Properties
@@ -687,7 +687,7 @@ struct CodeEditorLanguageKey: EnvironmentKey {
     static let defaultValue: Language = .plainText
 }
 
-// Note: CodeEditorThemeKey and codeEditorTheme environment value are defined in CodeEditorSwiftUIView.swift
+// Note: CodeEditorThemeKey and codeEditorTheme environment value are defined in CodeEditorTheme.swift
 
 @available(macOS 13.0, iOS 16.0, *)
 struct CodeEditorConfigurationKey: EnvironmentKey {
@@ -709,7 +709,7 @@ extension EnvironmentValues {
 
 // MARK: - Supporting Types
 
-// Note: Theme functionality is provided by CodeEditorSwiftUITheme in CodeEditorSwiftUIView.swift
+// Note: Theme functionality is provided by CodeEditorSwiftUITheme in CodeEditorTheme.swift
 
 // MARK: - Completion Types
 

@@ -34,14 +34,14 @@ public class TextLayoutFragmentView: NSView {
         #endif
         #if canImport(UIKit)
         backgroundColor = .clear
-        #elseif canImport(AppKit)
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         // backgroundColor not available on NSView
         #endif
     }
 
     #if canImport(UIKit)
 
-    #elseif canImport(AppKit)
+    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 

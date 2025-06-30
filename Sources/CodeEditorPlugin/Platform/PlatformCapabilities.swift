@@ -35,7 +35,7 @@ public final class PlatformCapabilities {
     public var currentPlatform: Platform {
         #if targetEnvironment(macCatalyst)
         return .catalyst
-        #elseif canImport(AppKit)
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         return .macOS
         #else
         return .iOS
@@ -183,7 +183,7 @@ public final class PlatformCapabilities {
         // Available on all iOS versions, macOS 14.0+
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return true
-        #elseif canImport(AppKit)
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         return systemVersionComponents.major >= 14
         #else
         return false

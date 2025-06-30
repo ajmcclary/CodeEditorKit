@@ -166,7 +166,7 @@ public final class ViewportManager: ObservableObject {
     
     /// Perform viewport-based rendering optimizations
     private func performViewportRendering() {
-        guard let textView else { return }
+        guard textView != nil else { return }
         
         // Cancel any existing rendering tasks outside the new viewport
         cancelRenderingOutsideViewport()
@@ -192,7 +192,7 @@ public final class ViewportManager: ObservableObject {
             }
             
             // Remove task when complete
-            await MainActor.run {
+            _ = await MainActor.run {
                 self.renderingTasks.removeValue(forKey: taskId)
             }
         }

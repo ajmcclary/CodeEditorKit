@@ -85,13 +85,14 @@ Protocol-based abstraction for text input features:
 - **Feature Detection**: Spell checking, grammar checking, smart quotes
 - **Configuration Application**: Apply settings to text views
 
-### MacOSVersionDetection.swift
+### PlatformCapabilities.swift
 
-Simplified version detection for macOS features:
+Runtime platform and feature detection:
 
-- **Version Checking**: Uses actual macOS version numbers (12, 13, 14)
-- **Feature Detection**: TextKit2 stability, CADisplayLink support
-- **iOS Stubs**: Provides stubs for iOS builds
+- **Platform Detection**: Identifies macOS, iOS, or Mac Catalyst
+- **Version Checking**: Uses actual OS version numbers
+- **Feature Detection**: TextKit2 support, hardware acceleration, rendering capabilities
+- **Recommended Configurations**: Performance settings based on platform
 
 ## Usage Examples
 

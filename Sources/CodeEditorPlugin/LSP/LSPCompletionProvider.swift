@@ -28,8 +28,6 @@ public final class LSPCompletionProvider: CompletionProvider {
         self.supportedLanguages = supportedLanguages.isEmpty ? [] : supportedLanguages
     }
     
-    deinit {}
-    
     // MARK: - CompletionProvider Protocol
     
     public func completions(for context: CompletionContextModel) async throws -> CompletionResult {

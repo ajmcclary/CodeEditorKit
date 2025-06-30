@@ -454,8 +454,6 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
 
 /// Builder pattern for creating configurations
 public class EditorConfigurationBuilder {
-    deinit {}
-    
     private var configuration = EditorConfiguration()
     
     public init() {}

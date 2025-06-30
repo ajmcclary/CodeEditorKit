@@ -344,8 +344,6 @@ public final class DebouncingStatistics: ObservableObject {
         droppedRequests = 0
         cancelledRequests = 0
     }
-    
-    deinit {}
 }
 
 /// Analyzes typing patterns for smart debouncing
@@ -385,8 +383,6 @@ private final class TypingPatternAnalyzer {
             return .paused
         }
     }
-    
-    deinit {}
 }
 
 /// Typing pattern classifications

@@ -96,18 +96,14 @@ public final class MemoryMonitor: ObservableObject {
         let sortedHandlers = cleanupHandlers.values.sorted { $0.priority.rawValue > $1.priority.rawValue }
         
         for handler in sortedHandlers {
-            do {
-                let result = await handler.handler()
-                totalFreed += result.memoryFreedMB
-                
-                logger.debug("Cleanup handler \(handler.identifier) freed \(result.memoryFreedMB)MB")
-                
-                // Check if we've reached the target
-                if let target = targetReduction, totalFreed >= target {
-                    break
-                }
-            } catch {
-                logger.error("Cleanup handler \(handler.identifier) failed: \(error)")
+            let result = await handler.handler()
+            totalFreed += result.memoryFreedMB
+            
+            logger.debug("Cleanup handler \(handler.identifier) freed \(result.memoryFreedMB)MB")
+            
+            // Check if we've reached the target
+            if let target = targetReduction, totalFreed >= target {
+                break
             }
         }
         

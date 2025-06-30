@@ -268,8 +268,6 @@ extension CompletionProvider {
 /// Manages multiple completion providers and coordinates completion requests
 @MainActor
 public final class CompletionManager: @unchecked Sendable {
-    deinit {}
-    
     private var providers: [String: any CompletionProvider] = [:]
     private var currentRequest: Task<CompletionResult, Error>?
     private let cache: LRUCache<CompletionCacheKey, CachedCompletionResult>
@@ -522,8 +520,6 @@ public final class CompletionManager: @unchecked Sendable {
 /// Statistics for completion requests and cache performance
 @MainActor
 public final class CompletionStatistics: @unchecked Sendable {
-    deinit {}
-    
     public private(set) var totalRequests: Int = 0
     public private(set) var totalCacheHits: Int = 0
     public private(set) var totalCacheMisses: Int = 0

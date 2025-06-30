@@ -50,7 +50,7 @@ private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "Code
 ///
 /// ## SwiftUI Integration
 ///
-/// For SwiftUI apps, use `CodeEditor` or `CodeEditorSwiftUIView`:
+/// For SwiftUI apps, use `CodeEditor`:
 ///
 /// ```swift
 /// struct ContentView: View {
@@ -243,7 +243,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private var completionWindow: NSWindow?
     #else
-    private var completionPopover: UIViewController?
+    private var completionPopover: PlatformViewController?
     #endif
     
     /// Whether completion is currently active

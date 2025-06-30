@@ -136,8 +136,9 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         // This is a simplified approach - in a full implementation, we'd need proper conversion
         if textView is CodeEditorView {
             // For now, just forward with a simple implementation - skip the NSTextRange conversion
-            // TODO: Properly convert NSRange to NSTextRange
-            return true // source?.textView(stTextView, shouldChangeTextIn: convertedRange, replacementString: replacementString) ?? true
+            // TextKit2 range conversion requires proper NSTextContentManager integration
+            // For now, we allow all text changes. Future implementation will handle range conversion.
+            return true
         }
         return true
     }
@@ -159,10 +160,6 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         return true
     }
     #endif
-
-    deinit {
-        // Cleanup if needed
-    }
 }
 
 // MARK: - Platform-specific Protocol Conformance

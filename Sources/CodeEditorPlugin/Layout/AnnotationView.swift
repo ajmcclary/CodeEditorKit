@@ -263,13 +263,13 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         
         // Type label
         let typeLabel = NSTextField(labelWithString: annotationType + ":")
-        typeLabel.font = .systemFont(ofSize: 11, weight: .semibold)
+        typeLabel.font = PlatformFont.systemFont(ofSize: 11, weight: .semibold)
         typeLabel.textColor = annotationColor
         typeLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Message label
         let messageLabel = NSTextField(labelWithString: annotationMessage)
-        messageLabel.font = .systemFont(ofSize: 11)
+        messageLabel.font = PlatformFont.systemFont(ofSize: 11)
         messageLabel.textColor = PlatformColors.label
         messageLabel.lineBreakMode = .byWordWrapping
         messageLabel.maximumNumberOfLines = 0
@@ -361,14 +361,14 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         // Type label
         let typeLabel = UILabel()
         typeLabel.text = annotationType + ":"
-        typeLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        typeLabel.font = PlatformFont.systemFont(ofSize: 13, weight: .semibold)
         typeLabel.textColor = annotationColor
         typeLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Message label
         let messageLabel = UILabel()
         messageLabel.text = annotationMessage
-        messageLabel.font = .systemFont(ofSize: 13)
+        messageLabel.font = PlatformFont.systemFont(ofSize: 13)
         messageLabel.textColor = PlatformColors.label
         messageLabel.numberOfLines = 0
         messageLabel.lineBreakMode = .byWordWrapping

@@ -5,8 +5,6 @@ import Foundation
 /// Built-in completion provider for Swift language
 @MainActor
 public final class SwiftCompletionProvider: CompletionProvider, @unchecked Sendable {
-    deinit {}
-    
     public let id = "swift-builtin"
     public let supportedLanguages: [Language] = [.swift]
     public let triggerCharacters = [".", "(", "[", "<", " "]

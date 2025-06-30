@@ -49,8 +49,6 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
     public func handle(_ event: EditorEvent) {
         handler(event)
     }
-    
-    deinit {}
 }
 
 /// Publisher for editor events using Combine
@@ -60,8 +58,6 @@ public final class EditorEventPublisher: @unchecked Sendable {
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
     
     public init() {}
-    
-    deinit {}
     
     /// Subscribe to editor events
     public func subscribe(_ handler: any EditorEventHandler) {
@@ -108,8 +104,6 @@ private final class WeakHandler {
     init(_ value: any EditorEventHandler) {
         self.value = value
     }
-    
-    deinit {}
 }
 
 // MARK: - Combine Support
@@ -119,17 +113,12 @@ import Combine
 
 @available(macOS 10.15, iOS 13.0, *)
 extension EditorEventPublisher {
-    // TODO: Re-enable when Combine integration is fixed
-    /*
     /// Create a Combine publisher for editor events
     func publisher() -> AnyPublisher<EditorEvent, Never> {
         EditorEventCombinePublisher(eventPublisher: self)
             .eraseToAnyPublisher()
     }
-    */
     
-    // TODO: Re-enable when Combine integration is fixed
-    /*
     /// Create a filtered publisher for specific event types
     func publisher<T>(for eventType: T.Type) -> AnyPublisher<T, Never> where T: EditorEventType {
         publisher()
@@ -138,7 +127,6 @@ extension EditorEventPublisher {
             }
             .eraseToAnyPublisher()
     }
-    */
 }
 
 /// Protocol for typed event extraction
@@ -165,40 +153,41 @@ public struct TextSelectionDidChangeEvent: EditorEventType {
     }
 }
 
-// TODO: Fix Combine integration for Swift 6 concurrency
-// Temporarily disabled due to concurrency issues
-
-/*
-/// Combine publisher implementation
+/// Combine publisher implementation with Swift 6 concurrency support
 @available(macOS 10.15, iOS 13.0, *)
-private struct EditorEventCombinePublisher: Publisher {
+private struct EditorEventCombinePublisher: Publisher, Sendable {
     typealias Output = EditorEvent
     typealias Failure = Never
     
     let eventPublisher: EditorEventPublisher
     
     nonisolated func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Never, S.Input == EditorEvent {
-        Task { @MainActor in
-            let subscription = EditorEventSubscription(
-                subscriber: subscriber,
-                eventPublisher: eventPublisher
-            )
-            subscriber.receive(subscription: subscription)
-        }
+        let subscription = EditorEventSubscription(
+            subscriber: subscriber,
+            eventPublisher: eventPublisher
+        )
+        subscriber.receive(subscription: subscription)
     }
 }
 
 @available(macOS 10.15, iOS 13.0, *)
-private final class EditorEventSubscription<S: Subscriber>: @preconcurrency Subscription, EditorEventHandler
+private final class EditorEventSubscription<S: Subscriber>: Subscription, @unchecked Sendable
     where S.Input == EditorEvent, S.Failure == Never {
     
+    private let lock = NSLock()
     private var subscriber: S?
     private let eventPublisher: EditorEventPublisher
+    private var handlerWrapper: HandlerWrapper?
     
     init(subscriber: S, eventPublisher: EditorEventPublisher) {
         self.subscriber = subscriber
         self.eventPublisher = eventPublisher
-        eventPublisher.subscribe(self)
+        
+        Task { @MainActor in
+            let wrapper = HandlerWrapper(subscription: self)
+            self.handlerWrapper = wrapper
+            eventPublisher.subscribe(wrapper)
+        }
     }
     
     nonisolated func request(_ demand: Subscribers.Demand) {
@@ -206,17 +195,40 @@ private final class EditorEventSubscription<S: Subscriber>: @preconcurrency Subs
     }
     
     nonisolated func cancel() {
+        lock.lock()
+        subscriber = nil
+        lock.unlock()
+        
         Task { @MainActor in
-            eventPublisher.unsubscribe(self)
-            subscriber = nil
+            if let wrapper = self.handlerWrapper {
+                self.eventPublisher.unsubscribe(wrapper)
+            }
+            self.handlerWrapper = nil
         }
     }
     
-    func handle(_ event: EditorEvent) {
-        _ = subscriber?.receive(event)
+    fileprivate func handleEvent(_ event: EditorEvent) {
+        lock.lock()
+        let sub = subscriber
+        lock.unlock()
+        
+        _ = sub?.receive(event)
+    }
+    
+    // Wrapper class to handle events on MainActor
+    @MainActor
+    private final class HandlerWrapper: EditorEventHandler {
+        private weak var subscription: EditorEventSubscription?
+        
+        init(subscription: EditorEventSubscription) {
+            self.subscription = subscription
+        }
+        
+        func handle(_ event: EditorEvent) {
+            subscription?.handleEvent(event)
+        }
     }
 }
-*/
 #endif
 
 // Note: Annotation type is defined in Models/Annotation.swift

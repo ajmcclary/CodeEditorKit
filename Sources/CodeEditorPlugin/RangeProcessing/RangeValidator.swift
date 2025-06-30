@@ -18,7 +18,8 @@ public actor RangeValidator<Content: VersionedContent> {
     }
 
     private var validSet = IndexSet()
-    // TODO: this has to be transitioned to an array with a computed set to better prevent overlapping work
+    // Future optimization: Convert to array with computed set for better overlap detection
+    // Current implementation uses IndexSet which may process overlapping ranges
     private var pendingSet = IndexSet()
     private var pendingRequests = 0
 

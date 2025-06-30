@@ -155,8 +155,6 @@ extension CompletionViewController: NSTableViewDelegate {
 // MARK: - CompletionCellView
 
 private final class CompletionCellView: NSTableCellView {
-    deinit {}
-    
     private lazy var iconLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
         label.font = PlatformFonts.systemFont(ofSize: 12)
@@ -352,8 +350,6 @@ extension CompletionViewController: UITableViewDelegate {
 // MARK: - CompletionTableViewCell
 
 private final class CompletionTableViewCell: UITableViewCell {
-    deinit {}
-    
     private lazy var iconLabel: UILabel = {
         let label = UILabel()
         label.font = PlatformFonts.systemFont(ofSize: 16)

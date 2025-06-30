@@ -167,8 +167,6 @@ public enum MinimapRenderer {
 /// AppKit implementation of minimap view
 @MainActor
 public final class AppKitMinimapView: NSView, MinimapViewProtocol {
-    deinit {}
-    
     public var configuration = MinimapConfiguration() {
         didSet { needsDisplay = true }
     }
@@ -304,8 +302,6 @@ public typealias MinimapView = AppKitMinimapView
 /// UIKit implementation of minimap view
 @MainActor
 public final class UIKitMinimapView: UIView, MinimapViewProtocol {
-    deinit {}
-    
     public var configuration = MinimapConfiguration() {
         didSet { setNeedsDisplay() }
     }
@@ -422,8 +418,6 @@ public typealias MinimapView = UIKitMinimapView
 
 /// Provides data for minimap from a text view
 @MainActor public final class MinimapDataProvider {
-    deinit {}
-    
     private weak var textView: CodeEditorView?
     private let configuration: MinimapConfiguration
     

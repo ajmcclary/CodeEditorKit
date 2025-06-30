@@ -351,7 +351,6 @@ public enum TextKit2PerformanceHelper {
 /// Monitors TextKit2 performance metrics
 @MainActor
 public final class TextKit2PerformanceMonitor: ObservableObject {
-    deinit {}
     // MARK: - Metrics
     
     @Published public private(set) var layoutOperations: Int = 0

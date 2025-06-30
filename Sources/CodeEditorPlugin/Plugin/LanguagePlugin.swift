@@ -91,18 +91,16 @@ public protocol LanguagePlugin: LanguageProvider {
     @MainActor
     func createSymbolProvider() -> (any SymbolProvider)?
     
-    // TODO: Re-enable once IndentationProvider is properly imported
-    // @MainActor
-    // func createIndentationProvider() -> (any IndentationProvider)?
+    @MainActor
+    func createIndentationProvider() -> (any IndentationProvider)?
     
     // MARK: - Language Server Protocol Support
     
     /// Language server configuration (optional)
     var languageServerConfig: LanguageServerConfig? { get }
     
-    // TODO: Re-enable once LSPClientProtocol is properly imported
-    // @MainActor
-    // func createLSPClient() -> (any LSPClientProtocol)?
+    @MainActor
+    func createLSPClient() -> (any LSPClientProtocol)?
     
     // MARK: - Lifecycle
     
@@ -171,13 +169,11 @@ extension LanguagePlugin {
     @MainActor
     func createSymbolProvider() -> (any SymbolProvider)? { nil }
     
-    // TODO: Re-enable once IndentationProvider is properly imported
-    // @MainActor
-    // func createIndentationProvider() -> (any IndentationProvider)? { nil }
+    @MainActor
+    func createIndentationProvider() -> (any IndentationProvider)? { nil }
     
-    // TODO: Re-enable once LSPClientProtocol is properly imported
-    // @MainActor
-    // func createLSPClient() -> (any LSPClientProtocol)? { nil }
+    @MainActor
+    func createLSPClient() -> (any LSPClientProtocol)? { nil }
     
     @MainActor
     func activate() async throws {

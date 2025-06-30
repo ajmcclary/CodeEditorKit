@@ -1,49 +1,47 @@
-### Revised Code Review Prompt:
+### **Rewritten Code Review Prompt**
 
-**Objective:**
+**Prompt Title:** Comprehensive Code Review for Production-Ready Swift Code Editor Component
 
-Perform a comprehensive code review of the `CodeEditorPlugin` Swift package and the `CodeEditorSample` example app. The primary goal is to assess and improve cross-platform compatibility, ensuring robust and maintainable support for both macOS (AppKit/SwiftUI) and iOS/macCatalyst (UIKit/SwiftUI).
+**Persona:** Act as a principal software engineer specializing in Apple platform development, with deep expertise in Swift, SwiftUI, AppKit, and modern concurrency. You are reviewing a new code editor component that is being prepared for its first major open-source release.
 
-**Context:**
+**Project Context:**
+You will review a Swift Package containing two main targets:
+1.  `CodeEditorPlugin`: A reusable, production-ready code editor component designed for macOS and iOS using Swift 6. It aims for high performance, extensibility, and ease of integration into any SwiftUI or AppKit application.
+2.  `CodeEditorSample`: A sample application that demonstrates the `CodeEditorPlugin`'''s features and configurations.
 
-*   `CodeEditorPlugin`: A Swift package intended to provide a powerful code editor component for any SwiftUI, AppKit, or UIKit application.
-*   `CodeEditorSample`: A sample application that integrates the plugin and demonstrates its features and configurations on all supported platforms.
+The project'''s standards, architecture, and goals are documented in `GEMINI.md`. Your review must validate the claims made in this document, including "production-ready," "zero technical debt," and full cross-platform support.
 
-**Key Areas for Review:**
+**Review Objectives & Key Areas of Focus:**
 
-1.  **Platform Abstraction Layer:**
-    *   Analyze the existing platform abstraction system in `Sources/CodeEditorPlugin/Platform/`.
-    *   Is it used consistently across the plugin?
-    *   Are there instances of direct AppKit/UIKit usage that should be moved into this abstraction layer?
-    *   Identify any "leaky abstractions" where platform-specific details are exposed unnecessarily.
+Please perform a thorough code review, focusing on the following areas. Structure your feedback in a comprehensive report.
 
-2.  **Conditional Compilation (`#if` blocks):**
-    *   Audit all uses of conditional compilation flags like `#if os(macOS)`, `#if os(iOS)`, `#if canImport(AppKit)`, and `#if canImport(UIKit)`.
-    *   Verify their correctness. Are there any missing or redundant checks?
-    *   Look for large, hard-to-maintain `#if` blocks that could be refactored for better clarity, perhaps by moving platform-specific logic into separate files or extensions.
+**1. Architecture and API Design:**
+    *   **Modularity:** Is the `CodeEditorPlugin` fully self-contained and decoupled from the `CodeEditorSample` app?
+    *   **API Intuitiveness:** Evaluate the public API of `CodeEditorPlugin`. Is it easy to understand and integrate for a developer new to the project? Pay close attention to the `CodeEditor` SwiftUI view and the `EditorConfiguration` system.
+    *   **Extensibility:** Does the plugin architecture (`Sources/CodeEditorPlugin/Plugin/`) provide a clear path for developers to add new features or languages?
 
-3.  **SwiftUI Integration (`UIViewRepresentable` / `NSViewRepresentable`):**
-    *   Review the implementation of the SwiftUI wrappers for the code editor view.
-    *   Assess the efficiency and correctness of the `make...`, `update...`, and `Coordinator` logic for both platforms.
-    *   Ensure that state management and data flow between SwiftUI and the underlying AppKit/UIKit views are handled correctly and without causing performance issues.
+**2. Code Quality and Best Practices:**
+    *   **Swift 6 Concurrency:** Scrutinize the use of Swift 6 Actors, `async/await`, and other concurrency patterns. Are there potential race conditions, deadlocks, or misuse of `MainActor`?
+    *   **Platform Abstraction:** Review the code in `Sources/CodeEditorPlugin/Platform/`. Is the abstraction layer robust? Does the code correctly use `#if canImport()` for platform-specific implementations?
+    *   **Adherence to Standards:** Verify that the codebase strictly follows the guidelines outlined in `GEMINI.md`, including naming conventions and the "zero SwiftLint violations" rule.
 
-4.  **Code Duplication and Consistency:**
-    *   Identify functionally equivalent code blocks that are duplicated for AppKit and UIKit.
-    *   Suggest how this code could be unified to reduce redundancy and improve maintainability.
-    *   Check for a consistent architectural approach in both platform-specific implementations.
+**3. Performance and Reliability:**
+    *   **Efficiency:** Identify potential performance bottlenecks, especially in the syntax highlighting engine (`SyntaxHighlighting/`), text processing (`TextProcessing/`), and rendering logic (`Layout/`).
+    *   **Memory Management:** Check for potential memory leaks or excessive memory consumption, particularly within the `CodeEditorView` and its underlying TextKit 2 components.
+    *   **Error Handling:** Is error handling robust and user-friendly? Are custom errors (`CodeEditorError`) used effectively?
 
-5.  **`CodeEditorSample` as a Reference:**
-    *   Evaluate the sample app's implementation. Does it correctly demonstrate best practices for integrating the plugin in a cross-platform SwiftUI application?
-    *   Does it properly configure the editor for each platform?
+**4. Test Coverage:**
+    *   **Test Quality:** The project claims 172 tests. Review the existing tests in `Tests/`. Are they meaningful? Do they cover critical paths, edge cases, and platform-specific logic?
+    *   **Gaps in Coverage:** Identify any significant features or components that lack adequate testing.
 
-**Output Requirements:**
+**5. Sample Application (`CodeEditorSample`):**
+    *   **Effectiveness:** Does the sample app serve as a clear and comprehensive guide for developers?
+    *   **Best Practices:** Does the integration of `CodeEditorPlugin` within the sample app demonstrate best practices?
 
-Please provide your findings in a structured Markdown report. Organize the report into the following sections:
-
-1.  **Overall Health Summary:** A high-level assessment of the codebase's cross-platform architecture and readiness.
-2.  **Critical Issues:** A list of any findings that will likely cause crashes, incorrect behavior, or build failures on one of the target platforms.
-3.  **Improvement Suggestions:** A detailed list of recommendations, categorized by the key review areas mentioned above (Platform Abstraction, SwiftUI Integration, etc.). For each suggestion, please:
-    *   Reference the relevant file(s) and line number(s).
-    *   Explain the "why" behind the recommendation.
-    *   Provide corrected or improved code snippets where applicable.
-4.  **Action Plan:** A prioritized list of recommended next steps to address the findings.
+**Output Format:**
+Please provide your findings in a structured report with the following sections:
+*   **Executive Summary:** A high-level overview of the codebase'''s quality, readiness for release, and key findings.
+*   **High-Priority Issues:** Critical bugs, architectural flaws, or performance problems that must be addressed.
+*   **Suggestions & Best Practices:** Recommendations for improving code clarity, maintainability, and API design.
+*   **Code Snippets:** Include specific, non-trivial code examples to illustrate your points.
+*   **Conclusion:** A final assessment of whether the project meets its goal of being a production-ready component.

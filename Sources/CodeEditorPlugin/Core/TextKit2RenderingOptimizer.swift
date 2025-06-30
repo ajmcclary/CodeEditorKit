@@ -8,8 +8,6 @@ import UIKit
 /// Optimizes TextKit2 rendering performance for large files
 @MainActor
 public final class TextKit2RenderingOptimizer: ObservableObject {
-    deinit {}
-    
     // MARK: - Configuration
     
     /// Maximum number of text layout fragments to keep in memory
@@ -386,8 +384,6 @@ private struct CachedFragment {
 /// Rendering performance statistics
 @MainActor
 public final class RenderingStatistics: ObservableObject {
-    deinit {}
-    
     @Published public private(set) var totalOptimizations: Int = 0
     @Published public private(set) var averageOptimizationTime: TimeInterval = 0
     @Published public private(set) var fragmentsCached: Int = 0

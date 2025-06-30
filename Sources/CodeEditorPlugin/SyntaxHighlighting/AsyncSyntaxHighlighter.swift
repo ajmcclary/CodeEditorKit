@@ -576,7 +576,6 @@ public struct TokenCacheStatistics: Sendable {
 /// Simple performance monitoring for syntax highlighting
 @MainActor
 final class SyntaxHighlightingPerformanceMonitor {
-    deinit {}
     enum Category: String {
         case syntaxHighlighting = "SyntaxHighlighting"
         case tokenApplication = "TokenApplication"
