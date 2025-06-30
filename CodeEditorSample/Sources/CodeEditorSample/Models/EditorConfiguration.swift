@@ -43,17 +43,16 @@ enum ConfigurationPreset: String, CaseIterable {
                 .showInvisibleCharacters(false)
                 .highlightSelectedLine(true)
                 .wrapLines(false)
-                .editable(true)
+                .isEditable(true)
                 .autoIndent(true)
                 .tabWidth(4)
                 .insertSpacesForTabs(true)
                 .fontSize(14)
                 .lineSpacing(1.2)
-                .annotations(true)
-                .hardwareAcceleration(true)
-                .smoothScrolling(true)
-                .codeCompletion(true)
-                .syntaxHighlighting(true)
+                .enableAnnotations(true)
+                .useHardwareAcceleration(true)
+                .enableCodeCompletion(true)
+                .enableSyntaxHighlighting(true)
                 .build()
 
         case .minimal:
@@ -68,7 +67,7 @@ enum ConfigurationPreset: String, CaseIterable {
                 .showLineNumbers(true)
                 .fontSize(13)
                 .lineSpacing(1.2)
-                .annotations(true)
+                .enableAnnotations(true)
                 .build()
 
         case .markdown:

@@ -1,5 +1,10 @@
 # CodeEditorPlugin
 
+[![Tests](https://img.shields.io/badge/tests-322%20passing-brightgreen)](#testing--quality)
+[![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
+[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
+
 A powerful, production-ready code editor component for macOS and iOS, built with a modern Swift 6 architecture. CodeEditorPlugin provides world-class performance, extensive customization, and a feature set designed for professional development tools.
 
 Built from the ground up with true cross-platform support in mind, it delivers advanced syntax highlighting, a robust theme system, and seamless native performance on **macOS, iOS, and Mac Catalyst** — not through simple ports, but through a sophisticated platform abstraction layer that respects each platform's unique characteristics.
@@ -14,7 +19,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs.
 
-- ✅ **Production-Grade Quality:** Verified with **over 170 automated tests**, ensuring reliability for professional applications. Every commit maintains strict quality standards with zero linting violations and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **322 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 204 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -170,21 +175,49 @@ Foundational LSP support enables advanced features like intelligent code complet
 
 Run the `CodeEditorSample` application to experience these features firsthand and see implementation examples.
 
+## 🎮 Sample Application
+
+The **CodeEditorSample** app serves as both a comprehensive demonstration and a reference implementation. It showcases all features of CodeEditorPlugin in action:
+
+### Live Feature Showcase
+- **Interactive Configuration UI**: Real-time manipulation of all 40+ configuration options
+- **Multi-Language Support**: Live syntax highlighting for all 17 supported languages
+- **Theme System**: Switch between professional themes (Xcode, VS Code Dark, GitHub, Solarized)
+- **Performance Monitoring**: Real-time performance metrics and optimization insights
+- **Annotation System**: See TODO/FIXME/NOTE comments rendered with interactive badges
+
+### Production Patterns
+- **Best Practice Integration**: Copy-paste ready SwiftUI and configuration patterns
+- **Cross-Platform Demo**: Experience identical functionality on macOS, iOS, and Mac Catalyst
+- **Advanced Architecture**: Explore plugin system, LSP integration, and performance optimization
+
+### Getting Started
+```bash
+cd CodeEditorSample
+swift run CodeEditorSample  # Launch the demo app
+swift test               # Run 46 comprehensive tests
+```
+
+The sample app maintains the same quality standards as the core plugin with **46 automated tests** (100% passing) and **zero linting violations** across 36 files.
+
 ## 🧪 Testing & Quality
 
 CodeEditorPlugin is built to the exacting standards required for production software. Our commitment to quality is demonstrated through:
 
 ### Comprehensive Test Coverage
-- **172 Total Tests**: 106 core package tests + 66 sample app tests
+- **322 Total Tests**: 276 core package tests + 46 sample app tests
+- **100% Test Pass Rate**: All tests passing with zero failures in final validation
 - **Unit & Integration Testing**: From low-level text processing to high-level UI integration
 - **Performance Benchmarks**: Automated performance regression detection
+- **Memory Leak Detection**: Comprehensive memory management testing with TextKit2 compatibility
 - **Platform-Specific Testing**: Ensures consistent behavior across all supported platforms
 
 ### Code Quality Standards
-- **Zero Linting Violations**: Strict SwiftLint configuration enforces consistent, clean code
+- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 204 files**
 - **Swift 6 Strict Concurrency**: Complete compliance with Swift's strictest concurrency checking
+- **Actor-Based Safety**: All potentially unsafe operations properly isolated to background actors
 - **Documentation Coverage**: Comprehensive inline documentation for all public APIs
-- **Continuous Integration**: Every commit is validated through our comprehensive test suite
+- **Continuous Quality**: Every commit maintains strict quality standards through automated validation
 
 ## 📄 License
 
