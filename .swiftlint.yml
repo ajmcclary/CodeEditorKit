@@ -40,6 +40,7 @@ disabled_rules:
   - closure_body_length # Complex SwiftUI views and TCA effects
   - large_tuple # TCA sometimes uses larger tuples for state
   - static_operator # Operators like <- need to be free functions for generic usage
+  - override_in_extension # Platform-specific extensions require overrides
 
 opt_in_rules:
   # Swift 6 & Concurrency
@@ -307,6 +308,7 @@ custom_rules:
     regex: 'NSString\(string:\s*[^)]+\)\.(?!draw)'
     message: "Use Swift String methods instead of NSString, except for drawing APIs"
     severity: warning
+
 
 
 

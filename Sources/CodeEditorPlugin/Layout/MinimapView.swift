@@ -33,37 +33,21 @@ public struct MinimapConfiguration: Sendable {
     
     public init() {}
     
-    // Default colors
+    // Default colors using consistent PlatformColors
     public static var defaultBackgroundColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.controlBackground
-        #else
-        return PlatformColors.systemBackground
-        #endif
+        PlatformColors.controlBackground
     }
     
     public static var defaultTextColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.secondaryLabel
-        #else
-        return PlatformColors.secondaryLabel
-        #endif
+        PlatformColors.secondaryLabel
     }
     
     public static var defaultViewportColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.controlAccentColor.withAlphaComponent(0.3)
-        #else
-        return PlatformColors.systemBlue.withAlphaComponent(0.3)
-        #endif
+        PlatformColors.systemBlue.withAlphaComponent(0.3)
     }
     
     public static var defaultViewportBorderColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.controlAccentColor
-        #else
-        return PlatformColors.systemBlue
-        #endif
+        PlatformColors.systemBlue
     }
 }
 
@@ -130,16 +114,10 @@ public struct MinimapData: Sendable {
 
 /// Shared minimap rendering logic
 public enum MinimapRenderer {
+    @MainActor
     public static func calculateCharacterMetrics(font: PlatformFont) -> (width: CGFloat, height: CGFloat) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let attributes: [NSAttributedString.Key: Any] = [.font: font]
-        let size = ("M" as String).size(withAttributes: attributes)
-        return (size.width, size.height)
-        #else
-        let attributes: [NSAttributedString.Key: Any] = [.font: font]
-        let size = ("M" as String).size(withAttributes: attributes)
-        return (size.width, size.height)
-        #endif
+        let metrics = font.metrics
+        return (metrics.averageCharacterWidth, metrics.lineHeight)
     }
     
     public static func calculateContentHeight(lineCount: Int, lineHeight: CGFloat) -> CGFloat {
@@ -243,20 +221,19 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        guard let data, let context = NSGraphicsContext.current?.cgContext else { return }
+        guard let data else { return }
         
-        // Clear background
-        MinimapConfiguration.defaultBackgroundColor.setFill()
-        dirtyRect.fill()
+        // Clear background using UnifiedDrawingCoordinator
+        UnifiedDrawingCoordinator.fillRect(dirtyRect, with: MinimapConfiguration.defaultBackgroundColor)
         
         // Draw text lines
-        drawTextLines(data: data, context: context)
+        drawTextLines(data: data)
         
         // Draw viewport indicator
-        drawViewportIndicator(data: data, context: context)
+        drawViewportIndicator(data: data)
     }
     
-    private func drawTextLines(data: MinimapData, context _: CGContext) {
+    private func drawTextLines(data: MinimapData) {
         let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
         let textColor = MinimapConfiguration.defaultTextColor
         
@@ -267,18 +244,20 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
             // Skip lines outside visible area for performance
             if y + data.lineHeight < 0 || y > bounds.height { continue }
             
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .foregroundColor: textColor
-            ]
-            
-            let attributedString = NSAttributedString(string: line, attributes: attributes)
             let point = NSPoint(x: 2, y: bounds.height - y - data.lineHeight)
-            attributedString.draw(at: point)
+            
+            // Use UnifiedDrawingCoordinator for text drawing
+            UnifiedDrawingCoordinator.drawMinimapLine(
+                line,
+                at: point,
+                font: font,
+                color: textColor,
+                maxWidth: bounds.width - 4
+            )
         }
     }
     
-    private func drawViewportIndicator(data: MinimapData, context: CGContext) {
+    private func drawViewportIndicator(data: MinimapData) {
         let viewportRect = MinimapRenderer.viewportRect(
             for: data.visibleLineRange,
             lineHeight: data.lineHeight,
@@ -287,14 +266,13 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
         
-        // Fill viewport area
-        context.setFillColor(MinimapConfiguration.defaultViewportColor.cgColor)
-        context.fill(viewportRect)
-        
-        // Draw viewport border
-        context.setStrokeColor(MinimapConfiguration.defaultViewportBorderColor.cgColor)
-        context.setLineWidth(1.0)
-        context.stroke(viewportRect)
+        // Use UnifiedDrawingCoordinator for viewport indicator
+        UnifiedDrawingCoordinator.drawViewportIndicator(
+            in: viewportRect,
+            backgroundColor: MinimapConfiguration.defaultViewportColor,
+            borderColor: MinimapConfiguration.defaultViewportBorderColor,
+            borderWidth: 1.0
+        )
     }
     
     override public func mouseDown(with event: NSEvent) {
@@ -366,20 +344,19 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
         
-        guard let data, let context = UIGraphicsGetCurrentContext() else { return }
+        guard let data else { return }
         
-        // Clear background
-        MinimapConfiguration.defaultBackgroundColor.setFill()
-        rect.fill()
+        // Clear background using UnifiedDrawingCoordinator
+        UnifiedDrawingCoordinator.fillRect(rect, with: MinimapConfiguration.defaultBackgroundColor)
         
         // Draw text lines
-        drawTextLines(data: data, context: context)
+        drawTextLines(data: data)
         
         // Draw viewport indicator
-        drawViewportIndicator(data: data, context: context)
+        drawViewportIndicator(data: data)
     }
     
-    private func drawTextLines(data: MinimapData, context _: CGContext) {
+    private func drawTextLines(data: MinimapData) {
         let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
         let textColor = MinimapConfiguration.defaultTextColor
         
@@ -390,18 +367,20 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
             // Skip lines outside visible area for performance
             if y + data.lineHeight < 0 || y > bounds.height { continue }
             
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .foregroundColor: textColor
-            ]
-            
-            let attributedString = NSAttributedString(string: line, attributes: attributes)
             let point = CGPoint(x: 2, y: y)
-            attributedString.draw(at: point)
+            
+            // Use UnifiedDrawingCoordinator for text drawing
+            UnifiedDrawingCoordinator.drawMinimapLine(
+                line,
+                at: point,
+                font: font,
+                color: textColor,
+                maxWidth: bounds.width - 4
+            )
         }
     }
     
-    private func drawViewportIndicator(data: MinimapData, context: CGContext) {
+    private func drawViewportIndicator(data: MinimapData) {
         let viewportRect = MinimapRenderer.viewportRect(
             for: data.visibleLineRange,
             lineHeight: data.lineHeight,
@@ -410,14 +389,13 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
         
-        // Fill viewport area
-        context.setFillColor(MinimapConfiguration.defaultViewportColor.cgColor)
-        context.fill(viewportRect)
-        
-        // Draw viewport border
-        context.setStrokeColor(MinimapConfiguration.defaultViewportBorderColor.cgColor)
-        context.setLineWidth(1.0)
-        context.stroke(viewportRect)
+        // Use UnifiedDrawingCoordinator for viewport indicator
+        UnifiedDrawingCoordinator.drawViewportIndicator(
+            in: viewportRect,
+            backgroundColor: MinimapConfiguration.defaultViewportColor,
+            borderColor: MinimapConfiguration.defaultViewportBorderColor,
+            borderWidth: 1.0
+        )
     }
     
     public func updateData(_ data: MinimapData) {
@@ -461,10 +439,10 @@ public typealias MinimapView = UIKitMinimapView
         let text = textView.text ?? ""
         let lines = text.components(separatedBy: .newlines)
         
-        // Calculate font metrics
+        // Calculate font metrics using TextMetricsCalculator
         let font = PlatformFont.monospacedSystemFont(ofSize: configuration.fontSize, weight: .regular)
-        let metrics = MinimapRenderer.calculateCharacterMetrics(font: font)
-        let lineHeight = metrics.height * configuration.lineHeight
+        let metrics = font.metrics
+        let lineHeight = metrics.lineHeight * configuration.lineHeight
         
         // Determine visible line range (simplified for now)
         let visibleRange = getVisibleLineRange(textView: textView, totalLines: lines.count)
@@ -496,37 +474,22 @@ public typealias MinimapView = UIKitMinimapView
             visibleLineRange: visibleRange,
             displayLines: truncatedLines,
             displayStartLine: displayStartLine,
-            characterWidth: metrics.width,
+            characterWidth: metrics.averageCharacterWidth,
             lineHeight: lineHeight
         )
     }
     
     private func getVisibleLineRange(textView: CodeEditorView, totalLines: Int) -> Range<Int> {
-        // This is a simplified implementation
-        // In a real implementation, you would calculate based on scroll position and view height
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let scrollView = textView.enclosingScrollView {
-            let visibleRect = scrollView.documentVisibleRect
-            let lineHeight = textView.font?.pointSize ?? 16.0
-            
-            let startLine = max(0, Int(visibleRect.origin.y / lineHeight))
-            let visibleLines = Int(visibleRect.height / lineHeight) + 1
-            let endLine = min(totalLines, startLine + visibleLines)
-            
-            return startLine..<endLine
-        }
-        #elseif canImport(UIKit)
-        let visibleRect = textView.bounds
+        // Use UnifiedDrawingCoordinator to calculate visible text area
+        let visibleRect = UnifiedDrawingCoordinator.calculateVisibleTextRect(for: textView)
         let lineHeight = textView.font?.pointSize ?? 16.0
         
-        let startLine = max(0, Int(textView.contentOffset.y / lineHeight))
-        let visibleLines = Int(visibleRect.height / lineHeight) + 1
-        let endLine = min(totalLines, startLine + visibleLines)
-        
-        return startLine..<endLine
-        #endif
-        
-        // Fallback to first 20 lines
-        return 0..<min(20, totalLines)
+        // Calculate visible lines using TextMetricsCalculator
+        return TextMetricsCalculator.calculateVisibleLines(
+            in: visibleRect,
+            lineHeight: lineHeight,
+            totalLines: totalLines,
+            contentOffset: visibleRect.origin
+        )
     }
 }

@@ -14,6 +14,10 @@ public typealias PlatformGestureRecognizer = NSGestureRecognizer
 public typealias PlatformPasteboard = NSPasteboard
 public typealias PlatformViewController = NSViewController
 public typealias PlatformContextMenu = NSMenu
+public typealias PlatformTableView = NSTableView
+public typealias PlatformTableColumn = NSTableColumn
+public typealias PlatformTextField = NSTextField
+public typealias PlatformLabel = NSTextField
 #else
 import UIKit
 public typealias PlatformColor = UIColor
@@ -29,6 +33,10 @@ public typealias PlatformGestureRecognizer = UIGestureRecognizer
 public typealias PlatformPasteboard = UIPasteboard
 public typealias PlatformViewController = UIViewController
 public typealias PlatformContextMenu = UIMenu
+public typealias PlatformTableView = UITableView
+public typealias PlatformTableViewCell = UITableViewCell
+public typealias PlatformTextField = UITextField
+public typealias PlatformLabel = UILabel
 #endif
 
 // Cross-platform color aliases

@@ -12,7 +12,7 @@ public class ModernTextKit2Bridge: NSObject {
     
     private weak var textView: PlatformTextView?
     private var textLayoutManager: NSTextLayoutManager? { textView?.textLayoutManager }
-    private var textContentManager: NSTextContentManager? { textView?.textContentManager }
+    private var textContentManager: NSTextContentManager? { textLayoutManager?.textContentManager }
     
     // MARK: - Initialization
     

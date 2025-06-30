@@ -23,7 +23,7 @@ final class ContextMenuTests: XCTestCase {
     override func setUp() async throws {
         await MainActor.run {
             coordinator = CrossPlatformCoordinator.shared
-            textView = CodeEditorView()
+            textView = CodeEditorView(frame: .zero)
             textView?.text = "Hello World\nThis is a test"
         }
     }
@@ -315,7 +315,7 @@ final class ContextMenuTests: XCTestCase {
         
         measure {
             for _ in 0..<100 {
-                _ = coordinator?.createContextMenu(for: range, in: textView ?? CodeEditorView())
+                _ = coordinator?.createContextMenu(for: range, in: textView ?? CodeEditorView(frame: .zero))
             }
         }
     }

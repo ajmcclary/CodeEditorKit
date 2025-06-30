@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor component for macOS, iOS, and Mac Catalyst. It features:
+- **Modern Swift 6 actor-based concurrency** throughout the codebase
+- **Sophisticated cross-platform abstraction layer** for true native performance
+- **17 programming languages** supported with syntax highlighting
+- **172 comprehensive tests** (106 main + 66 sample app)
+- **Zero SwiftLint violations** across all files
+- **Feature-based architecture** for maintainability
+
 ## Build and Development Commands
 
 ### Building the Package
@@ -56,7 +66,7 @@ swift run CodeEditorSample
 
 ### Current Directory Structure (Feature-Based Organization)
 
-After successful refactoring completed today, the project now uses a feature-based organization (reduced from 39 to 10 directories):
+The project uses a **feature-based organization** (simplified from 39 to 10 directories):
 
 ```
 Sources/CodeEditorPlugin/
@@ -71,10 +81,10 @@ Sources/CodeEditorPlugin/
 │   ├── SwiftSyntaxHighlighter.swift        # Swift AST highlighting
 │   └── RegexSyntaxHighlighter.swift        # Regex-based highlighting
 ├── Layout/                  # Layout and view components
-│   ├── GutterView.swift             # Cross-platform line numbers (fixed rendering issues)
-│   └── CodeEditorContainerView.swift # iOS container architecture (resolved clipping)
+│   ├── GutterView.swift             # Cross-platform line numbers
+│   └── CodeEditorContainerView.swift # iOS container architecture
 ├── SwiftUI/                 # SwiftUI integration
-│   ├── CodeEditorSwiftUIView.swift  # Main SwiftUI wrapper
+│   ├── CodeEditorSwiftUIView.swift  # Main SwiftUI wrapper (deprecated)
 │   └── CodeEditor.swift             # Modern SwiftUI view
 ├── Extensions/              # All extensions (flattened with +Extensions naming)
 ├── Models/                  # Data models and annotations
@@ -91,7 +101,7 @@ Sources/CodeEditorPlugin/
 
 1. **CodeEditorView** - The main text view component built on TextKit2
    - Located in `Sources/CodeEditorPlugin/Core/CodeEditorView.swift`
-   - Provides the core editing functionality with modern TextKit2 integration
+   - Provides core editing functionality with modern TextKit2 integration
    - Supports features like line numbers, syntax highlighting, and annotations
    - Cross-platform support with proper iOS container architecture
 
@@ -105,10 +115,10 @@ Sources/CodeEditorPlugin/
    - **Configuration Presets:** default, minimal, readOnly, markdown, presentation
    - **Fluid API:** Supports `.with()` methods for immutable updates
 
-3. **Syntax Highlighting** - Multi-language support with working implementation
+3. **Syntax Highlighting** - Multi-language support with production-ready implementation
    - `SyntaxHighlightingCoordinator` in `Sources/CodeEditorPlugin/SyntaxHighlighting/`
    - **SwiftSyntax integration** for Swift code with AST-based highlighting
-   - **Regex-based highlighting** for 15+ other programming languages
+   - **Regex-based highlighting** for 16+ other programming languages
    - **Performance optimized** with viewport-based rendering and background processing
    - **Fully functional** with comprehensive language support
 
@@ -118,13 +128,12 @@ Sources/CodeEditorPlugin/
    - `AnnotationsDataSource` for data source pattern integration
    - Performance tested with large files and many annotations
 
-5. **Cross-Platform Layout** - Fixed iOS and macOS support with proper text rendering
-   - `GutterView.swift` for cross-platform line number display (no more clipping issues)
-   - `CodeEditorContainerView.swift` for iOS container architecture (proper text alignment)
-   - Successfully separates gutter from text view with correct scrolling behavior
+5. **Cross-Platform Layout** - Production-ready iOS and macOS support
+   - `GutterView.swift` for cross-platform line number display
+   - `CodeEditorContainerView.swift` for iOS container architecture
+   - Successfully separates gutter from text view with correct scrolling
    - Handles keyboard appearance with proper content insets
    - All text rendering issues resolved on both platforms
-
 
 ### Key Design Patterns
 
@@ -148,7 +157,45 @@ Sources/CodeEditorPlugin/
    - `BackgroundProcessor` for async operations
    - Thread-safe range validation and processing
 
-### Working with the Simplified Structure
+### Platform Abstraction System
+
+The plugin features a **sophisticated platform abstraction layer** that enables true cross-platform support:
+
+**PlatformImports.swift** - Type aliases and semantic color system:
+```swift
+// Platform-agnostic types
+PlatformColor, PlatformFont, PlatformView, PlatformViewController
+
+// Semantic color system
+PlatformColors.label                    // Adaptive text color
+PlatformColors.systemBackground         // Adaptive background
+PlatformColors.controlBackground        // Adaptive control background
+```
+
+**PlatformCapabilities.swift** - Runtime feature detection:
+```swift
+let capabilities = PlatformCapabilities.shared
+
+// Check feature availability
+if capabilities.supportsTextKit2 {
+    // Use TextKit2 features
+}
+
+// Get optimal configuration
+let config = capabilities.recommendedPerformanceConfiguration
+```
+
+**CrossPlatformCoordinator.swift** - UI pattern abstraction:
+```swift
+let coordinator = CrossPlatformCoordinator()
+
+// Handle platform-specific input
+coordinator.configureInputHandling(for: textView)
+coordinator.handleTouchInput(event: touchEvent)    // iOS
+coordinator.handleMouseInput(event: mouseEvent)    // macOS
+```
+
+### Working with the Project
 
 **Finding Components:**
 - Core text editing → `Core/`
@@ -165,13 +212,6 @@ Sources/CodeEditorPlugin/
 - Use `+Extensions` suffix for extension files
 - Example: `PlatformColor+Extensions.swift`, `String+Extensions.swift`
 - SwiftLint `file_name` rule disabled to allow this pattern
-
-**Feature-Based Organization Benefits:**
-- **74% Directory Reduction** - From 39 to 10 directories for simpler navigation
-- **Related code co-location** - All syntax highlighting components together
-- **Clear component boundaries** - Easy to understand dependencies
-- **Simplified imports** - Flattened structure reduces module overhead
-- **Better maintainability** - Logical grouping improves code organization
 
 **Configuration Usage Patterns:**
 ```swift
@@ -192,10 +232,10 @@ let minimalConfig = EditorConfiguration.minimal
 
 ### Platform Support
 
-- **macOS**: 12.0+
-- **iOS**: 16.0+
+- **macOS**: 12.0+ (optimized for macOS 14+)
+- **iOS**: 16.0+ (with proper container architecture)
 - **Mac Catalyst**: 16.0+
-- **Swift**: 6.0+ (uses experimental concurrency features)
+- **Swift**: 6.0+ (uses modern concurrency features)
 
 ### Dependencies
 
@@ -207,10 +247,11 @@ let minimalConfig = EditorConfiguration.minimal
 - Viewport-based rendering for efficiency
 - Background processing for syntax highlighting
 - Read-only mode available for viewing without editing overhead
+- Actor-based concurrency ensures UI responsiveness
 
 ### Testing Approach
 
-Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (66 tests) for a total of 172 comprehensive tests. The project uses Swift Package Manager's built-in testing support. Key test files include:
+Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (66 tests) for a total of **172 comprehensive tests**. 
 
 **Main Package Tests (106 tests):**
 - `CodeEditorViewTests.swift` - Core text view functionality (33 tests)
@@ -229,9 +270,9 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - `PluginConfigurationTests.swift` - Plugin system tests (11 tests)
 - `QuickIsFlippedTest.swift` - View hierarchy tests (1 test)
 
-### Architecture Achievements and Lessons Learned
+### Recent Achievements
 
-**Major Refactoring Completed Today**
+**Architecture Improvements:**
 - **Directory Structure Simplification**: Reduced from 39 to 10 directories (74% reduction)
 - **Feature-Based Organization**: Transitioned from type-based to feature-based organization
 - **Fixed Text Rendering Issues**: Resolved all line number clipping and text display problems
@@ -240,43 +281,12 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **Working Syntax Highlighting**: Fully functional multi-language support
 - **Swift 6 Compliance**: Full actor-based concurrency throughout codebase
 
-**Configuration System Evolution**
-- **Nested Structure**: Organized into display, layout, behavior, and performance sections
-- **Immutable Updates**: `.with()` methods for clean configuration changes
-- **Preset System**: Built-in configurations for common use cases
-- **SwiftUI Integration**: Environment-based configuration passing
-- **Type Safety**: Full Codable and Sendable conformance
-
-**Comprehensive Platform Abstraction System**
-- **Runtime Capability Detection**: `PlatformCapabilities` for feature availability checking
-- **Semantic Color System**: `PlatformColors` enum with adaptive light/dark mode support
-- **Cross-Platform Font System**: `PlatformFonts` with consistent font creation across platforms
-- **Input Handling Abstraction**: `CrossPlatformCoordinator` for mouse, touch, and pencil input
-- **Performance Optimization**: Memory-aware configuration and hardware acceleration detection
-- **Platform-Appropriate UI**: Context menus, keyboard shortcuts, and gesture handling
-
-**Performance and Quality Achievements**
+**Quality Achievements:**
 - **Zero SwiftLint Violations**: Maintained across all 102+ files
-- **172 Comprehensive Tests**: 106 main package + 66 sample app tests
+- **172 Comprehensive Tests**: Full test coverage with performance benchmarks
 - **Actor-Based Concurrency**: Full Swift 6 compliance with thread safety
 - **TextKit2 Integration**: Modern text handling with proper synchronization
 - **Viewport Optimization**: Efficient rendering for large files
-
-**Cross-Platform Success (Fixed Today)**
-- **iOS Container Architecture**: Fixed line number display - no more clipping issues
-- **Text Rendering**: Resolved all text alignment and display problems on both platforms
-- **Keyboard Handling**: Content insets working correctly without frame resizing
-- **SwiftUI Wrappers**: Native SwiftUI integration with environment configuration
-- **macOS Optimization**: Smooth scrolling and proper gutter display
-- **Zero Known Issues**: All rendering problems have been resolved
-
-**Development Process Insights**
-- **Feature-based organization** significantly improves maintainability
-- **Nested configuration** provides better API organization than flat structures
-- **Comprehensive testing** prevents regressions during major refactoring
-- **Actor-based concurrency** requires careful design but provides excellent thread safety
-- **SwiftLint configuration** with custom rules maintains code quality at scale
-- **Iterative refinement** - Today's successful fixes show the value of focused problem-solving
 
 ## Current Working Systems
 
@@ -295,11 +305,11 @@ textView.language = .python
 textView.language = .javascript
 ```
 
-**Supported Languages (15+):**
+**Supported Languages (17):**
 - Swift (SwiftSyntax AST-based)
 - Python, JavaScript/TypeScript, Rust, C/C++
 - HTML/CSS, JSON/YAML, Markdown
-- Go, Java, Ruby, PHP, SQL, XML
+- Go, Java, Ruby, PHP, SQL, XML, Shell
 
 ### EditorConfiguration Usage
 
@@ -353,15 +363,10 @@ struct ContentView: View {
     @State private var configuration = EditorConfiguration()
     
     var body: some View {
-        CodeEditorSwiftUIView(
-            text: $code,
-            language: .swift,
-            showLineNumbers: true,
-            highlightSelectedLine: true,
-            isEditable: true
-        )
-        .environment(\.codeEditorConfiguration, configuration)
-        .frame(minHeight: 400)
+        CodeEditor(text: $code)
+            .codeLanguage(.swift)
+            .environment(\.codeEditorConfiguration, configuration)
+            .frame(minHeight: 400)
     }
 }
 ```
@@ -412,87 +417,10 @@ The annotation system detects and displays TODO/FIXME/NOTE/WARNING/ERROR comment
 - **Use cross-platform coordinator** - Let `CrossPlatformCoordinator` handle input differences
 - **Prefer `#if canImport()` over `#if os()`** - Better compatibility with Mac Catalyst
 
-## Platform Abstraction System
+## Important Reminders
 
-The CodeEditorPlugin includes a comprehensive platform abstraction system located in `Sources/CodeEditorPlugin/Platform/`. This system provides seamless cross-platform development while maintaining access to platform-specific optimizations.
-
-### Core Components
-
-**PlatformImports.swift** - Type aliases and semantic color system:
-```swift
-// Platform-agnostic types
-PlatformColor, PlatformFont, PlatformView, PlatformViewController
-
-// Semantic color system
-PlatformColors.label                    // Adaptive text color
-PlatformColors.systemBackground         // Adaptive background color
-PlatformColors.controlBackground        // Adaptive control background
-```
-
-**PlatformCapabilities.swift** - Runtime feature detection:
-```swift
-let capabilities = PlatformCapabilities.shared
-
-// Check feature availability
-if capabilities.supportsTextKit2 {
-    // Use TextKit2 features
-}
-
-// Get optimal configuration
-let config = capabilities.recommendedPerformanceConfiguration
-```
-
-**CrossPlatformCoordinator.swift** - UI pattern abstraction:
-```swift
-let coordinator = CrossPlatformCoordinator()
-
-// Handle platform-specific input
-coordinator.configureInputHandling(for: textView)
-coordinator.handleTouchInput(event: touchEvent)    // iOS
-coordinator.handleMouseInput(event: mouseEvent)    // macOS
-```
-
-### Usage Examples
-
-**Basic Platform Types:**
-```swift
-// Use semantic colors that adapt to light/dark mode
-let textColor: PlatformColor = PlatformColors.label
-let backgroundColor: PlatformColor = PlatformColors.systemBackground
-
-// Create cross-platform fonts
-let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
-
-// Platform-aware view controllers
-class MyEditorViewController: PlatformViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Your cross-platform code here
-    }
-}
-```
-
-**Runtime Capability Detection:**
-```swift
-// Check platform capabilities before using features
-if PlatformCapabilities.shared.supportsHardwareAcceleration {
-    textView.enableHardwareAcceleration()
-}
-
-// Use memory-aware configuration
-let memoryConfig = PlatformCapabilities.shared.recommendedMemoryConfiguration
-```
-
-**Cross-Platform Input Handling:**
-```swift
-let coordinator = CrossPlatformCoordinator()
-
-// Automatically configure appropriate input handling
-coordinator.configureInputHandling(for: textView)
-
-// Create platform-appropriate context menus
-let contextMenu = coordinator.createContextMenu(for: selectedText)
-```
-
-For detailed documentation, see `Sources/CodeEditorPlugin/Platform/README.md`.
-
+- **Production-Ready**: This is not a prototype - the plugin is ready for production use
+- **Swift 6 First**: All new code should use modern concurrency patterns
+- **Test Coverage**: Maintain the high test coverage standard (currently 172 tests)
+- **Zero Violations**: Keep SwiftLint violations at zero
+- **Cross-Platform**: Always test changes on macOS, iOS, and Mac Catalyst

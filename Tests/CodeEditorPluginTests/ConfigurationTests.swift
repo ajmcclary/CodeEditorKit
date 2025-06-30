@@ -8,7 +8,7 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testCodeEditorViewDefaults() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
 
         // Test default values
         XCTAssertNotNil(textView.font)
@@ -22,7 +22,7 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testCodeEditorViewConfigurationChanges() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
 
         // Test changing configuration
         textView.showsLineNumbers = true
@@ -72,11 +72,11 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testTextContainerConfiguration() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
 
         // Test width tracking
-        textView.widthTracksTextView = true
-        XCTAssertTrue(textView.widthTracksTextView)
+        textView.textContainer?.widthTracksTextView = true
+        XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
 
         // Test resizability
@@ -91,7 +91,7 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testAnnotationAddition() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.text = "Test content"
 
         // Create mock NSTextRange for annotation

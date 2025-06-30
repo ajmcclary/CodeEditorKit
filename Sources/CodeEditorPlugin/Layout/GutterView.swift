@@ -69,11 +69,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Display Updates
     
     public func setNeedsDisplayLineNumbers() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        needsDisplay = true
-        #else
-        setNeedsDisplay()
-        #endif
+        UnifiedDrawingCoordinator.setNeedsDisplay(for: self)
     }
     
     // MARK: - Drawing
@@ -138,11 +134,11 @@ extension GutterView {
         guard let textView else { return }
         
         // Get the graphics context
+        guard let context = UnifiedDrawingCoordinator.currentContext() else { return }
+        
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
         let fillBackground = false // AppKit doesn't need background fill
         #else
-        guard let context = UIGraphicsGetCurrentContext() else { return }
         let fillBackground = true // UIKit needs background fill
         #endif
         

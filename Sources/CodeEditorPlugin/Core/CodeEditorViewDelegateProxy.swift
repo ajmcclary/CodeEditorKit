@@ -8,12 +8,6 @@ import Foundation
 
 @MainActor
 class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    // NSTextViewDelegate methods will be implemented
-    #elseif canImport(UIKit)
-    // UITextViewDelegate methods will be implemented
-    #endif
-    
     weak var source: CodeEditorViewDelegate?
 
     init(source: CodeEditorViewDelegate?) {
@@ -99,12 +93,7 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
     }
 
     func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return source?.textViewCompletionViewController(textView) ?? CompletionViewController()
-        #else
-        // iOS stub - return a minimal implementation
-        return source?.textViewCompletionViewController(textView) ?? BasicCompletionViewController()
-        #endif
+        source?.textViewCompletionViewController(textView) ?? CompletionViewController()
     }
 
     func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicatorProtocol)? {
@@ -176,10 +165,10 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
     }
 }
 
+// MARK: - Platform-specific Protocol Conformance
+
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// swiftlint:disable:next no_grouping_extension
 extension CodeEditorViewDelegateProxy: NSTextViewDelegate {}
 #elseif canImport(UIKit)
-// swiftlint:disable:next no_grouping_extension
 extension CodeEditorViewDelegateProxy: UITextViewDelegate {}
 #endif

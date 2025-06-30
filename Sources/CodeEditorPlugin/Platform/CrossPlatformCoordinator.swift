@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit)
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
 import os.log

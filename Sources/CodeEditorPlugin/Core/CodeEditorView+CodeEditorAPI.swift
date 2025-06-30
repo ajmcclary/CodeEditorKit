@@ -18,8 +18,20 @@ extension CodeEditorView: CodeEditorAPI {
     
     /// The attributed text content (if supported)
     public var attributedContent: NSAttributedString? {
-        get { attributedText }
-        set { attributedText = newValue }
+        get { 
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            return textStorage
+            #else
+            return attributedText
+            #endif
+        }
+        set { 
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textStorage?.setAttributedString(newValue ?? NSAttributedString())
+            #else
+            attributedText = newValue
+            #endif
+        }
     }
     
     /// Current text selection as a Swift range

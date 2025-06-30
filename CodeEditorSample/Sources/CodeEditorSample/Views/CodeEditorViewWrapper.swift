@@ -1,4 +1,4 @@
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
 #if canImport(UIKit)
@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - CodeEditorViewWrapper
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
@@ -180,7 +180,13 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
-            fatalError("Completion view controller not implemented")
+            // For the sample app, we don't provide completion functionality
+            // Return a minimal implementation that satisfies the protocol
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            return NoOpCompletionViewController()
+            #else
+            return NoOpCompletionViewController()
+            #endif
         }
 
         func textViewInsertionPointView(
@@ -231,15 +237,11 @@ struct CodeEditorViewWrapper: View {
     }
 
     var body: some View {
-        // Use the actual CodeEditorSwiftUIView implementation
-        CodeEditorSwiftUIView(
-            text: $text,
-            language: detectLanguage(from: language),
-            showLineNumbers: configuration.display.showLineNumbers,
-            highlightSelectedLine: configuration.display.highlightSelectedLine,
-            isEditable: configuration.behavior.isEditable,
-            becomeFirstResponderOnAppear: configuration.behavior.isEditable
-        )
+        // Use the modern CodeEditor implementation
+        CodeEditor(text: $text, language: detectLanguage(from: language))
+            .showsLineNumbers(configuration.display.showLineNumbers)
+            .highlightSelectedLine(configuration.display.highlightSelectedLine)
+            .editable(configuration.behavior.isEditable)
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {
@@ -255,6 +257,31 @@ struct CodeEditorViewWrapper: View {
         default:
             return .plainText
         }
+    }
+}
+#endif
+
+// MARK: - NoOpCompletionViewController
+
+/// A minimal completion view controller implementation for the sample app
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+private class NoOpCompletionViewController: NSViewController, CompletionViewControllerProtocol {
+    var items: [any CompletionItem] = []
+    var delegate: CompletionViewControllerDelegate?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view = NSView()
+    }
+}
+#else
+private class NoOpCompletionViewController: UIViewController, CompletionViewControllerProtocol {
+    var items: [any CompletionItem] = []
+    var delegate: CompletionViewControllerDelegate?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view = UIView()
     }
 }
 #endif

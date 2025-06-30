@@ -105,7 +105,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSymbolNavigatorPerformance() throws {
         let navigator = SymbolNavigator()
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         
         // Generate large code file
         var largeCode = """
@@ -172,7 +172,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSmartEditingEnginePerformance() throws {
         let engine = SmartEditingEngine()
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         
         engine.attach(to: textView)
         
@@ -407,7 +407,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testSearchReplaceEnginePerformance() throws {
         let engine = SearchReplaceEngine()
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         
         // Set up test content
         let testContent = """

@@ -1202,11 +1202,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         let badgeSize = configuration.layout.annotationBadgeSize
         let badgePadding = configuration.layout.annotationBadgePadding
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let inlineX = crossPlatformTextContainerInset.width + segmentFrame.maxX + badgePadding
-        let inlineY = crossPlatformTextContainerInset.height + segmentFrame.midY - (badgeSize / 2)
+        let inlineX = textContainerInset.width + segmentFrame.maxX + badgePadding
+        let inlineY = textContainerInset.height + segmentFrame.midY - (badgeSize / 2)
         #else
-        let inlineX = crossPlatformTextContainerInset.width + segmentFrame.maxX + badgePadding
-        let inlineY = crossPlatformTextContainerInset.height + segmentFrame.midY - (badgeSize / 2)
+        let inlineX = textContainerInset.left + segmentFrame.maxX + badgePadding
+        let inlineY = textContainerInset.top + segmentFrame.midY - (badgeSize / 2)
         #endif
         
         let proposedFrame = CGRect(
@@ -1217,7 +1217,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         ).integral
         
         kLogger.debug("Calculated proposedFrame: \(String(describing: proposedFrame))")
-        kLogger.debug("textContainerInset: \(String(describing: self.crossPlatformTextContainerInset))")
+        kLogger.debug("textContainerInset: \(String(describing: self.textContainerInset))")
 
         // Create annotation view
         if let annotationView = dataSource.textView(

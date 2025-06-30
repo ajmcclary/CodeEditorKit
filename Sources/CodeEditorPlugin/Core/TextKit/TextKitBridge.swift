@@ -90,7 +90,7 @@ public final class TextKitBridge {
     
     private func ensureLayoutTextKit2(for range: NSRange) {
         guard let textLayoutManager = textView?.textLayoutManager,
-              let textContentManager = textView?.textContentManager else { return }
+              let textContentManager = textLayoutManager.textContentManager else { return }
         
         // Convert NSRange to NSTextRange for TextKit2
         if let textRange = textRangeFromNSRange(range) {
@@ -103,7 +103,8 @@ public final class TextKitBridge {
     /// Convert NSRange to NSTextRange for TextKit2
     public func textRangeFromNSRange(_ nsRange: NSRange) -> NSTextRange? {
         guard isUsingTextKit2,
-              let textContentManager = textView?.textContentManager else {
+              let textLayoutManager = textView?.textLayoutManager,
+              let textContentManager = textLayoutManager.textContentManager else {
             return nil
         }
         
@@ -119,14 +120,15 @@ public final class TextKitBridge {
     /// Convert NSTextRange to NSRange for TextKit1 compatibility
     public func nsRangeFromTextRange(_ textRange: NSTextRange) -> NSRange? {
         guard isUsingTextKit2,
-              let textContentManager = textView?.textContentManager else {
+              let textLayoutManager = textView?.textLayoutManager,
+              let textContentManager = textLayoutManager.textContentManager else {
             return nil
         }
         
         let startOffset = textContentManager.offset(from: textContentManager.documentRange.location, to: textRange.location)
         let endOffset = textContentManager.offset(from: textContentManager.documentRange.location, to: textRange.endLocation)
         
-        return NSRange(location: startOffset, length: endOffset - startOffset)
+        return NSRange(location: startOffset, length: Int(endOffset - startOffset))
     }
     
     // MARK: - Text Attributes

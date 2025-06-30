@@ -4,20 +4,19 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    
     var body: some View {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if #available(macOS 13.0, *) {
+        if #available(macOS 13.0, iOS 16.0, *) {
             UnifiedContentView()
         } else {
-            Text("macOS 13.0 or later required")
+            VStack {
+                Text("CodeEditor Sample")
+                    .font(.largeTitle)
+                    .padding()
+                
+                Text("Requires macOS 13.0+ or iOS 16.0+")
+                    .padding()
+            }
+            .frame(minWidth: 400, minHeight: 300)
         }
-        #elseif canImport(UIKit)
-        if #available(iOS 16.0, visionOS 1.0, *) {
-            UnifiedContentView()
-        } else {
-            Text("iOS 16.0 or later required")
-        }
-        #endif
     }
 }

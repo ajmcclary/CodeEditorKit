@@ -63,7 +63,7 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
     public func makeNSView(context: Context) -> NSView {
         // Create container view for editor and minimap
         let containerView = NSView()
-        let editorView = CodeEditorView()
+        let editorView = CodeEditorView(frame: .zero)
         
         // Store references in coordinator
         context.coordinator.editorView = editorView

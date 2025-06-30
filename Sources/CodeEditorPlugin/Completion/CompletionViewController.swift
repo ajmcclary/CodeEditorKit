@@ -2,28 +2,10 @@ import Foundation
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
-/// Modern completion view controller with table view interface
+/// Modern completion view controller with table view interface for macOS
 @MainActor
-public final class CompletionViewController: NSViewController, CompletionViewControllerProtocol {
+public final class CompletionViewController: CompletionViewControllerBase, CompletionViewControllerProtocol {
     public typealias Item = any CompletionItem
-    
-    // MARK: - Public Properties
-    
-    public var items: [Item] = [] {
-        didSet {
-            updateCompletionItems()
-        }
-    }
-    
-    public weak var delegate: CompletionViewControllerDelegate?
-    
-    // Modern completion items
-    public var completionItems: [CompletionItemModel] = [] {
-        didSet {
-            tableView.reloadData()
-            updateSelection()
-        }
-    }
     
     // MARK: - Private Properties
     
@@ -59,8 +41,6 @@ public final class CompletionViewController: NSViewController, CompletionViewCon
         
         return tableView
     }()
-    
-    private var selectedIndex: Int = 0
     
     // MARK: - Initialization
     
@@ -100,75 +80,26 @@ public final class CompletionViewController: NSViewController, CompletionViewCon
         ])
     }
     
-    private func configureAppearance() {
-        // Configure visual appearance
-        view.wantsLayer = true
-        view.layer?.backgroundColor = PlatformColors.controlBackground.cgColor
-        view.layer?.cornerRadius = 6
-        view.layer?.borderWidth = 1
-        view.layer?.borderColor = PlatformColors.separator.cgColor
-        
-        // Add shadow
-        view.shadow = NSShadow()
-        view.layer?.shadowColor = PlatformColors.black.cgColor
-        view.layer?.shadowOpacity = 0.2
-        view.layer?.shadowOffset = NSSize(width: 0, height: -2)
-        view.layer?.shadowRadius = 4
-    }
+    // MARK: - Base Class Overrides
     
-    // MARK: - Public Methods
-    
-    /// Update completion items from new completion models
-    public func updateCompletionItems() {
-        // Convert legacy CompletionItem to CompletionItemModel if needed
-        // For now, we'll focus on the new completion model system
+    override public func reloadData() {
         tableView.reloadData()
-        updateSelection()
     }
     
-    /// Set the selected completion item
-    public func setSelectedIndex(_ index: Int) {
+    override public func setSelectedIndex(_ index: Int) {
+        super.setSelectedIndex(index)
         guard index >= 0 && index < completionItems.count else { return }
         
-        selectedIndex = index
         tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
         tableView.scrollRowToVisible(index)
     }
     
-    /// Get the currently selected completion item
-    public func selectedCompletionItem() -> CompletionItemModel? {
-        guard selectedIndex >= 0 && selectedIndex < completionItems.count else { return nil }
-        return completionItems[selectedIndex]
-    }
+    // MARK: - Public Methods
     
     /// Insert the selected completion item
-    public func insertSelectedItem() {
+    override public func insertSelectedItem() {
         guard let item = selectedCompletionItem() else { return }
-        delegate?.completionViewController(self, complete: CompletionItemAdapter(item), movement: .return)
-    }
-    
-    // MARK: - Navigation
-    
-    /// Move selection up
-    public func selectPrevious() {
-        let newIndex = max(0, selectedIndex - 1)
-        setSelectedIndex(newIndex)
-    }
-    
-    /// Move selection down
-    public func selectNext() {
-        let newIndex = min(completionItems.count - 1, selectedIndex + 1)
-        setSelectedIndex(newIndex)
-    }
-    
-    // MARK: - Private Methods
-    
-    private func updateSelection() {
-        guard !completionItems.isEmpty else { return }
-        
-        // Select first item by default, or maintain current selection
-        let newIndex = min(selectedIndex, completionItems.count - 1)
-        setSelectedIndex(newIndex)
+        delegate?.completionViewController(self, complete: CompletionViewControllerAdapter(item), movement: .return)
     }
     
     deinit {
@@ -209,7 +140,7 @@ extension CompletionViewController: NSTableViewDelegate {
     }
     
     public func tableView(_: NSTableView, heightOfRow _: Int) -> CGFloat {
-        24 // Standard completion item height
+        platformRowHeight()
     }
     
     public func tableViewSelectionDidChange(_: Notification) {
@@ -220,6 +151,8 @@ extension CompletionViewController: NSTableViewDelegate {
         row >= 0 && row < completionItems.count
     }
 }
+
+// MARK: - CompletionCellView
 
 private final class CompletionCellView: NSTableCellView {
     deinit {}
@@ -309,26 +242,8 @@ import UIKit
 
 /// iOS completion view controller implementation
 @MainActor
-public final class BasicCompletionViewController: UIViewController, CompletionViewControllerProtocol {
+public final class CompletionViewController: CompletionViewControllerBase, CompletionViewControllerProtocol {
     public typealias Item = any CompletionItem
-    
-    // MARK: - Public Properties
-    
-    public var items: [Item] = [] {
-        didSet {
-            updateCompletionItems()
-        }
-    }
-    
-    public weak var delegate: CompletionViewControllerDelegate?
-    
-    // Modern completion items
-    public var completionItems: [CompletionItemModel] = [] {
-        didSet {
-            tableView.reloadData()
-            updateSelection()
-        }
-    }
     
     // MARK: - Private Properties
     
@@ -338,15 +253,13 @@ public final class BasicCompletionViewController: UIViewController, CompletionVi
         tableView.separatorStyle = .singleLine
         tableView.allowsSelection = true
         tableView.allowsMultipleSelection = false
-        tableView.rowHeight = 44
+        tableView.rowHeight = platformRowHeight()
         tableView.register(CompletionTableViewCell.self, forCellReuseIdentifier: "CompletionCell")
         tableView.delegate = self
         tableView.dataSource = self
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
-    
-    private var selectedIndex: Int = 0
     
     // MARK: - Initialization
     
@@ -383,69 +296,26 @@ public final class BasicCompletionViewController: UIViewController, CompletionVi
         ])
     }
     
-    private func configureAppearance() {
-        view.backgroundColor = PlatformColors.systemBackground
-        view.layer.cornerRadius = 8
-        view.layer.borderWidth = 1
-        view.layer.borderColor = PlatformColors.separator.cgColor
-        
-        // Add shadow
-        view.layer.shadowColor = PlatformColors.black.cgColor
-        view.layer.shadowOpacity = 0.2
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 4
-    }
+    // MARK: - Base Class Overrides
     
-    // MARK: - Public Methods
-    
-    /// Update completion items from new completion models
-    public func updateCompletionItems() {
+    override public func reloadData() {
         tableView.reloadData()
-        updateSelection()
     }
     
-    /// Set the selected completion item
-    public func setSelectedIndex(_ index: Int) {
+    override public func setSelectedIndex(_ index: Int) {
+        super.setSelectedIndex(index)
         guard index >= 0 && index < completionItems.count else { return }
         
-        selectedIndex = index
         let indexPath = IndexPath(row: index, section: 0)
         tableView.selectRow(at: indexPath, animated: false, scrollPosition: .middle)
     }
     
-    /// Get the currently selected completion item
-    public func selectedCompletionItem() -> CompletionItemModel? {
-        guard selectedIndex >= 0 && selectedIndex < completionItems.count else { return nil }
-        return completionItems[selectedIndex]
-    }
+    // MARK: - Public Methods
     
     /// Insert the selected completion item
-    public func insertSelectedItem() {
+    override public func insertSelectedItem() {
         guard let item = selectedCompletionItem() else { return }
-        delegate?.completionViewController(self, complete: CompletionItemAdapter(item), movement: .return)
-    }
-    
-    // MARK: - Navigation
-    
-    /// Move selection up
-    public func selectPrevious() {
-        let newIndex = max(0, selectedIndex - 1)
-        setSelectedIndex(newIndex)
-    }
-    
-    /// Move selection down
-    public func selectNext() {
-        let newIndex = min(completionItems.count - 1, selectedIndex + 1)
-        setSelectedIndex(newIndex)
-    }
-    
-    // MARK: - Private Methods
-    
-    private func updateSelection() {
-        guard !completionItems.isEmpty else { return }
-        
-        let newIndex = min(selectedIndex, completionItems.count - 1)
-        setSelectedIndex(newIndex)
+        delegate?.completionViewController(self, complete: CompletionViewControllerAdapter(item), movement: .return)
     }
     
     deinit {
@@ -455,7 +325,7 @@ public final class BasicCompletionViewController: UIViewController, CompletionVi
 
 // MARK: - UITableViewDataSource
 
-extension BasicCompletionViewController: UITableViewDataSource {
+extension CompletionViewController: UITableViewDataSource {
     public func tableView(_: UITableView, numberOfRowsInSection _: Int) -> Int {
         completionItems.count
     }
@@ -472,12 +342,14 @@ extension BasicCompletionViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 
-extension BasicCompletionViewController: UITableViewDelegate {
+extension CompletionViewController: UITableViewDelegate {
     public func tableView(_: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedIndex = indexPath.row
         insertSelectedItem()
     }
 }
+
+// MARK: - CompletionTableViewCell
 
 private final class CompletionTableViewCell: UITableViewCell {
     deinit {}
@@ -561,3 +433,27 @@ private final class CompletionTableViewCell: UITableViewCell {
 }
 
 #endif
+
+// MARK: - CompletionViewControllerAdapter (renamed to avoid conflict)
+
+/// Adapter to convert CompletionItemModel to CompletionItem protocol for CompletionViewController
+@MainActor
+internal struct CompletionViewControllerAdapter: CompletionItem {
+    let id: String
+    let model: CompletionItemModel
+    
+    init(_ model: CompletionItemModel) {
+        self.id = model.id
+        self.model = model
+    }
+    
+    var view: PlatformView {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let view = NSView()
+        view.wantsLayer = true
+        return view
+        #else
+        return UIView()
+        #endif
+    }
+}

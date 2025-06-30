@@ -481,17 +481,6 @@ extension CGRect {
 }
 
 extension CodeEditorView {
-    /// Get text container inset in a cross-platform way
-    var crossPlatformTextContainerInset: CGSize {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return textContainer?.lineFragmentPadding ?? 0 > 0 ? 
-            CGSize(width: textContainer?.lineFragmentPadding ?? 0, height: 0) : 
-            CGSize.zero
-        #else
-        return CGSize(width: super.textContainerInset.left, height: super.textContainerInset.top)
-        #endif
-    }
-    
     /// Get enclosing scroll view
     var crossPlatformEnclosingScrollView: PlatformScrollView? {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

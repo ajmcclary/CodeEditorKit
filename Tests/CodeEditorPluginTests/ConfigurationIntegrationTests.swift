@@ -8,7 +8,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testShowInvisibleCharacters() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         XCTAssertFalse(textView.showsInvisibleCharacters)
         
         textView.showsInvisibleCharacters = true
@@ -20,7 +20,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testTextContainerInset() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         _ = textView.textContainerInset
         // Just verify we can get and set the inset
         
@@ -31,7 +31,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testLineFragmentPadding() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         _ = textView.textContainer?.lineFragmentPadding ?? 0
         // Just verify we can get and set the padding
         
@@ -43,7 +43,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutoIndentConfiguration() {
-        _ = CodeEditorView()
+        _ = CodeEditorView(frame: .zero)
         // Note: autoIndent is a configuration option that needs delegate implementation
         // This test verifies the behavior would be configurable
         let hasAutoIndentCapability = true // CodeEditorView supports delegates for this
@@ -52,7 +52,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testTabWidthConfiguration() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.defaultTabInterval = CGFloat(4) * 7.0
         textView.defaultParagraphStyle = paragraphStyle
@@ -66,7 +66,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testInsertSpacesForTabsConfiguration() {
-        _ = CodeEditorView()
+        _ = CodeEditorView(frame: .zero)
         // Note: insertSpacesForTabs is a configuration option that needs delegate implementation
         // This test verifies the behavior would be configurable
         let hasTabReplacementCapability = true // CodeEditorView supports delegates for this
@@ -77,7 +77,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testContinuousSpellChecking() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         // CodeEditorView sets spell checking to false by default
         XCTAssertFalse(textView.isContinuousSpellCheckingEnabled)
         
@@ -91,7 +91,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testGrammarChecking() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         // CodeEditorView sets grammar checking to false by default
         XCTAssertFalse(textView.isGrammarCheckingEnabled)
         
@@ -105,7 +105,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticQuoteSubstitution() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isAutomaticQuoteSubstitutionEnabled = true
         XCTAssertTrue(textView.isAutomaticQuoteSubstitutionEnabled)
         
@@ -115,7 +115,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticDashSubstitution() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isAutomaticDashSubstitutionEnabled = true
         XCTAssertTrue(textView.isAutomaticDashSubstitutionEnabled)
         
@@ -125,7 +125,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticTextReplacement() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isAutomaticTextReplacementEnabled = true
         XCTAssertTrue(textView.isAutomaticTextReplacementEnabled)
         
@@ -135,7 +135,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticSpellingCorrection() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isAutomaticSpellingCorrectionEnabled = true
         XCTAssertTrue(textView.isAutomaticSpellingCorrectionEnabled)
         
@@ -145,7 +145,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAutomaticTextCompletion() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         #if canImport(AppKit)
         if #available(macOS 12.0, *) {
             textView.isAutomaticTextCompletionEnabled = true
@@ -159,7 +159,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testIncrementalSearching() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isIncrementalSearchingEnabled = true
         XCTAssertTrue(textView.isIncrementalSearchingEnabled)
         
@@ -171,7 +171,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testAllowsDocumentBackgroundColorChange() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.allowsDocumentBackgroundColorChange = true
         XCTAssertTrue(textView.allowsDocumentBackgroundColorChange)
         
@@ -181,7 +181,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testIsRichText() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.isRichText = true
         XCTAssertTrue(textView.isRichText)
         
@@ -191,7 +191,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testImportsGraphics() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.importsGraphics = true
         XCTAssertTrue(textView.importsGraphics)
         
@@ -201,7 +201,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testUsesFindBar() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.usesFindBar = true
         XCTAssertTrue(textView.usesFindBar)
         
@@ -211,7 +211,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testDisplaysLinkToolTips() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         textView.displaysLinkToolTips = true
         XCTAssertTrue(textView.displaysLinkToolTips)
         
@@ -223,7 +223,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testInsertionPointColor() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         let defaultColor = textView.insertionPointColor
         XCTAssertEqual(defaultColor, PlatformColors.controlAccentColor)
         
@@ -234,7 +234,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testSelectedTextAttributes() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         let attributes: [NSAttributedString.Key: Any] = [
             .backgroundColor: PlatformColors.systemBlue,
             .foregroundColor: PlatformColors.white
@@ -255,7 +255,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testLineSpacing() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 1.5
         textView.defaultParagraphStyle = paragraphStyle
@@ -271,17 +271,17 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testWrapLinesConfiguration() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         // Test word wrap enabled
-        textView.widthTracksTextView = true
+        textView.textContainer?.widthTracksTextView = true
         textView.isHorizontallyResizable = false
-        XCTAssertTrue(textView.widthTracksTextView)
+        XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         XCTAssertFalse(textView.isHorizontallyResizable)
         
         // Test word wrap disabled
-        textView.widthTracksTextView = false
+        textView.textContainer?.widthTracksTextView = false
         textView.isHorizontallyResizable = true
-        XCTAssertFalse(textView.widthTracksTextView)
+        XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         XCTAssertTrue(textView.isHorizontallyResizable)
     }
     
@@ -289,14 +289,14 @@ final class ConfigurationIntegrationTests: XCTestCase {
     
     @MainActor
     func testCompleteConfigurationWorkflow() {
-        let textView = CodeEditorView()
+        let textView = CodeEditorView(frame: .zero)
         // This test demonstrates applying all available CodeEditorView configurations
         
         // Apply all display settings
         textView.showsLineNumbers = true
         textView.showsInvisibleCharacters = true
         textView.highlightSelectedLine = true
-        textView.widthTracksTextView = false
+        textView.textContainer?.widthTracksTextView = false
         textView.isHorizontallyResizable = true
         textView.isEditable = true
         textView.font = PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular)
@@ -339,7 +339,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertTrue(textView.showsLineNumbers)
         XCTAssertTrue(textView.showsInvisibleCharacters)
         XCTAssertTrue(textView.highlightSelectedLine)
-        XCTAssertFalse(textView.widthTracksTextView)
+        XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         XCTAssertTrue(textView.isHorizontallyResizable)
         XCTAssertTrue(textView.isEditable)
         XCTAssertEqual(textView.font, PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular))

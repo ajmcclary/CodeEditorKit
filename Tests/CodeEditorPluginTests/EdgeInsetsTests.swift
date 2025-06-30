@@ -128,7 +128,7 @@ final class EdgeInsetsTests: XCTestCase {
     
     @MainActor
     func testCodeEditorViewUnifiedInsets() {
-        let editorView = CodeEditorView()
+        let editorView = CodeEditorView(frame: .zero)
         let insets = EdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
         
         editorView.setUnifiedTextContainerInsets(insets)

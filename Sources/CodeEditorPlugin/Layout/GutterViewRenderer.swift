@@ -91,11 +91,7 @@ public class GutterViewRenderer {
     
     /// Get the visible rectangle for the text view
     private func getVisibleRect(for textView: CodeEditorView) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return textView.visibleRect
-        #else
-        return textView.bounds
-        #endif
+        UnifiedDrawingCoordinator.calculateVisibleTextRect(for: textView)
     }
     
     /// Draw a single line number
@@ -103,9 +99,9 @@ public class GutterViewRenderer {
         _ lineNumber: Int,
         for lineRange: NSRange,
         layoutManager: NSLayoutManager,
-        attributes: [NSAttributedString.Key: Any],
+        attributes _: [NSAttributedString.Key: Any],
         gutterBounds: CGRect,
-        context: CGContext
+        context _: CGContext
     ) {
         // Get the rect for this line
         let lineRect = layoutManager.lineFragmentRect(
@@ -114,36 +110,28 @@ public class GutterViewRenderer {
             withoutAdditionalLayout: true
         )
         
-        // Prepare the line number string
-        let lineNumberString = "\(lineNumber)"
-        // swiftlint:disable:next legacy_objc_type
-        let lineNumberSize = (lineNumberString as NSString).size(withAttributes: attributes)
-        
-        // Calculate drawing position (right-aligned with padding)
+        // Calculate drawing position (centered vertically)
+        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
         let drawingPoint = CGPoint(
-            x: gutterBounds.width - lineNumberSize.width - rightPadding,
-            y: lineRect.minY + (lineRect.height - lineNumberSize.height) / 2
+            x: 0, // Will be adjusted by the unified drawing method for right alignment
+            y: lineRect.minY + (lineRect.height - fontLineHeight) / 2
         )
         
         // Save graphics state
-        context.saveGState()
+        UnifiedDrawingCoordinator.saveGraphicsState()
         
-        // Draw the line number
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // AppKit needs to set the current context
-        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
-        // swiftlint:disable:next legacy_objc_type
-        (lineNumberString as NSString).draw(at: drawingPoint, withAttributes: attributes)
-        #else
-        // UIKit already has the context set up
-        UIGraphicsPushContext(context)
-        // swiftlint:disable:next legacy_objc_type
-        (lineNumberString as NSString).draw(at: drawingPoint, withAttributes: attributes)
-        UIGraphicsPopContext()
-        #endif
+        // Draw using unified drawing method
+        UnifiedDrawingCoordinator.drawLineNumber(
+            lineNumber,
+            at: drawingPoint,
+            font: font,
+            color: textColor,
+            alignment: .right,
+            maxWidth: gutterBounds.width - rightPadding
+        )
         
         // Restore graphics state
-        context.restoreGState()
+        UnifiedDrawingCoordinator.restoreGraphicsState()
     }
     
     /// Calculate line ranges for the visible text
