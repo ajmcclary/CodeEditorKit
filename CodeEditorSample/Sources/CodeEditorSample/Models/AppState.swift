@@ -6,6 +6,7 @@ class AppState: ObservableObject {
     @Published var coordinator = ConfigurationCoordinator()
     @Published var selectedPreset: ConfigurationPreset = .fullFeatured
     @Published var selectedSample: SampleCode = .swift
+    @Published var selectedLanguage: LanguageDetectionService.LanguageInfo?
     @Published var customCode: String = ""
     @Published var code: String = ""
     
@@ -17,6 +18,8 @@ class AppState: ObservableObject {
 
     init() {
         applyPreset(.fullFeatured)
+        // Initialize with Swift language
+        selectedLanguage = LanguageDetectionService.language(for: "swift")
         updateCode()
     }
 
@@ -27,7 +30,13 @@ class AppState: ObservableObject {
 
     func updateCode() {
         if customCode.isEmpty {
-            code = SampleCodeProvider.getCode(for: selectedSample)
+            if let language = selectedLanguage,
+               let sampleCode = SampleCodeStore.getSampleCode(for: language) {
+                code = sampleCode
+            } else {
+                // Fallback to old method for backward compatibility
+                code = SampleCodeProvider.getCode(for: selectedSample)
+            }
         } else {
             code = customCode
         }
@@ -35,6 +44,17 @@ class AppState: ObservableObject {
 
     func selectSample(_ sample: SampleCode) {
         selectedSample = sample
+        selectedLanguage = LanguageDetectionService.language(for: sample.rawValue)
+        customCode = ""
+        updateCode()
+    }
+    
+    func selectLanguage(_ language: LanguageDetectionService.LanguageInfo) {
+        selectedLanguage = language
+        // Update selectedSample if possible for backward compatibility
+        if let sample = SampleCode(rawValue: language.id) {
+            selectedSample = sample
+        }
         customCode = ""
         updateCode()
     }

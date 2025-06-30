@@ -23,92 +23,25 @@ enum SampleCode: String, CaseIterable {
     case ruby
     case php
 
+    // Use LanguageDetectionService for all language metadata
+    private var languageInfo: LanguageDetectionService.LanguageInfo? {
+        LanguageDetectionService.language(for: self.rawValue)
+    }
+    
     var displayName: String {
-        switch self {
-        case .swift: "Swift"
-        case .javascript: "JavaScript"
-        case .typescript: "TypeScript"
-        case .python: "Python"
-        case .go: "Go"
-        case .rust: "Rust"
-        case .cpp: "C++"
-        case .java: "Java"
-        case .html: "HTML"
-        case .css: "CSS"
-        case .json: "JSON"
-        case .markdown: "Markdown"
-        case .yaml: "YAML"
-        case .xml: "XML"
-        case .sql: "SQL"
-        case .ruby: "Ruby"
-        case .php: "PHP"
-        }
+        languageInfo?.displayName ?? self.rawValue.capitalized
     }
 
     var fileExtension: String {
-        switch self {
-        case .swift: "swift"
-        case .javascript: "js"
-        case .typescript: "ts"
-        case .python: "py"
-        case .go: "go"
-        case .rust: "rs"
-        case .cpp: "cpp"
-        case .java: "java"
-        case .html: "html"
-        case .css: "css"
-        case .json: "json"
-        case .markdown: "md"
-        case .yaml: "yaml"
-        case .xml: "xml"
-        case .sql: "sql"
-        case .ruby: "rb"
-        case .php: "php"
-        }
+        languageInfo?.fileExtensions.first ?? self.rawValue
     }
 
     var icon: String {
-        switch self {
-        case .swift: "swift"
-        case .javascript,
-             .typescript: "curlybraces"
-        case .python: "chevron.left.forwardslash.chevron.right"
-        case .go: "g.square"
-        case .rust: "r.square"
-        case .cpp: "c.square"
-        case .java: "cup.and.saucer"
-        case .html: "safari"
-        case .css: "paintbrush"
-        case .json: "doc.text"
-        case .markdown: "text.alignleft"
-        case .yaml: "list.bullet"
-        case .xml: "chevron.left.forwardslash.chevron.right"
-        case .sql: "server.rack"
-        case .ruby: "r.square"
-        case .php: "p.square"
-        }
+        languageInfo?.icon ?? "doc.text"
     }
 
     var iconColor: Color {
-        switch self {
-        case .swift: .orange
-        case .javascript: .yellow
-        case .typescript: .blue
-        case .python: .cyan
-        case .go: .teal
-        case .rust: .brown
-        case .cpp: .indigo
-        case .java: .red
-        case .html: .orange
-        case .css: .blue
-        case .json: .gray
-        case .markdown: .purple
-        case .yaml: .green
-        case .xml: .orange
-        case .sql: .mint
-        case .ruby: .red
-        case .php: .purple
-        }
+        languageInfo?.iconColor ?? .gray
     }
 }
 
@@ -116,41 +49,47 @@ enum SampleCode: String, CaseIterable {
 
 enum SampleCodeProvider {
     static func getCode(for sample: SampleCode) -> String {
+        // Get sample code from SampleCodeStore using the language ID
+        if let code = SampleCodeStore.getSampleCode(for: sample.rawValue) {
+            return code
+        }
+        
+        // Fallback to old implementation if needed (should not happen)
         switch sample {
         case .swift:
-            swiftSample
+            return swiftSample
         case .javascript:
-            javascriptSample
+            return javascriptSample
         case .typescript:
-            typescriptSample
+            return typescriptSample
         case .python:
-            pythonSample
+            return pythonSample
         case .go:
-            goSample
+            return goSample
         case .rust:
-            rustSample
+            return rustSample
         case .cpp:
-            cppSample
+            return cppSample
         case .java:
-            javaSample
+            return javaSample
         case .html:
-            htmlSample
+            return htmlSample
         case .css:
-            cssSample
+            return cssSample
         case .json:
-            jsonSample
+            return jsonSample
         case .markdown:
-            markdownSample
+            return markdownSample
         case .yaml:
-            yamlSample
+            return yamlSample
         case .xml:
-            xmlSample
+            return xmlSample
         case .sql:
-            sqlSample
+            return sqlSample
         case .ruby:
-            rubySample
+            return rubySample
         case .php:
-            phpSample
+            return phpSample
         }
     }
 

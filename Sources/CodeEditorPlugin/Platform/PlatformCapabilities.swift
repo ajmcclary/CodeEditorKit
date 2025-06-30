@@ -353,41 +353,201 @@ extension PlatformCapabilities {
     /// Check if a specific feature is available
     public func isFeatureAvailable(_ feature: EditorFeature) -> Bool {
         switch feature {
-        case .syntaxHighlighting:
+        // Core features
+        case .syntaxHighlighting, .codeCompletion, .lineNumbers:
             return true // Always available
-        case .codeCompletion:
-            return true // Always available
+        case .codeFolding:
+            return true // Software feature
         case .minimap:
             return supportsMinimap
-
+            
+        // Editing features
         case .multipleCursors:
             return currentPlatform == .macOS
 
+        case .smartBrackets, .autoIndent:
+            return true // Always available
+        case .findReplace:
+            return true // Basic version available everywhere
+        case .columnSelection:
+            return currentPlatform == .macOS
+            
+        // Navigation features
+        case .symbolNavigation, .breadcrumbs, .goToDefinition:
+            return true // Software features with platform-specific UI
+        case .quickOpen:
+            return currentPlatform == .macOS || currentPlatform == .catalyst
+            
+        // Performance features
+        case .hardwareAcceleration:
+            return supportsHardwareAcceleration
+
+        case .virtualScrolling, .incrementalParsing, .backgroundProcessing:
+            return true // Software optimizations
+            
+        // Integration features
+        case .languageServerProtocol, .pluginSystem:
+            return true // Software features
+        case .externalTools:
+            return currentPlatform == .macOS
+
+        case .fileWatching:
+            return true // Available via GCD/FSEvents
+            
+        // UI features
+        case .splitView:
+            return currentPlatform == .macOS || (currentPlatform == .iOS && isIPad)
+
+        case .tabs:
+            return currentPlatform == .macOS || currentPlatform == .catalyst
+
+        case .sidebars:
+            return currentPlatform == .macOS || (currentPlatform == .iOS && isIPad)
+
+        case .floatingPanels:
+            return currentPlatform == .macOS
+
+        case .contextMenus:
+            return supportsContextMenus
+
+        case .toolbars:
+            return true // Different implementations per platform
         case .touchBarSupport:
             return supportsTouchBar
+            
+        // Input features
+        case .keyboardShortcuts:
+            return supportsKeyboardShortcuts
+
+        case .mouseSupport:
+            return currentPlatform == .macOS || supportsTrackpad
+
+        case .touchSupport:
+            return currentPlatform == .iOS || currentPlatform == .catalyst
 
         case .gestureNavigation:
             return supportsGestureRecognizers
 
-        case .hardwareAcceleration:
-            return supportsHardwareAcceleration
+        case .pencilSupport:
+            return supportsPencilInput
+        }
+    }
+    
+    /// Get feature availability level (full, partial, or unavailable)
+    public func getFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability {
+        switch feature {
+        // Features with partial support on some platforms
+        case .findReplace:
+            return currentPlatform == .macOS ? .full : .partial
 
-        case .languageServerProtocol:
-            return true // Software feature
-        case .pluginSystem:
-            return true // Software feature
+        case .symbolNavigation, .breadcrumbs, .goToDefinition:
+            return currentPlatform == .macOS ? .full : .partial
+
+        case .toolbars:
+            return currentPlatform == .macOS ? .full : .partial
+
+        case .keyboardShortcuts:
+            if currentPlatform == .macOS {
+                return .full
+            } else if currentPlatform == .iOS && isIPad {
+                return .partial
+            } else {
+                return .unavailable
+            }
+
+        case .mouseSupport:
+            if currentPlatform == .macOS {
+                return .full
+            } else if supportsTrackpad {
+                return .partial
+            } else {
+                return .unavailable
+            }
+
+        case .touchSupport:
+            if currentPlatform == .iOS {
+                return .full
+            } else if currentPlatform == .catalyst {
+                return .partial
+            } else {
+                return .unavailable
+            }
+            
+        // Features that are either fully available or not
+        default:
+            return isFeatureAvailable(feature) ? .full : .unavailable
+        }
+    }
+    
+    private var isIPad: Bool {
+        #if canImport(UIKit)
+        return UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        return false
+        #endif
+    }
+    
+    public enum FeatureAvailability {
+        case full
+        case partial
+        case unavailable
+        
+        public var isAvailable: Bool {
+            self != .unavailable
+        }
+        
+        public var isFullyAvailable: Bool {
+            self == .full
         }
     }
     
     public enum EditorFeature {
+        // Core features
         case syntaxHighlighting
         case codeCompletion
+        case lineNumbers
+        case codeFolding
         case minimap
+        
+        // Editing features
         case multipleCursors
-        case touchBarSupport
-        case gestureNavigation
+        case smartBrackets
+        case autoIndent
+        case findReplace
+        case columnSelection
+        
+        // Navigation features
+        case symbolNavigation
+        case breadcrumbs
+        case goToDefinition
+        case quickOpen
+        
+        // Performance features
         case hardwareAcceleration
+        case virtualScrolling
+        case incrementalParsing
+        case backgroundProcessing
+        
+        // Integration features
         case languageServerProtocol
         case pluginSystem
+        case externalTools
+        case fileWatching
+        
+        // UI features
+        case splitView
+        case tabs
+        case sidebars
+        case floatingPanels
+        case contextMenus
+        case toolbars
+        case touchBarSupport
+        
+        // Input features
+        case keyboardShortcuts
+        case mouseSupport
+        case touchSupport
+        case gestureNavigation
+        case pencilSupport
     }
 }

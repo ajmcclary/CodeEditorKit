@@ -19,107 +19,13 @@ public class CrossPlatformCoordinator: ObservableObject {
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
     private let capabilities = PlatformCapabilities.shared
     
-    /// Feature availability matrix
-    @Published public private(set) var featureAvailability = FeatureAvailabilityMatrix()
-    
     /// Platform-specific adjustments
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
     
+    /// Observer tokens for proper cleanup
+    private nonisolated(unsafe) var notificationObservers: [Any] = []
+    
     // MARK: - Types
-    
-    /// Matrix of feature availability across platforms
-    public struct FeatureAvailabilityMatrix {
-        // Core features
-        public var syntaxHighlighting = FeatureStatus(macOS: .full, iOS: .full)
-        public var codeCompletion = FeatureStatus(macOS: .full, iOS: .full)
-        public var lineNumbers = FeatureStatus(macOS: .full, iOS: .full)
-        public var codeFollowing = FeatureStatus(macOS: .full, iOS: .partial)
-        public var minimap = FeatureStatus(macOS: .full, iOS: .unavailable)
-        
-        // Editing features
-        public var multiCursor = FeatureStatus(macOS: .full, iOS: .partial)
-        public var smartBrackets = FeatureStatus(macOS: .full, iOS: .full)
-        public var autoIndent = FeatureStatus(macOS: .full, iOS: .full)
-        public var findReplace = FeatureStatus(macOS: .full, iOS: .partial)
-        public var columnSelection = FeatureStatus(macOS: .full, iOS: .unavailable)
-        
-        // Navigation features
-        public var symbolNavigation = FeatureStatus(macOS: .full, iOS: .partial)
-        public var breadcrumbs = FeatureStatus(macOS: .full, iOS: .partial)
-        public var goToDefinition = FeatureStatus(macOS: .full, iOS: .partial)
-        public var quickOpen = FeatureStatus(macOS: .full, iOS: .partial)
-        
-        // Performance features
-        public var hardwareAcceleration = FeatureStatus(macOS: .full, iOS: .full)
-        public var virtualScrolling = FeatureStatus(macOS: .full, iOS: .full)
-        public var incrementalParsing = FeatureStatus(macOS: .full, iOS: .full)
-        public var backgroundProcessing = FeatureStatus(macOS: .full, iOS: .full)
-        
-        // Integration features
-        public var lspSupport = FeatureStatus(macOS: .full, iOS: .partial)
-        public var pluginSystem = FeatureStatus(macOS: .full, iOS: .partial)
-        public var externalTools = FeatureStatus(macOS: .full, iOS: .unavailable)
-        public var fileWatching = FeatureStatus(macOS: .full, iOS: .partial)
-        
-        // UI features
-        public var splitView = FeatureStatus(macOS: .full, iOS: .partial)
-        public var tabs = FeatureStatus(macOS: .full, iOS: .partial)
-        public var sidebars = FeatureStatus(macOS: .full, iOS: .partial)
-        public var floatingPanels = FeatureStatus(macOS: .full, iOS: .unavailable)
-        public var contextMenus = FeatureStatus(macOS: .full, iOS: .full)
-        public var toolbars = FeatureStatus(macOS: .full, iOS: .partial)
-        
-        // Input features
-        public var keyboardShortcuts = FeatureStatus(macOS: .full, iOS: .partial)
-        public var mouseSupport = FeatureStatus(macOS: .full, iOS: .partial)
-        public var touchSupport = FeatureStatus(macOS: .partial, iOS: .full)
-        public var gestures = FeatureStatus(macOS: .partial, iOS: .full)
-        public var pencilSupport = FeatureStatus(macOS: .unavailable, iOS: .full)
-    }
-    
-    /// Status of a feature on different platforms
-    public struct FeatureStatus {
-        public enum Availability {
-            case full
-            case partial
-            case unavailable
-            
-            public var icon: String {
-                switch self {
-                case .full: return "checkmark.circle.fill"
-                case .partial: return "exclamationmark.circle"
-                case .unavailable: return "xmark.circle"
-                }
-            }
-            
-            public var color: Color {
-                switch self {
-                case .full: return .green
-                case .partial: return .orange
-                case .unavailable: return .red
-                }
-            }
-        }
-        
-        public let macOS: Availability
-        public let iOS: Availability
-        
-        public var currentPlatform: Availability {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            return macOS
-            #else
-            return iOS
-            #endif
-        }
-        
-        public var isAvailable: Bool {
-            currentPlatform != .unavailable
-        }
-        
-        public var isFullyAvailable: Bool {
-            currentPlatform == .full
-        }
-    }
     
     /// Platform-specific adjustments
     public struct PlatformAdjustments {
@@ -201,28 +107,24 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     deinit {
-        // Cleanup is handled automatically by ARC
+        // Remove all notification observers
+        removeObservers()
+        
+        // Remove legacy selector-based observers if any
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Public Methods
     
     /// Check if a specific feature is available on the current platform
-    /// This method now delegates to PlatformCapabilities for unified capability detection
-    public func isFeatureAvailable(_ keyPath: KeyPath<FeatureAvailabilityMatrix, FeatureStatus>) -> Bool {
-        // Legacy method - delegate to PlatformCapabilities for consistency
-        // Map common features to the unified system
-        if keyPath == \.minimap {
-            return capabilities.isFeatureAvailable(.minimap)
-        } else if keyPath == \.syntaxHighlighting {
-            return capabilities.isFeatureAvailable(.syntaxHighlighting)
-        } else if keyPath == \.codeCompletion {
-            return capabilities.isFeatureAvailable(.codeCompletion)
-        } else if keyPath == \.multiCursor {
-            return capabilities.isFeatureAvailable(.multipleCursors)
-        } else {
-            // Fallback to legacy logic for other features
-            return featureAvailability[keyPath: keyPath].isAvailable
-        }
+    /// This method now fully delegates to PlatformCapabilities for unified capability detection
+    public func isFeatureAvailable(_ feature: PlatformCapabilities.EditorFeature) -> Bool {
+        capabilities.isFeatureAvailable(feature)
+    }
+    
+    /// Get feature availability level (full, partial, or unavailable)
+    public func getFeatureAvailability(_ feature: PlatformCapabilities.EditorFeature) -> PlatformCapabilities.FeatureAvailability {
+        capabilities.getFeatureAvailability(feature)
     }
     
     /// Get recommended configuration for current platform
@@ -344,7 +246,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         builder.addSeparator()
         
         // Code navigation actions
-        if featureAvailability.goToDefinition.isAvailable {
+        if capabilities.isFeatureAvailable(.goToDefinition) {
             builder.addAction(ContextMenuAction(
                 title: "Go to Definition",
                 keyEquivalent: nil,
@@ -397,46 +299,58 @@ public class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Private Methods
     
     private func adjustFeaturesForPlatform() {
-        // Adjust feature availability based on runtime checks
+        // Platform-specific adjustments are now handled by PlatformCapabilities
+        // This method is kept for backward compatibility but can be removed in the future
         
         #if canImport(UIKit)
-        // Check iPad-specific features
+        // Update platform adjustments based on runtime checks
         if UIDevice.current.userInterfaceIdiom == .pad {
-            featureAvailability.splitView = FeatureStatus(macOS: .full, iOS: .full)
-            featureAvailability.multiCursor = FeatureStatus(macOS: .full, iOS: .full)
-            featureAvailability.keyboardShortcuts = FeatureStatus(macOS: .full, iOS: .full)
+            // iPad gets larger touch targets
+            platformAdjustments.minimumTouchTargetSize = 44.0
         }
         
-        // Check for external keyboard
+        // Check for external keyboard to adjust UI
         if isExternalKeyboardConnected() {
-            featureAvailability.keyboardShortcuts = FeatureStatus(macOS: .full, iOS: .full)
+            // Could adjust UI for keyboard usage
         }
         
-        // Check for mouse/trackpad
+        // Check for mouse/trackpad to adjust hover behaviors
         if isPointingDeviceConnected() {
-            featureAvailability.mouseSupport = FeatureStatus(macOS: .full, iOS: .full)
+            // Could enable hover effects
         }
         #endif
     }
     
     private func setupPlatformSpecificObservers() {
         #if canImport(UIKit)
+        // Remove any existing observers first
+        removeObservers()
+        
         // Observe keyboard connection changes
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardDidConnect),
-            name: UIResponder.keyboardDidShowNotification,
-            object: nil
-        )
+        let keyboardObserver = NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardDidShowNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.keyboardDidConnect()
+        }
+        notificationObservers.append(keyboardObserver)
         
         // Observe device orientation changes
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(orientationDidChange),
-            name: UIDevice.orientationDidChangeNotification,
-            object: nil
-        )
+        let orientationObserver = NotificationCenter.default.addObserver(
+            forName: UIDevice.orientationDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.orientationDidChange()
+        }
+        notificationObservers.append(orientationObserver)
         #endif
+    }
+    
+    private nonisolated func removeObservers() {
+        notificationObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        notificationObservers.removeAll()
     }
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -597,12 +511,27 @@ public class CrossPlatformCoordinator: ObservableObject {
         return false
     }
     
-    @objc private func keyboardDidConnect() {
+    private func keyboardDidConnect() {
         adjustFeaturesForPlatform()
     }
     
-    @objc private func orientationDidChange() {
+    private func orientationDidChange() {
+        #if canImport(UIKit)
         // Adjust UI for new orientation
+        let orientation = UIDevice.current.orientation
+        
+        // Update platform adjustments based on orientation
+        if orientation.isLandscape {
+            // In landscape, we can use slightly smaller touch targets
+            platformAdjustments.minimumTouchTargetSize = 40
+        } else {
+            // Portrait uses standard iOS touch target size
+            platformAdjustments.minimumTouchTargetSize = 44
+        }
+        
+        // Notify observers of the change
+        objectWillChange.send()
+        #endif
     }
     
     @objc private func dismissKeyboard() {

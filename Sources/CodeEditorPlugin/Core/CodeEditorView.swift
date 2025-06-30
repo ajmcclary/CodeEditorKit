@@ -223,7 +223,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     private var lineHighlightView: PlatformView?
 
     /// Annotations storage
-    private var annotations: [Annotation] = []
+    public private(set) var annotations: [Annotation] = []
 
     /// Annotation views mapping
     private var annotationViews: [String: PlatformView] = [:]
@@ -2172,10 +2172,4 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     public var backgroundHighlightingStatistics: BackgroundHighlightingStatistics {
         asyncHighlighter.backgroundStatistics
     }
-}
-
-// MARK: - MockTextLineFragment
-
-private enum MockTextLineFragment {
-    // Minimal implementation for compatibility with existing annotation system
 }

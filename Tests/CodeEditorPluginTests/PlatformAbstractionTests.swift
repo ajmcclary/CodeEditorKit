@@ -185,12 +185,11 @@ final class PlatformAbstractionTests: XCTestCase {
     func testCrossPlatformCoordinator() {
         let coordinator = CrossPlatformCoordinator.shared
         
-        XCTAssertNotNil(coordinator.featureAvailability)
         XCTAssertNotNil(coordinator.platformAdjustments)
         
-        // Test feature availability
-        XCTAssertTrue(coordinator.isFeatureAvailable(\.syntaxHighlighting))
-        XCTAssertTrue(coordinator.isFeatureAvailable(\.codeCompletion))
+        // Test feature availability using the new API
+        XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
+        XCTAssertTrue(coordinator.isFeatureAvailable(.codeCompletion))
         
         // Test platform adjustments
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -266,19 +265,24 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Feature Status Tests
     
     func testFeatureStatusLogic() {
-        let fullFeature = CrossPlatformCoordinator.FeatureStatus(macOS: .full, iOS: .full)
-        XCTAssertTrue(fullFeature.isAvailable)
-        XCTAssertTrue(fullFeature.isFullyAvailable)
+        let capabilities = PlatformCapabilities.shared
         
-        let partialFeature = CrossPlatformCoordinator.FeatureStatus(macOS: .full, iOS: .partial)
-        XCTAssertTrue(partialFeature.isAvailable)
+        // Test full feature availability
+        let syntaxHighlighting = capabilities.getFeatureAvailability(.syntaxHighlighting)
+        XCTAssertTrue(syntaxHighlighting.isAvailable)
+        XCTAssertTrue(syntaxHighlighting.isFullyAvailable)
+        
+        // Test platform-specific features
         #if canImport(UIKit)
-        XCTAssertFalse(partialFeature.isFullyAvailable)
-        #endif
+        let touchSupport = capabilities.getFeatureAvailability(.touchSupport)
+        XCTAssertTrue(touchSupport.isAvailable)
         
-        let unavailableFeature = CrossPlatformCoordinator.FeatureStatus(macOS: .full, iOS: .unavailable)
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        XCTAssertFalse(unavailableFeature.isAvailable)
+        let floatingPanels = capabilities.getFeatureAvailability(.floatingPanels)
+        XCTAssertFalse(floatingPanels.isAvailable)
+        #else
+        let minimap = capabilities.getFeatureAvailability(.minimap)
+        // minimap is only available on iOS/Catalyst now
+        XCTAssertFalse(minimap.isAvailable)
         #endif
     }
 }

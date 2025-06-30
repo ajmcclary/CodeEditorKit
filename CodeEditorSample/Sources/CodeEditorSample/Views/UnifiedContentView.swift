@@ -48,7 +48,7 @@ struct UnifiedContentView: View {
             SampleCodeEditorView(
                 configuration: appState.coordinator.configuration,
                 text: $appState.code,
-                language: appState.selectedSample.fileExtension
+                language: appState.selectedLanguage?.fileExtensions.first ?? appState.selectedSample.fileExtension
             )
             .environmentObject(appState)
             

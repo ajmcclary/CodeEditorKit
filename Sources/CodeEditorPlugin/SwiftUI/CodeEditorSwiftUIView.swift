@@ -5,7 +5,9 @@ import SwiftUI
 import AppKit
 
 /// SwiftUI wrapper for CodeEditorView on macOS
+/// - Important: This view is deprecated. Use `CodeEditor` instead for better SwiftUI integration.
 @available(macOS 12.0, *)
+@available(*, deprecated, message: "Use CodeEditor instead for better SwiftUI integration with environment-based configuration")
 public struct CodeEditorSwiftUIView: NSViewRepresentable {
     @Binding public var text: String
     public let language: Language
@@ -171,7 +173,9 @@ public struct CodeEditorSwiftUIView: NSViewRepresentable {
 import UIKit
 
 /// SwiftUI wrapper for CodeEditorView on iOS/iPadOS
+/// - Important: This view is deprecated. Use `CodeEditor` instead for better SwiftUI integration.
 @available(iOS 16.0, *)
+@available(*, deprecated, message: "Use CodeEditor instead for better SwiftUI integration with environment-based configuration")
 public struct CodeEditorSwiftUIView: UIViewRepresentable {
     public typealias UIViewType = CodeEditorContainerView
     

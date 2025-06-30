@@ -6,6 +6,7 @@ import AppKit
 #endif
 
 /// Unified API for code editor functionality across platforms
+@MainActor
 public protocol CodeEditorAPI: AnyObject {
     // MARK: - Content Management
     
@@ -135,12 +136,13 @@ public struct FindOptions: OptionSet, Sendable {
 }
 
 /// Default implementations for common functionality
+@MainActor
 extension CodeEditorAPI {
-    func subscribe(_ handler: EditorEventHandler) {
+    public func subscribe(_ handler: EditorEventHandler) {
         eventPublisher.subscribe(handler)
     }
     
-    func unsubscribe(_ handler: EditorEventHandler) {
+    public func unsubscribe(_ handler: EditorEventHandler) {
         eventPublisher.unsubscribe(handler)
     }
     
@@ -180,6 +182,7 @@ extension CodeEditorAPI {
     }
 }
 
+@MainActor
 extension CodeEditorAPI {
     /// Convert NSRange to Range<String.Index>
     func range(from nsRange: NSRange) -> Range<String.Index>? {
@@ -193,6 +196,7 @@ extension CodeEditorAPI {
     }
 }
 
+@MainActor
 extension CodeEditorAPI {
     /// Set content and place cursor at end
     func setContent(_ text: String) {

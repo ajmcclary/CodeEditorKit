@@ -3,6 +3,7 @@
 // This file provides a unified GutterView implementation that works across
 // both iOS and macOS platforms, eliminating code duplication.
 
+import CoreGraphics
 import Foundation
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
@@ -31,6 +32,9 @@ public class GutterView: PlatformView, GutterViewProtocol {
     
     /// Array to store notification observer tokens for proper cleanup
     internal nonisolated(unsafe) var observers: [Any] = []
+    
+    /// The renderer responsible for drawing line numbers
+    private let renderer = GutterViewRenderer()
     
     #if canImport(UIKit)
     private nonisolated(unsafe) var displayLink: CADisplayLink?
@@ -133,48 +137,89 @@ extension GutterView {
     func drawLineNumbers(in rect: CGRect) {
         guard let textView else { return }
         
-        // Platform-specific drawing implementation
+        // Get the graphics context
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        drawLineNumbersAppKit(in: rect, textView: textView)
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        let fillBackground = false // AppKit doesn't need background fill
         #else
-        drawLineNumbersUIKit(in: rect, textView: textView)
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        let fillBackground = true // UIKit needs background fill
+        #endif
+        
+        // Use the renderer to draw line numbers
+        renderer.draw(
+            in: rect,
+            context: context,
+            textView: textView,
+            gutterBounds: bounds,
+            fillBackground: fillBackground
+        )
+    }
+}
+
+// MARK: - Observer Management
+
+extension GutterView {
+    /// Track text view changes
+    func observeTextView() {
+        guard let textView else { return }
+        
+        // Clear any existing observers first
+        removeTextViewObservers()
+        
+        // Observe text changes
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let notificationName = NSText.didChangeNotification
+        #else
+        let notificationName = UITextView.textDidChangeNotification
+        #endif
+        
+        let textObserver = NotificationCenter.default.addObserver(
+            forName: notificationName,
+            object: textView,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.setNeedsDisplayLineNumbers()
+            }
+        }
+        observers.append(textObserver)
+        
+        // Observe scrolling
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let scrollView = textView.enclosingScrollView {
+            let scrollObserver = NotificationCenter.default.addObserver(
+                forName: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.setNeedsDisplayLineNumbers()
+                }
+            }
+            observers.append(scrollObserver)
+        }
+        #else
+        // For UIKit, scrolling is handled via UIScrollViewDelegate
+        if let scrollView = textView as? UIScrollView {
+            scrollView.delegate = self
+        }
         #endif
     }
     
-    /// Shared line range calculation for both platforms
-    internal func getLineRanges(for text: String, in range: NSRange) -> [(Int, NSRange)] {
-        var lineRanges: [(Int, NSRange)] = []
-        var lineNumber = 1
-        var currentIndex = text.startIndex
-        
-        // Count lines before the visible range
-        let beforeRange = NSRange(location: 0, length: range.location)
-        let beforeText = String(text[..<text.index(text.startIndex, offsetBy: beforeRange.upperBound)])
-        lineNumber += beforeText.components(separatedBy: .newlines).count - 1
-        
-        // Move to start of visible range
-        currentIndex = text.index(text.startIndex, offsetBy: range.location)
-        
-        while currentIndex < text.endIndex {
-            let lineEnd = text.lineRange(for: currentIndex..<currentIndex).upperBound
-            let nextLineStart = lineEnd < text.endIndex ? text.index(after: lineEnd) : text.endIndex
-            
-            // Convert to NSRange
-            let startOffset = text.utf16.distance(from: text.startIndex, to: currentIndex)
-            let endOffset = text.utf16.distance(from: text.startIndex, to: nextLineStart)
-            let lineRange = NSRange(location: startOffset, length: endOffset - startOffset)
-            
-            lineRanges.append((lineNumber, lineRange))
-            lineNumber += 1
-            currentIndex = nextLineStart
-        }
-        
-        // Add final empty line if text ends with newline
-        if text.hasSuffix("\n") {
-            let finalOffset = text.utf16.count
-            lineRanges.append((lineNumber, NSRange(location: finalOffset, length: 0)))
-        }
-        
-        return lineRanges
+    /// Remove all text view observers
+    func removeTextViewObservers() {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers.removeAll()
     }
 }
+
+// MARK: - UIScrollViewDelegate
+
+#if canImport(UIKit)
+extension GutterView: UIScrollViewDelegate {
+    public func scrollViewDidScroll(_: UIScrollView) {
+        displayLink?.isPaused = false
+    }
+}
+#endif

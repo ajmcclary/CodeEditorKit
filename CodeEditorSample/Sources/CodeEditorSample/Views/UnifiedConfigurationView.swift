@@ -630,13 +630,14 @@ struct UnifiedConfigurationView: View {
     @ViewBuilder
     private var sampleCodeContent: some View {
         VStack(spacing: 8) {
-            ForEach(SampleCode.allCases, id: \.self) { sample in
-                SampleCodeRow(
-                    sample: sample,
-                    isSelected: appState.selectedSample == sample && appState.customCode.isEmpty
+            // Show all available sample languages
+            ForEach(SampleCodeStore.availableSamples(), id: \.id) { language in
+                LanguageSampleRow(
+                    languageInfo: language,
+                    isSelected: (appState.selectedLanguage?.id ?? "") == language.id && appState.customCode.isEmpty
                 )
                 .onTapGesture {
-                    appState.selectSample(sample)
+                    appState.selectLanguage(language)
                 }
             }
             
