@@ -21,6 +21,7 @@ struct UnifiedConfigurationView: View {
             VStack(spacing: adaptiveMainSpacing()) {
                 // Search bar for filtering options
                 searchBar
+                    .padding(.top, -adaptiveSearchTopPadding()) // Reduce top spacing
                 
                 // Configuration sections
                 VStack(spacing: adaptiveSectionSpacing()) {
@@ -202,24 +203,31 @@ struct UnifiedConfigurationView: View {
         VStack(spacing: adaptiveControlSpacing()) {
             // Core display options - using PlatformSafeToggle to avoid MainActor crashes
             PlatformSafeToggle("Show Line Numbers", isOn: $appState.coordinator.configuration.display.showLineNumbers)
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Highlight Selected Line",
                 isOn: $appState.coordinator.configuration.display.highlightSelectedLine
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Show Invisible Characters",
                 isOn: $appState.coordinator.configuration.display.showInvisibleCharacters
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Enable Syntax Highlighting",
                 isOn: $appState.coordinator.configuration.display.enableSyntaxHighlighting
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Enable Annotations",
                 isOn: $appState.coordinator.configuration.display.enableAnnotations
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle("Show Indent Guides", isOn: $appState.coordinator.configuration.display.showIndentGuides)
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle("Show Minimap", isOn: $appState.coordinator.configuration.display.showMinimap)
+                .frame(minHeight: adaptiveToggleMinHeight())
             // Additional display features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Additional Display Features (Coming Soon)")
@@ -269,7 +277,9 @@ struct UnifiedConfigurationView: View {
                 "Insert Spaces for Tabs",
                 isOn: $appState.coordinator.configuration.layout.insertSpacesForTabs
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle("Wrap Lines", isOn: $appState.coordinator.configuration.layout.wrapLines)
+                .frame(minHeight: adaptiveToggleMinHeight())
             
             // Line spacing
             SafeSlider(
@@ -341,20 +351,26 @@ struct UnifiedConfigurationView: View {
     private var behaviorContent: some View {
         VStack(spacing: adaptiveControlSpacing()) {
             PlatformSafeToggle("Editable", isOn: $appState.coordinator.configuration.behavior.isEditable)
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle("Selectable", isOn: $appState.coordinator.configuration.behavior.isSelectable)
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle("Auto Indent", isOn: $appState.coordinator.configuration.behavior.autoIndent)
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Auto Close Brackets",
                 isOn: $appState.coordinator.configuration.behavior.autoCloseBrackets
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Auto Close Quotes",
                 isOn: $appState.coordinator.configuration.behavior.autoCloseQuotes
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             PlatformSafeToggle(
                 "Enable Code Completion",
                 isOn: $appState.coordinator.configuration.behavior.enableCodeCompletion
             )
+                .frame(minHeight: adaptiveToggleMinHeight())
             // Additional features coming soon
             VStack(alignment: .leading, spacing: 4) {
                 Text("Advanced Features (Coming Soon)")
@@ -894,6 +910,25 @@ struct UnifiedConfigurationView: View {
         return .callout  // Match search field
         #else
         return .system(size: 16)  // Default
+        #endif
+    }
+    
+    private func adaptiveSearchTopPadding() -> CGFloat {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        // Reduce top padding specifically for search bar on iPad
+        return isIPad() ? 10 : 8
+        #else
+        return 8  // Default
+        #endif
+    }
+    
+    private func adaptiveToggleMinHeight() -> CGFloat {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        // Ensure adequate minimum height for toggles on iPad
+        let baseHeight: CGFloat = isIPad() ? 44 : 36
+        return scaledValue(baseHeight)
+        #else
+        return 36  // Default
         #endif
     }
     

@@ -964,6 +964,26 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         
         updateLayoutManagerSettings()
         
+        // Apply font settings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        textColor = PlatformColors.label
+        #else
+        font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        textColor = PlatformColors.label
+        #endif
+        
+        // Apply layout settings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if configuration.layout.wrapLines {
+            textContainer?.widthTracksTextView = true
+            isHorizontallyResizable = false
+        } else {
+            textContainer?.widthTracksTextView = false
+            isHorizontallyResizable = true
+        }
+        #endif
+        
         // Apply behavior settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isEditable = configuration.behavior.isEditable
