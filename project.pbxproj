@@ -1,0 +1,99 @@
+// !$*UTF8*$!
+{
+  archiveVersion = 1;
+  classes = {
+  };
+  objectVersion = 46;
+  objects = {
+
+/* Begin PBXProject section */
+    1D6058900D05DD3D006BFB54 /* Project object */ = {
+      isa = PBXProject;
+      attributes = {
+        LastUpgradeCheck = 1430;
+        ORGANIZATIONNAME = MyCompany;
+      };
+      buildConfigurationList = 1D6058910D05DD3E006BFB54 /* Build configuration list for PBXProject */;
+      compatibilityVersion = "Xcode 9.3";
+      developmentRegion = English;
+      hasScannedForEncodings = 0;
+      knownRegions = (
+        en,
+        Base,
+      );
+      mainGroup = 1D60588F0D05DD3D006BFB54;
+      productRefGroup = 1D60588F0D05DD3D006BFB54 /* Products */;
+      projectDirPath = "";
+      projectRoot = "";
+      targets = (
+        1D6058900D05DD3D006BFB54 /* MyApp */,
+        1D6058910D05DD3D006BFB55 /* MyAppTests */,
+        1D6058920D05DD3D006BFB56 /* MyAppUITests */,
+      );
+    };
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+    1D6058910D05DD3E006BFB54 /* Debug */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        MACOSX_DEPLOYMENT_TARGET = 14.0;
+        PRODUCT_NAME = "$(TARGET_NAME)";
+      };
+      name = Debug;
+    };
+    1D6058910D05DD3E006BFB55 /* Release */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        MACOSX_DEPLOYMENT_TARGET = 14.0;
+        PRODUCT_NAME = "$(TARGET_NAME)";
+      };
+      name = Release;
+    };
+    1D6058910D05DD3E006BFB56 /* Test Debug */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        MACOSX_DEPLOYMENT_TARGET = "14.0";
+        ENABLE_TESTING_SEARCH_PATHS = YES;
+        PRODUCT_NAME = "$(TARGET_NAME)";
+      };
+      name = Debug;
+    };
+    1D6058910D05DD3E006BFB57 /* Test Release */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        MACOSX_DEPLOYMENT_TARGET = "14.0";
+        ENABLE_TESTING_SEARCH_PATHS = YES;
+        PRODUCT_NAME = "$(TARGET_NAME)";
+      };
+      name = Release;
+    };
+/* End XCBuildConfiguration section */
+
+/* Begin PBXNativeTarget section */
+    1D6058900D05DD3D006BFB54 /* MyApp */ = {
+      isa = PBXNativeTarget;
+      buildConfigurationList = 1D6058910D05DD3E006BFB54 /* Build configuration list for MyApp */;
+      name = MyApp;
+      productName = MyApp;
+      productReference = 1D60588F0D05DD3D006BFB54 /* MyApp.app */;
+    };
+    1D6058910D05DD3D006BFB55 /* MyAppTests */ = {
+      isa = PBXNativeTarget;
+      buildConfigurationList = 1D6058910D05DD3E006BFB56 /* Build configuration list for MyAppTests */;
+      name = MyAppTests;
+      productName = MyAppTests;
+      productReference = 1D60588F0D05DD3D006BFB55 /* MyAppTests.xctest */;
+    };
+    1D6058920D05DD3D006BFB56 /* MyAppUITests */ = {
+      isa = PBXNativeTarget;
+      buildConfigurationList = 1D6058910D05DD3E006BFB57 /* Build configuration list for MyAppUITests */;
+      name = MyAppUITests;
+      productName = MyAppUITests;
+      productReference = 1D60588F0D05DD3D006BFB56 /* MyAppUITests.xctest */;
+    };
+/* End PBXNativeTarget section */
+
+  };
+  rootObject = 1D6058900D05DD3D006BFB54 /* Project object */;
+}

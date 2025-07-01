@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.codeeditor.sample
   deploymentTarget:
     iOS: "16.0"
-    macOS: "12.0"
+    macOS: "14.0"
     macCatalyst: "16.0"
   developmentLanguage: en
   xcodeVersion: "16.0"
@@ -104,7 +104,7 @@ targets:
   CodeEditorSample-macOS:
     type: application
     platform: macOS
-    deploymentTarget: "12.0"
+    deploymentTarget: "14.0"
     sources: 
       - Sources/CodeEditorSample
     dependencies:
@@ -120,7 +120,7 @@ targets:
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGNING_ALLOWED: NO
       PROVISIONING_PROFILE_SPECIFIER: ""
-      MACOSX_DEPLOYMENT_TARGET: "12.0"
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
       SWIFT_VERSION: "6.0"
       ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
@@ -145,7 +145,7 @@ targets:
   CodeEditorSample-macOSTests:
     type: bundle.unit-test
     platform: macOS
-    deploymentTarget: "12.0"
+    deploymentTarget: "14.0"
     sources:
       - Tests/CodeEditorSampleTests
     dependencies:
@@ -159,7 +159,7 @@ targets:
       CODE_SIGN_IDENTITY: "-"
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGNING_ALLOWED: NO
-      MACOSX_DEPLOYMENT_TARGET: "12.0"
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
       SWIFT_VERSION: "6.0"
       ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete

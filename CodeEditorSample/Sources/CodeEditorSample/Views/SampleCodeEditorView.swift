@@ -29,7 +29,7 @@ struct SampleCodeEditorView: View {
             ) { textView in
                 coordinator.editorView = textView
             }
-            .onChange(of: configuration) { newConfig in
+            .onChange(of: configuration) { _, newConfig in
                 // Reapply configuration when it changes
                 if let editor = coordinator.editorView {
                     newConfig.apply(to: editor)
@@ -44,7 +44,7 @@ struct SampleCodeEditorView: View {
             ) { textView in
                 coordinator.editorView = textView
             }
-            .onChange(of: configuration) { newConfig in
+            .onChange(of: configuration) { _, newConfig in
                 // Reapply configuration when it changes
                 if let editor = coordinator.editorView {
                     newConfig.apply(to: editor)
@@ -100,3 +100,4 @@ struct AnnotationIndicator: View {
             .cornerRadius(4)
     }
 }
+

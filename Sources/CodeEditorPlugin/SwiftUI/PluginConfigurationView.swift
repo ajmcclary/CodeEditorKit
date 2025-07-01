@@ -398,7 +398,7 @@ struct PluginRowView: View {
             VStack(spacing: 8) {
                 Toggle("", isOn: $isEnabled)
                     .toggleStyle(SwitchToggleStyle())
-                    .onChange(of: isEnabled) { newValue in
+                    .onChange(of: isEnabled) { _, newValue in
                         Task {
                             do {
                                 if newValue {
@@ -574,3 +574,4 @@ struct PluginConfigurationView_Previews: PreviewProvider {
     }
 }
 #endif
+

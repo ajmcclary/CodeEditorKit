@@ -8,7 +8,7 @@ let settings: [SwiftSetting] = [
 
 let package = Package(
     name: "CodeEditorPlugin",
-    platforms: [.macOS(.v12), .iOS(.v16), .macCatalyst(.v16)],
+    platforms: [.macOS(.v14), .iOS(.v16), .macCatalyst(.v16)],
     products: [
         .library(
             name: "CodeEditorPlugin",
