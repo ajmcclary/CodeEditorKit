@@ -1,5 +1,9 @@
 @testable import CodeEditorPlugin
+#if XCODE_BUILD && os(macOS)
+@testable import CodeEditorSample_macOS
+#else
 @testable import CodeEditorSample
+#endif
 import XCTest
 
 /// Test without MainActor to see if basic functionality works
