@@ -398,7 +398,7 @@ struct PluginRowView: View {
             VStack(spacing: 8) {
                 Toggle("", isOn: $isEnabled)
                     .toggleStyle(SwitchToggleStyle())
-                    .onChange(of: isEnabled) { newValue in
+                    .onChangeCompat(of: isEnabled) { newValue in
                         Task {
                             do {
                                 if newValue {

@@ -148,7 +148,7 @@ public struct PluginCreationView: View {
                     Text(error)
                 }
             }
-            .onChange(of: pluginName) { updatePluginIdentifier(from: $0) }
+            .onChangeCompat(of: pluginName) { newValue in updatePluginIdentifier(from: newValue) }
         }
     }
     

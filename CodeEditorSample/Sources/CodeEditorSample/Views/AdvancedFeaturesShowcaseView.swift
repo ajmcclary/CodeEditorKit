@@ -59,7 +59,7 @@ struct AdvancedFeaturesShowcaseView: View {
             loadDemoForCurrentFeature()
             startPerformanceMonitoring()
         }
-        .onChange(of: selectedDemo) { _ in loadDemoForCurrentFeature() }
+        .onChangeCompat(of: selectedDemo) { loadDemoForCurrentFeature() }
     }
     
     // MARK: - Feature Selection Toolbar
