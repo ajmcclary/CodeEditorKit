@@ -14,6 +14,34 @@ struct UnifiedContentView: View {
     @Environment(\.sizeCategory) private var sizeCategory
     
     var body: some View {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        if !isIPad() {
+            // iPhone: Use NavigationStack
+            NavigationStack {
+                editorView
+                    .environmentObject(appState)
+                    .navigationTitle("CodeEditor")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            NavigationLink(destination: UnifiedConfigurationView().environmentObject(appState)) {
+                                Image(systemName: "gear")
+                            }
+                        }
+                    }
+            }
+        } else {
+            // iPad: Use NavigationSplitView
+            navigationSplitView
+        }
+        #else
+        // macOS and Mac Catalyst: Use NavigationSplitView
+        navigationSplitView
+        #endif
+    }
+    
+    @ViewBuilder
+    private var navigationSplitView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar with configuration
             UnifiedConfigurationView()
@@ -36,36 +64,12 @@ struct UnifiedContentView: View {
             // Main editor view
             editorView
                 .environmentObject(appState)
-                #if canImport(UIKit)
-                .toolbar {
-                    if !isIPad() {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button(action: {
-                                columnVisibility = .all
-                            }) {
-                                HStack {
-                                    Image(systemName: "chevron.left")
-                                    Text("Settings")
-                                }
-                            }
-                        }
-                    }
-                }
-                #endif
         }
         .navigationTitle("CodeEditor Configuration Demo")
         #if canImport(UIKit)
         .navigationBarTitleDisplayMode(isIPad() ? .large : .inline)
         .navigationSplitViewStyle(.automatic)
         #endif
-        .onAppear {
-            #if canImport(UIKit)
-            // On iPhone, show detail view by default
-            if !isIPad() {
-                columnVisibility = .detailOnly
-            }
-            #endif
-        }
     }
     
     // MARK: - Adaptive Layout Helpers
@@ -101,7 +105,7 @@ struct UnifiedContentView: View {
         if isIPad() {
             return 16  // Less horizontal padding on iPad toolbar
         } else {
-            return 16  // Standard for iPhone
+            return 12  // Tighter padding for iPhone
         }
         #else
         return 16  // Default
@@ -166,19 +170,6 @@ struct UnifiedContentView: View {
             
             Divider()
                 .frame(height: 20)
-            #elseif canImport(UIKit)
-            // On iOS, add a button to show configuration
-            if !isIPad() {
-                PlatformSafeButton(action: {
-                    columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
-                }) {
-                    Image(systemName: "sidebar.left")
-                        .imageScale(dynamicImageScale())
-                }
-                
-                Divider()
-                    .frame(height: 16)
-            }
             #endif
             
             // Current configuration preset
@@ -187,7 +178,7 @@ struct UnifiedContentView: View {
                     .foregroundColor(.secondary)
                     .imageScale(dynamicImageScale())
                 Text(appState.selectedPreset.displayName)
-                    .font(.caption)
+                    .font(isIPad() ? .caption : .caption2)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -199,7 +190,7 @@ struct UnifiedContentView: View {
                 #if targetEnvironment(macCatalyst)
                 return 6
                 #elseif canImport(UIKit)
-                return isIPad() ? 8 : 6
+                return isIPad() ? 8 : 4
                 #else
                 return 12
                 #endif
@@ -255,8 +246,8 @@ struct UnifiedContentView: View {
         .padding(.vertical, 2)
         .frame(height: 32)
         #elseif canImport(UIKit)
-        .padding(.vertical, isIPad() ? 4 : 8)
-        .frame(height: isIPad() ? 44 : nil)
+        .padding(.vertical, isIPad() ? 4 : 4)
+        .frame(height: isIPad() ? 44 : 36)
         #else
         .padding(.vertical, 8)
         #endif
@@ -274,28 +265,28 @@ struct UnifiedContentView: View {
                     .foregroundColor(appState.selectedSample.iconColor)
                 Text(appState.selectedSample.displayName)
             }
-            .font(.caption)
+            .font(isIPad() ? .caption : .caption2)
             
             Divider()
-                .frame(height: 16)
+                .frame(height: isIPad() ? 16 : 12)
             
             // Line count
             HStack(spacing: 4) {
                 Image(systemName: "text.alignleft")
                 Text("\(appState.code.components(separatedBy: .newlines).count) lines")
             }
-            .font(.caption)
+            .font(isIPad() ? .caption : .caption2)
             .foregroundColor(.secondary)
             
             Divider()
-                .frame(height: 16)
+                .frame(height: isIPad() ? 16 : 12)
             
             // Character count
             HStack(spacing: 4) {
                 Image(systemName: "textformat.size")
                 Text("\(appState.code.count) characters")
             }
-            .font(.caption)
+            .font(isIPad() ? .caption : .caption2)
             .foregroundColor(.secondary)
             
             Spacer()
@@ -326,14 +317,14 @@ struct UnifiedContentView: View {
                         .help("Minimap Active")
                 }
             }
-            .font(.caption)
+            .font(isIPad() ? .caption : .caption2)
         }
         .padding(.horizontal, adaptiveToolbarHorizontalPadding())
         #if targetEnvironment(macCatalyst)
         .padding(.vertical, 3)
         #elseif canImport(UIKit)
-        .padding(.vertical, isIPad() ? 3 : 6)
-        .frame(height: isIPad() ? 32 : nil)
+        .padding(.vertical, isIPad() ? 3 : 2)
+        .frame(height: isIPad() ? 32 : 24)
         #else
         .padding(.vertical, 6)
         #endif
