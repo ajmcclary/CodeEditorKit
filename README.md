@@ -19,7 +19,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs.
 
-- ✅ **Production-Grade Quality:** Verified with **322 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 204 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **322 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 37 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -213,7 +213,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **Platform-Specific Testing**: Ensures consistent behavior across all supported platforms
 
 ### Code Quality Standards
-- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 204 files**
+- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 37 files**
 - **Swift 6 Strict Concurrency**: Complete compliance with Swift's strictest concurrency checking
 - **Actor-Based Safety**: All potentially unsafe operations properly isolated to background actors
 - **Documentation Coverage**: Comprehensive inline documentation for all public APIs

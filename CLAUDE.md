@@ -251,7 +251,7 @@ let minimalConfig = EditorConfiguration.minimal
 
 ### Testing Approach
 
-Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (66 tests) plus additional integration tests for a total of **276 comprehensive tests** with **100% pass rate**. 
+Tests are located in `Tests/CodeEditorPluginTests/` (276 tests) and `CodeEditorSample/Tests/CodeEditorSampleTests/` (46 tests) for a total of **322 comprehensive tests** with **100% pass rate**. 
 
 **Main Package Tests (106 tests):**
 - `CodeEditorViewTests.swift` - Core text view functionality (33 tests)
@@ -282,8 +282,8 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **Swift 6 Compliance**: Full actor-based concurrency throughout codebase
 
 **Quality Achievements:**
-- **Zero SwiftLint Violations**: Maintained across all 168 files (0 violations in final validation)
-- **276 Comprehensive Tests**: Full test coverage with **100% pass rate** (all tests passing)
+- **Zero SwiftLint Violations**: Maintained across all 37 files (0 violations in final validation)
+- **322 Comprehensive Tests**: Full test coverage with **100% pass rate** (all tests passing)
 - **Actor-Based Concurrency**: Full Swift 6 compliance with thread safety
 - **TextKit2 Integration**: Modern text handling with proper synchronization
 - **Viewport Optimization**: Efficient rendering for large files
