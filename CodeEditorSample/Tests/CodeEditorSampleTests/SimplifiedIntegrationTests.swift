@@ -3,6 +3,12 @@
 import SwiftUI
 import XCTest
 
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
+
 @MainActor
 final class SimplifiedIntegrationTests: XCTestCase {
     // MARK: - Configuration Tests
@@ -11,7 +17,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
         // Test each preset
         for preset in ConfigurationPreset.allCases {
             let config = preset.configuration
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+            #else
+            let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            #endif
 
             // Apply configuration using the plugin's apply method
             config.apply(to: textView)
@@ -41,7 +51,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testLanguageSamples() async {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #else
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #endif
 
         for sample in SampleCode.allCases {
             let code = SampleCodeProvider.getCode(for: sample)
@@ -53,7 +67,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testThemeColors() async {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #else
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #endif
 
         for theme in ColorTheme.allCases {
             textView.backgroundColor = theme.backgroundColor
@@ -67,7 +85,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testEditorWorkflow() async {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #else
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #endif
 
         // 1. Start with full featured config
         let config = ConfigurationPreset.fullFeatured.configuration
@@ -97,7 +119,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
     }
 
     func testAnnotationSystem() async {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #else
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #endif
 
         // Set text content
         textView.text = "TODO: Implement feature\nFIXME: Fix bug\nNOTE: Remember this"
@@ -110,7 +136,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
         XCTAssertTrue(text.contains("NOTE"), "Should contain NOTE annotation")
 
         // Layout
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
     }
 
     func testAppState() async {

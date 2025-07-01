@@ -7,12 +7,24 @@ options:
     macCatalyst: "16.0"
   developmentLanguage: en
   xcodeVersion: "16.0"
+  enableAutomaticSigning: true
+  defaultConfig: Debug
+  
+settings:
+  base:
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOL_EXTENSIONS: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZED_STRING_SWIFTUI_SUPPORT: YES
 
 packages:
   CodeEditorPlugin:
     path: ../
 
 targets:
+  # iOS/iPadOS Native Target
   CodeEditorSample:
     type: application
     platform: iOS
@@ -25,10 +37,10 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.ios
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "1"
-      DEVELOPMENT_TEAM: ""
-      CODE_SIGN_IDENTITY: "-"
-      CODE_SIGNING_REQUIRED: "NO"
-      CODE_SIGNING_ALLOWED: "NO"
+      DEVELOPMENT_TEAM: $(inherited)
+      CODE_SIGN_STYLE: Automatic
+      CODE_SIGN_IDENTITY: "Apple Development"
+      PROVISIONING_PROFILE_SPECIFIER: ""
       TARGETED_DEVICE_FAMILY: "1,2" # iPhone and iPad
       SUPPORTS_MACCATALYST: true
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
@@ -37,6 +49,7 @@ targets:
       SWIFT_STRICT_CONCURRENCY: complete
       GENERATE_INFOPLIST_FILE: NO
       INFOPLIST_FILE: Info.plist
+      DEAD_CODE_STRIPPING: YES
     info:
       path: Info.plist
       properties:
@@ -63,6 +76,31 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: true
 
+  # iOS/iPadOS Test Target
+  CodeEditorSampleTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Tests/CodeEditorSampleTests
+    dependencies:
+      - target: CodeEditorSample
+      - package: CodeEditorPlugin
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.ios.tests
+      DEVELOPMENT_TEAM: $(inherited)
+      CODE_SIGN_STYLE: Automatic
+      TARGETED_DEVICE_FAMILY: "1,2"
+      SUPPORTS_MACCATALYST: true
+      IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+      SWIFT_VERSION: "6.0"
+      ENABLE_EXPERIMENTAL_CONCURRENCY: true
+      SWIFT_STRICT_CONCURRENCY: complete
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CodeEditorSample
+      GENERATE_INFOPLIST_FILE: YES
+      DEAD_CODE_STRIPPING: YES
+
+  # macOS Native Target
   CodeEditorSample-macOS:
     type: application
     platform: macOS
@@ -75,14 +113,16 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.macos
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "1"
-      DEVELOPMENT_TEAM: ""
-      CODE_SIGN_IDENTITY: "-"
-      CODE_SIGNING_REQUIRED: "NO"
-      CODE_SIGNING_ALLOWED: "NO"
+      DEVELOPMENT_TEAM: $(inherited)
+      CODE_SIGN_STYLE: Automatic
+      CODE_SIGN_IDENTITY: "Apple Development"
+      PROVISIONING_PROFILE_SPECIFIER: ""
       MACOSX_DEPLOYMENT_TARGET: "12.0"
       SWIFT_VERSION: "6.0"
       ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
+      ENABLE_HARDENED_RUNTIME: YES
+      DEAD_CODE_STRIPPING: YES
     info:
       path: Info-macOS.plist
       properties:
@@ -97,25 +137,123 @@ targets:
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         NSHumanReadableCopyright: "Copyright © 2024 CodeEditor. All rights reserved."
 
+  # macOS Test Target
+  CodeEditorSample-macOSTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "12.0"
+    sources:
+      - Tests/CodeEditorSampleTests
+    dependencies:
+      - target: CodeEditorSample-macOS
+      - package: CodeEditorPlugin
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.codeeditor.sample.macos.tests
+      DEVELOPMENT_TEAM: $(inherited)
+      CODE_SIGN_STYLE: Automatic
+      MACOSX_DEPLOYMENT_TARGET: "12.0"
+      SWIFT_VERSION: "6.0"
+      ENABLE_EXPERIMENTAL_CONCURRENCY: true
+      SWIFT_STRICT_CONCURRENCY: complete
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/CodeEditorSample-macOS.app/Contents/MacOS/CodeEditorSample-macOS
+      GENERATE_INFOPLIST_FILE: YES
+      DEAD_CODE_STRIPPING: YES
+
 schemes:
-  CodeEditorSample:
+  # iOS Native Scheme (iPhone)
+  CodeEditorSample-iOS:
     build:
       targets:
         CodeEditorSample: all
+        CodeEditorSampleTests: test
     run:
       config: Debug
+      destination: "platform=iOS Simulator,name=iPhone 16 Pro"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSampleTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan
       
+  # iPadOS Native Scheme
+  CodeEditorSample-iPadOS:
+    build:
+      targets:
+        CodeEditorSample: all
+        CodeEditorSampleTests: test
+    run:
+      config: Debug
+      destination: "platform=iOS Simulator,name=iPad Pro 13-inch (M4)"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSampleTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan
+      
+  # macOS Native Scheme
   CodeEditorSample-macOS:
     build:
       targets:
         CodeEditorSample-macOS: all
+        CodeEditorSample-macOSTests: test
     run:
       config: Debug
+      destination: "platform=macOS"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSample-macOSTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan
       
-  CodeEditorSample-Catalyst:
+  # Mac Catalyst Scheme
+  CodeEditorSample-macOS-Catalyst:
     build:
       targets:
         CodeEditorSample: all
+        CodeEditorSampleTests: test
     run:
       config: Debug
-      destination: "My Mac (Mac Catalyst)"
+      destination: "platform=macOS,variant=Mac Catalyst"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSampleTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan
+      
+  # iPad Catalyst Scheme (for development on Mac)
+  CodeEditorSample-iPadOS-Catalyst:
+    build:
+      targets:
+        CodeEditorSample: all
+        CodeEditorSampleTests: test
+    run:
+      config: Debug
+      destination: "platform=macOS,variant=Mac Catalyst"
+      commandLineArguments:
+        "-UIPreferredContentSizeCategory": "UICTContentSizeCategoryL"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSampleTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan
+      
+  # Default scheme (alias for iOS)
+  CodeEditorSample:
+    build:
+      targets:
+        CodeEditorSample: all
+        CodeEditorSampleTests: test
+    run:
+      config: Debug
+      destination: "platform=iOS Simulator,name=iPhone 16 Pro"
+    test:
+      config: Debug
+      targets:
+        - CodeEditorSampleTests
+      testPlans:
+        - path: Tests/CodeEditorSample.xctestplan

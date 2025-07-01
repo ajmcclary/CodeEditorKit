@@ -16,12 +16,15 @@ struct UnifiedContentView: View {
             UnifiedConfigurationView()
                 .environmentObject(appState)
                 .navigationSplitViewColumnWidth(
-                    min: 300,
-                    ideal: 350,
-                    max: 400
+                    min: adaptiveColumnWidth().min,
+                    ideal: adaptiveColumnWidth().ideal,
+                    max: adaptiveColumnWidth().max
                 )
                 #if targetEnvironment(macCatalyst)
                 .frame(minWidth: 350)
+                #elseif canImport(UIKit)
+                // iPad-specific adjustments
+                .frame(minWidth: horizontalSizeClass == .regular ? 375 : 300)
                 #endif
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .navigationSplitViewStyle(.prominentDetail)
@@ -33,7 +36,35 @@ struct UnifiedContentView: View {
         }
         .navigationTitle("CodeEditor Configuration Demo")
         #if canImport(UIKit)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(isIPad() ? .large : .inline)
+        #endif
+    }
+    
+    // MARK: - Adaptive Layout Helpers
+    
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    
+    private func adaptiveColumnWidth() -> (min: CGFloat, ideal: CGFloat, max: CGFloat) {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        if isIPad() {
+            // iPad gets much more generous spacing to utilize screen
+            return (min: 450, ideal: 500, max: 600)
+        } else {
+            // iPhone gets compact spacing
+            return (min: 300, ideal: 350, max: 400)
+        }
+        #else
+        // macOS/Catalyst default
+        return (min: 300, ideal: 350, max: 400)
+        #endif
+    }
+    
+    private func isIPad() -> Bool {
+        #if canImport(UIKit)
+        return UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        return false
         #endif
     }
     

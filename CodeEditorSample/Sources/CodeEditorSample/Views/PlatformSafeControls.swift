@@ -120,6 +120,14 @@ struct IOSToggleView: UIViewRepresentable {
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.font = UIFont.systemFont(ofSize: 13)
+        #else
+        // iPad gets larger font for better readability
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            label.font = UIFont.systemFont(ofSize: 17)
+        } else {
+            label.font = UIFont.systemFont(ofSize: 14)
+        }
         #endif
         
         // Create switch

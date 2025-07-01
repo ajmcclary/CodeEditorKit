@@ -1,9 +1,12 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
 /// Simple test to verify isFlipped behavior
 final class QuickIsFlippedTest: XCTestCase {
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @MainActor
     func testIsFlippedIssue() async {
         // Create CodeEditorView
@@ -67,4 +70,5 @@ final class QuickIsFlippedTest: XCTestCase {
             )
         }
     }
+#endif
 }
