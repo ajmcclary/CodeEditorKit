@@ -8,7 +8,7 @@ import SwiftUI
 struct UnifiedContentView: View {
     @StateObject private var appState = AppState()
     @State private var showConfiguration = true
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     
     // Dynamic Type support
     @Environment(\.sizeCategory) private var sizeCategory
@@ -36,11 +36,36 @@ struct UnifiedContentView: View {
             // Main editor view
             editorView
                 .environmentObject(appState)
+                #if canImport(UIKit)
+                .toolbar {
+                    if !isIPad() {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button(action: {
+                                columnVisibility = .all
+                            }) {
+                                HStack {
+                                    Image(systemName: "chevron.left")
+                                    Text("Settings")
+                                }
+                            }
+                        }
+                    }
+                }
+                #endif
         }
         .navigationTitle("CodeEditor Configuration Demo")
         #if canImport(UIKit)
         .navigationBarTitleDisplayMode(isIPad() ? .large : .inline)
+        .navigationSplitViewStyle(.automatic)
         #endif
+        .onAppear {
+            #if canImport(UIKit)
+            // On iPhone, show detail view by default
+            if !isIPad() {
+                columnVisibility = .detailOnly
+            }
+            #endif
+        }
     }
     
     // MARK: - Adaptive Layout Helpers
@@ -141,6 +166,19 @@ struct UnifiedContentView: View {
             
             Divider()
                 .frame(height: 20)
+            #elseif canImport(UIKit)
+            // On iOS, add a button to show configuration
+            if !isIPad() {
+                PlatformSafeButton(action: {
+                    columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
+                }) {
+                    Image(systemName: "sidebar.left")
+                        .imageScale(dynamicImageScale())
+                }
+                
+                Divider()
+                    .frame(height: 16)
+            }
             #endif
             
             // Current configuration preset
@@ -161,68 +199,12 @@ struct UnifiedContentView: View {
                 #if targetEnvironment(macCatalyst)
                 return 6
                 #elseif canImport(UIKit)
-                return isIPad() ? 8 : 12
+                return isIPad() ? 8 : 6
                 #else
                 return 12
                 #endif
             }()) {
-                PlatformSafeButton(
-                    action: {
-                        appState.coordinator.configuration.display.showLineNumbers.toggle()
-                    },
-                    label: {
-                        Image(systemName: "number")
-                            .imageScale(dynamicImageScale())
-                            .foregroundColor(
-                                appState.coordinator.configuration.display.showLineNumbers
-                                    ? .accentColor : .secondary
-                            )
-                            .help("Toggle Line Numbers")
-                    }
-                )
-                
-                PlatformSafeButton(
-                    action: {
-                        appState.coordinator.configuration.display.showMinimap.toggle()
-                    },
-                    label: {
-                        Image(systemName: "map")
-                            .imageScale(dynamicImageScale())
-                            .foregroundColor(
-                                appState.coordinator.configuration.display.showMinimap
-                                    ? .accentColor : .secondary
-                            )
-                            .help("Toggle Minimap")
-                    }
-                )
-                
-                PlatformSafeButton(
-                    action: {
-                        appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
-                    },
-                    label: {
-                        Image(systemName: "paragraph")
-                            .imageScale(dynamicImageScale())
-                            .foregroundColor(
-                                appState.coordinator.configuration.display.showInvisibleCharacters
-                                    ? .accentColor : .secondary
-                            )
-                            .help("Toggle Invisible Characters")
-                    }
-                )
-                
-                PlatformSafeButton(
-                    action: {
-                        appState.coordinator.configuration.behavior.isEditable.toggle()
-                    },
-                    label: {
-                        let isEditable = appState.coordinator.configuration.behavior.isEditable
-                        Image(systemName: isEditable ? "pencil" : "pencil.slash")
-                            .imageScale(dynamicImageScale())
-                            .foregroundColor(isEditable ? .accentColor : .secondary)
-                            .help("Toggle Editing")
-                    }
-                )
+                quickToggleButtons
             }
             
             Spacer()
@@ -414,6 +396,104 @@ struct UnifiedContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             appState.coordinator.configuration.display.enableSyntaxHighlighting = current
         }
+    }
+    
+    // MARK: - Quick Toggle Buttons
+    
+    @ViewBuilder
+    private var quickToggleButtons: some View {
+        PlatformSafeButton(
+            action: {
+                appState.coordinator.configuration.display.showLineNumbers.toggle()
+            },
+            label: {
+                Image(systemName: "number")
+                    .imageScale(dynamicImageScale())
+                    .foregroundColor(
+                        appState.coordinator.configuration.display.showLineNumbers
+                            ? .accentColor : .secondary
+                    )
+                    .help("Toggle Line Numbers")
+            }
+        )
+        
+        // Show additional toggles only on iPad and macOS
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        if isIPad() {
+            PlatformSafeButton(
+                action: {
+                    appState.coordinator.configuration.display.showMinimap.toggle()
+                },
+                label: {
+                    Image(systemName: "map")
+                        .imageScale(dynamicImageScale())
+                        .foregroundColor(
+                            appState.coordinator.configuration.display.showMinimap
+                                ? .accentColor : .secondary
+                        )
+                        .help("Toggle Minimap")
+                }
+            )
+            
+            PlatformSafeButton(
+                action: {
+                    appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+                },
+                label: {
+                    Image(systemName: "paragraph")
+                        .imageScale(dynamicImageScale())
+                        .foregroundColor(
+                            appState.coordinator.configuration.display.showInvisibleCharacters
+                                ? .accentColor : .secondary
+                        )
+                        .help("Toggle Invisible Characters")
+                }
+            )
+        }
+        #elseif canImport(AppKit)
+        PlatformSafeButton(
+            action: {
+                appState.coordinator.configuration.display.showMinimap.toggle()
+            },
+            label: {
+                Image(systemName: "map")
+                    .imageScale(dynamicImageScale())
+                    .foregroundColor(
+                        appState.coordinator.configuration.display.showMinimap
+                            ? .accentColor : .secondary
+                    )
+                    .help("Toggle Minimap")
+            }
+        )
+        
+        PlatformSafeButton(
+            action: {
+                appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+            },
+            label: {
+                Image(systemName: "paragraph")
+                    .imageScale(dynamicImageScale())
+                    .foregroundColor(
+                        appState.coordinator.configuration.display.showInvisibleCharacters
+                            ? .accentColor : .secondary
+                    )
+                    .help("Toggle Invisible Characters")
+            }
+        )
+        #endif
+        
+        PlatformSafeButton(
+            action: {
+                appState.coordinator.configuration.behavior.isEditable.toggle()
+            },
+            label: {
+                let isEditable = appState.coordinator.configuration.behavior.isEditable
+                Image(systemName: isEditable ? "pencil" : "pencil.slash")
+                    .imageScale(dynamicImageScale())
+                    .foregroundColor(isEditable ? .accentColor : .secondary)
+                    .help("Toggle Editing")
+            }
+        )
     }
 }
 
