@@ -574,4 +574,3 @@ struct PluginConfigurationView_Previews: PreviewProvider {
     }
 }
 #endif
-

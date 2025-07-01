@@ -454,4 +454,3 @@ public final class TextKit2PerformanceMonitor: ObservableObject {
         cacheHitRate = totalRequests > 0 ? Double(cacheHits) / Double(totalRequests) : 0
     }
 }
-

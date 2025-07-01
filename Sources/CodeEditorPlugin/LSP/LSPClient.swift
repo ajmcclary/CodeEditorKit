@@ -521,4 +521,3 @@ public final class LSPClient: ObservableObject {
 // MARK: - Empty Parameters
 
 private struct EmptyParams: Codable {}
-

@@ -150,7 +150,12 @@ private class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
         completion = nil
         // Remove coordinator reference from associated object
         if let vc = viewController {
-            objc_setAssociatedObject(vc, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), nil, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(
+                vc,
+                Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(),
+                nil,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
         }
     }
 }
@@ -185,7 +190,12 @@ private class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
             }
             
             // Store coordinator to keep it alive
-            objc_setAssociatedObject(viewController, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), coordinator, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(
+                viewController,
+                Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(),
+                coordinator,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
             documentPicker.delegate = coordinator
             
             viewController.present(documentPicker, animated: true)
@@ -246,7 +256,12 @@ private class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
         }
         
         // Store coordinator to keep it alive
-        objc_setAssociatedObject(viewController, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), coordinator, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        objc_setAssociatedObject(
+            viewController,
+            Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(),
+            coordinator,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        )
         documentPicker.delegate = coordinator
         
         viewController.present(documentPicker, animated: true)
@@ -271,4 +286,3 @@ private class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
 }
 
 // Note: EditorConfiguration is already Codable in the plugin, so no additional extension needed
-

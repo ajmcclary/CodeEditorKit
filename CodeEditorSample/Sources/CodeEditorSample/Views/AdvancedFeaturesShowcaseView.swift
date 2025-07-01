@@ -1,6 +1,6 @@
 // swiftlint:disable file_length
-import SwiftUI
 import CodeEditorPlugin
+import SwiftUI
 
 // MARK: - Advanced Features Showcase View
 
@@ -1297,4 +1297,3 @@ struct AdvancedFeaturesShowcaseView_Previews: PreviewProvider {
             .environmentObject(AppState())
     }
 }
-

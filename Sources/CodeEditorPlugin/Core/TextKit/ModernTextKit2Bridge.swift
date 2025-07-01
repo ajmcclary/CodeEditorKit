@@ -426,4 +426,3 @@ extension NSTextLineFragment {
         return min(characterRange.length - 1, max(0, Int(relativeX / averageCharWidth)))
     }
 }
-

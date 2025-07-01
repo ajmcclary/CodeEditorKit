@@ -303,7 +303,7 @@ final class TextKit2OptimizationTests: XCTestCase {
         config.performance.useHardwareAcceleration = true
         codeEditorView.configuration = config
         
-        XCTAssertEqual(codeEditorView.configuration.performance.useHardwareAcceleration, true)
+        XCTAssertTrue(codeEditorView.configuration.performance.useHardwareAcceleration)
     }
     
     @MainActor
@@ -316,7 +316,7 @@ final class TextKit2OptimizationTests: XCTestCase {
         
         // Configure for performance
         var config = EditorConfiguration()
-        config.performance.maxSyntaxHighlightingLength = 500000
+        config.performance.maxSyntaxHighlightingLength = 500_000
         config.performance.useHardwareAcceleration = true
         codeEditorView.configuration = config
         

@@ -727,4 +727,3 @@ struct MarkdownSymbolProvider: DocumentSymbolProvider {
         return nil
     }
 }
-

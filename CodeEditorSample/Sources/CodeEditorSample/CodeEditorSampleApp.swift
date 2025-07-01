@@ -106,4 +106,3 @@ extension Notification.Name {
     static let toggleInvisibleCharacters = Notification.Name("toggleInvisibleCharacters")
     static let resetLayout = Notification.Name("resetLayout")
 }
-

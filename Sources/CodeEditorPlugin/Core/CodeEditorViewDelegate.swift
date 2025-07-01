@@ -147,7 +147,7 @@ extension CodeEditorViewDelegate {
 @MainActor
 private class NoOpCompletionViewController: UIViewController, CompletionViewControllerProtocol {
     var items: [any CompletionItem] = []
-    var delegate: CompletionViewControllerDelegate?
+    weak var delegate: CompletionViewControllerDelegate?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -157,6 +157,7 @@ private class NoOpCompletionViewController: UIViewController, CompletionViewCont
     func showCompletions() {}
     func hideCompletions() {}
     func reloadData() {}
+    
     var isVisible: Bool { false }
 }
 #endif

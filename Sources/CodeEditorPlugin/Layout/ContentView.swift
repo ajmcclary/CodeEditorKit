@@ -77,7 +77,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
     // MARK: - NSTextInputClient
 
     /// Forward insertText to CodeEditorAPI's insertText(_:) method to avoid ambiguity
-    public func insertText(_ string: Any, replacementRange: NSRange) {
+    public func insertText(_ string: Any, replacementRange _: NSRange) {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
             if let str = string as? String {
@@ -443,7 +443,7 @@ public class EditorContentView: UIView {
     }
     
     @objc private func insertTab() {
-        if let textView = textView {
+        if let textView {
             (textView as CodeEditorAPI).insertText("\t")
         }
     }
@@ -494,4 +494,3 @@ extension EditorContentView: UIGestureRecognizerDelegate {
     }
 }
 #endif
-

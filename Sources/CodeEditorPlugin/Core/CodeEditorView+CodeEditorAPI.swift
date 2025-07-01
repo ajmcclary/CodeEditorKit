@@ -62,10 +62,6 @@ extension CodeEditorView {
     
     /// Insert text at current cursor position (CodeEditorAPI implementation)
     #if canImport(UIKit)
-    // On iOS/Catalyst, UITextView already has insertText(_:), so we need override
-    override public func insertText(_ text: String) {
-        super.insertText(text)
-    }
     #else
     // On macOS, implement the protocol requirement
     public func insertText(_ text: String) {
@@ -80,8 +76,10 @@ extension CodeEditorView {
         insertText(text, replacementRange: nsRange)
         #else
         // For UIKit, we need to replace the text differently
-        if let textRange = self.textRange(from: self.position(from: self.beginningOfDocument, offset: nsRange.location) ?? self.beginningOfDocument,
-                                          to: self.position(from: self.beginningOfDocument, offset: nsRange.location + nsRange.length) ?? self.beginningOfDocument) {
+        if let textRange = self.textRange(
+            from: self.position(from: self.beginningOfDocument, offset: nsRange.location) ?? self.beginningOfDocument,
+            to: self.position(from: self.beginningOfDocument, offset: nsRange.location + nsRange.length) ?? self.beginningOfDocument
+        ) {
             self.replace(textRange, withText: text)
         }
         #endif

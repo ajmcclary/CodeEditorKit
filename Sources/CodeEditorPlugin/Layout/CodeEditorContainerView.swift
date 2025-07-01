@@ -610,4 +610,3 @@ extension CodeEditorContainerView: UITextViewDelegate {
     }
 }
 #endif
-

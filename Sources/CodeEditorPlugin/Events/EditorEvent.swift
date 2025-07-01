@@ -208,7 +208,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         }
     }
     
-    nonisolated func request(_ demand: Subscribers.Demand) {
+    nonisolated func request(_: Subscribers.Demand) {
         // Ensure setup when subscription is activated
         ensureSetup()
         // Events are pushed, so we don't need to handle demand
@@ -221,7 +221,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         handlerWrapper = nil
         lock.unlock()
         
-        if let wrapper = wrapper {
+        if let wrapper {
             let pub = eventPublisher
             DispatchQueue.main.async {
                 pub.unsubscribe(wrapper)

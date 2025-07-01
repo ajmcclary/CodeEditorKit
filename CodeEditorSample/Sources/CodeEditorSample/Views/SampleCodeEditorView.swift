@@ -100,4 +100,3 @@ struct AnnotationIndicator: View {
             .cornerRadius(4)
     }
 }
-

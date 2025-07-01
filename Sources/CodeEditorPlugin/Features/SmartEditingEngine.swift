@@ -31,7 +31,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     // MARK: - Initialization
     
-    public override init() {
+    override public init() {
         super.init()
         setupDefaultRules()
     }
@@ -88,7 +88,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     }
     
     private func handleOpeningBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
-        guard let textView = textView else { return false }
+        guard let textView else { return false }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return false }
@@ -132,7 +132,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     }
     
     private func handleClosingBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
-        guard let textView = textView else { return false }
+        guard let textView else { return false }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return false }
@@ -174,7 +174,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     /// Add cursors at all occurrences of selected text
     public func addCursorsAtOccurrences() {
-        guard let textView = textView,
+        guard let textView,
               textView.selectedRange.length > 0 else { return }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -226,7 +226,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     private func handleMultiCursorInput(_ text: String) -> Bool {
         guard isMultiCursorMode,
               !cursors.isEmpty,
-              let textView = textView else { return false }
+              let textView else { return false }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return false }
@@ -271,7 +271,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     /// Calculate indentation for a new line
     private func calculateIndentation(at location: Int) -> String {
-        guard let textView = textView,
+        guard let textView,
               configuration.autoIndent else { return "" }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -321,7 +321,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     /// Expand selection to logical boundaries
     public func expandSelection() {
-        guard let textView = textView else { return }
+        guard let textView else { return }
         
         let currentRange = textView.selectedRange
         
@@ -429,7 +429,7 @@ extension SmartEditingEngine: NSTextViewDelegate {
     public func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString text: String?) -> Bool {
         guard let codeEditorView = textView as? CodeEditorView else { return true }
         
-        guard let text = text else {
+        guard let text else {
             // Replacement string is nil, fall through to default behavior
             return true
         }
@@ -534,7 +534,7 @@ extension SmartEditingEngine: UITextViewDelegate {
     }
     
     // UITextViewDelegate doesn't have these methods - they're from CodeEditorViewDelegate
-    public func textViewDidChange(_ textView: UITextView) {
+    public func textViewDidChange(_: UITextView) {
         // This is the correct UITextViewDelegate method name
     }
     
@@ -652,4 +652,3 @@ extension CodeEditorView {
     }
 }
 */
-

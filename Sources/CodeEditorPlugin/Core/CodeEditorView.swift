@@ -669,7 +669,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer = textContainer, let layoutManager = layoutManager else {
+        guard let textContainer, let layoutManager else {
             return CGRect(x: 0, y: 0, width: 1, height: 16)
         }
         
@@ -1162,7 +1162,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
 
         // Check if we're using TextKit2
-        guard let textLayoutManager = textLayoutManager else {
+        guard let textLayoutManager else {
             kLogger.debug("No textLayoutManager (not using TextKit2?) - annotation will not be displayed")
             return
         }
@@ -1496,7 +1496,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             textStorage
         }
         set {
-            if let newValue = newValue {
+            if let newValue {
                 textStorage?.setAttributedString(newValue)
             } else {
                 string = ""
@@ -1544,7 +1544,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // For now, replace at current selection
         let selectedRange = selectedRange
-        guard let textStorage = textStorage else { return }
+        guard let textStorage else { return }
         textStorage.replaceCharacters(in: selectedRange, with: string)
         #else
         // For now, replace at current selection
@@ -1660,9 +1660,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - CompletionViewControllerDelegate
     
     public func completionViewController(
-        _ viewController: some CompletionViewControllerProtocol,
+        _: some CompletionViewControllerProtocol,
         complete item: any CompletionItem,
-        movement: PlatformTextMovement
+        movement _: PlatformTextMovement
     ) {
         // Get the insert text based on the item type
         let textToInsert: String
@@ -1692,5 +1692,4 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // The cleanup of UI elements will happen automatically when the view is deallocated
         // Subviews are automatically removed from their superview when deallocated
     }
-    
 }

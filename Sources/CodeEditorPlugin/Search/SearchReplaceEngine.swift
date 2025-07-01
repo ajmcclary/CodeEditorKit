@@ -476,4 +476,3 @@ extension CodeEditorView {
         return engine
     }
 }
-

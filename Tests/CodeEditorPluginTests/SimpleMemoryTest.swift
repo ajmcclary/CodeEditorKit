@@ -39,7 +39,7 @@ final class SimpleMemoryTest: XCTestCase {
         // Editor should be deallocated
         // Note: Due to TextKit2 system retention, immediate deallocation may not occur in tests
         if weakEditor != nil {
-            print("Warning: CodeEditorView not immediately deallocated (acceptable in test environment)")
+            // Warning: CodeEditorView not immediately deallocated (acceptable in test environment)
         }
     }
 }

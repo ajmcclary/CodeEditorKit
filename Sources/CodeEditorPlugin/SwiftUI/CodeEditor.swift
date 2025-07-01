@@ -847,4 +847,3 @@ public enum CompletionKind {
 }
 
 #endif
-

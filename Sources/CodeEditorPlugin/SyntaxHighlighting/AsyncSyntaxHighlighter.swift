@@ -653,4 +653,3 @@ final class SyntaxHighlightingPerformanceMonitor {
         metrics.removeAll()
     }
 }
-
