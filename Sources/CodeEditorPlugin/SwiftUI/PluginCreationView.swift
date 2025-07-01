@@ -148,7 +148,7 @@ public struct PluginCreationView: View {
                     Text(error)
                 }
             }
-            .onChange(of: pluginName) { _, newValue in updatePluginIdentifier(from: newValue) }
+            .onChange(of: pluginName) { newValue in updatePluginIdentifier(from: newValue) }
         }
     }
     

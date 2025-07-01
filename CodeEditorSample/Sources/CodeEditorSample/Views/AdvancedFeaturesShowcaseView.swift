@@ -1,6 +1,6 @@
 // swiftlint:disable file_length
-import CodeEditorPlugin
 import SwiftUI
+import CodeEditorPlugin
 
 // MARK: - Advanced Features Showcase View
 
@@ -59,7 +59,7 @@ struct AdvancedFeaturesShowcaseView: View {
             loadDemoForCurrentFeature()
             startPerformanceMonitoring()
         }
-        .onChange(of: selectedDemo) { loadDemoForCurrentFeature() }
+        .onChange(of: selectedDemo) { _ in loadDemoForCurrentFeature() }
     }
     
     // MARK: - Feature Selection Toolbar
