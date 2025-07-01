@@ -11,6 +11,11 @@ struct UnifiedConfigurationView: View {
     @State private var searchText = ""
     @State private var expandedSections: Set<String> = ["Display", "Editor Settings"]
     
+    // Dynamic Type support
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.sizeCategory) private var sizeCategory
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
     var body: some View {
         ScrollView {
             VStack(spacing: adaptiveMainSpacing()) {
@@ -168,10 +173,11 @@ struct UnifiedConfigurationView: View {
                 #endif
                 .font(adaptiveSearchFont())
         }
-        .padding(.horizontal, adaptivePadding())
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        .padding(.vertical, isIPad() ? 8 : 0)
+        .padding(.vertical, isIPad() ? 4 : 0)
         #endif
+        .minimumScaleFactor(0.7)  // Allow text to scale down if needed
+        .lineLimit(1)
     }
     
     // MARK: - Presets Content
@@ -779,10 +785,24 @@ struct UnifiedConfigurationView: View {
     
     private func adaptivePadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 32  // Much more generous padding for iPad
-        } else {
-            return 16  // Standard padding for iPhone
+        let basePadding: CGFloat = isIPad() ? 20 : 16
+        
+        // Adjust for dynamic type
+        switch sizeCategory {
+        case .extraSmall, .small:
+            return basePadding * 0.8
+        case .medium, .large:
+            return basePadding
+        case .extraLarge, .extraExtraLarge:
+            return basePadding * 1.2
+        case .extraExtraExtraLarge:
+            return basePadding * 1.4
+        case .accessibilityMedium, .accessibilityLarge:
+            return basePadding * 1.6
+        case .accessibilityExtraLarge, .accessibilityExtraExtraLarge, .accessibilityExtraExtraExtraLarge:
+            return basePadding * 2.0
+        @unknown default:
+            return basePadding
         }
         #elseif targetEnvironment(macCatalyst)
         return 20  // Mac Catalyst gets medium padding
@@ -793,10 +813,11 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveFont() -> Font {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        // Use dynamic type for better accessibility
         if isIPad() {
-            return .system(size: 17)  // Larger font for iPad readability
+            return .body  // Will scale with Dynamic Type
         } else {
-            return .system(size: 14)  // Standard font for iPhone
+            return .callout  // Smaller but still scales
         }
         #elseif targetEnvironment(macCatalyst)
         return .system(size: 13)  // Mac Catalyst font
@@ -807,11 +828,8 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveSectionPadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 40  // Much more indentation for iPad
-        } else {
-            return 28  // Standard indentation for iPhone
-        }
+        let basePadding: CGFloat = isIPad() ? 32 : 28
+        return scaledValue(basePadding)
         #else
         return 28  // Default
         #endif
@@ -819,11 +837,8 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveSectionInternalPadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 28  // Much larger internal padding for iPad
-        } else {
-            return 16  // Standard for iPhone
-        }
+        let basePadding: CGFloat = isIPad() ? 20 : 16
+        return scaledValue(basePadding)
         #elseif targetEnvironment(macCatalyst)
         return 16  // Mac Catalyst
         #else
@@ -841,11 +856,8 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveControlSpacing() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 20  // Much more spacing between controls on iPad
-        } else {
-            return 12  // Standard spacing for iPhone
-        }
+        let baseSpacing: CGFloat = isIPad() ? 16 : 12
+        return scaledValue(baseSpacing)
         #else
         return 12  // Default
         #endif
@@ -853,11 +865,8 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveSectionSpacing() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 24  // Much more spacing between sections on iPad
-        } else {
-            return 12  // Standard spacing for iPhone
-        }
+        let baseSpacing: CGFloat = isIPad() ? 20 : 12
+        return scaledValue(baseSpacing)
         #else
         return 12  // Default
         #endif
@@ -865,11 +874,8 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveMainSpacing() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 28  // Much more spacing for main sections on iPad
-        } else {
-            return 16  // Standard spacing for iPhone
-        }
+        let baseSpacing: CGFloat = isIPad() ? 20 : 16
+        return scaledValue(baseSpacing)
         #else
         return 16  // Default
         #endif
@@ -877,11 +883,7 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveSearchFont() -> Font {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return .system(size: 18)  // Larger search text on iPad
-        } else {
-            return .system(size: 15)  // Standard for iPhone
-        }
+        return .callout  // Smaller, consistent with controls
         #else
         return .system(size: 14)  // Default
         #endif
@@ -889,13 +891,44 @@ struct UnifiedConfigurationView: View {
     
     private func adaptiveSearchIconFont() -> Font {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return .system(size: 20)  // Larger icon on iPad
-        } else {
-            return .system(size: 16)  // Standard for iPhone
-        }
+        return .callout  // Match search field
         #else
         return .system(size: 16)  // Default
+        #endif
+    }
+    
+    // MARK: - Dynamic Type Scaling
+    
+    private func scaledValue(_ value: CGFloat) -> CGFloat {
+        #if canImport(UIKit)
+        switch sizeCategory {
+        case .extraSmall:
+            return value * 0.85
+        case .small:
+            return value * 0.9
+        case .medium, .large:
+            return value
+        case .extraLarge:
+            return value * 1.1
+        case .extraExtraLarge:
+            return value * 1.15
+        case .extraExtraExtraLarge:
+            return value * 1.2
+        case .accessibilityMedium:
+            return value * 1.3
+        case .accessibilityLarge:
+            return value * 1.4
+        case .accessibilityExtraLarge:
+            return value * 1.5
+        case .accessibilityExtraExtraLarge:
+            return value * 1.7
+        case .accessibilityExtraExtraExtraLarge:
+            return value * 2.0
+        @unknown default:
+            return value
+        }
+        #else
+        return value
         #endif
     }
 }
@@ -908,6 +941,9 @@ struct ConfigurationSection<Content: View>: View {
     let systemImage: String
     let isExpanded: Bool
     @ViewBuilder let content: () -> Content
+    
+    // Dynamic Type support
+    @Environment(\.sizeCategory) private var sizeCategory
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -926,7 +962,7 @@ struct ConfigurationSection<Content: View>: View {
                 Spacer()
                 
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundColor(.secondary)
             }
             .contentShape(Rectangle())
@@ -956,11 +992,7 @@ struct ConfigurationSection<Content: View>: View {
     
     private func sectionTitleFont() -> Font {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return .system(size: 24)  // Much larger icon for iPad
-        } else {
-            return .title3
-        }
+        return .title3  // Uses Dynamic Type
         #else
         return .title3
         #endif
@@ -968,11 +1000,7 @@ struct ConfigurationSection<Content: View>: View {
     
     private func sectionHeadlineFont() -> Font {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return .system(size: 20, weight: .semibold)  // Much larger headline for iPad
-        } else {
-            return .headline
-        }
+        return .headline  // Uses Dynamic Type
         #else
         return .headline
         #endif
@@ -981,7 +1009,7 @@ struct ConfigurationSection<Content: View>: View {
     private func sectionContentSpacing() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if isIPad() {
-            return 16  // Much more spacing for iPad
+            return 12  // Moderate spacing for iPad
         } else {
             return 8
         }
@@ -993,7 +1021,7 @@ struct ConfigurationSection<Content: View>: View {
     private func sectionContentPadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if isIPad() {
-            return 40  // Much more indentation for iPad
+            return 32  // Moderate indentation for iPad
         } else {
             return 28
         }
@@ -1005,7 +1033,7 @@ struct ConfigurationSection<Content: View>: View {
     private func sectionInternalPadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if isIPad() {
-            return 28  // Much larger padding for iPad
+            return 20  // Balanced padding for iPad
         } else {
             return 16
         }
@@ -1027,7 +1055,7 @@ struct ConfigurationSection<Content: View>: View {
     private func sectionCornerRadius() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if isIPad() {
-            return 16  // Larger corner radius for iPad
+            return 14  // Slightly larger corner radius for iPad
         } else {
             return 12  // Standard for iPhone
         }

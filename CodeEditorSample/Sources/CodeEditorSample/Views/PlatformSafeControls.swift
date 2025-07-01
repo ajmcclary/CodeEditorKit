@@ -122,12 +122,9 @@ struct IOSToggleView: UIViewRepresentable {
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.font = UIFont.systemFont(ofSize: 13)
         #else
-        // iPad gets larger font for better readability
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            label.font = UIFont.systemFont(ofSize: 17)
-        } else {
-            label.font = UIFont.systemFont(ofSize: 14)
-        }
+        // Use preferred font for dynamic type support
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
         #endif
         
         // Create switch

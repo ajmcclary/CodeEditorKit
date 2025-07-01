@@ -10,6 +10,9 @@ struct UnifiedContentView: View {
     @State private var showConfiguration = true
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     
+    // Dynamic Type support
+    @Environment(\.sizeCategory) private var sizeCategory
+    
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar with configuration
@@ -68,6 +71,33 @@ struct UnifiedContentView: View {
         #endif
     }
     
+    private func adaptiveToolbarHorizontalPadding() -> CGFloat {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        if isIPad() {
+            return 16  // Less horizontal padding on iPad toolbar
+        } else {
+            return 16  // Standard for iPhone
+        }
+        #else
+        return 16  // Default
+        #endif
+    }
+    
+    private func dynamicImageScale() -> Image.Scale {
+        #if canImport(UIKit)
+        switch sizeCategory {
+        case .extraSmall, .small:
+            return .small
+        case .medium, .large, .extraLarge:
+            return .medium
+        default:
+            return .large
+        }
+        #else
+        return .medium
+        #endif
+    }
+    
     // MARK: - Editor View
     
     @ViewBuilder
@@ -117,15 +147,11 @@ struct UnifiedContentView: View {
             HStack(spacing: 4) {
                 Image(systemName: "slider.horizontal.3")
                     .foregroundColor(.secondary)
-                    #if targetEnvironment(macCatalyst)
-                    .font(.system(size: 12))
-                    #endif
+                    .imageScale(dynamicImageScale())
                 Text(appState.selectedPreset.displayName)
-                    #if targetEnvironment(macCatalyst)
-                    .font(.system(size: 11))
-                    #else
                     .font(.caption)
-                    #endif
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             
             Spacer()
@@ -134,6 +160,8 @@ struct UnifiedContentView: View {
             HStack(spacing: {
                 #if targetEnvironment(macCatalyst)
                 return 6
+                #elseif canImport(UIKit)
+                return isIPad() ? 8 : 12
                 #else
                 return 12
                 #endif
@@ -144,9 +172,7 @@ struct UnifiedContentView: View {
                     },
                     label: {
                         Image(systemName: "number")
-                            #if targetEnvironment(macCatalyst)
-                            .font(.system(size: 14))
-                            #endif
+                            .imageScale(dynamicImageScale())
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showLineNumbers
                                     ? .accentColor : .secondary
@@ -161,9 +187,7 @@ struct UnifiedContentView: View {
                     },
                     label: {
                         Image(systemName: "map")
-                            #if targetEnvironment(macCatalyst)
-                            .font(.system(size: 14))
-                            #endif
+                            .imageScale(dynamicImageScale())
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showMinimap
                                     ? .accentColor : .secondary
@@ -178,9 +202,7 @@ struct UnifiedContentView: View {
                     },
                     label: {
                         Image(systemName: "paragraph")
-                            #if targetEnvironment(macCatalyst)
-                            .font(.system(size: 14))
-                            #endif
+                            .imageScale(dynamicImageScale())
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showInvisibleCharacters
                                     ? .accentColor : .secondary
@@ -196,9 +218,7 @@ struct UnifiedContentView: View {
                     label: {
                         let isEditable = appState.coordinator.configuration.behavior.isEditable
                         Image(systemName: isEditable ? "pencil" : "pencil.slash")
-                            #if targetEnvironment(macCatalyst)
-                            .font(.system(size: 14))
-                            #endif
+                            .imageScale(dynamicImageScale())
                             .foregroundColor(isEditable ? .accentColor : .secondary)
                             .help("Toggle Editing")
                     }
@@ -244,16 +264,17 @@ struct UnifiedContentView: View {
                 #endif
             } label: {
                 Image(systemName: "ellipsis.circle")
-                    #if targetEnvironment(macCatalyst)
-                    .font(.system(size: 14))
-                    #endif
+                    .imageScale(dynamicImageScale())
             }
             .menuStyle(.borderlessButton)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, adaptiveToolbarHorizontalPadding())
         #if targetEnvironment(macCatalyst)
         .padding(.vertical, 2)
         .frame(height: 32)
+        #elseif canImport(UIKit)
+        .padding(.vertical, isIPad() ? 4 : 8)
+        .frame(height: isIPad() ? 44 : nil)
         #else
         .padding(.vertical, 8)
         #endif
@@ -325,9 +346,12 @@ struct UnifiedContentView: View {
             }
             .font(.caption)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, adaptiveToolbarHorizontalPadding())
         #if targetEnvironment(macCatalyst)
         .padding(.vertical, 3)
+        #elseif canImport(UIKit)
+        .padding(.vertical, isIPad() ? 3 : 6)
+        .frame(height: isIPad() ? 32 : nil)
         #else
         .padding(.vertical, 6)
         #endif
