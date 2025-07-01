@@ -102,7 +102,7 @@ private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "Code
 /// }
 /// ```
 @objc @MainActor
-open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
+open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEditorAPI, CompletionViewControllerDelegate {
     // CodeEditorViewProtocol conformance  
     public typealias Color = PlatformColor
     public typealias Font = PlatformFont
@@ -454,17 +454,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // Initial syntax highlighting
         applySyntaxHighlighting()
         
-        // Set up completion providers
-        setupCompletionProviders()
+        // TODO: Set up completion providers
+        // setupCompletionProviders()
         
-        // Set up LSP integration
-        setupLSPIntegration()
+        // TODO: Set up LSP integration
+        // setupLSPIntegration()
         
-        // Set up TextKit2 rendering optimization
-        setupTextKit2Optimization()
+        // TODO: Set up TextKit2 rendering optimization
+        // setupTextKit2Optimization()
         
-        // Register with memory monitor
-        registerWithMemoryMonitor()
+        // TODO: Register with memory monitor
+        // registerWithMemoryMonitor()
     }
 
     // MARK: - Theme Setup
@@ -512,11 +512,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             eventPublisher.publish(.textDidChange(text ?? ""))
             #endif
             
-            // Check for completion triggering
-            checkForCompletionTrigger(at: editedRange)
+            // TODO: Check for completion triggering
+            // checkForCompletionTrigger(at: editedRange)
             
-            // Update LSP document context
-            updateLSPDocumentContext()
+            // TODO: Update LSP document context
+            // updateLSPDocumentContext()
         }
     }
 
@@ -558,9 +558,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func removeSyntaxHighlighting() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textStorage = textStorage else { return }
-        #else
         guard let textStorage = self.textStorage else { return }
+        #else
+        let textStorage = self.textStorage
         #endif
 
         let fullRange = NSRange(location: 0, length: textStorage.length)
@@ -1377,9 +1377,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
             return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             #else
-            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
-                return NSRange(location: 0, length: 0)
-            }
+            // On iOS/Catalyst, layoutManager and textContainer are not optional
             let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
             return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             #endif
@@ -1531,7 +1529,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #else
         // For now, replace at current selection
         let selectedRange = selectedRange
-        textStorage?.replaceCharacters(in: selectedRange, with: string)
+        textStorage.replaceCharacters(in: selectedRange, with: string)
         #endif
     }
 
@@ -1564,9 +1562,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
                 return nil
             }
             #else
-            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
-                return nil
-            }
+            // On iOS/Catalyst, layoutManager and textContainer are not optional
+            let layoutManager = self.layoutManager
+            let textContainer = self.textContainer
             #endif
             
             let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
@@ -1639,6 +1637,31 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     #endif
     
+    // MARK: - CompletionViewControllerDelegate
+    
+    public func completionViewController(
+        _ viewController: some CompletionViewControllerProtocol,
+        complete item: any CompletionItem,
+        movement: PlatformTextMovement
+    ) {
+        // Get the insert text based on the item type
+        let textToInsert: String
+        if let adapter = item as? CompletionItemAdapter {
+            textToInsert = adapter.model.insertText
+        } else {
+            // Fallback - use a default or empty string
+            textToInsert = ""
+        }
+        
+        // Insert the completion text if not empty
+        if !textToInsert.isEmpty {
+            insertText(textToInsert)
+        }
+        
+        // Hide the completion window
+        hideCompletionPopup()
+    }
+    
     // MARK: - Cleanup
     
     deinit {
@@ -1649,763 +1672,5 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // The cleanup of UI elements will happen automatically when the view is deallocated
         // Subviews are automatically removed from their superview when deallocated
     }
+    
 }
-
-// MARK: - CompletionViewControllerDelegate
-
-// swiftlint:disable:next no_grouping_extension
-extension CodeEditorView: CompletionViewControllerDelegate {
-    public func completionViewController(
-        _: some CompletionViewControllerProtocol,
-        complete item: any CompletionItem,
-        movement _: PlatformTextMovement
-    ) {
-        // Hide completion popup
-        hideCompletionPopup()
-        
-        // Insert the completion item
-        if let adapter = item as? CompletionItemAdapter {
-            insertCompletionItem(adapter.model)
-        } else {
-            // For items that don't have the adapter pattern, we can't access detailed properties
-            // This is a minimal fallback implementation
-            kLogger.warning("Completion item does not provide detailed information for insertion")
-        }
-    }
-    
-    /// Insert a completion item into the text
-    private func insertCompletionItem(_ item: CompletionItemModel) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let currentPosition = selectedRange.location
-        let text = string
-        #else
-        let currentPosition = selectedRange.location
-        let text = self.text ?? ""
-        #endif
-        
-        // Find the word to replace (if any)
-        let wordRange = currentWordRange(at: currentPosition) ?? NSRange(location: currentPosition, length: 0)
-        
-        // Use textEdit if provided, otherwise insert the insertText
-        let insertText = item.textEdit?.newText ?? item.insertText
-        let replaceRange = item.textEdit?.range ?? wordRange
-        
-        // Perform the text replacement
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if shouldChangeText(in: convertNSRangeToTextRange(replaceRange), replacementString: insertText) {
-            guard let textStorage = textStorage else { return }
-            textStorage.replaceCharacters(in: replaceRange, with: insertText)
-            
-            // Update selection to end of inserted text
-            let newPosition = replaceRange.location + insertText.count
-            setSelectedRange(NSRange(location: newPosition, length: 0))
-        }
-        #else
-        if let start = position(from: beginningOfDocument, offset: replaceRange.location),
-           let end = position(from: start, offset: replaceRange.length),
-           let textRange = textRange(from: start, to: end) {
-            replace(textRange, withText: insertText)
-        }
-        #endif
-    }
-    
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Convert NSRange to NSTextRange for modern TextKit compatibility
-    private func convertNSRangeToTextRange(_ range: NSRange) -> NSTextRange {
-        // This is a simplified implementation - for proper TextKit2 conversion
-        // we'd need to carefully map between character and glyph indices
-        
-        // First try to use the text layout manager
-        if let textLayoutManager = textLayoutManager,
-           let textContentManager = textLayoutManager.textContentManager {
-            let documentRange = textContentManager.documentRange
-            
-            // Try to create the proper range
-            if let start = textContentManager.location(documentRange.location, offsetBy: range.location),
-               let end = textContentManager.location(start, offsetBy: range.length),
-               let textRange = NSTextRange(location: start, end: end) {
-                return textRange
-            }
-            
-            // Fallback to document range if we can't create the exact range
-            return documentRange
-        }
-        
-        // Last resort: create a minimal range using the beginning of the document
-        // This shouldn't happen in normal operation but provides a safe fallback
-        if let contentManager = textLayoutManager?.textContentManager {
-            let location = contentManager.documentRange.location
-            return NSTextRange(location: location)
-        }
-        
-        // This case should be extremely rare - indicates no TextKit2 setup
-        fatalError("Unable to create NSTextRange - TextKit2 not properly initialized")
-    }
-    #endif
-    
-    /// Set up completion providers during initialization
-    private func setupCompletionProviders() {
-        // Register built-in Swift completion provider
-        let swiftProvider = SwiftCompletionProvider()
-        completionManager.registerProvider(swiftProvider)
-        
-        // Update trigger characters based on registered providers
-        updateCompletionTriggerCharacters()
-    }
-    
-    /// Update completion trigger characters from all registered providers
-    private func updateCompletionTriggerCharacters() {
-        var allTriggerChars: Set<Character> = []
-        
-        for provider in completionManager.registeredProviders {
-            for triggerString in provider.triggerCharacters {
-                allTriggerChars.formUnion(triggerString)
-            }
-        }
-        
-        completionTriggerCharacters = allTriggerChars
-    }
-    
-    /// Register a custom completion provider
-    public func registerCompletionProvider(_ provider: any CompletionProvider) {
-        completionManager.registerProvider(provider)
-        updateCompletionTriggerCharacters()
-    }
-    
-    /// Unregister a completion provider by ID
-    public func unregisterCompletionProvider(withId id: String) {
-        completionManager.unregisterProvider(withId: id)
-        updateCompletionTriggerCharacters()
-    }
-    
-    // MARK: - Parameter Validation Helpers
-    
-    /// Validate that a position is within the text bounds
-    private func validatePosition(_ position: Int) throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let textLength = string.count
-        #else
-        let textLength = text?.count ?? 0
-        #endif
-        guard position >= 0 && position <= textLength else {
-            throw CodeEditorError.invalidPosition(position, textLength: textLength)
-        }
-    }
-    
-    /// Validate that a range is within the text bounds
-    private func validateRange(_ range: NSRange) throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let textLength = string.count
-        #else
-        let textLength = text?.count ?? 0
-        #endif
-        
-        guard range.location >= 0,
-              range.length >= 0,
-              range.location <= textLength,
-              NSMaxRange(range) <= textLength else {
-            throw CodeEditorError.invalidRange(range, textLength: textLength)
-        }
-    }
-    
-    // MARK: - Safe API Methods (With Error Handling)
-    
-    /// Safe version of requestHover that throws on invalid parameters
-    /// - Parameter position: Character position in the text
-    /// - Returns: Hover information if available
-    /// - Throws: CodeEditorError if position is invalid
-    public func requestHoverSafe(at position: Int) async throws -> Hover? {
-        try validatePosition(position)
-        guard let filePath = filePath else { return nil }
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let text = string
-        #else
-        let text = self.text ?? ""
-        #endif
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
-        
-        do {
-            return try await lspManager.requestHover(
-                filePath: filePath,
-                line: lineCharPos.line,
-                character: lineCharPos.character
-            )
-        } catch {
-            throw CodeEditorError.languageServerCommunicationFailed(error)
-        }
-    }
-    
-    /// Safe version of requestDefinition that throws on invalid parameters
-    /// - Parameter position: Character position in the text
-    /// - Returns: Definition locations
-    /// - Throws: CodeEditorError if position is invalid
-    public func requestDefinitionSafe(at position: Int) async throws -> [Location] {
-        try validatePosition(position)
-        guard let filePath = filePath else { return [] }
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let text = string
-        #else
-        let text = self.text ?? ""
-        #endif
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
-        
-        do {
-            return try await lspManager.requestDefinition(
-                filePath: filePath,
-                line: lineCharPos.line,
-                character: lineCharPos.character
-            )
-        } catch {
-            throw CodeEditorError.languageServerCommunicationFailed(error)
-        }
-    }
-    
-    // MARK: - Improved Method Aliases (Consistent Parameter Naming)
-    
-    /// Improved alias for requestCompletion with shorter, clearer parameter names
-    public func requestCompletion(trigger: CompletionTriggerKind = .manual, character: String? = nil) {
-        requestCompletion(triggerKind: trigger, triggerCharacter: character)
-    }
-    
-    // MARK: - LSP Integration
-    
-    /// Get the LSP manager for external configuration
-    public var languageServerManager: LSPManager {
-        lspManager
-    }
-    
-    /// Current file path for LSP document management
-    public var filePath: String? {
-        get {
-            objc_getAssociatedObject(self, &AssociatedKeys.filePath) as? String
-        }
-        set {
-            let oldValue = filePath
-            objc_setAssociatedObject(self, &AssociatedKeys.filePath, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            if newValue != oldValue {
-                updateLSPDocumentContext()
-            }
-        }
-    }
-    
-    private enum AssociatedKeys {
-        @MainActor static var filePath: UInt8 = 0
-    }
-    
-    /// Set up LSP integration during initialization
-    private func setupLSPIntegration() {
-        // Register LSP completion provider
-        let lspProvider = LSPCompletionProvider(lspManager: lspManager)
-        registerCompletionProvider(lspProvider)
-        
-        // Set up workspace root if available
-        if let workspaceRoot = inferWorkspaceRoot() {
-            lspManager.workspaceRoot = workspaceRoot
-        }
-    }
-    
-    /// Update LSP document context when file path or content changes
-    private func updateLSPDocumentContext() {
-        guard let filePath = filePath else { return }
-        
-        Task {
-            do {
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                let content = string
-                #else
-                let content = self.text ?? ""
-                #endif
-                
-                let lspProvider = completionManager.registeredProviders.first { $0.id == "lsp-completion-provider" } as? LSPCompletionProvider
-                lspProvider?.updateContext(filePath: filePath, text: content)
-            }
-        }
-    }
-    
-    /// Infer workspace root from file path
-    private func inferWorkspaceRoot() -> URL? {
-        guard let filePath = filePath else { return nil }
-        
-        let fileURL = URL(fileURLWithPath: filePath)
-        var currentDir = fileURL.deletingLastPathComponent()
-        
-        // Look for common workspace markers
-        let workspaceMarkers = [".git", ".gitignore", "Package.swift", "Cargo.toml", "package.json", ".vscode", ".idea"]
-        
-        while currentDir.path != "/" {
-            for marker in workspaceMarkers {
-                let markerURL = currentDir.appendingPathComponent(marker)
-                if FileManager.default.fileExists(atPath: markerURL.path) {
-                    return currentDir
-                }
-            }
-            currentDir = currentDir.deletingLastPathComponent()
-        }
-        
-        // Fallback to file's parent directory
-        return fileURL.deletingLastPathComponent()
-    }
-    
-    /// Get diagnostics for the current file
-    public func getDiagnostics() -> [Diagnostic] {
-        guard let filePath = filePath else { return [] }
-        return lspManager.getDiagnostics(for: filePath)
-    }
-    
-    /// Request hover information at a specific position
-    /// - Parameters:
-    ///   - position: Character position in the text
-    /// - Returns: Hover information if available
-    public func requestHover(at position: Int) async -> Hover? {
-        guard let filePath = filePath else { return nil }
-        
-        // Validate position parameter
-        do {
-            try validatePosition(position)
-        } catch {
-            kLogger.error("Invalid position for hover request: \(error.localizedDescription)")
-            return nil
-        }
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let text = string
-        #else
-        let text = self.text ?? ""
-        #endif
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
-        
-        do {
-            return try await lspManager.requestHover(
-                filePath: filePath,
-                line: lineCharPos.line,
-                character: lineCharPos.character
-            )
-        } catch {
-            kLogger.error("Failed to request hover: \(error.localizedDescription)")
-            return nil
-        }
-    }
-    
-    /// Request definition for symbol at position
-    /// - Parameters:
-    ///   - position: Character position in the text
-    /// - Returns: Definition locations
-    public func requestDefinition(at position: Int) async -> [Location] {
-        guard let filePath = filePath else { return [] }
-        
-        // Validate position parameter
-        do {
-            try validatePosition(position)
-        } catch {
-            kLogger.error("Invalid position for definition request: \(error.localizedDescription)")
-            return []
-        }
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let text = string
-        #else
-        let text = self.text ?? ""
-        #endif
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
-        
-        do {
-            return try await lspManager.requestDefinition(
-                filePath: filePath,
-                line: lineCharPos.line,
-                character: lineCharPos.character
-            )
-        } catch {
-            kLogger.error("Failed to request definition: \(error.localizedDescription)")
-            return []
-        }
-    }
-    
-    /// Helper to convert string position to line/character
-    private func convertPositionToLineCharacter(position: Int, in text: String) -> (line: Int, character: Int) {
-        let lines = text.prefix(position).components(separatedBy: .newlines)
-        let line = max(0, lines.count - 1)
-        let character = lines.last?.count ?? 0
-        
-        return (line: line, character: character)
-    }
-    
-    // MARK: - Memory Management
-    
-    /// Register with memory monitor for cleanup
-    private func registerWithMemoryMonitor() {
-        Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
-                identifier: "code-editor-view-\(ObjectIdentifier(self).hashValue)",
-                priority: .normal
-            ) { @MainActor [weak self] in
-                guard let self = self else {
-                    return CleanupResult(memoryFreedMB: 0, description: "CodeEditorView deallocated")
-                }
-                
-                // Clear completion manager cache
-                self.completionManager.clearCache()
-                
-                // Clear any cached layout information (avoid accessing textContainer in Sendable context)
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                self.needsLayout = true
-                #else
-                self.setNeedsLayout()
-                #endif
-                
-                // Estimate memory freed
-                let estimatedMemoryMB = 2.0 // Conservative estimate for text view cleanup
-                
-                return CleanupResult(
-                    memoryFreedMB: estimatedMemoryMB,
-                    description: "Cleared CodeEditorView caches and layout"
-                )
-            }
-        }
-    }
-    
-    // MARK: - TextKit2 Optimization
-    
-    /// Set up TextKit2 rendering optimization
-    private func setupTextKit2Optimization() {
-        // Configure optimizer if using TextKit2
-        if let textLayoutManager = textLayoutManager,
-           let textContentStorage = textContentStorage {
-            renderingOptimizer.configure(
-                textLayoutManager: textLayoutManager,
-                textContentStorage: textContentStorage
-            )
-            
-            // Apply optimal performance configuration based on text length
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            let characterCount = string.count
-            #else
-            let characterCount = text?.count ?? 0
-            #endif
-            let config = TextKit2PerformanceHelper.configureForOptimalPerformance(
-                textView: self,
-                characterCount: characterCount
-            )
-            
-            kLogger.debug("TextKit2 optimization configured for \(characterCount) characters with config: viewport=\(config.enableViewportOptimization), recycling=\(config.enableFragmentRecycling)")
-            
-            // Set up scroll view observation for viewport optimization
-            setupScrollViewObservation()
-            
-            // Enable TextKit2 if beneficial for the file size
-            let usingTextKit2 = TextKit2PerformanceHelper.enableTextKit2IfBeneficial(self, characterCount: characterCount)
-            kLogger.debug("TextKit2 enabled: \(usingTextKit2)")
-        }
-    }
-    
-    /// Set up scroll view observation for viewport-based optimization
-    private func setupScrollViewObservation() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Observe scroll view changes on macOS
-        if let scrollView = enclosingScrollView {
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(handleScrollViewDidScroll(_:)),
-                name: NSView.boundsDidChangeNotification,
-                object: scrollView.contentView
-            )
-        }
-        #else
-        // On iOS, UITextView handles scrolling directly
-        // We can observe scrollViewDidScroll through delegate if needed
-        #endif
-    }
-    
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Handle scroll view scrolling for viewport optimization
-    @objc private func handleScrollViewDidScroll(_: Notification) {
-        guard let scrollView = enclosingScrollView else { return }
-        
-        // Calculate visible text range
-        let visibleRect = scrollView.documentVisibleRect
-        let visibleRange = calculateVisibleTextRange(for: visibleRect)
-        
-        // Update rendering optimizer
-        renderingOptimizer.updateVisibleRange(visibleRange)
-        
-        // Update async syntax highlighter for priority highlighting
-        asyncHighlighter.updateVisibleRange(visibleRange)
-        
-        // Record performance metrics
-        performanceMonitor.recordLayoutOperation(duration: 0.001) // Minimal scroll update
-    }
-    #endif
-    
-    /// Calculate visible text range for a given visible rectangle
-    private func calculateVisibleTextRange(for visibleRect: CGRect) -> NSRange {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer = textContainer, let layoutManager = layoutManager else {
-            return NSRange(location: 0, length: 0)
-        }
-        
-        // Convert visible rect to glyph range
-        let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        
-        // Convert glyph range to character range
-        
-        return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-        #else
-        // For UITextView, use different approach
-        guard let textPosition = closestPosition(to: visibleRect.origin) else {
-            return NSRange(location: 0, length: 0)
-        }
-        
-        let startOffset = offset(from: beginningOfDocument, to: textPosition)
-        
-        // Estimate visible length based on rect height and font size
-        let fontSize = font?.pointSize ?? 12
-        let estimatedLines = Int(visibleRect.height / (fontSize * 1.2))
-        let estimatedLength = estimatedLines * 80 // Rough estimate
-        
-        return NSRange(location: startOffset, length: min(estimatedLength, (text?.count ?? 0) - startOffset))
-        #endif
-    }
-    
-    /// Optimize text view for current content
-    public func optimizeForCurrentContent() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let characterCount = string.count
-        #else
-        let characterCount = text?.count ?? 0
-        #endif
-        
-        // Apply optimal configuration
-        TextKit2PerformanceHelper.configureForOptimalPerformance(
-            textView: self,
-            characterCount: characterCount
-        )
-        
-        // Update rendering optimizer
-        if let textLayoutManager = textLayoutManager,
-           let textContentStorage = textContentStorage {
-            renderingOptimizer.configure(
-                textLayoutManager: textLayoutManager,
-                textContentStorage: textContentStorage
-            )
-            
-            // Trigger optimization
-            renderingOptimizer.optimizeLargeFileLayout()
-        }
-        
-        kLogger.debug("Text view optimized for \(characterCount) characters")
-    }
-    
-    /// Enable real-time editing optimizations
-    public func enableRealTimeEditingMode() {
-        TextKit2PerformanceHelper.optimizeForRealTimeEditing(self)
-        kLogger.debug("Real-time editing mode enabled")
-    }
-    
-    /// Enable read-only viewing optimizations
-    public func enableReadOnlyViewingMode() {
-        TextKit2PerformanceHelper.optimizeForReadOnlyViewing(self)
-        kLogger.debug("Read-only viewing mode enabled")
-    }
-    
-    /// Get current rendering performance statistics
-    public var renderingStatistics: RenderingStatistics {
-        renderingOptimizer.renderingStats
-    }
-    
-    /// Get current performance monitor data
-    public var performanceStatistics: TextKit2PerformanceMonitor {
-        performanceMonitor
-    }
-    
-    /// Get background syntax highlighting statistics
-    public var backgroundHighlightingStatistics: BackgroundHighlightingStatistics {
-        asyncHighlighter.backgroundStatistics
-    }
-    
-    // MARK: - Error Handling API
-    
-    /// Set language with proper error handling
-    /// - Parameter language: The language to set
-    /// - Throws: CodeEditorError if the language is not supported
-    public func setLanguage(_ language: Language) throws {
-        // Validate language support
-        guard syntaxHighlighter.supportedFileExtensions.contains(language.identifier) || language == .swift || language == .plainText else {
-            throw CodeEditorError.unsupportedLanguage(language.name)
-        }
-        
-        self.language = language
-        applySyntaxHighlighting()
-    }
-    
-    /// Set text with validation and error handling
-    /// - Parameter text: The text to set
-    /// - Throws: CodeEditorError if the text is too large or processing fails
-    public func setText(_ text: String) throws {
-        // Check file size limits
-        let maxSize = configuration.performance.maxSyntaxHighlightingLength
-        if maxSize > 0 && text.count > maxSize {
-            throw CodeEditorError.fileTooLarge(text.count, maxSize: maxSize)
-        }
-        
-        // Validate text encoding
-        guard text.canBeConverted(to: .utf8) else {
-            throw CodeEditorError.textProcessingFailed("Text contains invalid UTF-8 characters")
-        }
-        
-        // Set the text
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        self.string = text
-        #else
-        self.text = text
-        #endif
-    }
-    
-    /// Apply configuration with validation
-    /// - Parameter configuration: The configuration to apply
-    /// - Throws: CodeEditorError if configuration validation fails
-    public func setConfiguration(_ configuration: EditorConfiguration) throws {
-        // Validate configuration
-        let validationErrors = configuration.validate()
-        if !validationErrors.isEmpty {
-            throw CodeEditorError.configurationValidationFailed(validationErrors)
-        }
-        
-        self.configuration = configuration
-    }
-    
-    /// Safe range validation (public version)
-    /// - Parameter range: The range to validate
-    /// - Throws: CodeEditorError if the range is invalid
-    public func validateRangeSafe(_ range: NSRange) throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let textLength = string.count
-        #else
-        let textLength = text?.count ?? 0
-        #endif
-        
-        guard range.location >= 0 && range.location <= textLength else {
-            throw CodeEditorError.invalidRange(range, textLength: textLength)
-        }
-        
-        guard range.location + range.length <= textLength else {
-            throw CodeEditorError.invalidRange(range, textLength: textLength)
-        }
-    }
-    
-    /// Safe position validation (public version)
-    /// - Parameter position: The position to validate
-    /// - Throws: CodeEditorError if the position is invalid
-    public func validatePositionSafe(_ position: Int) throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let textLength = string.count
-        #else
-        let textLength = text?.count ?? 0
-        #endif
-        
-        guard position >= 0 && position <= textLength else {
-            throw CodeEditorError.invalidPosition(position, textLength: textLength)
-        }
-    }
-    
-    /// Request hover information with error handling
-    /// - Parameter position: The text position
-    /// - Returns: Hover information if available
-    /// - Throws: CodeEditorError for invalid positions or LSP failures
-    public func requestHoverSafe(at position: Int) async throws -> String? {
-        try validatePositionSafe(position)
-        
-        // For now, return nil as hover functionality needs LSP integration
-        return nil
-    }
-    
-    /// Request completion with error handling
-    /// - Parameter position: The text position
-    /// - Returns: Completion items if available
-    /// - Throws: CodeEditorError for invalid positions or completion failures
-    public func requestCompletionSafe(at position: Int) async throws -> [String] {
-        try validatePositionSafe(position)
-        
-        guard configuration.behavior.enableCodeCompletion else {
-            throw CodeEditorError.completionProviderNotFound("Code completion is disabled")
-        }
-        
-        // For now, return empty array as completion needs proper implementation
-        return []
-    }
-    
-    /// Safe text replacement with validation
-    /// - Parameters:
-    ///   - range: The range to replace
-    ///   - text: The replacement text
-    /// - Throws: CodeEditorError for invalid ranges or processing failures
-    public func replaceTextSafe(in range: NSRange, with text: String) throws {
-        try validateRangeSafe(range)
-        
-        // Check if the new text would exceed size limits
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let currentLength = string.count
-        #else
-        let currentLength = self.text?.count ?? 0
-        #endif
-        
-        let newLength = currentLength - range.length + text.count
-        let maxSize = configuration.performance.maxSyntaxHighlightingLength
-        if maxSize > 0 && newLength > maxSize {
-            throw CodeEditorError.fileTooLarge(newLength, maxSize: maxSize)
-        }
-        
-        // Perform the replacement
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textStorage = textStorage else { return }
-        textStorage.replaceCharacters(in: range, with: text)
-        #else
-        if let start = position(from: beginningOfDocument, offset: range.location),
-           let end = position(from: start, offset: range.length),
-           let textRange = textRange(from: start, to: end) {
-            replace(textRange, withText: text)
-        }
-        #endif
-    }
-    
-    // MARK: - Error Recovery
-    
-    /// Attempt to recover from errors
-    /// - Parameter error: The error to recover from
-    /// - Returns: Whether recovery was successful
-    @discardableResult
-    public func attemptErrorRecovery(from error: CodeEditorError) -> Bool {
-        guard error.isRecoverable else { return false }
-        
-        switch error {
-        case .syntaxHighlightingFailed:
-            // Disable and re-enable syntax highlighting
-            var display = configuration.display
-            display.enableSyntaxHighlighting = false
-            configuration = configuration.with(display: display)
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                var newDisplay = self.configuration.display
-                newDisplay.enableSyntaxHighlighting = true
-                self.configuration = self.configuration.with(display: newDisplay)
-            }
-            return true
-            
-        case .hardwareAccelerationUnavailable:
-            // Disable hardware acceleration
-            var performance = configuration.performance
-            performance.useHardwareAcceleration = false
-            configuration = configuration.with(performance: performance)
-            return true
-            
-        case .configurationValidationFailed:
-            // Reset to default configuration
-            configuration = .default
-            return true
-            
-        default:
-            return false
-        }
-    }
-}
-

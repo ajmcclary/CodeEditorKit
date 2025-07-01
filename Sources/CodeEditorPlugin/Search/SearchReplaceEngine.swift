@@ -167,25 +167,32 @@ public class SearchReplaceEngine: ObservableObject {
         // Sort results in reverse order to maintain correct ranges
         let sortedResults = results.sorted { $0.range.location > $1.range.location }
         
-        guard let textStorage = textView.textStorage else { return 0 }
+        var replacementCount = 0
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textStorage = textView.textStorage!
         
         // Begin grouped undo
         textStorage.beginEditing()
         defer { textStorage.endEditing() }
         
-        var replacementCount = 0
-        
         for result in sortedResults {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.replaceCharacters(in: result.range, with: replacement)
-            #else
-            if let text = textView.text,
-               let textRange = Range(result.range, in: text) {
-                textView.text = text.replacingCharacters(in: textRange, with: replacement)
-            }
-            #endif
             replacementCount += 1
         }
+        #else
+        // On iOS/Catalyst, textStorage is not optional
+        let textStorage = textView.textStorage
+        
+        // Use textStorage
+        textStorage.beginEditing()
+        defer { textStorage.endEditing() }
+        
+        for result in sortedResults {
+            textStorage.replaceCharacters(in: result.range, with: replacement)
+            replacementCount += 1
+        }
+        #endif
         
         // Clear search results after replace all
         currentSearchResults = []
@@ -297,15 +304,16 @@ public class SearchReplaceEngine: ObservableObject {
     
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return }
+        let fullRange = NSRange(location: 0, length: textView.string.count)
+        #else
+        let textStorage = textView.textStorage
+        let fullRange = NSRange(location: 0, length: textView.text?.count ?? 0)
+        #endif
         
         // Clear existing highlights
-        let fullRange: NSRange
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        fullRange = NSRange(location: 0, length: textView.string.count)
-        #else
-        fullRange = NSRange(location: 0, length: textView.text?.count ?? 0)
-        #endif
         textStorage.removeAttribute(
             .backgroundColor,
             range: fullRange
@@ -335,7 +343,12 @@ public class SearchReplaceEngine: ObservableObject {
     
     private func flashRange(_ range: NSRange) {
         guard let textView else { return }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         let flashColor = searchOptions.flashColor
         

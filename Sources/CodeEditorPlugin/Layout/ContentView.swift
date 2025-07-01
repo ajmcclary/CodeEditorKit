@@ -76,13 +76,19 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
 
     // MARK: - NSTextInputClient
 
+    /// Forward insertText to CodeEditorAPI's insertText(_:) method to avoid ambiguity
     public func insertText(_ string: Any, replacementRange: NSRange) {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
-            textView.insertText(string, replacementRange: replacementRange)
+            if let str = string as? String {
+                textView.insertText(str)
+            } else {
+                textView.insertText("\(string)")
+            }
         }
     }
 
+    /// Forward setMarkedText to CodeEditorAPI's method to avoid ambiguity
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -90,6 +96,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         }
     }
 
+    /// Forward unmarkText to CodeEditorAPI's method
     public func unmarkText() {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -97,6 +104,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         }
     }
 
+    /// Forward selectedRange to CodeEditorAPI's selectedRange()
     public func selectedRange() -> NSRange {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -105,6 +113,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return NSRange(location: 0, length: 0)
     }
 
+    /// Forward markedRange to CodeEditorAPI's markedRange()
     public func markedRange() -> NSRange {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -113,6 +122,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return NSRange(location: NSNotFound, length: 0)
     }
 
+    /// Forward hasMarkedText to CodeEditorAPI's hasMarkedText()
     public func hasMarkedText() -> Bool {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -121,6 +131,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return false
     }
 
+    /// Forward attributedSubstring to CodeEditorAPI's method
     public func attributedSubstring(
         forProposedRange range: NSRange,
         actualRange: NSRangePointer?
@@ -132,6 +143,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return nil
     }
 
+    /// Forward validAttributesForMarkedText to CodeEditorAPI's method
     public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -140,6 +152,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return []
     }
 
+    /// Forward firstRect(forCharacterRange:) to CodeEditorAPI's method
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -148,6 +161,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
         return NSRect.zero
     }
 
+    /// Forward characterIndex(for:) to CodeEditorAPI's method
     public func characterIndex(for point: NSPoint) -> Int {
         // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
@@ -157,7 +171,7 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
     }
 
     override public func doCommand(by selector: Selector) {
-        // Forward to parent CodeEditorView or handle directly
+        // Forward to parent CodeEditorView
         if let textView = superview?.superview as? CodeEditorView {
             textView.doCommand(by: selector)
         }
@@ -429,7 +443,9 @@ public class EditorContentView: UIView {
     }
     
     @objc private func insertTab() {
-        textView?.insertText("\t")
+        if let textView = textView {
+            (textView as CodeEditorAPI).insertText("\t")
+        }
     }
     
     @objc private func showFind() {

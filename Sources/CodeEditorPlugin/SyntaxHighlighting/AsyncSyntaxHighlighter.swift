@@ -244,8 +244,11 @@ public final class AsyncSyntaxHighlighter {
         visibleRange: NSRange? = nil
     ) {
         // Get text storage - works for both TextKit1 and TextKit2
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let textStorage = textView.textStorage else { return }
+        #else
         let textStorage = textView.textStorage
-        guard let textStorage = textStorage else { return }
+        #endif
         
         // Log highlighting application
         kLogger.debug("✅ Applying \(tokens.count) syntax highlighting tokens")
@@ -293,8 +296,11 @@ public final class AsyncSyntaxHighlighter {
     }
     
     private func clearHighlighting(for textView: CodeEditorView) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let textStorage = textView.textStorage else { return }
+        #else
         let textStorage = textView.textStorage
-        guard let textStorage = textStorage else { return }
+        #endif
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             let range = NSRange(location: 0, length: textView.string.count)

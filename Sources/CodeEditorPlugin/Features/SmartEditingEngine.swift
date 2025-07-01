@@ -89,7 +89,12 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     private func handleOpeningBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
         guard let textView = textView else { return false }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return false }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         // For quotes, check if we should auto-pair
         if pair.isQuote {
@@ -128,7 +133,12 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     
     private func handleClosingBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
         guard let textView = textView else { return false }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return false }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         // Check if the next character is the same closing bracket
         if range.location < textStorage.length {
@@ -165,8 +175,13 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     /// Add cursors at all occurrences of selected text
     public func addCursorsAtOccurrences() {
         guard let textView = textView,
-              let textStorage = textView.textStorage,
               textView.selectedRange.length > 0 else { return }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let textStorage = textView.textStorage else { return }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         let selectedText = textStorage.attributedSubstring(
             from: textView.selectedRange
@@ -211,8 +226,13 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     private func handleMultiCursorInput(_ text: String) -> Bool {
         guard isMultiCursorMode,
               !cursors.isEmpty,
-              let textView = textView,
-              let textStorage = textView.textStorage else { return false }
+              let textView = textView else { return false }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let textStorage = textView.textStorage else { return false }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         // Begin grouped editing
         textStorage.beginEditing()
@@ -253,7 +273,12 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     private func calculateIndentation(at location: Int) -> String {
         guard let textView = textView,
               configuration.autoIndent else { return "" }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return "" }
+        #else
+        let textStorage = textView.textStorage
+        #endif
         
         // Get the current line
         let lineRange = RangeUtilities.lineRange(containing: location, in: textStorage.string)
@@ -425,7 +450,11 @@ extension SmartEditingEngine: NSTextViewDelegate {
         if text == "\n" && configuration.autoIndent {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 guard let textStorage = codeEditorView.textStorage else { return true }
+                #else
+                let textStorage = codeEditorView.textStorage
+                #endif
                 textStorage.replaceCharacters(
                     in: range,
                     with: "\n" + indentation
@@ -478,7 +507,11 @@ extension SmartEditingEngine: UITextViewDelegate {
         if text == "\n" && configuration.autoIndent {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 guard let textStorage = codeEditorView.textStorage else { return true }
+                #else
+                let textStorage = codeEditorView.textStorage
+                #endif
                 textStorage.replaceCharacters(
                     in: range,
                     with: "\n" + indentation

@@ -7,7 +7,7 @@ import AppKit
 
 // MARK: - CodeEditorAPI Conformance
 
-extension CodeEditorView: CodeEditorAPI {
+extension CodeEditorView {
     // MARK: - Content Management
     
     /// The text content of the editor
@@ -60,14 +60,24 @@ extension CodeEditorView: CodeEditorAPI {
     
     // MARK: - Text Operations
     
-    /// Insert text at current cursor position
-    public func insertText(_ text: String) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        super.insertText(text, replacementRange: selectedRange)
-        #else
+    /// Insert text at current cursor position (CodeEditorAPI implementation)
+    #if targetEnvironment(macCatalyst)
+    // On Catalyst, UITextView already has insertText(_:), so we need override
+    override public func insertText(_ text: String) {
         super.insertText(text)
+    }
+    #else
+    // On other platforms, implement the protocol requirement
+    public func insertText(_ text: String) {
+        #if canImport(AppKit)
+        self.insertText(text as Any, replacementRange: selectedRange)
+        #else
+        if let selectedRange = selectedTextRange {
+            replace(selectedRange, withText: text)
+        }
         #endif
     }
+    #endif
     
     /// Replace text in range
     public func replaceText(in range: Range<String.Index>, with text: String) {
