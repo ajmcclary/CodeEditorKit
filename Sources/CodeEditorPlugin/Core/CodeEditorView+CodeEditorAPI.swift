@@ -61,21 +61,15 @@ extension CodeEditorView {
     // MARK: - Text Operations
     
     /// Insert text at current cursor position (CodeEditorAPI implementation)
-    #if targetEnvironment(macCatalyst)
-    // On Catalyst, UITextView already has insertText(_:), so we need override
+    #if canImport(UIKit)
+    // On iOS/Catalyst, UITextView already has insertText(_:), so we need override
     override public func insertText(_ text: String) {
         super.insertText(text)
     }
     #else
-    // On other platforms, implement the protocol requirement
+    // On macOS, implement the protocol requirement
     public func insertText(_ text: String) {
-        #if canImport(AppKit)
         self.insertText(text as Any, replacementRange: selectedRange)
-        #else
-        if let selectedRange = selectedTextRange {
-            replace(selectedRange, withText: text)
-        }
-        #endif
     }
     #endif
     

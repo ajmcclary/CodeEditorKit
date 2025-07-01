@@ -119,10 +119,12 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
     }
     
     // Process management
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     internal var process: Process?
     internal var stdin: Pipe?
     internal var stdout: Pipe?
     internal var stderr: Pipe?
+    #endif
     
     // State
     internal var isInitialized = false
@@ -307,11 +309,13 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         _ = try await sendRequest("disconnect", arguments: ["restart": false])
         
         // Clean up process
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         process?.terminate()
         process = nil
         stdin = nil
         stdout = nil
         stderr = nil
+        #endif
     }
     
     // MARK: - Subclass Requirements

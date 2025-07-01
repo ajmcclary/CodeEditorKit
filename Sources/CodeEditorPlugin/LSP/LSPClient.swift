@@ -1,6 +1,10 @@
 import Foundation
 import os.log
 
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// Process is only available on macOS
+#endif
+
 /// Language Server Protocol client implementation
 @MainActor
 public final class LSPClient: ObservableObject {
@@ -43,12 +47,14 @@ public final class LSPClient: ObservableObject {
     /// LSP message handler
     private let messageHandler = LSPMessageHandler()
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Process for running the language server
     private var serverProcess: Process?
     
     /// Communication pipes
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
+    #endif
     
     /// Request/response tracking
     private var pendingRequests: [Int: LSPRequestCompletion] = [:]
@@ -376,14 +382,17 @@ public final class LSPClient: ObservableObject {
     }
     
     private func terminateServerProcess() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         serverProcess?.terminate()
         serverProcess?.waitUntilExit()
         serverProcess = nil
         stdinPipe = nil
         stdoutPipe = nil
+        #endif
     }
     
     private func startReadingFromServer(pipe: Pipe) async {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let fileHandle = pipe.fileHandleForReading
         
         while serverProcess?.isRunning == true {
@@ -400,6 +409,7 @@ public final class LSPClient: ObservableObject {
                 break
             }
         }
+        #endif
     }
     
     private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
@@ -438,6 +448,7 @@ public final class LSPClient: ObservableObject {
     }
     
     private func sendMessage(_ message: any Codable) async throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let stdinPipe else {
             throw LSPError.notConnected
         }
@@ -451,6 +462,9 @@ public final class LSPClient: ObservableObject {
         let fullMessage = headerData + jsonData
         
         try stdinPipe.fileHandleForWriting.write(contentsOf: fullMessage)
+        #else
+        throw LSPError.serverError(code: -1, message: "LSP not supported on this platform", data: nil)
+        #endif
     }
     
     private func handleNotification(method: String, params: Data) async {
