@@ -1297,3 +1297,4 @@ struct AdvancedFeaturesShowcaseView_Previews: PreviewProvider {
             .environmentObject(AppState())
     }
 }
+
