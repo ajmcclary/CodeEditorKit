@@ -90,13 +90,13 @@ public class CrossPlatformCoordinator: ObservableObject {
             #endif
         }()
         
-        public var enableMultiCursor: Bool = {
+        public var enableMultiCursor: Bool {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return true
             #else
-            return UIDevice.current.userInterfaceIdiom == .pad
+            return false // Simplified for iOS to avoid actor isolation issues
             #endif
-        }()
+        }
     }
     
     // MARK: - Initialization
@@ -332,7 +332,10 @@ public class CrossPlatformCoordinator: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.keyboardDidConnect()
+            // Hop to the main actor to safely call main actor-isolated method
+            Task { @MainActor in
+                self?.keyboardDidConnect()
+            }
         }
         notificationObservers.append(keyboardObserver)
         
@@ -342,7 +345,9 @@ public class CrossPlatformCoordinator: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.orientationDidChange()
+            Task { @MainActor in
+                self?.orientationDidChange()
+            }
         }
         notificationObservers.append(orientationObserver)
         #endif
@@ -693,3 +698,4 @@ public struct ToolbarItem: Identifiable {
 }
 
 // Context menu types are now defined in ContextMenuAction.swift
+

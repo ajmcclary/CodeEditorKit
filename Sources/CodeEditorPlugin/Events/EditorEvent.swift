@@ -177,32 +177,55 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     private var subscriber: S?
     private let eventPublisher: EditorEventPublisher
     private var handlerWrapper: HandlerWrapper?
+    private var pendingSetup = true
     
     init(subscriber: S, eventPublisher: EditorEventPublisher) {
         self.subscriber = subscriber
         self.eventPublisher = eventPublisher
+    }
+    
+    private func ensureSetup() {
+        guard pendingSetup else { return }
+        pendingSetup = false
         
-        Task { @MainActor in
-            let wrapper = HandlerWrapper(subscription: self)
+        // Create handler box to avoid capturing generic type
+        let box = HandlerBox { [weak self] event in
+            self?.handleEvent(event)
+        }
+        
+        // Store references for async setup
+        let pub = eventPublisher
+        
+        // Defer setup to avoid capturing self in init
+        DispatchQueue.main.async {
+            let wrapper = HandlerWrapper()
+            wrapper.handlerBox = box
+            pub.subscribe(wrapper)
+            
+            self.lock.lock()
             self.handlerWrapper = wrapper
-            eventPublisher.subscribe(wrapper)
+            self.lock.unlock()
         }
     }
     
-    nonisolated func request(_: Subscribers.Demand) {
+    nonisolated func request(_ demand: Subscribers.Demand) {
+        // Ensure setup when subscription is activated
+        ensureSetup()
         // Events are pushed, so we don't need to handle demand
     }
     
     nonisolated func cancel() {
         lock.lock()
         subscriber = nil
+        let wrapper = handlerWrapper
+        handlerWrapper = nil
         lock.unlock()
         
-        Task { @MainActor in
-            if let wrapper = self.handlerWrapper {
-                self.eventPublisher.unsubscribe(wrapper)
+        if let wrapper = wrapper {
+            let pub = eventPublisher
+            DispatchQueue.main.async {
+                pub.unsubscribe(wrapper)
             }
-            self.handlerWrapper = nil
         }
     }
     
@@ -214,17 +237,26 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         _ = sub?.receive(event)
     }
     
-    // Wrapper class to handle events on MainActor
-    @MainActor
-    private final class HandlerWrapper: EditorEventHandler {
-        private weak var subscription: EditorEventSubscription?
+    // Type-erased handler box to avoid capturing generic types
+    private final class HandlerBox: @unchecked Sendable {
+        private let handler: (EditorEvent) -> Void
         
-        init(subscription: EditorEventSubscription) {
-            self.subscription = subscription
+        init(handler: @escaping (EditorEvent) -> Void) {
+            self.handler = handler
         }
         
         func handle(_ event: EditorEvent) {
-            subscription?.handleEvent(event)
+            handler(event)
+        }
+    }
+    
+    // Wrapper class to handle events on MainActor
+    @MainActor
+    private final class HandlerWrapper: EditorEventHandler {
+        var handlerBox: HandlerBox?
+        
+        func handle(_ event: EditorEvent) {
+            handlerBox?.handle(event)
         }
     }
 }

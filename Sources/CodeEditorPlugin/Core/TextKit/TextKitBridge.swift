@@ -57,14 +57,22 @@ public final class TextKitBridge {
     
     /// Get the text content storage for TextKit2
     public var textContentStorage: NSTextContentStorage? {
-        textView?.textContentStorage
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return textView?.textContentStorage
+        #else
+        // For iOS/Catalyst, we need to cast the textView to CodeEditorView to access textContentStorage
+        if let codeEditorView = textView as? CodeEditorView {
+            return codeEditorView.textContentStorage
+        }
+        return nil
+        #endif
     }
     
     // MARK: - Layout Management
     
     /// Perform layout for a specific range
     public func ensureLayout(for range: NSRange) {
-        guard let textView else { return }
+        guard textView != nil else { return }
         
         if isUsingTextKit2 {
             ensureLayoutTextKit2(for: range)
@@ -89,8 +97,7 @@ public final class TextKitBridge {
     }
     
     private func ensureLayoutTextKit2(for range: NSRange) {
-        guard let textLayoutManager = textView?.textLayoutManager,
-              let textContentManager = textLayoutManager.textContentManager else { return }
+        guard let textLayoutManager = textView?.textLayoutManager else { return }
         
         // Convert NSRange to NSTextRange for TextKit2
         if let textRange = textRangeFromNSRange(range) {
@@ -284,7 +291,7 @@ public final class TextKitBridge {
             // For large files, enable TextKit2 if available
             if capabilities.supportsTextKit2 && !isUsingTextKit2 {
                 if let textView {
-                    ModernTextKitHelper.ensureTextKit2(for: textView)
+                    _ = ModernTextKitHelper.ensureTextKit2(for: textView)
                 }
             }
             
@@ -336,7 +343,7 @@ public final class TextKitBridge {
         if isUsingTextKit2 {
             info += "  TextKit2 Features:\n"
             info += "    - TextLayoutManager: \(textView?.textLayoutManager != nil)\n"
-            info += "    - TextContentStorage: \(textView?.textContentStorage != nil)\n"
+            info += "    - TextContentStorage: \(textContentStorage != nil)\n"
         } else {
             info += "  TextKit1 Features:\n"
             info += "    - LayoutManager: \(textView?.layoutManager != nil)\n"

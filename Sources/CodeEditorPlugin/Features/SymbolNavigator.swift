@@ -74,12 +74,18 @@ public class SymbolNavigator: ObservableObject {
     }
     
     private func detectSymbols() async {
-        guard let textView,
-              let provider = providers[textView.language],
-              let text = textView.textStorage?.string else {
+        guard let textView, let provider = providers[textView.language] else {
             symbols = []
             return
         }
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let text = textView.textStorage?.string else {
+            symbols = []
+            return
+        }
+        #else
+        let text = textView.textStorage.string
+        #endif
         
         isProcessing = true
         defer { isProcessing = false }
@@ -721,3 +727,4 @@ struct MarkdownSymbolProvider: DocumentSymbolProvider {
         return nil
     }
 }
+

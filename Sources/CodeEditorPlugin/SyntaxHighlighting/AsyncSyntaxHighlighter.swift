@@ -129,7 +129,11 @@ public final class AsyncSyntaxHighlighter {
         highlightingTask?.cancel()
         
         // Get the text content
-        let text = textView.string
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            let text = textView.string
+        #else
+            let text = textView.text ?? ""
+        #endif
         let textLength = text.count
         
         // Check performance limits
@@ -240,16 +244,20 @@ public final class AsyncSyntaxHighlighter {
         visibleRange: NSRange? = nil
     ) {
         // Get text storage - works for both TextKit1 and TextKit2
-        guard let textStorage = textView.textStorage else { 
-            kLogger.debug("❌ No text storage available for applying tokens")
-            return 
-        }
+        let textStorage = textView.textStorage
+        guard let textStorage = textStorage else { return }
         
         // Log highlighting application
         kLogger.debug("✅ Applying \(tokens.count) syntax highlighting tokens")
         
         // Determine range to apply
-        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: textView.string.count)
+        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                return textView.string.count
+            #else
+                return textView.text?.count ?? 0
+            #endif
+        }())
         
         // Filter tokens to visible range if specified
         let tokensToApply = visibleRange != nil
@@ -266,7 +274,16 @@ public final class AsyncSyntaxHighlighter {
         
         // Apply new highlighting
         for token in tokensToApply {
-            guard token.range.location + token.range.length <= textStorage.length else { continue }
+            // Prevent out-of-bounds NSRange crashes, required for stability:
+            // Validate that token.range.location and length are within textStorage bounds
+            guard
+                token.range.location >= 0,
+                token.range.length > 0,
+                token.range.location < textStorage.length,
+                token.range.location + token.range.length <= textStorage.length
+            else {
+                continue
+            }
             textStorage.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
         
@@ -276,9 +293,14 @@ public final class AsyncSyntaxHighlighter {
     }
     
     private func clearHighlighting(for textView: CodeEditorView) {
-        guard let textStorage = textView.textStorage else { return }
+        let textStorage = textView.textStorage
+        guard let textStorage = textStorage else { return }
         
-        let range = NSRange(location: 0, length: textView.string.count)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            let range = NSRange(location: 0, length: textView.string.count)
+        #else
+            let range = NSRange(location: 0, length: textView.text?.count ?? 0)
+        #endif
         textStorage.removeAttribute(.foregroundColor, range: range)
     }
     
@@ -625,3 +647,4 @@ final class SyntaxHighlightingPerformanceMonitor {
         metrics.removeAll()
     }
 }
+

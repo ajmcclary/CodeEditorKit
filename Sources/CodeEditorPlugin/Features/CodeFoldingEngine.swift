@@ -173,11 +173,19 @@ public class CodeFoldingEngine: ObservableObject {
     
     private func detectFoldableRegions() async {
         guard let textView,
-              let provider = providers[textView.language],
-              let text = textView.textStorage?.string else {
+              let provider = providers[textView.language] else {
             foldableRegions = []
             return
         }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let text = textView.textStorage?.string else {
+            foldableRegions = []
+            return
+        }
+        #else
+        let text = textView.textStorage.string
+        #endif
         
         isProcessing = true
         defer { isProcessing = false }

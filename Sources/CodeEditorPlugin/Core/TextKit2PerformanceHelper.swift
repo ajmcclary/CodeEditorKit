@@ -125,31 +125,25 @@ public enum TextKit2PerformanceHelper {
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Configure NSTextView specific optimizations
-        if let nsTextView = textView as? NSTextView {
-            configureNSTextView(nsTextView, for: config)
-        }
+        configureNSTextView(textView, for: config)
         #elseif canImport(UIKit)
         // Configure UITextView specific optimizations
-        if let uiTextView = textView as? UITextView {
-            configureUITextView(uiTextView, for: config)
-        }
+        configureUITextView(textView, for: config)
         #endif
     }
     
     /// Optimize text view for real-time editing performance
     /// - Parameter textView: Text view to optimize
     public static func optimizeForRealTimeEditing(_ textView: PlatformTextView) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = textView.textContainer else { return }
         
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let nsTextView = textView as? NSTextView else { return }
-        
         // Disable expensive visual features during editing
-        nsTextView.isContinuousSpellCheckingEnabled = false
-        nsTextView.isGrammarCheckingEnabled = false
-        nsTextView.isAutomaticQuoteSubstitutionEnabled = false
-        nsTextView.isAutomaticDashSubstitutionEnabled = false
-        nsTextView.isAutomaticTextReplacementEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.isGrammarCheckingEnabled = false
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
         
         // Optimize layout
         textContainer.heightTracksTextView = false
@@ -159,7 +153,8 @@ public enum TextKit2PerformanceHelper {
         textContainer.lineFragmentPadding = 0
         
         #elseif canImport(UIKit)
-        guard let uiTextView = textView as? UITextView else { return }
+        // textView is already UITextView when we're in UIKit
+        let uiTextView = textView
         
         // Disable autocorrection features
         uiTextView.autocorrectionType = .no
@@ -176,31 +171,28 @@ public enum TextKit2PerformanceHelper {
     /// - Parameter textView: Text view to optimize
     public static func optimizeForReadOnlyViewing(_ textView: PlatformTextView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let nsTextView = textView as? NSTextView else { return }
         
         // Disable editing features
-        nsTextView.isEditable = false
-        nsTextView.isSelectable = true
+        textView.isEditable = false
+        textView.isSelectable = true
         
         // Disable all text processing features
-        nsTextView.isContinuousSpellCheckingEnabled = false
-        nsTextView.isGrammarCheckingEnabled = false
-        nsTextView.allowsUndo = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.isGrammarCheckingEnabled = false
+        textView.allowsUndo = false
         
         // Optimize for display
-        nsTextView.drawsBackground = true
-        nsTextView.usesFindPanel = true
+        textView.drawsBackground = true
+        textView.usesFindPanel = true
         
         #elseif canImport(UIKit)
-        guard let uiTextView = textView as? UITextView else { return }
-        
         // Disable editing
-        uiTextView.isEditable = false
-        uiTextView.isSelectable = true
+        textView.isEditable = false
+        textView.isSelectable = true
         
         // Optimize display
-        uiTextView.autocorrectionType = .no
-        uiTextView.spellCheckingType = .no
+        textView.autocorrectionType = .no
+        textView.spellCheckingType = .no
         #endif
     }
     
@@ -339,8 +331,14 @@ public enum TextKit2PerformanceHelper {
         
         // Optimize content size for large files
         if config.enableViewportOptimization {
-            textView.textContainer.maximumNumberOfLines = 0
-            textView.textContainer.lineBreakMode = .byWordWrapping
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView.textContainer?.maximumNumberOfLines = 0
+            textView.textContainer?.lineBreakMode = .byWordWrapping
+            #else
+            let textContainer = textView.textContainer
+            textContainer.maximumNumberOfLines = 0
+            textContainer.lineBreakMode = .byWordWrapping
+            #endif
         }
     }
     #endif
@@ -456,3 +454,4 @@ public final class TextKit2PerformanceMonitor: ObservableObject {
         cacheHitRate = totalRequests > 0 ? Double(cacheHits) / Double(totalRequests) : 0
     }
 }
+

@@ -171,11 +171,11 @@ public class ContentView: NSView, @preconcurrency NSTextInputClient {
 #elseif canImport(UIKit)
 import UIKit
 
-// MARK: - ContentView (iOS)
+// MARK: - EditorContentView (iOS)
 
 /// Content view that provides text input support on iOS
 @MainActor
-public class ContentView: UIView {
+public class EditorContentView: UIView {
     // MARK: - Properties
     
     /// The parent text view
@@ -465,7 +465,7 @@ public class ContentView: UIView {
 
 // MARK: - UIGestureRecognizerDelegate
 
-extension ContentView: UIGestureRecognizerDelegate {
+extension EditorContentView: UIGestureRecognizerDelegate {
     public func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
@@ -478,3 +478,4 @@ extension ContentView: UIGestureRecognizerDelegate {
     }
 }
 #endif
+

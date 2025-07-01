@@ -7,11 +7,15 @@ import UIKit
 import CodeEditorPlugin
 import SwiftUI
 
+class SampleCodeEditorCoordinator {
+    var editorView: CodeEditorView?
+}
+
 struct SampleCodeEditorView: View {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
-    @State private var editorView: CodeEditorView?
+    private let coordinator = SampleCodeEditorCoordinator()
     @EnvironmentObject var appState: AppState
 
     var body: some View {
@@ -23,11 +27,11 @@ struct SampleCodeEditorView: View {
                 text: $text,
                 language: language
             ) { textView in
-                editorView = textView
+                coordinator.editorView = textView
             }
             .onChange(of: configuration) { newConfig in
                 // Reapply configuration when it changes
-                if let editor = editorView {
+                if let editor = coordinator.editorView {
                     newConfig.apply(to: editor)
                 }
             }
@@ -38,17 +42,18 @@ struct SampleCodeEditorView: View {
                 text: $text,
                 language: language
             ) { textView in
-                editorView = textView
+                coordinator.editorView = textView
             }
             .onChange(of: configuration) { newConfig in
                 // Reapply configuration when it changes
-                if let editor = editorView {
+                if let editor = coordinator.editorView {
                     newConfig.apply(to: editor)
                 }
             }
             #endif
             
-            // Visual indicators overlay
+            // Visual indicators overlay - only show on macOS, not on iOS or Mac Catalyst
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             VStack {
                 HStack {
                     Spacer()
@@ -65,12 +70,8 @@ struct SampleCodeEditorView: View {
                 }
             }
             .padding()
+            #endif
         }
-    }
-    
-    private func detectLanguage(from fileExtension: String) -> Language {
-        let coordinator = SyntaxHighlightingCoordinator()
-        return coordinator.detectLanguage(from: fileExtension)
     }
 }
 

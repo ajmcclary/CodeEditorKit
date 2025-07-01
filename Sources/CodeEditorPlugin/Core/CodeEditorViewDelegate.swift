@@ -119,6 +119,8 @@ extension CodeEditorViewDelegate {
     func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         CompletionViewController()
+        #elseif canImport(UIKit)
+        NoOpCompletionViewController()
         #else
         BasicCompletionViewController()
         #endif
@@ -140,3 +142,21 @@ extension CodeEditorViewDelegate {
         true
     }
 }
+
+#if canImport(UIKit)
+@MainActor
+private class NoOpCompletionViewController: UIViewController, CompletionViewControllerProtocol {
+    var items: [any CompletionItem] = []
+    var delegate: CompletionViewControllerDelegate?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view = UIView()
+    }
+
+    func showCompletions() {}
+    func hideCompletions() {}
+    func reloadData() {}
+    var isVisible: Bool { false }
+}
+#endif

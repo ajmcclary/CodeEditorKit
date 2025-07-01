@@ -47,11 +47,17 @@ public class GutterViewRenderer {
         gutterBounds: CGRect,
         fillBackground: Bool = false
     ) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = textView.textContainer,
               let layoutManager = textView.layoutManager,
-              let textStorage = textView.textStorage else { 
-            return 
+              let textStorage = textView.textStorage else {
+            return
         }
+        #else
+        let textContainer = textView.textContainer
+        let layoutManager = textView.layoutManager
+        let textStorage = textView.textStorage
+        #endif
         
         // Fill background if requested (UIKit needs this)
         if fillBackground {
@@ -205,3 +211,4 @@ extension String {
         return String(self[startIndex...])
     }
 }
+

@@ -8,7 +8,7 @@ import UIKit
 /// Cross-platform container view that holds the text view, gutter view, and minimap
 /// This allows the gutter and minimap to remain fixed while the text view scrolls
 @MainActor
-public class CodeEditorContainerView: PlatformView {
+public final class CodeEditorContainerView: PlatformView {
     // MARK: - Properties
     
     public let textView: CodeEditorView
@@ -17,8 +17,9 @@ public class CodeEditorContainerView: PlatformView {
     private var minimapDataProvider: MinimapDataProvider?
     
     #if canImport(UIKit)
-    public let contentView: ContentView
+    public let contentView: EditorContentView
     private var keyboardObservers: [NSObjectProtocol] = []
+    private nonisolated(unsafe) var keyboardObserversForDeinit: [NSObjectProtocol] = []
     private var keyboardHeight: CGFloat = 0
     #else
     public let scrollView: NSScrollView
@@ -45,10 +46,10 @@ public class CodeEditorContainerView: PlatformView {
         
         #if canImport(UIKit)
         // Create the content view for iOS
-        contentView = ContentView(frame: .zero)
+        contentView = EditorContentView(frame: CGRect.zero)
         #else
         // Create scroll view for macOS
-        scrollView = NSScrollView(frame: .zero)
+        scrollView = NSScrollView(frame: NSRect.zero)
         #endif
         
         super.init(frame: frame)
@@ -69,10 +70,10 @@ public class CodeEditorContainerView: PlatformView {
         
         #if canImport(UIKit)
         // Create the content view for iOS
-        contentView = ContentView(frame: .zero)
+        contentView = EditorContentView(frame: CGRect.zero)
         #else
         // Create scroll view for macOS
-        scrollView = NSScrollView(frame: .zero)
+        scrollView = NSScrollView(frame: NSRect.zero)
         #endif
         
         super.init(coder: coder)
@@ -171,9 +172,8 @@ public class CodeEditorContainerView: PlatformView {
         bringSubviewToFront(gutterView)
         
         // Set up scroll delegate for minimap updates
-        if let scrollView = textView as? UIScrollView {
-            scrollView.delegate = self
-        }
+        // CodeEditorView inherits from UIScrollView on iOS
+        textView.delegate = self
     }
     #endif
     
@@ -521,6 +521,7 @@ public class CodeEditorContainerView: PlatformView {
         }
         
         keyboardObservers = [willShow, willHide]
+        keyboardObserversForDeinit = keyboardObservers
     }
     
     private func handleKeyboardWillShow(keyboardFrame: CGRect?, duration: Double?) {
@@ -579,13 +580,19 @@ public class CodeEditorContainerView: PlatformView {
             }
         }
     }
+    
+    private func cleanupKeyboardObservers() {
+        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        keyboardObservers.removeAll()
+        keyboardObserversForDeinit = keyboardObservers
+    }
     #endif
     
     deinit {
         #if canImport(UIKit)
-        // Remove keyboard observers - block-based observers must be removed manually
-        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        keyboardObservers.removeAll()
+        // Perform cleanup synchronously to avoid capturing self after deinit begins
+        keyboardObserversForDeinit.forEach { NotificationCenter.default.removeObserver($0) }
+        keyboardObserversForDeinit.removeAll()
         #endif
         
         // Remove any selector-based observers
@@ -596,10 +603,11 @@ public class CodeEditorContainerView: PlatformView {
 // MARK: - UIScrollViewDelegate
 
 #if canImport(UIKit)
-extension CodeEditorContainerView: UIScrollViewDelegate {
+extension CodeEditorContainerView: UITextViewDelegate {
     public func scrollViewDidScroll(_: UIScrollView) {
         // Update minimap when text view scrolls
         updateMinimap()
     }
 }
 #endif
+

@@ -224,7 +224,11 @@ public final class ViewportManager: ObservableObject {
     
     /// Calculate prefetch range based on visible range
     private func calculatePrefetchRange(from visibleRange: NSRange) -> NSRange {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textLength = textView?.string.count else { return visibleRange }
+        #else
+        guard let textLength = textView?.text?.count else { return visibleRange }
+        #endif
         
         let prefetchLength = Int(CGFloat(visibleRange.length) * prefetchMultiplier)
         let extraLength = (prefetchLength - visibleRange.length) / 2

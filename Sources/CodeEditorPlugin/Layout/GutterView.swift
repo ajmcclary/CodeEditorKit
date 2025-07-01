@@ -99,7 +99,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     }
     
     @objc private func displayLinkFired() {
-        guard let scrollView = textView?.enclosingScrollView else { return }
+        guard let scrollView = textView?.crossPlatformEnclosingScrollView else { return }
         let currentOffset = scrollView.contentOffset
         
         if currentOffset != lastContentOffset {
@@ -197,9 +197,8 @@ extension GutterView {
         }
         #else
         // For UIKit, scrolling is handled via UIScrollViewDelegate
-        if let scrollView = textView as? UIScrollView {
-            scrollView.delegate = self
-        }
+        // CodeEditorView inherits from UIScrollView on iOS
+        textView.delegate = self
         #endif
     }
     
@@ -213,7 +212,7 @@ extension GutterView {
 // MARK: - UIScrollViewDelegate
 
 #if canImport(UIKit)
-extension GutterView: UIScrollViewDelegate {
+extension GutterView: UITextViewDelegate {
     public func scrollViewDidScroll(_: UIScrollView) {
         displayLink?.isPaused = false
     }

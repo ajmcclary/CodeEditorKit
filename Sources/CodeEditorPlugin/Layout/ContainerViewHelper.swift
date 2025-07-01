@@ -12,8 +12,12 @@ enum ContainerViewHelper {
     
     /// Navigate to a specific line number in the text view
     static func navigateToLine(_ lineNumber: Int, in textView: CodeEditorView) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = textView.string
-        let lines = text.components(separatedBy: .newlines)
+        #else
+        let text = textView.text ?? ""
+        #endif
+        let lines = text.components(separatedBy: CharacterSet.newlines)
         
         guard lineNumber < lines.count else { return }
         
@@ -97,6 +101,7 @@ enum ContainerViewHelper {
         if let scrollView = textView.enclosingScrollView {
             return scrollView.contentView.visibleRect
         }
+        return containerBounds
         #else
         // iOS - textView is itself a scroll view
         return CGRect(
@@ -104,8 +109,6 @@ enum ContainerViewHelper {
             size: textView.bounds.size
         )
         #endif
-        
-        return containerBounds
     }
     
     // MARK: - Layout Updates
@@ -155,3 +158,4 @@ enum ContainerViewHelper {
         #endif
     }
 }
+

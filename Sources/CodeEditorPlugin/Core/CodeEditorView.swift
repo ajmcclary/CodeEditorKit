@@ -386,14 +386,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         // Set up text storage observation for syntax highlighting
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let textStorage {
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(handleTextStorageDidProcessEditing(_:)),
-                name: NSTextStorage.didProcessEditingNotification,
-                object: textStorage
-            )
-        }
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTextStorageDidProcessEditing(_:)),
+            name: NSTextStorage.didProcessEditingNotification,
+            object: textStorage
+        )
         #else
         NotificationCenter.default.addObserver(
             self,
@@ -418,10 +416,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         // Setup theme
         setupDefaultTheme()
-        
-        // Apply modern TextKit configuration
+
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         ModernTextKitHelper.configureTextView(self)
         ModernTextKitHelper.applyPerformanceOptimizations(to: self)
+        #endif
         
         // Ensure TextKit2 is used if available and beneficial
         let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)
@@ -431,8 +430,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isVerticallyResizable = true
         isHorizontallyResizable = false
-        textContainer?.widthTracksTextView = true
-        textContainer?.heightTracksTextView = false
+        if let textContainer = self.textContainer {
+            textContainer.widthTracksTextView = true
+            textContainer.heightTracksTextView = false
+        }
         #else
         // UITextView doesn't have these properties - it handles scrolling differently
         #endif
@@ -445,7 +446,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         kLogger.debug("CodeEditorView setupTextView: Final frame = \(String(describing: self.frame))")
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? .zero))")
+        kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? NSSize(width: 0, height: 0)))")
         #else
         kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer.size))")
         #endif
@@ -557,11 +558,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func removeSyntaxHighlighting() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textStorage else {
-            return
-        }
+        guard let textStorage = textStorage else { return }
         #else
-        let textStorage = self.textStorage
+        guard let textStorage = self.textStorage else { return }
         #endif
 
         let fullRange = NSRange(location: 0, length: textStorage.length)
@@ -583,7 +582,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         
         // Get current cursor position
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let cursorPosition = selectedRange().location
+        let cursorPosition = selectedRange.location
         let text = string
         #else
         let cursorPosition = selectedRange.location
@@ -607,7 +606,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         guard isCompletionEnabled else { return }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let cursorPosition = selectedRange().location
+        let cursorPosition = selectedRange.location
         let text = string
         #else
         let cursorPosition = selectedRange.location
@@ -670,8 +669,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer,
-              let layoutManager else {
+        guard let textContainer = textContainer, let layoutManager = layoutManager else {
             return CGRect(x: 0, y: 0, width: 1, height: 16)
         }
         
@@ -679,10 +677,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
         #else
         // UITextView cursor positioning
-        guard let textPosition = position(from: beginningOfDocument, offset: position) else {
+        guard let start = self.position(from: beginningOfDocument, offset: position),
+              let end = self.position(from: start, offset: 0),
+              let textRange = self.textRange(from: start, to: end) else {
             return CGRect(x: 0, y: 0, width: 1, height: 16)
         }
-        return caretRect(for: textPosition)
+        return caretRect(for: textRange.start)
         #endif
     }
     
@@ -721,10 +721,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
         
-        guard let popoverVC = viewController as? UIViewController else {
-            assertionFailure("viewController must be a UIViewController on iOS")
-            return
-        }
+        let popoverVC = viewController as UIViewController
         popoverVC.modalPresentationStyle = .popover
         
         if let popover = popoverVC.popoverPresentationController {
@@ -755,8 +752,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     
     /// Handle keyboard input for completion navigation
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func keyDown(with event: NSEvent) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Handle completion navigation
         if isCompletionActive, let completionVC = completionViewController {
             switch event.keyCode {
@@ -783,10 +780,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
                 break
             }
         }
-        #endif
         
         super.keyDown(with: event)
     }
+    #endif
     
     /// Get current line range at position
     private func currentLineRange(at position: Int) -> Range<String.Index> {
@@ -796,7 +793,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         let text = self.text ?? ""
         #endif
         
-        let textIndex = text.index(text.startIndex, offsetBy: min(position, text.count))
+        let pos = min(position, text.count)
+        let textIndex = text.index(text.startIndex, offsetBy: pos)
         return text.lineRange(for: textIndex..<textIndex)
     }
     
@@ -976,7 +974,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         #endif
         
         // Force layout update
-        layoutCoordinator.invalidateLayout()
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        needsLayout = true
+        #else
+        setNeedsLayout()
+        #endif
     }
 
     // MARK: - Line Highlighting
@@ -993,12 +995,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         NotificationCenter.default.post(stNotification)
         
         // Publish selection changed event
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let selection = selectedRange()
-        #else
-        let selection = selectedRange
-        #endif
-        eventPublisher.publish(.textSelectionDidChange(selection))
+        eventPublisher.publish(.textSelectionDidChange(selectedRange))
     }
 
     private func updateSelectedLineHighlight() {
@@ -1045,9 +1042,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let selectedRange = selectedRange()
+        let selectedRange = selectedRange
         #else
-        let selectedRange = self.selectedRange
+        let selectedRange = selectedRange
         #endif
         guard selectedRange.location != NSNotFound else {
             return
@@ -1092,9 +1089,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
     private func updateLayoutManagerSettings() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let layoutManager {
-            layoutManager.showsInvisibleCharacters = showsInvisibleCharacters
-        }
+        layoutManager?.showsInvisibleCharacters = showsInvisibleCharacters
         #else
         // UITextView's layout manager doesn't support showsInvisibleCharacters
         #endif
@@ -1147,7 +1142,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         }
 
         // Check if we're using TextKit2
-        guard let textLayoutManager else {
+        guard let textLayoutManager = textLayoutManager else {
             kLogger.debug("No textLayoutManager (not using TextKit2?) - annotation will not be displayed")
             return
         }
@@ -1256,7 +1251,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
 
         // Update syntax highlighting for the affected area
         if isSyntaxHighlightingEnabled {
-            let range = replacementRange.location != NSNotFound ? replacementRange : selectedRange()
+            let range = replacementRange.location != NSNotFound ? replacementRange : selectedRange
             applySyntaxHighlighting(in: range)
         }
     }
@@ -1317,13 +1312,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
     
     /// Get the text content storage for TextKit2 operations
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public var textContentStorage: NSTextContentStorage? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return textLayoutManager?.textContentManager as? NSTextContentStorage
-        #else
-        return textLayoutManager?.textContentManager as? NSTextContentStorage
-        #endif
+        textLayoutManager?.textContentManager as? NSTextContentStorage
     }
+    #else
+    public var textContentStorage: NSTextContentStorage? {
+        textLayoutManager?.textContentManager as? NSTextContentStorage
+    }
+    #endif
 
     /// Get the visible range of text in the text view
     public func visibleRange() -> NSRange {
@@ -1374,14 +1371,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             // Fallback to TextKit1 approach only if TextKit2 is not available
             // Note: This access to layoutManager should only happen as a last resort
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let layoutManager = self.layoutManager,
-               let textContainer = self.textContainer {
-                let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-                return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
+                return NSRange(location: 0, length: 0)
             }
+            let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
+            return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             #else
-            let layoutManager = self.layoutManager
-            let textContainer = self.textContainer
+            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
+                return NSRange(location: 0, length: 0)
+            }
             let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
             return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             #endif
@@ -1402,16 +1400,20 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public var widthTracksTextView: Bool {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            super.textContainer?.widthTracksTextView ?? false
+            if let textContainer = super.textContainer {
+                return textContainer.widthTracksTextView
+            } else {
+                return false
+            }
             #else
-            false // UITextView doesn't have this property
+            return false // UITextView doesn't have this property
             #endif
         }
         set {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            super.textContainer?.widthTracksTextView = newValue
-            #else
-            // UITextView doesn't have this property
+            if let textContainer = super.textContainer {
+                textContainer.widthTracksTextView = newValue
+            }
             #endif
         }
     }
@@ -1430,16 +1432,20 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public var heightTracksTextView: Bool {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            super.textContainer?.heightTracksTextView ?? true
+            if let textContainer = super.textContainer {
+                return textContainer.heightTracksTextView
+            } else {
+                return true
+            }
             #else
-            true // UITextView doesn't have this property
+            return true // UITextView doesn't have this property
             #endif
         }
         set {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            super.textContainer?.heightTracksTextView = newValue
-            #else
-            // UITextView doesn't have this property
+            if let textContainer = super.textContainer {
+                textContainer.heightTracksTextView = newValue
+            }
             #endif
         }
     }
@@ -1472,7 +1478,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             textStorage
         }
         set {
-            if let newValue {
+            if let newValue = newValue {
                 textStorage?.setAttributedString(newValue)
             } else {
                 string = ""
@@ -1484,7 +1490,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     public var textSelection: NSRange {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            selectedRange()
+            selectedRange
             #else
             selectedRange
             #endif
@@ -1518,15 +1524,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         // Convert NSTextRange to NSRange for NSTextView compatibility
         // This is a simplified implementation
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let textStorage {
-            // For now, replace at current selection
-            let selectedRange = selectedRange()
-            textStorage.replaceCharacters(in: selectedRange, with: string)
-        }
+        // For now, replace at current selection
+        let selectedRange = selectedRange
+        guard let textStorage = textStorage else { return }
+        textStorage.replaceCharacters(in: selectedRange, with: string)
         #else
         // For now, replace at current selection
         let selectedRange = selectedRange
-        textStorage.replaceCharacters(in: selectedRange, with: string)
+        textStorage?.replaceCharacters(in: selectedRange, with: string)
         #endif
     }
 
@@ -1555,13 +1560,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             // Fallback to TextKit1 approach only if TextKit2 is not available
             // Note: This access to layoutManager should only happen as a last resort
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            guard let layoutManager = self.layoutManager,
-                  let textContainer = self.textContainer else {
+            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
                 return nil
             }
             #else
-            let layoutManager = self.layoutManager
-            let textContainer = self.textContainer
+            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
+                return nil
+            }
             #endif
             
             let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
@@ -1574,7 +1579,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     /// Detects which TextKit version is currently being used and logs warnings for compatibility mode
     public func detectTextKitVersion() -> String {
         #if canImport(UIKit)
-        if let textLayoutManager = self.textLayoutManager {
+        if textLayoutManager != nil {
             kLogger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else {
@@ -1582,7 +1587,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
             return "TextKit 1 (fallback)"
         }
         #else
-        if let textLayoutManager = self.textLayoutManager {
+        if textLayoutManager != nil {
             kLogger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else if responds(to: #selector(getter: NSTextView.layoutManager)) {
@@ -1671,7 +1676,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// Insert a completion item into the text
     private func insertCompletionItem(_ item: CompletionItemModel) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let currentPosition = selectedRange().location
+        let currentPosition = selectedRange.location
         let text = string
         #else
         let currentPosition = selectedRange.location
@@ -1688,18 +1693,17 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         // Perform the text replacement
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if shouldChangeText(in: convertNSRangeToTextRange(replaceRange), replacementString: insertText) {
-            textStorage?.replaceCharacters(in: replaceRange, with: insertText)
+            guard let textStorage = textStorage else { return }
+            textStorage.replaceCharacters(in: replaceRange, with: insertText)
             
             // Update selection to end of inserted text
             let newPosition = replaceRange.location + insertText.count
             setSelectedRange(NSRange(location: newPosition, length: 0))
         }
         #else
-        // UITextView text replacement
-        if let textRange = textRange(
-            from: position(from: beginningOfDocument, offset: replaceRange.location)!,
-            to: position(from: beginningOfDocument, offset: replaceRange.location + replaceRange.length)!
-        ) {
+        if let start = position(from: beginningOfDocument, offset: replaceRange.location),
+           let end = position(from: start, offset: replaceRange.length),
+           let textRange = textRange(from: start, to: end) {
             replace(textRange, withText: insertText)
         }
         #endif
@@ -1712,7 +1716,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         // we'd need to carefully map between character and glyph indices
         
         // First try to use the text layout manager
-        if let textLayoutManager,
+        if let textLayoutManager = textLayoutManager,
            let textContentManager = textLayoutManager.textContentManager {
             let documentRange = textContentManager.documentRange
             
@@ -1778,7 +1782,11 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Validate that a position is within the text bounds
     private func validatePosition(_ position: Int) throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = string.count
+        #else
+        let textLength = text?.count ?? 0
+        #endif
         guard position >= 0 && position <= textLength else {
             throw CodeEditorError.invalidPosition(position, textLength: textLength)
         }
@@ -1786,7 +1794,12 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Validate that a range is within the text bounds
     private func validateRange(_ range: NSRange) throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = string.count
+        #else
+        let textLength = text?.count ?? 0
+        #endif
+        
         guard range.location >= 0,
               range.length >= 0,
               range.location <= textLength,
@@ -1803,9 +1816,14 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// - Throws: CodeEditorError if position is invalid
     public func requestHoverSafe(at position: Int) async throws -> Hover? {
         try validatePosition(position)
-        guard let filePath else { return nil }
+        guard let filePath = filePath else { return nil }
         
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let text = string
+        #else
+        let text = self.text ?? ""
+        #endif
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
         
         do {
             return try await lspManager.requestHover(
@@ -1824,9 +1842,14 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// - Throws: CodeEditorError if position is invalid
     public func requestDefinitionSafe(at position: Int) async throws -> [Location] {
         try validatePosition(position)
-        guard let filePath else { return [] }
+        guard let filePath = filePath else { return [] }
         
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let text = string
+        #else
+        let text = self.text ?? ""
+        #endif
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
         
         do {
             return try await lspManager.requestDefinition(
@@ -1885,11 +1908,16 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Update LSP document context when file path or content changes
     private func updateLSPDocumentContext() {
-        guard let filePath else { return }
+        guard let filePath = filePath else { return }
         
         Task {
             do {
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 let content = string
+                #else
+                let content = self.text ?? ""
+                #endif
+                
                 let lspProvider = completionManager.registeredProviders.first { $0.id == "lsp-completion-provider" } as? LSPCompletionProvider
                 lspProvider?.updateContext(filePath: filePath, text: content)
             }
@@ -1898,7 +1926,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Infer workspace root from file path
     private func inferWorkspaceRoot() -> URL? {
-        guard let filePath else { return nil }
+        guard let filePath = filePath else { return nil }
         
         let fileURL = URL(fileURLWithPath: filePath)
         var currentDir = fileURL.deletingLastPathComponent()
@@ -1922,7 +1950,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     
     /// Get diagnostics for the current file
     public func getDiagnostics() -> [Diagnostic] {
-        guard let filePath else { return [] }
+        guard let filePath = filePath else { return [] }
         return lspManager.getDiagnostics(for: filePath)
     }
     
@@ -1931,7 +1959,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     ///   - position: Character position in the text
     /// - Returns: Hover information if available
     public func requestHover(at position: Int) async -> Hover? {
-        guard let filePath else { return nil }
+        guard let filePath = filePath else { return nil }
         
         // Validate position parameter
         do {
@@ -1941,7 +1969,12 @@ extension CodeEditorView: CompletionViewControllerDelegate {
             return nil
         }
         
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let text = string
+        #else
+        let text = self.text ?? ""
+        #endif
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
         
         do {
             return try await lspManager.requestHover(
@@ -1960,7 +1993,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     ///   - position: Character position in the text
     /// - Returns: Definition locations
     public func requestDefinition(at position: Int) async -> [Location] {
-        guard let filePath else { return [] }
+        guard let filePath = filePath else { return [] }
         
         // Validate position parameter
         do {
@@ -1970,7 +2003,12 @@ extension CodeEditorView: CompletionViewControllerDelegate {
             return []
         }
         
-        let lineCharPos = convertPositionToLineCharacter(position: position, in: string)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let text = string
+        #else
+        let text = self.text ?? ""
+        #endif
+        let lineCharPos = convertPositionToLineCharacter(position: position, in: text)
         
         do {
             return try await lspManager.requestDefinition(
@@ -2002,7 +2040,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
                 identifier: "code-editor-view-\(ObjectIdentifier(self).hashValue)",
                 priority: .normal
             ) { @MainActor [weak self] in
-                guard let self else {
+                guard let self = self else {
                     return CleanupResult(memoryFreedMB: 0, description: "CodeEditorView deallocated")
                 }
                 
@@ -2010,7 +2048,11 @@ extension CodeEditorView: CompletionViewControllerDelegate {
                 self.completionManager.clearCache()
                 
                 // Clear any cached layout information (avoid accessing textContainer in Sendable context)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 self.needsLayout = true
+                #else
+                self.setNeedsLayout()
+                #endif
                 
                 // Estimate memory freed
                 let estimatedMemoryMB = 2.0 // Conservative estimate for text view cleanup
@@ -2028,15 +2070,19 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// Set up TextKit2 rendering optimization
     private func setupTextKit2Optimization() {
         // Configure optimizer if using TextKit2
-        if let textLayoutManager,
-           let textContentStorage {
+        if let textLayoutManager = textLayoutManager,
+           let textContentStorage = textContentStorage {
             renderingOptimizer.configure(
                 textLayoutManager: textLayoutManager,
                 textContentStorage: textContentStorage
             )
             
             // Apply optimal performance configuration based on text length
-            let characterCount = textContentStorage.textStorage?.length ?? 0
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            let characterCount = string.count
+            #else
+            let characterCount = text?.count ?? 0
+            #endif
             let config = TextKit2PerformanceHelper.configureForOptimalPerformance(
                 textView: self,
                 characterCount: characterCount
@@ -2094,8 +2140,7 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// Calculate visible text range for a given visible rectangle
     private func calculateVisibleTextRange(for visibleRect: CGRect) -> NSRange {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer,
-              let layoutManager else {
+        guard let textContainer = textContainer, let layoutManager = layoutManager else {
             return NSRange(location: 0, length: 0)
         }
         
@@ -2118,13 +2163,17 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         let estimatedLines = Int(visibleRect.height / (fontSize * 1.2))
         let estimatedLength = estimatedLines * 80 // Rough estimate
         
-        return NSRange(location: startOffset, length: min(estimatedLength, text.count - startOffset))
+        return NSRange(location: startOffset, length: min(estimatedLength, (text?.count ?? 0) - startOffset))
         #endif
     }
     
     /// Optimize text view for current content
     public func optimizeForCurrentContent() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let characterCount = string.count
+        #else
+        let characterCount = text?.count ?? 0
+        #endif
         
         // Apply optimal configuration
         TextKit2PerformanceHelper.configureForOptimalPerformance(
@@ -2133,8 +2182,8 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         )
         
         // Update rendering optimizer
-        if let textLayoutManager,
-           let textContentStorage {
+        if let textLayoutManager = textLayoutManager,
+           let textContentStorage = textContentStorage {
             renderingOptimizer.configure(
                 textLayoutManager: textLayoutManager,
                 textContentStorage: textContentStorage
@@ -2308,11 +2357,12 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         
         // Perform the replacement
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let textStorage {
-            textStorage.replaceCharacters(in: range, with: text)
-        }
+        guard let textStorage = textStorage else { return }
+        textStorage.replaceCharacters(in: range, with: text)
         #else
-        if let textRange = textRange(from: range) {
+        if let start = position(from: beginningOfDocument, offset: range.location),
+           let end = position(from: start, offset: range.length),
+           let textRange = textRange(from: start, to: end) {
             replace(textRange, withText: text)
         }
         #endif
@@ -2358,3 +2408,4 @@ extension CodeEditorView: CompletionViewControllerDelegate {
         }
     }
 }
+

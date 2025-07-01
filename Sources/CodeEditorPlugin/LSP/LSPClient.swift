@@ -313,6 +313,7 @@ public final class LSPClient: ObservableObject {
     }
     
     private func startServerProcess(configuration: ServerConfiguration) async throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: configuration.serverPath)
         process.arguments = configuration.serverArguments
@@ -340,6 +341,9 @@ public final class LSPClient: ObservableObject {
         self.stdoutPipe = stdoutPipe
         
         logger.info("Started LSP server process")
+        #else
+        throw LSPError.serverError(code: -1, message: "LSP server process not supported on this platform", data: nil)
+        #endif
     }
     
     private func initializeServer(configuration: ServerConfiguration) async throws {
@@ -503,3 +507,4 @@ public final class LSPClient: ObservableObject {
 // MARK: - Empty Parameters
 
 private struct EmptyParams: Codable {}
+

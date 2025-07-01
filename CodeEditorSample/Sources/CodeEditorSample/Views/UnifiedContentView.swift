@@ -20,6 +20,9 @@ struct UnifiedContentView: View {
                     ideal: 350,
                     max: 400
                 )
+                #if targetEnvironment(macCatalyst)
+                .frame(minWidth: 350)
+                #endif
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 .navigationSplitViewStyle(.prominentDetail)
                 #endif
@@ -83,20 +86,36 @@ struct UnifiedContentView: View {
             HStack(spacing: 4) {
                 Image(systemName: "slider.horizontal.3")
                     .foregroundColor(.secondary)
+                    #if targetEnvironment(macCatalyst)
+                    .font(.system(size: 12))
+                    #endif
                 Text(appState.selectedPreset.displayName)
+                    #if targetEnvironment(macCatalyst)
+                    .font(.system(size: 11))
+                    #else
                     .font(.caption)
+                    #endif
             }
             
             Spacer()
             
             // Quick toggles for frequently used options
-            HStack(spacing: 12) {
+            HStack(spacing: {
+                #if targetEnvironment(macCatalyst)
+                return 6
+                #else
+                return 12
+                #endif
+            }()) {
                 PlatformSafeButton(
                     action: {
                         appState.coordinator.configuration.display.showLineNumbers.toggle()
                     },
                     label: {
                         Image(systemName: "number")
+                            #if targetEnvironment(macCatalyst)
+                            .font(.system(size: 14))
+                            #endif
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showLineNumbers
                                     ? .accentColor : .secondary
@@ -111,6 +130,9 @@ struct UnifiedContentView: View {
                     },
                     label: {
                         Image(systemName: "map")
+                            #if targetEnvironment(macCatalyst)
+                            .font(.system(size: 14))
+                            #endif
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showMinimap
                                     ? .accentColor : .secondary
@@ -125,6 +147,9 @@ struct UnifiedContentView: View {
                     },
                     label: {
                         Image(systemName: "paragraph")
+                            #if targetEnvironment(macCatalyst)
+                            .font(.system(size: 14))
+                            #endif
                             .foregroundColor(
                                 appState.coordinator.configuration.display.showInvisibleCharacters
                                     ? .accentColor : .secondary
@@ -140,6 +165,9 @@ struct UnifiedContentView: View {
                     label: {
                         let isEditable = appState.coordinator.configuration.behavior.isEditable
                         Image(systemName: isEditable ? "pencil" : "pencil.slash")
+                            #if targetEnvironment(macCatalyst)
+                            .font(.system(size: 14))
+                            #endif
                             .foregroundColor(isEditable ? .accentColor : .secondary)
                             .help("Toggle Editing")
                     }
@@ -185,11 +213,19 @@ struct UnifiedContentView: View {
                 #endif
             } label: {
                 Image(systemName: "ellipsis.circle")
+                    #if targetEnvironment(macCatalyst)
+                    .font(.system(size: 14))
+                    #endif
             }
             .menuStyle(.borderlessButton)
         }
         .padding(.horizontal)
+        #if targetEnvironment(macCatalyst)
+        .padding(.vertical, 2)
+        .frame(height: 32)
+        #else
         .padding(.vertical, 8)
+        #endif
         .background(Color(PlatformColors.controlBackground))
     }
     
@@ -259,7 +295,11 @@ struct UnifiedContentView: View {
             .font(.caption)
         }
         .padding(.horizontal)
+        #if targetEnvironment(macCatalyst)
+        .padding(.vertical, 3)
+        #else
         .padding(.vertical, 6)
+        #endif
         .background(Color(PlatformColors.controlBackground))
     }
     
@@ -274,7 +314,7 @@ struct UnifiedContentView: View {
     private func copyConfiguration() {
         if let jsonData = try? JSONEncoder().encode(appState.coordinator.configuration),
            let jsonString = String(data: jsonData, encoding: .utf8) {
-            #if canImport(AppKit)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(jsonString, forType: .string)
             #else
@@ -300,9 +340,14 @@ struct UnifiedContentView: View {
     }
     
     private func exportConfiguration() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let window = NSApp.keyWindow {
             ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
+        }
+        #else
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
+            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: rootVC)
         }
         #endif
     }

@@ -23,6 +23,9 @@ struct PlatformSafeToggle: View {
         MacOSToggleView(title: title, isOn: $isOn)
         #else
         IOSToggleView(title: title, isOn: $isOn)
+            #if targetEnvironment(macCatalyst)
+            .frame(height: 44) // Standard iOS row height
+            #endif
         #endif
     }
 }
@@ -113,6 +116,11 @@ struct IOSToggleView: UIViewRepresentable {
         let label = UILabel()
         label.text = title
         label.translatesAutoresizingMaskIntoConstraints = false
+        #if targetEnvironment(macCatalyst)
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        #endif
         
         // Create switch
         let toggle = UISwitch()
@@ -127,7 +135,7 @@ struct IOSToggleView: UIViewRepresentable {
         containerView.addSubview(toggle)
         
         // Set up constraints
-        NSLayoutConstraint.activate([
+        var constraints = [
             label.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             label.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             
@@ -135,8 +143,17 @@ struct IOSToggleView: UIViewRepresentable {
             toggle.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             toggle.leadingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 8),
             
-            containerView.heightAnchor.constraint(equalToConstant: 44)
-        ])
+            // Use greaterThanOrEqualToConstant: 0 to allow containerView height to shrink to zero
+            // This avoids constraint conflicts when the container provides zero height (e.g. SwiftUI's PlatformViewHost)
+            containerView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0)
+        ]
+        
+        #if targetEnvironment(macCatalyst)
+        // Add width constraint for Mac Catalyst to prevent label from getting too compressed
+        constraints.append(label.widthAnchor.constraint(greaterThanOrEqualToConstant: 150))
+        #endif
+        
+        NSLayoutConstraint.activate(constraints)
         
         // Store reference in coordinator
         context.coordinator.toggle = toggle
@@ -259,12 +276,22 @@ struct IOSButtonView<Label: View>: UIViewRepresentable {
         hostingController.view.backgroundColor = .clear
         
         button.addSubview(hostingController.view)
+        
+        #if targetEnvironment(macCatalyst)
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 4),
+            hostingController.view.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -4),
+            hostingController.view.topAnchor.constraint(equalTo: button.topAnchor, constant: 2),
+            hostingController.view.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -2)
+        ])
+        #else
         NSLayoutConstraint.activate([
             hostingController.view.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 8),
             hostingController.view.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -8),
             hostingController.view.topAnchor.constraint(equalTo: button.topAnchor, constant: 4),
             hostingController.view.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -4)
         ])
+        #endif
         
         return button
     }

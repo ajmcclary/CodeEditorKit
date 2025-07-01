@@ -13,10 +13,18 @@ struct CodeEditorSampleApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .frame(minWidth: 1200, minHeight: 800)
-                #endif
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            if #available(macOS 13.0, *) {
+                UnifiedContentView()
+                    .frame(minWidth: 1200, minHeight: 800)
+            } else {
+                Text("CodeEditor Sample requires macOS 13.0 or newer.")
+                    .frame(width: 400, height: 100)
+                    .padding()
+            }
+            #else
+            UnifiedContentView()
+            #endif
         }
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         .windowStyle(.titleBar)
@@ -98,3 +106,4 @@ extension Notification.Name {
     static let toggleInvisibleCharacters = Notification.Name("toggleInvisibleCharacters")
     static let resetLayout = Notification.Name("resetLayout")
 }
+

@@ -1,6 +1,17 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
+extension View {
+    @ViewBuilder
+    func codeEditorFocusable() -> some View {
+        if #available(macOS 14.0, iOS 17.0, macCatalyst 17.0, *) {
+            self.focusable()
+        } else {
+            self
+        }
+    }
+}
+
 /// Modern, idiomatic SwiftUI code editor with declarative configuration.
 ///
 /// `CodeEditor` provides a native SwiftUI interface for code editing with full integration
@@ -185,7 +196,7 @@ public struct CodeEditor: View {
             onSelectionChange: handleSelectionChange
         )
         .searchable(text: $searchText)
-        .focusable()
+        .codeEditorFocusable()
         .focused($isFocused)
     }
     
@@ -612,7 +623,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     
     class Coordinator: NSObject, UITextViewDelegate {
         let parent: CodeEditorRepresentable
-        private var observers: [Any] = []
+        private nonisolated(unsafe) var observers: [Any] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
@@ -836,3 +847,4 @@ public enum CompletionKind {
 }
 
 #endif
+

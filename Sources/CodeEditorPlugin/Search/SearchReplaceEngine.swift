@@ -51,7 +51,11 @@ public class SearchReplaceEngine: ObservableObject {
         isSearching = true
         defer { isSearching = false }
         
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = textView.string
+        #else
+        let text = textView.text ?? ""
+        #endif
         let results = await performSearch(
             pattern: pattern,
             in: text,
@@ -130,7 +134,14 @@ public class SearchReplaceEngine: ObservableObject {
         let result = currentSearchResults[index]
         
         // Perform replacement
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.replaceCharacters(in: result.range, with: replacement)
+        #else
+        if let text = textView.text,
+           let textRange = Range(result.range, in: text) {
+            textView.text = text.replacingCharacters(in: textRange, with: replacement)
+        }
+        #endif
         
         // Update search results
         let lengthDiff = replacement.count - result.range.length
@@ -156,14 +167,23 @@ public class SearchReplaceEngine: ObservableObject {
         // Sort results in reverse order to maintain correct ranges
         let sortedResults = results.sorted { $0.range.location > $1.range.location }
         
+        guard let textStorage = textView.textStorage else { return 0 }
+        
         // Begin grouped undo
-        textView.textStorage?.beginEditing()
-        defer { textView.textStorage?.endEditing() }
+        textStorage.beginEditing()
+        defer { textStorage.endEditing() }
         
         var replacementCount = 0
         
         for result in sortedResults {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.replaceCharacters(in: result.range, with: replacement)
+            #else
+            if let text = textView.text,
+               let textRange = Range(result.range, in: text) {
+                textView.text = text.replacingCharacters(in: textRange, with: replacement)
+            }
+            #endif
             replacementCount += 1
         }
         
@@ -277,16 +297,23 @@ public class SearchReplaceEngine: ObservableObject {
     
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
+        guard let textStorage = textView.textStorage else { return }
         
         // Clear existing highlights
-        textView.textStorage?.removeAttribute(
+        let fullRange: NSRange
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        fullRange = NSRange(location: 0, length: textView.string.count)
+        #else
+        fullRange = NSRange(location: 0, length: textView.text?.count ?? 0)
+        #endif
+        textStorage.removeAttribute(
             .backgroundColor,
-            range: NSRange(location: 0, length: textView.string.count)
+            range: fullRange
         )
         
         // Apply highlights
         for result in results {
-            textView.textStorage?.addAttribute(
+            textStorage.addAttribute(
                 .backgroundColor,
                 value: searchOptions.highlightColor,
                 range: result.range
@@ -308,24 +335,25 @@ public class SearchReplaceEngine: ObservableObject {
     
     private func flashRange(_ range: NSRange) {
         guard let textView else { return }
+        guard let textStorage = textView.textStorage else { return }
         
         let flashColor = searchOptions.flashColor
         
-        textView.textStorage?.addAttribute(
+        textStorage.addAttribute(
             .backgroundColor,
             value: flashColor,
             range: range
         )
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            textView.textStorage?.removeAttribute(
+            textStorage.removeAttribute(
                 .backgroundColor,
                 range: range
             )
             
             // Reapply search highlight if needed
             if self?.searchOptions.highlightResults == true {
-                textView.textStorage?.addAttribute(
+                textStorage.addAttribute(
                     .backgroundColor,
                     value: self?.searchOptions.highlightColor ?? PlatformColor.yellow.withAlphaComponent(0.3),
                     range: range
@@ -435,3 +463,4 @@ extension CodeEditorView {
         return engine
     }
 }
+

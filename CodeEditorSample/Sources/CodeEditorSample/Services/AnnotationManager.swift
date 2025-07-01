@@ -134,7 +134,7 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         }
     }
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     func textView(
         _ textView: CodeEditorView,
         viewForLineAnnotation annotation: CodeEditorViewAnnotation,
@@ -146,14 +146,9 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
             return nil
         }
         
-        #if canImport(AppKit)
         // Create and return annotation view
         let annotationView = SampleAnnotationView(annotation: codeAnnotation, frame: proposedViewFrame)
         return annotationView
-        #else
-        // iOS doesn't have SampleAnnotationView yet
-        return nil
-        #endif
     }
     #else
     func textView(
@@ -162,8 +157,8 @@ extension AnnotationManager: @preconcurrency AnnotationsDataSource {
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
     ) -> UIView? {
-        // Find the matching code annotation
-        guard let codeAnnotation = annotations.first(where: { $0.range == annotation.range }) else {
+        // Find the matching code annotation by ID
+        guard let codeAnnotation = annotations.first(where: { $0.id == annotation.id }) else {
             return nil
         }
         
@@ -239,7 +234,7 @@ struct CodeAnnotation {
 
 // MARK: - SampleAnnotationView
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 class SampleAnnotationView: NSView {
     private let annotation: CodeAnnotation
     private var trackingArea: NSTrackingArea?
@@ -425,7 +420,7 @@ class SampleAnnotationView: NSView {
 
 // MARK: - SampleAnnotationView (iOS)
 
-#if canImport(UIKit)
+#if canImport(UIKit) || targetEnvironment(macCatalyst)
 class SampleAnnotationView: UIView {
     private let annotation: CodeAnnotation
     private var popoverController: UIViewController?

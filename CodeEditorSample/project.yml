@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     iOS: "16.0"
     macOS: "12.0"
+    macCatalyst: "16.0"
   developmentLanguage: en
   xcodeVersion: "16.0"
 
@@ -25,10 +26,11 @@ targets:
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "1"
       DEVELOPMENT_TEAM: ""
-      CODE_SIGN_STYLE: Automatic
+      CODE_SIGN_IDENTITY: "-"
+      CODE_SIGNING_REQUIRED: "NO"
+      CODE_SIGNING_ALLOWED: "NO"
       TARGETED_DEVICE_FAMILY: "1,2" # iPhone and iPad
-      SUPPORTS_MACCATALYST: false
-      DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: false
+      SUPPORTS_MACCATALYST: true
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
       SWIFT_VERSION: "6.0"
       ENABLE_EXPERIMENTAL_CONCURRENCY: true
@@ -74,7 +76,9 @@ targets:
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "1"
       DEVELOPMENT_TEAM: ""
-      CODE_SIGN_STYLE: Automatic
+      CODE_SIGN_IDENTITY: "-"
+      CODE_SIGNING_REQUIRED: "NO"
+      CODE_SIGNING_ALLOWED: "NO"
       MACOSX_DEPLOYMENT_TARGET: "12.0"
       SWIFT_VERSION: "6.0"
       ENABLE_EXPERIMENTAL_CONCURRENCY: true
@@ -107,3 +111,11 @@ schemes:
         CodeEditorSample-macOS: all
     run:
       config: Debug
+      
+  CodeEditorSample-Catalyst:
+    build:
+      targets:
+        CodeEditorSample: all
+    run:
+      config: Debug
+      destination: "My Mac (Mac Catalyst)"

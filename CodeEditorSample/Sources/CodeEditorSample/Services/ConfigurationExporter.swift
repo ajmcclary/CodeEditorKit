@@ -10,7 +10,14 @@ import UniformTypeIdentifiers
 
 // MARK: - ConfigurationExporter
 
+// Associated object key holder
+private final class AssociatedObjectKey: Sendable {
+    static let coordinator = AssociatedObjectKey()
+    private init() {}
+}
+
 enum ConfigurationExporter {
+
     // MARK: - Export Configuration
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -116,6 +123,38 @@ enum ConfigurationExporter {
     }
 
 #elseif canImport(UIKit)
+
+// MARK: - Document Picker Coordinator
+
+private class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
+    private var completion: (([URL]) -> Void)?
+    private weak var viewController: UIViewController?
+    
+    init(viewController: UIViewController?, completion: @escaping ([URL]) -> Void) {
+        self.viewController = viewController
+        self.completion = completion
+        super.init()
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        completion?(urls)
+        cleanup()
+    }
+    
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        completion?([])
+        cleanup()
+    }
+    
+    private func cleanup() {
+        completion = nil
+        // Remove coordinator reference from associated object
+        if let vc = viewController {
+            objc_setAssociatedObject(vc, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), nil, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+}
+
     @MainActor
     static func exportConfiguration(_ config: EditorConfiguration, from viewController: UIViewController?) {
         guard let viewController else { return }
@@ -129,8 +168,8 @@ enum ConfigurationExporter {
             let documentPicker = UIDocumentPickerViewController(forExporting: [tempURL])
             documentPicker.modalPresentationStyle = .pageSheet
             
-            // Handle completion
-            documentPicker.completionHandler = { [weak viewController] urls in
+            // Create coordinator to handle delegate callbacks
+            let coordinator = DocumentPickerCoordinator(viewController: viewController) { [weak viewController] urls in
                 Task { @MainActor in
                     // Clean up temp file
                     try? FileManager.default.removeItem(at: tempURL)
@@ -144,6 +183,10 @@ enum ConfigurationExporter {
                     }
                 }
             }
+            
+            // Store coordinator to keep it alive
+            objc_setAssociatedObject(viewController, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), coordinator, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            documentPicker.delegate = coordinator
             
             viewController.present(documentPicker, animated: true)
         } catch {
@@ -172,8 +215,8 @@ enum ConfigurationExporter {
         documentPicker.allowsMultipleSelection = false
         documentPicker.modalPresentationStyle = .pageSheet
         
-        // Handle completion
-        documentPicker.completionHandler = { [weak viewController] urls in
+        // Create coordinator to handle delegate callbacks
+        let coordinator = DocumentPickerCoordinator(viewController: viewController) { [weak viewController] urls in
             Task { @MainActor in
                 guard let url = urls.first else {
                     completion(nil)
@@ -202,6 +245,10 @@ enum ConfigurationExporter {
             }
         }
         
+        // Store coordinator to keep it alive
+        objc_setAssociatedObject(viewController, Unmanaged.passUnretained(AssociatedObjectKey.coordinator).toOpaque(), coordinator, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        documentPicker.delegate = coordinator
+        
         viewController.present(documentPicker, animated: true)
     }
     
@@ -224,3 +271,4 @@ enum ConfigurationExporter {
 }
 
 // Note: EditorConfiguration is already Codable in the plugin, so no additional extension needed
+

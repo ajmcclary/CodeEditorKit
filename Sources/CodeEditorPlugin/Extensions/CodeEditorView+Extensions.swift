@@ -41,7 +41,7 @@ extension CodeEditorView {
         paste(nil)
         #else
         if let pasteString = UIPasteboard.general.string {
-            insertText(pasteString)
+            super.insertText(pasteString)
         }
         #endif
     }

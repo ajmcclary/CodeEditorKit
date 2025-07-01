@@ -8,7 +8,13 @@ import os.log
 
 /// Smart editing engine for auto-brackets, multi-cursor, and other intelligent features
 @MainActor
-public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate {
+public class SmartEditingEngine: NSObject, ObservableObject {
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    public typealias PlatformTextViewDelegate = NSTextViewDelegate
+    #else
+    public typealias PlatformTextViewDelegate = UITextViewDelegate
+    #endif
+
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "SmartEditingEngine")
     
     // MARK: - Published Properties
@@ -25,7 +31,7 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     
     // MARK: - Initialization
     
-    override public init() {
+    public override init() {
         super.init()
         setupDefaultRules()
     }
@@ -65,16 +71,16 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     // MARK: - Auto Bracket Insertion
     
     /// Handle character insertion for auto-bracket functionality
-    private func handleCharacterInsertion(_ string: String, at range: NSRange) -> Bool {
+    private func handleCharacterInsertion(_ text: String, at range: NSRange) -> Bool {
         guard configuration.autoInsertBrackets else { return false }
         
         // Check if this is an opening bracket
-        if let pair = bracketPairs.first(where: { $0.open == string }) {
+        if let pair = bracketPairs.first(where: { $0.open == text }) {
             return handleOpeningBracket(pair, at: range)
         }
         
         // Check if this is a closing bracket
-        if let pair = bracketPairs.first(where: { $0.close == string }) {
+        if let pair = bracketPairs.first(where: { $0.close == text }) {
             return handleClosingBracket(pair, at: range)
         }
         
@@ -82,8 +88,8 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     }
     
     private func handleOpeningBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
-        guard let textView,
-              let textStorage = textView.textStorage else { return false }
+        guard let textView = textView else { return false }
+        guard let textStorage = textView.textStorage else { return false }
         
         // For quotes, check if we should auto-pair
         if pair.isQuote {
@@ -104,7 +110,7 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
                 let prevChar = textStorage.attributedSubstring(
                     from: NSRange(location: range.location - 1, length: 1)
                 ).string
-                if prevChar.rangeOfCharacter(from: .alphanumerics) != nil {
+                if prevChar.rangeOfCharacter(from: CharacterSet.alphanumerics) != nil {
                     return false
                 }
             }
@@ -121,8 +127,8 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     }
     
     private func handleClosingBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
-        guard let textView,
-              let textStorage = textView.textStorage else { return false }
+        guard let textView = textView else { return false }
+        guard let textStorage = textView.textStorage else { return false }
         
         // Check if the next character is the same closing bracket
         if range.location < textStorage.length {
@@ -158,14 +164,20 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     
     /// Add cursors at all occurrences of selected text
     public func addCursorsAtOccurrences() {
-        guard let textView,
-              textView.selectedRange.length > 0,
-              let selectedText = textView.textStorage?.attributedSubstring(
-                from: textView.selectedRange
-              ).string else { return }
+        guard let textView = textView,
+              let textStorage = textView.textStorage,
+              textView.selectedRange.length > 0 else { return }
+        
+        let selectedText = textStorage.attributedSubstring(
+            from: textView.selectedRange
+        ).string
         
         // Find all occurrences
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = textView.string
+        #else
+        let text = textView.text ?? ""
+        #endif
         var searchRange = NSRange(location: 0, length: text.count)
         
         cursors.removeAll()
@@ -196,10 +208,11 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     }
     
     /// Handle text input with multiple cursors
-    private func handleMultiCursorInput(_ string: String) -> Bool {
+    private func handleMultiCursorInput(_ text: String) -> Bool {
         guard isMultiCursorMode,
               !cursors.isEmpty,
-              let textStorage = textView?.textStorage else { return false }
+              let textView = textView,
+              let textStorage = textView.textStorage else { return false }
         
         // Begin grouped editing
         textStorage.beginEditing()
@@ -207,10 +220,10 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
         // Insert text at each cursor location (in reverse order to maintain positions)
         for cursor in cursors.reversed() {
             let range = NSRange(location: cursor.location, length: cursor.selection)
-            textStorage.replaceCharacters(in: range, with: string)
+            textStorage.replaceCharacters(in: range, with: text)
             
             // Update cursor positions for remaining cursors
-            let lengthChange = string.count - cursor.selection
+            let lengthChange = text.count - cursor.selection
             for index in 0..<cursors.count where cursors[index].location > cursor.location {
                 cursors[index].location += lengthChange
             }
@@ -220,7 +233,7 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
         
         // Update cursor positions
         for index in 0..<cursors.count {
-            cursors[index].location += string.count
+            cursors[index].location += text.count
             cursors[index].selection = 0
         }
         
@@ -238,8 +251,9 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     
     /// Calculate indentation for a new line
     private func calculateIndentation(at location: Int) -> String {
-        guard let textStorage = textView?.textStorage,
+        guard let textView = textView,
               configuration.autoIndent else { return "" }
+        guard let textStorage = textView.textStorage else { return "" }
         
         // Get the current line
         let lineRange = RangeUtilities.lineRange(containing: location, in: textStorage.string)
@@ -282,7 +296,7 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     
     /// Expand selection to logical boundaries
     public func expandSelection() {
-        guard let textView else { return }
+        guard let textView = textView else { return }
         
         let currentRange = textView.selectedRange
         
@@ -297,19 +311,31 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
     }
     
     private func expandToWord(from range: NSRange) -> NSRange? {
-        guard let text = textView?.string else { return nil }
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let text = textView?.text else { return nil }
+        #else
+        guard let text = textView?.text else { return nil }
+        #endif
         
         return RangeUtilities.wordRange(at: range.location, in: text)
     }
     
     private func expandToLine(from range: NSRange) -> NSRange? {
-        guard let text = textView?.string else { return nil }
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let text = textView?.text else { return nil }
+        #else
+        guard let text = textView?.text else { return nil }
+        #endif
         
         return RangeUtilities.lineRange(containing: range.location, in: text)
     }
     
     private func expandToBrackets(from range: NSRange) -> NSRange? {
-        guard let text = textView?.string else { return nil }
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let text = textView?.text else { return nil }
+        #else
+        guard let text = textView?.text else { return nil }
+        #endif
         
         // Find enclosing brackets
         var startPos = range.location
@@ -373,26 +399,34 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
 
 // MARK: - Text View Delegate
 
-@MainActor
-extension SmartEditingEngine: CodeEditorViewDelegate {
-    public func textView(_ textView: CodeEditorView, shouldChangeTextIn range: NSRange, replacementString string: String) -> Bool {
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+extension SmartEditingEngine: NSTextViewDelegate {
+    public func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString text: String?) -> Bool {
+        guard let codeEditorView = textView as? CodeEditorView else { return true }
+        
+        guard let text = text else {
+            // Replacement string is nil, fall through to default behavior
+            return true
+        }
+        
         // Handle multi-cursor input
-        if isMultiCursorMode && !string.isEmpty {
-            return !handleMultiCursorInput(string)
+        if isMultiCursorMode && !text.isEmpty {
+            return !handleMultiCursorInput(text)
         }
         
         // Handle auto-bracket insertion
-        if string.count == 1 {
-            if handleCharacterInsertion(string, at: range) {
+        if text.count == 1 {
+            if handleCharacterInsertion(text, at: range) {
                 return false
             }
         }
         
         // Handle enter key for auto-indentation
-        if string == "\n" && configuration.autoIndent {
+        if text == "\n" && configuration.autoIndent {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
-                textView.textStorage?.replaceCharacters(
+                guard let textStorage = codeEditorView.textStorage else { return true }
+                textStorage.replaceCharacters(
                     in: range,
                     with: "\n" + indentation
                 )
@@ -403,9 +437,11 @@ extension SmartEditingEngine: CodeEditorViewDelegate {
         return true
     }
     
-    public func textViewDidChangeSelection(_ textView: CodeEditorView) {
+    public func textViewDidChangeSelection(_ notification: Notification) {
+        guard let textView = notification.object as? NSTextView,
+              let codeEditorView = textView as? CodeEditorView else { return }
         // Update multi-cursor mode if needed
-        if isMultiCursorMode && textView.selectedRange.length > 0 {
+        if isMultiCursorMode && codeEditorView.selectedRange.length > 0 {
             // Selection made, might want to exit multi-cursor mode
             // or update cursor positions
         }
@@ -413,35 +449,87 @@ extension SmartEditingEngine: CodeEditorViewDelegate {
     
     // MARK: - Other delegate methods with default implementations
     
-    public func undoManager(for _: CodeEditorView) -> UndoManager? { nil }
+    public func undoManager(for _: NSTextView) -> UndoManager? { nil }
     
     public func textViewWillChangeText(_: Notification) {}
     
     public func textViewDidChangeText(_: Notification) {}
     
-    public func textViewDidChangeSelection(_: Notification) {}
+    // Removed methods with incorrect signatures or that don't exactly match NSTextViewDelegate protocol to avoid warnings
+}
+#else
+extension SmartEditingEngine: UITextViewDelegate {
+    public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        guard let codeEditorView = textView as? CodeEditorView else { return true }
+        
+        // Handle multi-cursor input
+        if isMultiCursorMode && !text.isEmpty {
+            return !handleMultiCursorInput(text)
+        }
+        
+        // Handle auto-bracket insertion
+        if text.count == 1 {
+            if handleCharacterInsertion(text, at: range) {
+                return false
+            }
+        }
+        
+        // Handle enter key for auto-indentation
+        if text == "\n" && configuration.autoIndent {
+            let indentation = calculateIndentation(at: range.location)
+            if !indentation.isEmpty {
+                guard let textStorage = codeEditorView.textStorage else { return true }
+                textStorage.replaceCharacters(
+                    in: range,
+                    with: "\n" + indentation
+                )
+                return false
+            }
+        }
+        
+        return true
+    }
     
-    public func textView(_: CodeEditorView, shouldChangeTextIn _: NSTextRange, replacementString _: String?) -> Bool { true }
+    public func textViewDidChangeSelection(_ textView: UITextView) {
+        guard let codeEditorView = textView as? CodeEditorView else { return }
+        
+        // Update multi-cursor mode if needed
+        if isMultiCursorMode && codeEditorView.selectedRange.length > 0 {
+            // Selection made, might want to exit multi-cursor mode
+            // or update cursor positions
+        }
+    }
     
-    public func textView(_: CodeEditorView, willChangeTextIn _: NSTextRange, replacementString _: String) {}
+    // UITextViewDelegate doesn't have these methods - they're from CodeEditorViewDelegate
+    public func textViewDidChange(_ textView: UITextView) {
+        // This is the correct UITextViewDelegate method name
+    }
     
-    public func textView(_: CodeEditorView, didChangeTextIn _: NSTextRange, replacementString _: String) {}
+    // The following methods are commented out because they do not match UITextViewDelegate protocol signatures and would cause warnings.
+    /*
+    public func textView(_ textView: CodeEditorView, shouldChangeTextIn _: NSTextRange, replacementString _: String?) -> Bool { true }
     
-    public func textView(_: CodeEditorView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool { false }
+    public func textView(_ textView: CodeEditorView, willChangeTextIn _: NSTextRange, replacementString _: String) {}
     
-    public func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItem) {}
+    public func textView(_ textView: CodeEditorView, didChangeTextIn _: NSTextRange, replacementString _: String) {}
     
-    public func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol { 
+    public func textView(_ textView: CodeEditorView, clickedOnLink _: Any, at _: any NSTextLocation) -> Bool { false }
+    
+    public func textView(_ textView: CodeEditorView, insertCompletionItem _: any CompletionItem) {}
+    
+    public func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol { 
         // SmartEditingEngine doesn't provide completion - return a default implementation
         CompletionViewController()
     }
     
-    public func textViewInsertionPointView(_: CodeEditorView, frame _: CGRect) -> (InsertionPointIndicatorProtocol)? { nil }
+    public func textViewInsertionPointView(_ textView: CodeEditorView, frame _: CGRect) -> (InsertionPointIndicatorProtocol)? { nil }
     
-    public func textView(_: CodeEditorView, clickedOnAttachment _: NSTextAttachment, at _: any NSTextLocation) -> Bool { false }
+    public func textView(_ textView: CodeEditorView, clickedOnAttachment _: NSTextAttachment, at _: any NSTextLocation) -> Bool { false }
     
-    public func textView(_: CodeEditorView, shouldAllowInteractionWith _: NSTextAttachment, at _: any NSTextLocation) -> Bool { false }
+    public func textView(_ textView: CodeEditorView, shouldAllowInteractionWith _: NSTextAttachment, at _: any NSTextLocation) -> Bool { false }
+    */
 }
+#endif
 
 // MARK: - Supporting Types
 
@@ -518,6 +606,8 @@ public struct SmartEditingConfiguration {
 
 // MARK: - Convenience Extensions
 
+// Removed smartEditingEngine extension per instructions
+/*
 extension CodeEditorView {
     /// Access the smart editing engine
     public var smartEditingEngine: SmartEditingEngine {
@@ -528,3 +618,5 @@ extension CodeEditorView {
         return engine
     }
 }
+*/
+

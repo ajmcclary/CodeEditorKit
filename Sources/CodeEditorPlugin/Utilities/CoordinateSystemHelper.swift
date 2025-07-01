@@ -145,17 +145,27 @@ public class CoordinateSystemHelper {
         range: NSRange,
         in textView: CodeEditorView
     ) -> UnifiedRect? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
             return nil
         }
-        
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         let boundingRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
         
         // Add container origin offset
         let textOrigin = textView.textContainerInset
         let adjustedRect = boundingRect.offsetBy(dx: textOrigin.width, dy: textOrigin.height)
+        #else
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        let boundingRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        
+        // Add container origin offset
+        let textOrigin = textView.textContainerInset
+        let adjustedRect = boundingRect.offsetBy(dx: textOrigin.left, dy: textOrigin.top)
+        #endif
         
         return UnifiedRect(
             x: adjustedRect.minX,
@@ -171,11 +181,11 @@ public class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         in textView: CodeEditorView
     ) -> Int? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
             return nil
         }
-        
         // Convert to view coordinates
         let viewPoint = point.cgPoint(in: coordinateSystem, containerHeight: textView.bounds.height)
         
@@ -187,12 +197,31 @@ public class CoordinateSystemHelper {
         )
         
         // Find character index
-        
         return layoutManager.characterIndex(
             for: adjustedPoint,
             in: textContainer,
             fractionOfDistanceBetweenInsertionPoints: nil
         )
+        #else
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        // Convert to view coordinates
+        let viewPoint = point.cgPoint(in: coordinateSystem, containerHeight: textView.bounds.height)
+        
+        // Adjust for text container inset
+        let textOrigin = textView.textContainerInset
+        let adjustedPoint = CGPoint(
+            x: viewPoint.x - textOrigin.left,
+            y: viewPoint.y - textOrigin.top
+        )
+        
+        // Find character index
+        return layoutManager.characterIndex(
+            for: adjustedPoint,
+            in: textContainer,
+            fractionOfDistanceBetweenInsertionPoints: nil
+        )
+        #endif
     }
     
     /// Calculate visible rect in text coordinates
@@ -299,8 +328,14 @@ public class CoordinateSystemHelper {
         let locationInView = view.convert(locationInWindow, from: nil)
         return UnifiedPoint(x: locationInView.x, y: locationInView.y, in: .macOS)
         #else
-        let locationInView = event.location(in: view)
-        return UnifiedPoint(x: locationInView.x, y: locationInView.y, in: .iOS)
+        // On iOS, we need to get location from the first touch
+        if let touch = event.allTouches?.first {
+            let locationInView = touch.location(in: view)
+            return UnifiedPoint(x: locationInView.x, y: locationInView.y, in: .iOS)
+        } else {
+            // Fallback to center of view if no touches available
+            return UnifiedPoint(x: view.bounds.midX, y: view.bounds.midY, in: .iOS)
+        }
         #endif
     }
     
@@ -331,6 +366,7 @@ public class CoordinateSystemHelper {
         let bounds = textView.bounds
         let textInset = textView.textContainerInset
         
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textAreaRect = UnifiedRect(
             x: textInset.width,
             y: textInset.height,
@@ -338,6 +374,15 @@ public class CoordinateSystemHelper {
             height: bounds.height - textInset.height * 2,
             in: coordinateSystem
         )
+        #else
+        let textAreaRect = UnifiedRect(
+            x: textInset.left,
+            y: textInset.top,
+            width: bounds.width - textInset.left - textInset.right,
+            height: bounds.height - textInset.top - textInset.bottom,
+            in: coordinateSystem
+        )
+        #endif
         
         let visibleLines = Int(textAreaRect.size.height / lineHeight)
         let scrollView = textView.crossPlatformEnclosingScrollView

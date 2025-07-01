@@ -14,6 +14,16 @@ public class ModernTextKit2Bridge: NSObject {
     private var textLayoutManager: NSTextLayoutManager? { textView?.textLayoutManager }
     private var textContentManager: NSTextContentManager? { textLayoutManager?.textContentManager }
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    private var textViewVisibleRect: CGRect? {
+        textView?.visibleRect
+    }
+    #else
+    private var textViewVisibleRect: CGRect? {
+        textView?.bounds
+    }
+    #endif
+    
     // MARK: - Initialization
     
     public init(textView: PlatformTextView) {
@@ -25,7 +35,7 @@ public class ModernTextKit2Bridge: NSObject {
     // MARK: - Configuration
     
     private func ensureTextKit2Configuration() {
-        guard let textView else { return }
+        guard textView != nil else { return }
         
         // Ensure TextKit2 is properly configured
         // Note: TextKit2 initialization happens automatically in modern systems
@@ -202,7 +212,7 @@ public class ModernTextKit2Bridge: NSObject {
             let fragmentRange = fragment.rangeInElement
             
             // Check if fragment is visible
-            if fragment.layoutFragmentFrame.intersects(self.textView?.visibleRect ?? .zero) {
+            if fragment.layoutFragmentFrame.intersects(self.textViewVisibleRect ?? .zero) {
                 ranges.append(fragmentRange)
             }
             
@@ -294,12 +304,11 @@ public class ModernTextKit2Bridge: NSObject {
             }
             
             // Count line breaks in fragment
-            if let textContentManager = self.textContentManager,
-                   let nsRange = self.nsRange(from: fragmentRange),
-                   let textStorage = self.textView?.textStorage {
-                    let text = textStorage.attributedSubstring(from: nsRange).string
-                    lineNumber += text.components(separatedBy: .newlines).count - 1
-                }
+            if let nsRange = self.nsRange(from: fragmentRange),
+               let textStorage = self.textView?.textStorage {
+                let text = textStorage.attributedSubstring(from: nsRange).string
+                lineNumber += text.components(separatedBy: .newlines).count - 1
+            }
             
             return true
         }
@@ -366,7 +375,7 @@ extension ModernTextKit2Bridge: @preconcurrency NSTextLayoutManagerDelegate {
 
 extension ModernTextKit2Bridge: @preconcurrency NSTextViewportLayoutControllerDelegate {
     public func viewportBounds(for _: NSTextViewportLayoutController) -> CGRect {
-        textView?.visibleRect ?? .zero
+        textViewVisibleRect ?? .zero
     }
     
     public func textViewportLayoutController(
@@ -417,3 +426,4 @@ extension NSTextLineFragment {
         return min(characterRange.length - 1, max(0, Int(relativeX / averageCharWidth)))
     }
 }
+

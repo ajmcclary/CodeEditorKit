@@ -22,6 +22,7 @@ struct AdvancedFeaturesShowcaseView: View {
             
             // Main demo area
             GeometryReader { geometry in
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 HSplitView {
                     // Demo code editor
                     demoEditorView
@@ -31,6 +32,19 @@ struct AdvancedFeaturesShowcaseView: View {
                     featureExplanationPanel
                         .frame(minWidth: geometry.size.width * 0.35)
                 }
+                #else
+                HStack(spacing: 0) {
+                    // Demo code editor
+                    demoEditorView
+                        .frame(width: geometry.size.width * 0.6)
+                    
+                    Divider()
+                    
+                    // Feature explanation panel
+                    featureExplanationPanel
+                        .frame(width: geometry.size.width * 0.4)
+                }
+                #endif
             }
             
             Divider()

@@ -47,7 +47,9 @@ open class CompletionViewControllerBase: PlatformViewController {
     /// Configure the appearance of the view
     open func configureAppearance() {
         // Base appearance configuration
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.wantsLayer = true
+        #endif
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.layer?.backgroundColor = PlatformColors.controlBackground.cgColor

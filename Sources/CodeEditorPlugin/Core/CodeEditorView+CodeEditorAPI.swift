@@ -62,13 +62,25 @@ extension CodeEditorView: CodeEditorAPI {
     
     /// Insert text at current cursor position
     public func insertText(_ text: String) {
-        insertText(text, replacementRange: selectedRange)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        super.insertText(text, replacementRange: selectedRange)
+        #else
+        super.insertText(text)
+        #endif
     }
     
     /// Replace text in range
     public func replaceText(in range: Range<String.Index>, with text: String) {
         let nsRange = NSRange(range, in: content)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         insertText(text, replacementRange: nsRange)
+        #else
+        // For UIKit, we need to replace the text differently
+        if let textRange = self.textRange(from: self.position(from: self.beginningOfDocument, offset: nsRange.location) ?? self.beginningOfDocument,
+                                          to: self.position(from: self.beginningOfDocument, offset: nsRange.location + nsRange.length) ?? self.beginningOfDocument) {
+            self.replace(textRange, withText: text)
+        }
+        #endif
     }
     
     /// Delete text in range
@@ -164,12 +176,13 @@ extension CodeEditorView: CodeEditorAPI {
     public func visibleRange() -> Range<String.Index>? {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let visibleRect = visibleRect
-        #else
-        let visibleRect = bounds
-        #endif
-        
         guard let textContainer,
               let layoutManager else { return nil }
+        #else
+        let visibleRect = bounds
+        let textContainer = self.textContainer
+        let layoutManager = self.layoutManager
+        #endif
         
         let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)

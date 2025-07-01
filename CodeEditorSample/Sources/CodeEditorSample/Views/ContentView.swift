@@ -1,22 +1,8 @@
-import CodeEditorPlugin
-import SwiftUI
+import Foundation
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
 
-// MARK: - ContentView
+#elseif canImport(UIKit)
+import UIKit
 
-struct ContentView: View {
-    var body: some View {
-        if #available(macOS 13.0, iOS 16.0, *) {
-            UnifiedContentView()
-        } else {
-            VStack {
-                Text("CodeEditor Sample")
-                    .font(.largeTitle)
-                    .padding()
-                
-                Text("Requires macOS 13.0+ or iOS 16.0+")
-                    .padding()
-            }
-            .frame(minWidth: 400, minHeight: 300)
-        }
-    }
-}
+#endif

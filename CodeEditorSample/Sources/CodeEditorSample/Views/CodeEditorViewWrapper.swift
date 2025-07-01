@@ -238,10 +238,9 @@ struct CodeEditorViewWrapper: View {
 
     var body: some View {
         // Use the modern CodeEditor implementation
-        CodeEditor(text: $text, language: detectLanguage(from: language))
-            .showsLineNumbers(configuration.display.showLineNumbers)
-            .highlightSelectedLine(configuration.display.highlightSelectedLine)
-            .editable(configuration.behavior.isEditable)
+        CodeEditor(text: $text)
+            .codeLanguage(detectLanguage(from: language))
+            .environment(\.codeEditorConfiguration, configuration)
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {

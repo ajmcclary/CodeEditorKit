@@ -144,6 +144,9 @@ struct UnifiedConfigurationView: View {
                 importExportButtons
             }
             .padding()
+            #if targetEnvironment(macCatalyst)
+            .padding(.horizontal, 8)
+            #endif
         }
         #if canImport(UIKit)
         .navigationTitle("Configuration")
@@ -654,13 +657,16 @@ struct UnifiedConfigurationView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                #if canImport(AppKit)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 if let clipboard = NSPasteboard.general.string(forType: .string) {
                     appState.setCustomCode(clipboard)
                 }
                 #else
-                // On iOS, we could show a text input sheet
-                appState.setCustomCode("// Paste your custom code here")
+                if let clipboard = UIPasteboard.general.string {
+                    appState.setCustomCode(clipboard)
+                } else {
+                    appState.setCustomCode("// Paste your custom code here")
+                }
                 #endif
             }
         }
@@ -724,18 +730,20 @@ struct UnifiedConfigurationView: View {
     }
     
     private func exportConfiguration() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let window = NSApp.keyWindow {
             ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
         }
         #else
-        // iOS export implementation would go here
-        print("Export configuration: \(appState.coordinator.configuration)")
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
+            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: rootVC)
+        }
         #endif
     }
     
     private func importConfiguration() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let window = NSApp.keyWindow {
             ConfigurationExporter.importConfiguration(from: window) { imported in
                 if let config = imported {
@@ -746,8 +754,16 @@ struct UnifiedConfigurationView: View {
             }
         }
         #else
-        // iOS import implementation would go here
-        print("Import configuration")
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
+            ConfigurationExporter.importConfiguration(from: rootVC) { imported in
+                if let config = imported {
+                    Task { @MainActor in
+                        appState.currentConfiguration = config
+                    }
+                }
+            }
+        }
         #endif
     }
     
@@ -776,6 +792,9 @@ struct ConfigurationSection<Content: View>: View {
                 
                 Text(title)
                     .font(.headline)
+                    #if targetEnvironment(macCatalyst)
+                    .fixedSize(horizontal: false, vertical: true)
+                    #endif
                 
                 Spacer()
                 
@@ -799,6 +818,9 @@ struct ConfigurationSection<Content: View>: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(PlatformColors.controlBackground))
         )
+        #if targetEnvironment(macCatalyst)
+        .padding(.horizontal, 8)
+        #endif
     }
 }
 

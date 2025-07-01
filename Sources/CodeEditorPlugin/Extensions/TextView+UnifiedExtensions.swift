@@ -10,15 +10,18 @@ import UIKit
 
 /// Protocol that provides a unified interface for text view operations across platforms
 @MainActor
-protocol UnifiedTextViewProtocol {
+public protocol UnifiedTextViewProtocol {
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     var textStorage: NSTextStorage? { get }
     var layoutManager: NSLayoutManager? { get }
     var textContainer: NSTextContainer? { get }
-    
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     var textContainerOrigin: NSPoint { get }
     var visibleRect: NSRect { get }
     #else
+    // For UIKit, these are non-optional, but we'll handle them differently
+    var textStorage: NSTextStorage { get }
+    var layoutManager: NSLayoutManager { get }
+    var textContainer: NSTextContainer { get }
     var contentOffset: CGPoint { get }
     var bounds: CGRect { get }
     #endif
@@ -31,7 +34,9 @@ protocol UnifiedTextViewProtocol {
 extension NSTextView: UnifiedTextViewProtocol {}
 #else
 @MainActor
-extension UITextView: UnifiedTextViewProtocol {}
+extension UITextView: UnifiedTextViewProtocol {
+    // UITextView already has all required properties
+}
 #endif
 
 // MARK: - Unified Extensions
@@ -49,10 +54,15 @@ extension UnifiedTextViewProtocol {
     
     /// Returns the bounding rectangle for the given text range using layout manager
     func unifiedBoundingRect(for range: NSRange) -> CGRect? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager,
               let textContainer else {
             return nil
         }
+        #else
+        let layoutManager = self.layoutManager
+        let textContainer = self.textContainer
+        #endif
         
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
@@ -134,7 +144,11 @@ extension TextView {
         }
         
         if !layoutAttributes.isEmpty {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textStorage?.addAttributes(layoutAttributes, range: range)
+            #else
+            textStorage.addAttributes(layoutAttributes, range: range)
+            #endif
         }
     }
     
