@@ -10,7 +10,7 @@ CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor compon
 - **Swift 6 Actor System**: Full concurrency safety with modern actors
 - **True Cross-Platform**: Not a port - built from the ground up for all platforms
 - **17 Languages**: SwiftSyntax for Swift, optimized regex for others
-- **172 Tests**: Comprehensive test coverage ensuring reliability
+- **322 Tests**: Comprehensive test coverage ensuring reliability
 - **Zero Technical Debt**: Clean architecture, no linting violations
 
 ## Essential Commands
@@ -23,7 +23,7 @@ swift build
 # Run the sample application
 cd CodeEditorSample && swift run CodeEditorSample
 
-# Run all tests (172 total)
+# Run all tests (322 total)
 swift test
 
 # Quality check (build + lint + test)
@@ -148,7 +148,7 @@ if PlatformCapabilities.shared.supportsHardwareAcceleration {
 - Add tests for new features
 - Run on all platforms (macOS, iOS, Mac Catalyst)
 - Include performance benchmarks
-- Maintain 172+ test count
+- Maintain 322+ test count
 
 ## Common Development Tasks
 
@@ -204,7 +204,7 @@ xcodebuild -scheme CodeEditorSample -destination 'platform=macOS,variant=Mac Cat
 ## Project Standards
 
 ### Quality Metrics
-- **Test Count**: 172 (106 main + 66 sample)
+- **Test Count**: 322 (276 main + 46 sample)
 - **SwiftLint**: Zero violations required
 - **Platforms**: Must work on all three
 - **Performance**: <16ms frame time

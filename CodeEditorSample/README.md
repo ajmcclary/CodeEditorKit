@@ -194,7 +194,7 @@ The sample app maintains the same high quality standards as the core plugin:
   - SimplifiedIntegrationTests (6 tests)
   
 ### Quality Metrics
-- **SwiftLint Compliance**: Zero violations across 36 files (part of overall 0 violations across 204 project files)
+- **SwiftLint Compliance**: Zero violations across 36 files (part of overall 0 violations across 37 project files)
 - **Swift 6 Concurrency**: Full actor isolation and Sendable compliance
 - **Memory Safety**: Verified with Instruments and comprehensive memory leak detection
 - **Test Pass Rate**: 100% - All tests passing in final validation

@@ -9,7 +9,7 @@ CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor compon
 - **Modern Architecture**: Built with Swift 6 actors for thread-safe, performant operations
 - **Cross-Platform Excellence**: Sophisticated abstraction layer for true native performance
 - **17 Languages Supported**: SwiftSyntax for Swift, regex for other languages
-- **172 Comprehensive Tests**: Production-quality test coverage
+- **322 Comprehensive Tests**: Production-quality test coverage
 - **Zero Technical Debt**: No SwiftLint violations, clean architecture
 
 ## Quick Reference Commands
@@ -165,8 +165,8 @@ textView.language = .python
 
 ## Testing Requirements
 
-- **Main Package**: 106 tests in `Tests/CodeEditorPluginTests/`
-- **Sample App**: 66 tests in `CodeEditorSample/Tests/`
+- **Main Package**: 276 tests in `Tests/CodeEditorPluginTests/`
+- **Sample App**: 46 tests in `CodeEditorSample/Tests/`
 - **Performance**: Include benchmarks for new features
 - **Platforms**: Test macOS, iOS, and Mac Catalyst
 
