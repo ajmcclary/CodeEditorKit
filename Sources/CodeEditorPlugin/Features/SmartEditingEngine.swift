@@ -374,7 +374,7 @@ public class SmartEditingEngine: NSObject, ObservableObject, NSTextViewDelegate 
 // MARK: - Text View Delegate
 
 @MainActor
-extension SmartEditingEngine: @preconcurrency CodeEditorViewDelegate {
+extension SmartEditingEngine: CodeEditorViewDelegate {
     public func textView(_ textView: CodeEditorView, shouldChangeTextIn range: NSRange, replacementString string: String) -> Bool {
         // Handle multi-cursor input
         if isMultiCursorMode && !string.isEmpty {

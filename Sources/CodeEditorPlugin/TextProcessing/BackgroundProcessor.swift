@@ -1,6 +1,8 @@
-import Dispatch
+import Foundation
 
-final class BackgroundProcessor<Value> {
+/// A thread-safe processor for background operations with proper actor isolation
+/// Uses Swift 6 concurrency patterns for safe access to values
+actor BackgroundProcessor<Value: Sendable> {
     enum AccessMode {
         case synchronous
         case synchronousPreferred
@@ -8,9 +10,7 @@ final class BackgroundProcessor<Value> {
     }
 
     private let value: Value
-    private let queue = DispatchQueue(label: "com.chimehq.Neon.BackgroundProcessor")
     private var pendingCount = 0
-    private var pendingTask: Task<Void, Never>?
 
     init(value: Value) {
         self.value = value
@@ -28,89 +28,54 @@ final class BackgroundProcessor<Value> {
     private func endBackgroundWork() {
         pendingCount -= 1
         precondition(pendingCount >= 0)
-
-        pendingTask = nil
     }
 
-    func accessValueSynchronously<T>(
-        operation: (Value?) throws -> T
-    ) throws -> T {
-        if hasPendingWork {
-            return try operation(nil)
+    /// Access value if no pending work exists
+    /// Returns nil if work is pending to avoid blocking
+    func accessValueIfAvailable<T>(
+        operation: (Value) throws -> T
+    ) async throws -> T? {
+        guard !hasPendingWork else {
+            return nil
         }
-
-        let opResult = try queue.sync {
-            try operation(value)
-        }
-
-        precondition(hasPendingWork == false)
-
-        return opResult
+        
+        return try operation(value)
     }
 
+    /// Access value with proper async handling
     func accessValue<T>(
-        isolation: isolated (any Actor),
-        preferSynchronous: Bool,
-        operation: @escaping @Sendable (Value) throws -> sending T,
-        completion: @escaping (sending Result<T, Error>) -> Void
-    ) {
-        if preferSynchronous, hasPendingWork == false {
-            // this is necessary because queue.sync does not return a sending value. However, because operation's return is sending, this must be safe.
-            nonisolated(unsafe) let result = Result {
-                try queue.sync {
-                    try operation(value)
-                }
-            }
-
-            completion(result)
-
-            return
-        }
-
-        beginBackgroundWork()
-
-        nonisolated(unsafe) let unsafeValue = value
-
-        Task {
-            _ = isolation
-
-            let result = await withCheckedContinuation { continuation in
-                queue.async {
-                    let result = Result { try operation(unsafeValue) }
-
-                    continuation.resume(returning: result)
-                }
-            }
-
-            endBackgroundWork()
-
-            completion(result)
-        }
-    }
-
-    func accessValue<T>(
-        isolation: isolated (any Actor),
-        operation: @escaping @Sendable (Value) throws -> sending T
+        operation: @escaping @Sendable (Value) async throws -> T
     ) async throws -> T {
-        // older compilers believe this is unsafe
-        #if compiler(<6.1)
-        nonisolated(unsafe) let localSelf = self
-        #else
-        let localSelf = self
-        #endif
-
-        return try await withCheckedThrowingContinuation(isolation: isolation) { continuation in
-            localSelf.accessValue(
-                isolation: isolation,
-                preferSynchronous: false,
-                operation: operation
-            ) { result in
-                continuation.resume(with: result)
-            }
-        }
+        beginBackgroundWork()
+        defer { endBackgroundWork() }
+        
+        return try await operation(value)
     }
 
-    deinit {
-        // Cleanup if needed
+    /// Process value with cancellation support
+    func processValue<T: Sendable>(
+        operation: @escaping @Sendable (Value) async throws -> T
+    ) async throws -> T {
+        beginBackgroundWork()
+        
+        do {
+            let result = try await withTaskCancellationHandler {
+                try await operation(value)
+            } onCancel: {
+                Task { await self.endBackgroundWork() }
+            }
+            
+            endBackgroundWork()
+            return result
+        } catch {
+            endBackgroundWork()
+            throw error
+        }
+    }
+    
+    /// Cancel any pending operations
+    func cancelPendingOperations() {
+        // Reset pending count since we're cancelling all operations
+        pendingCount = 0
     }
 }

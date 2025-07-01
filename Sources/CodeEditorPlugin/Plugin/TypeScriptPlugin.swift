@@ -336,8 +336,8 @@ private final class TypeScriptIndentationProvider: IndentationProvider, @uncheck
         
         // Calculate base indentation from previous lines
         var indentLevel = 0
-        for i in 0..<lineNumber {
-            let prevLine = lines[i].trimmingCharacters(in: .whitespaces)
+        for index in 0..<lineNumber {
+            let prevLine = lines[index].trimmingCharacters(in: .whitespaces)
             if prevLine.hasSuffix("{") || prevLine.hasSuffix("[") || prevLine.hasSuffix("(") {
                 indentLevel += 1
             }

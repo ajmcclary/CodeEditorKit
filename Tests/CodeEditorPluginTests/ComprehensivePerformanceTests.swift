@@ -70,7 +70,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
         // Test the FuzzyMatcher component instead, which is a key part of SmartCompletionEngine
         // The SmartCompletionEngine itself has complex async initialization that's hard to test in isolation
         let fuzzyMatcher = FuzzyMatcher()
-        let engine = SmartCompletionEngine()
+        _ = SmartCompletionEngine() // Test that it can be instantiated
         
         // Generate test data
         let candidates = ["String", "StringProtocol", "Substring", "StaticString", "StringLiteralType"]

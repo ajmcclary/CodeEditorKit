@@ -89,7 +89,9 @@ public final class PerformanceInsights: ObservableObject {
     
     /// Reset all performance data
     public func reset() {
-        performanceMonitor.clearMetrics()
+        Task {
+            await performanceMonitor.clearMetrics()
+        }
         textKit2Monitor.reset()
         issues.removeAll()
         recommendations.removeAll()
@@ -147,13 +149,16 @@ public final class PerformanceInsights: ObservableObject {
         // FPS (for UI responsiveness)
         metrics.currentFPS = 60 // Placeholder - would measure actual frame rate
         
-        // Active operations
-        metrics.activeOperations = performanceMonitor.getAllMetrics().count
-        
-        // Response time (from recent operations)
-        if let lastMetric = performanceMonitor.getAllMetrics().last,
-           let duration = lastMetric.duration {
-            metrics.averageResponseTime = duration * 1_000 // Convert to ms
+        // Active operations and response time will be updated asynchronously
+        Task {
+            let allMetrics = await performanceMonitor.getAllMetrics()
+            metrics.activeOperations = allMetrics.count
+            
+            // Response time (from recent operations)
+            if let lastMetric = allMetrics.last,
+               let duration = lastMetric.duration {
+                metrics.averageResponseTime = duration * 1_000 // Convert to ms
+            }
         }
     }
     

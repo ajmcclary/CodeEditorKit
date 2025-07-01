@@ -416,7 +416,7 @@ final class CodeEditorViewTests: XCTestCase {
 // MARK: - MockCodeEditorViewDelegate
 
 @MainActor
-class MockCodeEditorViewDelegate: NSObject, @preconcurrency CodeEditorViewDelegate {
+class MockCodeEditorViewDelegate: NSObject, CodeEditorViewDelegate {
     var textDidChangeCalled = false
     var selectionDidChangeCalled = false
 

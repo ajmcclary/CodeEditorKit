@@ -89,6 +89,11 @@ public final class LayoutCoordinator {
         isPerformingLayout
     }
     
+    /// Cancel all pending layout operations
+    public func cancelPendingLayout() {
+        pendingLayoutOperations.removeAll()
+    }
+    
     // MARK: - Private Methods
     
     private func processPendingOperations() {

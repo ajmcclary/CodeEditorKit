@@ -1,4 +1,4 @@
-### **Rewritten Code Review Prompt**
+# **Code Review Report**
 
 **Prompt Title:** Comprehensive Code Review for Production-Ready Swift Code Editor Component
 
@@ -9,7 +9,7 @@ You will review a Swift Package containing two main targets:
 1.  `CodeEditorPlugin`: A reusable, production-ready code editor component designed for macOS and iOS using Swift 6. It aims for high performance, extensibility, and ease of integration into any SwiftUI or AppKit application.
 2.  `CodeEditorSample`: A sample application that demonstrates the `CodeEditorPlugin`'''s features and configurations.
 
-The project'''s standards, architecture, and goals are documented in `GEMINI.md`. Your review must validate the claims made in this document, including "production-ready," "zero technical debt," and full cross-platform support.
+The project'''s standards, architecture, and goals are documented in `CLAUDE.md`. Your review must validate the claims made in this document, including "production-ready," "zero technical debt," and full cross-platform support.
 
 **Review Objectives & Key Areas of Focus:**
 
@@ -23,7 +23,7 @@ Please perform a thorough code review, focusing on the following areas. Structur
 **2. Code Quality and Best Practices:**
     *   **Swift 6 Concurrency:** Scrutinize the use of Swift 6 Actors, `async/await`, and other concurrency patterns. Are there potential race conditions, deadlocks, or misuse of `MainActor`?
     *   **Platform Abstraction:** Review the code in `Sources/CodeEditorPlugin/Platform/`. Is the abstraction layer robust? Does the code correctly use `#if canImport()` for platform-specific implementations?
-    *   **Adherence to Standards:** Verify that the codebase strictly follows the guidelines outlined in `GEMINI.md`, including naming conventions and the "zero SwiftLint violations" rule.
+    *   **Adherence to Standards:** Verify that the codebase strictly follows the guidelines outlined in `CLAUDE.md`, including naming conventions and the "zero SwiftLint violations" rule.
 
 **3. Performance and Reliability:**
     *   **Efficiency:** Identify potential performance bottlenecks, especially in the syntax highlighting engine (`SyntaxHighlighting/`), text processing (`TextProcessing/`), and rendering logic (`Layout/`).

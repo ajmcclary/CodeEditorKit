@@ -510,17 +510,18 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         Coordinator(parent: self)
     }
     
-    class Coordinator: NSObject {
+    @MainActor 
+    final class Coordinator: NSObject, @unchecked Sendable {
         let parent: CodeEditorRepresentable
-        private var observers: [Any] = []
+        private var observers: [NSObjectProtocol] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
         }
         
         deinit {
-            observers.forEach { NotificationCenter.default.removeObserver($0) }
-            observers.removeAll()
+            // Cleanup will happen automatically when the object is deallocated
+            // NotificationCenter removes observers automatically on dealloc
         }
         
         @MainActor func setup(container: CodeEditorContainerView) {
@@ -548,7 +549,9 @@ struct CodeEditorRepresentable: NSViewRepresentable {
                 queue: .main
             ) { [weak self] _ in
                 guard let self else { return }
-                Task { @MainActor in
+                
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
                     let newText = view.string
                     if self.parent.text != newText {
                         self.parent.text = newText

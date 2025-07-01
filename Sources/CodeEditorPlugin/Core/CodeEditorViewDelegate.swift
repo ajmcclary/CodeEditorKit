@@ -9,6 +9,7 @@ import AppKit
 
 /// A set of optional methods that text view delegates can use to manage selection,
 /// set text attributes and more.
+@MainActor
 public protocol CodeEditorViewDelegate: AnyObject {
     /// Returns the undo manager for the specified text view.
     ///
@@ -115,7 +116,6 @@ extension CodeEditorViewDelegate {
         // Default implementation
     }
 
-    @MainActor
     func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         CompletionViewController()

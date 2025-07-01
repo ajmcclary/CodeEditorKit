@@ -194,13 +194,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
     }
 
     /// The color for highlighting the selected line
-    public var selectedLineHighlightColor: PlatformColor = {
-        #if canImport(UIKit)
-        return PlatformColors.tintColor.withAlphaComponent(0.15)
-        #else
-        return PlatformColors.controlAccentColor.withAlphaComponent(0.15)
-        #endif
-    }() {
+    public var selectedLineHighlightColor = PlatformColor.selectedLineHighlight {
         didSet {
             updateSelectedLineHighlight()
         }
@@ -470,10 +464,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         
         // Register with memory monitor
         registerWithMemoryMonitor()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Theme Setup
@@ -1643,6 +1633,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate {
         )
     }
     #endif
+    
+    // MARK: - Cleanup
+    
+    deinit {
+        // Remove notification observers
+        NotificationCenter.default.removeObserver(self)
+        
+        // Note: We cannot perform MainActor-isolated cleanup in deinit
+        // The cleanup of UI elements will happen automatically when the view is deallocated
+        // Subviews are automatically removed from their superview when deallocated
+    }
 }
 
 // MARK: - CompletionViewControllerDelegate
@@ -2171,5 +2172,189 @@ extension CodeEditorView: CompletionViewControllerDelegate {
     /// Get background syntax highlighting statistics
     public var backgroundHighlightingStatistics: BackgroundHighlightingStatistics {
         asyncHighlighter.backgroundStatistics
+    }
+    
+    // MARK: - Error Handling API
+    
+    /// Set language with proper error handling
+    /// - Parameter language: The language to set
+    /// - Throws: CodeEditorError if the language is not supported
+    public func setLanguage(_ language: Language) throws {
+        // Validate language support
+        guard syntaxHighlighter.supportedFileExtensions.contains(language.identifier) || language == .swift || language == .plainText else {
+            throw CodeEditorError.unsupportedLanguage(language.name)
+        }
+        
+        self.language = language
+        applySyntaxHighlighting()
+    }
+    
+    /// Set text with validation and error handling
+    /// - Parameter text: The text to set
+    /// - Throws: CodeEditorError if the text is too large or processing fails
+    public func setText(_ text: String) throws {
+        // Check file size limits
+        let maxSize = configuration.performance.maxSyntaxHighlightingLength
+        if maxSize > 0 && text.count > maxSize {
+            throw CodeEditorError.fileTooLarge(text.count, maxSize: maxSize)
+        }
+        
+        // Validate text encoding
+        guard text.canBeConverted(to: .utf8) else {
+            throw CodeEditorError.textProcessingFailed("Text contains invalid UTF-8 characters")
+        }
+        
+        // Set the text
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        self.string = text
+        #else
+        self.text = text
+        #endif
+    }
+    
+    /// Apply configuration with validation
+    /// - Parameter configuration: The configuration to apply
+    /// - Throws: CodeEditorError if configuration validation fails
+    public func setConfiguration(_ configuration: EditorConfiguration) throws {
+        // Validate configuration
+        let validationErrors = configuration.validate()
+        if !validationErrors.isEmpty {
+            throw CodeEditorError.configurationValidationFailed(validationErrors)
+        }
+        
+        self.configuration = configuration
+    }
+    
+    /// Safe range validation (public version)
+    /// - Parameter range: The range to validate
+    /// - Throws: CodeEditorError if the range is invalid
+    public func validateRangeSafe(_ range: NSRange) throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textLength = string.count
+        #else
+        let textLength = text?.count ?? 0
+        #endif
+        
+        guard range.location >= 0 && range.location <= textLength else {
+            throw CodeEditorError.invalidRange(range, textLength: textLength)
+        }
+        
+        guard range.location + range.length <= textLength else {
+            throw CodeEditorError.invalidRange(range, textLength: textLength)
+        }
+    }
+    
+    /// Safe position validation (public version)
+    /// - Parameter position: The position to validate
+    /// - Throws: CodeEditorError if the position is invalid
+    public func validatePositionSafe(_ position: Int) throws {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textLength = string.count
+        #else
+        let textLength = text?.count ?? 0
+        #endif
+        
+        guard position >= 0 && position <= textLength else {
+            throw CodeEditorError.invalidPosition(position, textLength: textLength)
+        }
+    }
+    
+    /// Request hover information with error handling
+    /// - Parameter position: The text position
+    /// - Returns: Hover information if available
+    /// - Throws: CodeEditorError for invalid positions or LSP failures
+    public func requestHoverSafe(at position: Int) async throws -> String? {
+        try validatePositionSafe(position)
+        
+        // For now, return nil as hover functionality needs LSP integration
+        return nil
+    }
+    
+    /// Request completion with error handling
+    /// - Parameter position: The text position
+    /// - Returns: Completion items if available
+    /// - Throws: CodeEditorError for invalid positions or completion failures
+    public func requestCompletionSafe(at position: Int) async throws -> [String] {
+        try validatePositionSafe(position)
+        
+        guard configuration.behavior.enableCodeCompletion else {
+            throw CodeEditorError.completionProviderNotFound("Code completion is disabled")
+        }
+        
+        // For now, return empty array as completion needs proper implementation
+        return []
+    }
+    
+    /// Safe text replacement with validation
+    /// - Parameters:
+    ///   - range: The range to replace
+    ///   - text: The replacement text
+    /// - Throws: CodeEditorError for invalid ranges or processing failures
+    public func replaceTextSafe(in range: NSRange, with text: String) throws {
+        try validateRangeSafe(range)
+        
+        // Check if the new text would exceed size limits
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let currentLength = string.count
+        #else
+        let currentLength = self.text?.count ?? 0
+        #endif
+        
+        let newLength = currentLength - range.length + text.count
+        let maxSize = configuration.performance.maxSyntaxHighlightingLength
+        if maxSize > 0 && newLength > maxSize {
+            throw CodeEditorError.fileTooLarge(newLength, maxSize: maxSize)
+        }
+        
+        // Perform the replacement
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textStorage {
+            textStorage.replaceCharacters(in: range, with: text)
+        }
+        #else
+        if let textRange = textRange(from: range) {
+            replace(textRange, withText: text)
+        }
+        #endif
+    }
+    
+    // MARK: - Error Recovery
+    
+    /// Attempt to recover from errors
+    /// - Parameter error: The error to recover from
+    /// - Returns: Whether recovery was successful
+    @discardableResult
+    public func attemptErrorRecovery(from error: CodeEditorError) -> Bool {
+        guard error.isRecoverable else { return false }
+        
+        switch error {
+        case .syntaxHighlightingFailed:
+            // Disable and re-enable syntax highlighting
+            var display = configuration.display
+            display.enableSyntaxHighlighting = false
+            configuration = configuration.with(display: display)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                var newDisplay = self.configuration.display
+                newDisplay.enableSyntaxHighlighting = true
+                self.configuration = self.configuration.with(display: newDisplay)
+            }
+            return true
+            
+        case .hardwareAccelerationUnavailable:
+            // Disable hardware acceleration
+            var performance = configuration.performance
+            performance.useHardwareAcceleration = false
+            configuration = configuration.with(performance: performance)
+            return true
+            
+        case .configurationValidationFailed:
+            // Reset to default configuration
+            configuration = .default
+            return true
+            
+        default:
+            return false
+        }
     }
 }

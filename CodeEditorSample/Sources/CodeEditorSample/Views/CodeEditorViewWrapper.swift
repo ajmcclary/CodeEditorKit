@@ -108,7 +108,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     // MARK: - Coordinator
 
     @MainActor
-    class Coordinator: NSObject, @preconcurrency CodeEditorViewDelegate {
+    class Coordinator: NSObject, CodeEditorViewDelegate {
         var parent: UnifiedCodeEditorView
         var annotationManager: AnnotationManager?
 

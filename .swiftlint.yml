@@ -41,6 +41,7 @@ disabled_rules:
   - large_tuple # TCA sometimes uses larger tuples for state
   - static_operator # Operators like <- need to be free functions for generic usage
   - override_in_extension # Platform-specific extensions require overrides
+  - required_deinit # Deinit methods should only be added when cleanup is needed
 
 opt_in_rules:
   # Swift 6 & Concurrency
@@ -131,7 +132,6 @@ opt_in_rules:
   - reduce_into
   - redundant_nil_coalescing
   - redundant_type_annotation
-  - required_deinit
   - required_enum_case
   - return_arrow_whitespace
   - self_binding

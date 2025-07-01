@@ -9,67 +9,106 @@ import SwiftUI
 
 // MARK: - Main Module Exports
 
+/// CodeEditorPlugin: Production-ready code editor component for Swift applications
+///
+/// This module provides a comprehensive code editing solution with:
+/// - **17+ programming languages** with syntax highlighting
+/// - **Cross-platform support** for macOS, iOS, and Mac Catalyst
+/// - **Modern Swift 6 concurrency** with actor-based architecture
+/// - **SwiftUI and UIKit/AppKit integration**
+/// - **Performance optimizations** for large files
+/// - **Comprehensive error handling** with recovery mechanisms
+///
+/// ## Quick Start
+///
+/// ### SwiftUI Integration
+/// ```swift
+/// import SwiftUI
+/// import CodeEditorPlugin
+///
+/// struct ContentView: View {
+///     @State private var code = "logger.debug(\"Hello, World!\")"
+///
+///     var body: some View {
+///         CodeEditor(text: $code)
+///             .codeLanguage(.swift)
+///             .showsLineNumbers(true)
+///     }
+/// }
+/// ```
+///
+/// ### UIKit/AppKit Integration
+/// ```swift
+/// let editor = CodeEditorView()
+/// editor.language = .swift
+/// editor.showsLineNumbers = true
+/// editor.text = "logger.debug(\"Hello, World!\")"
+/// ```
+///
+/// ### Configuration with Builder Pattern
+/// ```swift
+/// let config = EditorConfigurationBuilder()
+///     .fontSize(16)
+///     .theme(.dark)
+///     .language(.swift)
+///     .build()
+///
+/// editor.configuration = config
+/// ```
+///
+/// ## Architecture
+///
+/// The plugin uses a feature-based architecture with clear separation of concerns:
+/// - **Core**: Main text view and editing functionality
+/// - **Configuration**: Unified configuration system with builder pattern
+/// - **SyntaxHighlighting**: Multi-language highlighting with SwiftSyntax integration
+/// - **Platform**: Cross-platform abstraction layer
+/// - **Extensions**: Utility extensions and helpers
+///
+/// ## Performance
+///
+/// - **Viewport-based rendering** for large files
+/// - **Hardware acceleration** support
+/// - **Actor-based concurrency** for thread safety
+/// - **Memory limits** with automatic cleanup
+/// - **Background processing** with cancellation support
+///
+/// ## Error Handling
+///
+/// Comprehensive error handling with `CodeEditorError` enum:
+/// ```swift
+/// do {
+///     try editor.setText(content)
+///     try editor.setLanguage(.python)
+/// } catch let error as CodeEditorError {
+///     logger.error("Error: \(error.localizedDescription)")
+///     editor.attemptErrorRecovery(from: error)
+/// }
+/// ```
 public struct CodeEditorPlugin {
+    /// Current version of the CodeEditorPlugin
     public static let version = "1.0.0"
+    
+    /// Swift version used to build the plugin
     public static let swiftVersion = "6.0"
+    
+    /// Minimum supported macOS version
+    public static let minimumMacOSVersion = "12.0"
+    
+    /// Minimum supported iOS version
+    public static let minimumIOSVersion = "16.0"
+    
+    /// Supported programming languages count
+    public static let supportedLanguagesCount = 17
 
     private init() {}
 }
 
-// MARK: - Convenience Typealiases
+// MARK: - Essential Type Aliases
 
-// Main text view types
+// Main text view types (for backward compatibility)
 public typealias CodeEditorTextView = CodeEditorView
 public typealias CodeEditorDelegate = CodeEditorViewDelegate
-
-// Plugin types have been removed - functionality integrated directly into CodeEditorView
-
-// Annotation types
-public typealias CodeEditorAnnotation = LineAnnotation
-public typealias CodeEditorAnnotationDataSource = AnnotationsDataSource
-
-// Highlighting types
-// Note: CodeEditorTheme is defined in SwiftUI/CodeEditor.swift
-public typealias CodeEditorToken = Token
-public typealias CodeEditorTokenType = TokenType
-public typealias CodeEditorSyntaxHighlighter = SyntaxHighlightingCoordinator
-
-// macOS 26 Compatibility types
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-public typealias CodeEditorAdaptiveColors = AdaptiveColorSystem
-// CodeEditorVersionDetection removed - use PlatformCapabilities.shared instead
-public typealias CodeEditorModernTextKit = ModernTextKitHelper
-#endif
-
-// MARK: - New Architecture Types
-
-// Configuration
-public typealias EditorConfig = EditorConfiguration
-
-// MARK: - Convenience Type Aliases for Improved API
-
-/// Shorter alias for the main editor view
-public typealias Editor = CodeEditorView
-
-/// Shorter alias for editor theme
-public typealias EditorTheme = CodeEditorSwiftUITheme
-
-// Events
-// Note: EditorEventType protocol is defined in Events/EditorEvent.swift
-// Note: EditorEventHandler and EditorEventPublisher are defined in Events/EditorEvent.swift
-
-// Layout
-public typealias LayoutCoord = LayoutCoordinator
-public typealias LayoutCtx = LayoutContext
-
-// Language System
-// public typealias LanguageProvider = LanguageProvider // Removed self-referential type alias
-public typealias LanguageReg = LanguageRegistry
-
-// Performance
-public typealias PerfMonitor = PerformanceMonitor
-// Note: PerformanceMetric type alias removed due to ambiguity - use specific types directly
-public typealias PerfReport = PerformanceReport
 
 // MARK: - CodeEditorPluginModule
 

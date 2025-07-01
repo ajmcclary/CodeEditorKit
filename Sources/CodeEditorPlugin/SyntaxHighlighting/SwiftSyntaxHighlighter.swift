@@ -11,8 +11,7 @@ import AppKit
 // MARK: - SwiftSyntaxHighlighter
 
 /// A pure Swift syntax highlighter for Swift code using Apple's SwiftSyntax
-@MainActor
-public final class SwiftSyntaxHighlighter: @unchecked Sendable {
+public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
     
     /// Optimized keyword lookup set for O(1) performance
@@ -116,6 +115,7 @@ public final class SwiftSyntaxHighlighter: @unchecked Sendable {
     }
 
     /// Apply highlighting to an attributed string
+    @MainActor
     public func applyHighlighting(to attributedString: NSMutableAttributedString, tokens: [HighlightedToken]) {
         // Remove existing syntax highlighting
         let range = NSRange(location: 0, length: attributedString.length)

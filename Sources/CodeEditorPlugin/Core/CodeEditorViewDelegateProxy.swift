@@ -7,7 +7,7 @@ import UIKit
 import Foundation
 
 @MainActor
-class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDelegate {
+class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     weak var source: CodeEditorViewDelegate?
 
     init(source: CodeEditorViewDelegate?) {
@@ -131,15 +131,21 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         }
     }
 
-    func textView(_ textView: NSTextView, shouldChangeTextIn _: NSRange, replacementString _: String?) -> Bool {
+    func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
         // Convert NSRange to NSTextRange for CodeEditorView compatibility
-        // This is a simplified approach - in a full implementation, we'd need proper conversion
-        if textView is CodeEditorView {
-            // For now, just forward with a simple implementation - skip the NSTextRange conversion
-            // TextKit2 range conversion requires proper NSTextContentManager integration
-            // For now, we allow all text changes. Future implementation will handle range conversion.
+        guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
+        
+        // Try to convert NSRange to NSTextRange
+        if let textLayoutManager = codeEditorView.textLayoutManager,
+           let textContentManager = textLayoutManager.textContentManager,
+           let textRange = NSTextRange(affectedCharRange, provider: textContentManager) {
+            // Forward to the CodeEditorView delegate method with proper NSTextRange
+            return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: replacementString) ?? true
+        }
+        
+        // Fallback: allow the change if we can't convert the range
         return true
     }
     #elseif canImport(UIKit)
@@ -151,12 +157,18 @@ class CodeEditorViewDelegateProxy: NSObject, @preconcurrency CodeEditorViewDeleg
         }
     }
 
-    func textView(_ textView: UITextView, shouldChangeTextIn _: NSRange, replacementText _: String) -> Bool {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         // Convert NSRange to NSTextRange for CodeEditorView compatibility
-        if textView is CodeEditorView {
-            // For now, just forward with a simple implementation
+        guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
+        
+        // UITextView doesn't have TextKit2 support, so we'll create a simple NSTextRange
+        if let textRange = NSTextRange(range) {
+            return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: text) ?? true
+        }
+        
+        // Fallback: allow the change if we can't convert the range
         return true
     }
     #endif

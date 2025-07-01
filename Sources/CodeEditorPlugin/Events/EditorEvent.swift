@@ -173,7 +173,6 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
 @available(macOS 10.15, iOS 13.0, *)
 private final class EditorEventSubscription<S: Subscriber>: Subscription, @unchecked Sendable
     where S.Input == EditorEvent, S.Failure == Never {
-    
     private let lock = NSLock()
     private var subscriber: S?
     private let eventPublisher: EditorEventPublisher
@@ -190,7 +189,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         }
     }
     
-    nonisolated func request(_ demand: Subscribers.Demand) {
+    nonisolated func request(_: Subscribers.Demand) {
         // Events are pushed, so we don't need to handle demand
     }
     
@@ -207,7 +206,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         }
     }
     
-    fileprivate func handleEvent(_ event: EditorEvent) {
+    private func handleEvent(_ event: EditorEvent) {
         lock.lock()
         let sub = subscriber
         lock.unlock()

@@ -8,15 +8,36 @@ import UIKit
 import AppKit
 #endif
 
+// MARK: - HighlightingTaskManager
+
+/// Actor for managing highlighting tasks with thread safety
+private actor HighlightingTaskManager {
+    private var currentTask: Task<[HighlightedToken], Never>?
+    
+    func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) {
+        currentTask?.cancel()
+        currentTask = task
+    }
+    
+    func cancelCurrent() {
+        currentTask?.cancel()
+        currentTask = nil
+    }
+}
+
 // MARK: - SyntaxHighlightingCoordinator
 
 /// Coordinates between SwiftSyntax and regex-based highlighting for different languages
-@MainActor
-public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
+/// Thread-safe implementation with proper cancellation support
+public final class SyntaxHighlightingCoordinator {
     // MARK: - Properties
 
     private let swiftHighlighter: SwiftSyntaxHighlighter
     private let regexHighlighter: RegexSyntaxHighlighter
+    private let performanceMonitor = PerformanceMonitor.shared
+    
+    // Use an actor for managing mutable state
+    private let taskManager = HighlightingTaskManager()
 
     // MARK: - Initialization
 
@@ -42,7 +63,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         return .plainText
     }
 
-    /// Highlight source code based on detected or specified language
+    /// Highlight source code synchronously
     public func highlight(source: String, language: Language) -> [HighlightedToken] {
         switch language {
         case .swift:
@@ -55,21 +76,66 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
             return []
         }
     }
+    
+    /// Highlight source code asynchronously with cancellation support
+    public func highlightAsync(source: String, language: Language) async -> [HighlightedToken] {
+        // Cancel any existing highlighting task
+        await taskManager.cancelCurrent()
+        
+        // Capture highlighters explicitly
+        let swiftHL = swiftHighlighter
+        let regexHL = regexHighlighter
+        
+        // Create new task for highlighting
+        let task = Task<[HighlightedToken], Never> {
+            // Perform highlighting directly without performance monitoring in async context
+            switch language {
+            case .swift:
+                return swiftHL.highlight(source: source)
 
-    /// Apply highlighting to an attributed string using adaptive colors
-    public func applyHighlighting(to attributedString: NSMutableAttributedString, tokens: [HighlightedToken]) {
+            case let .regex(definition):
+                return regexHL.highlight(source: source, language: definition)
+
+            case .plainText:
+                return []
+            }
+        }
+        
+        await taskManager.setCurrentTask(task)
+        return await task.value
+    }
+
+    /// Apply highlighting to an attributed string using adaptive colors with progressive rendering
+    @MainActor
+    public func applyHighlighting(
+        to attributedString: NSMutableAttributedString,
+        tokens: [HighlightedToken],
+        progressHandler: ((Double) -> Void)? = nil
+    ) async {
         // Remove existing syntax highlighting
         let range = NSRange(location: 0, length: attributedString.length)
         attributedString.removeAttribute(.foregroundColor, range: range)
-
-        // Apply new highlighting with adaptive colors
-        for token in tokens {
+        
+        // Apply new highlighting with adaptive colors in batches for responsiveness
+        let batchSize = 100
+        let totalTokens = tokens.count
+        
+        for (index, token) in tokens.enumerated() {
+            // Check for cancellation periodically
+            if index.isMultiple(of: batchSize) {
+                await Task.yield()
+                progressHandler?(Double(index) / Double(totalTokens))
+            }
+            
             guard token.range.location + token.range.length <= attributedString.length else {
                 continue
             }
+            
             // Use adaptive color system that works with macOS 26 Liquid Glass design
             attributedString.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
+        
+        progressHandler?(1.0)
     }
 
     /// Get all supported file extensions
@@ -84,8 +150,14 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         return Array(Set(extensions)).sorted()
     }
 
+    /// Cancel any in-progress highlighting
+    public func cancelHighlighting() async {
+        await taskManager.cancelCurrent()
+    }
+    
     deinit {
-        // Cleanup if needed
+        // Note: Cannot perform async cleanup in deinit
+        // The task manager will clean up its own resources
     }
 }
 

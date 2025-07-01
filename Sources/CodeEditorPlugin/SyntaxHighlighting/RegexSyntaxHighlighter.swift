@@ -12,8 +12,7 @@ public typealias RegexHighlighterColor = PlatformColor
 // MARK: - RegexSyntaxHighlighter
 
 /// A pure Swift regex-based syntax highlighter for various programming languages
-@MainActor
-public final class RegexSyntaxHighlighter: @unchecked Sendable {
+public final class RegexSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
     
     /// Optimized token type mapping for O(1) conversion
@@ -210,6 +209,7 @@ public final class RegexSyntaxHighlighter: @unchecked Sendable {
     }
 
     /// Apply highlighting to an attributed string
+    @MainActor
     public func applyHighlighting(to attributedString: NSMutableAttributedString, tokens: [HighlightedToken]) {
         // Remove existing syntax highlighting
         let range = NSRange(location: 0, length: attributedString.length)
