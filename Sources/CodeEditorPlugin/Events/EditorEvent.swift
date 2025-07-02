@@ -41,11 +41,11 @@ import UIKit
 ///     func handle(_ event: EditorEvent) {
 ///         switch event {
 ///         case .textDidChange(let newText):
-///             print("Text changed: \(newText)")
+///             logger.debug("Text changed: \(newText)")
 ///         case .textSelectionDidChange(let range):
-///             print("Selection: \(range)")
+///             logger.debug("Selection: \(range)")
 ///         case .error(let error):
-///             print("Error: \(error)")
+///             logger.debug("Error: \(error)")
 ///         default:
 ///             break
 ///         }
@@ -67,7 +67,7 @@ import UIKit
 /// // Type-safe event filtering
 /// editor.eventPublisher.publisher(for: TextDidChangeEvent.self)
 ///     .sink { event in
-///         print("Text: \(event.text)")
+///         logger.debug("Text: \(event.text)")
 ///     }
 ///     .store(in: &cancellables)
 /// ```
@@ -221,9 +221,9 @@ public protocol EditorEventHandler: AnyObject, Sendable {
 /// let handler = ClosureEventHandler { event in
 ///     switch event {
 ///     case .textDidChange(let text):
-///         print("New text: \(text)")
+///         logger.debug("New text: \(text)")
 ///     case .error(let error):
-///         print("Error: \(error)")
+///         logger.debug("Error: \(error)")
 ///     default:
 ///         break
 ///     }
@@ -278,7 +278,7 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
 /// // Subscribe to all events
 /// eventPublisher.publisher()
 ///     .sink { event in
-///         print("Event: \(event)")
+///         logger.debug("Event: \(event)")
 ///     }
 ///     .store(in: &cancellables)
 ///
@@ -287,7 +287,7 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
 ///     .map { $0.text }
 ///     .removeDuplicates()
 ///     .sink { text in
-///         print("Unique text: \(text)")
+///         logger.debug("Unique text: \(text)")
 ///     }
 ///     .store(in: &cancellables)
 /// ```

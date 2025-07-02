@@ -401,7 +401,7 @@ public actor AsyncOperationManager {
     /// // Use it multiple times - only executes based on throttle interval
     /// textDidChange()
     /// if let saved = try await throttledSave() {
-    ///     print("Document saved")
+    ///     logger.debug("Document saved")
     /// }
     /// ```
     ///
@@ -611,9 +611,9 @@ public actor AsyncOperationManager {
     /// for (index, result) in results.enumerated() {
     ///     switch result {
     ///     case .success(let output):
-    ///         print("File \(index) processed: \(output)")
+    ///         logger.debug("File \(index) processed: \(output)")
     ///     case .failure(let error):
-    ///         print("File \(index) failed: \(error)")
+    ///         logger.debug("File \(index) failed: \(error)")
     ///     }
     /// }
     /// ```
@@ -752,10 +752,10 @@ public actor AsyncOperationManager {
     ///
     /// ```swift
     /// let status = await manager.getStatus()
-    /// print("Active operations: \(status.activeCount)")
-    /// print("Scheduled operations: \(status.scheduledCount)")
-    /// print("Throttled keys: \(status.throttledKeys)")
-    /// print("Debounced keys: \(status.debouncedKeys)")
+    /// logger.debug("Active operations: \(status.activeCount)")
+    /// logger.debug("Scheduled operations: \(status.scheduledCount)")
+    /// logger.debug("Throttled keys: \(status.throttledKeys)")
+    /// logger.debug("Debounced keys: \(status.debouncedKeys)")
     ///
     /// // Adapt behavior based on load
     /// if status.activeCount > 10 {

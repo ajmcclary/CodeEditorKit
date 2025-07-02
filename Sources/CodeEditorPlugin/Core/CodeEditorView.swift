@@ -159,13 +159,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// ```swift
     /// editor.eventPublisher.textDidChangePublisher
     ///     .sink { event in
-    ///         print("Text changed: \(event.newText)")
+    ///         logger.debug("Text changed: \(event.newText)")
     ///     }
     ///     .store(in: &cancellables)
     /// 
     /// editor.eventPublisher.selectionDidChangePublisher
     ///     .sink { event in
-    ///         print("Selection: \(event.selectedRange)")
+    ///         logger.debug("Selection: \(event.selectedRange)")
     ///     }
     ///     .store(in: &cancellables)
     /// ```

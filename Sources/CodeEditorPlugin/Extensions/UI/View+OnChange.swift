@@ -24,7 +24,7 @@ extension View {
     ///     var body: some View {
     ///         TextField("Search", text: $searchText)
     ///             .onChangeCompat(of: searchText) { newValue in
-    ///                 print("Search text changed to: \(newValue)")
+    ///                 logger.debug("Search text changed to: \(newValue)")
     ///                 performSearch(with: newValue)
     ///             }
     ///     }

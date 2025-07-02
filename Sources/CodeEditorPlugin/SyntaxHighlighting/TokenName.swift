@@ -104,7 +104,7 @@ public struct TokenName: Hashable, Decodable, CustomStringConvertible, Expressib
     ///
     /// ```swift
     /// let token = TokenName("keyword")
-    /// print(token.description) // Prints: "keyword"
+    /// logger.debug(token.description) // Prints: "keyword"
     /// ```
     public var description: String {
         value

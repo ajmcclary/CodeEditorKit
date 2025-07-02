@@ -687,9 +687,9 @@ public final class CompletionManager: @unchecked Sendable {
 ///
 /// ```swift
 /// let stats = manager.statistics
-/// print("Total requests: \(stats.totalRequests)")
-/// print("Cache hit rate: \(stats.cacheHitRate * 100)%")
-/// print("Avg processing time: \(stats.averageProcessingTime)s")
+/// logger.debug("Total requests: \(stats.totalRequests)")
+/// logger.debug("Cache hit rate: \(stats.cacheHitRate * 100)%")
+/// logger.debug("Avg processing time: \(stats.averageProcessingTime)s")
 /// ```
 ///
 /// - SeeAlso: ``CompletionManager``

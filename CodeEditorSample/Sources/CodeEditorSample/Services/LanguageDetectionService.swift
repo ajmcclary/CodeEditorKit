@@ -192,54 +192,31 @@ public struct LanguageDetectionService {
     public static func editorLanguage(for languageInfo: LanguageInfo?) -> Language {
         guard let info = languageInfo else { return .plainText }
         
-        // Map language IDs to Language enum cases
-        switch info.id {
-        case "swift":
-            return .swift
-        case "javascript":
-            return .javascript
-        case "typescript":
-            return .typescript
-        case "python":
-            return .python
-        case "go":
-            return .go
-        case "rust":
-            return .rust
-        case "c":
-            return .c
-        case "cpp":
-            return .cpp
-        case "java":
-            return .java
-        case "html":
-            return .html
-        case "css":
-            return .css
-        case "json":
-            return .json
-        case "markdown":
-            return .markdown
-        case "yaml":
-            return .yaml
-        case "xml":
-            return .xml
-        case "sql":
-            return .sql
-        case "ruby":
-            return .ruby
-        case "php":
-            return .php
-        case "shell":
-            return .shell
-        default:
-            // Try to create Language from identifier
-            if let language = Language(identifier: info.id) {
-                return language
-            }
-            return .plainText
-        }
+        return languageMapping[info.id] ?? Language(identifier: info.id) ?? .plainText
     }
+    
+    /// Static mapping of language IDs to Language enum cases for efficient lookup
+    private static let languageMapping: [String: Language] = [
+        "swift": .swift,
+        "javascript": .javascript,
+        "typescript": .typescript,
+        "python": .python,
+        "go": .go,
+        "rust": .rust,
+        "c": .c,
+        "cpp": .cpp,
+        "java": .java,
+        "html": .html,
+        "css": .css,
+        "json": .json,
+        "markdown": .markdown,
+        "yaml": .yaml,
+        "xml": .xml,
+        "sql": .sql,
+        "ruby": .ruby,
+        "php": .php,
+        "shell": .shell
+    ]
     
     /// Check if a file type is supported
     public static func isSupported(fileExtension: String) -> Bool {

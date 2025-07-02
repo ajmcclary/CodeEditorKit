@@ -39,7 +39,7 @@ import AppKit
 /// editor.configuration = .default
 /// 
 /// // Set content
-/// editor.content = "func hello() {\n    print(\"Hello, World!\")\n}"
+/// editor.content = "func hello() {\n    logger.debug(\"Hello, World!\")\n}"
 /// 
 /// // Subscribe to events
 /// editor.subscribe(MyEventHandler())

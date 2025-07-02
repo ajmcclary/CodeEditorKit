@@ -50,7 +50,26 @@ import Foundation
 /// do {
 ///     try editor.performOperation()
 /// } catch let error as CodeEditorError {
-///     print(\"Error: \\(error.errorDescription ?? \"Unknown\")\")\n///     print(\"Reason: \\(error.failureReason ?? \"Unknown\")\")\n///     print(\"Recovery: \\(error.recoverySuggestion ?? \"None\")\")\n///     \n///     if error.isRecoverable {\n///         // Attempt recovery\n///     }\n/// }\n/// ```\n///\n/// ## Error Properties\n///\n/// ```swift\n/// let error = CodeEditorError.fileTooLarge(1_000_000, maxSize: 500_000)\n/// print(error.category)        // \"FileSystem\"\n/// print(error.isRecoverable)   // false\n/// ```\n///\n/// - SeeAlso: ``ValidationError``, ``CodeEditorResult``\npublic enum CodeEditorError: LocalizedError, CustomStringConvertible {
+///     logger.debug("Error: \(error.errorDescription ?? "Unknown")")
+///     logger.debug("Reason: \(error.failureReason ?? "Unknown")")
+///     logger.debug("Recovery: \(error.recoverySuggestion ?? "None")")
+///     
+///     if error.isRecoverable {
+///         // Attempt recovery
+///     }
+/// }
+/// ```
+///
+/// ## Error Properties
+///
+/// ```swift
+/// let error = CodeEditorError.fileTooLarge(1_000_000, maxSize: 500_000)
+/// logger.debug(error.category)        // "FileSystem"
+/// logger.debug("\(error.isRecoverable)")   // false
+/// ```
+///
+/// - SeeAlso: ``ValidationError``, ``CodeEditorResult``
+public enum CodeEditorError: LocalizedError, CustomStringConvertible {
     // MARK: - Configuration Errors
     case invalidConfiguration(String)
     case configurationValidationFailed([ValidationError])
@@ -274,7 +293,7 @@ import Foundation
 ///     value: -1,
 ///     constraint: "must be greater than 0"
 /// )
-/// print(error) // "fontSize: '-1' violates constraint 'must be greater than 0'"
+/// logger.debug(error) // "fontSize: '-1' violates constraint 'must be greater than 0'"
 /// ```
 ///
 /// - SeeAlso: ``CodeEditorError``, ``EditorConfiguration``

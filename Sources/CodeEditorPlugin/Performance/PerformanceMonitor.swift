@@ -34,7 +34,7 @@ import os.log
 /// 
 /// // Generate report
 /// let report = await monitor.generateReport()
-/// print("Average operation time: \\(report.averageDuration)s")
+/// logger.debug("Average operation time: \\(report.averageDuration)s")
 /// ```
 ///
 /// ## Performance Thresholds
@@ -311,11 +311,11 @@ public struct MonitoringPerformanceMetric: Sendable {
 ///
 /// ```swift
 /// let report = await monitor.generateReport()
-/// print(report.summary)
+/// logger.debug(report.summary)
 /// 
 /// // Check slowest operations
 /// for operation in report.slowestOperations {
-///     print("\(operation.name): \(operation.duration ?? 0)s")
+///     logger.debug("\(operation.name): \(operation.duration ?? 0)s")
 /// }
 /// ```
 ///

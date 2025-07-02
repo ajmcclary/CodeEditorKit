@@ -43,7 +43,7 @@ struct UnifiedConfigurationView: View {
                         systemImage: "eye",
                         isExpanded: expandedSections.contains("Display")
                     ) {
-                        displayContent
+                        DisplayConfigurationSection()
                     }
                     .onTapGesture {
                         toggleSection("Display")
@@ -52,37 +52,25 @@ struct UnifiedConfigurationView: View {
                     // Layout section
                     ConfigurationSection(
                         title: "Layout",
-                        systemImage: "rectangle.3.offgrid",
+                        systemImage: "rectangle.grid.1x2",
                         isExpanded: expandedSections.contains("Layout")
                     ) {
-                        layoutContent
+                        LayoutConfigurationSection()
                     }
                     .onTapGesture {
                         toggleSection("Layout")
                     }
                     
-                    // Editor Behavior section
+                    // Behavior section
                     ConfigurationSection(
-                        title: "Editor Behavior",
-                        systemImage: "keyboard",
+                        title: "Behavior",
+                        systemImage: "gear",
                         isExpanded: expandedSections.contains("Behavior")
                     ) {
-                        behaviorContent
+                        BehaviorConfigurationSection()
                     }
                     .onTapGesture {
                         toggleSection("Behavior")
-                    }
-                    
-                    // Text Input Features section
-                    ConfigurationSection(
-                        title: "Text Input Features",
-                        systemImage: "text.cursor",
-                        isExpanded: expandedSections.contains("TextInput")
-                    ) {
-                        textInputContent
-                    }
-                    .onTapGesture {
-                        toggleSection("TextInput")
                     }
                     
                     // Performance section
@@ -91,92 +79,49 @@ struct UnifiedConfigurationView: View {
                         systemImage: "speedometer",
                         isExpanded: expandedSections.contains("Performance")
                     ) {
-                        performanceContent
+                        PerformanceConfigurationSection()
                     }
                     .onTapGesture {
                         toggleSection("Performance")
                     }
                     
-                    // Advanced Features section
+                    // Import/Export section
                     ConfigurationSection(
-                        title: "Advanced Features",
-                        systemImage: "gearshape.2",
-                        isExpanded: expandedSections.contains("Advanced")
+                        title: "Import/Export",
+                        systemImage: "square.and.arrow.up",
+                        isExpanded: expandedSections.contains("ImportExport")
                     ) {
-                        advancedFeaturesContent
+                        importExportButtons
                     }
                     .onTapGesture {
-                        toggleSection("Advanced")
-                    }
-                    
-                    // Plugin System section
-                    ConfigurationSection(
-                        title: "Plugin System",
-                        systemImage: "puzzlepiece.extension",
-                        isExpanded: expandedSections.contains("Plugins")
-                    ) {
-                        pluginSystemContent
-                    }
-                    .onTapGesture {
-                        toggleSection("Plugins")
-                    }
-                    
-                    // Language Server section
-                    ConfigurationSection(
-                        title: "Language Server (LSP)",
-                        systemImage: "network",
-                        isExpanded: expandedSections.contains("LSP")
-                    ) {
-                        languageServerContent
-                    }
-                    .onTapGesture {
-                        toggleSection("LSP")
-                    }
-                    
-                    // Sample Code section
-                    ConfigurationSection(
-                        title: "Sample Code",
-                        systemImage: "doc.text",
-                        isExpanded: expandedSections.contains("Samples")
-                    ) {
-                        sampleCodeContent
-                    }
-                    .onTapGesture {
-                        toggleSection("Samples")
+                        toggleSection("ImportExport")
                     }
                 }
-                
-                // Import/Export buttons
-                importExportButtons
+                .padding(.horizontal, adaptiveMainHorizontalPadding())
             }
-            .padding(adaptivePadding())
+            .padding(.bottom, adaptiveBottomPadding())
         }
-        #if canImport(UIKit)
-        .navigationTitle("Configuration")
-        .navigationBarTitleDisplayMode(isIPad() ? .large : .inline)
-        #endif
-        .font(adaptiveFont())
+        .background(adaptiveBackgroundColor())
     }
     
     // MARK: - Search Bar
     
     @ViewBuilder
     private var searchBar: some View {
-        HStack {
+        HStack(spacing: adaptiveSearchSpacing()) {
             Image(systemName: "magnifyingglass")
+                .font(.system(size: adaptiveSearchIconSize()))
                 .foregroundColor(.secondary)
-                .font(adaptiveSearchIconFont())
-            TextField("Search configuration options...", text: $searchText)
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .textFieldStyle(.squareBorder)
-                #else
-                .textFieldStyle(.roundedBorder)
-                #endif
-                .font(adaptiveSearchFont())
+            
+            TextField("Search settings...", text: $searchText)
+                .font(.system(size: adaptiveSearchTextSize()))
+                .textFieldStyle(PlainTextFieldStyle())
+                .padding(.vertical, adaptiveSearchVerticalPadding())
         }
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        .padding(.vertical, isIPad() ? 4 : 0)
-        #endif
+        .padding(.horizontal, adaptiveSearchHorizontalPadding())
+        .background(adaptiveSearchBackground())
+        .clipShape(RoundedRectangle(cornerRadius: adaptiveSearchCornerRadius()))
+        .padding(.horizontal, adaptiveMainHorizontalPadding())
         .minimumScaleFactor(0.7)  // Allow text to scale down if needed
         .lineLimit(1)
     }
@@ -187,512 +132,9 @@ struct UnifiedConfigurationView: View {
     private var presetsContent: some View {
         VStack(spacing: 8) {
             ForEach(ConfigurationPreset.allCases, id: \.self) { preset in
-                PresetRow(preset: preset, isSelected: appState.selectedPreset == preset)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        appState.applyPreset(preset)
-                    }
-            }
-        }
-    }
-    
-    // MARK: - Display Content
-    
-    @ViewBuilder
-    private var displayContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            // Core display options - using PlatformSafeToggle to avoid MainActor crashes
-            PlatformSafeToggle("Show Line Numbers", isOn: $appState.coordinator.configuration.display.showLineNumbers)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Highlight Selected Line",
-                isOn: $appState.coordinator.configuration.display.highlightSelectedLine
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Show Invisible Characters",
-                isOn: $appState.coordinator.configuration.display.showInvisibleCharacters
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Enable Syntax Highlighting",
-                isOn: $appState.coordinator.configuration.display.enableSyntaxHighlighting
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Enable Annotations",
-                isOn: $appState.coordinator.configuration.display.enableAnnotations
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle("Show Indent Guides", isOn: $appState.coordinator.configuration.display.showIndentGuides)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle("Show Minimap", isOn: $appState.coordinator.configuration.display.showMinimap)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            // Additional display features coming soon
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Additional Display Features (Coming Soon)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.blue)
-                    Text("Code Folding, Visual Themes, Search Highlighting")
-                        .font(.caption)
+                PresetRow(preset: preset, isSelected: appState.selectedPreset == preset) {
+                    appState.applyPreset(preset)
                 }
-            }
-            
-            // Font size
-            SafeSlider(
-                "Font Size",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.display.fontSize) },
-                    set: { appState.coordinator.configuration.display.fontSize = CGFloat($0) }
-                ),
-                in: 10...32,
-                step: 1.0,
-                formatter: { "\(Int($0))pt" }
-            )
-        }
-    }
-    
-    // MARK: - Layout Content
-    
-    @ViewBuilder
-    private var layoutContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            // Tab settings
-            SafeSlider(
-                "Tab Width",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.tabWidth) },
-                    set: { appState.coordinator.configuration.layout.tabWidth = Int($0) }
-                ),
-                in: 2...8,
-                step: 1.0,
-                formatter: { "\(Int($0)) spaces" }
-            )
-            
-            PlatformSafeToggle(
-                "Insert Spaces for Tabs",
-                isOn: $appState.coordinator.configuration.layout.insertSpacesForTabs
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle("Wrap Lines", isOn: $appState.coordinator.configuration.layout.wrapLines)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            
-            // Line spacing
-            SafeSlider(
-                "Line Spacing",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.lineSpacing) },
-                    set: { appState.coordinator.configuration.layout.lineSpacing = CGFloat($0) }
-                ),
-                in: 1.0...3.0,
-                step: 0.1,
-                formatter: { String(format: "%.1f", $0) }
-            )
-            
-            // Gutter settings
-            SafeSlider(
-                "Gutter Width",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.gutterWidth) },
-                    set: { appState.coordinator.configuration.layout.gutterWidth = CGFloat($0) }
-                ),
-                in: 40...100,
-                step: 5.0,
-                formatter: { "\(Int($0))pt" }
-            )
-            
-            SafeSlider(
-                "Line Number Padding",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.lineNumberPadding) },
-                    set: { appState.coordinator.configuration.layout.lineNumberPadding = CGFloat($0) }
-                ),
-                in: 4...16,
-                step: 1.0,
-                formatter: { "\(Int($0))pt" }
-            )
-            
-            // Annotation settings
-            SafeSlider(
-                "Annotation Badge Size",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.layout.annotationBadgeSize) },
-                    set: { appState.coordinator.configuration.layout.annotationBadgeSize = CGFloat($0) }
-                ),
-                in: 12...24,
-                step: 1.0,
-                formatter: { "\(Int($0))pt" }
-            )
-            
-            SafeSlider(
-                "Annotation Badge Padding",
-                value: Binding(
-                    get: {
-                        Double(appState.coordinator.configuration.layout.annotationBadgePadding)
-                    },
-                    set: {
-                        appState.coordinator.configuration.layout.annotationBadgePadding = CGFloat($0)
-                    }
-                ),
-                in: 2...8,
-                step: 1.0,
-                formatter: { "\(Int($0))pt" }
-            )
-        }
-    }
-    
-    // MARK: - Behavior Content
-    
-    @ViewBuilder
-    private var behaviorContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            PlatformSafeToggle("Editable", isOn: $appState.coordinator.configuration.behavior.isEditable)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle("Selectable", isOn: $appState.coordinator.configuration.behavior.isSelectable)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle("Auto Indent", isOn: $appState.coordinator.configuration.behavior.autoIndent)
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Auto Close Brackets",
-                isOn: $appState.coordinator.configuration.behavior.autoCloseBrackets
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Auto Close Quotes",
-                isOn: $appState.coordinator.configuration.behavior.autoCloseQuotes
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            PlatformSafeToggle(
-                "Enable Code Completion",
-                isOn: $appState.coordinator.configuration.behavior.enableCodeCompletion
-            )
-                .frame(minHeight: adaptiveToggleMinHeight())
-            // Additional features coming soon
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Advanced Features (Coming Soon)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.blue)
-                    Text("Smart Completion, Multi-Cursor, Search & Replace")
-                        .font(.caption)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Text Input Content
-    
-    @ViewBuilder
-    private var textInputContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            PlatformSafeToggle("Continuous Spell Checking", 
-                       isOn: $appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled)
-            PlatformSafeToggle("Grammar Checking", 
-                       isOn: $appState.coordinator.configuration.behavior.isGrammarCheckingEnabled)
-            PlatformSafeToggle("Automatic Quote Substitution", 
-                       isOn: $appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled)
-            PlatformSafeToggle("Automatic Dash Substitution", 
-                       isOn: $appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled)
-            PlatformSafeToggle(
-                "Automatic Text Replacement",
-                isOn: $appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled
-            )
-            PlatformSafeToggle(
-                "Automatic Spelling Correction",
-                isOn: $appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled
-            )
-            PlatformSafeToggle("Automatic Text Completion", 
-                       isOn: $appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled)
-            
-            #if canImport(UIKit)
-            Text("Note: Some text input features may have limited support on iOS")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            #endif
-        }
-    }
-    
-    // MARK: - Performance Content
-    
-    @ViewBuilder
-    private var performanceContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            PlatformSafeToggle(
-                "Hardware Acceleration",
-                isOn: $appState.coordinator.configuration.performance.useHardwareAcceleration
-            )
-            PlatformSafeToggle(
-                "Smooth Scrolling",
-                isOn: $appState.coordinator.configuration.performance.smoothScrolling
-            )
-            // Additional performance features coming soon
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Advanced Performance Features (Coming Soon)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.blue)
-                    Text("Performance Monitoring, Memory Optimization")
-                        .font(.caption)
-                }
-            }
-            
-            // Max syntax highlighting length
-            SafeSlider(
-                "Max Syntax Highlighting",
-                value: Binding(
-                    get: { Double(appState.coordinator.configuration.performance.maxSyntaxHighlightingLength) },
-                    set: { appState.coordinator.configuration.performance.maxSyntaxHighlightingLength = Int($0) }
-                ),
-                in: 10_000...1_000_000,
-                step: 10_000,
-                formatter: { formatBytes(Int($0)) }
-            )
-            
-            // Text change debounce interval
-            SafeSlider(
-                "Text Change Debounce",
-                value: $appState.coordinator.configuration.performance.textChangeDebounceInterval,
-                in: 0.0...1.0,
-                step: 0.1,
-                formatter: { String(format: "%.1fs", $0) }
-            )
-        }
-    }
-    
-    // MARK: - Advanced Features Content
-    
-    @ViewBuilder
-    private var advancedFeaturesContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            // Advanced feature status (read-only)
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Active Advanced Features")
-                    .font(.headline)
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Cross-Platform Coordination")
-                        .font(.body)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Unified Event System")
-                        .font(.body)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("TextKit Bridge")
-                        .font(.body)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Viewport Management")
-                        .font(.body)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Async Text Processing")
-                        .font(.body)
-                }
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Feature Status")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Core Features: Active")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Performance Optimizations: Enabled")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Platform Integration: Ready")
-                        .font(.caption)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Plugin System Content
-    
-    @ViewBuilder
-    private var pluginSystemContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Plugin System Architecture")
-                    .font(.headline)
-                
-                Text("The CodeEditor Plugin includes a comprehensive plugin architecture designed for " +
-                     "extensibility and security.")
-                    .font(.body)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Plugin Status")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "puzzlepiece.extension.fill")
-                        .foregroundColor(.blue)
-                    Text("Core Plugin System: Ready")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "externaldrive.connected")
-                        .foregroundColor(.orange)
-                    Text("Marketplace Integration: Available")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "shield.fill")
-                        .foregroundColor(.green)
-                    Text("Security: Sandboxed")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.blue)
-                    Text("Configuration coming in future release")
-                        .font(.caption)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Language Server Content
-    
-    @ViewBuilder
-    private var languageServerContent: some View {
-        VStack(spacing: adaptiveControlSpacing()) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Language Server Protocol (LSP)")
-                    .font(.headline)
-                
-                Text("The CodeEditor Plugin includes LSP integration architecture for advanced language " +
-                     "features like code completion, diagnostics, and semantic analysis.")
-                    .font(.body)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("LSP Server Support")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                HStack {
-                    Image(systemName: "network")
-                        .foregroundColor(.blue)
-                    Text("Protocol Support: LSP 3.17")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Swift: sourcekit-lsp")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("TypeScript: typescript-language-server")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Python: pylsp")
-                        .font(.caption)
-                }
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundColor(.blue)
-                    Text("Configuration coming in future release")
-                        .font(.caption)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Sample Code Content
-    
-    @ViewBuilder
-    private var sampleCodeContent: some View {
-        VStack(spacing: 8) {
-            // Show all available sample languages
-            ForEach(SampleCodeStore.availableSamples(), id: \.id) { language in
-                LanguageSampleRow(
-                    languageInfo: language,
-                    isSelected: (appState.selectedLanguage?.id ?? "") == language.id && appState.customCode.isEmpty
-                )
-                .onTapGesture {
-                    appState.selectLanguage(language)
-                }
-            }
-            
-            // Custom code option
-            HStack {
-                Image(systemName: "doc.text.fill")
-                    .foregroundColor(.secondary)
-                Text("Custom Code")
-                Spacer()
-                if !appState.customCode.isEmpty {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.accentColor)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                if let clipboard = NSPasteboard.general.string(forType: .string) {
-                    appState.setCustomCode(clipboard)
-                }
-                #else
-                if let clipboard = UIPasteboard.general.string {
-                    appState.setCustomCode(clipboard)
-                } else {
-                    appState.setCustomCode("// Paste your custom code here")
-                }
-                #endif
             }
         }
     }
@@ -701,41 +143,35 @@ struct UnifiedConfigurationView: View {
     
     @ViewBuilder
     private var importExportButtons: some View {
-        HStack(spacing: 12) {
-            PlatformSafeButton(action: exportConfiguration) {
-                Label("Export", systemImage: "square.and.arrow.up")
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentColor.opacity(0.1))
-                    .cornerRadius(6)
+        VStack(spacing: adaptiveButtonSpacing()) {
+            HStack(spacing: adaptiveButtonSpacing()) {
+                Button("Export Settings") {
+                    if let json = appState.exportConfigurationAsJSON() {
+                        // In a real app, present save dialog or share sheet
+                        print("Configuration exported: \(json)")
+                    }
+                }
+                .buttonStyle(configurationButtonStyle())
+                
+                Button("Import Settings") {
+                    // In a real app, present file picker or import dialog
+                    // appState.importConfiguration(from: jsonString)
+                }
+                .buttonStyle(configurationButtonStyle())
             }
             
-            PlatformSafeButton(action: importConfiguration) {
-                Label("Import", systemImage: "square.and.arrow.down")
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentColor.opacity(0.1))
-                    .cornerRadius(6)
+            Button("Reset to Defaults") {
+                appState.resetConfiguration()
             }
-            
-            Spacer()
-            
-            PlatformSafeButton(action: resetConfiguration) {
-                Label("Reset All", systemImage: "arrow.counterclockwise")
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(6)
-                    .foregroundColor(.red)
-            }
+            .buttonStyle(destructiveButtonStyle())
         }
-        .padding(.horizontal, adaptivePadding())
+        .padding(.horizontal, adaptiveHorizontalPadding())
     }
     
     // MARK: - Helper Methods
     
     private func toggleSection(_ section: String) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(.easeInOut(duration: 0.3)) {
             if expandedSections.contains(section) {
                 expandedSections.remove(section)
             } else {
@@ -744,420 +180,211 @@ struct UnifiedConfigurationView: View {
         }
     }
     
-    private func formatBytes(_ bytes: Int) -> String {
-        if bytes < 1_000 {
-            return "\(bytes) bytes"
-        } else if bytes < 1_000_000 {
-            return "\(bytes / 1_000)KB"
-        } else {
-            return String(format: "%.1fMB", Double(bytes) / 1_000_000)
-        }
-    }
-    
-    private func exportConfiguration() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let window = NSApp.keyWindow {
-            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
-        }
-        #else
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = scene.windows.first?.rootViewController {
-            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: rootVC)
-        }
-        #endif
-    }
-    
-    private func importConfiguration() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let window = NSApp.keyWindow {
-            ConfigurationExporter.importConfiguration(from: window) { imported in
-                if let config = imported {
-                    Task { @MainActor in
-                        appState.currentConfiguration = config
-                    }
-                }
-            }
-        }
-        #else
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = scene.windows.first?.rootViewController {
-            ConfigurationExporter.importConfiguration(from: rootVC) { imported in
-                if let config = imported {
-                    Task { @MainActor in
-                        appState.currentConfiguration = config
-                    }
-                }
-            }
-        }
-        #endif
-    }
-    
-    private func resetConfiguration() {
-        appState.coordinator.reset()
-        appState.selectedPreset = .fullFeatured
-    }
-    
     // MARK: - Adaptive Layout Helpers
     
-    private func adaptivePadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let basePadding: CGFloat = isIPad() ? 20 : 16
-        
-        // Adjust for dynamic type
-        switch sizeCategory {
-        case .extraSmall, .small:
-            return basePadding * 0.8
-        case .medium, .large:
-            return basePadding
-        case .extraLarge, .extraExtraLarge:
-            return basePadding * 1.2
-        case .extraExtraExtraLarge:
-            return basePadding * 1.4
-        case .accessibilityMedium, .accessibilityLarge:
-            return basePadding * 1.6
-        case .accessibilityExtraLarge, .accessibilityExtraExtraLarge, .accessibilityExtraExtraExtraLarge:
-            return basePadding * 2.0
-        @unknown default:
-            return basePadding
+    private func adaptiveMainSpacing() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 12
+        case .medium, .large: return 16
+        case .xLarge, .xxLarge: return 20
+        case .xxxLarge: return 24
+        default: return 16
         }
-        #elseif targetEnvironment(macCatalyst)
-        return 20  // Mac Catalyst gets medium padding
-        #else
-        return 16  // macOS default
-        #endif
-    }
-    
-    private func adaptiveFont() -> Font {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        // Use dynamic type for better accessibility
-        if isIPad() {
-            return .body  // Will scale with Dynamic Type
-        } else {
-            return .callout  // Smaller but still scales
-        }
-        #elseif targetEnvironment(macCatalyst)
-        return .system(size: 13)  // Mac Catalyst font
-        #else
-        return .system(size: 13)  // macOS default
-        #endif
-    }
-    
-    private func adaptiveSectionPadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let basePadding: CGFloat = isIPad() ? 32 : 28
-        return scaledValue(basePadding)
-        #else
-        return 28  // Default
-        #endif
-    }
-    
-    private func adaptiveSectionInternalPadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let basePadding: CGFloat = isIPad() ? 20 : 16
-        return scaledValue(basePadding)
-        #elseif targetEnvironment(macCatalyst)
-        return 16  // Mac Catalyst
-        #else
-        return 16  // macOS default
-        #endif
-    }
-    
-    private func isIPad() -> Bool {
-        #if canImport(UIKit)
-        return UIDevice.current.userInterfaceIdiom == .pad
-        #else
-        return false
-        #endif
-    }
-    
-    private func adaptiveControlSpacing() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let baseSpacing: CGFloat = isIPad() ? 16 : 12
-        return scaledValue(baseSpacing)
-        #else
-        return 12  // Default
-        #endif
     }
     
     private func adaptiveSectionSpacing() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let baseSpacing: CGFloat = isIPad() ? 20 : 12
-        return scaledValue(baseSpacing)
-        #else
-        return 12  // Default
-        #endif
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 8
+        case .medium, .large: return 12
+        case .xLarge, .xxLarge: return 16
+        case .xxxLarge: return 20
+        default: return 12
+        }
     }
     
-    private func adaptiveMainSpacing() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        let baseSpacing: CGFloat = isIPad() ? 20 : 16
-        return scaledValue(baseSpacing)
-        #else
-        return 16  // Default
-        #endif
+    private func adaptiveMainHorizontalPadding() -> CGFloat {
+        switch horizontalSizeClass {
+        case .compact:
+            switch dynamicTypeSize {
+            case .xSmall, .small: return 12
+            case .medium, .large: return 16
+            case .xLarge, .xxLarge: return 20
+            case .xxxLarge: return 24
+            default: return 16
+            }
+        case .regular:
+            switch dynamicTypeSize {
+            case .xSmall, .small: return 20
+            case .medium, .large: return 24
+            case .xLarge, .xxLarge: return 28
+            case .xxxLarge: return 32
+            default: return 24
+            }
+        default:
+            return 16
+        }
     }
     
-    private func adaptiveSearchFont() -> Font {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return .callout  // Smaller, consistent with controls
-        #else
-        return .system(size: 14)  // Default
-        #endif
+    private func adaptiveHorizontalPadding() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 12
+        case .medium, .large: return 16
+        case .xLarge, .xxLarge: return 20
+        case .xxxLarge: return 24
+        default: return 16
+        }
     }
     
-    private func adaptiveSearchIconFont() -> Font {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return .callout  // Match search field
-        #else
-        return .system(size: 16)  // Default
-        #endif
+    private func adaptiveBottomPadding() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 16
+        case .medium, .large: return 20
+        case .xLarge, .xxLarge: return 24
+        case .xxxLarge: return 28
+        default: return 20
+        }
     }
     
     private func adaptiveSearchTopPadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        // Reduce top padding specifically for search bar on iPad
-        return isIPad() ? 10 : 8
-        #else
-        return 8  // Default
-        #endif
-    }
-    
-    private func adaptiveToggleMinHeight() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        // Ensure adequate minimum height for toggles on iPad
-        let baseHeight: CGFloat = isIPad() ? 44 : 36
-        return scaledValue(baseHeight)
-        #else
-        return 36  // Default
-        #endif
-    }
-    
-    // MARK: - Dynamic Type Scaling
-    
-    private func scaledValue(_ value: CGFloat) -> CGFloat {
-        #if canImport(UIKit)
-        switch sizeCategory {
-        case .extraSmall:
-            return value * 0.85
-        case .small:
-            return value * 0.9
-        case .medium, .large:
-            return value
-        case .extraLarge:
-            return value * 1.1
-        case .extraExtraLarge:
-            return value * 1.15
-        case .extraExtraExtraLarge:
-            return value * 1.2
-        case .accessibilityMedium:
-            return value * 1.3
-        case .accessibilityLarge:
-            return value * 1.4
-        case .accessibilityExtraLarge:
-            return value * 1.5
-        case .accessibilityExtraExtraLarge:
-            return value * 1.7
-        case .accessibilityExtraExtraExtraLarge:
-            return value * 2.0
-        @unknown default:
-            return value
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 4
+        case .medium, .large: return 6
+        case .xLarge, .xxLarge: return 8
+        case .xxxLarge: return 10
+        default: return 6
         }
+    }
+    
+    private func adaptiveSearchSpacing() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 8
+        case .medium, .large: return 10
+        case .xLarge, .xxLarge: return 12
+        case .xxxLarge: return 14
+        default: return 10
+        }
+    }
+    
+    private func adaptiveSearchIconSize() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall: return 14
+        case .small: return 15
+        case .medium: return 16
+        case .large: return 17
+        case .xLarge: return 19
+        case .xxLarge: return 21
+        case .xxxLarge: return 23
+        default: return 16
+        }
+    }
+    
+    private func adaptiveSearchTextSize() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall: return 14
+        case .small: return 15
+        case .medium: return 16
+        case .large: return 17
+        case .xLarge: return 19
+        case .xxLarge: return 21
+        case .xxxLarge: return 23
+        default: return 16
+        }
+    }
+    
+    private func adaptiveSearchVerticalPadding() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 8
+        case .medium, .large: return 10
+        case .xLarge, .xxLarge: return 12
+        case .xxxLarge: return 14
+        default: return 10
+        }
+    }
+    
+    private func adaptiveSearchHorizontalPadding() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 12
+        case .medium, .large: return 16
+        case .xLarge, .xxLarge: return 20
+        case .xxxLarge: return 24
+        default: return 16
+        }
+    }
+    
+    private func adaptiveSearchCornerRadius() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 8
+        case .medium, .large: return 10
+        case .xLarge, .xxLarge: return 12
+        case .xxxLarge: return 14
+        default: return 10
+        }
+    }
+    
+    private func adaptiveButtonSpacing() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall, .small: return 8
+        case .medium, .large: return 12
+        case .xLarge, .xxLarge: return 16
+        case .xxxLarge: return 20
+        default: return 12
+        }
+    }
+    
+    @ViewBuilder
+    private func adaptiveBackgroundColor() -> some View {
+        #if os(iOS)
+        Color(.systemGroupedBackground)
         #else
-        return value
+        Color(.windowBackgroundColor)
         #endif
+    }
+    
+    @ViewBuilder
+    private func adaptiveSearchBackground() -> some View {
+        #if os(iOS)
+        Color(.systemBackground)
+        #else
+        Color(.textBackgroundColor)
+        #endif
+    }
+    
+    private func configurationButtonStyle() -> some ButtonStyle {
+        return ConfigurationButtonStyle()
+    }
+    
+    private func destructiveButtonStyle() -> some ButtonStyle {
+        return DestructiveButtonStyle()
     }
 }
 
-// MARK: - ConfigurationSection
+// MARK: - Button Styles
 
 @available(macOS 13.0, iOS 16.0, *)
-struct ConfigurationSection<Content: View>: View {
-    let title: String
-    let systemImage: String
-    let isExpanded: Bool
-    @ViewBuilder let content: () -> Content
-    
-    // Dynamic Type support
-    @Environment(\.sizeCategory) private var sizeCategory
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Section header
-            HStack {
-                Image(systemName: systemImage)
-                    .font(sectionTitleFont())
-                    .foregroundColor(.accentColor)
-                
-                Text(title)
-                    .font(sectionHeadlineFont())
-                    #if targetEnvironment(macCatalyst)
-                    .fixedSize(horizontal: false, vertical: true)
-                    #endif
-                
-                Spacer()
-                
-                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .contentShape(Rectangle())
-            
-            // Section content
-            if isExpanded {
-                VStack(alignment: .leading, spacing: sectionContentSpacing()) {
-                    content()
-                }
-                .padding(.leading, sectionContentPadding())
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .padding(sectionInternalPadding())
-        .background(
-            RoundedRectangle(cornerRadius: sectionCornerRadius())
-                .fill(Color(PlatformColors.controlBackground))
-        )
-        #if targetEnvironment(macCatalyst)
-        .padding(.horizontal, 8)
-        #elseif canImport(UIKit)
-        .padding(.horizontal, isIPad() ? 4 : 0)
-        #endif
-    }
-    
-    // MARK: - Section Adaptive Helpers
-    
-    private func sectionTitleFont() -> Font {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return .title3  // Uses Dynamic Type
-        #else
-        return .title3
-        #endif
-    }
-    
-    private func sectionHeadlineFont() -> Font {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return .headline  // Uses Dynamic Type
-        #else
-        return .headline
-        #endif
-    }
-    
-    private func sectionContentSpacing() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 12  // Moderate spacing for iPad
-        } else {
-            return 8
-        }
-        #else
-        return 8
-        #endif
-    }
-    
-    private func sectionContentPadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 32  // Moderate indentation for iPad
-        } else {
-            return 28
-        }
-        #else
-        return 28
-        #endif
-    }
-    
-    private func sectionInternalPadding() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 20  // Balanced padding for iPad
-        } else {
-            return 16
-        }
-        #elseif targetEnvironment(macCatalyst)
-        return 16
-        #else
-        return 16
-        #endif
-    }
-    
-    private func isIPad() -> Bool {
-        #if canImport(UIKit)
-        return UIDevice.current.userInterfaceIdiom == .pad
-        #else
-        return false
-        #endif
-    }
-    
-    private func sectionCornerRadius() -> CGFloat {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 14  // Slightly larger corner radius for iPad
-        } else {
-            return 12  // Standard for iPhone
-        }
-        #else
-        return 12  // Default
-        #endif
+struct ConfigurationButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
-// MARK: - PresetRow
-
 @available(macOS 13.0, iOS 16.0, *)
-struct PresetRow: View {
-    let preset: ConfigurationPreset
-    let isSelected: Bool
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(preset.displayName)
-                    .font(.headline)
-                Text(preset.description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            if isSelected {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.accentColor)
-            }
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-    }
-}
-
-// MARK: - SampleCodeRow
-
-@available(macOS 13.0, iOS 16.0, *)
-struct SampleCodeRow: View {
-    let sample: SampleCode
-    let isSelected: Bool
-
-    var body: some View {
-        HStack {
-            Image(systemName: sample.icon)
-                .foregroundColor(sample.iconColor)
-                .frame(width: 20)
-
-            VStack(alignment: .leading) {
-                Text(sample.displayName)
-                    .font(.body)
-                Text(".\(sample.fileExtension)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            if isSelected {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.accentColor)
-            }
-        }
-        .contentShape(Rectangle())
+struct DestructiveButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.red)
+            .foregroundColor(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -1166,7 +393,10 @@ struct SampleCodeRow: View {
 @available(macOS 13.0, iOS 16.0, *)
 struct UnifiedConfigurationView_Previews: PreviewProvider {
     static var previews: some View {
-        UnifiedConfigurationView()
-            .environmentObject(AppState())
+        NavigationView {
+            UnifiedConfigurationView()
+                .navigationTitle("Configuration")
+        }
+        .environmentObject(AppState())
     }
 }
