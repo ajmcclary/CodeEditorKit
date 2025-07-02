@@ -284,13 +284,21 @@ Tests are located in `Tests/CodeEditorPluginTests/` (106 tests) and `CodeEditorS
 - **Swift 6 Compliance**: Full actor-based concurrency throughout codebase
 
 **Quality Achievements:**
-- **Zero SwiftLint Violations**: Maintained across all 37 files (0 violations in final validation)
+- **Zero SwiftLint Violations**: Maintained across all files in both main plugin and sample app
 - **172 Comprehensive Tests**: Full test coverage with **100% pass rate** (all tests passing)
 - **Actor-Based Concurrency**: Full Swift 6 compliance with thread safety
 - **TextKit2 Integration**: Modern text handling with proper synchronization
 - **Viewport Optimization**: Efficient rendering for large files
 - **Memory Management**: Proper TextKit2 memory handling with graceful test validation
 - **Code Quality Standards**: Systematic lint violation fixes and test failure resolution
+
+**CodeEditorSample Refactoring:**
+- **Modern UI Controls**: Replaced old-style checkboxes with platform-appropriate toggle switches
+- **Fixed Configuration Flow**: All settings now apply correctly across macOS Native, Mac Catalyst, and iOS
+- **Resolved Double Line Numbers**: Fixed gutter view duplication on macOS Native
+- **Simplified Architecture**: Direct use of CodeEditor component for iOS/Catalyst platforms
+- **Enhanced State Management**: Proper SwiftUI update propagation with objectWillChange
+- **Container View Management**: Proper separation of gutter management between container and text view
 
 ## Current Working Systems
 

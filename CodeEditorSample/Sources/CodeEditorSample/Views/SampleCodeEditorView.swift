@@ -5,8 +5,8 @@ import AppKit
 import UIKit
 #endif
 import CodeEditorPlugin
-import SwiftUI
 import Combine
+import SwiftUI
 
 /// Coordinator for managing the editor view lifecycle and configuration updates.
 ///

@@ -3,7 +3,7 @@
 [![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-36-blue)](#quality-metrics)
+[![Files](https://img.shields.io/badge/files-40-blue)](#quality-metrics)
 
 **The definitive showcase and comprehensive reference implementation for CodeEditorPlugin.**
 
@@ -35,10 +35,35 @@ Experience firsthand how CodeEditorPlugin transforms text editing in your applic
 ### True Cross-Platform Excellence
 - ✅ **Platform Abstraction in Action**: Watch how the same code adapts perfectly to macOS, iOS, and Mac Catalyst without compromises
 - ✅ **Native Platform Features**: 
-  - macOS: Full keyboard shortcuts, native menus, hover effects
-  - iOS: Touch-optimized selection, proper keyboard handling
-  - Mac Catalyst: Best of both worlds with adaptive UI
+  - macOS: Full keyboard shortcuts, native menus, hover effects, modern toggle switches
+  - iOS: Touch-optimized selection, proper keyboard handling, SwiftUI-native integration
+  - Mac Catalyst: Best of both worlds with adaptive UI and proper configuration flow
 - ✅ **Zero-Compromise Performance**: Platform-specific optimizations ensure native performance on each platform
+- ✅ **Unified Configuration System**: Settings changes apply instantly across all platforms with proper state management
+
+### Recent Refactoring Improvements
+
+The CodeEditorSample has undergone significant improvements to ensure full compliance with CodeEditorPlugin across all platforms:
+
+#### Configuration System Overhaul
+- **Fixed Toggle Controls**: Replaced old-style checkboxes with modern `DefaultToggleStyle()` on macOS Native
+- **Proper State Management**: Added `objectWillChange.send()` calls to force SwiftUI updates
+- **Environment-Based Configuration**: iOS and Mac Catalyst now use CodeEditor directly with SwiftUI environment
+
+#### Architecture Simplification
+- **Removed Wrapper Layers**: Eliminated intermediate `CodeEditorViewWrapper` for iOS/Catalyst
+- **Direct Component Usage**: Now uses `CodeEditor` from CodeEditorPlugin directly
+- **Unified Update Flow**: Configuration changes propagate correctly through the coordinator pattern
+
+#### Platform-Specific Fixes
+- **macOS Native**: Resolved double line numbers by properly managing gutter views in container
+- **Mac Catalyst**: Fixed configuration application with proper SwiftUI patterns
+- **iOS/iPadOS**: Simplified to use native SwiftUI CodeEditor component
+
+#### Code Quality Improvements
+- **Zero SwiftLint Violations**: Maintained across all 40 files
+- **Removed Debug Logging**: Cleaned up all console output for production readiness
+- **Better Separation of Concerns**: Clear platform-specific code paths with `#if` directives
 
 ## 🚀 Quick Start
 
@@ -63,10 +88,14 @@ The app launches a complete code editing environment demonstrating all features 
 ### 🎊 Recent Achievements
 
 - ✅ **Perfect Test Suite**: All **66 tests passing** with comprehensive coverage
-- ✅ **Zero Code Quality Issues**: **0 SwiftLint violations** across all 36 files
+- ✅ **Zero Code Quality Issues**: **0 SwiftLint violations** across all 40 files
 - ✅ **Swift 6 Ready**: Full actor-based concurrency and strict compliance
 - ✅ **Production Performance**: Optimized builds and fast test execution
 - ✅ **Cross-Platform Excellence**: Verified on macOS, iOS, and Mac Catalyst
+- ✅ **Modern UI Controls**: Replaced old-style checkboxes with platform-appropriate toggle switches
+- ✅ **Fixed Configuration Flow**: All settings now apply correctly across all platforms
+- ✅ **Resolved Double Line Numbers**: Fixed gutter view duplication on macOS Native
+- ✅ **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst platforms
 
 ## ✨ How to Integrate the Plugin
 
@@ -202,11 +231,12 @@ The sample app maintains the same high quality standards as the core plugin:
   - `QuickIsFlippedTest`: View hierarchy tests (1 test)
   
 ### Quality Metrics
-- **SwiftLint Compliance**: Zero violations across 36 files
+- **SwiftLint Compliance**: Zero violations across 40 files
 - **Swift 6 Concurrency**: Full actor isolation and Sendable compliance
 - **Memory Safety**: Verified with Instruments and comprehensive memory leak detection
 - **Test Pass Rate**: 100% - All tests passing in final validation
 - **Performance Testing**: Automated benchmarks ensure consistent performance
+- **Configuration System**: Fully functional with proper state management across all platforms
 
 ### Running Tests
 

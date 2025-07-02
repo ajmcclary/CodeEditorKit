@@ -680,10 +680,6 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         }
         
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
-            print("🔧 iOS CodeEditor.update called")
-            print("   - Show Line Numbers: \(configuration.display.showLineNumbers)")
-            print("   - Font Size: \(configuration.display.fontSize)")
-            
             let view = container.textView
             
             // Prevent recursive updates by checking if text already matches
@@ -695,7 +691,6 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             // Apply full configuration to both container and text view
             container.configuration = configuration
             configuration.apply(to: view)
-            print("✅ iOS CodeEditor: Configuration applied")
         }
     }
 }

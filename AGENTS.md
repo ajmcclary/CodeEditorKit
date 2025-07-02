@@ -180,6 +180,14 @@ textView.language = .python
 - **17 Languages**: Comprehensive syntax highlighting
 - **Zero Debt**: No linting violations, all tests passing
 
+### CodeEditorSample Refactoring
+- **Modern UI Controls**: Platform-appropriate toggle switches on all platforms
+- **Fixed Configuration**: Settings now apply correctly across macOS/iOS/Catalyst
+- **Resolved Double Line Numbers**: Fixed gutter duplication on macOS Native
+- **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst
+- **Enhanced State Management**: Proper SwiftUI updates with objectWillChange
+- **40 Files**: Up from 36, maintaining zero violations
+
 ## Advanced Features
 
 ### Performance Monitoring

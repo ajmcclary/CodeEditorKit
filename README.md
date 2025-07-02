@@ -271,7 +271,7 @@ swift run CodeEditorSample
 The **CodeEditorSample** app serves as both a comprehensive demonstration and a reference implementation. It showcases all features of CodeEditorPlugin in action:
 
 ### Live Feature Showcase
-- **Interactive Configuration UI**: Real-time manipulation of all 40+ configuration options
+- **Interactive Configuration UI**: Real-time manipulation of all 40+ configuration options with modern toggle switches on all platforms
 - **Multi-Language Support**: Live syntax highlighting for all 17 supported languages
 - **Theme System**: Switch between professional themes (Xcode, VS Code Dark, GitHub, Solarized)
 - **Performance Monitoring**: Real-time performance metrics and optimization insights
@@ -281,6 +281,14 @@ The **CodeEditorSample** app serves as both a comprehensive demonstration and a 
 - **Best Practice Integration**: Copy-paste ready SwiftUI and configuration patterns
 - **Cross-Platform Demo**: Experience identical functionality on macOS, iOS, and Mac Catalyst
 - **Advanced Architecture**: Explore plugin system, LSP integration, and performance optimization
+- **Unified Configuration Flow**: Environment-based configuration that works seamlessly across all platforms
+
+### Recent Improvements
+- **Modern UI Controls**: Replaced old-style checkboxes with platform-appropriate toggle switches
+- **Fixed Configuration Application**: All configuration changes now apply correctly across macOS Native, Mac Catalyst, and iOS
+- **Eliminated Double Line Numbers**: Resolved gutter view duplication issues on macOS Native
+- **Simplified Architecture**: Direct use of CodeEditor component for iOS/Catalyst platforms
+- **Enhanced State Management**: Proper SwiftUI update propagation with objectWillChange
 
 ### Getting Started
 ```bash
@@ -289,7 +297,7 @@ swift run CodeEditorSample  # Launch the demo app
 swift test               # Run 66 comprehensive tests
 ```
 
-The sample app maintains the same quality standards as the core plugin with **66 automated tests** (100% passing) and **zero linting violations** across 36 files.
+The sample app maintains the same quality standards as the core plugin with **66 automated tests** (100% passing) and **zero linting violations** across 40 files (up from 36 files due to additional feature implementations).
 
 ## 🧪 Testing & Quality
 
