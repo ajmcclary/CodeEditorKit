@@ -1,37 +1,44 @@
 # CodeEditorSample
 
-[![Tests](https://img.shields.io/badge/tests-46%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Files](https://img.shields.io/badge/files-36-blue)](#quality-metrics)
 
-**The definitive showcase and reference implementation for CodeEditorPlugin.**
+**The definitive showcase and comprehensive reference implementation for CodeEditorPlugin.**
 
-This application is the primary way to evaluate the full capabilities of the **CodeEditorPlugin**. More than just a demo, it serves as a comprehensive reference implementation showcasing production-ready patterns, advanced features, and best practices for integrating the plugin into professional applications.
+This sample application is the primary way to evaluate the full capabilities of CodeEditorPlugin — showcasing its most advanced features, production-ready patterns, and modern Swift 6 architecture in action. More than just a demo, it serves as a living documentation of best practices and a testbed for exploring the plugin's sophisticated capabilities.
 
 ## 🎯 What This Demonstrates
 
 Experience firsthand how CodeEditorPlugin transforms text editing in your applications:
 
-### Architecture & Performance
-- ✅ **Modern Architecture in Practice**: See Swift 6 actors and the feature-based structure implemented in a real application. Observe how background processing keeps the UI responsive even with large files.
-- ✅ **Production Performance**: Monitor real-time performance metrics, memory usage, and rendering efficiency. Learn optimization strategies for your specific use cases.
+### Modern Architecture in Practice
+- ✅ **Swift 6 Actor System**: See how background actors handle intensive operations while keeping the UI buttery smooth. Watch real-time performance metrics as syntax highlighting processes in the background.
+- ✅ **Feature-Based Organization**: Explore the clean, modular architecture that reduced directory count by 74%. Each feature is self-contained and easy to understand.
+- ✅ **Thread Safety by Design**: Observe how Swift 6's strict concurrency prevents data races at compile time, not runtime.
 
-### Advanced Capabilities
-- ✅ **Advanced Features Showcase**: An interactive playground exploring performance monitoring, the preview plugin architecture, and Language Server Protocol (LSP) integration concepts.
-- ✅ **Rich Syntax Highlighting**: Experience all **17 supported languages** with accurate, performant highlighting. See how SwiftSyntax provides AST-based analysis for Swift code.
+### Advanced Features Showcase
+- ✅ **Interactive Feature Explorer**: An interactive view where you can toggle advanced features in real-time:
+  - Performance monitoring with frame rate and memory analysis
+  - Plugin architecture preview - see how extensibility works
+  - Language Server Protocol integration concepts
+  - Code folding, smart indentation, and symbol navigation
+- ✅ **17 Programming Languages**: Experience accurate syntax highlighting across all supported languages, from SwiftSyntax-powered Swift to optimized regex patterns for Python, JavaScript, Rust, and more.
 
-### Cross-Platform Excellence
-- ✅ **Robust Cross-Platform Support**: A single codebase that adapts perfectly to macOS, iOS, and Mac Catalyst. Witness how the platform abstraction layer provides truly native experiences on each platform.
-- ✅ **Platform-Specific Optimizations**: See how the editor leverages platform capabilities while maintaining a consistent API.
+### Production-Ready Patterns
+- ✅ **SwiftUI Best Practices**: Modern, environment-based configuration patterns you can copy directly into your apps
+- ✅ **Configuration Management**: See how the nested EditorConfiguration system works in practice with live updates
+- ✅ **Theme System Implementation**: Professional themes (Xcode, VS Code Dark, GitHub, Solarized) with full dark mode support
+- ✅ **Annotation System**: Interactive TODO/FIXME/NOTE badges with hover popups
 
-### Configuration & Customization
-- ✅ **Comprehensive Configuration**: A live, interactive UI to manipulate all 40+ configuration options in real-time. Instantly see how each setting affects the editor's behavior and appearance.
-- ✅ **Theme System**: Switch between multiple professional themes (Xcode, VS Code Dark, GitHub, Solarized) and learn how to create custom themes.
-
-### Integration Patterns
-- ✅ **Production-Ready Patterns**: Best practices for SwiftUI integration, configuration management, theme handling, and annotation systems. Copy these patterns directly into your applications.
-- ✅ **Real-World Implementation**: See how to handle edge cases, manage state, and integrate with existing application architectures.
+### True Cross-Platform Excellence
+- ✅ **Platform Abstraction in Action**: Watch how the same code adapts perfectly to macOS, iOS, and Mac Catalyst without compromises
+- ✅ **Native Platform Features**: 
+  - macOS: Full keyboard shortcuts, native menus, hover effects
+  - iOS: Touch-optimized selection, proper keyboard handling
+  - Mac Catalyst: Best of both worlds with adaptive UI
+- ✅ **Zero-Compromise Performance**: Platform-specific optimizations ensure native performance on each platform
 
 ## 🚀 Quick Start
 
@@ -55,7 +62,7 @@ The app launches a complete code editing environment demonstrating all features 
 
 ### 🎊 Recent Achievements
 
-- ✅ **Perfect Test Suite**: All **46 tests passing** with comprehensive coverage
+- ✅ **Perfect Test Suite**: All **66 tests passing** with comprehensive coverage
 - ✅ **Zero Code Quality Issues**: **0 SwiftLint violations** across all 36 files
 - ✅ **Swift 6 Ready**: Full actor-based concurrency and strict compliance
 - ✅ **Production Performance**: Optimized builds and fast test execution
@@ -63,7 +70,7 @@ The app launches a complete code editing environment demonstrating all features 
 
 ## ✨ How to Integrate the Plugin
 
-This sample app demonstrates battle-tested patterns for integrating CodeEditorPlugin. Below are key integration patterns you can adapt directly for your projects.
+This sample app provides battle-tested patterns for integrating CodeEditorPlugin into your applications. Below are clear, copy-paste-friendly examples for the most common integration tasks.
 
 ### 1. SwiftUI Integration
 
@@ -184,20 +191,22 @@ config.display.annotationRenderingMode = .inline
 The sample app maintains the same high quality standards as the core plugin:
 
 ### Test Coverage
-- **46 Automated Tests**: Comprehensive coverage of UI, configuration, integration, and performance (100% passing)
+- **66 Automated Tests**: Comprehensive coverage of UI, configuration, integration, and performance (100% passing)
 - **Test Categories**:
-  - BasicFunctionalityTests (4 tests)
-  - ConfigurationUITests (12 tests)
-  - PluginConfigurationTests (11 tests)  
-  - QuickIsFlippedTest (1 test)
-  - SampleCodeTests (12 tests)
-  - SimplifiedIntegrationTests (6 tests)
+  - `AnnotationSystemTests`: Comprehensive annotation testing with performance benchmarks (20 tests)
+  - `ConfigurationUITests`: UI-level configuration tests (12 tests)
+  - `SampleCodeTests`: Language sample validation (12 tests)
+  - `PluginConfigurationTests`: Plugin system tests (11 tests)
+  - `SimplifiedIntegrationTests`: End-to-end integration testing (6 tests)
+  - `BasicFunctionalityTests`: Core functionality verification (4 tests)
+  - `QuickIsFlippedTest`: View hierarchy tests (1 test)
   
 ### Quality Metrics
-- **SwiftLint Compliance**: Zero violations across 36 files (part of overall 0 violations across 37 project files)
+- **SwiftLint Compliance**: Zero violations across 36 files
 - **Swift 6 Concurrency**: Full actor isolation and Sendable compliance
 - **Memory Safety**: Verified with Instruments and comprehensive memory leak detection
 - **Test Pass Rate**: 100% - All tests passing in final validation
+- **Performance Testing**: Automated benchmarks ensure consistent performance
 
 ### Running Tests
 

@@ -188,20 +188,57 @@ public struct LanguageDetectionService {
     }
     
     /// Convert to CodeEditorPlugin Language enum
-    /// Note: This returns .plainText for all languages except Swift because
-    /// the actual language detection happens when setting a file extension
-    /// on the CodeEditorView instance.
+    /// Maps all supported language IDs to their corresponding Language enum cases
     public static func editorLanguage(for languageInfo: LanguageInfo?) -> Language {
         guard let info = languageInfo else { return .plainText }
         
-        // Only Swift has a dedicated enum case
-        if info.id == "swift" {
+        // Map language IDs to Language enum cases
+        switch info.id {
+        case "swift":
             return .swift
+        case "javascript":
+            return .javascript
+        case "typescript":
+            return .typescript
+        case "python":
+            return .python
+        case "go":
+            return .go
+        case "rust":
+            return .rust
+        case "c":
+            return .c
+        case "cpp":
+            return .cpp
+        case "java":
+            return .java
+        case "html":
+            return .html
+        case "css":
+            return .css
+        case "json":
+            return .json
+        case "markdown":
+            return .markdown
+        case "yaml":
+            return .yaml
+        case "xml":
+            return .xml
+        case "sql":
+            return .sql
+        case "ruby":
+            return .ruby
+        case "php":
+            return .php
+        case "shell":
+            return .shell
+        default:
+            // Try to create Language from identifier
+            if let language = Language(identifier: info.id) {
+                return language
+            }
+            return .plainText
         }
-        
-        // All other languages use the regex-based highlighter
-        // which is set via setLanguage(fileExtension:) on the view
-        return .plainText
     }
     
     /// Check if a file type is supported

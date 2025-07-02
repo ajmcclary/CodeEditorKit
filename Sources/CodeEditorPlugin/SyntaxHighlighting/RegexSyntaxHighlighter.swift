@@ -125,20 +125,29 @@ public final class RegexSyntaxHighlighter: Sendable {
     // MARK: - Properties
 
     public let supportedLanguages: [String: LanguageDefinition]
+    
+    // Direct language mapping for efficient lookup
+    private let languageMap: [Language: LanguageDefinition]
 
     // MARK: - Initialization
 
     public init() {
         supportedLanguages = Self.createLanguageDefinitions()
+        languageMap = Self.createLanguageMap(from: supportedLanguages)
     }
 
     // MARK: - Public Methods
 
-    /// Get language definition by file extension
+    /// Get language definition by file extension (legacy method)
     public func languageDefinition(for fileExtension: String) -> LanguageDefinition? {
         supportedLanguages.values.first { language in
             language.fileExtensions.contains(fileExtension.lowercased())
         }
+    }
+    
+    /// Get language definition by Language enum case (preferred method)
+    public func languageDefinition(for language: Language) -> LanguageDefinition? {
+        languageMap[language]
     }
 
     /// Highlight source code using the specified language definition
@@ -275,8 +284,94 @@ public final class RegexSyntaxHighlighter: Sendable {
 
         // Markdown
         languages["markdown"] = createMarkdownDefinition()
+        
+        // YAML
+        languages["yaml"] = createYAMLDefinition()
+        
+        // XML
+        languages["xml"] = createXMLDefinition()
+        
+        // SQL
+        languages["sql"] = createSQLDefinition()
+        
+        // Shell
+        languages["shell"] = createShellDefinition()
 
         return languages
+    }
+    
+    /// Create efficient Language enum to LanguageDefinition mapping
+    private static func createLanguageMap(from definitions: [String: LanguageDefinition]) -> [Language: LanguageDefinition] {
+        var languageMap: [Language: LanguageDefinition] = [:]
+        
+        // Map Language enum cases to their corresponding LanguageDefinitions
+        for language in Language.allCases {
+            switch language {
+            case .swift:
+                // Swift is handled by SwiftSyntaxHighlighter, not regex highlighter
+                break
+
+            case .javascript:
+                languageMap[language] = definitions["javascript"]
+
+            case .typescript:
+                languageMap[language] = definitions["typescript"]
+
+            case .python:
+                languageMap[language] = definitions["python"]
+
+            case .go:
+                languageMap[language] = definitions["go"]
+
+            case .rust:
+                languageMap[language] = definitions["rust"]
+
+            case .c:
+                languageMap[language] = definitions["c"]
+
+            case .cpp:
+                languageMap[language] = definitions["cpp"]
+
+            case .java:
+                languageMap[language] = definitions["java"]
+
+            case .html:
+                languageMap[language] = definitions["html"]
+
+            case .css:
+                languageMap[language] = definitions["css"]
+
+            case .json:
+                languageMap[language] = definitions["json"]
+
+            case .markdown:
+                languageMap[language] = definitions["markdown"]
+
+            case .yaml:
+                languageMap[language] = definitions["yaml"]
+
+            case .xml:
+                languageMap[language] = definitions["xml"]
+
+            case .sql:
+                languageMap[language] = definitions["sql"]
+
+            case .ruby:
+                languageMap[language] = definitions["ruby"]
+
+            case .php:
+                languageMap[language] = definitions["php"]
+
+            case .shell:
+                languageMap[language] = definitions["shell"]
+
+            case .plainText:
+                // Plain text doesn't need syntax highlighting
+                break
+            }
+        }
+        
+        return languageMap
     }
     
     // MARK: - Language Definition Builder
@@ -677,6 +772,71 @@ public final class RegexSyntaxHighlighter: Sendable {
         ].compactMap(\.self)
 
         return LanguageDefinition(name: "Markdown", fileExtensions: ["md", "markdown", "mdown", "mkd"], rules: rules)
+    }
+    
+    private static func createYAMLDefinition() -> LanguageDefinition {
+        let rules: [HighlightRule] = [
+            rule(#"#.*$"#, .comment, 10),
+            rule(#""(?:[^"\\]|\\.)*""#, .string, 9),
+            rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9),
+            rule(#"\b\d+\.?\d*\b"#, .number, 8),
+            rule(#"\b(true|false|null|yes|no|on|off)\b"#, .keyword, 7),
+            rule(#"^[a-zA-Z_][\w\-]*(?=\s*:)"#, .property, 6),
+            rule(#"[:\-\[\]{}]"#, .punctuation, 5)
+        ].compactMap(\.self)
+
+        return LanguageDefinition(name: "YAML", fileExtensions: ["yaml", "yml"], rules: rules)
+    }
+    
+    private static func createXMLDefinition() -> LanguageDefinition {
+        let rules: [HighlightRule] = [
+            rule(#"<!--[\s\S]*?-->"#, .comment, 10),
+            rule(#""(?:[^"\\]|\\.)*""#, .string, 9),
+            rule(#"'(?:[^'\\]|\\.)*'"#, .string, 9),
+            rule(#"<\?[\s\S]*?\?>"#, .preprocessor, 8),
+            rule(#"</?[a-zA-Z][a-zA-Z0-9]*\b[^>]*>"#, .keyword, 8),
+            rule(#"\b[a-zA-Z-]+(?==)"#, .property, 7)
+        ].compactMap(\.self)
+
+        return LanguageDefinition(name: "XML", fileExtensions: ["xml", "xsl", "xslt", "svg"], rules: rules)
+    }
+    
+    private static func createSQLDefinition() -> LanguageDefinition {
+        let sqlKeywords = [
+            "SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER",
+            "TABLE", "INDEX", "VIEW", "DATABASE", "SCHEMA", "CONSTRAINT", "PRIMARY", "FOREIGN",
+            "KEY", "REFERENCES", "NOT", "NULL", "UNIQUE", "DEFAULT", "CHECK", "AND", "OR",
+            "BETWEEN", "IN", "LIKE", "IS", "EXISTS", "JOIN", "INNER", "LEFT", "RIGHT", "FULL",
+            "OUTER", "UNION", "GROUP", "BY", "HAVING", "ORDER", "ASC", "DESC", "LIMIT", "OFFSET"
+        ]
+        
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "--", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true)
+            .addNumbers()
+            .addKeywords(sqlKeywords)
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!]+"#)
+            .build(name: "SQL", fileExtensions: ["sql"])
+    }
+    
+    private static func createShellDefinition() -> LanguageDefinition {
+        let shellKeywords = [
+            "if", "then", "else", "elif", "fi", "case", "esac", "for", "while", "until", "do", "done",
+            "function", "return", "break", "continue", "exit", "export", "local", "readonly", "declare",
+            "typeset", "let", "eval", "exec", "shift", "set", "unset", "trap", "source", "alias", "unalias"
+        ]
+        
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "#")
+            .addStrings(single: true, double: true)
+            .addNumbers()
+            .addKeywords(shellKeywords)
+            .addCustomRule(pattern: #"\$\{[^}]+\}"#, type: .identifier, priority: 8) // Variable substitution
+            .addCustomRule(pattern: #"\$[a-zA-Z_][a-zA-Z0-9_]*"#, type: .identifier, priority: 8) // Variables
+            .addCustomRule(pattern: #"\b\w+(?=\s*\()"#, type: .function, priority: 6) // Function calls
+            .addOperators(pattern: #"[|&;<>()]+"#)
+            .build(name: "Shell", fileExtensions: ["sh", "bash", "zsh", "fish"])
     }
 }
 

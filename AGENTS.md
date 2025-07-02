@@ -9,8 +9,10 @@ CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor compon
 - **Modern Architecture**: Built with Swift 6 actors for thread-safe, performant operations
 - **Cross-Platform Excellence**: Sophisticated abstraction layer for true native performance
 - **17 Languages Supported**: SwiftSyntax for Swift, regex for other languages
-- **322 Comprehensive Tests**: Production-quality test coverage
+- **172 Comprehensive Tests**: Production-quality test coverage (106 core + 66 sample)
 - **Zero Technical Debt**: No SwiftLint violations, clean architecture
+- **Advanced Features**: Plugin architecture, LSP integration, performance monitoring
+- **74% Directory Reduction**: Simplified from 39 to 10 directories
 
 ## Quick Reference Commands
 
@@ -165,8 +167,8 @@ textView.language = .python
 
 ## Testing Requirements
 
-- **Main Package**: 276 tests in `Tests/CodeEditorPluginTests/`
-- **Sample App**: 46 tests in `CodeEditorSample/Tests/`
+- **Main Package**: 106 tests in `Tests/CodeEditorPluginTests/`
+- **Sample App**: 66 tests in `CodeEditorSample/Tests/`
 - **Performance**: Include benchmarks for new features
 - **Platforms**: Test macOS, iOS, and Mac Catalyst
 
@@ -177,6 +179,35 @@ textView.language = .python
 - **Cross-Platform Fixed**: Resolved all rendering issues
 - **17 Languages**: Comprehensive syntax highlighting
 - **Zero Debt**: No linting violations, all tests passing
+
+## Advanced Features
+
+### Performance Monitoring
+- Frame rate analysis (target: 60fps)
+- Memory usage tracking
+- Syntax highlighting metrics
+- Large file optimization (500KB+)
+
+### Plugin Architecture (Preview)
+- Custom language plugins
+- Tool integrations
+- Theme extensions
+- Domain-specific commands
+
+### Language Server Protocol (Preview)
+- Intelligent code completion
+- Real-time diagnostics
+- Go-to-definition
+- Hover documentation
+- Refactoring support
+
+### Advanced Editing
+- Smart indentation
+- Code folding
+- Symbol navigation
+- Incremental parsing
+- Bracket matching
+- Search & replace with regex
 
 ## Supported Languages
 

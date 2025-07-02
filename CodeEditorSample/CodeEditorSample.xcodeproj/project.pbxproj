@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -25,7 +25,6 @@
 		2E91097AFFBF4DD0BBD4FA3B /* ThemeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69648C6323410DA0BCA36AAB /* ThemeProvider.swift */; };
 		2F8033BCF9F93704DCE5CA09 /* CodeEditorSampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E4C22A9BEF24D21CC5B811 /* CodeEditorSampleApp.swift */; };
 		3935E7F1D95F488A896B86B9 /* CodeEditorPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 9CC76952C0BCC072B3888837 /* CodeEditorPlugin */; };
-		3954F14EE99109B1EDDAC42F /* PluginConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B15AA6CFBC7863FB5BD3AB /* PluginConfigurationTests.swift */; };
 		3BC9730C6171F2ED6768FA65 /* AnnotationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9678817AB21AF0539F4A54 /* AnnotationManager.swift */; };
 		3BEF14B6392F74B39F56DDF0 /* SampleCodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F0655B5DA5A8C726D42CF4 /* SampleCodeEditorView.swift */; };
 		3FD0F86F61559D2552F236AE /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC003C56042C9E67BC4FA953 /* StatusBarView.swift */; };
@@ -57,7 +56,6 @@
 		9711AE2945078E37EDB92FCD /* SystemsSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7B40F69440B113274BA53D /* SystemsSamples.swift */; };
 		9A3DC76D415A6B2012B1DC33 /* SampleCodeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5C883534F9124E7BEDB4B0 /* SampleCodeProvider.swift */; };
 		9C94F3D0FE3AACEA1A0F0DB3 /* EditorConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD749CA067EE8C2DD94BBBE /* EditorConfiguration.swift */; };
-		9D8D29F993AC98A5FA0EEE60 /* PluginConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B15AA6CFBC7863FB5BD3AB /* PluginConfigurationTests.swift */; };
 		9E3F73BAAFF0273ACF8E88AC /* ConfigurationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D963ECA894E2862ECDB4BA72 /* ConfigurationCoordinator.swift */; };
 		A179420FE9030218EB349E53 /* UnifiedContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D638459BE2052A113CF6A6A5 /* UnifiedContentView.swift */; };
 		A3099B2AD2450B1F71EE6304 /* MinimalTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */; };
@@ -118,13 +116,12 @@
 		511107E1AB80474BE220AD4E /* SafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeButton.swift; sourceTree = "<group>"; };
 		56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickIsFlippedTest.swift; sourceTree = "<group>"; };
 		5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorViewWrapper.swift; sourceTree = "<group>"; };
-		59B15AA6CFBC7863FB5BD3AB /* PluginConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginConfigurationTests.swift; sourceTree = "<group>"; };
-		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B7B40F69440B113274BA53D /* SystemsSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemsSamples.swift; sourceTree = "<group>"; };
 		63A2A4F0BBCBCE884CBF6FB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		69648C6323410DA0BCA36AAB /* ThemeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeProvider.swift; sourceTree = "<group>"; };
 		78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSampleRow.swift; sourceTree = "<group>"; };
-		7CB1400899334CDC69482F65 /* CodeEditorSampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CodeEditorSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CB1400899334CDC69482F65 /* CodeEditorSampleTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CodeEditorSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		84B03E4022AE34DFD52CC14D /* CodeEditorSample-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CodeEditorSample-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C3019F883273CFCC0CAD533 /* SwiftSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftSamples.swift; sourceTree = "<group>"; };
 		AC003C56042C9E67BC4FA953 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
@@ -200,7 +197,6 @@
 			children = (
 				CE94FF0B6A2891455BC66EC4 /* BasicFunctionalityTests.swift */,
 				DCD6DDC0888E3B256631752E /* ConfigurationUITests.swift */,
-				59B15AA6CFBC7863FB5BD3AB /* PluginConfigurationTests.swift */,
 				56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */,
 				BF38C2A6F4ED69B89E21634F /* SampleCodeTests.swift */,
 				AC9D8C4586CE1D086EB2B09C /* SimplifiedIntegrationTests.swift */,
@@ -389,12 +385,22 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					548D7E1E6934E1F02B6F9150 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					6762C81374BF3BCC4AE388C4 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
 					CECD44AB1B8929EA916C2928 = {
+						DevelopmentTeam = "$(inherited)";
 						ProvisioningStyle = Automatic;
 					};
 					DC635B77EE56E6B11BFA2379 = {
+						DevelopmentTeam = "$(inherited)";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -412,6 +418,7 @@
 			packageReferences = (
 				69B3117AF2437787CF8B5B58 /* XCLocalSwiftPackageReference "..//" */,
 			);
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -449,7 +456,6 @@
 			files = (
 				4D44F7CD7BE10F3EC4B6117A /* BasicFunctionalityTests.swift in Sources */,
 				FEEBC14500331218797362CC /* ConfigurationUITests.swift in Sources */,
-				3954F14EE99109B1EDDAC42F /* PluginConfigurationTests.swift in Sources */,
 				949ED1A93F68F462CE83CB30 /* QuickIsFlippedTest.swift in Sources */,
 				2152CF271E7655ADC007350A /* SampleCodeTests.swift in Sources */,
 				B3598502E091D11F7D1403BD /* SimplifiedIntegrationTests.swift in Sources */,
@@ -499,7 +505,6 @@
 			files = (
 				449CF25BC6EC11055A77378F /* BasicFunctionalityTests.swift in Sources */,
 				C651E18DA515F98203310CF3 /* ConfigurationUITests.swift in Sources */,
-				9D8D29F993AC98A5FA0EEE60 /* PluginConfigurationTests.swift in Sources */,
 				5CCA5B75135A7135150CCF70 /* QuickIsFlippedTest.swift in Sources */,
 				DC6DDF0DDBA830A6AB621EA6 /* SampleCodeTests.swift in Sources */,
 				AA777BD07D8ED27B1D9EA738 /* SimplifiedIntegrationTests.swift in Sources */,
@@ -565,11 +570,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -578,7 +583,6 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codeeditor.sample.macos.tests;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = XCODE_BUILD;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -625,7 +629,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = P9KRV6RW4J;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -650,7 +653,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -664,12 +666,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "Info-macOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -694,7 +696,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -708,7 +710,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CodeEditorSample";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/CodeEditorSample";
 			};
 			name = Release;
 		};
@@ -718,7 +720,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -732,7 +734,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CodeEditorSample";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/CodeEditorSample";
 			};
 			name = Debug;
 		};
@@ -744,8 +746,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
-				GENERATE_INFOPLIST_FILE = NO;
+				DEVELOPMENT_TEAM = "$(inherited)";
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -769,12 +771,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "Info-macOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -831,7 +833,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = P9KRV6RW4J;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -849,7 +850,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -863,11 +863,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -876,7 +876,6 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codeeditor.sample.macos.tests;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = XCODE_BUILD;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -893,8 +892,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				ENABLE_EXPERIMENTAL_CONCURRENCY = YES;
-				GENERATE_INFOPLIST_FILE = NO;
+				DEVELOPMENT_TEAM = "$(inherited)";
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (

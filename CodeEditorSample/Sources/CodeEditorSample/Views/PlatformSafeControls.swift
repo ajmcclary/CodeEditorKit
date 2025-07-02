@@ -149,7 +149,8 @@ struct IOSToggleView: UIViewRepresentable {
             toggle.leadingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 8),
             
             // Use greaterThanOrEqualToConstant: 0 to allow containerView height to shrink to zero
-            // This avoids constraint conflicts when the container provides zero height (e.g. SwiftUI's PlatformViewHost)
+            // This avoids constraint conflicts when the container provides zero height
+            // (e.g. SwiftUI's PlatformViewHost)
             containerView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0)
         ]
         

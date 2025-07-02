@@ -26,8 +26,8 @@ let package = Package(
                 .product(name: "SwiftParser", package: "swift-syntax")
             ],
             exclude: [
-                "Platform/README.md", 
-                "Plugin/README.md"
+                "Platform/README.md",
+                "Info.plist"
             ],
             swiftSettings: settings
         ),

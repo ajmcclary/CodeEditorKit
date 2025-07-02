@@ -64,7 +64,7 @@ public final class SyntaxHighlightingCoordinator {
             
         default:
             // Use regex highlighter for all other languages
-            if let languageDefinition = regexHighlighter.languageDefinition(for: language.fileExtensions.first ?? "") {
+            if let languageDefinition = regexHighlighter.languageDefinition(for: language) {
                 return regexHighlighter.highlight(source: source, language: languageDefinition)
             }
             return []
@@ -92,7 +92,7 @@ public final class SyntaxHighlightingCoordinator {
                 
             default:
                 // Use regex highlighter for all other languages
-                if let languageDefinition = regexHL.languageDefinition(for: language.fileExtensions.first ?? "") {
+                if let languageDefinition = regexHL.languageDefinition(for: language) {
                     return regexHL.highlight(source: source, language: languageDefinition)
                 }
                 return []
@@ -165,7 +165,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     case python
     case go
     case rust
-    case c
+    case c // swiftlint:disable:this identifier_name
     case cpp
     case java
     case html
@@ -233,11 +233,9 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     /// Initialize from file extension
     public init?(fileExtension: String) {
         let lowercased = fileExtension.lowercased()
-        for language in Self.allCases {
-            if language.fileExtensions.contains(lowercased) {
-                self = language
-                return
-            }
+        for language in Self.allCases where language.fileExtensions.contains(lowercased) {
+            self = language
+            return
         }
         return nil
     }

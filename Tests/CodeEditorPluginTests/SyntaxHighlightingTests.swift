@@ -261,6 +261,70 @@ final class SyntaxHighlightingTests: XCTestCase {
             XCTAssertLessThanOrEqual(currentEnd, nextStart, "Tokens should not overlap")
         }
     }
+    
+    // MARK: - Language Enum Direct Mapping Tests
+    
+    @MainActor
+    func testRegexHighlighterLanguageEnumMapping() {
+        let regexHighlighter = RegexSyntaxHighlighter()
+        
+        // Test that all supported languages can be accessed directly via Language enum
+        let supportedLanguages: [Language] = [
+            .javascript, .typescript, .python, .go, .rust, .c, .cpp, .java,
+            .html, .css, .json, .markdown, .yaml, .xml, .sql, .ruby, .php, .shell
+        ]
+        
+        for language in supportedLanguages {
+            let definition = regexHighlighter.languageDefinition(for: language)
+            XCTAssertNotNil(definition, "Should find definition for \(language)")
+            
+            if let definition {
+                XCTAssertFalse(definition.rules.isEmpty, "\(language) should have highlighting rules")
+                XCTAssertEqual(definition.name, language.name, "Definition name should match language name")
+                
+                // Verify that the file extensions match
+                let definitionExtensions = Set(definition.fileExtensions)
+                let languageExtensions = Set(language.fileExtensions)
+                XCTAssertEqual(
+                    definitionExtensions,
+                    languageExtensions,
+                    "File extensions should match for \(language)"
+                )
+            }
+        }
+        
+        // Test that Swift and plainText return nil (Swift uses SwiftSyntaxHighlighter, plainText has no highlighting)
+        XCTAssertNil(
+            regexHighlighter.languageDefinition(for: .swift),
+            "Swift should not have regex definition (uses SwiftSyntaxHighlighter)"
+        )
+        XCTAssertNil(
+            regexHighlighter.languageDefinition(for: .plainText),
+            "Plain text should not have highlighting definition"
+        )
+    }
+    
+    @MainActor
+    func testLanguageEnumMappingEfficiency() {
+        let regexHighlighter = RegexSyntaxHighlighter()
+        
+        // Test that direct Language enum access is available and efficient
+        let testCode = "function test() { return 'hello'; }"
+        
+        // Using new Language enum method
+        if let jsDefinition = regexHighlighter.languageDefinition(for: .javascript) {
+            let tokens = regexHighlighter.highlight(source: testCode, language: jsDefinition)
+            XCTAssertFalse(tokens.isEmpty, "JavaScript highlighting should produce tokens")
+            
+            // Verify we get expected token types
+            let hasKeywords = tokens.contains { $0.type == .keyword }
+            let hasStrings = tokens.contains { $0.type == .string }
+            XCTAssertTrue(hasKeywords, "Should detect JavaScript keywords")
+            XCTAssertTrue(hasStrings, "Should detect JavaScript strings")
+        } else {
+            XCTFail("Should find JavaScript definition via Language enum")
+        }
+    }
 
     deinit {
         // Cleanup if needed

@@ -77,18 +77,24 @@ struct UnifiedContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     
-    private func adaptiveColumnWidth() -> (min: CGFloat, ideal: CGFloat, max: CGFloat) {
+    private struct ColumnWidth {
+        let min: CGFloat
+        let ideal: CGFloat
+        let max: CGFloat
+    }
+    
+    private func adaptiveColumnWidth() -> ColumnWidth {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         if isIPad() {
             // iPad gets much more generous spacing to utilize screen
-            return (min: 450, ideal: 500, max: 600)
+            return ColumnWidth(min: 450, ideal: 500, max: 600)
         } else {
             // iPhone gets compact spacing
-            return (min: 300, ideal: 350, max: 400)
+            return ColumnWidth(min: 300, ideal: 350, max: 400)
         }
         #else
         // macOS/Catalyst default
-        return (min: 300, ideal: 350, max: 400)
+        return ColumnWidth(min: 300, ideal: 350, max: 400)
         #endif
     }
     

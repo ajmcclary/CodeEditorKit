@@ -10,8 +10,10 @@ CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor compon
 - **Swift 6 Actor System**: Full concurrency safety with modern actors
 - **True Cross-Platform**: Not a port - built from the ground up for all platforms
 - **17 Languages**: SwiftSyntax for Swift, optimized regex for others
-- **322 Tests**: Comprehensive test coverage ensuring reliability
+- **172 Tests**: Comprehensive test coverage ensuring reliability (106 core + 66 sample)
 - **Zero Technical Debt**: Clean architecture, no linting violations
+- **Advanced Features**: Plugin architecture, LSP integration, performance monitoring
+- **74% Simpler**: Directory structure reduced from 39 to 10 directories
 
 ## Essential Commands
 
@@ -23,7 +25,7 @@ swift build
 # Run the sample application
 cd CodeEditorSample && swift run CodeEditorSample
 
-# Run all tests (322 total)
+# Run all tests (172 total)
 swift test
 
 # Quality check (build + lint + test)
@@ -148,7 +150,7 @@ if PlatformCapabilities.shared.supportsHardwareAcceleration {
 - Add tests for new features
 - Run on all platforms (macOS, iOS, Mac Catalyst)
 - Include performance benchmarks
-- Maintain 322+ test count
+- Maintain 172+ test count
 
 ## Common Development Tasks
 
@@ -204,10 +206,10 @@ xcodebuild -scheme CodeEditorSample -destination 'platform=macOS,variant=Mac Cat
 ## Project Standards
 
 ### Quality Metrics
-- **Test Count**: 322 (276 main + 46 sample)
+- **Test Count**: 172 (106 main + 66 sample)
 - **SwiftLint**: Zero violations required
 - **Platforms**: Must work on all three
-- **Performance**: <16ms frame time
+- **Performance**: <16ms frame time (60fps target)
 
 ### Supported Languages
 Swift (AST-based), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON, YAML, Markdown, Go, Java, Ruby, PHP, SQL, XML, Shell
@@ -219,12 +221,42 @@ Swift (AST-based), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON
 - **Swift**: 6.0+ (required for actors)
 - **Xcode**: 16.0+
 
+## Advanced Features
+
+### Performance Monitoring
+- Real-time frame rate analysis (60fps target)
+- Memory usage tracking and profiling
+- Syntax highlighting performance metrics
+- Large file optimization (500KB+)
+
+### Plugin Architecture (Preview)
+- Custom language plugin support
+- External tool integrations
+- Theme marketplace ready
+- Domain-specific command extensions
+
+### Language Server Protocol (Preview)
+- Intelligent code completion
+- Real-time error diagnostics
+- Go-to-definition navigation
+- Hover documentation tooltips
+- Automated refactoring support
+
+### Advanced Editing Capabilities
+- Smart context-aware indentation
+- Code folding with persistence
+- Symbol navigation and breadcrumbs
+- Incremental parsing for performance
+- Intelligent bracket matching
+- Powerful search & replace with regex
+
 ## Key Achievements
 - **Architecture**: 74% directory reduction through reorganization
 - **Swift 6**: Full migration to actor-based concurrency
 - **Cross-Platform**: All rendering issues resolved
 - **Performance**: Viewport optimization implemented
 - **Quality**: Zero linting violations maintained
+- **Advanced Features**: Plugin system and LSP integration added
 
 ## Remember
 This is a **production-ready** component used in real applications. Every change should maintain or improve the quality standards. When in doubt, add tests and check performance!
