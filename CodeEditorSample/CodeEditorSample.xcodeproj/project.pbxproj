@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -126,13 +126,13 @@
 		511107E1AB80474BE220AD4E /* SafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeButton.swift; sourceTree = "<group>"; };
 		56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickIsFlippedTest.swift; sourceTree = "<group>"; };
 		5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorViewWrapper.swift; sourceTree = "<group>"; };
-		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B7B40F69440B113274BA53D /* SystemsSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemsSamples.swift; sourceTree = "<group>"; };
 		63A2A4F0BBCBCE884CBF6FB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		69648C6323410DA0BCA36AAB /* ThemeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeProvider.swift; sourceTree = "<group>"; };
 		77FA75724BB22A43930F3FDF /* PerformanceConfigurationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceConfigurationSection.swift; sourceTree = "<group>"; };
 		78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSampleRow.swift; sourceTree = "<group>"; };
-		7CB1400899334CDC69482F65 /* CodeEditorSampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CodeEditorSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CB1400899334CDC69482F65 /* CodeEditorSampleTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CodeEditorSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		84B03E4022AE34DFD52CC14D /* CodeEditorSample-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CodeEditorSample-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C3019F883273CFCC0CAD533 /* SwiftSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftSamples.swift; sourceTree = "<group>"; };
 		AC003C56042C9E67BC4FA953 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
@@ -415,10 +415,20 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					548D7E1E6934E1F02B6F9150 = {
+						DevelopmentTeam = P9KRV6RW4J;
+						ProvisioningStyle = Automatic;
+					};
+					6762C81374BF3BCC4AE388C4 = {
+						DevelopmentTeam = P9KRV6RW4J;
+						ProvisioningStyle = Automatic;
+					};
 					CECD44AB1B8929EA916C2928 = {
+						DevelopmentTeam = P9KRV6RW4J;
 						ProvisioningStyle = Automatic;
 					};
 					DC635B77EE56E6B11BFA2379 = {
+						DevelopmentTeam = P9KRV6RW4J;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -436,6 +446,7 @@
 			packageReferences = (
 				69B3117AF2437787CF8B5B58 /* XCLocalSwiftPackageReference "..//" */,
 			);
+			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -595,8 +606,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -692,8 +701,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -797,8 +804,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -889,8 +894,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
