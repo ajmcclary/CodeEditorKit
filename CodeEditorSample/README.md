@@ -368,6 +368,28 @@ We welcome contributions to make this sample app even better! Whether you're add
 - **Theme Creation**: Learn from `Themes/ThemeProvider.swift`
 - **Performance Optimization**: Check `Services/ConfigurationCoordinator.swift`
 
+## 📖 Documentation
+
+This sample app works hand-in-hand with the comprehensive DocC documentation in the main plugin:
+
+- **Main Documentation**: See `../Sources/CodeEditorPlugin/Documentation.docc/` for full API reference and guides
+- **Getting Started Tutorial**: Follow the step-by-step tutorial at `Documentation.docc/Tutorials/Creating-Your-First-Editor.tutorial`
+- **Configuration Guide**: Learn about the configuration system at `Documentation.docc/Configuration-System.md`
+- **Platform Integration**: Platform-specific guides in `Documentation.docc/SwiftUI-Integration.md` and `Documentation.docc/iOS-Integration.md`
+
+### Viewing Documentation
+
+Generate and view the complete documentation:
+
+```bash
+# From the main repository root
+swift package generate-documentation --target CodeEditorPlugin
+
+# View in browser (requires DocC)
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
+open docs/documentation/codeeditorplugin/index.html
+```
+
 --- 
 
 **🎉 Ready to build something amazing?** This sample app provides everything you need to integrate CodeEditorPlugin into your applications. Study the patterns, run the tests, and create powerful code editing experiences for your users!

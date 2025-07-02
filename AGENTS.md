@@ -50,6 +50,7 @@ Sources/CodeEditorPlugin/
 ├── SyntaxHighlighting/      # Language support
 ├── Layout/                  # UI components
 ├── SwiftUI/                 # SwiftUI integration
+├── Documentation.docc/      # Comprehensive DocC documentation
 ├── Platform/                # Cross-platform layer
 ├── TextProcessing/          # Actor-based processing
 ├── Plugin/                  # Plugin architecture
@@ -143,6 +144,7 @@ textView.language = .python
 - Syntax highlighting → `SyntaxHighlighting/`
 - UI components → `Layout/`
 - SwiftUI → `SwiftUI/`
+- Documentation → `Documentation.docc/`
 - Extensions → `Extensions/` (+Extensions naming)
 
 ### Common Tasks
@@ -228,6 +230,37 @@ Swift (AST), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON, YAML
 - **Mac Catalyst**: 16.0+
 - **Swift**: 6.0+
 - **Xcode**: 16.0+
+
+## Documentation System
+
+CodeEditorPlugin uses comprehensive DocC documentation in `Sources/CodeEditorPlugin/Documentation.docc/`:
+
+### Key Documentation Files
+- **Main Entry**: `CodeEditorPlugin.md` - Documentation hub
+- **Tutorials**: Interactive step-by-step guides
+- **Getting Started**: `GettingStarted.md` - Quick setup
+- **Configuration**: `Configuration-System.md` - Complete config guide
+- **Integration**: `SwiftUI-Integration.md`, `iOS-Integration.md`
+- **Architecture**: `Architecture-Overview.md`, `Platform-Abstraction.md`
+
+### Working with Documentation
+```bash
+# Generate documentation
+swift package generate-documentation --target CodeEditorPlugin
+
+# Generate for static hosting
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
+
+# View documentation
+open docs/documentation/codeeditorplugin/index.html
+```
+
+### Documentation Guidelines
+- **Reference DocC first** for feature explanations
+- **Update docs** when adding/changing APIs
+- **Use DocC links** for cross-references
+- **Include code examples** for complex patterns
+- **Keep tutorials current** with latest practices
 
 ## Quick Debugging
 

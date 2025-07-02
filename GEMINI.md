@@ -56,6 +56,7 @@ Sources/CodeEditorPlugin/
 ├── SyntaxHighlighting/      # Language highlighting
 ├── Layout/                  # UI components (GutterView)
 ├── SwiftUI/                 # SwiftUI integration
+├── Documentation.docc/      # Comprehensive DocC documentation
 ├── Platform/                # Cross-platform abstractions
 ├── TextProcessing/          # Actor-based processing
 ├── Completion/              # Code completion
@@ -265,6 +266,38 @@ Swift (AST-based), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON
 - **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst
 - **State Management**: Proper SwiftUI updates with objectWillChange
 - **File Count**: Increased to 40 files while maintaining zero violations
+
+## Documentation System
+
+CodeEditorPlugin includes comprehensive DocC documentation in `Sources/CodeEditorPlugin/Documentation.docc/`:
+
+### Documentation Structure
+- **Main Hub**: `CodeEditorPlugin.md` - Central documentation entry point
+- **Interactive Tutorials**: Step-by-step guides in `Tutorials/` directory
+- **Getting Started**: `GettingStarted.md` - Quick setup and basic usage
+- **Configuration Guide**: `Configuration-System.md` - Complete config documentation
+- **Integration Guides**: `SwiftUI-Integration.md`, `iOS-Integration.md`, `macOS-Integration.md`
+- **Architecture Deep Dives**: `Architecture-Overview.md`, `Platform-Abstraction.md`
+- **Feature Documentation**: `Syntax-Highlighting.md`, `Annotation-System.md`
+
+### Viewing Documentation
+```bash
+# Generate documentation
+swift package generate-documentation --target CodeEditorPlugin
+
+# Generate for static hosting
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
+
+# View in browser
+open docs/documentation/codeeditorplugin/index.html
+```
+
+### Working with Documentation
+- **Reference DocC first** when explaining features or architecture
+- **Update documentation** when adding new APIs or changing behavior
+- **Use DocC cross-references** (`<doc:Configuration-System>`) for navigation
+- **Include practical examples** in documentation for complex integration patterns
+- **Keep tutorials synchronized** with latest API changes and best practices
 
 ## Remember
 This is a **production-ready** component used in real applications. Every change should maintain or improve the quality standards. When in doubt, add tests and check performance!

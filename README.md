@@ -395,6 +395,39 @@ swift test --parallel        # Run tests in parallel for speed
 
 Every release of CodeEditorPlugin maintains these standards. We don't just aim for quality – we guarantee it through automation, testing, and a commitment to excellence that's verified with every commit.
 
+## 📚 Documentation
+
+CodeEditorPlugin features comprehensive DocC documentation with step-by-step tutorials, API reference, and integration guides. The documentation includes:
+
+### Comprehensive DocC Documentation
+
+- **Interactive Tutorials**: Step-by-step guides for creating your first editor, configuring features, and adding syntax highlighting
+- **Complete API Reference**: Every public type, method, and property documented with examples
+- **Architecture Guides**: In-depth explanations of the platform abstraction layer and Swift 6 concurrency model
+- **Integration Patterns**: Best practices for SwiftUI, UIKit/AppKit, and cross-platform development
+
+### Documentation Structure
+
+- **Essentials**: [Getting Started](Sources/CodeEditorPlugin/Documentation.docc/GettingStarted.md), [Installation](Sources/CodeEditorPlugin/Documentation.docc/Installation.md), [Quick Start](Sources/CodeEditorPlugin/Documentation.docc/QuickStart.md)
+- **Architecture**: [Overview](Sources/CodeEditorPlugin/Documentation.docc/Architecture-Overview.md), [Platform Abstraction](Sources/CodeEditorPlugin/Documentation.docc/Platform-Abstraction.md), [Swift 6 Concurrency](Sources/CodeEditorPlugin/Documentation.docc/Swift6-Concurrency.md)
+- **Configuration**: [System](Sources/CodeEditorPlugin/Documentation.docc/Configuration-System.md), [Presets](Sources/CodeEditorPlugin/Documentation.docc/Configuration-Presets.md), [Themes](Sources/CodeEditorPlugin/Documentation.docc/Theme-System.md)
+- **Features**: [Syntax Highlighting](Sources/CodeEditorPlugin/Documentation.docc/Syntax-Highlighting.md), [Annotations](Sources/CodeEditorPlugin/Documentation.docc/Annotation-System.md), [Performance Monitoring](Sources/CodeEditorPlugin/Documentation.docc/Performance-Monitoring.md)
+- **Integration**: [SwiftUI](Sources/CodeEditorPlugin/Documentation.docc/SwiftUI-Integration.md), [UIKit/AppKit](Sources/CodeEditorPlugin/Documentation.docc/UIKit-AppKit-Integration.md), [Platform-Specific](Sources/CodeEditorPlugin/Documentation.docc/iOS-Integration.md)
+- **Advanced**: [Plugin Architecture](Sources/CodeEditorPlugin/Documentation.docc/Plugin-Architecture.md), [LSP Integration](Sources/CodeEditorPlugin/Documentation.docc/LSP-Integration.md), [Advanced Patterns](Sources/CodeEditorPlugin/Documentation.docc/Advanced-Patterns.md)
+
+### Viewing Documentation
+
+Build and view the full documentation locally:
+
+```bash
+# Generate documentation
+swift package generate-documentation --target CodeEditorPlugin
+
+# View in browser (requires DocC)
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
+open docs/documentation/codeeditorplugin/index.html
+```
+
 ## 📄 License
 
 CodeEditorPlugin is proprietary software. All rights are reserved. Unauthorized use, copying, distribution, or modification is strictly prohibited without explicit written permission from the owner.

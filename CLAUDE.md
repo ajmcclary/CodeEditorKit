@@ -88,6 +88,16 @@ Sources/CodeEditorPlugin/
 ├── SwiftUI/                 # SwiftUI integration
 │   ├── CodeEditorSwiftUIView.swift  # Main SwiftUI wrapper (deprecated)
 │   └── CodeEditor.swift             # Modern SwiftUI view
+├── Documentation.docc/      # Comprehensive DocC documentation
+│   ├── CodeEditorPlugin.md          # Main documentation entry point
+│   ├── Tutorials/                   # Step-by-step tutorials
+│   ├── GettingStarted.md           # Quick start guide
+│   ├── Configuration-System.md     # Configuration documentation
+│   ├── Syntax-Highlighting.md      # Highlighting system docs
+│   ├── SwiftUI-Integration.md      # SwiftUI patterns
+│   ├── Architecture-Overview.md    # Architecture deep dive
+│   ├── Platform-Abstraction.md     # Cross-platform layer
+│   └── Resources/                   # Images and code samples
 ├── Extensions/              # All extensions (flattened with +Extensions naming)
 ├── Models/                  # Data models and annotations
 ├── TextProcessing/          # Actor-based text processing
@@ -458,6 +468,45 @@ The annotation system detects and displays TODO/FIXME/NOTE/WARNING/ERROR comment
 - **Use cross-platform coordinator** - Let `CrossPlatformCoordinator` handle input differences
 - **Prefer `#if canImport()` over `#if os()`** - Better compatibility with Mac Catalyst
 
+## Documentation System
+
+CodeEditorPlugin features comprehensive DocC documentation located in `Sources/CodeEditorPlugin/Documentation.docc/`. This documentation system provides:
+
+### Documentation Structure
+- **Main Entry Point**: `CodeEditorPlugin.md` - Overview and navigation hub
+- **Interactive Tutorials**: Step-by-step guides in `Tutorials/` directory
+- **API Reference**: Complete documentation of all public APIs
+- **Architecture Guides**: Deep dives into system design and patterns
+- **Integration Guides**: Platform-specific integration patterns
+
+### Key Documentation Files
+- **Getting Started**: `GettingStarted.md` - Quick introduction and setup
+- **Installation**: `Installation.md` - Detailed installation instructions
+- **Configuration System**: `Configuration-System.md` - Complete configuration guide
+- **Syntax Highlighting**: `Syntax-Highlighting.md` - Language support documentation
+- **SwiftUI Integration**: `SwiftUI-Integration.md` - SwiftUI best practices
+- **Platform Abstraction**: `Platform-Abstraction.md` - Cross-platform architecture
+- **Architecture Overview**: `Architecture-Overview.md` - System design deep dive
+
+### Generating Documentation
+```bash
+# Generate documentation
+swift package generate-documentation --target CodeEditorPlugin
+
+# Generate for static hosting
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
+
+# View documentation
+open docs/documentation/codeeditorplugin/index.html
+```
+
+### Documentation Best Practices
+- **Always reference DocC docs** when explaining features or integration patterns
+- **Update documentation** when adding new features or changing APIs
+- **Use DocC links** for cross-references (e.g., `<doc:Configuration-System>`)
+- **Include code examples** in documentation for complex integration patterns
+- **Keep tutorials current** with latest API and best practices
+
 ## Important Reminders
 
 - **Production-Ready**: This is not a prototype - the plugin is ready for production use
@@ -465,3 +514,4 @@ The annotation system detects and displays TODO/FIXME/NOTE/WARNING/ERROR comment
 - **Test Coverage**: Maintain the high test coverage standard (currently 172 tests)
 - **Zero Violations**: Keep SwiftLint violations at zero
 - **Cross-Platform**: Always test changes on macOS, iOS, and Mac Catalyst
+- **Documentation First**: Always reference and update DocC documentation when working with features
