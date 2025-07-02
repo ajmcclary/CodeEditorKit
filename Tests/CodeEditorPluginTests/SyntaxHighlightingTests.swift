@@ -9,7 +9,7 @@ final class SyntaxHighlightingTests: XCTestCase {
     func testLanguageDetection() {
         let highlighter = SyntaxHighlightingCoordinator()
         XCTAssertEqual(highlighter.detectLanguage(from: "swift"), .swift)
-        // Other languages will be .regex or .plainText based on whether they're supported
+        // Other languages are now direct enum cases
         let jsLang = highlighter.detectLanguage(from: "js")
         XCTAssertNotEqual(jsLang, .plainText, "JavaScript should be supported")
 

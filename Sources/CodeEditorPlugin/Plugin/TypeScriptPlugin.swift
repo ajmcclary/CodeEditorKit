@@ -119,7 +119,7 @@ public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
     // MARK: - Feature Providers
     
     public func createCompletionProvider() -> (any CompletionProvider)? {
-        TypeScriptCompletionProvider()
+        TypeScriptPluginCompletionProvider()
     }
     
     public func createFormatter() -> (any CodeFormatter)? {
@@ -174,11 +174,10 @@ public final class TypeScriptPlugin: LanguagePlugin, @unchecked Sendable {
 // MARK: - TypeScript Completion Provider
 
 @MainActor
-private final class TypeScriptCompletionProvider: CompletionProvider, @unchecked Sendable {
-    let id = "typescript-completion"
+private final class TypeScriptPluginCompletionProvider: CompletionProvider, @unchecked Sendable {
+    let id = "typescript-plugin-completion"
     let supportedLanguages: [Language] = [
-        Language(name: "TypeScript", identifier: "typescript"),
-        Language(name: "TypeScript React", identifier: "typescriptreact")
+        .typescript
     ]
     let triggerCharacters = [".", "(", "[", "<", " ", ":", ","]
     
@@ -233,8 +232,7 @@ private final class TypeScriptCompletionProvider: CompletionProvider, @unchecked
 private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
     let id = "typescript-formatter"
     let supportedLanguages: [Language] = [
-        Language(name: "TypeScript", identifier: "typescript"),
-        Language(name: "TypeScript React", identifier: "typescriptreact")
+        .typescript
     ]
     let supportsRangeFormatting = true
     
@@ -309,8 +307,7 @@ private final class TypeScriptFormatter: CodeFormatter, @unchecked Sendable {
 private final class TypeScriptIndentationProvider: IndentationProvider, @unchecked Sendable {
     let id = "typescript-indentation"
     let supportedLanguages: [Language] = [
-        Language(name: "TypeScript", identifier: "typescript"),
-        Language(name: "TypeScript React", identifier: "typescriptreact")
+        .typescript
     ]
     let supportsAutomaticIndentation = true
     

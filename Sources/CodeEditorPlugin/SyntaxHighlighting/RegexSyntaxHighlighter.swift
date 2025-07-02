@@ -124,19 +124,19 @@ public final class RegexSyntaxHighlighter: Sendable {
 
     // MARK: - Properties
 
-    let supportedLanguagesMap: [String: LanguageDefinition]
+    public let supportedLanguages: [String: LanguageDefinition]
 
     // MARK: - Initialization
 
     public init() {
-        supportedLanguagesMap = Self.createLanguageDefinitions()
+        supportedLanguages = Self.createLanguageDefinitions()
     }
 
     // MARK: - Public Methods
 
     /// Get language definition by file extension
     public func languageDefinition(for fileExtension: String) -> LanguageDefinition? {
-        supportedLanguagesMap.values.first { language in
+        supportedLanguages.values.first { language in
             language.fileExtensions.contains(fileExtension.lowercased())
         }
     }

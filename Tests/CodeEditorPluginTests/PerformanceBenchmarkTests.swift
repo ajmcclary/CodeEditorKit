@@ -21,7 +21,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         }
         """
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: smallSourceCode,
             cursorPosition: smallSourceCode.count - 1,
@@ -63,7 +63,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         }
         largeSourceCode += "let x = String."
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: largeSourceCode,
             cursorPosition: largeSourceCode.count - 1,
@@ -94,7 +94,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
             completionManager.registerProvider(BenchmarkCompletionProvider(id: "provider\(index)"))
         }
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: "test code",
             cursorPosition: 9,
@@ -123,7 +123,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
             completionManager.registerProvider(DuplicateCompletionProvider(id: "dup-provider\(index)"))
         }
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: "test",
             cursorPosition: 4,
@@ -247,7 +247,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         }
         wait(for: [setupExpectation], timeout: 5.0)
         
-        let language = Language(name: "Benchmark", identifier: "benchmark")
+        let language = Language.plainText
         
         measure {
             // Test looking up various feature providers
@@ -336,11 +336,8 @@ final class PerformanceBenchmarkTests: XCTestCase {
         }
         
         measure {
-            // Create a JavaScript language definition using RegexSyntaxHighlighter
-            let regexHighlighter = RegexSyntaxHighlighter()
-            if let jsDefinition = regexHighlighter.languageDefinition(for: "js") {
-                _ = coordinator.highlight(source: jsCode, language: .regex(jsDefinition))
-            }
+            // Highlight JavaScript code directly
+            _ = coordinator.highlight(source: jsCode, language: .javascript)
         }
     }
     
@@ -352,7 +349,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         let provider = SwiftCompletionProvider()
         completionManager.registerProvider(provider)
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: "let x = String.",
             cursorPosition: 15,
@@ -391,7 +388,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
                     }
                     
                     // Use feature providers
-                    let language = Language(name: "Benchmark", identifier: "benchmark")
+                    let language = Language.plainText
                     for _ in 0..<100 {
                         _ = pluginManager.completionProviders(for: language)
                         _ = pluginManager.formatters(for: language)
@@ -420,7 +417,7 @@ private class BenchmarkCompletionProvider: CompletionProvider {
     deinit {}
     
     let id: String
-    let supportedLanguages: [Language] = [Language(name: "Swift", identifier: "swift")]
+    let supportedLanguages: [Language] = [.swift]
     let triggerCharacters: [String] = []
     
     init(id: String) {
@@ -457,7 +454,7 @@ private class DuplicateCompletionProvider: CompletionProvider {
     deinit {}
     
     let id: String
-    let supportedLanguages: [Language] = [Language(name: "Swift", identifier: "swift")]
+    let supportedLanguages: [Language] = [.swift]
     let triggerCharacters: [String] = []
     
     init(id: String) {
@@ -564,7 +561,7 @@ private class BenchmarkFormatter: CodeFormatter {
     deinit {}
     
     let id = "benchmark-formatter"
-    let supportedLanguages = [Language(name: "Benchmark", identifier: "benchmark")]
+    let supportedLanguages = [Language.plainText]
     let supportsRangeFormatting = true
     
     func format(source: String, options _: FormattingOptions) async throws -> String {
@@ -589,7 +586,7 @@ private class BenchmarkIndentationProvider: IndentationProvider {
     deinit {}
     
     let id = "benchmark-indentation"
-    let supportedLanguages = [Language(name: "Benchmark", identifier: "benchmark")]
+    let supportedLanguages = [Language.plainText]
     let supportsAutomaticIndentation = true
     
     func indentationForNewLine(after _: String, in _: String, at _: Int) -> Int {

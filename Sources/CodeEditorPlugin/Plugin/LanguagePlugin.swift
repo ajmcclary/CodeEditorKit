@@ -126,7 +126,9 @@ extension LanguagePlugin {
     public var id: String { identifier }
     
     public var supportedLanguages: [Language] {
-        [Language(name: displayName, identifier: identifier)]
+        // Map identifier to Language enum case
+        let languageCase = Language.allCases.first { $0.rawValue == identifier } ?? .plainText
+        return [languageCase]
     }
     
     public var metadata: PluginMetadata {

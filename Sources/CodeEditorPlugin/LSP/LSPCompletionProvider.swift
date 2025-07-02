@@ -138,19 +138,59 @@ public final class LSPCompletionProvider: CompletionProvider {
         case .swift:
             return "swift"
 
-        case .regex(let pattern):
-            // Try to infer language from regex pattern context
-            // This is a simplified mapping - could be improved
-            let name = pattern.name.lowercased()
-            if name.contains("javascript") || name.contains("js") {
-                return "javascript"
-            } else if name.contains("typescript") || name.contains("ts") {
-                return "typescript"
-            } else if name.contains("python") || name.contains("py") {
-                return "python"
-            } else {
-                return "plaintext"
-            }
+        case .javascript:
+            return "javascript"
+
+        case .typescript:
+            return "typescript"
+
+        case .python:
+            return "python"
+
+        case .go:
+            return "go"
+
+        case .rust:
+            return "rust"
+
+        case .c:
+            return "c"
+
+        case .cpp:
+            return "cpp"
+
+        case .java:
+            return "java"
+
+        case .html:
+            return "html"
+
+        case .css:
+            return "css"
+
+        case .json:
+            return "json"
+
+        case .markdown:
+            return "markdown"
+
+        case .yaml:
+            return "yaml"
+
+        case .xml:
+            return "xml"
+
+        case .sql:
+            return "sql"
+
+        case .ruby:
+            return "ruby"
+
+        case .php:
+            return "php"
+
+        case .shell:
+            return "shell"
 
         case .plainText:
             return "plaintext"

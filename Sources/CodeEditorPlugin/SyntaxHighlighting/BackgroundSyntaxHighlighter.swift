@@ -456,8 +456,23 @@ public class HighlightingOperation: Operation, @unchecked Sendable {
         case .swift:
             keywords = ["func", "var", "let", "class", "struct", "enum", "import", "if", "else", "for", "while", "return", "public", "private", "internal"]
 
-        case .regex:
-            keywords = ["function", "var", "const", "let", "if", "else", "for", "while", "return"]
+        case .javascript, .typescript:
+            keywords = ["function", "var", "const", "let", "if", "else", "for", "while", "return", "class", "new", "async", "await"]
+
+        case .python:
+            keywords = ["def", "class", "if", "elif", "else", "for", "while", "return", "import", "from", "as", "try", "except", "with"]
+
+        case .go:
+            keywords = ["func", "var", "const", "if", "else", "for", "return", "package", "import", "type", "struct", "interface"]
+
+        case .rust:
+            keywords = ["fn", "let", "mut", "const", "if", "else", "for", "while", "return", "use", "mod", "struct", "enum", "impl"]
+
+        case .java:
+            keywords = ["class", "public", "private", "static", "void", "if", "else", "for", "while", "return", "import", "new", "extends", "implements"]
+
+        case .c, .cpp:
+            keywords = ["int", "char", "void", "if", "else", "for", "while", "return", "include", "define", "typedef", "struct", "class"]
 
         default:
             keywords = ["function", "var", "if", "else", "for", "while", "return"]

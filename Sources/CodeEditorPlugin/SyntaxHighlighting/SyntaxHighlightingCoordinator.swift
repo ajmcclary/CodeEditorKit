@@ -50,17 +50,7 @@ public final class SyntaxHighlightingCoordinator {
 
     /// Detect language from file extension
     public func detectLanguage(from fileExtension: String) -> Language {
-        let ext = fileExtension.lowercased()
-
-        if ext == "swift" {
-            return .swift
-        }
-
-        if let languageDefinition = regexHighlighter.languageDefinition(for: ext) {
-            return .regex(languageDefinition)
-        }
-
-        return .plainText
+        Language(fileExtension: fileExtension) ?? .plainText
     }
 
     /// Highlight source code synchronously
@@ -68,11 +58,15 @@ public final class SyntaxHighlightingCoordinator {
         switch language {
         case .swift:
             return swiftHighlighter.highlight(source: source)
-
-        case let .regex(definition):
-            return regexHighlighter.highlight(source: source, language: definition)
-
+            
         case .plainText:
+            return []
+            
+        default:
+            // Use regex highlighter for all other languages
+            if let languageDefinition = regexHighlighter.languageDefinition(for: language.fileExtensions.first ?? "") {
+                return regexHighlighter.highlight(source: source, language: languageDefinition)
+            }
             return []
         }
     }
@@ -92,11 +86,15 @@ public final class SyntaxHighlightingCoordinator {
             switch language {
             case .swift:
                 return swiftHL.highlight(source: source)
-
-            case let .regex(definition):
-                return regexHL.highlight(source: source, language: definition)
-
+                
             case .plainText:
+                return []
+                
+            default:
+                // Use regex highlighter for all other languages
+                if let languageDefinition = regexHL.languageDefinition(for: language.fileExtensions.first ?? "") {
+                    return regexHL.highlight(source: source, language: languageDefinition)
+                }
                 return []
             }
         }
@@ -140,13 +138,10 @@ public final class SyntaxHighlightingCoordinator {
 
     /// Get all supported file extensions
     public var supportedFileExtensions: [String] {
-        var extensions = ["swift"]
-
-        // Add regex-based language extensions
-        for language in regexHighlighter.supportedLanguages.values {
+        var extensions: [String] = []
+        for language in Language.allCases {
             extensions.append(contentsOf: language.fileExtensions)
         }
-
         return Array(Set(extensions)).sorted()
     }
 
@@ -163,140 +158,102 @@ public final class SyntaxHighlightingCoordinator {
 
 // MARK: - Language
 
-public enum Language: Equatable, Hashable, Sendable {
+public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     case swift
-    case regex(RegexSyntaxHighlighter.LanguageDefinition)
-    case plainText
-
+    case javascript
+    case typescript
+    case python
+    case go
+    case rust
+    case c
+    case cpp
+    case java
+    case html
+    case css
+    case json
+    case markdown
+    case yaml
+    case xml
+    case sql
+    case ruby
+    case php
+    case shell
+    case plainText = "plaintext"
+    
     public var name: String {
         switch self {
-        case .swift:
-            "Swift"
-
-        case let .regex(definition):
-            definition.name
-
-        case .plainText:
-            "Plain Text"
-        }
-    }
-
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) {
-        case (.swift, .swift),
-             (.plainText, .plainText):
-            true
-
-        case let (.regex(lhsDef), .regex(rhsDef)):
-            lhsDef.name == rhsDef.name
-
-        default:
-            false
+        case .swift: "Swift"
+        case .javascript: "JavaScript"
+        case .typescript: "TypeScript"
+        case .python: "Python"
+        case .go: "Go"
+        case .rust: "Rust"
+        case .c: "C"
+        case .cpp: "C++"
+        case .java: "Java"
+        case .html: "HTML"
+        case .css: "CSS"
+        case .json: "JSON"
+        case .markdown: "Markdown"
+        case .yaml: "YAML"
+        case .xml: "XML"
+        case .sql: "SQL"
+        case .ruby: "Ruby"
+        case .php: "PHP"
+        case .shell: "Shell"
+        case .plainText: "Plain Text"
         }
     }
     
-    public func hash(into hasher: inout Hasher) {
+    public var fileExtensions: [String] {
         switch self {
-        case .swift:
-            hasher.combine("swift")
-
-        case .plainText:
-            hasher.combine("plainText")
-
-        case .regex(let definition):
-            hasher.combine("regex")
-            hasher.combine(definition.name)
+        case .swift: ["swift"]
+        case .javascript: ["js", "jsx", "mjs"]
+        case .typescript: ["ts", "tsx"]
+        case .python: ["py", "pyw"]
+        case .go: ["go"]
+        case .rust: ["rs"]
+        case .c: ["c", "h"]
+        case .cpp: ["cpp", "cc", "cxx", "hpp", "hh", "hxx"]
+        case .java: ["java"]
+        case .html: ["html", "htm", "xhtml"]
+        case .css: ["css", "scss", "sass", "less"]
+        case .json: ["json", "jsonc"]
+        case .markdown: ["md", "markdown", "mdown", "mkd"]
+        case .yaml: ["yaml", "yml"]
+        case .xml: ["xml", "xsl", "xslt", "svg"]
+        case .sql: ["sql"]
+        case .ruby: ["rb", "rbw"]
+        case .php: ["php", "phtml", "php3", "php4", "php5"]
+        case .shell: ["sh", "bash", "zsh", "fish"]
+        case .plainText: ["txt", "text", "log"]
         }
     }
     
+    /// Initialize from file extension
+    public init?(fileExtension: String) {
+        let lowercased = fileExtension.lowercased()
+        for language in Self.allCases {
+            if language.fileExtensions.contains(lowercased) {
+                self = language
+                return
+            }
+        }
+        return nil
+    }
+}
+
+// MARK: - Language Extensions
+
+extension Language {
     /// Unique identifier for the language (used by plugin system)
     public var identifier: String {
-        switch self {
-        case .swift:
-            return "swift"
-
-        case .regex(let definition):
-            return definition.name.lowercased().replacingOccurrences(of: " ", with: "-")
-
-        case .plainText:
-            return "plaintext"
-        }
+        rawValue
     }
     
-    /// Create a language instance from identifier and name (used by plugin system)
-    public init(name: String, identifier: String) {
-        switch identifier {
-        case "swift":
-            self = .swift
-
-        case "plaintext":
-            self = .plainText
-
-        default:
-            // For unknown languages, create a basic regex language definition
-            let definition = RegexSyntaxHighlighter.LanguageDefinition(
-                name: name,
-                fileExtensions: [identifier],
-                rules: []
-            )
-            self = .regex(definition)
-        }
-    }
-    
-    // MARK: - Commonly Used Languages
-    
-    /// Python language definition
-    public static var python: Self {
-        // Create language definition directly using the static helper
-        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "#.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\\b", tokenType: .keyword, priority: 7)
-        ].compactMap { $0 }
-        
-        let definition = RegexSyntaxHighlighter.LanguageDefinition(
-            name: "Python",
-            fileExtensions: ["py", "pyw"],
-            rules: rules
-        )
-        return .regex(definition)
-    }
-    
-    public static var javascript: Self {
-        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "//.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "/\\*[\\s\\S]*?\\*/", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "`(?:[^`\\\\]|\\\\.)*`", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof)\\b", tokenType: .keyword, priority: 7)
-        ].compactMap { $0 }
-        
-        let definition = RegexSyntaxHighlighter.LanguageDefinition(
-            name: "JavaScript",
-            fileExtensions: ["js", "jsx", "mjs"],
-            rules: rules
-        )
-        return .regex(definition)
-    }
-    
-    public static var json: Self {
-        let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null)\\b", tokenType: .keyword, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "[{}\\[\\],:]", tokenType: .punctuation, priority: 6)
-        ].compactMap { $0 }
-        
-        let definition = RegexSyntaxHighlighter.LanguageDefinition(
-            name: "JSON",
-            fileExtensions: ["json", "jsonc"],
-            rules: rules
-        )
-        return .regex(definition)
+    /// Get language from identifier
+    public init?(identifier: String) {
+        self.init(rawValue: identifier)
     }
 }
 
@@ -401,13 +358,5 @@ public struct HighlightedToken: Sendable {
         self.range = range
         self.type = type
         self.text = text
-    }
-}
-
-// MARK: - Extension for RegexSyntaxHighlighter
-
-extension RegexSyntaxHighlighter {
-    var supportedLanguages: [String: LanguageDefinition] {
-        supportedLanguagesMap
     }
 }

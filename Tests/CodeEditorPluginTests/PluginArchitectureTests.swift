@@ -160,7 +160,7 @@ final class PluginArchitectureTests: XCTestCase {
             try await pluginManager.registerPlugin(mockPlugin)
             try await pluginManager.enablePlugin(mockPlugin.identifier)
             
-            let language = Language(name: "Mock", identifier: "mock")
+            let language = Language.plainText
             
             // Test completion providers
             let completionProviders = pluginManager.completionProviders(for: language)
@@ -186,7 +186,7 @@ final class PluginArchitectureTests: XCTestCase {
             try await pluginManager.registerPlugin(mockPlugin)
             try await pluginManager.enablePlugin(mockPlugin.identifier)
             
-            let language = Language(name: "Mock", identifier: "mock")
+            let language = Language.plainText
             XCTAssertFalse(pluginManager.completionProviders(for: language).isEmpty)
             
             await pluginManager.disablePlugin(mockPlugin.identifier)
@@ -536,7 +536,7 @@ private class MockCodeFormatter: CodeFormatter {
     deinit {}
     
     let id = "mock-formatter"
-    let supportedLanguages = [Language(name: "Mock", identifier: "mock")]
+    let supportedLanguages = [Language.plainText]
     let supportsRangeFormatting = true
     
     func format(source: String, options _: FormattingOptions) async throws -> String {
@@ -560,7 +560,7 @@ private class MockPluginCompletionProvider: CompletionProvider {
     deinit {}
     
     let id: String
-    let supportedLanguages: [Language] = [Language(name: "Mock", identifier: "mock")]
+    let supportedLanguages: [Language] = [.plainText]
     let triggerCharacters: [String] = []
     
     init(id: String) {

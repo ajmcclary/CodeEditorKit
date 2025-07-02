@@ -6,7 +6,7 @@ options:
     macOS: "14.0"
     macCatalyst: "16.0"
   developmentLanguage: en
-  xcodeVersion: "16.0"
+  xcodeVersion: 16.0
   enableAutomaticSigning: true
   defaultConfig: Debug
   
@@ -45,10 +45,8 @@ targets:
       SUPPORTS_MACCATALYST: true
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
       SWIFT_VERSION: "6.0"
-      ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
-      GENERATE_INFOPLIST_FILE: NO
-      INFOPLIST_FILE: Info.plist
+      GENERATE_INFOPLIST_FILE: YES
       DEAD_CODE_STRIPPING: YES
     info:
       path: Info.plist
@@ -94,9 +92,8 @@ targets:
       SUPPORTS_MACCATALYST: true
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
       SWIFT_VERSION: "6.0"
-      ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
-      TEST_HOST: $(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CodeEditorSample
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/CodeEditorSample.app/CodeEditorSample
       GENERATE_INFOPLIST_FILE: YES
       DEAD_CODE_STRIPPING: YES
 
@@ -122,7 +119,6 @@ targets:
       PROVISIONING_PROFILE_SPECIFIER: ""
       MACOSX_DEPLOYMENT_TARGET: "14.0"
       SWIFT_VERSION: "6.0"
-      ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
       ENABLE_HARDENED_RUNTIME: YES
       DEAD_CODE_STRIPPING: YES
@@ -161,9 +157,8 @@ targets:
       CODE_SIGNING_ALLOWED: NO
       MACOSX_DEPLOYMENT_TARGET: "14.0"
       SWIFT_VERSION: "6.0"
-      ENABLE_EXPERIMENTAL_CONCURRENCY: true
       SWIFT_STRICT_CONCURRENCY: complete
-      TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CodeEditorSample-macOS.app/Contents/MacOS/CodeEditorSample-macOS"
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/CodeEditorSample-macOS.app/Contents/MacOS/CodeEditorSample-macOS
       BUNDLE_LOADER: "$(TEST_HOST)"
       GENERATE_INFOPLIST_FILE: YES
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: XCODE_BUILD

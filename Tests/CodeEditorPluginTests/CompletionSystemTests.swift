@@ -54,7 +54,7 @@ final class CompletionSystemTests: XCTestCase {
     // MARK: - CompletionContextModel Tests
     
     func testCompletionContextModelCreation() {
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: "let x = ",
             cursorPosition: 8,
@@ -67,7 +67,7 @@ final class CompletionSystemTests: XCTestCase {
         
         XCTAssertEqual(context.text, "let x = ")
         XCTAssertEqual(context.cursorPosition, 8)
-        XCTAssertEqual(context.language.identifier, "swift")
+        XCTAssertEqual(context.language, .swift)
         XCTAssertEqual(context.triggerKind, .character)
         XCTAssertEqual(context.triggerCharacter, ".")
         XCTAssertEqual(context.lineText, "let x = ")
@@ -99,7 +99,7 @@ final class CompletionSystemTests: XCTestCase {
         completionManager.registerProvider(mockProvider)
         
         // Create context
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(
             text: "let x = String.",
             cursorPosition: 15,
@@ -127,7 +127,7 @@ final class CompletionSystemTests: XCTestCase {
         completionManager.registerProvider(provider1)
         completionManager.registerProvider(provider2)
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
         
         let result = try await completionManager.requestCompletions(for: context)
@@ -144,7 +144,7 @@ final class CompletionSystemTests: XCTestCase {
         let mockProvider = MockCompletionProvider()
         completionManager.registerProvider(mockProvider)
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
         
         let result = try await completionManager.requestCompletions(for: context)
@@ -169,7 +169,7 @@ final class CompletionSystemTests: XCTestCase {
         let completionManager = CompletionManager()
         completionManager.registerProvider(MockSlowCompletionProvider())
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
         
         // Start a request
@@ -208,7 +208,7 @@ final class CompletionSystemTests: XCTestCase {
     @MainActor
     func testSwiftCompletionProviderCompletions() async throws {
         let provider = SwiftCompletionProvider()
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         
         // Test general context (should return keywords and types)
         let generalContext = CompletionContextModel(
@@ -255,7 +255,7 @@ final class CompletionSystemTests: XCTestCase {
     @MainActor
     func testSwiftCompletionProviderContextAwareness() async throws {
         let provider = SwiftCompletionProvider()
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         
         // Test different contexts
         let contexts = [
@@ -297,7 +297,7 @@ final class CompletionSystemTests: XCTestCase {
             completionManager.registerProvider(MockCompletionProvider(id: "provider\(index)"))
         }
         
-        let language = Language(name: "Swift", identifier: "swift")
+        let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
         
         measure {
@@ -322,7 +322,7 @@ private class MockCompletionProvider: CompletionProvider {
     deinit {}
     
     let id: String
-    let supportedLanguages: [Language] = [Language(name: "Swift", identifier: "swift")]
+    let supportedLanguages: [Language] = [.swift]
     let triggerCharacters: [String] = [".", "(", "["]
     
     init(id: String = "mock-provider") {
@@ -354,7 +354,7 @@ private class MockSlowCompletionProvider: CompletionProvider {
     deinit {}
     
     let id = "slow-provider"
-    let supportedLanguages: [Language] = [Language(name: "Swift", identifier: "swift")]
+    let supportedLanguages: [Language] = [.swift]
     let triggerCharacters: [String] = []
     
     func completions(for context: CompletionContextModel) async throws -> CompletionResult {

@@ -159,6 +159,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         didSet {
             if language != oldValue {
                 applySyntaxHighlighting()
+                updateCompletionTriggerCharacters()
             }
         }
     }
@@ -454,8 +455,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Initial syntax highlighting
         applySyntaxHighlighting()
         
-        // TODO: Set up completion providers
-        // setupCompletionProviders()
+        // Set up completion providers
+        setupCompletionProviders()
         
         // TODO: Set up LSP integration
         // setupLSPIntegration()
@@ -476,6 +477,39 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
         kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
         #endif
+    }
+    
+    // MARK: - Completion Setup
+    
+    private func setupCompletionProviders() {
+        // The SmartCompletionEngine already registers default providers in its init
+        // We just need to ensure completion is enabled based on configuration
+        isCompletionEnabled = configuration.behavior.enableCodeCompletion
+        
+        // Set up trigger characters based on the current language
+        updateCompletionTriggerCharacters()
+    }
+    
+    private func updateCompletionTriggerCharacters() {
+        // Base trigger characters
+        var triggers: Set<Character> = [" "]
+        
+        // Add language-specific trigger characters
+        switch language {
+        case .swift:
+            triggers.formUnion([".", "(", "[", "<"])
+
+        case .python:
+            triggers.formUnion([".", "(", "[", ":"])
+
+        case .javascript, .typescript:
+            triggers.formUnion([".", "(", "[", "{", ":"])
+
+        default:
+            triggers.formUnion([".", "(", "["])
+        }
+        
+        completionTriggerCharacters = triggers
     }
 
     // MARK: - Syntax Highlighting
@@ -512,8 +546,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             eventPublisher.publish(.textDidChange(text ?? ""))
             #endif
             
-            // TODO: Check for completion triggering
-            // checkForCompletionTrigger(at: editedRange)
+            // Check for completion triggering
+            if isCompletionEnabled {
+                checkForCompletionTrigger(at: editedRange)
+            }
             
             // TODO: Update LSP document context
             // updateLSPDocumentContext()

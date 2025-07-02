@@ -372,12 +372,8 @@ final class CodeEditorViewTests: XCTestCase {
         textView.setLanguage(fileExtension: "swift")
         XCTAssertEqual(textView.language, .swift)
         textView.setLanguage(fileExtension: "py")
-        // Python is supported via regex highlighting, not direct enum case
-        if case .regex = textView.language {
-            XCTAssertTrue(true, "Python language correctly detected as regex-based")
-        } else {
-            XCTFail("Expected regex-based language for Python")
-        }
+        // Python is now a direct enum case
+        XCTAssertEqual(textView.language, .python)
     }
 
     @MainActor

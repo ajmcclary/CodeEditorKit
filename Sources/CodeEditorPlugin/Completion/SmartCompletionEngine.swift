@@ -195,6 +195,58 @@ public final class SmartCompletionEngine: ObservableObject {
         let swiftProvider = SwiftCompletionProvider()
         registerProvider(swiftProvider, for: "swift")
         
+        let pythonProvider = PythonCompletionProvider()
+        registerProvider(pythonProvider, for: "python")
+        
+        let javascriptProvider = JavaScriptCompletionProvider()
+        registerProvider(javascriptProvider, for: "javascript")
+        
+        let typescriptProvider = TypeScriptCompletionProvider()
+        registerProvider(typescriptProvider, for: "typescript")
+        
+        let goProvider = GoCompletionProvider()
+        registerProvider(goProvider, for: "go")
+        
+        let rustProvider = RustCompletionProvider()
+        registerProvider(rustProvider, for: "rust")
+        
+        let cProvider = CCompletionProvider()
+        registerProvider(cProvider, for: "c")
+        registerProvider(cProvider, for: "cpp")
+        
+        let javaProvider = JavaCompletionProvider()
+        registerProvider(javaProvider, for: "java")
+        
+        let htmlProvider = HTMLCompletionProvider()
+        registerProvider(htmlProvider, for: "html")
+        
+        let cssProvider = CSSCompletionProvider()
+        registerProvider(cssProvider, for: "css")
+        
+        let jsonProvider = JSONCompletionProvider()
+        registerProvider(jsonProvider, for: "json")
+        
+        let yamlProvider = YAMLCompletionProvider()
+        registerProvider(yamlProvider, for: "yaml")
+        
+        let xmlProvider = XMLCompletionProvider()
+        registerProvider(xmlProvider, for: "xml")
+        
+        let sqlProvider = SQLCompletionProvider()
+        registerProvider(sqlProvider, for: "sql")
+        
+        let rubyProvider = RubyCompletionProvider()
+        registerProvider(rubyProvider, for: "ruby")
+        
+        let phpProvider = PHPCompletionProvider()
+        registerProvider(phpProvider, for: "php")
+        
+        let shellProvider = ShellCompletionProvider()
+        registerProvider(shellProvider, for: "shell")
+        
+        let markdownProvider = MarkdownCompletionProvider()
+        registerProvider(markdownProvider, for: "markdown")
+        
         // Register LSP provider as fallback
         // Note: LSPCompletionProvider requires an LSPManager instance
         // This will need to be injected or created elsewhere
