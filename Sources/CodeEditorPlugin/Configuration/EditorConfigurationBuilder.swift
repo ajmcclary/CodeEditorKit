@@ -40,20 +40,67 @@ public final class EditorConfigurationBuilder {
     
     // MARK: - Initialization
     
-    /// Creates a new configuration builder with default settings
+    /// Creates a new configuration builder with default settings.
+    ///
+    /// The builder starts with `EditorConfiguration.default` settings which can
+    /// be customized using the fluent API methods.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = EditorConfigurationBuilder()
+    ///     .fontSize(14)
+    ///     .showLineNumbers(true)
+    ///     .build()
+    /// ```
     public init() {}
     
-    /// Creates a configuration builder starting from an existing configuration
+    /// Creates a configuration builder starting from an existing configuration.
+    ///
+    /// Use this initializer to create variations of existing configurations or
+    /// to modify preset configurations.
+    ///
     /// - Parameter base: The base configuration to start with
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Start with a preset and customize
+    /// let config = EditorConfigurationBuilder(base: .minimal)
+    ///     .fontSize(16)
+    ///     .enableSyntaxHighlighting(true)
+    ///     .build()
+    /// 
+    /// // Create a variation of existing config
+    /// let darkModeConfig = EditorConfigurationBuilder(base: currentConfig)
+    ///     .theme(.dark)
+    ///     .build()
+    /// ```
     public init(base: EditorConfiguration) {
         self.configuration = base
     }
     
     // MARK: - Display Settings
     
-    /// Sets the font size for the editor
-    /// - Parameter size: The font size in points (typically 10-24)
-    /// - Returns: The builder for chaining
+    /// Sets the font size for the editor.
+    ///
+    /// The font size affects all text in the editor including line numbers.
+    /// The editor uses the system's monospaced font at the specified size.
+    ///
+    /// - Parameter size: The font size in points (recommended: 10-24)
+    /// - Returns: The builder instance for method chaining
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = EditorConfigurationBuilder()
+    ///     .fontSize(16)     // Comfortable reading size
+    ///     .fontSize(12)     // Compact view
+    ///     .fontSize(20)     // Presentation mode
+    ///     .build()
+    /// ```
+    ///
+    /// - Note: Font sizes outside 8-72 range will trigger validation warnings
     @discardableResult
     public func fontSize(_ size: CGFloat) -> Self {
         var display = configuration.display
@@ -62,9 +109,24 @@ public final class EditorConfigurationBuilder {
         return self
     }
     
-    /// Controls whether line numbers are shown
-    /// - Parameter show: Whether to show line numbers
-    /// - Returns: The builder for chaining
+    /// Controls whether line numbers are shown in the gutter.
+    ///
+    /// Line numbers help with navigation, debugging, and code discussion.
+    /// They appear in a separate gutter area that doesn't scroll horizontally.
+    ///
+    /// - Parameter show: `true` to show line numbers, `false` to hide them
+    /// - Returns: The builder instance for method chaining
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = EditorConfigurationBuilder()
+    ///     .showLineNumbers(true)   // Default for most code editing
+    ///     .showLineNumbers(false)  // Clean view for markdown or notes
+    ///     .build()
+    /// ```
+    ///
+    /// - SeeAlso: `gutterWidth(_:)` for customizing gutter size
     @discardableResult
     public func showLineNumbers(_ show: Bool) -> Self {
         var display = configuration.display
@@ -328,6 +390,34 @@ public final class EditorConfigurationBuilder {
     
     /// Builds the final EditorConfiguration
     /// - Returns: The configured EditorConfiguration instance
+    /// Builds and returns the final EditorConfiguration.
+    ///
+    /// Call this method after chaining all desired configuration methods to get
+    /// the final configuration object that can be applied to a CodeEditorView.
+    ///
+    /// - Returns: The configured EditorConfiguration instance
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = EditorConfigurationBuilder()
+    ///     .fontSize(14)
+    ///     .showLineNumbers(true)
+    ///     .tabWidth(4)
+    ///     .theme(.monokai)
+    ///     .language(.python)
+    ///     .build()  // Returns the final configuration
+    /// 
+    /// // Apply to editor
+    /// editor.configuration = config
+    /// 
+    /// // Or apply directly
+    /// config.apply(to: editor)
+    /// ```
+    ///
+    /// - Note: The configuration is automatically validated when applied to an editor
+    ///
+    /// - SeeAlso: `EditorConfiguration.validate()`, `EditorConfiguration.apply(to:)`
     public func build() -> EditorConfiguration {
         configuration
     }

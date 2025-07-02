@@ -87,53 +87,120 @@ import UIKit
 public struct EditorConfiguration: Equatable, Codable, Sendable {
     // MARK: - Nested Configuration Structures
     
-    /// Layout-related configuration
+    /// Layout-related configuration.
+    ///
+    /// Controls the visual layout and spacing of the editor components including
+    /// tab handling, line spacing, and gutter dimensions.
     public struct Layout: Equatable, Codable, Sendable {
-        /// Tab width in spaces
+        /// Tab width in spaces.
+        ///
+        /// Determines how many spaces a tab character represents when displayed.
+        /// Common values are 2, 4, or 8 spaces.
+        ///
+        /// - Note: This affects display only. Use `insertSpacesForTabs` to control
+        ///         whether pressing Tab inserts spaces or tab characters.
         public var tabWidth: Int = 4
         
-        /// Whether to insert spaces instead of tabs
+        /// Whether to insert spaces instead of tabs.
+        ///
+        /// When `true`, pressing the Tab key inserts spaces equal to `tabWidth`.
+        /// When `false`, pressing Tab inserts a tab character.
+        ///
+        /// - Important: Many modern coding standards recommend using spaces for
+        ///              consistent formatting across different editors.
         public var insertSpacesForTabs: Bool = true
         
-        /// Line spacing multiplier
+        /// Line spacing multiplier.
+        ///
+        /// Controls the vertical spacing between lines. A value of 1.0 provides
+        /// minimal spacing, while higher values increase readability.
+        ///
+        /// - Note: Typical values range from 1.2 to 1.5 for comfortable reading.
         public var lineSpacing: CGFloat = 1.2
         
-        /// Whether to wrap long lines
+        /// Whether to wrap long lines.
+        ///
+        /// When `true`, lines that exceed the visible width wrap to the next line.
+        /// When `false`, horizontal scrolling is required to see long lines.
+        ///
+        /// - Note: Code editors typically have wrapping disabled by default.
         public var wrapLines: Bool = false
         
-        /// Gutter width for line numbers
+        /// Gutter width for line numbers.
+        ///
+        /// The total width of the gutter area where line numbers are displayed.
+        /// Adjust this if you need to display large line numbers (e.g., files with
+        /// more than 9999 lines).
         public var gutterWidth: CGFloat = 60.0
         
-        /// Padding for line numbers within the gutter
+        /// Padding for line numbers within the gutter.
+        ///
+        /// The horizontal padding between the line numbers and the gutter edges.
+        /// Affects the spacing and alignment of line numbers.
         public var lineNumberPadding: CGFloat = 8.0
         
-        /// Size of annotation badges
+        /// Size of annotation badges.
+        ///
+        /// The diameter of circular badges displayed for annotations like
+        /// TODO, FIXME, and WARNING markers.
         public var annotationBadgeSize: CGFloat = 16.0
         
-        /// Padding around annotation badges
+        /// Padding around annotation badges.
+        ///
+        /// The spacing between annotation badges and surrounding elements.
+        /// Affects the visual density of annotations in the gutter.
         public var annotationBadgePadding: CGFloat = 4.0
         
-        /// Width of the minimap view
+        /// Width of the minimap view.
+        ///
+        /// The width of the code minimap shown on the right side of the editor.
+        /// The minimap provides a zoomed-out view of the entire file.
+        ///
+        /// - Note: Only applies when `display.showMinimap` is `true`.
         public var minimapWidth: CGFloat = 120.0
         
         public init() {}
     }
     
-    /// Display-related configuration
+    /// Display-related configuration.
+    ///
+    /// Controls visual elements like line numbers, syntax highlighting,
+    /// and editor annotations.
     public struct Display: Equatable, Codable, Sendable {
-        /// Whether to show line numbers in the gutter
+        /// Whether to show line numbers in the gutter.
+        ///
+        /// When enabled, displays line numbers in the left gutter area.
+        /// Line numbers help with navigation and debugging.
         public var showLineNumbers: Bool = true
         
-        /// Whether to highlight the current line
+        /// Whether to highlight the current line.
+        ///
+        /// When enabled, the line containing the cursor is highlighted
+        /// with a subtle background color to improve focus.
         public var highlightSelectedLine: Bool = true
         
-        /// Whether to show invisible characters (spaces, tabs, newlines)
+        /// Whether to show invisible characters (spaces, tabs, newlines).
+        ///
+        /// When enabled, displays visual representations of whitespace:
+        /// - Spaces appear as dots (·)
+        /// - Tabs appear as arrows (→)
+        /// - Newlines appear as paragraph marks (¶)
         public var showInvisibleCharacters: Bool = false
         
-        /// Font size for the editor text
+        /// Font size for the editor text.
+        ///
+        /// The point size of the monospaced font used in the editor.
+        /// Common values range from 11 to 18 points.
+        ///
+        /// - Note: The editor uses the system's default monospaced font.
         public var fontSize: CGFloat = 14.0
         
-        /// Whether to enable syntax highlighting
+        /// Whether to enable syntax highlighting.
+        ///
+        /// When enabled, code is colored based on syntax tokens like
+        /// keywords, strings, comments, and types. Supports 17+ languages.
+        ///
+        /// - Note: Disable for better performance with very large files.
         public var enableSyntaxHighlighting: Bool = true
         
         /// Shorter alias for enableSyntaxHighlighting
@@ -142,7 +209,10 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             set { enableSyntaxHighlighting = newValue }
         }
         
-        /// Whether to enable the annotation system
+        /// Whether to enable the annotation system.
+        ///
+        /// When enabled, displays badges for TODO, FIXME, NOTE, WARNING,
+        /// and ERROR comments found in the code.
         public var enableAnnotations: Bool = true
         
         /// Shorter alias for enableAnnotations
@@ -151,33 +221,66 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             set { enableAnnotations = newValue }
         }
         
-        /// Whether to show indent guides
+        /// Whether to show indent guides.
+        ///
+        /// When enabled, displays vertical lines at each indentation level
+        /// to help visualize code structure and nesting.
         public var showIndentGuides: Bool = true
         
-        /// Whether to show the minimap
+        /// Whether to show the minimap.
+        ///
+        /// When enabled, displays a zoomed-out view of the entire file
+        /// on the right side for quick navigation.
+        ///
+        /// - Note: Useful for navigating large files but consumes screen space.
         public var showMinimap: Bool = false
         
         public init() {}
     }
     
-    /// Behavior-related configuration
+    /// Behavior-related configuration.
+    ///
+    /// Controls editor behavior including editing capabilities, auto-completion,
+    /// and text processing features.
     public struct Behavior: Equatable, Codable, Sendable {
-        /// Whether the editor is editable
+        /// Whether the editor is editable.
+        ///
+        /// When `false`, the editor becomes read-only and users cannot
+        /// modify the content. Useful for displaying code without allowing edits.
         public var isEditable: Bool = true
         
-        /// Whether text is selectable
+        /// Whether text is selectable.
+        ///
+        /// When `false`, users cannot select text in the editor.
+        /// This is independent of `isEditable` - text can be selectable but not editable.
         public var isSelectable: Bool = true
         
-        /// Whether to auto-indent new lines
+        /// Whether to auto-indent new lines.
+        ///
+        /// When enabled, pressing Enter maintains the indentation level
+        /// of the previous line and adds appropriate indentation after
+        /// opening braces or similar constructs.
         public var autoIndent: Bool = true
         
-        /// Whether to automatically close brackets
+        /// Whether to automatically close brackets.
+        ///
+        /// When enabled, typing an opening bracket ([, {, or () automatically
+        /// inserts the corresponding closing bracket and positions the cursor
+        /// between them.
         public var autoCloseBrackets: Bool = true
         
-        /// Whether to automatically close quotes
+        /// Whether to automatically close quotes.
+        ///
+        /// When enabled, typing a quote (" or ') automatically inserts
+        /// the matching closing quote and positions the cursor between them.
         public var autoCloseQuotes: Bool = true
         
-        /// Whether to enable code completion
+        /// Whether to enable code completion.
+        ///
+        /// When enabled, the editor shows completion suggestions as you type.
+        /// Supports language-specific completions and LSP integration.
+        ///
+        /// - SeeAlso: ``CodeEditorView/requestCompletion(at:trigger:)``
         public var enableCodeCompletion: Bool = true
         
         /// Shorter alias for enableCodeCompletion
@@ -186,13 +289,22 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             set { enableCodeCompletion = newValue }
         }
         
-        /// Whether to enable continuous spell checking
+        /// Whether to enable continuous spell checking.
+        ///
+        /// When enabled, misspelled words are underlined with a red squiggle.
+        /// Typically disabled in code editors to avoid false positives.
         public var isContinuousSpellCheckingEnabled: Bool = false
         
-        /// Whether to enable grammar checking
+        /// Whether to enable grammar checking.
+        ///
+        /// When enabled, grammatical errors are highlighted.
+        /// Usually disabled in code editors as code syntax differs from natural language.
         public var isGrammarCheckingEnabled: Bool = false
         
-        /// Whether to enable automatic quote substitution
+        /// Whether to enable automatic quote substitution.
+        ///
+        /// When enabled, straight quotes are replaced with curly quotes.
+        /// Should be disabled for code editors to preserve literal string syntax.
         public var isAutomaticQuoteSubstitutionEnabled: Bool = false
         
         /// Shorter alias for isAutomaticQuoteSubstitutionEnabled
@@ -201,24 +313,46 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             set { isAutomaticQuoteSubstitutionEnabled = newValue }
         }
         
-        /// Whether to enable automatic dash substitution
+        /// Whether to enable automatic dash substitution.
+        ///
+        /// When enabled, double hyphens (--) are replaced with em dashes.
+        /// Should be disabled for code editors to preserve operators and comments.
         public var isAutomaticDashSubstitutionEnabled: Bool = false
         
-        /// Whether to enable automatic text replacement
+        /// Whether to enable automatic text replacement.
+        ///
+        /// When enabled, system-wide text replacements are applied.
+        /// Should be disabled for code editors to preserve exact syntax.
         public var isAutomaticTextReplacementEnabled: Bool = false
         
-        /// Whether to enable automatic spelling correction
+        /// Whether to enable automatic spelling correction.
+        ///
+        /// When enabled, misspelled words are automatically corrected.
+        /// Should be disabled for code editors to preserve variable names and syntax.
         public var isAutomaticSpellingCorrectionEnabled: Bool = false
         
-        /// Whether to enable automatic text completion
+        /// Whether to enable automatic text completion.
+        ///
+        /// When enabled, the system suggests completions for common words.
+        /// Different from code completion - this is for natural language.
+        ///
+        /// - Note: Usually disabled in favor of language-specific code completion.
         public var isAutomaticTextCompletionEnabled: Bool = false
         
         public init() {}
     }
     
-    /// Performance-related configuration
+    /// Performance-related configuration.
+    ///
+    /// Controls performance optimizations and resource limits to ensure
+    /// smooth operation with large files.
     public struct Performance: Equatable, Codable, Sendable {
-        /// Maximum file size for syntax highlighting (in bytes)
+        /// Maximum file size for syntax highlighting (in bytes).
+        ///
+        /// Files larger than this limit will not have syntax highlighting applied
+        /// to prevent performance degradation. Default is 500KB.
+        ///
+        /// - Note: Set to 0 to disable the limit (not recommended for production).
         public var maxSyntaxHighlightingLength: Int = 500_000
         
         /// Shorter alias for maxSyntaxHighlightingLength
@@ -227,13 +361,27 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             set { maxSyntaxHighlightingLength = newValue }
         }
         
-        /// Whether to use hardware acceleration
+        /// Whether to use hardware acceleration.
+        ///
+        /// When enabled, leverages GPU acceleration for rendering when available.
+        /// This can significantly improve scrolling and rendering performance.
+        ///
+        /// - Note: Disable if experiencing rendering issues on older hardware.
         public var useHardwareAcceleration: Bool = true
         
-        /// Whether to enable smooth scrolling
+        /// Whether to enable smooth scrolling.
+        ///
+        /// When enabled, scrolling animations are interpolated for a smoother
+        /// visual experience. May impact performance on slower systems.
         public var smoothScrolling: Bool = true
         
-        /// Debounce interval for text changes (in seconds)
+        /// Debounce interval for text changes (in seconds).
+        ///
+        /// Delays processing of rapid text changes to improve performance.
+        /// Syntax highlighting and other expensive operations wait for this
+        /// duration of inactivity before processing.
+        ///
+        /// - Note: Lower values provide more responsive feedback but use more CPU.
         public var textChangeDebounceInterval: TimeInterval = 0.1
         
         public init() {}
@@ -420,7 +568,36 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     
     // MARK: - Configuration Application
     
-    /// Apply configuration to a CodeEditorView
+    /// Apply configuration to a CodeEditorView.
+    ///
+    /// Updates the editor view with all settings from this configuration.
+    /// This method handles platform-specific differences and ensures all
+    /// configuration options are properly applied.
+    ///
+    /// ## What Gets Applied
+    ///
+    /// - Display settings (font size, line numbers, syntax highlighting)
+    /// - Layout settings (tab width, line spacing, gutter width)
+    /// - Behavior settings (editability, auto-indent, completion)
+    /// - Performance settings (hardware acceleration, debouncing)
+    /// - Platform-specific text input features
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = EditorConfiguration.minimal
+    /// config.apply(to: editorView)
+    /// 
+    /// // Or apply directly via the property
+    /// editorView.configuration = config
+    /// ```
+    ///
+    /// - Parameter view: The CodeEditorView to configure
+    ///
+    /// - Note: Setting the view's `configuration` property directly also
+    ///         triggers this method internally.
+    ///
+    /// - SeeAlso: ``CodeEditorView/configuration``
     @MainActor public func apply(to view: CodeEditorView) {
         // Only set configuration if it's different
         if view.configuration != self {

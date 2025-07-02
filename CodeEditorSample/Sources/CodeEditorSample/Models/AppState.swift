@@ -1,21 +1,85 @@
 import CodeEditorPlugin
 import SwiftUI
 
+/// Central state management for the CodeEditor Sample application.
+///
+/// `AppState` serves as the single source of truth for the entire sample app,
+/// managing editor configuration, sample code selection, and user preferences
+/// using SwiftUI's `@ObservableObject` pattern.
+///
+/// ## Overview
+///
+/// This class coordinates between various components:
+/// - Editor configuration through ``ConfigurationCoordinator``
+/// - Sample code selection and language detection
+/// - Custom code input and management
+/// - Configuration import/export functionality
+///
+/// ## State Management
+///
+/// The app state includes:
+/// - Current editor configuration and preset selection
+/// - Selected programming language and sample code
+/// - Custom code input from the user
+/// - Computed properties for backward compatibility
+///
+/// ## Example Usage
+///
+/// ```swift
+/// @StateObject private var appState = AppState()
+///
+/// var body: some View {
+///     CodeEditor(text: $appState.code)
+///         .environment(\.codeEditorConfiguration, appState.currentConfiguration)
+/// }
+/// ```
+///
+/// ## Thread Safety
+///
+/// This class is marked with `@MainActor` to ensure all UI updates
+/// happen on the main thread, following SwiftUI best practices.
+///
+/// - Note: All published properties automatically trigger UI updates
+///   when changed, thanks to the `@ObservableObject` protocol.
+///
+/// - SeeAlso: ``ConfigurationCoordinator`` for configuration management
+/// - SeeAlso: ``SampleCodeStore`` for sample code storage
+/// - SeeAlso: ``LanguageDetectionService`` for language detection
 @MainActor
 class AppState: ObservableObject {
+    /// Configuration coordinator managing editor settings.
     @Published var coordinator = ConfigurationCoordinator()
+    
+    /// Currently selected configuration preset.
     @Published var selectedPreset: ConfigurationPreset = .fullFeatured
+    
+    /// Currently selected sample code type (legacy compatibility).
     @Published var selectedSample: SampleCode = .swift
+    
+    /// Currently selected language information.
     @Published var selectedLanguage: LanguageDetectionService.LanguageInfo?
+    
+    /// Custom code entered by the user.
     @Published var customCode: String = ""
+    
+    /// Current code content displayed in the editor.
     @Published var code: String = ""
     
-    // Computed property for backward compatibility
+    /// Current editor configuration.
+    ///
+    /// This computed property provides backward compatibility while
+    /// delegating to the configuration coordinator.
+    ///
+    /// - Returns: The current ``EditorConfiguration`` from the coordinator.
     var currentConfiguration: EditorConfiguration {
         get { coordinator.configuration }
         set { coordinator.update { $0 = newValue } }
     }
 
+    /// Initializes the app state with default settings.
+    ///
+    /// Sets up the full-featured configuration preset and
+    /// initializes with Swift language as the default.
     init() {
         applyPreset(.fullFeatured)
         // Initialize with Swift language
@@ -23,11 +87,32 @@ class AppState: ObservableObject {
         updateCode()
     }
 
+    /// Applies a configuration preset to the editor.
+    ///
+    /// Updates both the selected preset and applies the corresponding
+    /// configuration through the coordinator.
+    ///
+    /// - Parameter preset: The ``ConfigurationPreset`` to apply.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// appState.applyPreset(.minimal)
+    /// appState.applyPreset(.fullFeatured)
+    /// ```
     func applyPreset(_ preset: ConfigurationPreset) {
         selectedPreset = preset
         coordinator.applyPreset(preset)
     }
 
+    /// Updates the code content based on current selection.
+    ///
+    /// Determines the code to display based on:
+    /// 1. Custom code entered by the user (highest priority)
+    /// 2. Sample code for the selected language
+    /// 3. Legacy sample code (fallback for compatibility)
+    ///
+    /// This method is called automatically when language or sample selection changes.
     func updateCode() {
         if customCode.isEmpty {
             if let language = selectedLanguage,
@@ -42,6 +127,18 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Selects a sample code type and updates the editor content.
+    ///
+    /// This method provides backward compatibility with the legacy
+    /// sample selection system while updating the modern language detection.
+    ///
+    /// - Parameter sample: The ``SampleCode`` type to select.
+    ///
+    /// ## Side Effects
+    ///
+    /// - Clears any custom code
+    /// - Updates the selected language
+    /// - Refreshes the editor content
     func selectSample(_ sample: SampleCode) {
         selectedSample = sample
         selectedLanguage = LanguageDetectionService.language(for: sample.rawValue)
@@ -49,6 +146,26 @@ class AppState: ObservableObject {
         updateCode()
     }
     
+    /// Selects a programming language and updates the editor content.
+    ///
+    /// This is the modern method for language selection, with automatic
+    /// fallback to legacy sample selection for compatibility.
+    ///
+    /// - Parameter language: The ``LanguageDetectionService/LanguageInfo`` to select.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// if let python = LanguageDetectionService.language(for: "python") {
+    ///     appState.selectLanguage(python)
+    /// }
+    /// ```
+    ///
+    /// ## Side Effects
+    ///
+    /// - Clears any custom code
+    /// - Updates legacy sample selection if possible
+    /// - Refreshes the editor content
     func selectLanguage(_ language: LanguageDetectionService.LanguageInfo) {
         selectedLanguage = language
         // Update selectedSample if possible for backward compatibility
@@ -59,6 +176,22 @@ class AppState: ObservableObject {
         updateCode()
     }
 
+    /// Sets custom code content in the editor.
+    ///
+    /// When custom code is set, it takes precedence over any sample code
+    /// and is immediately displayed in the editor.
+    ///
+    /// - Parameter text: The custom code content to display.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// appState.setCustomCode("""
+    /// func customFunction() {
+    ///     print("User-defined code")
+    /// }
+    /// """)
+    /// ```
     func setCustomCode(_ text: String) {
         customCode = text
         code = text
@@ -66,6 +199,37 @@ class AppState: ObservableObject {
     
     // MARK: - Configuration Import/Export
     
+    /// Exports the current editor configuration as formatted JSON.
+    ///
+    /// Creates a JSON representation of the current editor configuration
+    /// with pretty printing and sorted keys for readability.
+    ///
+    /// - Returns: A formatted JSON string, or `nil` if encoding fails.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// if let json = appState.exportConfigurationAsJSON() {
+    ///     // Save or share the configuration JSON
+    ///     UIPasteboard.general.string = json
+    /// }
+    /// ```
+    ///
+    /// ## JSON Format
+    ///
+    /// The exported JSON includes all configuration properties:
+    /// ```json
+    /// {
+    ///   "display": {
+    ///     "showLineNumbers": true,
+    ///     "fontSize": 14.0,
+    ///     ...
+    ///   },
+    ///   "behavior": { ... },
+    ///   "layout": { ... },
+    ///   "performance": { ... }
+    /// }
+    /// ```
     func exportConfigurationAsJSON() -> String? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -79,6 +243,40 @@ class AppState: ObservableObject {
         }
     }
     
+    /// Imports an editor configuration from JSON.
+    ///
+    /// Parses JSON configuration data and applies it to the current editor.
+    /// The preset selection is reset to indicate a custom configuration.
+    ///
+    /// - Parameter json: The JSON string containing configuration data.
+    ///
+    /// - Returns: `true` if the import succeeded, `false` otherwise.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let jsonConfig = """
+    /// {
+    ///   "display": {
+    ///     "showLineNumbers": false,
+    ///     "fontSize": 16.0
+    ///   }
+    /// }
+    /// """
+    ///
+    /// if appState.importConfiguration(from: jsonConfig) {
+    ///     print("Configuration imported successfully")
+    /// } else {
+    ///     print("Failed to import configuration")
+    /// }
+    /// ```
+    ///
+    /// ## Error Handling
+    ///
+    /// Returns `false` for:
+    /// - Invalid JSON syntax
+    /// - Missing required configuration properties
+    /// - Type mismatches in the JSON data
     func importConfiguration(from json: String) -> Bool {
         guard let data = json.data(using: .utf8) else { return false }
         
@@ -94,6 +292,23 @@ class AppState: ObservableObject {
         }
     }
     
+    /// Resets the editor configuration to default values.
+    ///
+    /// Restores the configuration coordinator to its initial state
+    /// and resets the preset selection to full-featured mode.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Reset after experimenting with settings
+    /// appState.resetConfiguration()
+    /// ```
+    ///
+    /// ## Side Effects
+    ///
+    /// - All custom configuration changes are lost
+    /// - Preset selection returns to `.fullFeatured`
+    /// - UI automatically updates to reflect default settings
     func resetConfiguration() {
         coordinator.reset()
         selectedPreset = .fullFeatured

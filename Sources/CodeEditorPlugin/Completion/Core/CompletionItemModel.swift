@@ -7,7 +7,27 @@ import UIKit
 
 // MARK: - Completion Item Model
 
-/// Represents a code completion item with comprehensive metadata
+/// Represents a code completion item with comprehensive metadata.
+///
+/// `CompletionItemModel` encapsulates all information needed to display and insert
+/// a code completion suggestion. It supports advanced features like snippets,
+/// text edits, and documentation.
+///
+/// ## Example
+///
+/// ```swift
+/// let completion = CompletionItemModel(
+///     label: "forEach",
+///     insertText: "forEach { <#element#> in\n    <#code#>\n}",
+///     kind: .method,
+///     detail: "(body: (Element) -> Void) -> Void",
+///     documentation: "Calls the given closure on each element in the sequence.",
+///     snippetSupport: true,
+///     priority: 100
+/// )
+/// ```
+///
+/// - SeeAlso: ``CompletionItemKind``, ``CompletionProvider``, ``CompletionManager``
 public struct CompletionItemModel: Identifiable, Sendable {
     public let id: String
     
@@ -67,7 +87,17 @@ public struct CompletionItemModel: Identifiable, Sendable {
 
 // MARK: - Completion Kind
 
-/// Types of completion items, compatible with LSP
+/// Types of completion items, compatible with LSP.
+///
+/// Each kind represents a different type of code element and affects how the
+/// completion is displayed (icon) and sorted (priority).
+///
+/// ## Icons and Priority
+///
+/// Each kind has an associated icon for visual representation and a default
+/// priority that affects sorting in the completion list.
+///
+/// - SeeAlso: ``CompletionItemModel``, ``CompletionProvider``
 public enum CompletionItemKind: String, CaseIterable, Sendable {
     case text = "Text"
     case method = "Method"
@@ -145,7 +175,22 @@ public enum CompletionItemKind: String, CaseIterable, Sendable {
 
 // MARK: - Text Edit
 
-/// Represents a text edit for completion insertion
+/// Represents a text edit for completion insertion.
+///
+/// Defines how text should be modified when a completion is accepted.
+/// Supports replacing existing text ranges, not just insertion at cursor.
+///
+/// ## Example
+///
+/// ```swift
+/// // Replace "pri" with "private"
+/// let edit = CompletionTextEdit(
+///     range: NSRange(location: 10, length: 3),
+///     newText: "private"
+/// )
+/// ```
+///
+/// - SeeAlso: ``CompletionItemModel``
 public struct CompletionTextEdit: Sendable {
     public let range: NSRange
     public let newText: String
@@ -158,7 +203,26 @@ public struct CompletionTextEdit: Sendable {
 
 // MARK: - Completion Context
 
-/// Context information for code completion requests
+/// Context information for code completion requests.
+///
+/// Provides all necessary information about the editor state when completion
+/// was triggered, including cursor position, surrounding text, and trigger type.
+///
+/// ## Example
+///
+/// ```swift
+/// let context = CompletionContextModel(
+///     text: "let name = user.",
+///     cursorPosition: 16,
+///     language: .swift,
+///     triggerKind: .character,
+///     triggerCharacter: ".",
+///     lineText: "let name = user.",
+///     wordRange: NSRange(location: 11, length: 4)
+/// )
+/// ```
+///
+/// - SeeAlso: ``CompletionTriggerKind``, ``CompletionProvider``
 public struct CompletionContextModel: Sendable {
     public let text: String
     public let cursorPosition: Int
@@ -204,7 +268,12 @@ public struct CompletionContextModel: Sendable {
 
 // MARK: - Completion Trigger Kind
 
-/// How completion was triggered
+/// How completion was triggered.
+///
+/// Indicates whether the user explicitly requested completion or it was
+/// triggered automatically by typing certain characters.
+///
+/// - SeeAlso: ``CompletionContextModel``
 public enum CompletionTriggerKind: String, Sendable {
     case manual = "Manual"              // User explicitly requested (Ctrl+Space)
     case character = "Character"        // Triggered by typing a character
@@ -213,7 +282,23 @@ public enum CompletionTriggerKind: String, Sendable {
 
 // MARK: - Completion Result
 
-/// Result of a completion request
+/// Result of a completion request.
+///
+/// Contains the completion items along with metadata about the request,
+/// including whether more results are available and processing time.
+///
+/// ## Example
+///
+/// ```swift
+/// let result = CompletionResult(
+///     items: completionItems,
+///     context: context,
+///     isIncomplete: hasMoreResults,
+///     processingTime: 0.05
+/// )
+/// ```
+///
+/// - SeeAlso: ``CompletionItemModel``, ``CompletionProvider``
 public struct CompletionResult: Sendable {
     public let items: [CompletionItemModel]
     public let isIncomplete: Bool
@@ -235,7 +320,37 @@ public struct CompletionResult: Sendable {
 
 // MARK: - Completion Provider Protocol
 
-/// Protocol for providing code completions
+/// Protocol for providing code completions.
+///
+/// Implement this protocol to create custom completion providers that can
+/// suggest code completions for specific languages or contexts.
+///
+/// ## Implementing a Provider
+///
+/// ```swift
+/// @MainActor
+/// final class SwiftCompletionProvider: CompletionProvider {
+///     let id = "swift-provider"
+///     let supportedLanguages: [Language] = [.swift]
+///     let triggerCharacters = [".", "(", "[", "<"]
+///     let supportsSnippets = true
+///     
+///     func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+///         // Analyze context and generate completions
+///         let items = generateCompletions(context)
+///         return CompletionResult(items: items, context: context)
+///     }
+/// }
+/// ```
+///
+/// ## Registration
+///
+/// ```swift
+/// let manager = CompletionManager()
+/// manager.registerProvider(SwiftCompletionProvider())
+/// ```
+///
+/// - SeeAlso: ``CompletionManager``, ``CompletionContextModel``, ``CompletionResult``
 @MainActor
 public protocol CompletionProvider: Sendable {
     /// Provider identifier
@@ -265,7 +380,53 @@ extension CompletionProvider {
     }
 }
 
-/// Manages multiple completion providers and coordinates completion requests
+/// Manages multiple completion providers and coordinates completion requests.
+///
+/// `CompletionManager` is the central coordinator for code completion in the editor.
+/// It manages multiple providers, handles caching, debouncing, and aggregates results
+/// from different sources.
+///
+/// ## Features
+///
+/// - **Multiple Providers**: Register different providers for different languages
+/// - **Caching**: LRU cache for recent completions to improve performance
+/// - **Debouncing**: Prevents excessive requests while typing
+/// - **Statistics**: Track performance and cache hit rates
+/// - **Memory Management**: Automatic cleanup under memory pressure
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// let manager = CompletionManager()
+/// 
+/// // Register providers
+/// manager.registerProvider(SwiftCompletionProvider())
+/// manager.registerProvider(LSPCompletionProvider())
+/// 
+/// // Request completions
+/// let context = CompletionContextModel(...)
+/// let result = try await manager.requestCompletions(for: context)
+/// 
+/// // Or with debouncing
+/// manager.requestCompletionsDebounced(for: context) { result in
+///     switch result {
+///     case .success(let completions):
+///         // Show completions
+///     case .failure(let error):
+///         // Handle error
+///     }
+/// }
+/// ```
+///
+/// ## Performance
+///
+/// The manager includes several optimizations:
+/// - Concurrent requests to multiple providers
+/// - Result deduplication and smart sorting
+/// - Configurable caching with expiration
+/// - Debouncing to reduce request frequency
+///
+/// - SeeAlso: ``CompletionProvider``, ``CompletionDebouncer``, ``CompletionStatistics``
 @MainActor
 public final class CompletionManager: @unchecked Sendable {
     private var providers: [String: any CompletionProvider] = [:]
@@ -517,7 +678,21 @@ public final class CompletionManager: @unchecked Sendable {
     }
 }
 
-/// Statistics for completion requests and cache performance
+/// Statistics for completion requests and cache performance.
+///
+/// Tracks metrics about completion system performance including request counts,
+/// cache hit rates, and processing times. Useful for monitoring and optimization.
+///
+/// ## Example
+///
+/// ```swift
+/// let stats = manager.statistics
+/// print("Total requests: \(stats.totalRequests)")
+/// print("Cache hit rate: \(stats.cacheHitRate * 100)%")
+/// print("Avg processing time: \(stats.averageProcessingTime)s")
+/// ```
+///
+/// - SeeAlso: ``CompletionManager``
 @MainActor
 public final class CompletionStatistics: @unchecked Sendable {
     public private(set) var totalRequests: Int = 0

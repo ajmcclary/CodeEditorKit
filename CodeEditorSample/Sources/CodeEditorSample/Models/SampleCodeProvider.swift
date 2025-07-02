@@ -4,42 +4,128 @@ import SwiftUI
 
 // MARK: - SampleCode
 
+/// Enumeration of available sample code types.
+///
+/// `SampleCode` represents the different programming languages and markup formats
+/// for which the sample app provides demonstration code. Each case corresponds
+/// to a specific language with associated metadata and sample content.
+///
+/// ## Supported Languages
+///
+/// The enum includes cases for:
+/// - **Systems Languages**: Swift, Rust, Go, C++, C, Java
+/// - **Web Languages**: JavaScript, TypeScript, HTML, CSS
+/// - **Scripting Languages**: Python, Ruby, PHP
+/// - **Data Formats**: JSON, YAML, XML, SQL, Markdown
+///
+/// ## Integration with Language Detection
+///
+/// This enum integrates with ``LanguageDetectionService`` to provide
+/// consistent language metadata including display names, file extensions,
+/// icons, and colors.
+///
+/// ## Example Usage
+///
+/// ```swift
+/// let swift = SampleCode.swift
+/// print(swift.displayName)  // "Swift"
+/// print(swift.fileExtension)  // "swift"
+/// print(swift.icon)  // "swift"
+/// ```
+///
+/// ## Backward Compatibility
+///
+/// This enum maintains compatibility with the legacy sample code system
+/// while integrating with the modern ``LanguageDetectionService``.
+///
+/// - SeeAlso: ``LanguageDetectionService`` for language metadata
+/// - SeeAlso: ``SampleCodeProvider`` for code content
 enum SampleCode: String, CaseIterable {
+    /// Swift programming language.
     case swift
+    
+    /// JavaScript programming language.
     case javascript
+    
+    /// TypeScript programming language.
     case typescript
+    
+    /// Python programming language.
     case python
+    
+    /// Go programming language.
     case go
+    
+    /// Rust programming language.
     case rust
+    
+    /// C++ programming language.
     case cpp
+    
+    /// Java programming language.
     case java
+    
+    /// HTML markup language.
     case html
+    
+    /// CSS stylesheet language.
     case css
+    
+    /// JSON data format.
     case json
+    
+    /// Markdown markup language.
     case markdown
+    
+    /// YAML data format.
     case yaml
+    
+    /// XML markup language.
     case xml
+    
+    /// SQL query language.
     case sql
+    
+    /// Ruby programming language.
     case ruby
+    
+    /// PHP programming language.
     case php
 
-    // Use LanguageDetectionService for all language metadata
+    /// Language information from the detection service.
+    ///
+    /// This computed property provides access to comprehensive language
+    /// metadata through the ``LanguageDetectionService``.
+    ///
+    /// - Returns: Language information if available, `nil` otherwise.
     private var languageInfo: LanguageDetectionService.LanguageInfo? {
         LanguageDetectionService.language(for: self.rawValue)
     }
     
+    /// Human-readable display name for the language.
+    ///
+    /// - Returns: The language's display name, or a capitalized raw value as fallback.
     var displayName: String {
         languageInfo?.displayName ?? self.rawValue.capitalized
     }
 
+    /// Primary file extension for the language.
+    ///
+    /// - Returns: The first file extension, or the raw value as fallback.
     var fileExtension: String {
         languageInfo?.fileExtensions.first ?? self.rawValue
     }
 
+    /// SF Symbol icon name for the language.
+    ///
+    /// - Returns: An appropriate SF Symbol name, or "doc.text" as fallback.
     var icon: String {
         languageInfo?.icon ?? "doc.text"
     }
 
+    /// Color associated with the language.
+    ///
+    /// - Returns: A semantic color for the language, or gray as fallback.
     var iconColor: Color {
         languageInfo?.iconColor ?? .gray
     }
@@ -47,6 +133,49 @@ enum SampleCode: String, CaseIterable {
 
 // MARK: - SampleCodeProvider
 
+/// Provider of sample code content for different programming languages.
+///
+/// `SampleCodeProvider` serves as a centralized repository of demonstration
+/// code for various programming languages. Each language includes realistic,
+/// well-commented examples that showcase syntax highlighting capabilities.
+///
+/// ## Overview
+///
+/// The provider includes sample code for:
+/// - Language fundamentals (variables, functions, classes)
+/// - Common patterns and idioms
+/// - Modern language features
+/// - Real-world code structures
+/// - Comprehensive syntax coverage for highlighting
+///
+/// ## Usage
+///
+/// ```swift
+/// let swiftCode = SampleCodeProvider.getCode(for: .swift)
+/// let pythonCode = SampleCodeProvider.getCode(for: .python)
+/// ```
+///
+/// ## Sample Quality
+///
+/// All samples are designed to:
+/// - Demonstrate comprehensive syntax highlighting
+/// - Show realistic code patterns
+/// - Include meaningful comments and documentation
+/// - Represent modern best practices
+/// - Provide educational value
+///
+/// ## Integration
+///
+/// This provider works in conjunction with:
+/// - ``LanguageDetectionService`` for metadata
+/// - ``SampleCodeStore`` for enhanced storage
+/// - The CodeEditorPlugin for syntax highlighting
+///
+/// - Note: This enum serves as the legacy sample provider, with newer
+///   functionality moving to ``SampleCodeStore``.
+///
+/// - SeeAlso: ``SampleCode`` for language enumeration
+/// - SeeAlso: ``SampleCodeStore`` for enhanced sample management
 enum SampleCodeProvider {
     static func getCode(for sample: SampleCode) -> String {
         // Get sample code from SampleCodeStore using the language ID

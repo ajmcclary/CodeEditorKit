@@ -1,8 +1,41 @@
 // swift-tools-version: 6.0
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+/// CodeEditorPlugin Package Configuration
+///
+/// This package provides a production-ready code editor component for Swift applications
+/// with comprehensive syntax highlighting, code completion, and cross-platform support.
+///
+/// ## Requirements
+///
+/// - **Swift**: 6.0 or later
+/// - **Platforms**:
+///   - macOS 14.0+
+///   - iOS 16.0+
+///   - Mac Catalyst 16.0+
+///
+/// ## Installation
+///
+/// Add to your `Package.swift`:
+/// ```swift
+/// dependencies: [
+///     .package(url: "https://github.com/yourusername/CodeEditorPlugin.git", from: "1.0.0")
+/// ]
+/// ```
+///
+/// ## Dependencies
+///
+/// - **SwiftSyntax**: For Swift language AST-based syntax highlighting
+///
+/// ## Build Configuration
+///
+/// - Strict concurrency checking enabled for Swift 6 compatibility
+/// - Optimized for both debug and release builds
 
 import PackageDescription
 
 let settings: [SwiftSetting] = [
+    // Enable strict concurrency checking for Swift 6 compatibility
     .enableExperimentalFeature("StrictConcurrency")
 ]
 

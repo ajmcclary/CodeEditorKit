@@ -7,8 +7,60 @@ import AppKit
 
 // MARK: - CodeEditorViewDelegate
 
-/// A set of optional methods that text view delegates can use to manage selection,
-/// set text attributes and more.
+/// A protocol that defines optional methods for customizing text view behavior and responding to editing events.
+///
+/// The `CodeEditorViewDelegate` protocol extends the standard text view delegation pattern with
+/// additional methods specific to code editing scenarios. All methods are optional with default
+/// implementations provided.
+///
+/// ## Adopting the Protocol
+///
+/// ```swift
+/// class MyEditorDelegate: CodeEditorViewDelegate {
+///     func textViewDidChangeText(_ notification: Notification) {
+///         guard let textView = notification.object as? CodeEditorView else { return }
+///         // Handle text changes
+///         updateWordCount(for: textView.string)
+///         markDocumentAsModified()
+///     }
+///     
+///     func textView(_ textView: CodeEditorView,
+///                   shouldChangeTextIn range: NSTextRange,
+///                   replacementString: String?) -> Bool {
+///         // Validate changes before they occur
+///         return isValidReplacement(string: replacementString)
+///     }
+///     
+///     func textView(_ textView: CodeEditorView,
+///                   insertCompletionItem item: any CompletionItem) {
+///         // Customize completion insertion
+///         insertWithSnippetExpansion(item)
+///     }
+/// }
+/// ```
+///
+/// ## Delegate Methods Categories
+///
+/// ### Text Change Notifications
+/// - `textViewWillChangeText(_:)` - Before text changes
+/// - `textViewDidChangeText(_:)` - After text changes
+/// - `textViewDidChangeSelection(_:)` - Selection changes
+///
+/// ### Text Validation
+/// - `textView(_:shouldChangeTextIn:replacementString:)` - Validate changes
+/// - `textView(_:willChangeTextIn:replacementString:)` - Pre-change hook
+/// - `textView(_:didChangeTextIn:replacementString:)` - Post-change hook
+///
+/// ### User Interaction
+/// - `textView(_:clickedOnLink:at:)` - Handle link clicks
+/// - `textView(_:clickedOnAttachment:at:)` - Handle attachment clicks
+///
+/// ### Customization
+/// - `undoManager(for:)` - Custom undo manager
+/// - `textViewCompletionViewController(_:)` - Custom completion UI
+/// - `textViewInsertionPointView(_:frame:)` - Custom cursor
+///
+/// - SeeAlso: `CodeEditorView.textDelegate`
 @MainActor
 public protocol CodeEditorViewDelegate: AnyObject {
     /// Returns the undo manager for the specified text view.
@@ -19,18 +71,127 @@ public protocol CodeEditorViewDelegate: AnyObject {
     /// to text and changes to other items in the application.
     func undoManager(for textView: CodeEditorView) -> UndoManager?
 
-    /// Any keyDown or paste which changes the contents causes this
+    /// Called before the text view's content is about to change.
+    ///
+    /// This method is called before any text modification, whether from keyboard input,
+    /// paste operations, or programmatic changes. Use this to prepare for changes or
+    /// update UI state.
+    ///
+    /// - Parameter notification: The notification containing the text view as its object
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// func textViewWillChangeText(_ notification: Notification) {
+    ///     // Save current state for comparison
+    ///     previousText = textView.string
+    ///     
+    ///     // Prepare for text change
+    ///     beginUndoGrouping()
+    /// }
+    /// ```
+    ///
+    /// - Note: This is called for every keystroke during typing
     func textViewWillChangeText(_ notification: Notification)
 
-    /// Informs the delegate that the text object has changed its characters or formatting attributes.
+    /// Called after the text view's content has changed.
+    ///
+    /// This method is called after any successful text modification. Use this to update
+    /// dependent UI, perform syntax highlighting, validate content, or trigger auto-save.
+    ///
+    /// - Parameter notification: The notification containing the text view as its object
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// func textViewDidChangeText(_ notification: Notification) {
+    ///     guard let textView = notification.object as? CodeEditorView else { return }
+    ///     
+    ///     // Update UI
+    ///     updateCharacterCount(textView.string.count)
+    ///     setDocumentModified(true)
+    ///     
+    ///     // Schedule auto-save
+    ///     autoSaveTimer?.invalidate()
+    ///     autoSaveTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in
+    ///         self.saveDocument()
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// - Important: This is called frequently during typing. Consider debouncing expensive operations.
     func textViewDidChangeText(_ notification: Notification)
 
-    /// Sent when the selection changes in the text view.
+    /// Called when the text selection or cursor position changes.
     ///
-    /// You can use the selectedRange property of the text view to get the new selection.
+    /// This method is called whenever the user moves the cursor or changes the selection,
+    /// either through mouse clicks, keyboard navigation, or programmatic changes.
+    /// Use the text view's `selectedRange` property to get the new selection.
+    ///
+    /// - Parameter notification: The notification containing the text view as its object
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// func textViewDidChangeSelection(_ notification: Notification) {
+    ///     guard let textView = notification.object as? CodeEditorView else { return }
+    ///     
+    ///     let range = textView.selectedRange
+    ///     let (line, column) = textView.lineAndColumn(for: range.location)
+    ///     
+    ///     // Update status bar
+    ///     statusLabel.stringValue = "Line \(line), Column \(column)"
+    ///     
+    ///     // Update context-sensitive UI
+    ///     updateToolbarForSelection(range)
+    ///     
+    ///     // Show relevant documentation
+    ///     if range.length == 0 {
+    ///         showQuickHelpForCursor(at: range.location)
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// - Note: This is called frequently during text selection dragging
     func textViewDidChangeSelection(_ notification: Notification)
 
-    /// Sent when a text view needs to determine if text in a specified range should be changed.
+    /// Asks whether the specified text should be replaced in the text view.
+    ///
+    /// Implement this method to validate text changes before they occur. Return `false`
+    /// to prevent the change, or `true` to allow it. This is useful for implementing
+    /// read-only regions, input validation, or custom text filters.
+    ///
+    /// - Parameters:
+    ///   - textView: The text view requesting validation
+    ///   - affectedCharRange: The range of text to be replaced
+    ///   - replacementString: The string to insert, or nil for deletion
+    /// - Returns: `true` to allow the change, `false` to prevent it
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// func textView(_ textView: CodeEditorView,
+    ///               shouldChangeTextIn range: NSTextRange,
+    ///               replacementString: String?) -> Bool {
+    ///     // Prevent editing in read-only regions
+    ///     if isReadOnlyRange(range) {
+    ///         return false
+    ///     }
+    ///     
+    ///     // Validate input
+    ///     if let string = replacementString {
+    ///         // Prevent non-ASCII characters in certain contexts
+    ///         if requiresASCII && !string.isASCII {
+    ///             showError("Only ASCII characters allowed")
+    ///             return false
+    ///         }
+    ///     }
+    ///     
+    ///     return true
+    /// }
+    /// ```
+    ///
+    /// - Note: This is called before `textView(_:willChangeTextIn:replacementString:)`
     func textView(
         _ textView: CodeEditorView,
         shouldChangeTextIn affectedCharRange: NSTextRange,

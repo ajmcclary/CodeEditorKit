@@ -8,13 +8,71 @@ import Foundation
 
 // MARK: - ConfigurationPreset
 
+/// Predefined editor configuration presets for common use cases.
+///
+/// `ConfigurationPreset` provides ready-to-use editor configurations optimized
+/// for different scenarios, from full-featured development to minimal reading
+/// experiences. Each preset combines multiple configuration settings to create
+/// cohesive, purpose-built editor experiences.
+///
+/// ## Available Presets
+///
+/// - ``fullFeatured``: Complete development environment with all features
+/// - ``minimal``: Streamlined interface for basic text editing
+/// - ``readOnly``: Optimized for code viewing and reading
+/// - ``markdown``: Tailored for Markdown document editing
+/// - ``presentation``: Large fonts and high contrast for demonstrations
+///
+/// ## Usage
+///
+/// ```swift
+/// // Apply a preset to the editor
+/// appState.applyPreset(.minimal)
+///
+/// // Get the configuration for a preset
+/// let config = ConfigurationPreset.markdown.configuration
+/// ```
+///
+/// ## Customization
+///
+/// Presets serve as starting points that can be further customized:
+/// ```swift
+/// var config = ConfigurationPreset.readOnly.configuration
+/// config.display.fontSize = 16.0
+/// config.layout.lineSpacing = 1.5
+/// ```
+///
+/// ## Design Philosophy
+///
+/// Each preset is designed around a specific use case:
+/// - **Full Featured**: Maximum functionality for active development
+/// - **Minimal**: Distraction-free writing and editing
+/// - **Read Only**: Optimal readability for code review
+/// - **Markdown**: Document-focused with appropriate spacing
+/// - **Presentation**: Visibility for audiences and screenshots
+///
+/// - SeeAlso: ``EditorConfiguration`` for detailed configuration options
+/// - SeeAlso: ``EditorConfigurationBuilder`` for custom configurations
+/// - SeeAlso: ``ConfigurationCoordinator`` for applying presets
 enum ConfigurationPreset: String, CaseIterable {
+    /// Complete development environment with all features enabled.
     case fullFeatured = "full"
+    
+    /// Streamlined interface for basic text editing.
     case minimal
+    
+    /// Optimized for code viewing and reading.
     case readOnly = "readonly"
+    
+    /// Tailored for Markdown document editing.
     case markdown
+    
+    /// Large fonts and high contrast for demonstrations.
     case presentation
 
+    /// Human-readable display name for the preset.
+    ///
+    /// - Returns: A localized display name suitable for UI presentation.
     var displayName: String {
         switch self {
         case .fullFeatured: "Full Featured"
@@ -25,6 +83,9 @@ enum ConfigurationPreset: String, CaseIterable {
         }
     }
 
+    /// Detailed description of the preset's purpose and characteristics.
+    ///
+    /// - Returns: A description explaining when and why to use this preset.
     var description: String {
         switch self {
         case .fullFeatured: "All features enabled for code editing"
@@ -35,6 +96,30 @@ enum ConfigurationPreset: String, CaseIterable {
         }
     }
 
+    /// The complete editor configuration for this preset.
+    ///
+    /// Generates a fully configured ``EditorConfiguration`` instance with
+    /// all settings optimized for the preset's intended use case.
+    ///
+    /// ## Implementation Details
+    ///
+    /// Each preset uses ``EditorConfigurationBuilder`` to construct its
+    /// configuration, starting from appropriate base configurations
+    /// and applying specific customizations.
+    ///
+    /// ## Examples
+    ///
+    /// ```swift
+    /// // Get configuration for development
+    /// let devConfig = ConfigurationPreset.fullFeatured.configuration
+    ///
+    /// // Get configuration for presentations
+    /// let presentConfig = ConfigurationPreset.presentation.configuration
+    /// ```
+    ///
+    /// - Returns: A complete ``EditorConfiguration`` instance.
+    ///
+    /// - SeeAlso: ``EditorConfigurationBuilder`` for configuration construction
     var configuration: EditorConfiguration {
         switch self {
         case .fullFeatured:

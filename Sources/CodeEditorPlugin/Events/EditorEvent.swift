@@ -5,43 +5,244 @@ import AppKit
 import UIKit
 #endif
 
-/// Events emitted by the code editor
+/// Events emitted by the code editor.
+///
+/// `EditorEvent` represents all possible events that can occur within the code editor.
+/// These events can be observed using the event handling system or through Combine publishers.
+///
+/// ## Event Categories
+///
+/// ### Text Events
+/// - `textDidChange`: Fired after text content changes
+/// - `textWillChange`: Fired before text is modified (allows validation)
+/// - `textSelectionDidChange`: Fired when cursor position or selection changes
+///
+/// ### Editor Lifecycle
+/// - `didBecomeFirstResponder`: Editor gained focus
+/// - `didResignFirstResponder`: Editor lost focus
+///
+/// ### Code Completion
+/// - `completionRequested`: User triggered completion (manually or automatically)
+/// - `completionItemSelected`: User selected a completion item
+///
+/// ### Annotations
+/// - `annotationHovered`: Mouse hovering over an annotation
+/// - `annotationClicked`: User clicked on an annotation
+///
+/// ### System Events
+/// - `performanceWarning`: Performance threshold exceeded
+/// - `error`: An error occurred during editor operation
+///
+/// ## Example Usage
+///
+/// ```swift
+/// // Using event handler
+/// class MyEventHandler: EditorEventHandler {
+///     func handle(_ event: EditorEvent) {
+///         switch event {
+///         case .textDidChange(let newText):
+///             print("Text changed: \(newText)")
+///         case .textSelectionDidChange(let range):
+///             print("Selection: \(range)")
+///         case .error(let error):
+///             print("Error: \(error)")
+///         default:
+///             break
+///         }
+///     }
+/// }
+///
+/// editor.subscribe(MyEventHandler())
+/// ```
+///
+/// ## Combine Integration
+///
+/// ```swift
+/// editor.eventPublisher.publisher()
+///     .sink { event in
+///         // Handle all events
+///     }
+///     .store(in: &cancellables)
+///
+/// // Type-safe event filtering
+/// editor.eventPublisher.publisher(for: TextDidChangeEvent.self)
+///     .sink { event in
+///         print("Text: \(event.text)")
+///     }
+///     .store(in: &cancellables)
+/// ```
+///
+/// - SeeAlso: ``EditorEventHandler``, ``EditorEventPublisher``, ``EditorEventType``
 public enum EditorEvent: Sendable {
     // Text events
+    
+    /// Text content has changed.
+    ///
+    /// Fired after the text has been modified. The associated value contains
+    /// the complete new text content of the editor.
     case textDidChange(String)
+    
+    /// Text is about to change.
+    ///
+    /// Fired before text modification occurs. Can be used for validation.
+    /// - Parameters:
+    ///   - range: The range of text being replaced
+    ///   - replacement: The new text that will replace the range
     case textWillChange(range: NSRange, replacement: String)
+    
+    /// Text selection or cursor position has changed.
+    ///
+    /// Fired whenever the user moves the cursor or changes the selection.
+    /// The associated value contains the new selected range.
     case textSelectionDidChange(NSRange)
     
     // Editor lifecycle
+    
+    /// Editor has become the first responder (gained focus).
+    ///
+    /// Indicates the editor is now active and will receive keyboard input.
     case didBecomeFirstResponder
+    
+    /// Editor has resigned first responder (lost focus).
+    ///
+    /// Indicates the editor is no longer active for keyboard input.
     case didResignFirstResponder
     
     // Completion
+    
+    /// Code completion has been requested.
+    ///
+    /// Fired when the user triggers completion, either manually or automatically.
+    /// The context contains information about the current position and trigger.
     case completionRequested(context: CompletionContext)
+    
+    /// A completion item has been selected.
+    ///
+    /// Fired when the user selects an item from the completion list.
+    /// The associated value contains the selected completion item.
     case completionItemSelected(any CompletionItem)
     
-    // Annotations  
+    // Annotations
+    
+    /// Mouse is hovering over an annotation.
+    ///
+    /// Fired when the mouse enters an annotation's hover area.
+    /// The associated value contains the annotation's unique identifier.
     case annotationHovered(annotationId: String)
+    
+    /// An annotation has been clicked.
+    ///
+    /// Fired when the user clicks on an annotation badge or marker.
+    /// The associated value contains the annotation's unique identifier.
     case annotationClicked(annotationId: String)
     
     // Performance
+    
+    /// A performance warning has been triggered.
+    ///
+    /// Fired when the editor detects performance issues, such as slow
+    /// syntax highlighting or excessive memory usage.
     case performanceWarning(message: String)
     
     // Errors
+    
+    /// An error occurred during editor operation.
+    ///
+    /// Fired when any error occurs that doesn't halt editor operation
+    /// but should be reported to the user or logged.
     case error(Error)
 }
 
-/// Protocol for handling editor events
+/// Protocol for handling editor events.
+///
+/// Implement this protocol to receive and process events from the code editor.
+/// Event handlers are weakly referenced by the editor to prevent retain cycles.
+///
+/// ## Implementing an Event Handler
+///
+/// ```swift
+/// @MainActor
+/// class MyEventHandler: EditorEventHandler {
+///     func handle(_ event: EditorEvent) {
+///         switch event {
+///         case .textDidChange(let text):
+///             // Update UI or perform validation
+///             validateSyntax(text)
+///             
+///         case .completionRequested(let context):
+///             // Provide custom completions
+///             provideCompletions(for: context)
+///             
+///         case .error(let error):
+///             // Log or display errors
+///             logger.error("Editor error: \(error)")
+///             
+///         default:
+///             // Handle other events as needed
+///             break
+///         }
+///     }
+/// }
+/// ```
+///
+/// ## Registration
+///
+/// ```swift
+/// let handler = MyEventHandler()
+/// editor.subscribe(handler)
+/// 
+/// // Later, to stop receiving events
+/// editor.unsubscribe(handler)
+/// ```
+///
+/// - Important: Event handlers must be retained by your code. The editor only
+///              keeps weak references to prevent memory leaks.
+///
+/// - SeeAlso: ``EditorEvent``, ``ClosureEventHandler``, ``EditorEventPublisher``
 @MainActor
 public protocol EditorEventHandler: AnyObject, Sendable {
+    /// Handle an editor event.
+    ///
+    /// This method is called on the main actor whenever an event occurs.
+    /// Implementation should be efficient as it may be called frequently.
+    ///
+    /// - Parameter event: The event that occurred in the editor
     func handle(_ event: EditorEvent)
 }
 
-/// Simple closure-based event handler
+/// Simple closure-based event handler.
+///
+/// Provides a convenient way to handle editor events using a closure instead of
+/// implementing a full class. Useful for simple event handling scenarios.
+///
+/// ## Example
+///
+/// ```swift
+/// let handler = ClosureEventHandler { event in
+///     switch event {
+///     case .textDidChange(let text):
+///         print("New text: \(text)")
+///     case .error(let error):
+///         print("Error: \(error)")
+///     default:
+///         break
+///     }
+/// }
+///
+/// editor.subscribe(handler)
+/// ```
+///
+/// - Note: Remember to retain the handler instance to keep receiving events.
+///
+/// - SeeAlso: ``EditorEventHandler``, ``EditorEvent``
 @MainActor
 public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable {
     private let handler: @Sendable (EditorEvent) -> Void
     
+    /// Creates a closure-based event handler.
+    ///
+    /// - Parameter handler: The closure to call for each event. Must be Sendable
+    ///                     to ensure thread safety across actor boundaries.
     public init(_ handler: @escaping @Sendable (EditorEvent) -> Void) {
         self.handler = handler
     }
@@ -51,7 +252,52 @@ public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable 
     }
 }
 
-/// Publisher for editor events using Combine
+/// Publisher for editor events using Combine.
+///
+/// `EditorEventPublisher` manages event distribution to multiple subscribers
+/// and provides Combine integration for reactive event handling. It maintains
+/// weak references to handlers to prevent retain cycles.
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// // Subscribe with event handler
+/// let handler = MyEventHandler()
+/// eventPublisher.subscribe(handler)
+///
+/// // Publish events
+/// eventPublisher.publish(.textDidChange("new text"))
+///
+/// // Unsubscribe when done
+/// eventPublisher.unsubscribe(handler)
+/// ```
+///
+/// ## Combine Integration
+///
+/// ```swift
+/// // Subscribe to all events
+/// eventPublisher.publisher()
+///     .sink { event in
+///         print("Event: \(event)")
+///     }
+///     .store(in: &cancellables)
+///
+/// // Subscribe to specific event types
+/// eventPublisher.publisher(for: TextDidChangeEvent.self)
+///     .map { $0.text }
+///     .removeDuplicates()
+///     .sink { text in
+///         print("Unique text: \(text)")
+///     }
+///     .store(in: &cancellables)
+/// ```
+///
+/// ## Thread Safety
+///
+/// The publisher is thread-safe and can be accessed from any thread. Events
+/// are always delivered on the main actor to ensure UI safety.
+///
+/// - SeeAlso: ``EditorEvent``, ``EditorEventHandler``, ``EditorEventType``
 @available(macOS 10.15, iOS 13.0, *)
 public final class EditorEventPublisher: @unchecked Sendable {
     private let lock = NSLock()
@@ -59,7 +305,14 @@ public final class EditorEventPublisher: @unchecked Sendable {
     
     public init() {}
     
-    /// Subscribe to editor events
+    /// Subscribe to editor events.
+    ///
+    /// Adds an event handler to receive all published events. The handler
+    /// is stored as a weak reference to prevent retain cycles.
+    ///
+    /// - Parameter handler: The event handler to add
+    ///
+    /// - Note: Handlers must be retained elsewhere or they will be deallocated
     public func subscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
         lock.lock()
@@ -67,7 +320,11 @@ public final class EditorEventPublisher: @unchecked Sendable {
         handlers[id] = WeakHandler(handler)
     }
     
-    /// Unsubscribe from editor events
+    /// Unsubscribe from editor events.
+    ///
+    /// Removes an event handler from receiving events.
+    ///
+    /// - Parameter handler: The event handler to remove
     public func unsubscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
         lock.lock()
@@ -75,7 +332,14 @@ public final class EditorEventPublisher: @unchecked Sendable {
         handlers.removeValue(forKey: id)
     }
     
-    /// Publish an event to all subscribers
+    /// Publish an event to all subscribers.
+    ///
+    /// Sends the event to all registered handlers. Events are delivered
+    /// asynchronously on the main actor to ensure UI thread safety.
+    ///
+    /// - Parameter event: The event to publish
+    ///
+    /// - Note: Handlers that have been deallocated are automatically removed
     public func publish(_ event: EditorEvent) {
         lock.lock()
         let activeHandlers = handlers.values.compactMap { $0.value }
@@ -89,7 +353,9 @@ public final class EditorEventPublisher: @unchecked Sendable {
         }
     }
     
-    /// Remove all handlers
+    /// Remove all handlers.
+    ///
+    /// Clears all event subscriptions. Useful for cleanup or reset scenarios.
     public func removeAll() {
         lock.lock()
         defer { lock.unlock() }

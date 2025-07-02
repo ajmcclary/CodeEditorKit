@@ -5,7 +5,52 @@ import UIKit
 import AppKit
 #endif
 
-/// Unified API for code editor functionality across platforms
+/// Unified API for code editor functionality across platforms.
+///
+/// `CodeEditorAPI` defines the core interface for interacting with the code editor,
+/// providing a consistent API across macOS, iOS, and Mac Catalyst. This protocol
+/// abstracts platform-specific implementations while exposing all essential editor
+/// functionality.
+///
+/// ## Overview
+///
+/// The API is organized into logical groups:
+/// - **Content Management**: Text manipulation and retrieval
+/// - **Configuration**: Editor settings and language modes
+/// - **Events**: Reactive event handling with Combine
+/// - **Text Operations**: Insertion, deletion, and replacement
+/// - **Selection**: Cursor movement and text selection
+/// - **Search & Replace**: Find and replace functionality
+/// - **Scrolling**: Viewport control
+/// - **Annotations**: Inline markers and warnings
+/// - **Line Information**: Line-based navigation
+/// - **Undo/Redo**: History management
+///
+/// ## Adopting the Protocol
+///
+/// `CodeEditorView` is the primary implementation of this protocol. You typically
+/// don't need to implement this protocol yourself unless creating a custom editor.
+///
+/// ```swift
+/// let editor: CodeEditorAPI = CodeEditorView()
+/// 
+/// // Configure the editor
+/// editor.language = .swift
+/// editor.configuration = .default
+/// 
+/// // Set content
+/// editor.content = "func hello() {\n    print(\"Hello, World!\")\n}"
+/// 
+/// // Subscribe to events
+/// editor.subscribe(MyEventHandler())
+/// ```
+///
+/// ## Thread Safety
+///
+/// All methods and properties must be accessed on the main actor. The protocol
+/// is marked with `@MainActor` to ensure UI operations happen on the main thread.
+///
+/// - SeeAlso: ``CodeEditorView``, ``EditorConfiguration``, ``Language``
 @MainActor
 public protocol CodeEditorAPI: AnyObject {
     // MARK: - Content Management
@@ -119,7 +164,25 @@ public protocol CodeEditorAPI: AnyObject {
     func redo()
 }
 
-/// Options for find operations
+/// Options for find and replace operations.
+///
+/// `FindOptions` is an option set that allows combining multiple search behaviors
+/// for flexible text searching within the editor.
+///
+/// ## Example
+///
+/// ```swift
+/// // Case-insensitive search
+/// let matches = editor.find("hello", options: .caseInsensitive)
+/// 
+/// // Whole word search with wrap around
+/// let matches = editor.find("var", options: [.wholeWords, .wrapAround])
+/// 
+/// // Regular expression search
+/// let matches = editor.find("\\bfunc\\s+\\w+", options: .regularExpression)
+/// ```
+///
+/// - SeeAlso: ``CodeEditorAPI/find(_:options:)``, ``CodeEditorAPI/replaceAll(_:with:options:)``
 public struct FindOptions: OptionSet, Sendable {
     public let rawValue: Int
     
@@ -127,11 +190,35 @@ public struct FindOptions: OptionSet, Sendable {
         self.rawValue = rawValue
     }
     
+    /// Perform case-insensitive matching.
+    ///
+    /// When set, "Hello" will match "hello", "HELLO", and "HeLLo".
     public static let caseInsensitive = Self(rawValue: 1 << 0)
+    
+    /// Match whole words only.
+    ///
+    /// When set, searching for "var" won't match "variable" or "invariant".
+    /// Word boundaries are determined by whitespace and punctuation.
     public static let wholeWords = Self(rawValue: 1 << 1)
+    
+    /// Treat the search string as a regular expression.
+    ///
+    /// When set, the search string is interpreted as a regular expression pattern.
+    /// Supports standard regex syntax including capture groups and quantifiers.
+    ///
+    /// - Note: Invalid regex patterns will cause the search to fail silently.
     public static let regularExpression = Self(rawValue: 1 << 2)
+    
+    /// Continue searching from the beginning when reaching the end.
+    ///
+    /// When set, the search wraps around to the beginning of the document
+    /// after reaching the end, ensuring all matches are found regardless
+    /// of the current cursor position.
     public static let wrapAround = Self(rawValue: 1 << 3)
     
+    /// Default options (empty set).
+    ///
+    /// Performs exact, case-sensitive matching without wrap-around.
     public static let `default`: FindOptions = []
 }
 

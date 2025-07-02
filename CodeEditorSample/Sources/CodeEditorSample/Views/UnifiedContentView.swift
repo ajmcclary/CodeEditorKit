@@ -3,7 +3,50 @@ import SwiftUI
 
 // MARK: - UnifiedContentView
 
-/// A unified content view that works consistently across macOS and iOS
+/// The main content view for the CodeEditor Sample application.
+///
+/// `UnifiedContentView` provides a cross-platform interface that adapts to
+/// different device types and screen sizes while maintaining a consistent
+/// user experience across macOS, iOS, and Mac Catalyst.
+///
+/// ## Platform Adaptations
+///
+/// The view automatically adapts its layout based on the platform:
+/// - **iPhone**: Single-stack navigation with toolbar access to configuration
+/// - **iPad**: Split-view layout with sidebar configuration panel
+/// - **macOS**: Split-view layout optimized for desktop interaction
+/// - **Mac Catalyst**: Desktop-style split view with touch support
+///
+/// ## Features
+///
+/// - Responsive design that adapts to Dynamic Type settings
+/// - Configurable sidebar visibility and width
+/// - Integrated code editor with live configuration
+/// - Cross-platform navigation patterns
+/// - Accessibility support throughout
+///
+/// ## Architecture
+///
+/// The view uses SwiftUI's `NavigationSplitView` for larger screens and
+/// `NavigationStack` for iPhone to provide platform-appropriate navigation.
+/// State management is handled through the ``AppState`` observable object.
+///
+/// ## Example Usage
+///
+/// ```swift
+/// var body: some Scene {
+///     WindowGroup {
+///         UnifiedContentView()
+///             .frame(minWidth: 1200, minHeight: 800) // macOS
+///     }
+/// }
+/// ```
+///
+/// - Requires: iOS 16.0+, macOS 13.0+
+///
+/// - SeeAlso: ``AppState`` for state management
+/// - SeeAlso: ``UnifiedConfigurationView`` for the configuration panel
+/// - SeeAlso: ``SampleCodeEditorView`` for the editor component
 @available(macOS 13.0, iOS 16.0, *)
 struct UnifiedContentView: View {
     @StateObject private var appState = AppState()

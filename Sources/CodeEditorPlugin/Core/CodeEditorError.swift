@@ -2,8 +2,55 @@
 
 import Foundation
 
-/// Comprehensive error types for CodeEditorPlugin
-public enum CodeEditorError: LocalizedError, CustomStringConvertible {
+/// Comprehensive error types for CodeEditorPlugin.
+///
+/// `CodeEditorError` provides a structured error system for all components of the
+/// code editor. Each error case includes detailed localized descriptions, failure
+/// reasons, and recovery suggestions.
+///
+/// ## Error Categories
+///
+/// ### Configuration Errors
+/// - `invalidConfiguration`: Invalid configuration values
+/// - `configurationValidationFailed`: Validation errors with specific fields
+///
+/// ### Text Processing Errors
+/// - `invalidRange`: Text range outside valid bounds
+/// - `invalidPosition`: Cursor position outside text bounds
+/// - `textProcessingFailed`: General text processing failures
+///
+/// ### Language Server Errors
+/// - `languageServerNotAvailable`: LSP not configured for language
+/// - `languageServerTimeout`: LSP request exceeded timeout
+/// - `languageServerCommunicationFailed`: LSP communication error
+///
+/// ### Completion Errors
+/// - `completionProviderNotFound`: No provider for requested completion
+/// - `completionRequestFailed`: Completion request error
+/// - `completionTimeout`: Completion exceeded timeout
+///
+/// ### Syntax Highlighting Errors
+/// - `syntaxHighlightingFailed`: Highlighting processing error
+/// - `unsupportedLanguage`: No highlighter for language
+/// - `highlightingTimeout`: Highlighting exceeded timeout
+///
+/// ### File System Errors
+/// - `fileTooLarge`: File exceeds size limit
+/// - `fileReadingFailed`: Cannot read file
+/// - `fileWritingFailed`: Cannot write file
+///
+/// ### Platform Errors
+/// - `unsupportedPlatform`: Feature not available on platform
+/// - `platformFeatureUnavailable`: Specific platform feature missing
+/// - `hardwareAccelerationUnavailable`: GPU acceleration not supported
+///
+/// ## Error Handling
+///
+/// ```swift
+/// do {
+///     try editor.performOperation()
+/// } catch let error as CodeEditorError {
+///     print(\"Error: \\(error.errorDescription ?? \"Unknown\")\")\n///     print(\"Reason: \\(error.failureReason ?? \"Unknown\")\")\n///     print(\"Recovery: \\(error.recoverySuggestion ?? \"None\")\")\n///     \n///     if error.isRecoverable {\n///         // Attempt recovery\n///     }\n/// }\n/// ```\n///\n/// ## Error Properties\n///\n/// ```swift\n/// let error = CodeEditorError.fileTooLarge(1_000_000, maxSize: 500_000)\n/// print(error.category)        // \"FileSystem\"\n/// print(error.isRecoverable)   // false\n/// ```\n///\n/// - SeeAlso: ``ValidationError``, ``CodeEditorResult``\npublic enum CodeEditorError: LocalizedError, CustomStringConvertible {
     // MARK: - Configuration Errors
     case invalidConfiguration(String)
     case configurationValidationFailed([ValidationError])
@@ -214,12 +261,39 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
 
 // MARK: - Validation Error
 
-/// Specific validation errors for configuration
+/// Specific validation errors for configuration.
+///
+/// Provides detailed information about configuration validation failures,
+/// including the field name, invalid value, and constraint that was violated.
+///
+/// ## Example
+///
+/// ```swift
+/// let error = ValidationError(
+///     field: "fontSize",
+///     value: -1,
+///     constraint: "must be greater than 0"
+/// )
+/// print(error) // "fontSize: '-1' violates constraint 'must be greater than 0'"
+/// ```
+///
+/// - SeeAlso: ``CodeEditorError``, ``EditorConfiguration``
 public struct ValidationError: CustomStringConvertible, Equatable, Sendable {
+    /// The configuration field that failed validation.
     public let field: String
+    
+    /// String representation of the invalid value.
     public let valueDescription: String
+    
+    /// Description of the constraint that was violated.
     public let constraint: String
     
+    /// Creates a validation error.
+    ///
+    /// - Parameters:
+    ///   - field: The field name (e.g., "fontSize", "tabWidth")
+    ///   - value: The invalid value that was provided
+    ///   - constraint: Description of the validation constraint
     public init(field: String, value: Any?, constraint: String) {
         self.field = field
         self.valueDescription = value.map(String.init(describing:)) ?? "nil"

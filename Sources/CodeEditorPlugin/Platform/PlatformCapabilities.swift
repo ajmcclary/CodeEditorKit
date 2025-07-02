@@ -5,7 +5,62 @@ import UIKit
 import AppKit
 #endif
 
-/// Centralized platform capability detection and feature availability system
+/// Centralized platform capability detection and feature availability system.
+///
+/// `PlatformCapabilities` provides runtime detection of platform features and capabilities,
+/// allowing the code editor to adapt its behavior and UI based on the current environment.
+/// This ensures optimal performance and user experience across macOS, iOS, and Mac Catalyst.
+///
+/// ## Overview
+///
+/// The capabilities system detects:
+/// - Platform type and version
+/// - Available system features (TextKit2, hardware acceleration, etc.)
+/// - Device capabilities (touch, trackpad, pencil input)
+/// - Performance characteristics and recommendations
+/// - Feature availability for specific editor functionality
+///
+/// ## Usage
+///
+/// ```swift
+/// let capabilities = PlatformCapabilities.shared
+/// 
+/// // Check platform
+/// if capabilities.currentPlatform == .macOS {
+///     // Enable macOS-specific features
+/// }
+/// 
+/// // Check feature availability
+/// if capabilities.supportsTextKit2 {
+///     // Use TextKit2 features
+/// }
+/// 
+/// // Get optimized configuration
+/// let config = capabilities.recommendedConfiguration()
+/// editor.configuration = config
+/// 
+/// // Check specific features
+/// if capabilities.isFeatureAvailable(.hardwareAcceleration) {
+///     // Enable GPU acceleration
+/// }
+/// ```
+///
+/// ## Platform Detection
+///
+/// The system accurately detects:
+/// - macOS (native)
+/// - iOS (iPhone and iPad)
+/// - Mac Catalyst (iOS apps on Mac)
+///
+/// ## Performance Optimization
+///
+/// Recommendations are based on:
+/// - Available memory
+/// - CPU architecture (Intel vs Apple Silicon)
+/// - Display capabilities (ProMotion, etc.)
+/// - Platform-specific optimizations
+///
+/// - SeeAlso: ``EditorConfiguration``, ``EditorFeature``, ``FeatureAvailability``
 @MainActor
 public final class PlatformCapabilities {
     public static let shared = PlatformCapabilities()
@@ -18,11 +73,22 @@ public final class PlatformCapabilities {
     
     // MARK: - Platform Detection
     
+    /// Platform type enumeration.
+    ///
+    /// Represents the current runtime platform with user-friendly names.
     public enum Platform {
+        /// Native macOS application
         case macOS
+        
+        /// iOS application (iPhone or iPad)
         case iOS
+        
+        /// Mac Catalyst (iOS app running on Mac)
         case catalyst
         
+        /// Human-readable platform name.
+        ///
+        /// Returns "macOS", "iOS", or "Mac Catalyst".
         public var name: String {
             switch self {
             case .macOS: return "macOS"
@@ -487,20 +553,110 @@ extension PlatformCapabilities {
         #endif
     }
     
+    /// Feature availability level.
+    ///
+    /// Indicates whether a feature is fully supported, partially supported,
+    /// or unavailable on the current platform.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let availability = capabilities.getFeatureAvailability(.keyboardShortcuts)
+    /// switch availability {
+    /// case .full:
+    ///     // Enable all keyboard shortcuts
+    /// case .partial:
+    ///     // Enable basic shortcuts only
+    /// case .unavailable:
+    ///     // Hide keyboard shortcut UI
+    /// }
+    /// ```
     public enum FeatureAvailability {
+        /// Feature is fully supported with all capabilities
         case full
+        
+        /// Feature is partially supported with limited capabilities
         case partial
+        
+        /// Feature is not available on this platform
         case unavailable
         
+        /// Whether the feature is available at any level.
+        ///
+        /// Returns `true` for both full and partial availability.
         public var isAvailable: Bool {
             self != .unavailable
         }
         
+        /// Whether the feature is fully available.
+        ///
+        /// Returns `true` only for full availability.
         public var isFullyAvailable: Bool {
             self == .full
         }
     }
     
+    /// Editor features that may have platform-specific availability.
+    ///
+    /// Represents all features that can be queried for availability
+    /// across different platforms and configurations.
+    ///
+    /// ## Feature Categories
+    ///
+    /// ### Core Features
+    /// Essential editing capabilities available on all platforms:
+    /// - `syntaxHighlighting`: Language-aware code coloring
+    /// - `codeCompletion`: Intelligent code suggestions
+    /// - `lineNumbers`: Line number display in gutter
+    /// - `codeFolding`: Collapse/expand code blocks
+    /// - `minimap`: Zoomed-out code overview
+    ///
+    /// ### Editing Features
+    /// Advanced text manipulation capabilities:
+    /// - `multipleCursors`: Edit multiple locations simultaneously
+    /// - `smartBrackets`: Auto-close brackets and quotes
+    /// - `autoIndent`: Intelligent indentation
+    /// - `findReplace`: Search and replace functionality
+    /// - `columnSelection`: Rectangle/column selection mode
+    ///
+    /// ### Navigation Features
+    /// Code navigation and exploration:
+    /// - `symbolNavigation`: Jump to symbols/functions
+    /// - `breadcrumbs`: Navigation path display
+    /// - `goToDefinition`: Navigate to symbol definitions
+    /// - `quickOpen`: Fast file/symbol search
+    ///
+    /// ### Performance Features
+    /// Optimization and acceleration:
+    /// - `hardwareAcceleration`: GPU-accelerated rendering
+    /// - `virtualScrolling`: Efficient large file handling
+    /// - `incrementalParsing`: Progressive syntax analysis
+    /// - `backgroundProcessing`: Async processing support
+    ///
+    /// ### Integration Features
+    /// External tool and service integration:
+    /// - `languageServerProtocol`: LSP support
+    /// - `pluginSystem`: Extension/plugin support
+    /// - `externalTools`: External tool integration
+    /// - `fileWatching`: File system monitoring
+    ///
+    /// ### UI Features
+    /// User interface capabilities:
+    /// - `splitView`: Multiple editor panes
+    /// - `tabs`: Tabbed interface
+    /// - `sidebars`: Side panel support
+    /// - `floatingPanels`: Detachable panels
+    /// - `contextMenus`: Right-click menus
+    /// - `toolbars`: Customizable toolbars
+    /// - `touchBarSupport`: MacBook Touch Bar
+    ///
+    /// ### Input Features
+    /// Input method support:
+    /// - `keyboardShortcuts`: Keyboard commands
+    /// - `mouseSupport`: Mouse interactions
+    /// - `touchSupport`: Touch gestures
+    /// - `gestureNavigation`: Swipe/pinch gestures
+    /// - `pencilSupport`: Apple Pencil support
     public enum EditorFeature {
         // Core features
         case syntaxHighlighting

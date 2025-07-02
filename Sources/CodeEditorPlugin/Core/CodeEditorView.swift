@@ -112,7 +112,30 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     // MARK: - Properties
 
-    /// Custom delegate for CodeEditorView-specific functionality
+    /// The delegate that receives notifications about text editing events.
+    ///
+    /// The delegate provides hooks for customizing editor behavior, responding to text changes,
+    /// handling completion events, and managing editor lifecycle.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// class MyDelegate: CodeEditorViewDelegate {
+    ///     func textViewDidChangeText(_ notification: Notification) {
+    ///         // Handle text changes
+    ///     }
+    ///     
+    ///     func textView(_ textView: CodeEditorView, shouldChangeTextIn range: NSRange, 
+    ///                   replacementString: String) -> Bool {
+    ///         // Validate text changes
+    ///         return true
+    ///     }
+    /// }
+    /// 
+    /// editor.textDelegate = MyDelegate()
+    /// ```
+    ///
+    /// - SeeAlso: `CodeEditorViewDelegate`
     public weak var textDelegate: (any CodeEditorViewDelegate)? {
         get {
             delegateProxy.source
@@ -125,13 +148,62 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Proxy for delegate calls
     let delegateProxy = CodeEditorViewDelegateProxy(source: nil)
     
-    /// Event publisher for unified event handling
+    /// Event publisher for unified event handling.
+    ///
+    /// The event publisher provides a reactive way to observe editor events using Combine.
+    /// Subscribe to receive notifications about text changes, selection changes, and other
+    /// editor events without implementing the delegate pattern.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// editor.eventPublisher.textDidChangePublisher
+    ///     .sink { event in
+    ///         print("Text changed: \(event.newText)")
+    ///     }
+    ///     .store(in: &cancellables)
+    /// 
+    /// editor.eventPublisher.selectionDidChangePublisher
+    ///     .sink { event in
+    ///         print("Selection: \(event.selectedRange)")
+    ///     }
+    ///     .store(in: &cancellables)
+    /// ```
+    ///
+    /// - SeeAlso: ``EditorEventPublisher``, ``EditorEvent``
     public let eventPublisher = EditorEventPublisher()
     
     /// Layout coordinator to prevent recursive layout
     private lazy var layoutCoordinator = LayoutCoordinator(view: self)
     
-    /// Editor configuration
+    /// The configuration object that controls all aspects of the editor's behavior and appearance.
+    ///
+    /// Changes to the configuration are automatically applied to the editor. The configuration
+    /// is organized into four main categories: display, layout, behavior, and performance.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Use a preset configuration
+    /// editor.configuration = .minimal
+    /// 
+    /// // Customize configuration
+    /// var config = EditorConfiguration()
+    /// config.display.fontSize = 16
+    /// config.display.showLineNumbers = true
+    /// config.layout.tabWidth = 4
+    /// config.behavior.autoIndent = true
+    /// editor.configuration = config
+    /// 
+    /// // Update specific settings
+    /// editor.configuration = editor.configuration.with(
+    ///     display: editor.configuration.display.with(fontSize: 14)
+    /// )
+    /// ```
+    ///
+    /// - Note: Configuration changes trigger immediate UI updates
+    ///
+    /// - SeeAlso: `EditorConfiguration`, `EditorConfigurationBuilder`
     public var configuration: EditorConfiguration = .default {
         didSet {
             applyConfiguration()
@@ -154,7 +226,34 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// LSP manager for language server integration
     private let lspManager = LSPManager()
 
-    /// Current programming language for syntax highlighting
+    /// The current programming language used for syntax highlighting and code completion.
+    ///
+    /// Setting this property updates syntax highlighting, completion providers, and language-specific
+    /// features. The editor supports 17+ programming languages with tailored highlighting rules.
+    ///
+    /// ## Supported Languages
+    ///
+    /// - **Web**: HTML, CSS, JavaScript, TypeScript
+    /// - **Systems**: Swift, Rust, C, C++, Go
+    /// - **Scripting**: Python, Ruby, PHP, Shell
+    /// - **Data**: JSON, YAML, XML, SQL
+    /// - **Documentation**: Markdown
+    /// - **Other**: Java, Plain Text
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Set language directly
+    /// editor.language = .swift
+    /// editor.language = .python
+    /// 
+    /// // Set from file extension
+    /// editor.setLanguage(fileExtension: "js")
+    /// ```
+    ///
+    /// - Note: Swift uses AST-based highlighting via SwiftSyntax for superior accuracy
+    ///
+    /// - SeeAlso: `setLanguage(fileExtension:)`, `Language`
     public var language: Language = .plainText {
         didSet {
             if language != oldValue {
@@ -217,13 +316,63 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Line highlight view
     private var lineHighlightView: PlatformView?
 
-    /// Annotations storage
+    /// The current annotations displayed in the editor.
+    ///
+    /// This array contains all active annotations (TODO, FIXME, NOTE, WARNING, ERROR)
+    /// that are detected and displayed in the editor. Annotations are automatically
+    /// detected from comments when enabled in the configuration.
+    ///
+    /// ## Accessing Annotations
+    ///
+    /// ```swift
+    /// // Get all annotations
+    /// let todos = editor.annotations.filter { $0.type == .todo }
+    /// 
+    /// // Get annotation at specific line
+    /// let lineAnnotations = editor.annotations.filter { annotation in
+    ///     let lineRange = editor.lineRange(for: annotation.range)
+    ///     return lineRange.contains(annotation.range.location)
+    /// }
+    /// ```
+    ///
+    /// - Note: This property is read-only. Use `addAnnotation(_:)` and
+    ///         `removeAnnotation(_:)` to modify annotations.
+    ///
+    /// - SeeAlso: ``Annotation``, ``addAnnotation(_:)``, ``removeAnnotation(_:)``
     public private(set) var annotations: [Annotation] = []
 
     /// Annotation views mapping
     private var annotationViews: [String: PlatformView] = [:]
 
-    /// Annotations data source
+    /// The data source for providing custom annotations.
+    ///
+    /// Set this property to provide annotations from an external source rather than
+    /// relying on automatic comment detection. The data source is queried whenever
+    /// the text changes or when you call `reloadAnnotations()`.
+    ///
+    /// ## Implementing a Data Source
+    ///
+    /// ```swift
+    /// class MyAnnotationsProvider: AnnotationsDataSource {
+    ///     func annotations(for textView: CodeEditorView) -> [Annotation] {
+    ///         // Return custom annotations based on text analysis
+    ///         return [
+    ///             Annotation(
+    ///                 id: UUID().uuidString,
+    ///                 type: .warning,
+    ///                 range: NSRange(location: 0, length: 10),
+    ///                 text: "Deprecated API usage"
+    ///             )
+    ///         ]
+    ///     }
+    /// }
+    /// 
+    /// editor.annotationsDataSource = MyAnnotationsProvider()
+    /// ```
+    ///
+    /// - Note: When a data source is set, automatic comment detection is disabled.
+    ///
+    /// - SeeAlso: ``AnnotationsDataSource``, ``Annotation``, ``reloadAnnotations()``
     public weak var annotationsDataSource: AnnotationsDataSource?
 
     // MARK: - Completion System
@@ -638,6 +787,34 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
     
     /// Request code completion at the current cursor position
+    /// Requests code completion at the current cursor position.
+    ///
+    /// This method triggers the code completion system to provide suggestions based on the
+    /// current context, language, and registered completion providers.
+    ///
+    /// - Parameters:
+    ///   - triggerKind: The kind of trigger that initiated the completion request
+    ///   - triggerCharacter: The character that triggered completion (if applicable)
+    ///
+    /// ## Trigger Kinds
+    ///
+    /// - `.manual`: User explicitly requested completion (e.g., Ctrl+Space)
+    /// - `.automatic`: Triggered by typing a trigger character
+    /// - `.incomplete`: Previous completion list was incomplete
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Manual completion request
+    /// editor.requestCompletion(triggerKind: .manual)
+    /// 
+    /// // Automatic completion after typing '.'
+    /// editor.requestCompletion(triggerKind: .automatic, triggerCharacter: ".")
+    /// ```
+    ///
+    /// - Note: Completion must be enabled via `enablesCodeCompletion` or configuration
+    ///
+    /// - SeeAlso: `hideCompletionPopup()`, `enablesCodeCompletion`, `CompletionProvider`
     public func requestCompletion(triggerKind: CompletionTriggerKind = .manual, triggerCharacter: String? = nil) {
         guard isCompletionEnabled else { return }
         
@@ -772,6 +949,27 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
     
     /// Hide the completion popup
+    /// Dismisses the currently visible completion popup.
+    ///
+    /// Use this method to programmatically hide the completion suggestions popup.
+    /// The popup is also automatically hidden when the user presses Escape, clicks
+    /// outside, or performs other dismissal actions.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Hide completion when losing focus
+    /// func textViewDidResignFirstResponder() {
+    ///     editor.hideCompletionPopup()
+    /// }
+    /// 
+    /// // Hide on specific key press
+    /// if event.keyCode == kVK_Escape {
+    ///     editor.hideCompletionPopup()
+    /// }
+    /// ```
+    ///
+    /// - SeeAlso: `requestCompletion(triggerKind:triggerCharacter:)`
     public func hideCompletionPopup() {
         guard isCompletionActive else { return }
         
@@ -1153,27 +1351,97 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     // MARK: - Annotations Support
 
-    /// Add an annotation to the text view
+    /// Adds an annotation to the text view at the specified range.
+    ///
+    /// Annotations appear as inline badges in the editor with custom content and styling.
+    /// Use annotations to display markers for TODOs, warnings, errors, or other inline documentation.
+    ///
+    /// - Parameter annotation: The annotation to add to the text view
+    ///
+    /// - Note: The annotation view is created using the `annotationsDataSource` if available.
+    ///         Without a data source, the annotation will be stored but not displayed.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let annotation = Annotation(
+    ///     range: NSRange(location: 10, length: 4),
+    ///     content: "TODO",
+    ///     kind: .todo
+    /// )
+    /// editor.addAnnotation(annotation)
+    /// ```
+    ///
+    /// - SeeAlso: `removeAnnotation(withId:)`, `removeAllAnnotations()`, `AnnotationsDataSource`
     public func addAnnotation(_ annotation: Annotation) {
         annotations.append(annotation)
         updateAnnotationView(for: annotation)
     }
 
-    /// Remove an annotation from the text view
+    /// Removes an annotation with the specified identifier.
+    ///
+    /// This method removes both the annotation data and its associated view from the text editor.
+    ///
+    /// - Parameter id: The unique identifier of the annotation to remove
+    ///
+    /// - Note: If no annotation exists with the given ID, this method does nothing.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Remove a specific annotation
+    /// editor.removeAnnotation(withId: "todo-123")
+    /// ```
+    ///
+    /// - SeeAlso: `addAnnotation(_:)`, `removeAllAnnotations()`
     public func removeAnnotation(withId id: String) {
         annotations.removeAll { $0.id == id }
         annotationViews[id]?.removeFromSuperview()
         annotationViews.removeValue(forKey: id)
     }
 
-    /// Remove all annotations
+    /// Removes all annotations from the text view.
+    ///
+    /// This method clears all annotation data and removes all annotation views from the editor.
+    /// Use this method when you need to reset the annotation state or reload annotations.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Clear all annotations before reloading
+    /// editor.removeAllAnnotations()
+    /// 
+    /// // Add new annotations
+    /// for annotation in newAnnotations {
+    ///     editor.addAnnotation(annotation)
+    /// }
+    /// ```
+    ///
+    /// - SeeAlso: `addAnnotation(_:)`, `removeAnnotation(withId:)`
     public func removeAllAnnotations() {
         annotations.removeAll()
         annotationViews.values.forEach { $0.removeFromSuperview() }
         annotationViews.removeAll()
     }
 
-    /// Get all annotations
+    /// Returns all annotations currently displayed in the text view.
+    ///
+    /// Use this property to access the complete list of annotations for persistence,
+    /// filtering, or other processing needs.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Filter annotations by kind
+    /// let todos = editor.allAnnotations.filter { $0.kind == .todo }
+    /// 
+    /// // Save annotations for persistence
+    /// let annotationData = editor.allAnnotations.map { $0.toDictionary() }
+    /// ```
+    ///
+    /// - Returns: An array of all annotations in the text view
+    ///
+    /// - SeeAlso: `addAnnotation(_:)`, `Annotation`
     public var allAnnotations: [Annotation] {
         annotations
     }
@@ -1358,6 +1626,39 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Convenience Methods
 
     /// Set the programming language for syntax highlighting
+    /// Sets the programming language based on a file extension.
+    ///
+    /// This method automatically detects the appropriate language from common file extensions
+    /// and applies the corresponding syntax highlighting rules.
+    ///
+    /// - Parameter fileExtension: The file extension (with or without leading dot)
+    ///
+    /// ## Supported Extensions
+    ///
+    /// - **Swift**: .swift
+    /// - **Python**: .py, .pyw
+    /// - **JavaScript**: .js, .mjs, .cjs
+    /// - **TypeScript**: .ts, .tsx
+    /// - **HTML**: .html, .htm
+    /// - **CSS**: .css, .scss, .sass
+    /// - **JSON**: .json
+    /// - **And many more...**
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Set language from file extension
+    /// editor.setLanguage(fileExtension: "swift")
+    /// editor.setLanguage(fileExtension: ".py")
+    /// 
+    /// // Language detection from file path
+    /// let url = URL(fileURLWithPath: "/path/to/script.js")
+    /// editor.setLanguage(fileExtension: url.pathExtension)
+    /// ```
+    ///
+    /// - Note: If the extension is not recognized, the language defaults to `.plainText`
+    ///
+    /// - SeeAlso: `language`, `Language`
     public func setLanguage(fileExtension: String) {
         language = syntaxHighlighter.detectLanguage(from: fileExtension)
     }

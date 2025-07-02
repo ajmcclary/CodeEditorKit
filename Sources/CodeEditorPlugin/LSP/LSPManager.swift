@@ -1,12 +1,90 @@
 import Foundation
 import os.log
 
-/// Manages LSP clients for different languages and provides unified access
+/// Manages Language Server Protocol (LSP) clients for different programming languages.
+///
+/// `LSPManager` provides a unified interface for integrating language servers into the code editor.
+/// It handles server lifecycle, document synchronization, and request routing for features like
+/// code completion, hover information, diagnostics, and more.
+///
+/// ## Overview
+///
+/// The manager supports multiple language servers running simultaneously, each handling
+/// different file types. It automatically starts and stops servers based on open documents
+/// and provides graceful error handling and recovery.
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// let lspManager = LSPManager(workspaceRoot: projectURL)
+///
+/// // Configure a language server
+/// let swiftConfig = LSPManager.LanguageServerConfig(
+///     languageId: "swift",
+///     serverPath: "/usr/bin/sourcekit-lsp",
+///     fileExtensions: ["swift"]
+/// )
+/// try await lspManager.registerLanguageServer(config: swiftConfig)
+///
+/// // Open a document
+/// let documentURI = "file:///path/to/file.swift"
+/// try await lspManager.openDocument(uri: documentURI, text: sourceCode)
+///
+/// // Request code completion
+/// let completions = try await lspManager.requestCompletion(
+///     uri: documentURI,
+///     position: Position(line: 10, character: 15)
+/// )
+/// ```
+///
+/// ## Supported Features
+///
+/// - **Document Synchronization**: Open, close, and change notifications
+/// - **Code Completion**: Context-aware suggestions with documentation
+/// - **Hover Information**: Type information and documentation on hover
+/// - **Diagnostics**: Real-time error and warning detection
+/// - **Go to Definition**: Navigate to symbol definitions
+/// - **Find References**: Locate all usages of a symbol
+/// - **Document Symbols**: Outline view of file structure
+/// - **Formatting**: Code formatting and range formatting
+///
+/// ## Language Server Configuration
+///
+/// Each language server requires configuration including:
+/// - Server executable path
+/// - Command-line arguments
+/// - File extensions to handle
+/// - Client capabilities
+///
+/// ## Error Handling
+///
+/// The manager provides robust error handling:
+/// - Automatic server restart on crash
+/// - Request timeout handling
+/// - Graceful degradation when servers are unavailable
+///
+/// - SeeAlso: `LSPClient`, `LanguageServerConfig`, `LSPProtocol`
 @MainActor
 public final class LSPManager: ObservableObject {
     // MARK: - Configuration
     
-    /// LSP server configuration for a specific language
+    /// Configuration for a language server.
+    ///
+    /// Defines how to start and communicate with a language server for a specific
+    /// programming language.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let config = LanguageServerConfig(
+    ///     languageId: "python",
+    ///     serverPath: "/usr/local/bin/pylsp",
+    ///     fileExtensions: ["py", "pyw"],
+    ///     serverArguments: ["--log-file", "/tmp/pylsp.log"],
+    ///     capabilities: .init(completion: true, hover: true),
+    ///     autoStart: true
+    /// )
+    /// ```
     public struct LanguageServerConfig: Sendable {
         public let languageId: String
         public let serverPath: String

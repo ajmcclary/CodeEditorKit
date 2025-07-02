@@ -6,6 +6,49 @@ import AppKit
 import UIKit
 #endif
 
+/// Represents a color and font theme for syntax highlighting.
+///
+/// A theme defines the visual appearance of code in the editor by specifying colors
+/// and fonts for different token types. Themes can be loaded from asset catalogs or
+/// created programmatically.
+///
+/// ## Creating Themes
+///
+/// ### From Asset Catalog
+/// ```swift
+/// let theme = Theme(
+///     colors: Theme.Colors(bundle: .main, name: "MyTheme"),
+///     fonts: Theme.Fonts()
+/// )
+/// ```
+///
+/// ### Programmatically
+/// ```swift
+/// let colors: [String: PlatformColor] = [
+///     "keyword": .systemPurple,
+///     "string": .systemRed,
+///     "comment": .secondaryLabel,
+///     "type": .systemGreen
+/// ]
+/// 
+/// let theme = Theme(
+///     colors: Theme.Colors(colors: colors),
+///     fonts: Theme.Fonts()
+/// )
+/// ```
+///
+/// ## Token Types
+///
+/// Themes support coloring for various token types:
+/// - **Keywords**: `keyword`, `keyword.function`, `keyword.return`
+/// - **Literals**: `string`, `number`, `boolean`
+/// - **Types**: `type`, `constructor`
+/// - **Functions**: `function.call`, `method`
+/// - **Comments**: `comment`
+/// - **Variables**: `variable`, `variable.builtin`, `parameter`
+/// - **Operators**: `operator`, `punctuation.special`
+///
+/// - SeeAlso: `TokenName`, `CodeEditorSwiftUITheme`
 public struct Theme {
     // MARK: - Props
 
@@ -19,6 +62,17 @@ public struct Theme {
         self.fonts = fonts
     }
 
+    /// Returns the color for a specific token type.
+    ///
+    /// - Parameter tokenName: The token type to get the color for
+    /// - Returns: The color for the token, or nil if not defined
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let keywordColor = theme.color(forToken: TokenName("keyword"))
+    /// let stringColor = theme.color(forToken: TokenName("string"))
+    /// ```
     public func color(forToken tokenName: TokenName) -> PlatformColor? {
         colors.color(forToken: tokenName)
     }

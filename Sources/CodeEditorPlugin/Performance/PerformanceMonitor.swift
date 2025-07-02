@@ -3,8 +3,47 @@ import os.log
 
 // MARK: - PerformanceMonitor
 
-/// Monitors and reports performance metrics for the code editor
-/// Uses actor isolation for thread-safe metric collection with automatic cleanup
+/// Monitors and reports performance metrics for the code editor.
+///
+/// `PerformanceMonitor` provides comprehensive performance tracking for all editor operations,
+/// helping identify bottlenecks and optimize performance. It uses actor isolation for thread-safe
+/// metric collection with automatic cleanup of old metrics.
+///
+/// ## Features
+///
+/// - **Automatic Measurement**: Track operation duration with tokens
+/// - **Block Measurement**: Measure synchronous and async code blocks
+/// - **Performance Reports**: Generate detailed performance summaries
+/// - **Automatic Cleanup**: Old metrics are automatically removed
+/// - **Thread Safety**: Actor-based design ensures safe concurrent access
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// let monitor = PerformanceMonitor.shared
+/// 
+/// // Manual measurement with tokens
+/// let token = await monitor.startMeasuring("syntax-highlighting")
+/// // ... perform operation ...
+/// await monitor.endMeasuring(token)
+/// 
+/// // Block measurement
+/// let result = await monitor.measure("file-loading") {
+///     try await loadFile(at: path)
+/// }
+/// 
+/// // Generate report
+/// let report = await monitor.generateReport()
+/// print("Average operation time: \\(report.averageDuration)s")
+/// ```
+///
+/// ## Performance Thresholds
+///
+/// Operations exceeding 100ms are logged as warnings to help identify
+/// performance issues. The monitor automatically maintains the last 1000
+/// metrics or 1 hour of data, whichever limit is reached first.
+///
+/// - SeeAlso: ``MeasurementToken``, ``PerformanceReport``, ``MonitoringPerformanceMetric``
 public actor PerformanceMonitor {
     // MARK: - Configuration
     
@@ -194,21 +233,59 @@ public actor PerformanceMonitor {
 
 // MARK: - MeasurementToken
 
-/// Token returned when starting a measurement
+/// Token returned when starting a measurement.
+///
+/// `MeasurementToken` is used to track the duration of an operation.
+/// Keep the token and pass it to `endMeasuring(_:)` when the operation completes.
+///
+/// ## Example
+///
+/// ```swift
+/// let token = await monitor.startMeasuring("database-query")
+/// defer { await monitor.endMeasuring(token) }
+/// 
+/// // Perform operation...
+/// ```
+///
+/// - SeeAlso: ``PerformanceMonitor``
 public struct MeasurementToken: Sendable {
+    /// The name of the operation being measured.
     let name: String
+    
+    /// The start time of the measurement.
     let startTime: CFAbsoluteTime
 }
 
 // MARK: - MonitoringPerformanceMetric
 
-/// A single performance metric for monitoring
+/// A single performance metric for monitoring.
+///
+/// Represents a measured operation with timing information.
+/// Metrics are automatically managed by the `PerformanceMonitor`.
+///
+/// ## Properties
+///
+/// - `name`: The operation identifier
+/// - `startTime`: When the operation began
+/// - `endTime`: When the operation completed (nil if still running)
+/// - `duration`: Total duration in seconds (nil if still running)
+/// - `isComplete`: Whether the measurement has finished
+///
+/// - SeeAlso: ``PerformanceMonitor``, ``PerformanceReport``
 public struct MonitoringPerformanceMetric: Sendable {
+    /// The name/identifier of the measured operation.
     public let name: String
+    
+    /// The absolute time when measurement started.
     public let startTime: CFAbsoluteTime
+    
+    /// The absolute time when measurement ended (nil if ongoing).
     public var endTime: CFAbsoluteTime?
+    
+    /// The duration of the operation in seconds (nil if ongoing).
     public var duration: TimeInterval?
     
+    /// Whether the measurement has completed.
     public var isComplete: Bool {
         endTime != nil
     }
@@ -225,13 +302,41 @@ public struct MonitoringPerformanceMetric: Sendable {
 
 // MARK: - PerformanceReport
 
-/// Performance report with aggregated metrics
+/// Performance report with aggregated metrics.
+///
+/// Provides a comprehensive summary of performance metrics collected by the monitor.
+/// Use this to identify performance bottlenecks and optimize critical paths.
+///
+/// ## Example
+///
+/// ```swift
+/// let report = await monitor.generateReport()
+/// print(report.summary)
+/// 
+/// // Check slowest operations
+/// for operation in report.slowestOperations {
+///     print("\(operation.name): \(operation.duration ?? 0)s")
+/// }
+/// ```
+///
+/// - SeeAlso: ``PerformanceMonitor``, ``MonitoringPerformanceMetric``
 public struct PerformanceReport: Sendable {
+    /// Total number of operations tracked.
     public let totalOperations: Int
+    
+    /// Number of operations that have completed.
     public let completedOperations: Int
+    
+    /// Combined duration of all completed operations in seconds.
     public let totalDuration: TimeInterval
+    
+    /// Average duration of completed operations in seconds.
     public let averageDuration: TimeInterval
+    
+    /// The 10 slowest operations, sorted by duration.
     public let slowestOperations: [MonitoringPerformanceMetric]
+    
+    /// Age of the oldest metric in seconds (nil if no metrics).
     public let oldestMetricAge: TimeInterval?
     
     public var summary: String {

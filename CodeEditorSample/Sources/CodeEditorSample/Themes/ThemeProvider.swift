@@ -5,14 +5,93 @@ import Foundation
 
 // MARK: - ColorTheme
 
+/// A comprehensive theme system for the CodeEditor Sample application.
+///
+/// `ColorTheme` provides professionally designed color schemes optimized for
+/// different use cases, from development environments to presentation modes.
+/// Each theme includes complete color definitions for all editor elements.
+///
+/// ## Available Themes
+///
+/// - ``xcode``: Familiar Xcode-style light theme
+/// - ``vsDark``: Dark theme inspired by Visual Studio Code
+/// - ``github``: Clean light theme based on GitHub's design
+/// - ``solarizedDark``: Popular Solarized dark color scheme
+/// - ``minimal``: Stripped-down theme for distraction-free editing
+/// - ``presentation``: High-contrast theme optimized for demos
+///
+/// ## Theme Components
+///
+/// Each theme defines colors for:
+/// - **Background Elements**: Editor background, gutter, selection
+/// - **Text Elements**: Default text, syntax highlighting categories
+/// - **UI Elements**: Line numbers, current line highlight, selection
+/// - **Syntax Categories**: Keywords, strings, comments, types, functions
+///
+/// ## Platform Support
+///
+/// The theme system provides platform-specific implementations:
+/// - **macOS**: Full NSColor support with custom color definitions
+/// - **iOS**: UIColor implementation with adaptive colors
+/// - **Accessibility**: Respects system contrast and color preferences
+///
+/// ## Usage
+///
+/// ```swift
+/// let theme = ColorTheme.vsDark
+/// print(theme.displayName)  // "VS Code Dark"
+/// 
+/// // Apply colors to editor elements
+/// editorView.backgroundColor = theme.backgroundColor
+/// textView.textColor = theme.textColor
+/// 
+/// // Get syntax highlighting color
+/// let keywordColor = theme.colorForTokenType(.keyword)
+/// ```
+///
+/// ## Customization
+///
+/// Themes can be extended or customized:
+/// ```swift
+/// let customTheme = ColorTheme.github
+/// let customKeywordColor = customTheme.keywordColor.withAlphaComponent(0.8)
+/// ```
+///
+/// ## Export Support
+///
+/// Themes support configuration export for sharing and backup:
+/// ```swift
+/// let config = theme.themeConfiguration
+/// // Exports as dictionary with hex color values
+/// ```
+///
+/// - Note: The theme system automatically adapts to platform capabilities
+///   and respects system accessibility settings.
+///
+/// - SeeAlso: ``TokenType`` for syntax highlighting categories
+/// - SeeAlso: ``PlatformColor`` for cross-platform color support
 enum ColorTheme: String, CaseIterable {
+    /// Familiar Xcode-style light theme.
     case xcode
+    
+    /// Dark theme inspired by Visual Studio Code.
     case vsDark
+    
+    /// Clean light theme based on GitHub's design.
     case github
+    
+    /// Popular Solarized dark color scheme.
     case solarizedDark
+    
+    /// Stripped-down theme for distraction-free editing.
     case minimal
+    
+    /// High-contrast theme optimized for demos.
     case presentation
 
+    /// Human-readable display name for the theme.
+    ///
+    /// - Returns: A localized name suitable for UI presentation.
     var displayName: String {
         switch self {
         case .xcode: "Xcode Default"
