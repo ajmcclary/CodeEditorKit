@@ -280,7 +280,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// When enabled, the editor shows completion suggestions as you type.
         /// Supports language-specific completions and LSP integration.
         ///
-        /// - SeeAlso: ``CodeEditorView/requestCompletion(at:trigger:)``
+        /// - SeeAlso: ``CodeEditorView/requestCompletion(triggerKind:triggerCharacter:)``
         public var enableCodeCompletion: Bool = true
         
         /// Shorter alias for enableCodeCompletion

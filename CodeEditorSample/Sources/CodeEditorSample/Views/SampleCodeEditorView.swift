@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Coordinator for managing the editor view lifecycle and configuration updates.
 ///
-/// This coordinator maintains a reference to the underlying ``CodeEditorView``
+/// This coordinator maintains a reference to the underlying ``editorView``
 /// instance to enable configuration updates and maintain editor state across
 /// SwiftUI view updates.
 ///
@@ -67,7 +67,7 @@ class SampleCodeEditorCoordinator {
 ///
 /// - SeeAlso: ``CodeEditorViewWrapper`` for the underlying wrapper
 /// - SeeAlso: ``AppState`` for state management integration
-/// - SeeAlso: ``EditorConfiguration`` for configuration options
+/// - SeeAlso: ``dragConfiguration(_:)`` for configuration options
 struct SampleCodeEditorView: View {
     @EnvironmentObject var appState: AppState
     @Binding var text: String

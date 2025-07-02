@@ -33,7 +33,6 @@
 		43C94CC642F1BFC50EBDAFA2 /* UnifiedConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D2A540096658CDED42EBB8 /* UnifiedConfigurationView.swift */; };
 		449CF25BC6EC11055A77378F /* BasicFunctionalityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94FF0B6A2891455BC66EC4 /* BasicFunctionalityTests.swift */; };
 		4D44F7CD7BE10F3EC4B6117A /* BasicFunctionalityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94FF0B6A2891455BC66EC4 /* BasicFunctionalityTests.swift */; };
-		52FEF53D6625AFFA1853C7D2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 41B0A606F7C931B3F8ADC19E /* Info.plist */; };
 		5469D69FF2048E94E3E29C47 /* SafeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511107E1AB80474BE220AD4E /* SafeButton.swift */; };
 		582B960C5A3A7A6EAF8CF725 /* ConfigurationSectionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */; };
 		585F68AAFFE6359EF4F901EE /* ConfigurationExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8D5C8B697D6BDCBA6ACF7 /* ConfigurationExporter.swift */; };
@@ -87,7 +86,6 @@
 		E83AC298C2013858B23BA427 /* ConfigurationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D963ECA894E2862ECDB4BA72 /* ConfigurationCoordinator.swift */; };
 		E9A8F3E3B17EC7D5ACA91E7C /* BehaviorConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E719D29B7771F6D3D211BCD2 /* BehaviorConfigurationSection.swift */; };
 		EF1DA6FEBB87CDCD51F50964 /* LayoutConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBB3A7A18BA5595A05D78E3 /* LayoutConfigurationSection.swift */; };
-		EF360C470EA2322F24417B16 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 41B0A606F7C931B3F8ADC19E /* Info.plist */; };
 		F3B379DA77193699AB56FB3D /* LanguageDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C325E004419D39E9DBB820EA /* LanguageDetectionService.swift */; };
 		F412B47C31D31E902B66AB4A /* UnifiedConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D2A540096658CDED42EBB8 /* UnifiedConfigurationView.swift */; };
 		F52D8C7CBA5DA84EFFD84B33 /* CodeEditorSampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E4C22A9BEF24D21CC5B811 /* CodeEditorSampleApp.swift */; };
@@ -122,7 +120,6 @@
 		27D2A540096658CDED42EBB8 /* UnifiedConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedConfigurationView.swift; sourceTree = "<group>"; };
 		27E030B1CED76B18E3F4E581 /* AdvancedFeaturesShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedFeaturesShowcaseView.swift; sourceTree = "<group>"; };
 		2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTest.swift; sourceTree = "<group>"; };
-		41B0A606F7C931B3F8ADC19E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		511107E1AB80474BE220AD4E /* SafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeButton.swift; sourceTree = "<group>"; };
 		56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickIsFlippedTest.swift; sourceTree = "<group>"; };
 		5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorViewWrapper.swift; sourceTree = "<group>"; };
@@ -291,7 +288,6 @@
 			isa = PBXGroup;
 			children = (
 				F1E4C22A9BEF24D21CC5B811 /* CodeEditorSampleApp.swift */,
-				41B0A606F7C931B3F8ADC19E /* Info.plist */,
 				2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */,
 				7A9C2F6B3035E565D5A68EE5 /* Models */,
 				83935ECACC5562B741B3DF14 /* Services */,
@@ -351,7 +347,6 @@
 			buildConfigurationList = 99CBD3C45C4A11A8B3EC593F /* Build configuration list for PBXNativeTarget "CodeEditorSample-macOS" */;
 			buildPhases = (
 				DEB87C09623396661F1C1A2D /* Sources */,
-				4BBA7EA7811502B888D750B3 /* Resources */,
 				D834B7BCE7A5D5B854248A7A /* Frameworks */,
 			);
 			buildRules = (
@@ -371,7 +366,6 @@
 			buildConfigurationList = 1DA853217F07B755DBD02AE7 /* Build configuration list for PBXNativeTarget "CodeEditorSample" */;
 			buildPhases = (
 				41E2C347DCCAD6FE9FF5DE20 /* Sources */,
-				0522A3E364C0192FC89F0D3C /* Resources */,
 				ED4837D34211C20077353776 /* Frameworks */,
 			);
 			buildRules = (
@@ -457,25 +451,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		0522A3E364C0192FC89F0D3C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				EF360C470EA2322F24417B16 /* Info.plist in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4BBA7EA7811502B888D750B3 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				52FEF53D6625AFFA1853C7D2 /* Info.plist in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		40C01312B97258C93148FDB4 /* Sources */ = {
@@ -782,7 +757,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = P9KRV6RW4J;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -925,7 +899,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = P9KRV6RW4J;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (

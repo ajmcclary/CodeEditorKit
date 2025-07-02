@@ -47,8 +47,8 @@ import SwiftUI
 /// - Note: On macOS, the app includes custom menu commands for common operations
 ///   like toggling line numbers and invisible characters.
 ///
-/// - SeeAlso: ``UnifiedContentView`` for the main interface
-/// - SeeAlso: ``AppDelegate`` for macOS-specific app lifecycle management
+/// - SeeAlso: `UnifiedContentView` for the main interface
+/// - SeeAlso: `AppDelegate` for macOS-specific app lifecycle management
 @main
 struct CodeEditorSampleApp: App {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -143,7 +143,7 @@ struct CodeEditorSampleApp: App {
 ///
 /// - Note: This delegate is only used on macOS, not on iOS or Mac Catalyst.
 ///
-/// - SeeAlso: ``CodeEditorSampleApp`` for the main app structure
+/// - SeeAlso: `CodeEditorSampleApp` for the main app structure
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         // Ensure the app appears in the dock and can receive focus

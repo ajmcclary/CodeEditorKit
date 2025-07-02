@@ -3,6 +3,8 @@ import AppKit
 import CodeEditorPlugin
 import Foundation
 
+// If TokenType is in another file, use the correct import or add a typealias if necessary.
+
 // MARK: - ColorTheme
 
 /// A comprehensive theme system for the CodeEditor Sample application.
@@ -68,8 +70,8 @@ import Foundation
 /// - Note: The theme system automatically adapts to platform capabilities
 ///   and respects system accessibility settings.
 ///
-/// - SeeAlso: ``TokenType`` for syntax highlighting categories
-/// - SeeAlso: ``PlatformColor`` for cross-platform color support
+/// - SeeAlso: ``colorForTokenType(_:)`` for syntax highlighting categories
+/// - SeeAlso: <doc:Platform-Support> for cross-platform color support
 enum ColorTheme: String, CaseIterable {
     /// Familiar Xcode-style light theme.
     case xcode
@@ -405,6 +407,8 @@ import CodeEditorPlugin
 import Foundation
 import UIKit
 
+// If TokenType is in another file, use the correct import or add a typealias if necessary.
+
 // iOS implementation - enhanced theme support
 enum ColorTheme: String, CaseIterable {
     case xcode
@@ -572,3 +576,4 @@ enum ColorTheme: String, CaseIterable {
     }
 }
 #endif
+

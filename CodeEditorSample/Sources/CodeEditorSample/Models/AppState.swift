@@ -10,7 +10,7 @@ import SwiftUI
 /// ## Overview
 ///
 /// This class coordinates between various components:
-/// - Editor configuration through ``ConfigurationCoordinator``
+/// - Editor configuration through `ConfigurationCoordinator`
 /// - Sample code selection and language detection
 /// - Custom code input and management
 /// - Configuration import/export functionality
@@ -42,9 +42,9 @@ import SwiftUI
 /// - Note: All published properties automatically trigger UI updates
 ///   when changed, thanks to the `@ObservableObject` protocol.
 ///
-/// - SeeAlso: ``ConfigurationCoordinator`` for configuration management
-/// - SeeAlso: ``SampleCodeStore`` for sample code storage
-/// - SeeAlso: ``LanguageDetectionService`` for language detection
+/// - SeeAlso: `ConfigurationCoordinator` for configuration management
+/// - SeeAlso: `SampleCodeStore` for sample code storage
+/// - SeeAlso: `LanguageDetectionService` for language detection
 @MainActor
 class AppState: ObservableObject {
     /// Configuration coordinator managing editor settings.
@@ -70,7 +70,7 @@ class AppState: ObservableObject {
     /// This computed property provides backward compatibility while
     /// delegating to the configuration coordinator.
     ///
-    /// - Returns: The current ``EditorConfiguration`` from the coordinator.
+    /// - Returns: The current `EditorConfiguration` from the coordinator.
     var currentConfiguration: EditorConfiguration {
         get { coordinator.configuration }
         set { 
@@ -96,7 +96,7 @@ class AppState: ObservableObject {
     /// Updates both the selected preset and applies the corresponding
     /// configuration through the coordinator.
     ///
-    /// - Parameter preset: The ``ConfigurationPreset`` to apply.
+    /// - Parameter preset: The `ConfigurationPreset` to apply.
     ///
     /// ## Example
     ///
@@ -136,7 +136,7 @@ class AppState: ObservableObject {
     /// This method provides backward compatibility with the legacy
     /// sample selection system while updating the modern language detection.
     ///
-    /// - Parameter sample: The ``SampleCode`` type to select.
+    /// - Parameter sample: The `SampleCode` type to select.
     ///
     /// ## Side Effects
     ///
@@ -155,7 +155,7 @@ class AppState: ObservableObject {
     /// This is the modern method for language selection, with automatic
     /// fallback to legacy sample selection for compatibility.
     ///
-    /// - Parameter language: The ``LanguageDetectionService/LanguageInfo`` to select.
+    /// - Parameter language: The `LanguageDetectionService.LanguageInfo` to select.
     ///
     /// ## Example
     ///

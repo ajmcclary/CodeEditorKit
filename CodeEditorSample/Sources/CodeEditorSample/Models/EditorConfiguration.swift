@@ -17,11 +17,11 @@ import Foundation
 ///
 /// ## Available Presets
 ///
-/// - ``fullFeatured``: Complete development environment with all features
-/// - ``minimal``: Streamlined interface for basic text editing
-/// - ``readOnly``: Optimized for code viewing and reading
-/// - ``markdown``: Tailored for Markdown document editing
-/// - ``presentation``: Large fonts and high contrast for demonstrations
+/// - `fullFeatured`: Complete development environment with all features
+/// - `minimal`: Streamlined interface for basic text editing
+/// - `readOnly`: Optimized for code viewing and reading
+/// - `markdown`: Tailored for Markdown document editing
+/// - `presentation`: Large fonts and high contrast for demonstrations
 ///
 /// ## Usage
 ///
@@ -51,9 +51,9 @@ import Foundation
 /// - **Markdown**: Document-focused with appropriate spacing
 /// - **Presentation**: Visibility for audiences and screenshots
 ///
-/// - SeeAlso: ``EditorConfiguration`` for detailed configuration options
-/// - SeeAlso: ``EditorConfigurationBuilder`` for custom configurations
-/// - SeeAlso: ``ConfigurationCoordinator`` for applying presets
+/// - SeeAlso: `configuration` for detailed configuration options
+/// - SeeAlso: `configuration` for custom configurations
+/// - SeeAlso: `ConfigurationCoordinator` for applying presets
 enum ConfigurationPreset: String, CaseIterable {
     /// Complete development environment with all features enabled.
     case fullFeatured = "full"
@@ -98,12 +98,12 @@ enum ConfigurationPreset: String, CaseIterable {
 
     /// The complete editor configuration for this preset.
     ///
-    /// Generates a fully configured ``EditorConfiguration`` instance with
+    /// Generates a fully configured `EditorConfiguration` instance with
     /// all settings optimized for the preset's intended use case.
     ///
     /// ## Implementation Details
     ///
-    /// Each preset uses ``EditorConfigurationBuilder`` to construct its
+    /// Each preset uses `EditorConfigurationBuilder` to construct its
     /// configuration, starting from appropriate base configurations
     /// and applying specific customizations.
     ///
@@ -117,9 +117,9 @@ enum ConfigurationPreset: String, CaseIterable {
     /// let presentConfig = ConfigurationPreset.presentation.configuration
     /// ```
     ///
-    /// - Returns: A complete ``EditorConfiguration`` instance.
+    /// - Returns: A complete `EditorConfiguration` instance.
     ///
-    /// - SeeAlso: ``EditorConfigurationBuilder`` for configuration construction
+    /// - SeeAlso: `EditorConfigurationBuilder` for configuration construction
     var configuration: EditorConfiguration {
         switch self {
         case .fullFeatured:

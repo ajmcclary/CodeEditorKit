@@ -1404,6 +1404,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         annotationViews[id]?.removeFromSuperview()
         annotationViews.removeValue(forKey: id)
     }
+    
+    /// Removes an annotation.
+    ///
+    /// Convenience method for removing an annotation by its instance.
+    ///
+    /// - Parameter annotation: The annotation to remove
+    public func removeAnnotation(_ annotation: Annotation) {
+        removeAnnotation(withId: annotation.id)
+    }
 
     /// Removes all annotations from the text view.
     ///
@@ -1449,6 +1458,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - SeeAlso: `addAnnotation(_:)`, `Annotation`
     public var allAnnotations: [Annotation] {
         annotations
+    }
+    
+    /// Reload all annotations from the data source.
+    ///
+    /// This method refreshes the annotation views based on the current annotations or data source.
+    /// It should be called after external changes to annotations that require UI updates.
+    public func reloadAnnotations() {
+        updateAnnotationViews()
     }
 
     private func updateAnnotationView(for annotation: Annotation) {
@@ -2177,3 +2194,4 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Subviews are automatically removed from their superview when deallocated
     }
 }
+

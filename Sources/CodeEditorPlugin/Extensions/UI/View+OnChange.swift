@@ -40,7 +40,7 @@ extension View {
     /// - Note: This modifier maintains the same behavior as the standard onChange modifier,
     ///   triggering only when the value actually changes (not on every view update).
     ///
-    /// - SeeAlso: ``onChangeCompat(of:perform:)-8n4jy`` for a variant without the new value parameter
+    /// - SeeAlso: ``onChangeCompat(of:perform:)`` for a variant without the new value parameter
     @ViewBuilder
     public func onChangeCompat<Value: Equatable>(
         of value: Value,
@@ -90,7 +90,7 @@ extension View {
     ///
     /// - Returns: A view that triggers the specified action when the observed value changes.
     ///
-    /// - SeeAlso: ``onChangeCompat(of:perform:)-73g5w`` for a variant that provides the new value
+    /// - SeeAlso: ``onChangeCompat(of:perform:)`` for a variant that provides the new value
     @ViewBuilder
     public func onChangeCompat<Value: Equatable>(
         of value: Value,
@@ -107,3 +107,4 @@ extension View {
         }
     }
 }
+
