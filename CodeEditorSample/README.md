@@ -9,6 +9,14 @@
 
 This sample application is the primary way to evaluate the full capabilities of CodeEditorPlugin — showcasing its most advanced features, production-ready patterns, and modern Swift 6 architecture in action. More than just a demo, it serves as a living documentation of best practices and a testbed for exploring the plugin's sophisticated capabilities.
 
+## 📱 Platform Screenshots
+
+<p align="center">
+  <img src="../iOS.png" width="30%" alt="CodeEditorPlugin on iOS" />
+  <img src="../iPadOS.png" width="30%" alt="CodeEditorPlugin on iPadOS" />
+  <img src="../macOS.png" width="30%" alt="CodeEditorPlugin on macOS" />
+</p>
+
 ## 🎯 What This Demonstrates
 
 Experience firsthand how CodeEditorPlugin transforms text editing in your applications:

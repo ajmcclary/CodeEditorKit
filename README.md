@@ -9,6 +9,8 @@ A powerful, production-ready code editor component for macOS and iOS, built with
 
 Built from the ground up with true cross-platform support in mind, it delivers advanced syntax highlighting, a robust theme system, and seamless native performance on **macOS, iOS, and Mac Catalyst** — not through simple ports, but through a sophisticated platform abstraction layer that respects each platform's unique characteristics.
 
+![CodeEditorPlugin running on multiple platforms](Platform.png)
+
 ## ✨ Core Features
 
 - 🚀 **Modern Swift 6 Concurrency:** Built from the ground up with actors for rock-solid thread safety, exceptional performance, and guaranteed responsiveness. This isn't just an update — it's a complete architectural advantage that ensures your editor remains smooth even under heavy load.
