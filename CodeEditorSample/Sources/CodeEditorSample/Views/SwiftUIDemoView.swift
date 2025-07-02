@@ -21,10 +21,10 @@ struct SwiftUIDemoView: View {
                 
                 // Editor - Use consistent implementation across platforms
                 SampleCodeEditorView(
-                    configuration: appState.currentConfiguration,
                     text: $sampleCode,
                     language: selectedLanguage.name.lowercased()
                 )
+                .environmentObject(appState)
             }
         }
         .navigationTitle("SwiftUI Demo")

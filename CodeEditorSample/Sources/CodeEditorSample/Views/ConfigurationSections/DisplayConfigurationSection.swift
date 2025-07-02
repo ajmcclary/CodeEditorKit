@@ -11,37 +11,62 @@ struct DisplayConfigurationSection: View {
         LazyVStack(spacing: adaptiveSectionSpacing()) {
             Toggle("Show Line Numbers", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showLineNumbers },
-                set: { appState.coordinator.configuration.display.showLineNumbers = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.showLineNumbers = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Highlight Current Line", isOn: Binding(
                 get: { appState.coordinator.configuration.display.highlightSelectedLine },
-                set: { appState.coordinator.configuration.display.highlightSelectedLine = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.highlightSelectedLine = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Show Invisible Characters", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showInvisibleCharacters },
-                set: { appState.coordinator.configuration.display.showInvisibleCharacters = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.showInvisibleCharacters = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Enable Syntax Highlighting", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableSyntaxHighlighting },
-                set: { appState.coordinator.configuration.display.enableSyntaxHighlighting = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.enableSyntaxHighlighting = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Enable Annotations", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableAnnotations },
-                set: { appState.coordinator.configuration.display.enableAnnotations = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.enableAnnotations = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Show Minimap", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showMinimap },
-                set: { appState.coordinator.configuration.display.showMinimap = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.showMinimap = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
@@ -59,7 +84,12 @@ struct DisplayConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { appState.coordinator.configuration.display.fontSize },
-                        set: { appState.coordinator.configuration.display.fontSize = $0 }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.display.fontSize = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
                     ),
                     in: 8...32,
                     step: 1
@@ -131,8 +161,11 @@ struct DisplayConfigurationSection: View {
     private func configurationToggleStyle() -> some ToggleStyle {
         #if os(iOS)
         return SwitchToggleStyle(tint: .blue)
+        #elseif targetEnvironment(macCatalyst)
+        return SwitchToggleStyle(tint: .blue)
         #else
-        return CheckboxToggleStyle()
+        // Use default toggle style for macOS (modern switch)
+        return DefaultToggleStyle()
         #endif
     }
 }

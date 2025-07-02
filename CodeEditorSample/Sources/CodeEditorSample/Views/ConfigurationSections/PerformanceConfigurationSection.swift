@@ -11,13 +11,21 @@ struct PerformanceConfigurationSection: View {
         LazyVStack(spacing: adaptiveSectionSpacing()) {
             Toggle("Hardware Acceleration", isOn: Binding(
                 get: { appState.coordinator.configuration.performance.useHardwareAcceleration },
-                set: { appState.coordinator.configuration.performance.useHardwareAcceleration = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.performance.useHardwareAcceleration = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Smooth Scrolling", isOn: Binding(
                 get: { appState.coordinator.configuration.performance.smoothScrolling },
-                set: { appState.coordinator.configuration.performance.smoothScrolling = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.performance.smoothScrolling = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
@@ -37,7 +45,11 @@ struct PerformanceConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { Double(appState.coordinator.configuration.performance.maxSyntaxHighlightingLength) },
-                        set: { appState.coordinator.configuration.performance.maxSyntaxHighlightingLength = Int($0) }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.performance.maxSyntaxHighlightingLength = Int(newValue)
+                            }
+                        }
                     ),
                     in: 100_000...5_000_000,
                     step: 100_000
@@ -61,7 +73,11 @@ struct PerformanceConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { Double(appState.coordinator.configuration.performance.maxSyntaxHighlightingLength) },
-                        set: { appState.coordinator.configuration.performance.maxSyntaxHighlightingLength = Int($0) }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.performance.maxSyntaxHighlightingLength = Int(newValue)
+                            }
+                        }
                     ),
                     in: 10_000...1_000_000,
                     step: 10_000
@@ -148,8 +164,11 @@ struct PerformanceConfigurationSection: View {
     private func configurationToggleStyle() -> some ToggleStyle {
         #if os(iOS)
         return SwitchToggleStyle(tint: .blue)
+        #elseif targetEnvironment(macCatalyst)
+        return SwitchToggleStyle(tint: .blue)
         #else
-        return CheckboxToggleStyle()
+        // Use default toggle style for macOS (modern switch)
+        return DefaultToggleStyle()
         #endif
     }
 }

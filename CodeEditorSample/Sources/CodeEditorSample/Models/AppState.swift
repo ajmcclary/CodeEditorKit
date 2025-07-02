@@ -73,7 +73,11 @@ class AppState: ObservableObject {
     /// - Returns: The current ``EditorConfiguration`` from the coordinator.
     var currentConfiguration: EditorConfiguration {
         get { coordinator.configuration }
-        set { coordinator.update { $0 = newValue } }
+        set { 
+            coordinator.update { $0 = newValue }
+            // Force SwiftUI to detect the change
+            objectWillChange.send()
+        }
     }
 
     /// Initializes the app state with default settings.

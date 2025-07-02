@@ -6,6 +6,7 @@ import UIKit
 #endif
 import CodeEditorPlugin
 import SwiftUI
+import Combine
 
 /// Coordinator for managing the editor view lifecycle and configuration updates.
 ///
@@ -68,44 +69,37 @@ class SampleCodeEditorCoordinator {
 /// - SeeAlso: ``AppState`` for state management integration
 /// - SeeAlso: ``EditorConfiguration`` for configuration options
 struct SampleCodeEditorView: View {
-    let configuration: EditorConfiguration
+    @EnvironmentObject var appState: AppState
     @Binding var text: String
     let language: String
     private let coordinator = SampleCodeEditorCoordinator()
-    @EnvironmentObject var appState: AppState
+    
+    // Force view updates when configuration changes
+    @State private var configurationHash: Int = 0
+    @State private var viewID = UUID()
+    @State private var cancellables = Set<AnyCancellable>()
 
     var body: some View {
         ZStack {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            // Temporarily bypass CodeEditor due to concurrency issues with accessibility
+            // macOS Native: Use NSViewRepresentable wrapper
             CodeEditorViewWrapper(
-                configuration: configuration,
+                configuration: appState.coordinator.configuration,
                 text: $text,
                 language: language
             ) { textView in
                 coordinator.editorView = textView
             }
-            .onChangeCompat(of: configuration) { newConfig in
-                // Reapply configuration when it changes
-                if let editor = coordinator.editorView {
-                    newConfig.apply(to: editor)
-                }
-            }
+            .id(viewID)
             #else
-            // For iOS, use CodeEditorViewWrapper with configuration
-            CodeEditorViewWrapper(
-                configuration: configuration,
-                text: $text,
-                language: language
-            ) { textView in
-                coordinator.editorView = textView
-            }
-            .onChangeCompat(of: configuration) { newConfig in
-                // Reapply configuration when it changes
-                if let editor = coordinator.editorView {
-                    newConfig.apply(to: editor)
+            // iOS/iPadOS/Mac Catalyst: Use SwiftUI CodeEditor directly
+            CodeEditor(text: $text)
+                .codeLanguage(detectLanguage(from: language))
+                .environment(\.codeEditorConfiguration, appState.coordinator.configuration)
+                .id(viewID)
+                .onAppear {
+                    // iOS CodeEditor appeared
                 }
-            }
             #endif
             
             // Visual indicators overlay - only show on macOS, not on iOS or Mac Catalyst
@@ -113,13 +107,13 @@ struct SampleCodeEditorView: View {
             VStack {
                 HStack {
                     Spacer()
-                    if configuration.display.showMinimap {
+                    if appState.coordinator.configuration.display.showMinimap {
                         MinimapIndicator()
                     }
                 }
                 Spacer()
                 HStack {
-                    if configuration.display.enableAnnotations {
+                    if appState.coordinator.configuration.display.enableAnnotations {
                         AnnotationIndicator()
                     }
                     Spacer()
@@ -128,6 +122,39 @@ struct SampleCodeEditorView: View {
             .padding()
             #endif
         }
+        .onAppear {
+            updateConfigurationHash()
+        }
+        .onChangeCompat(of: appState.coordinator.configuration) { _ in
+            updateConfigurationHash()
+        }
+    }
+    
+    private func updateConfigurationHash() {
+        // Create a hash from configuration properties to force view updates
+        var hasher = Hasher()
+        hasher.combine(appState.coordinator.configuration.display.showLineNumbers)
+        hasher.combine(appState.coordinator.configuration.display.fontSize)
+        hasher.combine(appState.coordinator.configuration.display.enableSyntaxHighlighting)
+        hasher.combine(appState.coordinator.configuration.display.enableAnnotations)
+        hasher.combine(appState.coordinator.configuration.display.showMinimap)
+        hasher.combine(appState.coordinator.configuration.layout.tabWidth)
+        hasher.combine(appState.coordinator.configuration.layout.wrapLines)
+        hasher.combine(appState.coordinator.configuration.behavior.isEditable)
+        let newHash = hasher.finalize()
+        
+        // Only update if hash actually changed
+        if newHash != configurationHash {
+            configurationHash = newHash
+            
+            // Force view recreation by updating the UUID
+            viewID = UUID()
+        }
+    }
+    
+    private func detectLanguage(from fileExtension: String) -> Language {
+        let coordinator = SyntaxHighlightingCoordinator()
+        return coordinator.detectLanguage(from: fileExtension)
     }
 }
 

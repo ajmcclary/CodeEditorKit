@@ -136,7 +136,6 @@ struct AdvancedFeaturesShowcaseView: View {
             
             // Enhanced editor with demo-specific configuration
             SampleCodeEditorView(
-                configuration: demoConfiguration,
                 text: $appState.code,
                 language: selectedDemo.preferredLanguage
             )
@@ -477,6 +476,8 @@ struct AdvancedFeaturesShowcaseView: View {
     private func loadDemoForCurrentFeature() {
         let demoCode = selectedDemo.sampleCode
         appState.setCustomCode(demoCode)
+        // Apply demo-specific configuration
+        appState.coordinator.configuration = demoConfiguration
     }
     
     private func startAnimation() {

@@ -11,37 +11,61 @@ struct BehaviorConfigurationSection: View {
         LazyVStack(spacing: adaptiveSectionSpacing()) {
             Toggle("Enable Editing", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isEditable },
-                set: { appState.coordinator.configuration.behavior.isEditable = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isEditable = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Auto Indent", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoIndent },
-                set: { appState.coordinator.configuration.behavior.autoIndent = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.autoIndent = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Enable Code Completion", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.enableCodeCompletion },
-                set: { appState.coordinator.configuration.behavior.enableCodeCompletion = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.enableCodeCompletion = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Spell Checking", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled },
-                set: { appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isContinuousSpellCheckingEnabled = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Smart Quotes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled },
-                set: { appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isAutomaticQuoteSubstitutionEnabled = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Auto Close Brackets", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoCloseBrackets },
-                set: { appState.coordinator.configuration.behavior.autoCloseBrackets = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.autoCloseBrackets = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
         }
@@ -73,8 +97,11 @@ struct BehaviorConfigurationSection: View {
     private func configurationToggleStyle() -> some ToggleStyle {
         #if os(iOS)
         return SwitchToggleStyle(tint: .blue)
+        #elseif targetEnvironment(macCatalyst)
+        return SwitchToggleStyle(tint: .blue)
         #else
-        return CheckboxToggleStyle()
+        // Use default toggle style for macOS (modern switch)
+        return DefaultToggleStyle()
         #endif
     }
 }

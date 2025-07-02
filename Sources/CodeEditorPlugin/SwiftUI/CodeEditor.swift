@@ -646,6 +646,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             
             // Apply initial configuration
             container.configuration = parent.configuration
+            parent.configuration.apply(to: view)
             
             // Set up delegate for selection change detection
             view.delegate = self
@@ -679,6 +680,10 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         }
         
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
+            print("🔧 iOS CodeEditor.update called")
+            print("   - Show Line Numbers: \(configuration.display.showLineNumbers)")
+            print("   - Font Size: \(configuration.display.fontSize)")
+            
             let view = container.textView
             
             // Prevent recursive updates by checking if text already matches
@@ -687,8 +692,10 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             }
             view.language = language
             
-            // Apply full configuration
+            // Apply full configuration to both container and text view
             container.configuration = configuration
+            configuration.apply(to: view)
+            print("✅ iOS CodeEditor: Configuration applied")
         }
     }
 }

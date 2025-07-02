@@ -96,6 +96,9 @@ public final class CodeEditorContainerView: PlatformView {
         gutterView.observeTextView()          // start listening for changes
         setupMinimap()
         
+        // IMPORTANT: Remove any internal gutter from text view before setting up
+        textView.removeGutter()
+        
         // Apply initial text container insets
         updateTextContainerInsets()
         
@@ -450,6 +453,11 @@ public final class CodeEditorContainerView: PlatformView {
         // since we manage the gutter externally
         var textViewConfig = configuration
         textViewConfig.display.showLineNumbers = false
+        
+        // First remove any existing internal gutter from text view
+        textView.removeGutter()
+        
+        // Then apply the configuration with line numbers disabled
         textView.configuration = textViewConfig
         
         // Update our own properties based on configuration

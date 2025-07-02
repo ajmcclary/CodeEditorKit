@@ -584,6 +584,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             textContainer.widthTracksTextView = true
             textContainer.heightTracksTextView = false
         }
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst - textContainer is non-optional
+        let textContainer = self.textContainer
+        textContainer.widthTracksTextView = true
+        textContainer.heightTracksTextView = false
         #else
         // UITextView doesn't have these properties - it handles scrolling differently
         #endif
@@ -1118,7 +1123,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         updateGutterFrame()
     }
 
-    private func removeGutter() {
+    internal func removeGutter() {
         _gutterView?.removeFromSuperview()
         _gutterView = nil
         
@@ -1760,6 +1765,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             } else {
                 return false
             }
+            #elseif targetEnvironment(macCatalyst)
+            let textContainer = super.textContainer
+            return textContainer.widthTracksTextView
             #else
             return false // UITextView doesn't have this property
             #endif
@@ -1769,6 +1777,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             if let textContainer = super.textContainer {
                 textContainer.widthTracksTextView = newValue
             }
+            #elseif targetEnvironment(macCatalyst)
+            let textContainer = super.textContainer
+            textContainer.widthTracksTextView = newValue
             #endif
         }
     }
@@ -1792,6 +1803,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             } else {
                 return true
             }
+            #elseif targetEnvironment(macCatalyst)
+            let textContainer = super.textContainer
+            return textContainer.heightTracksTextView
             #else
             return true // UITextView doesn't have this property
             #endif
@@ -1801,6 +1815,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             if let textContainer = super.textContainer {
                 textContainer.heightTracksTextView = newValue
             }
+            #elseif targetEnvironment(macCatalyst)
+            let textContainer = super.textContainer
+            textContainer.heightTracksTextView = newValue
             #endif
         }
     }
@@ -2030,7 +2047,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         textLayoutManager.textViewportLayoutController.delegate = nil // Use default viewport behavior
         
         // Configure text container for optimal performance
-        if let textContainer {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textContainer = self.textContainer {
             // Allow non-contiguous layout for better scrolling performance
             textContainer.widthTracksTextView = true
             textContainer.heightTracksTextView = false
@@ -2038,6 +2056,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             // Set reasonable line fragment padding
             textContainer.lineFragmentPadding = 4.0
         }
+        #elseif targetEnvironment(macCatalyst)
+        let textContainer = self.textContainer
+        // Allow non-contiguous layout for better scrolling performance
+        textContainer.widthTracksTextView = true
+        textContainer.heightTracksTextView = false
+        
+        // Set reasonable line fragment padding
+        textContainer.lineFragmentPadding = 4.0
+        #endif
         
         // Configure for hardware acceleration if available
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -2082,6 +2109,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             }
             
             // Clear text storage if very large
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let textStorage = self.textStorage, textStorage.length > 100_000 {
                 // Only clear if this is a read-only view or backup exists
                 if !self.isEditable {
@@ -2090,6 +2118,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                     operations.append("large text storage")
                 }
             }
+            #elseif targetEnvironment(macCatalyst)
+            let textStorage = self.textStorage
+            if textStorage.length > 100_000 {
+                // Only clear if this is a read-only view or backup exists
+                if !self.isEditable {
+                    let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1 // Rough estimate
+                    memoryFreed += sizeReduction
+                    operations.append("large text storage")
+                }
+            }
+            #endif
             
             // Clear layout manager caches
             if self.textLayoutManager != nil {

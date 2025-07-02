@@ -11,13 +11,21 @@ struct LayoutConfigurationSection: View {
         LazyVStack(spacing: adaptiveSectionSpacing()) {
             Toggle("Wrap Lines", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.wrapLines },
-                set: { appState.coordinator.configuration.layout.wrapLines = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.layout.wrapLines = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
             Toggle("Insert Spaces for Tabs", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.insertSpacesForTabs },
-                set: { appState.coordinator.configuration.layout.insertSpacesForTabs = $0 }
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.layout.insertSpacesForTabs = newValue
+                    }
+                }
             ))
             .toggleStyle(configurationToggleStyle())
             
@@ -37,7 +45,11 @@ struct LayoutConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { Double(appState.coordinator.configuration.layout.tabWidth) },
-                        set: { appState.coordinator.configuration.layout.tabWidth = Int($0) }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.tabWidth = Int(newValue)
+                            }
+                        }
                     ),
                     in: 1...8,
                     step: 1
@@ -59,7 +71,11 @@ struct LayoutConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.lineSpacing },
-                        set: { appState.coordinator.configuration.layout.lineSpacing = $0 }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.lineSpacing = newValue
+                            }
+                        }
                     ),
                     in: 0.8...3.0,
                     step: 0.1
@@ -81,7 +97,11 @@ struct LayoutConfigurationSection: View {
                 Slider(
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.gutterWidth },
-                        set: { appState.coordinator.configuration.layout.gutterWidth = $0 }
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.gutterWidth = newValue
+                            }
+                        }
                     ),
                     in: 30...100,
                     step: 5
@@ -153,8 +173,11 @@ struct LayoutConfigurationSection: View {
     private func configurationToggleStyle() -> some ToggleStyle {
         #if os(iOS)
         return SwitchToggleStyle(tint: .blue)
+        #elseif targetEnvironment(macCatalyst)
+        return SwitchToggleStyle(tint: .blue)
         #else
-        return CheckboxToggleStyle()
+        // Use default toggle style for macOS (modern switch)
+        return DefaultToggleStyle()
         #endif
     }
 }

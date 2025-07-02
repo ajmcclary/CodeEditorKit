@@ -188,7 +188,6 @@ struct UnifiedContentView: View {
             
             // Main editor with live preview
             SampleCodeEditorView(
-                configuration: appState.coordinator.configuration,
                 text: $appState.code,
                 language: appState.selectedLanguage?.fileExtensions.first ?? appState.selectedSample.fileExtension
             )
@@ -432,9 +431,13 @@ struct UnifiedContentView: View {
     private func refreshEditor() {
         // Force editor refresh by toggling a benign setting
         let current = appState.coordinator.configuration.display.enableSyntaxHighlighting
-        appState.coordinator.configuration.display.enableSyntaxHighlighting = !current
+        appState.coordinator.update { config in
+            config.display.enableSyntaxHighlighting = !current
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            appState.coordinator.configuration.display.enableSyntaxHighlighting = current
+            appState.coordinator.update { config in
+                config.display.enableSyntaxHighlighting = current
+            }
         }
     }
     
@@ -444,7 +447,9 @@ struct UnifiedContentView: View {
     private var quickToggleButtons: some View {
         PlatformSafeButton(
             action: {
-                appState.coordinator.configuration.display.showLineNumbers.toggle()
+                appState.coordinator.update { config in
+                    config.display.showLineNumbers.toggle()
+                }
             },
             label: {
                 Image(systemName: "number")
@@ -462,7 +467,9 @@ struct UnifiedContentView: View {
         if isIPad() {
             PlatformSafeButton(
                 action: {
-                    appState.coordinator.configuration.display.showMinimap.toggle()
+                    appState.coordinator.update { config in
+                        config.display.showMinimap.toggle()
+                    }
                 },
                 label: {
                     Image(systemName: "map")
@@ -477,7 +484,9 @@ struct UnifiedContentView: View {
             
             PlatformSafeButton(
                 action: {
-                    appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+                    appState.coordinator.update { config in
+                        config.display.showInvisibleCharacters.toggle()
+                    }
                 },
                 label: {
                     Image(systemName: "paragraph")
@@ -493,7 +502,9 @@ struct UnifiedContentView: View {
         #elseif canImport(AppKit)
         PlatformSafeButton(
             action: {
-                appState.coordinator.configuration.display.showMinimap.toggle()
+                appState.coordinator.update { config in
+                    config.display.showMinimap.toggle()
+                }
             },
             label: {
                 Image(systemName: "map")
@@ -508,7 +519,9 @@ struct UnifiedContentView: View {
         
         PlatformSafeButton(
             action: {
-                appState.coordinator.configuration.display.showInvisibleCharacters.toggle()
+                appState.coordinator.update { config in
+                    config.display.showInvisibleCharacters.toggle()
+                }
             },
             label: {
                 Image(systemName: "paragraph")
@@ -524,7 +537,9 @@ struct UnifiedContentView: View {
         
         PlatformSafeButton(
             action: {
-                appState.coordinator.configuration.behavior.isEditable.toggle()
+                appState.coordinator.update { config in
+                    config.behavior.isEditable.toggle()
+                }
             },
             label: {
                 let isEditable = appState.coordinator.configuration.behavior.isEditable
