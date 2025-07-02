@@ -1,6 +1,11 @@
-# Mac Catalyst Support Guide
+# Catalyst Best Practices
 
-This guide provides comprehensive documentation for using CodeEditorPlugin with Mac Catalyst, including platform-specific considerations, implementation details, and best practices.
+@Metadata {
+    @PageKind(article)
+    @PageColor(orange)
+}
+
+Build excellent Mac apps with Mac Catalyst using CodeEditorPlugin.
 
 ## Overview
 
@@ -9,14 +14,289 @@ CodeEditorPlugin provides full support for Mac Catalyst applications, allowing y
 ## Platform Requirements
 
 - **Mac Catalyst**: 16.0+
-- **Xcode**: 15.0+
+- **Xcode**: 15.0+  
 - **Swift**: 6.0+
+
+## Platform Detection
+
+### Runtime Checks
+
+```swift
+extension CodeEditorView {
+    var isCatalyst: Bool {
+        #if targetEnvironment(macCatalyst)
+        return true
+        #else
+        return false
+        #endif
+    }
+    
+    func configurePlatformSpecifics() {
+        if isCatalyst {
+            // Catalyst-specific configuration
+            configureCatalystBehavior()
+        } else {
+            // Regular iOS behavior
+            configureIOSBehavior()
+        }
+    }
+}
+```
+
+## Window Management
+
+### Scene Configuration
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        #if targetEnvironment(macCatalyst)
+        if let windowScene = scene as? UIWindowScene {
+            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 800, height: 600)
+            windowScene.sizeRestrictions?.maximumSize = CGSize(width: 1920, height: 1080)
+            
+            // Set window title
+            windowScene.title = "Code Editor"
+            
+            // Configure toolbar
+            if let titlebar = windowScene.titlebar {
+                titlebar.titleVisibility = .visible
+                titlebar.toolbar = makeToolbar()
+            }
+        }
+        #endif
+    }
+}
+```
+
+### Multiple Windows
+
+```swift
+func openNewWindow() {
+    #if targetEnvironment(macCatalyst)
+    let activity = NSUserActivity(activityType: "com.example.editor.new")
+    
+    UIApplication.shared.requestSceneSessionActivation(
+        nil,
+        userActivity: activity,
+        options: nil
+    ) { error in
+        if let error = error {
+            print("Failed to open new window: \(error)")
+        }
+    }
+    #endif
+}
+```
+
+## Menu Bar Integration
+
+### Custom Menus
+
+```swift
+override func buildMenu(with builder: UIMenuBuilder) {
+    super.buildMenu(with: builder)
+    
+    #if targetEnvironment(macCatalyst)
+    // Editor menu
+    let editorMenu = UIMenu(
+        title: "Editor",
+        children: [
+            UICommand(
+                title: "Toggle Line Numbers",
+                action: #selector(toggleLineNumbers),
+                input: "L",
+                modifierFlags: [.command, .shift]
+            ),
+            UICommand(
+                title: "Jump to Line...",
+                action: #selector(jumpToLine),
+                input: "L",
+                modifierFlags: .command
+            )
+        ]
+    )
+    
+    builder.insertSibling(editorMenu, afterMenu: .edit)
+    #endif
+}
+```
+
+## Toolbar Support
+
+### NSToolbar Integration
+
+```swift
+#if targetEnvironment(macCatalyst)
+extension EditorViewController: NSToolbarDelegate {
+    func makeToolbar() -> NSToolbar {
+        let toolbar = NSToolbar(identifier: "EditorToolbar")
+        toolbar.delegate = self
+        toolbar.displayMode = .iconAndLabel
+        toolbar.allowsUserCustomization = true
+        
+        return toolbar
+    }
+    
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return [
+            .toggleSidebar,
+            .flexibleSpace,
+            .searchField,
+            .editorSettings
+        ]
+    }
+    
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        
+        if itemIdentifier == .editorSettings {
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+            item.label = "Settings"
+            item.image = UIImage(systemName: "gear")
+            item.action = #selector(showSettings)
+            item.target = self
+            return item
+        }
+        
+        return nil
+    }
+}
+#endif
+```
+
+## Keyboard and Mouse
+
+### Enhanced Keyboard Support
+
+```swift
+override var keyCommands: [UIKeyCommand]? {
+    var commands = super.keyCommands ?? []
+    
+    #if targetEnvironment(macCatalyst)
+    // Add Mac-specific shortcuts
+    commands.append(contentsOf: [
+        UIKeyCommand(
+            title: "Close Window",
+            action: #selector(closeWindow),
+            input: "w",
+            modifierFlags: .command
+        ),
+        UIKeyCommand(
+            title: "New Tab",
+            action: #selector(newTab),
+            input: "t",
+            modifierFlags: .command
+        )
+    ])
+    #endif
+    
+    return commands
+}
+```
+
+### Mouse Support
+
+```swift
+#if targetEnvironment(macCatalyst)
+override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+    for press in presses {
+        if press.type == .select && press.clickCount == 2 {
+            // Handle double-click
+            handleDoubleClick(at: press.location)
+            return
+        }
+    }
+    
+    super.pressesBegan(presses, with: event)
+}
+#endif
+```
+
+## UI Adaptations
+
+### Platform-Specific UI
+
+```swift
+func configureUI() {
+    #if targetEnvironment(macCatalyst)
+    // Mac-style UI
+    navigationController?.setNavigationBarHidden(true, animated: false)
+    
+    // Use sidebar
+    splitViewController?.preferredDisplayMode = .oneBesideSecondary
+    splitViewController?.preferredSplitBehavior = .tile
+    #else
+    // iOS UI
+    navigationController?.setNavigationBarHidden(false, animated: false)
+    #endif
+}
+```
+
+### Context Menus
+
+```swift
+override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+    
+    return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+        var children: [UIMenuElement] = []
+        
+        #if targetEnvironment(macCatalyst)
+        // Mac-style context menu
+        children.append(UICommand(title: "Show in Finder", action: #selector(showInFinder)))
+        #endif
+        
+        // Common items
+        children.append(contentsOf: [
+            UICommand(title: "Copy", action: #selector(copy(_:))),
+            UICommand(title: "Paste", action: #selector(paste(_:)))
+        ])
+        
+        return UIMenu(children: children)
+    }
+}
+```
+
+## File Management
+
+### Open/Save Dialogs
+
+```swift
+#if targetEnvironment(macCatalyst)
+func openDocument() {
+    let documentPicker = UIDocumentPickerViewController(
+        forOpeningContentTypes: [.text, .sourceCode]
+    )
+    documentPicker.delegate = self
+    documentPicker.allowsMultipleSelection = true
+    
+    present(documentPicker, animated: true)
+}
+
+func saveDocument() {
+    let documentPicker = UIDocumentPickerViewController(
+        forExporting: [documentURL],
+        asCopy: false
+    )
+    documentPicker.delegate = self
+    
+    present(documentPicker, animated: true)
+}
+#endif
+```
+
+## Best Practices
+
+1. **Respect Mac Conventions**: Follow Mac UI guidelines
+2. **Keyboard First**: Ensure all features are keyboard accessible
+3. **Window Management**: Support multiple windows and tabs
+4. **Menu Bar**: Provide comprehensive menu bar commands
+5. **Performance**: Optimize for Mac hardware capabilities
 
 ## Architecture Overview
 
 ### Cross-Platform Abstraction Layer
 
-The CodeEditorPlugin uses a sophisticated platform abstraction system that ensures seamless operation across iOS, macOS, and Mac Catalyst:
+The CodeEditorPlugin uses a sophisticated platform abstraction system:
 
 ```swift
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -87,7 +367,7 @@ class CatalystViewController: PlatformViewController {
 
 ### Container View Usage
 
-For iOS-style layout with gutter separation, use `CodeEditorContainerView`:
+For iOS-style layout with gutter separation:
 
 ```swift
 class CatalystEditorViewController: PlatformViewController {
@@ -149,59 +429,7 @@ struct CatalystContentView: View {
 }
 ```
 
-## Platform-Specific Features
-
-### Context Menus
-
-The new action-based context menu system provides native menus on Catalyst:
-
-```swift
-// Context menus work seamlessly on Catalyst
-let menu = CrossPlatformCoordinator.shared.createContextMenu(
-    for: selectedRange,
-    in: editorView
-)
-
-// The menu is automatically a UIMenu on Catalyst
-// with native macOS-style presentation
-```
-
-### Input Handling
-
-Catalyst supports both touch and mouse input. The plugin automatically adapts:
-
-```swift
-// The CrossPlatformCoordinator handles input differences
-coordinator.configureInputHandling(for: editorView)
-
-// Mouse events are supported on Catalyst
-if PlatformCapabilities.shared.supportsMouseInput {
-    // Enable hover effects, right-click menus, etc.
-}
-```
-
-### Keyboard Shortcuts
-
-Enhanced keyboard support on Catalyst:
-
-```swift
-// Standard keyboard shortcuts work automatically
-// Cmd+C, Cmd+V, Cmd+X, etc.
-
-// Add custom shortcuts
-override var keyCommands: [UIKeyCommand]? {
-    return [
-        UIKeyCommand(
-            title: "Toggle Line Numbers",
-            action: #selector(toggleLineNumbers),
-            input: "L",
-            modifierFlags: .command
-        )
-    ]
-}
-```
-
-## Feature Matrix for Catalyst
+## Feature Matrix
 
 | Feature | iOS | macOS | Catalyst | Notes |
 |---------|-----|-------|----------|-------|
@@ -265,9 +493,26 @@ if memoryConfig.availableMemory < 4_000_000_000 { // 4GB
 
 ## Common Issues and Solutions
 
-### Issue: Blurry Text on External Displays
+### Xcode Beta Warnings
 
-**Solution**: Enable high-resolution rendering:
+When building with Xcode beta, you may see:
+- **Directory not found for Metal toolchain** - Known beta issue, safely ignored
+- **Missing SubFrameworks path** - Doesn't affect functionality
+
+**Workarounds:**
+```bash
+# Build from command line
+xcodebuild -workspace CodeEditorSample.xcworkspace \
+           -scheme CodeEditorSample \
+           -destination 'platform=macOS,variant=Mac Catalyst' \
+           build
+
+# Or suppress warnings in scheme
+# Other Linker Flags: -Xlinker -w
+# Other Swift Flags: -suppress-warnings
+```
+
+### Blurry Text on External Displays
 
 ```swift
 if let window = view.window {
@@ -275,36 +520,18 @@ if let window = view.window {
 }
 ```
 
-### Issue: Context Menu Not Appearing
-
-**Solution**: Ensure proper gesture recognizer setup:
+### Context Menu Not Appearing
 
 ```swift
-// The CrossPlatformCoordinator handles this automatically
+// Ensure proper gesture recognizer setup
 CrossPlatformCoordinator.shared.configureInputHandling(for: editorView)
 ```
 
-### Issue: Performance with Large Files
-
-**Solution**: Use viewport-based rendering:
+### Performance with Large Files
 
 ```swift
 config.performance.useViewportRendering = true
 config.performance.viewportExpansion = 100 // Lines above/below viewport
-```
-
-### Issue: Keyboard Shortcuts Conflict
-
-**Solution**: Check for system conflicts:
-
-```swift
-override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-    // Filter out conflicting actions
-    if action == #selector(paste(_:)) {
-        return editorView.isEditable
-    }
-    return super.canPerformAction(action, withSender: sender)
-}
 ```
 
 ## Testing Catalyst Apps
@@ -364,6 +591,8 @@ class CatalystUITests: XCTestCase {
 5. **Test on Device**: Always test on actual Mac hardware, not just simulator
 6. **Memory Awareness**: Catalyst apps share memory with other Mac apps
 7. **Window Management**: Support multiple windows and proper state restoration
+8. **Respect Mac Conventions**: Follow Mac UI guidelines
+9. **Handle Module Imports**: Ensure workspace file is opened for proper module resolution
 
 ## Migration Guide
 
@@ -374,7 +603,7 @@ class CatalystUITests: XCTestCase {
 let textView = CodeEditorView()
 textView.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
-// After (Catalyst-aware with platform abstractions)
+// After (Catalyst-aware)
 let textView = CodeEditorView()
 let fontSize: CGFloat = {
     #if targetEnvironment(macCatalyst)
@@ -384,23 +613,6 @@ let fontSize: CGFloat = {
     #endif
 }()
 textView.font = PlatformFonts.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-```
-
-### From macOS to Catalyst
-
-```swift
-// Before (macOS only)
-let textView = CodeEditorView()
-textView.isAutomaticQuoteSubstitutionEnabled = false
-
-// After (Catalyst-aware)
-let textView = CodeEditorView()
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-textView.isAutomaticQuoteSubstitutionEnabled = false
-#else
-// UITextView properties
-textView.smartQuotesType = .no
-#endif
 ```
 
 ## Advanced Topics
@@ -452,8 +664,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 }
 ```
 
-## Conclusion
+## Common Pitfalls
 
-CodeEditorPlugin provides comprehensive Mac Catalyst support with automatic platform adaptation. By following this guide and using the provided configurations, you can create a native-feeling code editor that works seamlessly across iOS, iPadOS, and macOS through Catalyst.
+1. **Touch Gestures**: Not all iOS gestures make sense on Mac
+2. **Navigation**: Consider removing iOS navigation patterns
+3. **Tooltips**: Add tooltips for better discoverability
+4. **Preferences**: Use Mac-style preferences window
+5. **File Access**: Handle sandboxing appropriately
+6. **Module Import Issues**: Open workspace file, not project file directly
+7. **Build Warnings**: Beta Xcode may show cosmetic warnings
 
-For additional support or to report Catalyst-specific issues, please visit the [GitHub repository](https://github.com/CodeEditorPlugin/CodeEditorPlugin).
+## See Also
+
+- <doc:macOS-Integration>
+- <doc:iOS-Integration>
+- <doc:Platform-Abstraction>
+- <doc:Troubleshooting>

@@ -1,0 +1,75 @@
+@Tutorial(time: 15) {
+    @Intro(title: "Configuring the Editor") {
+        Learn how to customize CodeEditorPlugin using the powerful configuration system to create the perfect editing experience for your users.
+        
+        @Image(source: configuration-intro.png, alt: "Editor configuration options")
+    }
+    
+    @Section(title: "Understanding Configuration") {
+        @ContentAndMedia {
+            CodeEditorPlugin uses a nested configuration structure organized into four main categories: display, layout, behavior, and performance.
+            
+            @Image(source: configuration-structure.png, alt: "Configuration structure diagram")
+        }
+        
+        @Steps {
+            @Step {
+                Start with a default configuration instance.
+                
+                @Code(name: "ContentView.swift", file: config-01-default.swift)
+            }
+            
+            @Step {
+                Modify display settings like line numbers and font size.
+                
+                @Code(name: "ContentView.swift", file: config-02-display.swift)
+            }
+            
+            @Step {
+                Adjust layout settings for spacing and indentation.
+                
+                @Code(name: "ContentView.swift", file: config-03-layout.swift)
+            }
+            
+            @Step {
+                Configure behavior settings for editing features.
+                
+                @Code(name: "ContentView.swift", file: config-04-behavior.swift)
+            }
+            
+            @Step {
+                Optimize performance for your use case.
+                
+                @Code(name: "ContentView.swift", file: config-05-performance.swift)
+            }
+        }
+    }
+    
+    @Section(title: "Using Configuration Presets") {
+        @ContentAndMedia {
+            Save time by starting with one of the built-in configuration presets designed for common scenarios.
+            
+            @Image(source: presets-overview.png, alt: "Available configuration presets")
+        }
+        
+        @Steps {
+            @Step {
+                Use the minimal preset for a clean interface.
+                
+                @Code(name: "ContentView.swift", file: preset-01-minimal.swift)
+            }
+            
+            @Step {
+                Apply the read-only preset for viewing code.
+                
+                @Code(name: "ContentView.swift", file: preset-02-readonly.swift)
+            }
+            
+            @Step {
+                Try the presentation preset for demos.
+                
+                @Code(name: "ContentView.swift", file: preset-03-presentation.swift)
+            }
+        }
+    }
+}

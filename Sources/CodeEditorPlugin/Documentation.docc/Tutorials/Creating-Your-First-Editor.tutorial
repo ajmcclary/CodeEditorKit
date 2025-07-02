@@ -1,0 +1,175 @@
+@Tutorial(time: 10) {
+    @Intro(title: "Creating Your First Code Editor") {
+        Learn how to add a fully-featured code editor to your SwiftUI application in just a few lines of code.
+        
+        This tutorial covers the basics of integrating CodeEditorPlugin, from installation to displaying your first syntax-highlighted code.
+        
+        @Image(source: first-editor-intro.png, alt: "A basic code editor with syntax highlighting")
+    }
+    
+    @Section(title: "Set Up Your Project") {
+        @ContentAndMedia {
+            First, let's add CodeEditorPlugin to your Xcode project using Swift Package Manager.
+            
+            @Image(source: xcode-add-package.png, alt: "Adding package dependency in Xcode")
+        }
+        
+        @Steps {
+            @Step {
+                Open your project in Xcode and navigate to **File → Add Package Dependencies**.
+                
+                @Code(name: "Package.swift", file: setup-01-package.swift)
+            }
+            
+            @Step {
+                Enter the CodeEditorPlugin repository URL: `https://github.com/ajmcclary/CodeEditorPlugin.git`
+                
+                @Image(source: add-package-url.png, alt: "Entering the package URL")
+            }
+            
+            @Step {
+                Select your preferred version rule and click **Add Package**.
+                
+                @Image(source: version-selection.png, alt: "Selecting version")
+            }
+        }
+    }
+    
+    @Section(title: "Create a Basic Editor") {
+        @ContentAndMedia {
+            Now let's create a simple SwiftUI view with a code editor.
+            
+            @Image(source: basic-editor-preview.png, alt: "Basic editor in SwiftUI preview")
+        }
+        
+        @Steps {
+            @Step {
+                Import CodeEditorPlugin in your SwiftUI view file.
+                
+                @Code(name: "ContentView.swift", file: editor-01-import.swift) {
+                    @Image(source: editor-01-import.png, alt: "Import statement")
+                }
+            }
+            
+            @Step {
+                Create a `@State` property to hold your code text.
+                
+                @Code(name: "ContentView.swift", file: editor-02-state.swift) {
+                    @Image(source: editor-02-state.png, alt: "State property")
+                }
+            }
+            
+            @Step {
+                Add the CodeEditor view to your body.
+                
+                @Code(name: "ContentView.swift", file: editor-03-view.swift) {
+                    @Image(source: editor-03-view.png, alt: "CodeEditor view")
+                }
+            }
+            
+            @Step {
+                Set the code language for syntax highlighting.
+                
+                @Code(name: "ContentView.swift", file: editor-04-language.swift) {
+                    @Image(source: editor-04-language.png, alt: "Language setting")
+                }
+            }
+            
+            @Step {
+                Add some styling to make it look great.
+                
+                @Code(name: "ContentView.swift", file: editor-05-styling.swift) {
+                    @Image(source: editor-05-styling.png, alt: "Styled editor")
+                }
+            }
+        }
+    }
+    
+    @Section(title: "Add Configuration") {
+        @ContentAndMedia {
+            Let's enhance our editor with configuration options like line numbers and themes.
+            
+            @Image(source: configured-editor.png, alt: "Configured editor with line numbers")
+        }
+        
+        @Steps {
+            @Step {
+                Create an EditorConfiguration instance.
+                
+                @Code(name: "ContentView.swift", file: config-01-create.swift)
+            }
+            
+            @Step {
+                Enable line numbers and syntax highlighting.
+                
+                @Code(name: "ContentView.swift", file: config-02-settings.swift)
+            }
+            
+            @Step {
+                Apply the configuration using the environment.
+                
+                @Code(name: "ContentView.swift", file: config-03-apply.swift) {
+                    @Image(source: config-03-result.png, alt: "Editor with configuration applied")
+                }
+            }
+        }
+    }
+    
+    @Assessments {
+        @MultipleChoice {
+            What method do you use to set the programming language for syntax highlighting?
+            
+            @Choice(isCorrect: false) {
+                `.language(_:)`
+                
+                @Justification(reaction: "Close! The method name is slightly different.") {
+                    The correct method is `.codeLanguage(_:)`.
+                }
+            }
+            
+            @Choice(isCorrect: true) {
+                `.codeLanguage(_:)`
+                
+                @Justification(reaction: "Correct!") {
+                    The `.codeLanguage(_:)` modifier sets the language for syntax highlighting.
+                }
+            }
+            
+            @Choice(isCorrect: false) {
+                `.syntaxHighlighting(_:)`
+                
+                @Justification(reaction: "Not quite.") {
+                    While descriptive, this isn't the actual method name.
+                }
+            }
+        }
+        
+        @MultipleChoice {
+            How do you apply configuration to a CodeEditor view?
+            
+            @Choice(isCorrect: false) {
+                Pass it as a parameter to CodeEditor
+                
+                @Justification(reaction: "Not quite.") {
+                    Configuration is applied through the environment, not as a parameter.
+                }
+            }
+            
+            @Choice(isCorrect: true) {
+                Use `.environment(\.codeEditorConfiguration, config)`
+                
+                @Justification(reaction: "Perfect!") {
+                    Configuration is applied using SwiftUI's environment system.
+                }
+            }
+            
+            @Choice(isCorrect: false) {
+                Call `.configure(with:)` on the view
+                
+                @Justification(reaction: "Incorrect.") {
+                    CodeEditor uses SwiftUI's environment pattern for configuration.
+                }
+            }
+        }
+    }
+}
