@@ -514,6 +514,91 @@ public struct CodeEditor: View {
             config.behavior.autoScrollToCursor = enable
         }
     }
+    
+    /// Configures code folding behavior.
+    ///
+    /// - Parameter enable: Whether to enable code folding (default: true)
+    /// - Returns: A view with updated code folding configuration
+    ///
+    /// When enabled, allows collapsing and expanding code sections like functions,
+    /// classes, blocks, and comments for better navigation. Supports 17+ programming
+    /// languages with language-specific folding rules.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .enableCodeFolding(true)   // Enable code folding
+    ///     .enableCodeFolding(false)  // Disable code folding
+    /// ```
+    public func enableCodeFolding(_ enable: Bool = true) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.display.enableCodeFolding = enable
+        }
+    }
+    
+    /// Configures the visibility of folding controls in the gutter.
+    ///
+    /// - Parameter show: Whether to show fold/unfold controls in the gutter (default: true)
+    /// - Returns: A view with updated folding controls configuration
+    ///
+    /// When enabled, displays ▶️/▼ fold/unfold buttons in the gutter next to
+    /// foldable code regions. Allows interactive folding control via clicking.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .showFoldingControls(true)   // Show folding controls
+    ///     .showFoldingControls(false)  // Hide folding controls
+    /// ```
+    public func showFoldingControls(_ show: Bool = true) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.display.showFoldingControls = show
+        }
+    }
+    
+    /// Sets the minimum number of lines required for a code region to be foldable.
+    ///
+    /// - Parameter lineCount: The minimum line count for foldable regions (default: 3)
+    /// - Returns: A view with updated minimum foldable lines configuration
+    ///
+    /// Code sections with fewer lines than this threshold will not be considered
+    /// foldable. This prevents folding of very small blocks that provide little benefit.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .minimumFoldableLines(2)  // Allow folding of 2+ line blocks
+    ///     .minimumFoldableLines(5)  // Only fold 5+ line blocks
+    /// ```
+    public func minimumFoldableLines(_ lineCount: Int) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.display.minimumFoldableLines = max(1, lineCount)
+        }
+    }
+    
+    /// Configures code folding animation behavior.
+    ///
+    /// - Parameter animate: Whether to animate code folding operations (default: true)
+    /// - Returns: A view with updated folding animation configuration
+    ///
+    /// When enabled, folding and unfolding operations are animated for a smoother
+    /// visual experience. Disable for better performance with very large files.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .animateCodeFolding(true)   // Smooth folding animations
+    ///     .animateCodeFolding(false)  // Instant folding (better performance)
+    /// ```
+    public func animateCodeFolding(_ animate: Bool = true) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.performance.animateCodeFolding = animate
+        }
+    }
 }
 
 // MARK: - Platform-Specific Representable

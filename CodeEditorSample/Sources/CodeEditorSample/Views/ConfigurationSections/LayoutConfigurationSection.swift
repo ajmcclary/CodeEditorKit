@@ -195,6 +195,72 @@ struct LayoutConfigurationSection: View {
                 .accentColor(.blue)
             }
             
+            // Folding Control Size
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Folding Control Size")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.foldingControlSize))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.foldingControlSize },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.foldingControlSize = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 8...20,
+                    step: 1
+                )
+                .accentColor(.blue)
+                .disabled(!appState.coordinator.configuration.display.enableCodeFolding)
+                
+                Text("Size of fold/unfold control buttons in the gutter")
+                    .font(.system(size: adaptiveControlHelpFontSize()))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            // Folding Control Padding
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Folding Control Padding")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.foldingControlPadding))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.foldingControlPadding },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.foldingControlPadding = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 1...8,
+                    step: 1
+                )
+                .accentColor(.blue)
+                .disabled(!appState.coordinator.configuration.display.enableCodeFolding)
+                
+                Text("Padding around folding control buttons")
+                    .font(.system(size: adaptiveControlHelpFontSize()))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
             // Minimap Width
             VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
                 HStack {
@@ -280,6 +346,19 @@ struct LayoutConfigurationSection: View {
         case .xxLarge: return 19
         case .xxxLarge: return 21
         default: return 14
+        }
+    }
+    
+    private func adaptiveControlHelpFontSize() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall: return 11
+        case .small: return 12
+        case .medium: return 13
+        case .large: return 14
+        case .xLarge: return 16
+        case .xxLarge: return 18
+        case .xxxLarge: return 20
+        default: return 13
         }
     }
     

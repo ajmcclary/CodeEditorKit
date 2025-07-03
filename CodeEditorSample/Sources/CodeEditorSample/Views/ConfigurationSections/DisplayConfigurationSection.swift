@@ -86,6 +86,64 @@ struct DisplayConfigurationSection: View {
             ))
             .toggleStyle(configurationToggleStyle())
             
+            Toggle("Enable Code Folding", isOn: Binding(
+                get: { appState.coordinator.configuration.display.enableCodeFolding },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.enableCodeFolding = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            .help("Allow collapsing and expanding code sections like functions, classes, and blocks")
+            
+            Toggle("Show Folding Controls", isOn: Binding(
+                get: { appState.coordinator.configuration.display.showFoldingControls },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.showFoldingControls = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            .help("Display ▶️/▼ fold/unfold buttons in the gutter")
+            .disabled(!appState.coordinator.configuration.display.enableCodeFolding)
+            
+            // Minimum Foldable Lines
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Minimum Foldable Lines")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(appState.coordinator.configuration.display.minimumFoldableLines)")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { Double(appState.coordinator.configuration.display.minimumFoldableLines) },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.display.minimumFoldableLines = Int(newValue)
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 1...10,
+                    step: 1
+                )
+                .accentColor(.blue)
+                .disabled(!appState.coordinator.configuration.display.enableCodeFolding)
+                
+                Text("Minimum number of lines required for a code section to be foldable")
+                    .font(.system(size: adaptiveControlHelpFontSize()))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
             // Font Size
             VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
                 HStack {
@@ -171,6 +229,19 @@ struct DisplayConfigurationSection: View {
         case .xxLarge: return 19
         case .xxxLarge: return 21
         default: return 14
+        }
+    }
+    
+    private func adaptiveControlHelpFontSize() -> CGFloat {
+        switch dynamicTypeSize {
+        case .xSmall: return 11
+        case .small: return 12
+        case .medium: return 13
+        case .large: return 14
+        case .xLarge: return 16
+        case .xxLarge: return 18
+        case .xxxLarge: return 20
+        default: return 13
         }
     }
     

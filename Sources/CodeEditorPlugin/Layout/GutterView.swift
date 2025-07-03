@@ -64,6 +64,22 @@ public class GutterView: PlatformView, GutterViewProtocol {
         backgroundColor = PlatformColors.controlBackground
         setupDisplayLink()
         #endif
+        
+        // Set up click handling for folding controls
+        setupClickHandling()
+    }
+    
+    /// Set up click/tap handling for folding controls
+    private func setupClickHandling() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS: Enable mouse events
+        // Note: NSView handles mouse events by default
+        #else
+        // iOS/Catalyst: Add tap gesture recognizer
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        addGestureRecognizer(tapGesture)
+        isUserInteractionEnabled = true
+        #endif
     }
     
     // MARK: - Display Updates
@@ -164,6 +180,129 @@ extension GutterView {
             gutterBounds: bounds,
             fillBackground: fillBackground
         )
+    }
+}
+
+// MARK: - Click/Tap Handling
+
+extension GutterView {
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Handle mouse clicks on macOS
+    override public func mouseDown(with event: NSEvent) {
+        guard let textView = textView else {
+            super.mouseDown(with: event)
+            return
+        }
+        
+        let localPoint = convert(event.locationInWindow, from: nil)
+        if handleClickAt(point: localPoint, in: textView) {
+            // Click was handled by folding control
+            return
+        }
+        
+        // Pass through to default handling
+        super.mouseDown(with: event)
+    }
+    #else
+    /// Handle tap gestures on iOS/Catalyst
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard let textView = textView else { return }
+        
+        let localPoint = gesture.location(in: self)
+        handleClickAt(point: localPoint, in: textView)
+    }
+    #endif
+    
+    /// Common click handling logic for both platforms
+    private func handleClickAt(point: CGPoint, in textView: CodeEditorView) -> Bool {
+        // Only handle clicks if folding is enabled
+        guard textView.configuration.display.enableCodeFolding &&
+              textView.configuration.display.showFoldingControls else {
+            return false
+        }
+        
+        // Find which line was clicked
+        guard let clickedLineNumber = findLineNumber(at: point, in: textView) else {
+            return false
+        }
+        
+        // Check if click was on a folding control
+        if isFoldingControlClick(at: point, for: clickedLineNumber, in: textView) {
+            // Toggle folding for this line
+            let wasToggled = textView.toggleFold(at: clickedLineNumber)
+            
+            if wasToggled {
+                // Trigger display update
+                setNeedsDisplayLineNumbers()
+                
+                // Provide haptic feedback on iOS
+                #if canImport(UIKit)
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                #endif
+            }
+            
+            return wasToggled
+        }
+        
+        return false
+    }
+    
+    /// Find the line number at the given point
+    private func findLineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else {
+            return nil
+        }
+        #else
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        #endif
+        
+        // Convert point to text view coordinates
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS: Point is already in the correct coordinate system
+        let textPoint = CGPoint(x: 0, y: point.y)
+        #else
+        // iOS/Catalyst: Account for text container inset and scroll offset
+        let textContainerInset = textView.textContainerInset
+        let textPoint = CGPoint(
+            x: 0,
+            y: point.y + textView.contentOffset.y - textContainerInset.top
+        )
+        #endif
+        
+        // Find the glyph at this point
+        let glyphIndex = layoutManager.glyphIndex(for: textPoint, in: textContainer)
+        let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
+        
+        // Convert character index to line number
+        let text = textView.text ?? ""
+        let lineNumber = text.prefix(characterIndex).components(separatedBy: .newlines).count
+        
+        return lineNumber > 0 ? lineNumber : 1
+    }
+    
+    /// Check if the click was on a folding control
+    private func isFoldingControlClick(at point: CGPoint, for lineNumber: Int, in textView: CodeEditorView) -> Bool {
+        // Check if this line is foldable
+        guard textView.isFoldable(at: lineNumber) else { return false }
+        
+        let controlSize = textView.configuration.layout.foldingControlSize
+        let controlPadding = textView.configuration.layout.foldingControlPadding
+        
+        // Calculate the folding control rect for this line
+        // Note: This calculation should match the one in GutterViewRenderer.drawFoldingControl
+        let controlRect = CGRect(
+            x: controlPadding,
+            y: point.y - controlSize / 2, // Approximate - could be more precise
+            width: controlSize,
+            height: controlSize
+        )
+        
+        return controlRect.contains(point)
     }
 }
 

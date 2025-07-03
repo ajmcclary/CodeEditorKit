@@ -99,6 +99,19 @@ public class GutterViewRenderer {
                 context: context,
                 textView: textView
             )
+            
+            // Draw folding controls if enabled
+            if textView.configuration.display.enableCodeFolding &&
+               textView.configuration.display.showFoldingControls {
+                drawFoldingControl(
+                    for: lineNumber,
+                    lineRange: lineRange,
+                    layoutManager: layoutManager,
+                    gutterBounds: gutterBounds,
+                    context: context,
+                    textView: textView
+                )
+            }
         }
     }
     
@@ -253,6 +266,139 @@ public class GutterViewRenderer {
         
         return lineRanges
     }
+    
+    /// Draw folding control (▶️/▼ icon) for foldable lines
+    private func drawFoldingControl(
+        for lineNumber: Int,
+        lineRange: NSRange,
+        layoutManager: NSLayoutManager,
+        gutterBounds: CGRect,
+        context: CGContext,
+        textView: CodeEditorView
+    ) {
+        // Check if this line is foldable
+        guard textView.isFoldable(at: lineNumber) else { return }
+        
+        // Get the rect for this line
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: lineRange.location)
+        let lineRect = layoutManager.lineFragmentRect(
+            forGlyphAt: glyphIndex,
+            effectiveRange: nil,
+            withoutAdditionalLayout: true
+        )
+        
+        // Calculate folding control position
+        let controlSize = textView.configuration.layout.foldingControlSize
+        let controlPadding = textView.configuration.layout.foldingControlPadding
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS: Position control to the left of line numbers
+        let xPosition = controlPadding
+        let yPosition = lineRect.minY + (lineRect.height - controlSize) / 2
+        #else
+        // iOS/Catalyst: Account for text container inset and scroll offset
+        let textContainerInset = textView.textContainerInset
+        let baseY = lineRect.origin.y + textContainerInset.top - textView.contentOffset.y
+        let xPosition = controlPadding
+        let yPosition = baseY + (lineRect.height - controlSize) / 2
+        #endif
+        
+        let controlRect = CGRect(
+            x: xPosition,
+            y: yPosition,
+            width: controlSize,
+            height: controlSize
+        )
+        
+        // Skip if control rect is outside visible area
+        guard controlRect.intersects(CGRect(origin: .zero, size: gutterBounds.size)) else { return }
+        
+        // Determine if this line is folded
+        let isFolded = textView.isFolded(at: lineNumber)
+        
+        // Draw folding control
+        drawFoldingIcon(
+            in: controlRect,
+            isFolded: isFolded,
+            context: context,
+            textView: textView
+        )
+    }
+    
+    /// Draw the folding icon (▶️ for folded, ▼ for expanded)
+    private func drawFoldingIcon(
+        in rect: CGRect,
+        isFolded: Bool,
+        context: CGContext,
+        textView: CodeEditorView
+    ) {
+        // Save graphics state
+        context.saveGState()
+        
+        // Set up colors
+        let iconColor = PlatformColors.secondaryLabel
+        let backgroundColor = PlatformColors.controlBackground
+        
+        // Draw background circle
+        context.setFillColor(backgroundColor.cgColor)
+        context.fillEllipse(in: rect)
+        
+        // Draw border
+        context.setStrokeColor(iconColor.withAlphaComponent(0.3).cgColor)
+        context.setLineWidth(0.5)
+        context.strokeEllipse(in: rect)
+        
+        // Draw icon
+        context.setFillColor(iconColor.cgColor)
+        
+        let iconInset: CGFloat = rect.width * 0.25
+        let iconRect = rect.insetBy(dx: iconInset, dy: iconInset)
+        
+        if isFolded {
+            // Draw right-pointing triangle (▶️)
+            drawTriangleIcon(in: iconRect, pointing: .right, context: context)
+        } else {
+            // Draw down-pointing triangle (▼)
+            drawTriangleIcon(in: iconRect, pointing: .down, context: context)
+        }
+        
+        // Restore graphics state
+        context.restoreGState()
+    }
+    
+    /// Draw a triangle icon pointing in the specified direction
+    private func drawTriangleIcon(
+        in rect: CGRect,
+        pointing direction: TriangleDirection,
+        context: CGContext
+    ) {
+        let path = CGMutablePath()
+        
+        switch direction {
+        case .right:
+            // Right-pointing triangle (▶️)
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.closeSubpath()
+            
+        case .down:
+            // Down-pointing triangle (▼)
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.closeSubpath()
+        }
+        
+        context.addPath(path)
+        context.fillPath()
+    }
+}
+
+/// Direction for triangle icons
+private enum TriangleDirection {
+    case right
+    case down
 }
 
 // MARK: - String Helpers

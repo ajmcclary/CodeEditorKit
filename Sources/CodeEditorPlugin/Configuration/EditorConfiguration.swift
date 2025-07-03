@@ -159,6 +159,20 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// - Note: Only applies when `display.showMinimap` is `true`.
         public var minimapWidth: CGFloat = 120.0
         
+        /// Size of fold/unfold control buttons in the gutter.
+        ///
+        /// The diameter of the circular fold/unfold buttons (▶️/▼) displayed
+        /// in the gutter next to foldable code regions.
+        ///
+        /// - Note: Only applies when `display.showFoldingControls` is `true`.
+        public var foldingControlSize: CGFloat = 14.0
+        
+        /// Padding around folding control buttons.
+        ///
+        /// The spacing between folding control buttons and surrounding elements
+        /// in the gutter. Affects the visual density of folding controls.
+        public var foldingControlPadding: CGFloat = 2.0
+        
         public init() {}
     }
     
@@ -234,6 +248,33 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         ///
         /// - Note: Useful for navigating large files but consumes screen space.
         public var showMinimap: Bool = false
+        
+        /// Whether to enable code folding.
+        ///
+        /// When enabled, allows collapsing and expanding code sections
+        /// like functions, classes, blocks, and comments for better navigation.
+        /// Supports 17+ programming languages with language-specific folding.
+        public var enableCodeFolding: Bool = true
+        
+        /// Shorter alias for enableCodeFolding
+        public var codeFolding: Bool {
+            get { enableCodeFolding }
+            set { enableCodeFolding = newValue }
+        }
+        
+        /// Whether to show folding controls in the gutter.
+        ///
+        /// When enabled, displays ▶️/▼ fold/unfold buttons in the gutter
+        /// next to foldable code regions. Allows interactive folding control.
+        public var showFoldingControls: Bool = true
+        
+        /// Minimum number of lines required for a foldable region.
+        ///
+        /// Code sections with fewer lines than this threshold will not
+        /// be considered foldable. Prevents folding of very small blocks.
+        ///
+        /// - Note: Typical values range from 2 to 5 lines.
+        public var minimumFoldableLines: Int = 3
         
         public init() {}
     }
@@ -395,6 +436,14 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         ///
         /// - Note: Lower values provide more responsive feedback but use more CPU.
         public var textChangeDebounceInterval: TimeInterval = 0.1
+        
+        /// Whether to animate code folding operations.
+        ///
+        /// When enabled, folding and unfolding operations are animated
+        /// for a smoother visual experience. May impact performance on slower systems.
+        ///
+        /// - Note: Disable for better performance with very large files.
+        public var animateCodeFolding: Bool = true
         
         public init() {}
     }
@@ -636,5 +685,20 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
         view.textColor = PlatformColors.label
         #endif
+    }
+    
+    /// Create a CodeFoldingConfiguration from this EditorConfiguration.
+    ///
+    /// Maps the code folding settings from this EditorConfiguration to a
+    /// CodeFoldingConfiguration that can be used by the CodeFoldingEngine.
+    ///
+    /// - Returns: A configured CodeFoldingConfiguration instance
+    public func createCodeFoldingConfiguration() -> CodeFoldingConfiguration {
+        var config = CodeFoldingConfiguration()
+        config.enabled = display.enableCodeFolding
+        config.showGutterControls = display.showFoldingControls
+        config.minimumLineCount = display.minimumFoldableLines
+        config.animatesFolding = performance.animateCodeFolding
+        return config
     }
 }

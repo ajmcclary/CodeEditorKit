@@ -31,6 +31,18 @@ struct PerformanceConfigurationSection: View {
             ))
             .toggleStyle(configurationToggleStyle())
             
+            Toggle("Animate Code Folding", isOn: Binding(
+                get: { appState.coordinator.configuration.performance.animateCodeFolding },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.performance.animateCodeFolding = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            .help("Animate folding and unfolding operations for smooth visual transitions")
+            
             // Note: Background processing setting not available in current configuration
             
             // File Size Limit

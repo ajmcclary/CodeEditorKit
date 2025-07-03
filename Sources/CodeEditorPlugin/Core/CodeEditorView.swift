@@ -225,6 +225,32 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// LSP manager for language server integration
     private let lspManager = LSPManager()
+    
+    /// Code folding engine for managing foldable regions and fold states.
+    ///
+    /// The folding engine automatically detects foldable code regions based on
+    /// the current language (functions, classes, blocks, comments) and provides
+    /// methods for folding and unfolding sections.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Toggle fold at specific line
+    /// editor.toggleFold(at: 25)
+    /// 
+    /// // Fold all functions
+    /// editor.foldAll(type: .function)
+    /// 
+    /// // Check if line is foldable
+    /// if editor.isFoldable(at: 42) {
+    ///     editor.fold(at: 42)
+    /// }
+    /// ```
+    ///
+    /// - Note: Code folding is enabled by default and supports 17+ programming languages
+    ///
+    /// - SeeAlso: ``FoldableRegion``, ``EditorConfiguration/Display/enableCodeFolding``
+    public let codeFoldingEngine = CodeFoldingEngine()
 
     /// The current programming language used for syntax highlighting and code completion.
     ///
@@ -306,6 +332,26 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         set {
             var display = configuration.display
             display.showInvisibleCharacters = newValue
+            configuration = configuration.with(display: display)
+        }
+    }
+    
+    /// Controls whether code folding is enabled (convenience property)
+    public var enablesCodeFolding: Bool {
+        get { configuration.display.enableCodeFolding }
+        set {
+            var display = configuration.display
+            display.enableCodeFolding = newValue
+            configuration = configuration.with(display: display)
+        }
+    }
+    
+    /// Controls whether folding controls are shown in the gutter (convenience property)
+    public var showsFoldingControls: Bool {
+        get { configuration.display.showFoldingControls }
+        set {
+            var display = configuration.display
+            display.showFoldingControls = newValue
             configuration = configuration.with(display: display)
         }
     }
@@ -615,6 +661,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Set up completion providers
         setupCompletionProviders()
         
+        // Set up code folding engine
+        setupCodeFoldingEngine()
+        
         // TODO: Set up LSP integration
         // setupLSPIntegration()
         
@@ -667,6 +716,30 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         
         completionTriggerCharacters = triggers
+    }
+    
+    // MARK: - Code Folding Setup
+    
+    /// Set up the code folding engine with current configuration
+    private func setupCodeFoldingEngine() {
+        // Attach the folding engine to this text view
+        codeFoldingEngine.attach(to: self)
+        
+        // Apply current configuration settings
+        updateCodeFoldingConfiguration()
+        
+        kLogger.debug("✂️ Code folding engine initialized and attached")
+    }
+    
+    /// Update code folding configuration from EditorConfiguration
+    private func updateCodeFoldingConfiguration() {
+        codeFoldingEngine.configuration = configuration.createCodeFoldingConfiguration()
+        
+        // Update folding regions if folding is enabled
+        if configuration.display.enableCodeFolding {
+            // Update the folding engine with current language
+            codeFoldingEngine.attach(to: self)
+        }
     }
 
     // MARK: - Syntax Highlighting
@@ -1255,6 +1328,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
         #endif
+        
+        // Update code folding configuration
+        updateCodeFoldingConfiguration()
         
         // Force layout update
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -2345,6 +2421,196 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Note: We cannot perform MainActor-isolated cleanup in deinit
         // The cleanup of UI elements will happen automatically when the view is deallocated
         // Subviews are automatically removed from their superview when deallocated
+    }
+}
+
+// MARK: - Public Code Folding API
+
+extension CodeEditorView {
+    
+    /// Toggle fold state at the specified line number.
+    ///
+    /// If the line contains a foldable region that is currently expanded, it will be folded.
+    /// If the line contains a folded region, it will be unfolded.
+    ///
+    /// - Parameter lineNumber: The line number to toggle folding at (1-based)
+    /// - Returns: `true` if the fold state was changed, `false` if no foldable region exists
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Toggle folding at line 25
+    /// if editor.toggleFold(at: 25) {
+    ///     print("Folding toggled successfully")
+    /// }
+    /// ```
+    public func toggleFold(at lineNumber: Int) -> Bool {
+        guard configuration.display.enableCodeFolding else { return false }
+        
+        codeFoldingEngine.toggleFold(at: lineNumber)
+        return true
+    }
+    
+    /// Fold a code region at the specified line number.
+    ///
+    /// This method folds a foldable code region that starts at or contains the specified line.
+    /// Common foldable regions include functions, classes, blocks, and comments.
+    ///
+    /// - Parameter lineNumber: The line number where folding should occur (1-based)
+    /// - Returns: `true` if folding was successful, `false` if no foldable region exists
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Fold function at line 42
+    /// if editor.fold(at: 42) {
+    ///     print("Function folded")
+    /// }
+    /// ```
+    public func fold(at lineNumber: Int) -> Bool {
+        guard configuration.display.enableCodeFolding else { return false }
+        
+        if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
+            codeFoldingEngine.fold(region)
+            return true
+        }
+        return false
+    }
+    
+    /// Unfold a code region at the specified line number.
+    ///
+    /// This method unfolds a previously folded code region at the specified line.
+    ///
+    /// - Parameter lineNumber: The line number where unfolding should occur (1-based)
+    /// - Returns: `true` if unfolding was successful, `false` if no folded region exists
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Unfold code at line 42
+    /// if editor.unfold(at: 42) {
+    ///     print("Code unfolded")
+    /// }
+    /// ```
+    public func unfold(at lineNumber: Int) -> Bool {
+        guard configuration.display.enableCodeFolding else { return false }
+        
+        if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
+            codeFoldingEngine.unfold(region)
+            return true
+        }
+        return false
+    }
+    
+    /// Check if a line contains a foldable code region.
+    ///
+    /// Use this method to determine if folding controls should be shown for a specific line
+    /// or to validate before attempting folding operations.
+    ///
+    /// - Parameter lineNumber: The line number to check (1-based)
+    /// - Returns: `true` if the line contains a foldable region, `false` otherwise
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// if editor.isFoldable(at: 25) {
+    ///     // Show folding controls in UI
+    ///     showFoldingButton(at: 25)
+    /// }
+    /// ```
+    public func isFoldable(at lineNumber: Int) -> Bool {
+        guard configuration.display.enableCodeFolding else { return false }
+        return codeFoldingEngine.foldableRegion(at: lineNumber) != nil
+    }
+    
+    /// Check if a line is currently folded.
+    ///
+    /// - Parameter lineNumber: The line number to check (1-based)
+    /// - Returns: `true` if the line is part of a folded region, `false` otherwise
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// if editor.isFolded(at: 25) {
+    ///     print("Line 25 is currently folded")
+    /// }
+    /// ```
+    public func isFolded(at lineNumber: Int) -> Bool {
+        guard configuration.display.enableCodeFolding else { return false }
+        return codeFoldingEngine.isLineFolded(line: lineNumber)
+    }
+    
+    /// Fold all regions of a specific type.
+    ///
+    /// This method folds all foldable regions of the specified type throughout the document.
+    /// Useful for quickly collapsing all functions, classes, or other code structures.
+    ///
+    /// - Parameter type: The type of regions to fold
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Fold all functions
+    /// editor.foldAll(type: .function)
+    /// 
+    /// // Fold all classes
+    /// editor.foldAll(type: .class)
+    /// 
+    /// // Fold all comments
+    /// editor.foldAll(type: .comment)
+    /// ```
+    public func foldAll(type: FoldingType) {
+        guard configuration.display.enableCodeFolding else { return }
+        
+        let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
+        for region in regionsToFold {
+            codeFoldingEngine.fold(region)
+        }
+    }
+    
+    /// Unfold all currently folded regions.
+    ///
+    /// This method expands all folded code regions in the document, making all text visible.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Expand all folded code
+    /// editor.unfoldAll()
+    /// ```
+    public func unfoldAll() {
+        guard configuration.display.enableCodeFolding else { return }
+        codeFoldingEngine.unfoldAll()
+    }
+    
+    /// Get all foldable regions in the document.
+    ///
+    /// Returns an array of all detected foldable regions, useful for building custom
+    /// folding interfaces or performing bulk operations.
+    ///
+    /// - Returns: Array of foldable regions with their line ranges and types
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let regions = editor.foldableRegions
+    /// for region in regions {
+    ///     print("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
+    /// }
+    /// ```
+    public var foldableRegions: [FoldableRegion] {
+        guard configuration.display.enableCodeFolding else { return [] }
+        return codeFoldingEngine.foldableRegions
+    }
+    
+    /// Get all currently folded regions.
+    ///
+    /// - Returns: Array of currently folded regions
+    public var foldedRegions: [FoldableRegion] {
+        guard configuration.display.enableCodeFolding else { return [] }
+        return codeFoldingEngine.foldableRegions.filter { region in
+            codeFoldingEngine.foldedRegions.contains(region.id)
+        }
     }
 }
 
