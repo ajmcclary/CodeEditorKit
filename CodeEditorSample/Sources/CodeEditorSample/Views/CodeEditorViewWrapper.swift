@@ -261,7 +261,7 @@ struct CodeEditorViewWrapper: View {
             .onAppear {
                 internalConfiguration = configuration
             }
-            .onChange(of: configuration) { _, newValue in
+            .onChange(of: configuration) { newValue in
                 internalConfiguration = newValue
             }
     }

@@ -1422,10 +1422,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             defaultParagraphStyle = paragraphStyle
         }
         #else
-        if let textStorage = self.textStorage {
-            let range = NSRange(location: 0, length: textStorage.length)
-            textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
-        }
+        let textStorage = self.textStorage
+        let range = NSRange(location: 0, length: textStorage.length)
+        textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
         
         // Set as typing attributes for new text
         var typingAttrs = typingAttributes

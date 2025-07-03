@@ -550,7 +550,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             view.textColor = PlatformColor(parent.theme.textColor)
             
             // Apply initial configuration
-            parent.configuration.apply(to: view)
+            // Only set on container - it will handle applying to the text view
             container.configuration = parent.configuration
             
             // Set up text change observer
@@ -584,15 +584,21 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             if view.string != text {
                 view.string = text
             }
-            view.language = language
+            
+            // Only update language if it has changed
+            if view.language != language {
+                view.language = language
+            }
             
             // Apply theme colors
             view.backgroundColor = PlatformColor(theme.backgroundColor)
             view.textColor = PlatformColor(theme.textColor)
             
-            // Apply full configuration
-            configuration.apply(to: view)
-            container.configuration = configuration
+            // Only apply configuration if it has changed to prevent infinite loops
+            if container.configuration != configuration {
+                container.configuration = configuration
+                // Don't call configuration.apply(to: view) here - the container will handle it
+            }
         }
     }
 }
@@ -645,8 +651,8 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             view.language = parent.language
             
             // Apply initial configuration
+            // Only set on container - it will handle applying to the text view
             container.configuration = parent.configuration
-            parent.configuration.apply(to: view)
             
             // Set up delegate for selection change detection
             view.delegate = self
@@ -686,11 +692,17 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             if view.text != text {
                 view.text = text
             }
-            view.language = language
             
-            // Apply full configuration to both container and text view
-            container.configuration = configuration
-            configuration.apply(to: view)
+            // Only update language if it has changed
+            if view.language != language {
+                view.language = language
+            }
+            
+            // Only apply configuration if it has changed to prevent infinite loops
+            if container.configuration != configuration {
+                container.configuration = configuration
+                // Don't call configuration.apply(to: view) here - the container will handle it
+            }
         }
     }
 }

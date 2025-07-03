@@ -260,6 +260,7 @@ public final class CodeEditorContainerView: PlatformView {
     public let gutterView: GutterView
     public let minimapView: MinimapView
     private var minimapDataProvider: MinimapDataProvider?
+    private var isApplyingConfiguration = false
     
     #if canImport(UIKit)
     public let contentView: EditorContentView
@@ -273,52 +274,61 @@ public final class CodeEditorContainerView: PlatformView {
     /// Configuration for the editor
     public var configuration: EditorConfiguration = .default {
         didSet {
-            applyConfiguration()
+            // Prevent recursive configuration updates
+            if !isApplyingConfiguration {
+                applyConfiguration()
+            }
         }
     }
     
     // MARK: - Initialization
     
     override public init(frame: CGRect) {
-        // Create the text view
-        textView = CodeEditorView(frame: .zero)
+        // Use the provided frame or a reasonable default size
+        let initialFrame = frame == .zero ? CGRect(x: 0, y: 0, width: 600, height: 400) : frame
         
-        // Create the gutter view
-        gutterView = GutterView(frame: .zero)
+        // Create the text view with reasonable initial frame
+        textView = CodeEditorView(frame: initialFrame)
         
-        // Create the minimap view
-        minimapView = MinimapView(frame: .zero)
+        // Create the gutter view with initial width
+        gutterView = GutterView(frame: CGRect(x: 0, y: 0, width: 40, height: initialFrame.height))
+        
+        // Create the minimap view with initial width
+        minimapView = MinimapView(frame: CGRect(x: initialFrame.width - 100, y: 0, width: 100, height: initialFrame.height))
         
         #if canImport(UIKit)
         // Create the content view for iOS
-        contentView = EditorContentView(frame: CGRect.zero)
+        contentView = EditorContentView(frame: initialFrame)
         #else
         // Create scroll view for macOS
-        scrollView = NSScrollView(frame: NSRect.zero)
+        scrollView = NSScrollView(frame: initialFrame)
         #endif
         
-        super.init(frame: frame)
+        super.init(frame: initialFrame)
         
         setupViews()
         setupObservers()
     }
     
     public required init?(coder: NSCoder) {
-        // Create the text view
-        textView = CodeEditorView(frame: .zero)
+        // Use reasonable default size for coder init
+        let initialFrame = CGRect(x: 0, y: 0, width: 600, height: 400)
         
-        // Create the gutter view
-        gutterView = GutterView(frame: .zero)
+        // Create the text view with reasonable initial frame
+        textView = CodeEditorView(frame: initialFrame)
         
-        // Create the minimap view
-        minimapView = MinimapView(frame: .zero)
+        // Create the gutter view with initial width
+        gutterView = GutterView(frame: CGRect(x: 0, y: 0, width: 40, height: initialFrame.height))
+        
+        // Create the minimap view with initial width
+        minimapView = MinimapView(frame: CGRect(x: initialFrame.width - 100, y: 0, width: 100, height: initialFrame.height))
         
         #if canImport(UIKit)
         // Create the content view for iOS
-        contentView = EditorContentView(frame: CGRect.zero)
+        contentView = EditorContentView(frame: initialFrame)
         #else
         // Create scroll view for macOS
-        scrollView = NSScrollView(frame: NSRect.zero)
+        scrollView = NSScrollView(frame: initialFrame)
         #endif
         
         super.init(coder: coder)
@@ -767,6 +777,11 @@ public final class CodeEditorContainerView: PlatformView {
     }
     
     public func applyConfiguration() {
+        // Prevent re-entrant calls
+        guard !isApplyingConfiguration else { return }
+        isApplyingConfiguration = true
+        defer { isApplyingConfiguration = false }
+        
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
         var textViewConfig = configuration
