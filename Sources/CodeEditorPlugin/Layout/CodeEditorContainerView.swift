@@ -501,7 +501,7 @@ public final class CodeEditorContainerView: PlatformView {
         }
         #endif
         
-        // Set up scroll observer to update minimap
+        // Set up scroll observer to update minimap and handle cursor tracking
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
@@ -510,6 +510,7 @@ public final class CodeEditorContainerView: PlatformView {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.updateMinimap()
+                self?.handleScrollCursorTracking()
             }
         }
         #else
@@ -531,23 +532,29 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Calculate character position for the line
         let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-        if lineNumber > 0 {
-            // Add 1 for the newline character
-            let targetPosition = lineStart + 1
-            textView.setSelectedRange(NSRange(location: targetPosition, length: 0))
+        let targetPosition = lineNumber > 0 ? lineStart + 1 : 0
+        let targetRange = NSRange(location: targetPosition, length: 0)
+        
+        if configuration.behavior.autoScrollToCursor {
+            // When auto-scroll is enabled, set selection and explicitly scroll
+            textView.setSelectedRange(targetRange)
             
-            // Only scroll if autoScrollToCursor is enabled
-            if configuration.behavior.autoScrollToCursor {
-                textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+            // Use the proper macOS scrolling method
+            if let layoutManager = textView.layoutManager,
+               let textContainer = textView.textContainer {
+                let glyphRange = layoutManager.glyphRange(forCharacterRange: targetRange, actualCharacterRange: nil)
+                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+                let adjustedRect = CGRect(
+                    x: rect.origin.x + textView.textContainerOrigin.x,
+                    y: rect.origin.y + textView.textContainerOrigin.y,
+                    width: max(rect.width, 1),
+                    height: max(rect.height, 20)
+                )
+                textView.scrollToVisible(adjustedRect)
             }
         } else {
-            // First line
-            textView.setSelectedRange(NSRange(location: 0, length: 0))
-            
-            // Only scroll if autoScrollToCursor is enabled
-            if configuration.behavior.autoScrollToCursor {
-                textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
-            }
+            // When auto-scroll is disabled, use the method that prevents scrolling
+            textView.setSelectedRangeWithoutScrolling(targetRange)
         }
         #else
         // iOS navigation
@@ -587,6 +594,46 @@ public final class CodeEditorContainerView: PlatformView {
         }
         #endif
     }
+    
+    // MARK: - Cursor Tracking During Scroll
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    private func handleScrollCursorTracking() {
+        // Only auto-scroll to cursor if autoScrollToCursor is enabled
+        guard configuration.behavior.autoScrollToCursor else { return }
+        
+        // Get current cursor position
+        let currentSelection = textView.selectedRange
+        guard currentSelection.length == 0 else { return } // Only work with cursor, not selections
+        
+        // Get cursor position information
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else { return }
+        
+        let cursorPosition = currentSelection.location
+        let textLength = textView.string.count
+        guard cursorPosition < textLength else { return }
+        
+        // Calculate cursor rect
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: currentSelection, actualCharacterRange: nil)
+        let cursorRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        let adjustedCursorRect = CGRect(
+            x: cursorRect.origin.x + textView.textContainerOrigin.x,
+            y: cursorRect.origin.y + textView.textContainerOrigin.y,
+            width: max(cursorRect.width, 1),
+            height: max(cursorRect.height, 20)
+        )
+        
+        // Check if cursor is visible in current view
+        let visibleRect = textView.visibleRect
+        let isVisible = visibleRect.intersects(adjustedCursorRect)
+        
+        // If cursor is not visible, scroll to make it visible
+        if !isVisible {
+            textView.scrollToVisible(adjustedCursorRect)
+        }
+    }
+    #endif
     
     private func updateMinimap() {
         guard configuration.display.showMinimap,

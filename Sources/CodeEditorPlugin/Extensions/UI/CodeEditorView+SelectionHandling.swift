@@ -1,13 +1,40 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
 #endif
 
 // MARK: - Selection Handling Without Auto-Scroll
 
 @MainActor
 extension CodeEditorView {
-    #if canImport(UIKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    
+    // MARK: - NSTextView Method for macOS
+    
+    /// Sets the selected range without triggering automatic scrolling on macOS
+    func setSelectedRangeWithoutScrolling(_ range: NSRange) {
+        // Only prevent scrolling if autoScrollToCursor is false
+        guard !configuration.behavior.autoScrollToCursor else {
+            // If auto-scroll is enabled, use default behavior with explicit scrolling
+            setSelectedRange(range)
+            scrollRangeToVisible(range)
+            return
+        }
+        
+        // Save current visible rect
+        let savedVisibleRect = visibleRect
+        
+        // Set the selected range
+        setSelectedRange(range)
+        
+        // Restore scroll position by scrolling back to saved visible rect
+        // This counteracts the automatic scrolling behavior
+        scrollToVisible(savedVisibleRect)
+    }
+    
+    #elseif canImport(UIKit)
     
     // MARK: - UITextView Method Overrides
     

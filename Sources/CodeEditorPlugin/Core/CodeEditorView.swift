@@ -1977,7 +1977,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         set {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            setSelectedRange(newValue)
+            // Use the method that respects autoScrollToCursor configuration
+            setSelectedRangeWithoutScrolling(newValue)
             #else
             print("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
             // Use the method that respects autoScrollToCursor configuration
