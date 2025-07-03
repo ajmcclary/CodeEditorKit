@@ -590,16 +590,17 @@ public final class CodeEditorContainerView: PlatformView {
     
     private func updateTextContainerInsets() {
         let padding = configuration.layout.lineNumberPadding
+        let gutterWidth = configuration.display.showLineNumbers ? configuration.layout.gutterWidth : 0
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, we need to set inset to account for the ruler view
-        let gutterWidth = configuration.display.showLineNumbers ? configuration.layout.gutterWidth : 0
         let currentInsets = textView.textContainerInset
         textView.textContainerInset = NSSize(
             width: gutterWidth + padding,
             height: currentInsets.height
         )
         #else
+        // On iOS/Catalyst, update edge insets
         let currentInsets = textView.textContainerEdgeInsets
         let newInsets = EdgeInsets(
             top: currentInsets.top,
