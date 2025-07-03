@@ -67,6 +67,12 @@ public class GutterViewRenderer {
         
         // Get visible text range
         let visibleRect = getVisibleRect(for: textView)
+        
+        // Guard against invalid rect
+        guard visibleRect.width > 0, visibleRect.height > 0 else {
+            return
+        }
+        
         let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         let visibleCharacterRange = layoutManager.characterRange(forGlyphRange: visibleGlyphRange, actualGlyphRange: nil)
         
@@ -145,22 +151,34 @@ public class GutterViewRenderer {
         var lineRanges: [(Int, NSRange)] = []
         var lineNumber = 1
         
-        // Handle empty range
-        guard range.length > 0 || range.location < text.utf16.count else {
+        // Handle empty range or invalid range
+        guard range.location >= 0,
+              range.location <= text.utf16.count,
+              (range.length > 0 || range.location < text.utf16.count) else {
             return lineRanges
         }
         
+        // Clamp range to valid bounds
+        let clampedLocation = max(0, min(range.location, text.utf16.count))
+        let maxLength = max(0, text.utf16.count - clampedLocation)
+        let clampedLength = max(0, min(range.length, maxLength))
+        
+        let validRange = NSRange(
+            location: clampedLocation,
+            length: clampedLength
+        )
+        
         // Count lines before the visible range
-        if range.location > 0 {
-            let beforeRange = NSRange(location: 0, length: range.location)
+        if validRange.location > 0 {
+            let beforeRange = NSRange(location: 0, length: validRange.location)
             if let beforeText = text.substring(with: beforeRange) {
                 lineNumber += beforeText.components(separatedBy: .newlines).count - 1
             }
         }
         
         // Process visible range
-        var currentLocation = range.location
-        let endLocation = min(range.location + range.length, text.utf16.count)
+        var currentLocation = validRange.location
+        let endLocation = min(validRange.location + validRange.length, text.utf16.count)
         
         while currentLocation < endLocation {
             // Find the end of the current line

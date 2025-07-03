@@ -77,7 +77,8 @@ public class GutterView: PlatformView, GutterViewProtocol {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        drawLineNumbers(in: dirtyRect)
+        // Always draw the full bounds to ensure line numbers are visible when scrolling
+        drawLineNumbers(in: bounds)
     }
     
     /// Text views need a flipped coordinate system on macOS
@@ -183,24 +184,53 @@ extension GutterView {
         
         // Observe scrolling
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let scrollView = textView.enclosingScrollView {
-            let scrollObserver = NotificationCenter.default.addObserver(
-                forName: NSView.boundsDidChangeNotification,
-                object: scrollView.contentView,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in
-                    self?.setNeedsDisplayLineNumbers()
-                }
-            }
-            observers.append(scrollObserver)
-        }
+        // The scroll view will be set up separately via observeScrollView()
+        // since it might not be available when this method is called
         #else
         // For UIKit, scrolling is handled via UIScrollViewDelegate
         // CodeEditorView inherits from UIScrollView on iOS
         textView.delegate = self
         #endif
     }
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Observe scroll view changes (macOS only)
+    func observeScrollView(_ scrollView: NSScrollView) {
+        // Guard against early calls
+        guard scrollView.contentView.bounds.width > 0 else { return }
+        
+        // Remove any existing scroll observers
+        observers = observers.filter { observer in
+            // Keep non-scroll observers
+            return true
+        }
+        
+        // Observe scrolling via the content view's bounds changes
+        let scrollObserver = NotificationCenter.default.addObserver(
+            forName: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.setNeedsDisplayLineNumbers()
+            }
+        }
+        observers.append(scrollObserver)
+        
+        // Also observe the clipView's bounds changes as a backup
+        let clipView = scrollView.contentView
+        let clipObserver = NotificationCenter.default.addObserver(
+            forName: NSView.frameDidChangeNotification,
+            object: clipView,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.setNeedsDisplayLineNumbers()
+            }
+        }
+        observers.append(clipObserver)
+    }
+    #endif
     
     /// Remove all text view observers
     func removeTextViewObservers() {

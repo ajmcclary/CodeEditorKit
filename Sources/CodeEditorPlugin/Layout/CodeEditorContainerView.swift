@@ -94,6 +94,15 @@ public final class CodeEditorContainerView: PlatformView {
         // Common setup
         gutterView.textView = textView
         gutterView.observeTextView()          // start listening for changes
+        
+        // Set up scroll observation for macOS (deferred to avoid initialization issues)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.gutterView.observeScrollView(self.scrollView)
+        }
+        #endif
+        
         setupMinimap()
         
         // IMPORTANT: Remove any internal gutter from text view before setting up
@@ -145,6 +154,7 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
+        textView.drawsBackground = false
     }
     #endif
     
@@ -170,6 +180,7 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
+        textView.drawsBackground = false
         
         // Ensure gutter stays on top
         bringSubviewToFront(gutterView)

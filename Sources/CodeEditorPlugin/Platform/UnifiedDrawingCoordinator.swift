@@ -297,6 +297,8 @@ public enum UnifiedDrawingCoordinator {
     /// Calculate visible text area for a text view
     public static func calculateVisibleTextRect(for textView: CodeEditorView) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // For macOS, simply return the visible rect
+        // The conversion was causing issues in some cases
         return textView.visibleRect
         #else
         return CGRect(
