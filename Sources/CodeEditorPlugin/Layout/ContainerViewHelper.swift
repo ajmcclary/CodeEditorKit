@@ -28,15 +28,24 @@ enum ContainerViewHelper {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS navigation
         textView.setSelectedRange(NSRange(location: targetPosition, length: 0))
-        textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+        
+        // Only scroll if autoScrollToCursor is enabled
+        if textView.configuration.behavior.autoScrollToCursor {
+            textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+        }
         #else
         // iOS navigation
         if let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) {
-            textView.selectedTextRange = textView.textRange(from: position, to: position)
+            let textRange = textView.textRange(from: position, to: position)
             
-            // Scroll to make the line visible
-            let rect = textView.caretRect(for: position)
-            textView.scrollRectToVisible(rect, animated: true)
+            // Use the new method that respects autoScrollToCursor configuration
+            textView.setSelectedTextRangeWithoutScrolling(textRange)
+            
+            // Only scroll if autoScrollToCursor is enabled
+            if textView.configuration.behavior.autoScrollToCursor {
+                let rect = textView.caretRect(for: position)
+                textView.scrollRectToVisible(rect, animated: true)
+            }
         }
         #endif
     }

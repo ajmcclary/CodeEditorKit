@@ -530,6 +530,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         autocapitalizationType = .none
         spellCheckingType = .no
         
+        // Disable automatic content inset adjustments to prevent scroll jumping
+        contentInsetAdjustmentBehavior = .never
+        
         // Set up delegate
         delegate = delegateProxy
         #endif
@@ -1976,7 +1979,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             setSelectedRange(newValue)
             #else
-            selectedRange = newValue
+            print("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            // Use the method that respects autoScrollToCursor configuration
+            setSelectedRangeWithoutScrolling(newValue)
             #endif
         }
     }

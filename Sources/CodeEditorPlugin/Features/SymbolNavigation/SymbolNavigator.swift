@@ -191,8 +191,10 @@ public class SymbolNavigator: ObservableObject {
         // Select the symbol range
         textView.selectedRange = symbol.selectionRange
         
-        // Scroll to make visible
-        textView.scrollRangeToVisible(symbol.selectionRange)
+        // Scroll to make visible only if autoScrollToCursor is enabled
+        if textView.configuration.behavior.autoScrollToCursor {
+            textView.scrollRangeToVisible(symbol.selectionRange)
+        }
         
         // Update selected symbol
         selectedSymbol = symbol

@@ -163,12 +163,18 @@ extension CodeEditorView {
     
     /// Scroll to make range visible
     public func scrollToVisible(_ range: Range<String.Index>) {
+        // Only scroll if autoScrollToCursor is enabled
+        guard configuration.behavior.autoScrollToCursor else { return }
+        
         let nsRange = NSRange(range, in: content)
         scrollRangeToVisible(nsRange)
     }
     
     /// Scroll to line number
     public func scrollToLine(_ lineNumber: Int) {
+        // Only scroll if autoScrollToCursor is enabled
+        guard configuration.behavior.autoScrollToCursor else { return }
+        
         if let range = lineRange(for: lineNumber) {
             scrollToVisible(range)
         }

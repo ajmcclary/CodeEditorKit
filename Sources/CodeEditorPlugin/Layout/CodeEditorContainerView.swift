@@ -455,9 +455,8 @@ public final class CodeEditorContainerView: PlatformView {
         // Ensure gutter stays on top
         bringSubviewToFront(gutterView)
         
-        // Set up scroll delegate for minimap updates
-        // CodeEditorView inherits from UIScrollView on iOS
-        textView.delegate = self
+        // Note: The text view's delegate will be set by the SwiftUI Coordinator
+        // which will forward scroll events back to us
     }
     #endif
     
@@ -536,11 +535,19 @@ public final class CodeEditorContainerView: PlatformView {
             // Add 1 for the newline character
             let targetPosition = lineStart + 1
             textView.setSelectedRange(NSRange(location: targetPosition, length: 0))
-            textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+            
+            // Only scroll if autoScrollToCursor is enabled
+            if configuration.behavior.autoScrollToCursor {
+                textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+            }
         } else {
             // First line
             textView.setSelectedRange(NSRange(location: 0, length: 0))
-            textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+            
+            // Only scroll if autoScrollToCursor is enabled
+            if configuration.behavior.autoScrollToCursor {
+                textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+            }
         }
         #else
         // iOS navigation
@@ -555,16 +562,28 @@ public final class CodeEditorContainerView: PlatformView {
             // Add 1 for the newline character
             let targetPosition = lineStart + 1
             if let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) {
-                textView.selectedTextRange = textView.textRange(from: position, to: position)
+                let textRange = textView.textRange(from: position, to: position)
                 
-                // Scroll to make the line visible
-                let rect = textView.caretRect(for: position)
-                textView.scrollRectToVisible(rect, animated: true)
+                // Use the new method that respects autoScrollToCursor configuration
+                textView.setSelectedTextRangeWithoutScrolling(textRange)
+                
+                // Only scroll if autoScrollToCursor is enabled
+                if configuration.behavior.autoScrollToCursor {
+                    let rect = textView.caretRect(for: position)
+                    textView.scrollRectToVisible(rect, animated: true)
+                }
             }
         } else {
             // First line
-            textView.selectedTextRange = textView.textRange(from: textView.beginningOfDocument, to: textView.beginningOfDocument)
-            textView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: true)
+            let textRange = textView.textRange(from: textView.beginningOfDocument, to: textView.beginningOfDocument)
+            
+            // Use the new method that respects autoScrollToCursor configuration
+            textView.setSelectedTextRangeWithoutScrolling(textRange)
+            
+            // Only scroll if autoScrollToCursor is enabled
+            if configuration.behavior.autoScrollToCursor {
+                textView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: true)
+            }
         }
         #endif
     }
@@ -682,27 +701,24 @@ public final class CodeEditorContainerView: PlatformView {
         #else
         // iOS layout
         
-        // Get the text view's content size
-        let contentSize = textView.contentSize
-        
         // Position content view to fill the container
         contentView.frame = bounds
         
-        // Position gutter on the left - it should match content height, not bounds
+        // Position gutter on the left - fixed position
         gutterView.frame = CGRect(
             x: 0,
             y: 0,
             width: gutterWidth,
-            height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
+            height: bounds.height
         )
         
-        // Position minimap on the right
+        // Position minimap on the right - fixed position
         if configuration.display.showMinimap {
             minimapView.frame = CGRect(
                 x: bounds.width - minimapWidth,
                 y: 0,
                 width: minimapWidth,
-                height: max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
+                height: bounds.height
             )
             minimapView.isHidden = false
         } else {
@@ -781,6 +797,7 @@ public final class CodeEditorContainerView: PlatformView {
         guard !isApplyingConfiguration else { return }
         isApplyingConfiguration = true
         defer { isApplyingConfiguration = false }
+        
         
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
@@ -934,10 +951,23 @@ public final class CodeEditorContainerView: PlatformView {
             bottom: bottomInset,
             right: 0
         )
-        textView.contentInset = contentInsets.uiEdgeInsets
         
-        // Also adjust the scroll indicator insets
-        textView.scrollIndicatorInsets = textView.contentInset
+        // Only update if insets have actually changed to prevent unnecessary scroll jumps
+        let newInsets = contentInsets.uiEdgeInsets
+        if textView.contentInset != newInsets {
+            // Save current scroll position
+            let savedContentOffset = textView.contentOffset
+            
+            textView.contentInset = newInsets
+            
+            // Also adjust the scroll indicator insets
+            textView.scrollIndicatorInsets = textView.contentInset
+            
+            // Restore scroll position if it changed
+            if textView.contentOffset != savedContentOffset {
+                textView.setContentOffset(savedContentOffset, animated: false)
+            }
+        }
         
         // Make sure the gutter redraws with proper positioning
         gutterView.setNeedsDisplay()
@@ -975,9 +1005,37 @@ public final class CodeEditorContainerView: PlatformView {
 
 #if canImport(UIKit)
 extension CodeEditorContainerView: UITextViewDelegate {
-    public func scrollViewDidScroll(_: UIScrollView) {
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // Update minimap when text view scrolls
         updateMinimap()
+        
+        // Don't move the gutter view - keep it fixed in position
+        // The gutter will adjust its drawing based on the text view's scroll offset
+        
+        // Notify the gutter view to update line numbers
+        gutterView.setNeedsDisplayLineNumbers()
+        
+        // Call the gutter's scroll method directly to activate display link
+        gutterView.scrollViewDidScroll(scrollView)
+    }
+    
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        // Start updating line numbers when scrolling begins
+        // This helps activate the display link earlier for smoother updates
+        gutterView.scrollViewWillBeginDragging(scrollView)
+    }
+    
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        // Continue updating if decelerating
+        if !decelerate {
+            // Scrolling has stopped, ensure final update
+            gutterView.setNeedsDisplayLineNumbers()
+        }
+    }
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        // Scrolling has completely stopped
+        gutterView.setNeedsDisplayLineNumbers()
     }
 }
 #endif

@@ -93,10 +93,11 @@ struct SampleCodeEditorView: View {
             .id(viewID)
             #else
             // iOS/iPadOS/Mac Catalyst: Use SwiftUI CodeEditor directly
+            // IMPORTANT: Do NOT use .id() here as it forces view recreation
+            // The CodeEditor handles configuration updates internally
             CodeEditor(text: $text)
                 .codeLanguage(detectLanguage(from: language))
                 .environment(\.codeEditorConfiguration, appState.coordinator.configuration)
-                .id(viewID)
                 .onAppear {
                     // iOS CodeEditor appeared
                 }
@@ -147,8 +148,12 @@ struct SampleCodeEditorView: View {
         if newHash != configurationHash {
             configurationHash = newHash
             
-            // Force view recreation by updating the UUID
+            // For iOS/Catalyst, do NOT force view recreation
+            // The CodeEditor handles configuration updates internally via environment
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            // Only force recreation on macOS native where we use NSViewRepresentable
             viewID = UUID()
+            #endif
         }
     }
     

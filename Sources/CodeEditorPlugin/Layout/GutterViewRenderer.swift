@@ -73,8 +73,10 @@ public class GutterViewRenderer {
             return
         }
         
+        
         let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         let visibleCharacterRange = layoutManager.characterRange(forGlyphRange: visibleGlyphRange, actualGlyphRange: nil)
+        
         
         // Get line ranges for visible area
         let text = textStorage.string
@@ -94,7 +96,8 @@ public class GutterViewRenderer {
                 layoutManager: layoutManager,
                 attributes: attributes,
                 gutterBounds: gutterBounds,
-                context: context
+                context: context,
+                textView: textView
             )
         }
     }
@@ -103,7 +106,15 @@ public class GutterViewRenderer {
     
     /// Get the visible rectangle for the text view
     private func getVisibleRect(for textView: CodeEditorView) -> CGRect {
-        UnifiedDrawingCoordinator.calculateVisibleTextRect(for: textView)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return UnifiedDrawingCoordinator.calculateVisibleTextRect(for: textView)
+        #else
+        // For iOS/Catalyst, the visible rect is simply the scrolled area
+        return CGRect(
+            origin: textView.contentOffset,
+            size: textView.bounds.size
+        )
+        #endif
     }
     
     /// Draw a single line number
@@ -113,20 +124,46 @@ public class GutterViewRenderer {
         layoutManager: NSLayoutManager,
         attributes _: [NSAttributedString.Key: Any],
         gutterBounds: CGRect,
-        context _: CGContext
+        context _: CGContext,
+        textView: CodeEditorView
     ) {
         // Get the rect for this line
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: lineRange.location)
         let lineRect = layoutManager.lineFragmentRect(
-            forGlyphAt: layoutManager.glyphIndexForCharacter(at: lineRange.location),
+            forGlyphAt: glyphIndex,
             effectiveRange: nil,
             withoutAdditionalLayout: true
         )
         
-        // Calculate drawing position (centered vertically)
+        // Calculate drawing position
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS: align with text baseline
         let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+        let yPosition = lineRect.minY + (lineRect.height - fontLineHeight) / 2
+        #else
+        // iOS/Catalyst: Calculate position accounting for text container inset
+        let textContainerInset = textView.textContainerInset
+        
+        // The lineRect.origin.y is in text coordinates (starts at 0)
+        // We need to convert to view coordinates accounting for:
+        // 1. The text container inset (text starts at y = textContainerInset.top)
+        // 2. The scroll offset
+        // 3. Center the line number with the text baseline
+        
+        // When at scroll position 0, the first line of text is at y = textContainerInset.top
+        // So we need to add the inset and subtract the scroll
+        let baseY = lineRect.origin.y + textContainerInset.top - textView.contentOffset.y
+        
+        // Adjust for text baseline alignment (similar to macOS)
+        // The line number should be vertically centered with the text
+        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+        let yPosition = baseY + (lineRect.height - fontLineHeight) / 2
+        
+        #endif
+        
         let drawingPoint = CGPoint(
             x: 0, // Will be adjusted by the unified drawing method for right alignment
-            y: lineRect.minY + (lineRect.height - fontLineHeight) / 2
+            y: yPosition
         )
         
         // Save graphics state
@@ -180,7 +217,12 @@ public class GutterViewRenderer {
         var currentLocation = validRange.location
         let endLocation = min(validRange.location + validRange.length, text.utf16.count)
         
-        while currentLocation < endLocation {
+        // Special case: if we're at the beginning of the text, ensure we include the first line
+        if validRange.location == 0 && text.utf16.count > 0 {
+            currentLocation = 0
+        }
+        
+        while currentLocation <= endLocation && currentLocation < text.utf16.count {
             // Find the end of the current line
             var lineEndLocation = currentLocation
             

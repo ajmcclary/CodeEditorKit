@@ -492,6 +492,28 @@ public struct CodeEditor: View {
             config.display.showMinimap = show
         }
     }
+    
+    /// Configures automatic scrolling to cursor position.
+    ///
+    /// - Parameter enable: Whether to automatically scroll to cursor (default: false)
+    /// - Returns: A view with updated auto-scroll behavior
+    ///
+    /// When enabled, the editor automatically scrolls to make the cursor
+    /// visible when navigating to a specific line or position (e.g., via
+    /// minimap clicks, symbol navigation, or search results).
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .autoScrollToCursor(true)   // Enable automatic scrolling
+    ///     .autoScrollToCursor(false)  // Disable automatic scrolling (default)
+    /// ```
+    public func autoScrollToCursor(_ enable: Bool = false) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.behavior.autoScrollToCursor = enable
+        }
+    }
 }
 
 // MARK: - Platform-Specific Representable
@@ -685,12 +707,58 @@ struct CodeEditorRepresentable: UIViewRepresentable {
             parent.onSelectionChange?(textView.selectedRange)
         }
         
+        // Forward scroll events to the container
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            // Find the container and forward the event
+            if let container = findContainer(for: scrollView) {
+                container.scrollViewDidScroll(scrollView)
+            }
+        }
+        
+        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+            if let container = findContainer(for: scrollView) {
+                container.scrollViewWillBeginDragging(scrollView)
+            }
+        }
+        
+        func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+            if let container = findContainer(for: scrollView) {
+                container.scrollViewDidEndDragging(scrollView, willDecelerate: decelerate)
+            }
+        }
+        
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            if let container = findContainer(for: scrollView) {
+                container.scrollViewDidEndDecelerating(scrollView)
+            }
+        }
+        
+        private func findContainer(for scrollView: UIScrollView) -> CodeEditorContainerView? {
+            // The scrollView is the text view, and its superview's superview should be the container
+            var view = scrollView.superview
+            while view != nil {
+                if let container = view as? CodeEditorContainerView {
+                    return container
+                }
+                view = view?.superview
+            }
+            return nil
+        }
+        
         @MainActor func update(container: CodeEditorContainerView, text: String, language: Language, theme _: CodeEditorSwiftUITheme, configuration: EditorConfiguration) {
             let view = container.textView
+            
+            // Save selection but NOT scroll position - let the user control scrolling
+            let savedSelectedRange = view.selectedRange
             
             // Prevent recursive updates by checking if text already matches
             if view.text != text {
                 view.text = text
+                
+                // Restore selection if possible
+                if savedSelectedRange.location <= (view.text ?? "").count {
+                    view.setSelectedRangeWithoutScrolling(savedSelectedRange)
+                }
             }
             
             // Only update language if it has changed
@@ -703,6 +771,9 @@ struct CodeEditorRepresentable: UIViewRepresentable {
                 container.configuration = configuration
                 // Don't call configuration.apply(to: view) here - the container will handle it
             }
+            
+            // Don't restore scroll position - this causes snapping during user scrolling
+            // The text view maintains its own scroll position naturally
         }
     }
 }

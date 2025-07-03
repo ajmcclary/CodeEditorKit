@@ -74,6 +74,18 @@ struct BehaviorConfigurationSection: View {
                 }
             ))
             .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Auto Scroll to Cursor", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.autoScrollToCursor },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.autoScrollToCursor = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            .help("When enabled, the editor automatically scrolls to make the cursor visible when navigating to a specific line (e.g., via minimap or search)")
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
     }

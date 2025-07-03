@@ -269,7 +269,8 @@ public class EditorContentView: UIView {
         
         // Convert tap location to text position
         if let position = textView.closestPosition(to: location) {
-            textView.selectedTextRange = textView.textRange(from: position, to: position)
+            let textRange = textView.textRange(from: position, to: position)
+            textView.setSelectedTextRangeWithoutScrolling(textRange)
         }
         
         // Ensure text view becomes first responder
@@ -290,7 +291,7 @@ public class EditorContentView: UIView {
                with: .word,
                inDirection: .storage(.forward)
            ) {
-            textView.selectedTextRange = range
+            textView.setSelectedTextRangeWithoutScrolling(range)
         }
     }
     
@@ -306,7 +307,7 @@ public class EditorContentView: UIView {
                with: .line,
                inDirection: .storage(.forward)
            ) {
-            textView.selectedTextRange = range
+            textView.setSelectedTextRangeWithoutScrolling(range)
         }
     }
     
@@ -319,7 +320,8 @@ public class EditorContentView: UIView {
             
             // Start selection at location
             if let position = textView.closestPosition(to: location) {
-                textView.selectedTextRange = textView.textRange(from: position, to: position)
+                let textRange = textView.textRange(from: position, to: position)
+                textView.setSelectedTextRangeWithoutScrolling(textRange)
                 
                 // Show magnifier or selection handles
                 showSelectionUI(at: location)
@@ -368,7 +370,7 @@ public class EditorContentView: UIView {
         
         // Update selection end point
         if let newRange = textView.textRange(from: selectedRange.start, to: position) {
-            textView.selectedTextRange = newRange
+            textView.setSelectedTextRangeWithoutScrolling(newRange)
         }
     }
     

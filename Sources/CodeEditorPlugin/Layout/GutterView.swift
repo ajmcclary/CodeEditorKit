@@ -112,6 +112,14 @@ public class GutterView: PlatformView, GutterViewProtocol {
             lastContentOffset = currentOffset
             setNeedsDisplay()
         }
+        
+        // Auto-pause after a short time to save battery
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            // Only pause if we haven't moved recently
+            if self?.lastContentOffset == scrollView.contentOffset {
+                self?.displayLink?.isPaused = true
+            }
+        }
     }
     #endif
     
@@ -192,9 +200,9 @@ extension GutterView {
         // The scroll view will be set up separately via observeScrollView()
         // since it might not be available when this method is called
         #else
-        // For UIKit, scrolling is handled via UIScrollViewDelegate
-        // CodeEditorView inherits from UIScrollView on iOS
-        textView.delegate = self
+        // For UIKit, scrolling is handled via the container's UIScrollViewDelegate
+        // The container will forward scroll events to us, so we don't set delegate here
+        // This avoids conflicts with other components that need the delegate
         #endif
     }
     
@@ -248,8 +256,37 @@ extension GutterView {
 
 #if canImport(UIKit)
 extension GutterView: UITextViewDelegate {
-    public func scrollViewDidScroll(_: UIScrollView) {
+    @objc public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // Activate display link for smooth updates during scrolling
+        displayLink?.isPaused = false
+        
+        // Also trigger an immediate update
+        setNeedsDisplay()
+    }
+    
+    @objc public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        // Start display link when scrolling begins
         displayLink?.isPaused = false
     }
+    
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            // Pause display link when scrolling stops without deceleration
+            displayLink?.isPaused = true
+            // Ensure final update
+            setNeedsDisplay()
+        }
+    }
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        // Pause display link when scrolling completely stops
+        displayLink?.isPaused = true
+        // Ensure final update
+        setNeedsDisplay()
+    }
 }
+
+// Make scroll handling methods accessible via @objc for dynamic dispatch
+// These are already declared in the UITextViewDelegate extension above
+// No need to redeclare them
 #endif

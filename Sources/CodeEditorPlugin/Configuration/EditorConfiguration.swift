@@ -339,6 +339,18 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// - Note: Usually disabled in favor of language-specific code completion.
         public var isAutomaticTextCompletionEnabled: Bool = false
         
+        /// Whether to automatically scroll to cursor position.
+        ///
+        /// When enabled, the editor automatically scrolls to make the cursor
+        /// visible when navigating to a specific line or position (e.g., via
+        /// minimap clicks, symbol navigation, or search results).
+        ///
+        /// When disabled, navigation actions will move the cursor but won't
+        /// automatically scroll the view.
+        ///
+        /// - Note: This does not affect manual scrolling or cursor movement.
+        public var autoScrollToCursor: Bool = false
+        
         public init() {}
     }
     

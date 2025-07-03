@@ -333,7 +333,11 @@ public class SearchReplaceEngine: ObservableObject {
         guard let textView else { return }
         
         textView.selectedRange = result.range
-        textView.scrollRangeToVisible(result.range)
+        
+        // Only scroll if autoScrollToCursor is enabled
+        if textView.configuration.behavior.autoScrollToCursor {
+            textView.scrollRangeToVisible(result.range)
+        }
         
         // Flash the result for visibility
         if searchOptions.flashResult {

@@ -88,13 +88,11 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             textView.string = text
         }
 
-        // Always apply configuration to ensure updates propagate
-        // Apply configuration to container only - it will handle the text view
-        containerView.configuration = configuration
-        
-        // Force the container view to re-layout immediately
-        containerView.needsLayout = true
-        containerView.layout() // macOS uses layout() not layoutIfNeeded()
+        // Only apply configuration if it has actually changed
+        if containerView.configuration != configuration {
+            // Apply configuration to container only - it will handle the text view
+            containerView.configuration = configuration
+        }
         
         // Update language separately (doesn't affect line numbers)
         textView.setLanguage(fileExtension: language)
@@ -110,9 +108,6 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             context.coordinator.annotationManager?.clearAnnotations()
             context.coordinator.annotationManager = nil
         }
-        
-        // Force the text view to update its display
-        textView.needsDisplay = true
     }
 
     func makeCoordinator() -> Coordinator {
@@ -237,7 +232,6 @@ struct CodeEditorViewWrapper: View {
     @Binding var text: String
     let language: String
     let onTextViewReady: ((CodeEditorView) -> Void)?
-    @State private var internalConfiguration: EditorConfiguration
 
     init(
         configuration: EditorConfiguration,
@@ -249,36 +243,14 @@ struct CodeEditorViewWrapper: View {
         self._text = text
         self.language = language
         self.onTextViewReady = onTextViewReady
-        self._internalConfiguration = State(initialValue: configuration)
     }
 
     var body: some View {
         // Use the modern CodeEditor implementation
         CodeEditor(text: $text)
             .codeLanguage(detectLanguage(from: language))
-            .environment(\.codeEditorConfiguration, internalConfiguration)
-            .id(configurationID) // Force view recreation when configuration changes
-            .onAppear {
-                internalConfiguration = configuration
-            }
-            .onChange(of: configuration) { newValue in
-                internalConfiguration = newValue
-            }
-    }
-    
-    // Create a unique ID based on configuration properties to force view updates
-    private var configurationID: String {
-        var id = ""
-        id += "line:\(configuration.display.showLineNumbers),"
-        id += "font:\(configuration.display.fontSize),"
-        id += "syntax:\(configuration.display.enableSyntaxHighlighting),"
-        id += "annot:\(configuration.display.enableAnnotations),"
-        id += "minimap:\(configuration.display.showMinimap),"
-        id += "highlight:\(configuration.display.highlightSelectedLine),"
-        id += "invisible:\(configuration.display.showInvisibleCharacters),"
-        id += "editable:\(configuration.behavior.isEditable),"
-        id += "tab:\(configuration.layout.tabWidth)"
-        return id
+            .environment(\.codeEditorConfiguration, configuration)
+            // Don't use .id() - the CodeEditor handles configuration updates internally
     }
     
     private func detectLanguage(from fileExtension: String) -> Language {
