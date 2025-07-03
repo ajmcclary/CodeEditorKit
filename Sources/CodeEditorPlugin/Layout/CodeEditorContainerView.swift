@@ -326,7 +326,9 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.drawsBackground = false
+        #endif
         
         // IMPORTANT: Don't set text container inset here - let updateTextContainerInsets handle it
         // The inset will be set based on whether line numbers are shown
@@ -355,7 +357,9 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.drawsBackground = false
+        #endif
         
         // Ensure gutter stays on top
         bringSubviewToFront(gutterView)
