@@ -184,6 +184,14 @@ public class CodeFoldingEngine: ObservableObject {
         guard let region = foldableRegion(at: line) else { return false }
         return foldedRegions.contains(region.id)
     }
+    
+    /// Check if line is the start of a foldable region
+    public func isStartOfFoldableRegion(_ line: Int) -> Bool {
+        foldableRegions.contains { region in
+            let startLine = lineNumber(for: region.range.location)
+            return line == startLine
+        }
+    }
 
     // MARK: - Region Detection
 
@@ -314,9 +322,19 @@ public class CodeFoldingEngine: ObservableObject {
 
         let contentRange = NSRange(location: contentStart, length: contentLength)
 
-        // Hide content using attributes
+        // Create a paragraph style with zero line height to collapse the content
+        let hiddenParagraphStyle = NSMutableParagraphStyle()
+        hiddenParagraphStyle.minimumLineHeight = 0
+        hiddenParagraphStyle.maximumLineHeight = 0
+        hiddenParagraphStyle.lineSpacing = 0
+        hiddenParagraphStyle.paragraphSpacing = 0
+        hiddenParagraphStyle.paragraphSpacingBefore = 0
+
+        // Apply attributes to hide content
         textStorage.addAttributes([
-            .hidden: true,
+            .paragraphStyle: hiddenParagraphStyle,
+            .font: PlatformFont.systemFont(ofSize: 0.1), // Nearly invisible font
+            .foregroundColor: PlatformColors.clear,
             .foldedRegion: region.id
         ], range: contentRange)
     }
@@ -324,9 +342,34 @@ public class CodeFoldingEngine: ObservableObject {
     private func showUnfoldedContent(_ region: FoldableRegion) {
         guard let textStorage else { return }
 
-        // Remove hidden attributes from the entire region
-        textStorage.removeAttribute(.hidden, range: region.range)
-        textStorage.removeAttribute(.foldedRegion, range: region.range)
+        // Calculate content range (excluding first line)
+        let firstLineEnd = firstLineEndLocation(for: region.range)
+        let contentStart = min(firstLineEnd + 1, NSMaxRange(region.range))
+        let contentLength = NSMaxRange(region.range) - contentStart
+
+        guard contentLength > 0 else { return }
+
+        let contentRange = NSRange(location: contentStart, length: contentLength)
+
+        // Remove folding attributes
+        textStorage.removeAttribute(.paragraphStyle, range: contentRange)
+        textStorage.removeAttribute(.font, range: contentRange)
+        textStorage.removeAttribute(.foregroundColor, range: contentRange)
+        textStorage.removeAttribute(.foldedRegion, range: contentRange)
+
+        // Restore original text formatting by reapplying syntax highlighting
+        if let textView {
+            // Force layout update to properly display unfolded content
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView.setNeedsDisplay(textView.bounds)
+            textView.needsLayout = true
+            textView.layoutSubtreeIfNeeded()
+            #else
+            textView.setNeedsDisplay()
+            textView.setNeedsLayout()
+            textView.layoutIfNeeded()
+            #endif
+        }
     }
 
     // MARK: - Utilities
@@ -638,6 +681,5 @@ struct XMLFoldingProvider: CodeFoldingProvider {
 
 extension NSAttributedString.Key {
     static let foldingIndicator = NSAttributedString.Key("CodeEditor.foldingIndicator")
-    static let hidden = NSAttributedString.Key("CodeEditor.hidden")
     static let foldedRegion = NSAttributedString.Key("CodeEditor.foldedRegion")
 }

@@ -73,10 +73,8 @@ public class GutterViewRenderer {
             return
         }
         
-        
         let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         let visibleCharacterRange = layoutManager.characterRange(forGlyphRange: visibleGlyphRange, actualGlyphRange: nil)
-        
         
         // Get line ranges for visible area
         let text = textStorage.string
@@ -204,7 +202,7 @@ public class GutterViewRenderer {
         // Handle empty range or invalid range
         guard range.location >= 0,
               range.location <= text.utf16.count,
-              (range.length > 0 || range.location < text.utf16.count) else {
+              range.length > 0 || range.location < text.utf16.count else {
             return lineRanges
         }
         
@@ -231,7 +229,7 @@ public class GutterViewRenderer {
         let endLocation = min(validRange.location + validRange.length, text.utf16.count)
         
         // Special case: if we're at the beginning of the text, ensure we include the first line
-        if validRange.location == 0 && text.utf16.count > 0 {
+        if validRange.location == 0 && !text.utf16.isEmpty {
             currentLocation = 0
         }
         
@@ -330,7 +328,7 @@ public class GutterViewRenderer {
         in rect: CGRect,
         isFolded: Bool,
         context: CGContext,
-        textView: CodeEditorView
+        textView _: CodeEditorView
     ) {
         // Save graphics state
         context.saveGState()

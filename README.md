@@ -25,7 +25,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
-- 📝 **Rich Editing Experience:** Professional-grade features including line numbers with gutter display, inline `TODO`/`FIXME` annotations with badges, selected line highlighting, invisible character rendering, and smart indentation that understands your code.
+- 📝 **Rich Editing Experience:** Professional-grade features including line numbers with gutter display, inline `TODO`/`FIXME` annotations with badges, selected line highlighting, invisible character rendering, smart indentation that understands your code, and advanced code folding with visual indicators.
 
 - 🎯 **SwiftUI Native:** First-class SwiftUI integration with environment-based configuration, making it as easy to use as any built-in SwiftUI component while maintaining full customization capabilities.
 
@@ -269,7 +269,12 @@ Experience IDE-level intelligence with our foundational LSP support:
 Every feature developers expect from a modern code editor:
 
 - **Smart Indentation Engine**: Understands language syntax and automatically maintains proper code structure
-- **Advanced Code Folding**: Fold functions, classes, and custom regions with persistent state across sessions
+- **Advanced Code Folding**: Fold functions, classes, and custom regions with visual indicators (▶️/▼). Features include:
+  - Click-to-fold interactive controls in the gutter
+  - Language-aware folding for 17 programming languages
+  - Proper code collapsing that actually hides content
+  - Cross-platform support (macOS Native, Mac Catalyst, iOS)
+  - Hierarchical folding with parent-child relationships
 - **Symbol Navigation**: Lightning-fast navigation with outline view and go-to-symbol support
 - **Incremental Parsing**: Only re-parse changed sections for instant feedback even in massive files
 - **Bracket Matching**: Visual and navigational support for all bracket types with customizable highlighting
@@ -313,6 +318,7 @@ The **CodeEditorSample** app serves as both a comprehensive demonstration and a 
 - **Theme System**: Switch between professional themes (Xcode, VS Code Dark, GitHub, Solarized)
 - **Performance Monitoring**: Real-time performance metrics and optimization insights
 - **Annotation System**: See TODO/FIXME/NOTE comments rendered with interactive badges
+- **Code Folding**: Interactive folding controls with visual indicators for collapsing/expanding code sections
 
 ### Production Patterns
 - **Best Practice Integration**: Copy-paste ready SwiftUI and configuration patterns

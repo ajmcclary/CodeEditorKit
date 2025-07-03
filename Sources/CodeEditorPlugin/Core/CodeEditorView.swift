@@ -1476,7 +1476,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Set tab stops based on tab width
         let tabWidth = CGFloat(configuration.layout.tabWidth)
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        let spaceWidth = ("    " as NSString).size(withAttributes: [.font: font]).width / 4.0 // Width of one space
+        let spaceWidth = "    ".size(withAttributes: [.font: font]).width / 4.0 // Width of one space
         let tabInterval = spaceWidth * tabWidth
         
         // Clear existing tab stops and set new ones
@@ -2056,7 +2056,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #else
-            print("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #endif
@@ -2382,7 +2382,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             let maxCheck = min(tabWidth, currentRange.location)
             let checkRange = NSRange(location: currentRange.location - maxCheck, length: maxCheck)
             let text = textStorage.string
-            let substring = (text as NSString).substring(with: checkRange)
+            let substring = String(text[Range(checkRange, in: text)!])
             
             // Count trailing spaces
             var spacesToRemove = 0
@@ -2427,7 +2427,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 // MARK: - Public Code Folding API
 
 extension CodeEditorView {
-    
     /// Toggle fold state at the specified line number.
     ///
     /// If the line contains a foldable region that is currently expanded, it will be folded.
@@ -2441,7 +2440,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Toggle folding at line 25
     /// if editor.toggleFold(at: 25) {
-    ///     print("Folding toggled successfully")
+    ///     logger.debug("Folding toggled successfully")
     /// }
     /// ```
     public func toggleFold(at lineNumber: Int) -> Bool {
@@ -2464,7 +2463,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Fold function at line 42
     /// if editor.fold(at: 42) {
-    ///     print("Function folded")
+    ///     logger.debug("Function folded")
     /// }
     /// ```
     public func fold(at lineNumber: Int) -> Bool {
@@ -2489,7 +2488,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Unfold code at line 42
     /// if editor.unfold(at: 42) {
-    ///     print("Code unfolded")
+    ///     logger.debug("Code unfolded")
     /// }
     /// ```
     public func unfold(at lineNumber: Int) -> Bool {
@@ -2520,7 +2519,7 @@ extension CodeEditorView {
     /// ```
     public func isFoldable(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
-        return codeFoldingEngine.foldableRegion(at: lineNumber) != nil
+        return codeFoldingEngine.isStartOfFoldableRegion(lineNumber)
     }
     
     /// Check if a line is currently folded.
@@ -2532,12 +2531,12 @@ extension CodeEditorView {
     ///
     /// ```swift
     /// if editor.isFolded(at: 25) {
-    ///     print("Line 25 is currently folded")
+    ///     logger.debug("Line 25 is currently folded")
     /// }
     /// ```
     public func isFolded(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
-        return codeFoldingEngine.isLineFolded(line: lineNumber)
+        return codeFoldingEngine.isLineFolded(lineNumber)
     }
     
     /// Fold all regions of a specific type.
@@ -2595,7 +2594,7 @@ extension CodeEditorView {
     /// ```swift
     /// let regions = editor.foldableRegions
     /// for region in regions {
-    ///     print("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
+    ///     logger.debug("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
     /// }
     /// ```
     public var foldableRegions: [FoldableRegion] {
@@ -2613,4 +2612,3 @@ extension CodeEditorView {
         }
     }
 }
-

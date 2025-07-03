@@ -181,7 +181,7 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     
     // Mark view as opaque for proper rendering
     override public var isOpaque: Bool {
-        return true
+        true
     }
     
     override public init(frame frameRect: NSRect) {

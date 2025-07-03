@@ -186,11 +186,10 @@ extension GutterView {
 // MARK: - Click/Tap Handling
 
 extension GutterView {
-    
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Handle mouse clicks on macOS
     override public func mouseDown(with event: NSEvent) {
-        guard let textView = textView else {
+        guard let textView else {
             super.mouseDown(with: event)
             return
         }
@@ -207,10 +206,10 @@ extension GutterView {
     #else
     /// Handle tap gestures on iOS/Catalyst
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        guard let textView = textView else { return }
+        guard let textView else { return }
         
         let localPoint = gesture.location(in: self)
-        handleClickAt(point: localPoint, in: textView)
+        _ = handleClickAt(point: localPoint, in: textView)
     }
     #endif
     
@@ -352,9 +351,9 @@ extension GutterView {
         guard scrollView.contentView.bounds.width > 0 else { return }
         
         // Remove any existing scroll observers
-        observers = observers.filter { observer in
+        observers = observers.filter { _ in
             // Keep non-scroll observers
-            return true
+            true
         }
         
         // Observe scrolling via the content view's bounds changes
@@ -395,7 +394,7 @@ extension GutterView {
 
 #if canImport(UIKit)
 extension GutterView: UITextViewDelegate {
-    @objc public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    @objc public func scrollViewDidScroll(_: UIScrollView) {
         // Activate display link for smooth updates during scrolling
         displayLink?.isPaused = false
         
@@ -403,12 +402,12 @@ extension GutterView: UITextViewDelegate {
         setNeedsDisplay()
     }
     
-    @objc public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    @objc public func scrollViewWillBeginDragging(_: UIScrollView) {
         // Start display link when scrolling begins
         displayLink?.isPaused = false
     }
     
-    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
         if !decelerate {
             // Pause display link when scrolling stops without deceleration
             displayLink?.isPaused = true
@@ -417,7 +416,7 @@ extension GutterView: UITextViewDelegate {
         }
     }
     
-    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(_: UIScrollView) {
         // Pause display link when scrolling completely stops
         displayLink?.isPaused = true
         // Ensure final update

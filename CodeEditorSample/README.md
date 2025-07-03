@@ -87,6 +87,13 @@ Copy these battle-tested patterns directly into your applications:
   - Hover popups with rich information
   - Performance optimized for files with hundreds of annotations
 
+- ✅ **Advanced Code Folding**
+  - Visual folding indicators (▶️/▼) in the gutter
+  - Click-to-fold interaction for functions, classes, and blocks
+  - Language-aware folding for all 17 supported languages
+  - Proper code collapsing with hidden content
+  - Works seamlessly across macOS Native, Mac Catalyst, and iOS
+
 ### True Cross-Platform Excellence
 
 Experience how our sophisticated platform abstraction delivers native performance everywhere:
@@ -172,6 +179,7 @@ The app launches a complete code editing environment demonstrating all features 
 - ✅ **Fixed Configuration Flow**: All settings now apply correctly across all platforms
 - ✅ **Resolved Double Line Numbers**: Fixed gutter view duplication on macOS Native
 - ✅ **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst platforms
+- ✅ **Code Folding Implementation**: Added interactive folding controls with proper code collapsing
 
 ## ✨ How to Integrate CodeEditorPlugin
 
@@ -289,6 +297,21 @@ See how to detect and display inline code annotations.
 // Configure annotation behavior
 config.display.enableAnnotations = true
 config.display.annotationRenderingMode = .inline
+```
+
+### 6. Code Folding Configuration
+
+Enable interactive code folding with visual indicators.
+
+```swift
+// Enable code folding features
+config.display.enableCodeFolding = true
+config.display.showFoldingControls = true
+config.layout.foldingControlSize = 10.0
+config.layout.foldingControlPadding = 4.0
+
+// Code folding works automatically for supported languages
+// Users can click the ▶️/▼ indicators to fold/unfold code sections
 ```
 
 ## 🧪 Testing & Quality

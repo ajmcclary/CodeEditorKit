@@ -1,9 +1,13 @@
 import Foundation
+import os.log
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
+
+// Local logger instance for selection handling
+private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "SelectionHandling")
 
 // MARK: - Selection Handling Without Auto-Scroll
 
@@ -41,10 +45,10 @@ extension CodeEditorView {
     /// Override the UITextView's selectedTextRange setter to respect autoScrollToCursor
     override open var selectedTextRange: UITextRange? {
         get {
-            return super.selectedTextRange
+            super.selectedTextRange
         }
         set {
-            print("🎯 selectedTextRange override called, autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("🎯 selectedTextRange override called, autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
             
             // Only prevent scrolling if autoScrollToCursor is false
             if !configuration.behavior.autoScrollToCursor && newValue != nil {
@@ -52,7 +56,7 @@ extension CodeEditorView {
                 let savedContentOffset = contentOffset
                 let savedScrollEnabled = isScrollEnabled
                 
-                print("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
+                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
                 
                 // Temporarily disable scrolling
                 isScrollEnabled = false
@@ -65,7 +69,7 @@ extension CodeEditorView {
                 
                 // Restore scroll position if it changed
                 if contentOffset != savedContentOffset {
-                    print("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+                    kLogger.debug("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
                     setContentOffset(savedContentOffset, animated: false)
                 }
             } else {
@@ -78,10 +82,10 @@ extension CodeEditorView {
     /// Override UITextView's selectedRange property to respect autoScrollToCursor
     override open var selectedRange: NSRange {
         get {
-            return super.selectedRange
+            super.selectedRange
         }
         set {
-            print("🎯 selectedRange override called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("🎯 selectedRange override called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
             
             // Only prevent scrolling if autoScrollToCursor is false
             if !configuration.behavior.autoScrollToCursor {
@@ -89,7 +93,7 @@ extension CodeEditorView {
                 let savedContentOffset = contentOffset
                 let savedScrollEnabled = isScrollEnabled
                 
-                print("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
+                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
                 
                 // Temporarily disable scrolling
                 isScrollEnabled = false
@@ -102,7 +106,7 @@ extension CodeEditorView {
                 
                 // Restore scroll position if it changed
                 if contentOffset != savedContentOffset {
-                    print("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+                    kLogger.debug("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
                     setContentOffset(savedContentOffset, animated: false)
                 }
             } else {
@@ -122,13 +126,13 @@ extension CodeEditorView {
             return
         }
         
-        print("🔒 setSelectedTextRangeWithoutScrolling: autoScrollToCursor = \(configuration.behavior.autoScrollToCursor)")
+        kLogger.debug("🔒 setSelectedTextRangeWithoutScrolling: autoScrollToCursor = \(configuration.behavior.autoScrollToCursor)")
         
         // Save current scroll position
         let savedContentOffset = contentOffset
         let savedScrollEnabled = isScrollEnabled
         
-        print("🔒 Before: contentOffset = \(savedContentOffset)")
+        kLogger.debug("🔒 Before: contentOffset = \(savedContentOffset)")
         
         // Temporarily disable scrolling to prevent automatic scroll
         isScrollEnabled = false
@@ -141,11 +145,11 @@ extension CodeEditorView {
         
         // Restore the scroll position if it changed
         if contentOffset != savedContentOffset {
-            print("🔒 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+            kLogger.debug("🔒 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
             setContentOffset(savedContentOffset, animated: false)
         }
         
-        print("🔒 After: contentOffset = \(contentOffset)")
+        kLogger.debug("🔒 After: contentOffset = \(contentOffset)")
     }
     
     /// Sets the selected range (NSRange) without triggering automatic scrolling
@@ -169,13 +173,13 @@ extension CodeEditorView {
     
     /// Override scrollRectToVisible to respect autoScrollToCursor configuration
     override open func scrollRectToVisible(_ rect: CGRect, animated: Bool) {
-        print("🚫 scrollRectToVisible called with rect: \(rect), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+        kLogger.debug("🚫 scrollRectToVisible called with rect: \(rect), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
         
         // Only allow scrolling if autoScrollToCursor is true
         if configuration.behavior.autoScrollToCursor {
             super.scrollRectToVisible(rect, animated: animated)
         } else {
-            print("🚫 Blocking scrollRectToVisible because autoScrollToCursor is false")
+            kLogger.debug("🚫 Blocking scrollRectToVisible because autoScrollToCursor is false")
         }
     }
     #endif

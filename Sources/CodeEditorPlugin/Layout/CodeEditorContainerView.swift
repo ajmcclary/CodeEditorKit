@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
@@ -8,26 +9,26 @@ private class LineNumberRulerView: NSRulerView {
     // MARK: - Properties
     
     /// The text view this ruler is associated with
-    public weak var textView: NSTextView?
+    weak var textView: NSTextView?
     
     /// Font for line numbers
-    public var font: NSFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+    var font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
     
     /// Text color for line numbers
-    public var textColor: NSColor = NSColor.secondaryLabelColor
+    var textColor = NSColor.secondaryLabelColor
     
     /// Background color
-    public var backgroundColor: NSColor = NSColor.controlBackgroundColor
+    var backgroundColor = NSColor.controlBackgroundColor
     
     /// Right padding for line numbers
-    public var rightPadding: CGFloat = 8.0
+    var rightPadding: CGFloat = 8.0
     
     // MARK: - Initialization
     
-    public override init(scrollView: NSScrollView?, orientation: NSRulerView.Orientation) {
+    override init(scrollView: NSScrollView?, orientation: NSRulerView.Orientation) {
         super.init(scrollView: scrollView, orientation: orientation)
         self.clientView = scrollView?.documentView
-        self.ruleThickness = 40.0 // Default width, matches our gutter width
+        self.ruleThickness = 50.0 // Increased width to accommodate folding controls
         self.clipsToBounds = true // Prevent drawing outside bounds
     }
     
@@ -37,7 +38,7 @@ private class LineNumberRulerView: NSRulerView {
     
     // MARK: - Drawing
     
-    public override func drawHashMarksAndLabels(in rect: NSRect) {
+    override func drawHashMarksAndLabels(in rect: NSRect) {
         // Fill background
         backgroundColor.set()
         rect.fill()
@@ -80,10 +81,10 @@ private class LineNumberRulerView: NSRulerView {
         // Debug info
         #if DEBUG
         if characterRange.location == 0 {
-            print("📍 At top: range=\(characterRange)")
+            kLogger.debug("📍 At top: range=\(characterRange)")
         }
         if characterRange.location + characterRange.length >= textLength && textLength > 0 {
-            print("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
+            kLogger.debug("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
         }
         #endif
         
@@ -114,6 +115,19 @@ private class LineNumberRulerView: NSRulerView {
             )
             
             lineNumberString.draw(at: drawingPoint, withAttributes: attributes)
+            
+            // Draw folding control if this line is foldable
+            if let codeEditorView = textView as? CodeEditorView,
+               codeEditorView.configuration.display.enableCodeFolding &&
+               codeEditorView.configuration.display.showFoldingControls &&
+               codeEditorView.isFoldable(at: lineNumber) {
+                drawFoldingControl(
+                    for: lineNumber,
+                    at: yPosition,
+                    lineHeight: lineRect.height,
+                    in: codeEditorView
+                )
+            }
         }
         
         // Draw a separator line on the right edge
@@ -143,30 +157,12 @@ private class LineNumberRulerView: NSRulerView {
         
         // Count lines before the visible range
         if validLocation > 0 {
-            // Use NSString for counting newlines - more reliable with NSRange
-            let nsString = text as NSString
-            var count = 0
-            var searchRange = NSRange(location: 0, length: validLocation)
-            
-            while searchRange.length > 0 && searchRange.location < nsString.length {
-                // Ensure search range is valid
-                let safeLength = min(searchRange.length, nsString.length - searchRange.location)
-                let safeRange = NSRange(location: searchRange.location, length: safeLength)
-                
-                let newlineRange = nsString.rangeOfCharacter(from: .newlines, options: [], range: safeRange)
-                if newlineRange.location != NSNotFound {
-                    count += 1
-                    let nextStart = newlineRange.location + newlineRange.length
-                    if nextStart < validLocation && nextStart < nsString.length {
-                        searchRange = NSRange(location: nextStart, length: validLocation - nextStart)
-                    } else {
-                        break
-                    }
-                } else {
-                    break
-                }
+            // Count newlines in the prefix
+            let beforeRange = NSRange(location: 0, length: validLocation)
+            if let beforeString = Range(beforeRange, in: text) {
+                let substring = text[beforeString]
+                lineNumber += substring.components(separatedBy: .newlines).count - 1
             }
-            lineNumber += count
         }
         
         // Process visible range
@@ -179,26 +175,18 @@ private class LineNumberRulerView: NSRulerView {
             
             // Search for line ending
             if currentLocation < textLength {
-                // Use NSString for more reliable range operations
-                let nsString = text as NSString
-                let nsLength = nsString.length
-                
-                // Ensure we don't exceed NSString bounds
-                if currentLocation < nsLength {
-                    let searchLength = min(textLength - currentLocation, nsLength - currentLocation)
-                    let searchRange = NSRange(location: currentLocation, length: searchLength)
-                    
-                    let newlineRange = nsString.rangeOfCharacter(from: .newlines, options: [], range: searchRange)
-                    
-                    if newlineRange.location != NSNotFound {
-                        // Found a newline
-                        lineEndLocation = min(newlineRange.location + newlineRange.length, textLength)
+                // Find next newline from current location
+                let searchRange = NSRange(location: currentLocation, length: textLength - currentLocation)
+                if let range = Range(searchRange, in: text) {
+                    let substring = text[range]
+                    if let newlineIndex = substring.firstIndex(where: { $0.isNewline }) {
+                        let distance = substring.distance(from: substring.startIndex, to: newlineIndex)
+                        lineEndLocation = currentLocation + distance + 1  // +1 to include the newline
                     } else {
                         // No more newlines, this is the last line
                         lineEndLocation = textLength
                     }
                 } else {
-                    // Current location exceeds NSString bounds
                     lineEndLocation = textLength
                 }
             } else {
@@ -214,7 +202,7 @@ private class LineNumberRulerView: NSRulerView {
             
             // Debug check before creating NSRange
             if currentLocation > lineEndLocation {
-                print("⚠️ Invalid range detected: currentLocation=\(currentLocation) > lineEndLocation=\(lineEndLocation)")
+                kLogger.debug("⚠️ Invalid range detected: currentLocation=\(currentLocation) > lineEndLocation=\(lineEndLocation)")
                 // Skip this invalid range
                 currentLocation = lineEndLocation
                 continue
@@ -238,17 +226,148 @@ private class LineNumberRulerView: NSRulerView {
     
     // MARK: - Width Calculation
     
-    public func updateWidth(for maxLineNumber: Int) {
+    func updateWidth(for maxLineNumber: Int) {
         let testString = String(repeating: "9", count: "\(maxLineNumber)".count)
         let size = testString.size(withAttributes: [.font: font])
-        ruleThickness = size.width + rightPadding * 2
+        
+        // Add space for folding controls if enabled
+        var baseWidth = size.width + rightPadding * 2
+        if let textView = self.clientView as? CodeEditorView,
+           textView.configuration.display.enableCodeFolding &&
+           textView.configuration.display.showFoldingControls {
+            baseWidth += textView.configuration.layout.foldingControlSize + textView.configuration.layout.foldingControlPadding * 2
+        }
+        
+        ruleThickness = baseWidth
     }
     
+    // MARK: - Folding Controls
+    
+    private func drawFoldingControl(for lineNumber: Int, at yPosition: CGFloat, lineHeight: CGFloat, in textView: CodeEditorView) {
+        let controlSize = textView.configuration.layout.foldingControlSize
+        let controlPadding = textView.configuration.layout.foldingControlPadding
+        
+        // Position control on the left side
+        let xPosition = controlPadding
+        let controlY = yPosition + (lineHeight - controlSize) / 2
+        
+        let controlRect = NSRect(x: xPosition, y: controlY, width: controlSize, height: controlSize)
+        
+        // Draw background circle
+        let backgroundPath = NSBezierPath(ovalIn: controlRect)
+        NSColor.tertiaryLabelColor.withAlphaComponent(0.2).setFill()
+        backgroundPath.fill()
+        
+        // Draw border
+        NSColor.tertiaryLabelColor.setStroke()
+        backgroundPath.lineWidth = 0.5
+        backgroundPath.stroke()
+        
+        // Check if folded
+        let isFolded = textView.isFolded(at: lineNumber)
+        
+        // Draw the triangle icon
+        drawFoldingIcon(in: controlRect.insetBy(dx: controlSize * 0.25, dy: controlSize * 0.25), isFolded: isFolded)
+    }
+    
+    private func drawFoldingIcon(in rect: NSRect, isFolded: Bool) {
+        let path = NSBezierPath()
+        
+        NSColor.labelColor.setFill()
+        
+        if isFolded {
+            // Right-pointing triangle (▶️)
+            path.move(to: NSPoint(x: rect.minX, y: rect.minY))
+            path.line(to: NSPoint(x: rect.maxX, y: rect.midY))
+            path.line(to: NSPoint(x: rect.minX, y: rect.maxY))
+        } else {
+            // Down-pointing triangle (▼)
+            path.move(to: NSPoint(x: rect.minX, y: rect.minY))
+            path.line(to: NSPoint(x: rect.maxX, y: rect.minY))
+            path.line(to: NSPoint(x: rect.midX, y: rect.maxY))
+        }
+        
+        path.close()
+        path.fill()
+    }
+    
+    // MARK: - Click Handling
+    
+    override func mouseDown(with event: NSEvent) {
+        guard let textView = self.clientView as? CodeEditorView else {
+            super.mouseDown(with: event)
+            return
+        }
+        
+        let localPoint = convert(event.locationInWindow, from: nil)
+        
+        // Check if click is on a folding control
+        if handleFoldingControlClick(at: localPoint, in: textView) {
+            return
+        }
+        
+        super.mouseDown(with: event)
+    }
+    
+    private func handleFoldingControlClick(at point: NSPoint, in textView: CodeEditorView) -> Bool {
+        guard textView.configuration.display.enableCodeFolding &&
+              textView.configuration.display.showFoldingControls else {
+            return false
+        }
+        
+        // Find which line was clicked
+        guard let lineNumber = findLineNumber(at: point, in: textView) else {
+            return false
+        }
+        
+        // Check if this line is foldable
+        guard textView.isFoldable(at: lineNumber) else {
+            return false
+        }
+        
+        // Check if click is within folding control area
+        let controlSize = textView.configuration.layout.foldingControlSize
+        let controlPadding = textView.configuration.layout.foldingControlPadding
+        
+        if point.x <= controlPadding + controlSize {
+            // Toggle folding
+            _ = textView.toggleFold(at: lineNumber)
+            setNeedsDisplay(bounds)
+            return true
+        }
+        
+        return false
+    }
+    
+    private func findLineNumber(at point: NSPoint, in textView: NSTextView) -> Int? {
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else {
+            return nil
+        }
+        
+        // Convert point to text view coordinates
+        let textPoint = convert(point, to: textView)
+        
+        // Find the character index at this point
+        let index = layoutManager.characterIndex(for: textPoint, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
+        
+        if index < textView.string.count {
+            // Count lines up to this index
+            let text = textView.string
+            let substring = String(text.prefix(index))
+            return substring.components(separatedBy: .newlines).count
+        }
+        
+        return nil
+    }
 }
 
 #elseif canImport(UIKit)
 import UIKit
 #endif
+
+// Local logger instance for container view
+private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView")
 
 /// Cross-platform container view that holds the text view, gutter view, and minimap
 /// This allows the gutter and minimap to remain fixed while the text view scrolls
@@ -845,7 +964,6 @@ public final class CodeEditorContainerView: PlatformView {
         isApplyingConfiguration = true
         defer { isApplyingConfiguration = false }
         
-        
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
         var textViewConfig = configuration
@@ -1072,7 +1190,7 @@ extension CodeEditorContainerView: UITextViewDelegate {
         gutterView.scrollViewWillBeginDragging(scrollView)
     }
     
-    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
         // Continue updating if decelerating
         if !decelerate {
             // Scrolling has stopped, ensure final update
@@ -1080,7 +1198,7 @@ extension CodeEditorContainerView: UITextViewDelegate {
         }
     }
     
-    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(_: UIScrollView) {
         // Scrolling has completely stopped
         gutterView.setNeedsDisplayLineNumbers()
     }
