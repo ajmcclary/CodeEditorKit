@@ -766,7 +766,7 @@ public final class CodeEditorContainerView: PlatformView {
         }
     }
     
-    private func applyConfiguration() {
+    public func applyConfiguration() {
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
         var textViewConfig = configuration

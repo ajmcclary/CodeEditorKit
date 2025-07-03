@@ -1241,6 +1241,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         #endif
         
+        // Apply paragraph style for tab width and line spacing
+        applyParagraphStyle()
+        
         // Apply behavior settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isEditable = configuration.behavior.isEditable
@@ -1255,6 +1258,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         needsLayout = true
         #else
         setNeedsLayout()
+        #endif
+        
+        // Notify container view to update gutter width if needed
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let containerView = superview?.superview as? CodeEditorContainerView {
+            containerView.applyConfiguration()
+        }
+        #else
+        if let containerView = superview?.superview as? CodeEditorContainerView {
+            containerView.applyConfiguration()
+        }
         #endif
     }
 
@@ -1369,6 +1383,63 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         layoutManager?.showsInvisibleCharacters = showsInvisibleCharacters
         #else
         // UITextView's layout manager doesn't support showsInvisibleCharacters
+        #endif
+    }
+    
+    /// Apply paragraph style settings for tab width and line spacing
+    private func applyParagraphStyle() {
+        // Create a new paragraph style with the configured settings
+        let paragraphStyle = NSMutableParagraphStyle()
+        
+        // Set line spacing multiplier
+        paragraphStyle.lineHeightMultiple = configuration.layout.lineSpacing
+        
+        // Set tab stops based on tab width
+        let tabWidth = CGFloat(configuration.layout.tabWidth)
+        let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        let spaceWidth = ("    " as NSString).size(withAttributes: [.font: font]).width / 4.0 // Width of one space
+        let tabInterval = spaceWidth * tabWidth
+        
+        // Clear existing tab stops and set new ones
+        paragraphStyle.tabStops = []
+        var tabPosition: CGFloat = tabInterval
+        for _ in 0..<50 { // Create enough tab stops for reasonable content
+            let tabStop = NSTextTab(textAlignment: .left, location: tabPosition, options: [:])
+            paragraphStyle.tabStops.append(tabStop)
+            tabPosition += tabInterval
+        }
+        
+        // Set default tab interval
+        paragraphStyle.defaultTabInterval = tabInterval
+        
+        // Apply the paragraph style to all text
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textStorage = self.textStorage {
+            let range = NSRange(location: 0, length: textStorage.length)
+            textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
+            
+            // Set as default paragraph style for new text
+            defaultParagraphStyle = paragraphStyle
+        }
+        #else
+        if let textStorage = self.textStorage {
+            let range = NSRange(location: 0, length: textStorage.length)
+            textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
+        }
+        
+        // Set as typing attributes for new text
+        var typingAttrs = typingAttributes
+        typingAttrs[.paragraphStyle] = paragraphStyle
+        typingAttributes = typingAttrs
+        #endif
+        
+        // Force text view to relayout and redraw
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        needsDisplay = true
+        needsLayout = true
+        #else
+        setNeedsDisplay()
+        setNeedsLayout()
         #endif
     }
 
@@ -2194,6 +2265,65 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
     
     // MARK: - Cleanup
+    
+    // MARK: - Tab Handling
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Handle tab key press for macOS
+    override public func insertTab(_ sender: Any?) {
+        if configuration.layout.insertSpacesForTabs {
+            // Insert spaces instead of a tab character
+            let spaces = String(repeating: " ", count: configuration.layout.tabWidth)
+            insertText(spaces)
+        } else {
+            // Insert a regular tab character
+            super.insertTab(sender)
+        }
+    }
+    
+    /// Handle backtab (shift+tab) for macOS
+    override public func insertBacktab(_ sender: Any?) {
+        if configuration.layout.insertSpacesForTabs {
+            // Remove up to tabWidth spaces before cursor
+            let tabWidth = configuration.layout.tabWidth
+            guard let textStorage = self.textStorage else {
+                super.insertBacktab(sender)
+                return
+            }
+            
+            let currentRange = selectedRange()
+            guard currentRange.location > 0 else {
+                super.insertBacktab(sender)
+                return
+            }
+            
+            // Look backwards to find spaces to remove
+            let maxCheck = min(tabWidth, currentRange.location)
+            let checkRange = NSRange(location: currentRange.location - maxCheck, length: maxCheck)
+            let text = textStorage.string
+            let substring = (text as NSString).substring(with: checkRange)
+            
+            // Count trailing spaces
+            var spacesToRemove = 0
+            for char in substring.reversed() {
+                if char == " " {
+                    spacesToRemove += 1
+                } else {
+                    break
+                }
+            }
+            
+            if spacesToRemove > 0 {
+                let removeRange = NSRange(location: currentRange.location - spacesToRemove, length: spacesToRemove)
+                replaceCharacters(in: removeRange, with: "")
+            } else {
+                super.insertBacktab(sender)
+            }
+        } else {
+            super.insertBacktab(sender)
+        }
+    }
+    #endif
     
     deinit {
         // Remove notification observers

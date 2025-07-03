@@ -15,6 +15,7 @@ struct LayoutConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.layout.wrapLines = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -25,6 +26,7 @@ struct LayoutConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.layout.insertSpacesForTabs = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -49,6 +51,7 @@ struct LayoutConfigurationSection: View {
                             appState.coordinator.update { config in
                                 config.layout.tabWidth = Int(newValue)
                             }
+                            appState.objectWillChange.send()
                         }
                     ),
                     in: 1...8,
@@ -75,6 +78,7 @@ struct LayoutConfigurationSection: View {
                             appState.coordinator.update { config in
                                 config.layout.lineSpacing = newValue
                             }
+                            appState.objectWillChange.send()
                         }
                     ),
                     in: 0.8...3.0,
@@ -101,6 +105,7 @@ struct LayoutConfigurationSection: View {
                             appState.coordinator.update { config in
                                 config.layout.gutterWidth = newValue
                             }
+                            appState.objectWillChange.send()
                         }
                     ),
                     in: 30...100,

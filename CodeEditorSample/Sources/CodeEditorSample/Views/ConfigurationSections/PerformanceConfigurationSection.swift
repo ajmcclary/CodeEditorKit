@@ -15,6 +15,7 @@ struct PerformanceConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.performance.useHardwareAcceleration = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -25,6 +26,7 @@ struct PerformanceConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.performance.smoothScrolling = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -49,6 +51,7 @@ struct PerformanceConfigurationSection: View {
                             appState.coordinator.update { config in
                                 config.performance.maxSyntaxHighlightingLength = Int(newValue)
                             }
+                            appState.objectWillChange.send()
                         }
                     ),
                     in: 100_000...5_000_000,
@@ -77,6 +80,7 @@ struct PerformanceConfigurationSection: View {
                             appState.coordinator.update { config in
                                 config.performance.maxSyntaxHighlightingLength = Int(newValue)
                             }
+                            appState.objectWillChange.send()
                         }
                     ),
                     in: 10_000...1_000_000,

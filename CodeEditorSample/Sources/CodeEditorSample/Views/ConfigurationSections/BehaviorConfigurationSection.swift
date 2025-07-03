@@ -15,6 +15,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.isEditable = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -25,6 +26,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.autoIndent = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -35,6 +37,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.enableCodeCompletion = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -45,6 +48,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.isContinuousSpellCheckingEnabled = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -55,6 +59,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.isAutomaticQuoteSubstitutionEnabled = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -65,6 +70,7 @@ struct BehaviorConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.behavior.autoCloseBrackets = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
