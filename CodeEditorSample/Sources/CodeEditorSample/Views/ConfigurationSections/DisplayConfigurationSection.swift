@@ -64,6 +64,17 @@ struct DisplayConfigurationSection: View {
             ))
             .toggleStyle(configurationToggleStyle())
             
+            Toggle("Show Indent Guides", isOn: Binding(
+                get: { appState.coordinator.configuration.display.showIndentGuides },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.display.showIndentGuides = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
             Toggle("Show Minimap", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showMinimap },
                 set: { newValue in

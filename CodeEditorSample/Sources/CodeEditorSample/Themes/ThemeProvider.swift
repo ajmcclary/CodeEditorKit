@@ -576,4 +576,3 @@ enum ColorTheme: String, CaseIterable {
     }
 }
 #endif
-

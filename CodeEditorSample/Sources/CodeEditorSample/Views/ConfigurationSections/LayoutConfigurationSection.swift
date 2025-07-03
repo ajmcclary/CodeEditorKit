@@ -113,6 +113,114 @@ struct LayoutConfigurationSection: View {
                 )
                 .accentColor(.blue)
             }
+            
+            // Line Number Padding
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Line Number Padding")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.lineNumberPadding))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.lineNumberPadding },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.lineNumberPadding = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 4...20,
+                    step: 1
+                )
+                .accentColor(.blue)
+            }
+            
+            // Annotation Badge Size
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Annotation Badge Size")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.annotationBadgeSize))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.annotationBadgeSize },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.annotationBadgeSize = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 8...24,
+                    step: 1
+                )
+                .accentColor(.blue)
+            }
+            
+            // Annotation Badge Padding
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Annotation Badge Padding")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.annotationBadgePadding))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.annotationBadgePadding },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.annotationBadgePadding = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 2...12,
+                    step: 1
+                )
+                .accentColor(.blue)
+            }
+            
+            // Minimap Width
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Minimap Width")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text("\(Int(appState.coordinator.configuration.layout.minimapWidth))pt")
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.layout.minimapWidth },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.layout.minimapWidth = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 80...200,
+                    step: 10
+                )
+                .accentColor(.blue)
+            }
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
     }

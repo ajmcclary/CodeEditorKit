@@ -88,6 +88,36 @@ struct PerformanceConfigurationSection: View {
                 )
                 .accentColor(.blue)
             }
+            
+            // Text Change Debounce Interval
+            VStack(alignment: .leading, spacing: adaptiveControlSpacing()) {
+                HStack {
+                    Text("Text Change Debounce")
+                        .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
+                    Spacer()
+                    Text(String(
+                        format: "%.1fs", 
+                        appState.coordinator.configuration.performance.textChangeDebounceInterval
+                    ))
+                        .font(.system(size: adaptiveControlValueFontSize()))
+                        .foregroundColor(.secondary)
+                }
+                
+                Slider(
+                    value: Binding(
+                        get: { appState.coordinator.configuration.performance.textChangeDebounceInterval },
+                        set: { newValue in
+                            appState.coordinator.update { config in
+                                config.performance.textChangeDebounceInterval = newValue
+                            }
+                            appState.objectWillChange.send()
+                        }
+                    ),
+                    in: 0.1...2.0,
+                    step: 0.1
+                )
+                .accentColor(.blue)
+            }
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
     }

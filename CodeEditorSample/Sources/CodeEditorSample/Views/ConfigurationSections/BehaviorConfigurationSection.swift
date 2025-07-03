@@ -75,6 +75,83 @@ struct BehaviorConfigurationSection: View {
             ))
             .toggleStyle(configurationToggleStyle())
             
+            Toggle("Auto Close Quotes", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.autoCloseQuotes },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.autoCloseQuotes = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Is Selectable", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isSelectable },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isSelectable = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Grammar Checking", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isGrammarCheckingEnabled },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isGrammarCheckingEnabled = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Smart Dashes", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isAutomaticDashSubstitutionEnabled = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Text Replacement", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isAutomaticTextReplacementEnabled = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Spell Correction", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isAutomaticSpellingCorrectionEnabled = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
+            Toggle("Text Completion", isOn: Binding(
+                get: { appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled },
+                set: { newValue in
+                    appState.coordinator.update { config in
+                        config.behavior.isAutomaticTextCompletionEnabled = newValue
+                    }
+                    appState.objectWillChange.send()
+                }
+            ))
+            .toggleStyle(configurationToggleStyle())
+            
             Toggle("Auto Scroll to Cursor", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoScrollToCursor },
                 set: { newValue in
@@ -85,7 +162,7 @@ struct BehaviorConfigurationSection: View {
                 }
             ))
             .toggleStyle(configurationToggleStyle())
-            .help("When enabled, the editor automatically scrolls to make the cursor visible when navigating to a specific line (e.g., via minimap or search)")
+            .help("When enabled, the editor automatically scrolls to make the cursor visible")
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
     }

@@ -55,16 +55,44 @@ final class AnnotationManager: NSObject {
     private func createAnnotationsUsingTextKit1(text: String) {
         guard textView != nil else { return }
         
-        // Find the first occurrence of "TODO:"
-        if let todoRange = text.range(of: "TODO:") {
-            let nsRange = NSRange(todoRange, in: text)
+        // Define annotation patterns to scan for
+        let patterns: [(pattern: String, type: CodeAnnotation.AnnotationType)] = [
+            ("TODO:", .todo),
+            ("FIXME:", .fixme),
+            ("WARNING:", .warning),
+            ("NOTE:", .note),
+            ("ERROR:", .error),
+            ("Force Cast Violation", .error),
+            ("Colon Violation", .warning),
+            ("SwiftLint", .warning)
+        ]
+        
+        // Scan for all patterns
+        for (pattern, type) in patterns {
+            var searchRange = text.startIndex..<text.endIndex
             
-            // Create annotation through the public API
-            createSimpleAnnotationMarker(
-                at: nsRange,
-                type: CodeAnnotation.AnnotationType.todo,
-                message: "TODO found here"
-            )
+            while let range = text.range(of: pattern, options: .caseInsensitive, range: searchRange) {
+                let nsRange = NSRange(range, in: text)
+                
+                // Extract the full line content for better context
+                let lineStartIndex = text.lineRange(for: range).lowerBound
+                let lineEndIndex = text.lineRange(for: range).upperBound
+                let lineContent = String(text[lineStartIndex..<lineEndIndex])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Create annotation with better message
+                let message = lineContent.isEmpty ? "\(type.label) annotation" : lineContent
+                
+                createSimpleAnnotationMarker(
+                    at: nsRange,
+                    type: type,
+                    message: message
+                )
+                
+                // Continue searching after this match
+                searchRange = range.upperBound..<text.endIndex
+                if searchRange.isEmpty { break }
+            }
         }
     }
     
@@ -253,15 +281,27 @@ class SampleAnnotationView: NSView {
     private func setupView() {
         wantsLayer = true
         
-        // Create circular badge
-        layer?.cornerRadius = bounds.width / 2
-        layer?.backgroundColor = annotation.type.color.cgColor
+        // Create styled badge matching the screenshot
+        let size = min(bounds.width, bounds.height)
         
-        // Add icon or symbol
-        let iconView = NSImageView(frame: bounds.insetBy(dx: 4, dy: 4))
+        // Set background color with subtle border
+        layer?.backgroundColor = annotation.type.color.cgColor
+        layer?.cornerRadius = size / 2
+        layer?.borderWidth = 0.5
+        layer?.borderColor = annotation.type.color.withAlphaComponent(0.8).cgColor
+        
+        // Add shadow for better visibility
+        layer?.shadowColor = NSColor.black.cgColor
+        layer?.shadowOffset = CGSize(width: 0, height: 1)
+        layer?.shadowRadius = 2
+        layer?.shadowOpacity = 0.2
+        
+        // Add icon with proper sizing and coloring
+        let iconView = NSImageView(frame: bounds.insetBy(dx: 2, dy: 2))
         iconView.image = NSImage(systemSymbolName: getIconName(), accessibilityDescription: annotation.type.label)
         iconView.contentTintColor = PlatformColors.white
         iconView.imageScaling = .scaleProportionallyUpOrDown
+        iconView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: size * 0.6, weight: .medium)
         addSubview(iconView)
         
         // Set up cursor
@@ -271,15 +311,15 @@ class SampleAnnotationView: NSView {
     private func getIconName() -> String {
         switch annotation.type {
         case .todo:
-            return "checkmark.circle"
+            return "checkmark.circle.fill"
         case .fixme:
-            return "wrench"
+            return "wrench.fill"
         case .warning:
-            return "exclamationmark.triangle"
+            return "exclamationmark.triangle.fill"
         case .note:
-            return "info.circle"
+            return "info.circle.fill"
         case .error:
-            return "xmark"
+            return "exclamationmark.circle.fill"
         }
     }
     
@@ -436,15 +476,33 @@ class SampleAnnotationView: UIView {
     }
     
     private func setupView() {
-        // Create circular badge
-        layer.cornerRadius = bounds.width / 2
-        backgroundColor = annotation.type.color
+        // Create styled badge matching the screenshot
+        let size = min(bounds.width, bounds.height)
         
-        // Add icon
-        let iconImageView = UIImageView(frame: bounds.insetBy(dx: 4, dy: 4))
+        // Set background color with subtle border and shadow
+        layer.cornerRadius = size / 2
+        backgroundColor = annotation.type.color
+        layer.borderWidth = 0.5
+        layer.borderColor = annotation.type.color.withAlphaComponent(0.8).cgColor
+        
+        // Add shadow for better visibility
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 1)
+        layer.shadowRadius = 2
+        layer.shadowOpacity = 0.2
+        
+        // Add icon with proper sizing
+        let iconImageView = UIImageView(frame: bounds.insetBy(dx: 2, dy: 2))
         iconImageView.image = UIImage(systemName: getIconName())
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.tintColor = PlatformColors.white
+        
+        // Configure symbol for better appearance
+        if #available(iOS 13.0, *) {
+            let config = UIImage.SymbolConfiguration(pointSize: size * 0.6, weight: .medium)
+            iconImageView.preferredSymbolConfiguration = config
+        }
+        
         addSubview(iconImageView)
         
         // Add tap gesture
@@ -465,15 +523,15 @@ class SampleAnnotationView: UIView {
     private func getIconName() -> String {
         switch annotation.type {
         case .todo:
-            return "checkmark.circle"
+            return "checkmark.circle.fill"
         case .fixme:
-            return "wrench"
+            return "wrench.fill"
         case .warning:
-            return "exclamationmark.triangle"
+            return "exclamationmark.triangle.fill"
         case .note:
-            return "info.circle"
+            return "info.circle.fill"
         case .error:
-            return "xmark.circle"
+            return "exclamationmark.circle.fill"
         }
     }
     
