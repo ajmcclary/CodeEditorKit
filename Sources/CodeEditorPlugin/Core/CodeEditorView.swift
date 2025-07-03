@@ -2056,7 +2056,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #else
-            kLogger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #endif
