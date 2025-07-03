@@ -48,7 +48,7 @@ extension CodeEditorView {
             super.selectedTextRange
         }
         set {
-            kLogger.debug("🎯 selectedTextRange override called, autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("🎯 selectedTextRange override called, autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
             
             // Only prevent scrolling if autoScrollToCursor is false
             if !configuration.behavior.autoScrollToCursor && newValue != nil {
@@ -56,7 +56,7 @@ extension CodeEditorView {
                 let savedContentOffset = contentOffset
                 let savedScrollEnabled = isScrollEnabled
                 
-                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
+                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset.x), \(savedContentOffset.y)")
                 
                 // Temporarily disable scrolling
                 isScrollEnabled = false
@@ -69,7 +69,7 @@ extension CodeEditorView {
                 
                 // Restore scroll position if it changed
                 if contentOffset != savedContentOffset {
-                    kLogger.debug("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+                    kLogger.debug("🎯 Scroll position changed! Restoring from \(self.contentOffset.x), \(self.contentOffset.y) to \(savedContentOffset.x), \(savedContentOffset.y)")
                     setContentOffset(savedContentOffset, animated: false)
                 }
             } else {
@@ -85,7 +85,7 @@ extension CodeEditorView {
             super.selectedRange
         }
         set {
-            kLogger.debug("🎯 selectedRange override called with range: \(newValue), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+            kLogger.debug("🎯 selectedRange override called with range: \(newValue), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
             
             // Only prevent scrolling if autoScrollToCursor is false
             if !configuration.behavior.autoScrollToCursor {
@@ -93,7 +93,7 @@ extension CodeEditorView {
                 let savedContentOffset = contentOffset
                 let savedScrollEnabled = isScrollEnabled
                 
-                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset)")
+                kLogger.debug("🎯 Preventing auto-scroll. Current offset: \(savedContentOffset.x), \(savedContentOffset.y)")
                 
                 // Temporarily disable scrolling
                 isScrollEnabled = false
@@ -106,7 +106,7 @@ extension CodeEditorView {
                 
                 // Restore scroll position if it changed
                 if contentOffset != savedContentOffset {
-                    kLogger.debug("🎯 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+                    kLogger.debug("🎯 Scroll position changed! Restoring from \(self.contentOffset.x), \(self.contentOffset.y) to \(savedContentOffset.x), \(savedContentOffset.y)")
                     setContentOffset(savedContentOffset, animated: false)
                 }
             } else {
@@ -126,13 +126,13 @@ extension CodeEditorView {
             return
         }
         
-        kLogger.debug("🔒 setSelectedTextRangeWithoutScrolling: autoScrollToCursor = \(configuration.behavior.autoScrollToCursor)")
+        kLogger.debug("🔒 setSelectedTextRangeWithoutScrolling: autoScrollToCursor = \(self.configuration.behavior.autoScrollToCursor)")
         
         // Save current scroll position
         let savedContentOffset = contentOffset
         let savedScrollEnabled = isScrollEnabled
         
-        kLogger.debug("🔒 Before: contentOffset = \(savedContentOffset)")
+        kLogger.debug("🔒 Before: contentOffset = \(savedContentOffset.x), \(savedContentOffset.y)")
         
         // Temporarily disable scrolling to prevent automatic scroll
         isScrollEnabled = false
@@ -145,11 +145,11 @@ extension CodeEditorView {
         
         // Restore the scroll position if it changed
         if contentOffset != savedContentOffset {
-            kLogger.debug("🔒 Scroll position changed! Restoring from \(contentOffset) to \(savedContentOffset)")
+            kLogger.debug("🔒 Scroll position changed! Restoring from \(self.contentOffset.x), \(self.contentOffset.y) to \(savedContentOffset.x), \(savedContentOffset.y)")
             setContentOffset(savedContentOffset, animated: false)
         }
         
-        kLogger.debug("🔒 After: contentOffset = \(contentOffset)")
+        kLogger.debug("🔒 After: contentOffset = \(self.contentOffset.x), \(self.contentOffset.y)")
     }
     
     /// Sets the selected range (NSRange) without triggering automatic scrolling
@@ -173,7 +173,7 @@ extension CodeEditorView {
     
     /// Override scrollRectToVisible to respect autoScrollToCursor configuration
     override open func scrollRectToVisible(_ rect: CGRect, animated: Bool) {
-        kLogger.debug("🚫 scrollRectToVisible called with rect: \(rect), autoScrollToCursor: \(configuration.behavior.autoScrollToCursor)")
+        kLogger.debug("🚫 scrollRectToVisible called with rect: \(rect.origin.x), \(rect.origin.y), \(rect.size.width), \(rect.size.height), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
         
         // Only allow scrolling if autoScrollToCursor is true
         if configuration.behavior.autoScrollToCursor {
