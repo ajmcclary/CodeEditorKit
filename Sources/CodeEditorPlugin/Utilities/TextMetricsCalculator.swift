@@ -129,7 +129,21 @@ public enum TextMetricsCalculator {
         let firstVisibleLine = max(0, Int(floor(adjustedBounds.minY / lineHeight)))
         let lastVisibleLine = min(totalLines - 1, Int(ceil(adjustedBounds.maxY / lineHeight)))
         
-        return firstVisibleLine..<(lastVisibleLine + 1)
+        // Ensure we don't create an invalid range
+        let endLine = min(lastVisibleLine + 1, totalLines)
+        
+        // Handle edge case where firstVisibleLine >= endLine
+        if firstVisibleLine >= endLine {
+            // Return an empty range at a valid position
+            if totalLines > 0 {
+                let validLine = min(firstVisibleLine, totalLines - 1)
+                return validLine..<validLine
+            } else {
+                return 0..<0
+            }
+        }
+        
+        return firstVisibleLine..<endLine
     }
     
     /// Calculate the number of visible lines that fit in bounds

@@ -26,6 +26,7 @@ struct DisplayConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.display.highlightSelectedLine = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -36,6 +37,7 @@ struct DisplayConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.display.showInvisibleCharacters = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -46,6 +48,7 @@ struct DisplayConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.display.enableSyntaxHighlighting = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -56,6 +59,7 @@ struct DisplayConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.display.enableAnnotations = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())
@@ -66,6 +70,7 @@ struct DisplayConfigurationSection: View {
                     appState.coordinator.update { config in
                         config.display.showMinimap = newValue
                     }
+                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(configurationToggleStyle())

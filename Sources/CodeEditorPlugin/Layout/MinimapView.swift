@@ -179,6 +179,11 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     
     private var trackingArea: NSTrackingArea?
     
+    // Mark view as opaque for proper rendering
+    override public var isOpaque: Bool {
+        return true
+    }
+    
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setupView()
@@ -219,10 +224,10 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        guard let data else { return }
+        // Always fill the entire background, even if there's no data
+        UnifiedDrawingCoordinator.fillRect(bounds, with: MinimapConfiguration.defaultBackgroundColor)
         
-        // Clear background using UnifiedDrawingCoordinator
-        UnifiedDrawingCoordinator.fillRect(dirtyRect, with: MinimapConfiguration.defaultBackgroundColor)
+        guard let data else { return }
         
         // Draw text lines
         drawTextLines(data: data)

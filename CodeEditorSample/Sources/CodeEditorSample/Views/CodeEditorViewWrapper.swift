@@ -92,6 +92,10 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Apply configuration to container only - it will handle the text view
         containerView.configuration = configuration
         
+        // Force the container view to re-layout immediately
+        containerView.needsLayout = true
+        containerView.layout() // macOS uses layout() not layoutIfNeeded()
+        
         // Update language separately (doesn't affect line numbers)
         textView.setLanguage(fileExtension: language)
         
@@ -106,6 +110,9 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             context.coordinator.annotationManager?.clearAnnotations()
             context.coordinator.annotationManager = nil
         }
+        
+        // Force the text view to update its display
+        textView.needsDisplay = true
     }
 
     func makeCoordinator() -> Coordinator {
@@ -254,8 +261,8 @@ struct CodeEditorViewWrapper: View {
             .onAppear {
                 internalConfiguration = configuration
             }
-            .onChange(of: configuration) { newConfig in
-                internalConfiguration = newConfig
+            .onChange(of: configuration) { _, newValue in
+                internalConfiguration = newValue
             }
     }
     
@@ -305,3 +312,4 @@ private class NoOpCompletionViewController: UIViewController, CompletionViewCont
     }
 }
 #endif
+

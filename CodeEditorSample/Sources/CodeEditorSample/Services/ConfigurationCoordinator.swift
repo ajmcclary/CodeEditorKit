@@ -15,6 +15,9 @@ final class ConfigurationCoordinator: ObservableObject {
         var newConfig = configuration
         block(&newConfig)
         configuration = newConfig
+        
+        // Force SwiftUI to recognize the change
+        objectWillChange.send()
     }
     
     /// Apply a preset configuration

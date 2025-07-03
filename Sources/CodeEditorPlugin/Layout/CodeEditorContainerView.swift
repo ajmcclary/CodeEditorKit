@@ -55,10 +55,38 @@ private class LineNumberRulerView: NSRulerView {
         
         // Get the range of characters that are visible
         let glyphRange = layoutManager.glyphRange(forBoundingRect: textVisibleRect, in: textContainer)
-        let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        var characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        
+        // Ensure the character range doesn't exceed the text length
+        let textLength = textStorage.length
+        
+        // Fix for scrolling to bottom: ensure we never go beyond text bounds
+        if characterRange.location >= textLength {
+            // If we're beyond the text, show the last line
+            characterRange = NSRange(location: max(0, textLength - 1), length: 1)
+        } else if characterRange.location + characterRange.length > textLength {
+            // Trim the length to not exceed bounds
+            characterRange.length = textLength - characterRange.location
+        }
+        
+        // Handle empty text
+        if textLength == 0 {
+            characterRange = NSRange(location: 0, length: 0)
+        }
         
         // Calculate line numbers for the visible range
         let text = textStorage.string
+        
+        // Debug info
+        #if DEBUG
+        if characterRange.location == 0 {
+            print("📍 At top: range=\(characterRange)")
+        }
+        if characterRange.location + characterRange.length >= textLength && textLength > 0 {
+            print("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
+        }
+        #endif
+        
         let lineRanges = getLineRanges(for: text, in: characterRange)
         
         // Set up text attributes
@@ -100,48 +128,107 @@ private class LineNumberRulerView: NSRulerView {
         var lineRanges: [(Int, NSRange)] = []
         var lineNumber = 1
         
+        // Validate range bounds
+        let textLength = text.utf16.count
+        guard textLength > 0 else { return lineRanges }
+        
+        // Clamp range to valid bounds
+        let validLocation = max(0, min(range.location, textLength))
+        let validLength = min(range.length, textLength - validLocation)
+        
         // Handle empty range
-        guard range.length > 0 || range.location < text.utf16.count else {
+        guard validLength > 0 || validLocation < textLength else {
             return lineRanges
         }
         
         // Count lines before the visible range
-        if range.location > 0 {
-            let beforeRange = NSRange(location: 0, length: range.location)
-            if let beforeText = lineNumberSubstring(text, with: beforeRange) {
-                lineNumber += beforeText.components(separatedBy: .newlines).count - 1
+        if validLocation > 0 {
+            // Use NSString for counting newlines - more reliable with NSRange
+            let nsString = text as NSString
+            var count = 0
+            var searchRange = NSRange(location: 0, length: validLocation)
+            
+            while searchRange.length > 0 && searchRange.location < nsString.length {
+                // Ensure search range is valid
+                let safeLength = min(searchRange.length, nsString.length - searchRange.location)
+                let safeRange = NSRange(location: searchRange.location, length: safeLength)
+                
+                let newlineRange = nsString.rangeOfCharacter(from: .newlines, options: [], range: safeRange)
+                if newlineRange.location != NSNotFound {
+                    count += 1
+                    let nextStart = newlineRange.location + newlineRange.length
+                    if nextStart < validLocation && nextStart < nsString.length {
+                        searchRange = NSRange(location: nextStart, length: validLocation - nextStart)
+                    } else {
+                        break
+                    }
+                } else {
+                    break
+                }
             }
+            lineNumber += count
         }
         
         // Process visible range
-        var currentLocation = range.location
-        let endLocation = min(range.location + range.length, text.utf16.count)
+        var currentLocation = validLocation
+        let endLocation = min(validLocation + validLength, textLength)
         
         while currentLocation < endLocation {
             // Find the end of the current line
             var lineEndLocation = currentLocation
             
             // Search for line ending
-            if let substring = lineNumberSubstring(text, from: currentLocation) {
-                if let lineEndRange = substring.range(of: "\n") {
-                    let distance = substring.distance(from: substring.startIndex, to: lineEndRange.lowerBound)
-                    lineEndLocation = currentLocation + distance + 1
+            if currentLocation < textLength {
+                // Use NSString for more reliable range operations
+                let nsString = text as NSString
+                let nsLength = nsString.length
+                
+                // Ensure we don't exceed NSString bounds
+                if currentLocation < nsLength {
+                    let searchLength = min(textLength - currentLocation, nsLength - currentLocation)
+                    let searchRange = NSRange(location: currentLocation, length: searchLength)
+                    
+                    let newlineRange = nsString.rangeOfCharacter(from: .newlines, options: [], range: searchRange)
+                    
+                    if newlineRange.location != NSNotFound {
+                        // Found a newline
+                        lineEndLocation = min(newlineRange.location + newlineRange.length, textLength)
+                    } else {
+                        // No more newlines, this is the last line
+                        lineEndLocation = textLength
+                    }
                 } else {
-                    // No more line endings, this is the last line
-                    lineEndLocation = text.utf16.count
+                    // Current location exceeds NSString bounds
+                    lineEndLocation = textLength
                 }
+            } else {
+                // Already at the end
+                lineEndLocation = textLength
             }
             
-            // Create range for this line
-            let lineRange = NSRange(location: currentLocation, length: lineEndLocation - currentLocation)
+            // Ensure line end doesn't go beyond text bounds
+            lineEndLocation = min(lineEndLocation, textLength)
+            
+            // Create range for this line (ensure valid length)
+            let lineLength = max(0, lineEndLocation - currentLocation)
+            
+            // Debug check before creating NSRange
+            if currentLocation > lineEndLocation {
+                print("⚠️ Invalid range detected: currentLocation=\(currentLocation) > lineEndLocation=\(lineEndLocation)")
+                // Skip this invalid range
+                currentLocation = lineEndLocation
+                continue
+            }
+            
+            let lineRange = NSRange(location: currentLocation, length: lineLength)
             lineRanges.append((lineNumber, lineRange))
             
             // Move to next line
             lineNumber += 1
             currentLocation = lineEndLocation
             
-            // Stop if we've reached the end of the visible range
-            if currentLocation >= endLocation {
+            // Stop if we've reached the end of the visible range or text
+            if currentLocation >= endLocation || currentLocation >= textLength {
                 break
             }
         }
@@ -157,18 +244,6 @@ private class LineNumberRulerView: NSRulerView {
         ruleThickness = size.width + rightPadding * 2
     }
     
-    // MARK: - String Helpers
-    
-    private func lineNumberSubstring(_ text: String, with range: NSRange) -> String? {
-        guard let rangeInString = Range(range, in: text) else { return nil }
-        return String(text[rangeInString])
-    }
-    
-    private func lineNumberSubstring(_ text: String, from offset: Int) -> String? {
-        guard offset < text.utf16.count else { return nil }
-        let startIndex = text.index(text.startIndex, offsetBy: offset, limitedBy: text.endIndex) ?? text.endIndex
-        return String(text[startIndex...])
-    }
 }
 
 #elseif canImport(UIKit)
@@ -292,6 +367,8 @@ public final class CodeEditorContainerView: PlatformView {
         scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
         scrollView.autohidesScrollers = false
         scrollView.borderType = .noBorder
+        scrollView.scrollerStyle = .legacy  // Ensure scrollers are visible
+        scrollView.backgroundColor = PlatformColors.systemBackground
         
         // Configure text view for scroll view
         textView.isVerticallyResizable = true
@@ -323,6 +400,10 @@ public final class CodeEditorContainerView: PlatformView {
         // Add subviews (only scroll view and minimap, not gutter since it's now a ruler)
         addSubview(scrollView)
         addSubview(minimapView)
+        
+        // Ensure minimap is on top and has opaque background
+        minimapView.wantsLayer = true
+        minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
@@ -535,8 +616,58 @@ public final class CodeEditorContainerView: PlatformView {
                 height: bounds.height
             )
             minimapView.isHidden = false
+            
+            // When minimap is shown, we need to constrain the text view
+            if !configuration.layout.wrapLines {
+                // Force the scroll view to update its content view
+                scrollView.contentView.frame = scrollView.bounds
+                
+                // Get the actual content width (scroll view width minus ruler if present)
+                let contentWidth = scrollView.contentView.bounds.width
+                
+                // Remove width from autoresizing mask so text view doesn't expand beyond scroll view
+                textView.autoresizingMask = [.height]
+                
+                // Text view should not be horizontally resizable when minimap is shown
+                textView.isHorizontallyResizable = false
+                
+                // Set a fixed frame for the text view that matches the content width
+                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
+                
+                // Set text container to match the content width minus gutters
+                let textWidth = contentWidth - configuration.layout.gutterWidth - configuration.layout.lineNumberPadding
+                textView.textContainer?.containerSize = NSSize(
+                    width: textWidth,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+                
+                // Ensure the text container tracks the text view width
+                textView.textContainer?.widthTracksTextView = true
+                
+                // Force layout update
+                textView.needsDisplay = true
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+            }
         } else {
             minimapView.isHidden = true
+            
+            // Restore normal behavior when minimap is hidden
+            if !configuration.layout.wrapLines {
+                // Restore autoresizing mask
+                textView.autoresizingMask = [.width, .height]
+                
+                // Restore horizontal resizability
+                textView.isHorizontallyResizable = true
+                
+                // Restore infinite width
+                textView.textContainer?.containerSize = NSSize(
+                    width: CGFloat.greatestFiniteMagnitude,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+                
+                // Text container should not track width when not wrapping
+                textView.textContainer?.widthTracksTextView = false
+            }
         }
         #else
         // iOS layout
@@ -595,9 +726,12 @@ public final class CodeEditorContainerView: PlatformView {
     private func updateTextContainerInsets() {
         let padding = configuration.layout.lineNumberPadding
         let gutterWidth = configuration.display.showLineNumbers ? configuration.layout.gutterWidth : 0
+        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // On macOS, we need to set inset to account for the ruler view
+        // On macOS, we need to set inset to account for the ruler view and minimap
+        // Note: We don't add right inset for minimap on macOS because the scroll view
+        // width is already adjusted. The text view needs to fill the scroll view.
         let currentInsets = textView.textContainerInset
         textView.textContainerInset = NSSize(
             width: gutterWidth + padding,
@@ -610,7 +744,7 @@ public final class CodeEditorContainerView: PlatformView {
             top: currentInsets.top,
             left: gutterWidth + padding,
             bottom: currentInsets.bottom,
-            right: currentInsets.right
+            right: minimapWidth + padding
         )
         textView.setTextContainerEdgeInsets(newInsets)
         #endif
@@ -662,31 +796,49 @@ public final class CodeEditorContainerView: PlatformView {
             rulerView.clipsToBounds = true
             rulerView.needsDisplay = true
         }
-        textView.isHorizontallyResizable = !configuration.layout.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        // Don't set horizontal resizability here - it will be handled in layoutViews
+        // based on minimap visibility
+        if !configuration.display.showMinimap {
+            textView.isHorizontallyResizable = !configuration.layout.wrapLines
+            textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        }
         
-        if !configuration.layout.wrapLines {
+        if !configuration.layout.wrapLines && !configuration.display.showMinimap {
+            // Only set infinite width if minimap is not shown
+            // When minimap is shown, layoutViews will handle the sizing
             textView.textContainer?.containerSize = NSSize(
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
             )
         }
         
-        // Update text container insets when configuration changes
-        updateTextContainerInsets()
         #endif
+        
+        // Update text container insets when configuration changes (for all platforms)
+        updateTextContainerInsets()
         
         // Force layout update
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         needsLayout = true
+        layout() // Force immediate layout on macOS
         #else
         setNeedsLayout()
+        layoutIfNeeded()
         #endif
         
         // Update minimap if it's now visible
         if configuration.display.showMinimap {
             updateMinimap()
         }
+        
+        // Force redraw of all subviews
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        needsDisplay = true
+        scrollView.needsDisplay = true
+        textView.needsDisplay = true
+        #else
+        setNeedsDisplay()
+        #endif
     }
     
     // MARK: - Platform-Specific Extensions
