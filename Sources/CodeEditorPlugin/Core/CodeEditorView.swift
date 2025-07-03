@@ -1024,6 +1024,24 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
     #endif
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Override textContainerOrigin to account for ruler view when using NSScrollView
+    override public var textContainerOrigin: NSPoint {
+        let origin = super.textContainerOrigin
+        
+        // Check if we're in a scroll view with a ruler view
+        if let scrollView = self.enclosingScrollView,
+           scrollView.hasVerticalRuler && scrollView.rulersVisible,
+           scrollView.verticalRulerView != nil {
+            // Don't offset the origin - the ruler sits alongside the text view
+            // The text container inset handles the internal padding
+            // This prevents double offsetting
+        }
+        
+        return origin
+    }
+    #endif
+    
     /// Get current line range at position
     private func currentLineRange(at position: Int) -> Range<String.Index> {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

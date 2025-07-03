@@ -8,7 +8,7 @@ struct BehaviorConfigurationSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
-        LazyVStack(spacing: adaptiveSectionSpacing()) {
+        LazyVStack(alignment: .leading, spacing: adaptiveSectionSpacing()) {
             Toggle("Enable Editing", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isEditable },
                 set: { newValue in

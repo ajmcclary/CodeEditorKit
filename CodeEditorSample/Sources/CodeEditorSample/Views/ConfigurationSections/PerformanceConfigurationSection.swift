@@ -8,7 +8,7 @@ struct PerformanceConfigurationSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
-        LazyVStack(spacing: adaptiveSectionSpacing()) {
+        LazyVStack(alignment: .leading, spacing: adaptiveSectionSpacing()) {
             Toggle("Hardware Acceleration", isOn: Binding(
                 get: { appState.coordinator.configuration.performance.useHardwareAcceleration },
                 set: { newValue in

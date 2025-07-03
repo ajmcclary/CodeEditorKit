@@ -8,7 +8,7 @@ struct LayoutConfigurationSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
-        LazyVStack(spacing: adaptiveSectionSpacing()) {
+        LazyVStack(alignment: .leading, spacing: adaptiveSectionSpacing()) {
             Toggle("Wrap Lines", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.wrapLines },
                 set: { newValue in

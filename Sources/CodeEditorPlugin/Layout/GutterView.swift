@@ -69,7 +69,12 @@ public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Display Updates
     
     public func setNeedsDisplayLineNumbers() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // Force a complete redraw on macOS to ensure line numbers are visible
+        self.needsDisplay = true
+        #else
         UnifiedDrawingCoordinator.setNeedsDisplay(for: self)
+        #endif
     }
     
     // MARK: - Drawing

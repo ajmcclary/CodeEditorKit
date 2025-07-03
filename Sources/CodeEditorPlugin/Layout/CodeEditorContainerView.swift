@@ -1,6 +1,176 @@
 import Foundation
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+
+/// A ruler view that displays line numbers for macOS
+@MainActor
+private class LineNumberRulerView: NSRulerView {
+    // MARK: - Properties
+    
+    /// The text view this ruler is associated with
+    public weak var textView: NSTextView?
+    
+    /// Font for line numbers
+    public var font: NSFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+    
+    /// Text color for line numbers
+    public var textColor: NSColor = NSColor.secondaryLabelColor
+    
+    /// Background color
+    public var backgroundColor: NSColor = NSColor.controlBackgroundColor
+    
+    /// Right padding for line numbers
+    public var rightPadding: CGFloat = 8.0
+    
+    // MARK: - Initialization
+    
+    public override init(scrollView: NSScrollView?, orientation: NSRulerView.Orientation) {
+        super.init(scrollView: scrollView, orientation: orientation)
+        self.clientView = scrollView?.documentView
+        self.ruleThickness = 40.0 // Default width, matches our gutter width
+        self.clipsToBounds = true // Prevent drawing outside bounds
+    }
+    
+    required init(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
+    // MARK: - Drawing
+    
+    public override func drawHashMarksAndLabels(in rect: NSRect) {
+        // Fill background
+        backgroundColor.set()
+        rect.fill()
+        
+        guard let textView = self.clientView as? NSTextView,
+              let textContainer = textView.textContainer,
+              let layoutManager = textView.layoutManager,
+              let textStorage = textView.textStorage else {
+            return
+        }
+        
+        // Get the visible rect in the text view's coordinate system
+        let visibleRect = textView.visibleRect
+        let textVisibleRect = textView.convert(visibleRect, from: textView.superview)
+        
+        // Get the range of characters that are visible
+        let glyphRange = layoutManager.glyphRange(forBoundingRect: textVisibleRect, in: textContainer)
+        let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        
+        // Calculate line numbers for the visible range
+        let text = textStorage.string
+        let lineRanges = getLineRanges(for: text, in: characterRange)
+        
+        // Set up text attributes
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: textColor
+        ]
+        
+        // Draw each line number
+        for (lineNumber, lineRange) in lineRanges {
+            // Get the rect for this line
+            let lineGlyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
+            let lineRect = layoutManager.lineFragmentRect(forGlyphAt: lineGlyphRange.location, effectiveRange: nil, withoutAdditionalLayout: true)
+            
+            // Convert to ruler coordinates
+            let yPosition = convert(NSPoint(x: 0, y: lineRect.minY), from: textView).y
+            
+            // Draw the line number
+            let lineNumberString = "\(lineNumber)"
+            let size = lineNumberString.size(withAttributes: attributes)
+            
+            let drawingPoint = NSPoint(
+                x: ruleThickness - size.width - rightPadding,
+                y: yPosition + (lineRect.height - size.height) / 2
+            )
+            
+            lineNumberString.draw(at: drawingPoint, withAttributes: attributes)
+        }
+        
+        // Draw a separator line on the right edge
+        NSColor.separatorColor.set()
+        let separatorRect = NSRect(x: ruleThickness - 1, y: rect.minY, width: 1, height: rect.height)
+        separatorRect.fill()
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func getLineRanges(for text: String, in range: NSRange) -> [(Int, NSRange)] {
+        var lineRanges: [(Int, NSRange)] = []
+        var lineNumber = 1
+        
+        // Handle empty range
+        guard range.length > 0 || range.location < text.utf16.count else {
+            return lineRanges
+        }
+        
+        // Count lines before the visible range
+        if range.location > 0 {
+            let beforeRange = NSRange(location: 0, length: range.location)
+            if let beforeText = lineNumberSubstring(text, with: beforeRange) {
+                lineNumber += beforeText.components(separatedBy: .newlines).count - 1
+            }
+        }
+        
+        // Process visible range
+        var currentLocation = range.location
+        let endLocation = min(range.location + range.length, text.utf16.count)
+        
+        while currentLocation < endLocation {
+            // Find the end of the current line
+            var lineEndLocation = currentLocation
+            
+            // Search for line ending
+            if let substring = lineNumberSubstring(text, from: currentLocation) {
+                if let lineEndRange = substring.range(of: "\n") {
+                    let distance = substring.distance(from: substring.startIndex, to: lineEndRange.lowerBound)
+                    lineEndLocation = currentLocation + distance + 1
+                } else {
+                    // No more line endings, this is the last line
+                    lineEndLocation = text.utf16.count
+                }
+            }
+            
+            // Create range for this line
+            let lineRange = NSRange(location: currentLocation, length: lineEndLocation - currentLocation)
+            lineRanges.append((lineNumber, lineRange))
+            
+            // Move to next line
+            lineNumber += 1
+            currentLocation = lineEndLocation
+            
+            // Stop if we've reached the end of the visible range
+            if currentLocation >= endLocation {
+                break
+            }
+        }
+        
+        return lineRanges
+    }
+    
+    // MARK: - Width Calculation
+    
+    public func updateWidth(for maxLineNumber: Int) {
+        let testString = String(repeating: "9", count: "\(maxLineNumber)".count)
+        let size = testString.size(withAttributes: [.font: font])
+        ruleThickness = size.width + rightPadding * 2
+    }
+    
+    // MARK: - String Helpers
+    
+    private func lineNumberSubstring(_ text: String, with range: NSRange) -> String? {
+        guard let rangeInString = Range(range, in: text) else { return nil }
+        return String(text[rangeInString])
+    }
+    
+    private func lineNumberSubstring(_ text: String, from offset: Int) -> String? {
+        guard offset < text.utf16.count else { return nil }
+        let startIndex = text.index(text.startIndex, offsetBy: offset, limitedBy: text.endIndex) ?? text.endIndex
+        return String(text[startIndex...])
+    }
+}
+
 #elseif canImport(UIKit)
 import UIKit
 #endif
@@ -91,16 +261,10 @@ public final class CodeEditorContainerView: PlatformView {
         setupIOSViews()
         #endif
         
-        // Common setup
+        // Common setup for iOS only (macOS uses ruler view)
+        #if canImport(UIKit)
         gutterView.textView = textView
         gutterView.observeTextView()          // start listening for changes
-        
-        // Set up scroll observation for macOS (deferred to avoid initialization issues)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.gutterView.observeScrollView(self.scrollView)
-        }
         #endif
         
         setupMinimap()
@@ -147,14 +311,25 @@ public final class CodeEditorContainerView: PlatformView {
         // Set text view as document view
         scrollView.documentView = textView
         
-        // Add subviews
+        // Set up line number ruler view
+        let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
+        rulerView.textView = textView
+        rulerView.ruleThickness = configuration.layout.gutterWidth
+        rulerView.clipsToBounds = true // Ensure ruler doesn't draw outside bounds
+        scrollView.verticalRulerView = rulerView
+        scrollView.hasVerticalRuler = configuration.display.showLineNumbers
+        scrollView.rulersVisible = configuration.display.showLineNumbers
+        
+        // Add subviews (only scroll view and minimap, not gutter since it's now a ruler)
         addSubview(scrollView)
-        addSubview(gutterView)
         addSubview(minimapView)
         
         // Ensure text view background is transparent where gutter is
         textView.backgroundColor = PlatformColors.clear
         textView.drawsBackground = false
+        
+        // IMPORTANT: Don't set text container inset here - let updateTextContainerInsets handle it
+        // The inset will be set based on whether line numbers are shown
     }
     #endif
     
@@ -339,19 +514,11 @@ public final class CodeEditorContainerView: PlatformView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS layout
         
-        // Position scroll view to take remaining space between gutter and minimap
+        // Position scroll view to fill entire width (ruler view is inside the scroll view)
         scrollView.frame = CGRect(
-            x: gutterWidth,
-            y: 0,
-            width: bounds.width - gutterWidth - minimapWidth,
-            height: bounds.height
-        )
-        
-        // Position gutter on the left
-        gutterView.frame = CGRect(
             x: 0,
             y: 0,
-            width: gutterWidth,
+            width: bounds.width - minimapWidth,
             height: bounds.height
         )
         
@@ -422,10 +589,11 @@ public final class CodeEditorContainerView: PlatformView {
     // MARK: - Text Container Insets
     
     private func updateTextContainerInsets() {
-        let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
         let padding = configuration.layout.lineNumberPadding
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On macOS, we need to set inset to account for the ruler view
+        let gutterWidth = configuration.display.showLineNumbers ? configuration.layout.gutterWidth : 0
         let currentInsets = textView.textContainerInset
         textView.textContainerInset = NSSize(
             width: gutterWidth + padding,
@@ -480,6 +648,15 @@ public final class CodeEditorContainerView: PlatformView {
         // Update scroll view settings on macOS
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
+        
+        // Update ruler visibility and settings
+        scrollView.hasVerticalRuler = configuration.display.showLineNumbers
+        scrollView.rulersVisible = configuration.display.showLineNumbers
+        if let rulerView = scrollView.verticalRulerView as? LineNumberRulerView {
+            rulerView.ruleThickness = configuration.layout.gutterWidth
+            rulerView.clipsToBounds = true
+            rulerView.needsDisplay = true
+        }
         textView.isHorizontallyResizable = !configuration.layout.wrapLines
         textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
         
@@ -489,6 +666,9 @@ public final class CodeEditorContainerView: PlatformView {
                 height: CGFloat.greatestFiniteMagnitude
             )
         }
+        
+        // Update text container insets when configuration changes
+        updateTextContainerInsets()
         #endif
         
         // Force layout update

@@ -223,6 +223,7 @@ struct MacOSButtonView<Label: View>: NSViewRepresentable {
     func makeNSView(context: Context) -> NSButton {
         let button = NSButton()
         button.bezelStyle = .rounded
+        button.title = "" // Clear the default "Button" text
         button.target = context.coordinator
         button.action = #selector(Coordinator.buttonPressed)
         

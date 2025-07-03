@@ -8,7 +8,7 @@ struct DisplayConfigurationSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
-        LazyVStack(spacing: adaptiveSectionSpacing()) {
+        LazyVStack(alignment: .leading, spacing: adaptiveSectionSpacing()) {
             Toggle("Show Line Numbers", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showLineNumbers },
                 set: { newValue in
