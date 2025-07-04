@@ -225,7 +225,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let coordinator = CrossPlatformCoordinator.shared
         
         measure {
-            for _ in 0..<1000 {
+            for _ in 0..<1_000 {
                 _ = coordinator.isFeatureAvailable(.syntaxHighlighting)
             }
         }

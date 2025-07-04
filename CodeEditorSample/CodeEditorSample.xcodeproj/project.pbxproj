@@ -15,7 +15,6 @@
 		17029DF400798B40065A4919 /* DisplayConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22655AD40895839604BA193 /* DisplayConfigurationSection.swift */; };
 		1DDB00A8D25AA948FF473A6C /* WebSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37986D28FE9BB790D40DD20 /* WebSamples.swift */; };
 		1E73BB0FFC7F8164F9118239 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC003C56042C9E67BC4FA953 /* StatusBarView.swift */; };
-		2095542D0F8A23E157DE7E05 /* MinimalTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */; };
 		2152CF271E7655ADC007350A /* SampleCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF38C2A6F4ED69B89E21634F /* SampleCodeTests.swift */; };
 		22F9C8EF5FF2DC139B13E15D /* ConfigSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DECDBA45DBCE4E748CFC456 /* ConfigSamples.swift */; };
 		258387D788C599E70746DC22 /* SampleCodeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB5C883534F9124E7BEDB4B0 /* SampleCodeProvider.swift */; };
@@ -63,7 +62,6 @@
 		9E3F73BAAFF0273ACF8E88AC /* ConfigurationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D963ECA894E2862ECDB4BA72 /* ConfigurationCoordinator.swift */; };
 		A179420FE9030218EB349E53 /* UnifiedContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D638459BE2052A113CF6A6A5 /* UnifiedContentView.swift */; };
 		A2F6A82E83AC294936CA16B7 /* LayoutConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBB3A7A18BA5595A05D78E3 /* LayoutConfigurationSection.swift */; };
-		A3099B2AD2450B1F71EE6304 /* MinimalTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */; };
 		A477424106B825A862996BFF /* CodeEditorViewWrapper+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F7D7878B81809EC72C2F75 /* CodeEditorViewWrapper+macOS.swift */; };
 		A598A394C3DB10DCBF401BB3 /* SystemsSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7B40F69440B113274BA53D /* SystemsSamples.swift */; };
 		AA777BD07D8ED27B1D9EA738 /* SimplifiedIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9D8C4586CE1D086EB2B09C /* SimplifiedIntegrationTests.swift */; };
@@ -120,7 +118,6 @@
 		24C75C1C4EEB77FF30305F37 /* PythonSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonSamples.swift; sourceTree = "<group>"; };
 		27D2A540096658CDED42EBB8 /* UnifiedConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedConfigurationView.swift; sourceTree = "<group>"; };
 		27E030B1CED76B18E3F4E581 /* AdvancedFeaturesShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedFeaturesShowcaseView.swift; sourceTree = "<group>"; };
-		2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTest.swift; sourceTree = "<group>"; };
 		511107E1AB80474BE220AD4E /* SafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeButton.swift; sourceTree = "<group>"; };
 		56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickIsFlippedTest.swift; sourceTree = "<group>"; };
 		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -292,7 +289,6 @@
 			isa = PBXGroup;
 			children = (
 				F1E4C22A9BEF24D21CC5B811 /* CodeEditorSampleApp.swift */,
-				2FA0D30B4EC942D8E81173A2 /* MinimalTest.swift */,
 				7A9C2F6B3035E565D5A68EE5 /* Models */,
 				83935ECACC5562B741B3DF14 /* Services */,
 				54EFD9208E2F0E716CF0272E /* Themes */,
@@ -492,7 +488,6 @@
 				F3B379DA77193699AB56FB3D /* LanguageDetectionService.swift in Sources */,
 				7C865E572D404F910CC6F04B /* LanguageSampleRow.swift in Sources */,
 				A2F6A82E83AC294936CA16B7 /* LayoutConfigurationSection.swift in Sources */,
-				2095542D0F8A23E157DE7E05 /* MinimalTest.swift in Sources */,
 				5C8E8B16EA5EC99559A614B7 /* PerformanceConfigurationSection.swift in Sources */,
 				6656312CBDAB3CA1E08FB9FD /* PlatformSafeControls.swift in Sources */,
 				C6BC0C3338A6DAABB7BCDAF2 /* PlatformToggleStyle.swift in Sources */,
@@ -547,7 +542,6 @@
 				E1125DA8116AA053CAB74132 /* LanguageDetectionService.swift in Sources */,
 				8A739839E1197A80B50ED614 /* LanguageSampleRow.swift in Sources */,
 				EF1DA6FEBB87CDCD51F50964 /* LayoutConfigurationSection.swift in Sources */,
-				A3099B2AD2450B1F71EE6304 /* MinimalTest.swift in Sources */,
 				F7C7A4D1C953D9CB7724A3F0 /* PerformanceConfigurationSection.swift in Sources */,
 				2C868949C9B7BF2FF955393E /* PlatformSafeControls.swift in Sources */,
 				FCCEC4F9FD8EB9D6E95E6E12 /* PlatformToggleStyle.swift in Sources */,

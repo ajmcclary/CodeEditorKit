@@ -59,7 +59,13 @@ extension CrossPlatformCoordinator {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            self?.handleKeyboardWillShow(notification)
+            // Extract values outside the Task to avoid actor isolation issues
+            let keyboardInfo = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double
+            
+            Task { @MainActor in
+                self?.handleKeyboardWillShow(keyboardInfo: keyboardInfo, duration: duration)
+            }
         }
         notificationObservers.append(keyboardObserver)
         
@@ -70,7 +76,7 @@ extension CrossPlatformCoordinator {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.updatePlatformAdjustments()
+                self?.orientationDidChange()
             }
         }
         notificationObservers.append(orientationObserver)
@@ -132,9 +138,10 @@ extension CrossPlatformCoordinator {
     
     // MARK: - IOS Keyboard Management
     
-    private func handleKeyboardWillShow(_ notification: Notification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
-              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+    @MainActor
+    private func handleKeyboardWillShow(keyboardInfo: CGRect?, duration: Double?) {
+        guard keyboardInfo != nil,
+              let duration else {
             return
         }
         
@@ -166,7 +173,7 @@ extension CrossPlatformCoordinator {
     
     func setupIOSGestures(for textView: CodeEditorView) {
         // Long press for context menu
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressUIKit(_:)))
         textView.addGestureRecognizer(longPress)
         
         // Two-finger tap for quick actions
@@ -175,7 +182,7 @@ extension CrossPlatformCoordinator {
         textView.addGestureRecognizer(twoFingerTap)
     }
     
-    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+    @objc private func handleLongPressUIKit(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let textView = gesture.view as? CodeEditorView else { return }
         
@@ -184,7 +191,7 @@ extension CrossPlatformCoordinator {
     }
     
     @objc private func handleTwoFingerTap(_ gesture: UITapGestureRecognizer) {
-        guard let textView = gesture.view as? CodeEditorView else { return }
+        guard gesture.view is CodeEditorView else { return }
         logger.debug("Two-finger tap detected")
         // Could trigger quick actions menu
     }

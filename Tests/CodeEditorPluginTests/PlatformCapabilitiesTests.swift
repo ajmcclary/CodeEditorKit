@@ -38,8 +38,10 @@ final class PlatformCapabilitiesTests: XCTestCase {
         switch platform {
         case .macOS:
             XCTAssertEqual(displayName, "macOS")
+
         case .iOS:
             XCTAssertEqual(displayName, "iOS")
+
         case .catalyst:
             XCTAssertEqual(displayName, "Mac Catalyst")
         }
@@ -62,6 +64,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         switch platform {
         case .macOS:
             XCTAssertTrue(isAvailable)
+
         case .iOS, .catalyst:
             XCTAssertFalse(isAvailable)
         }
@@ -78,6 +81,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         case .macOS:
             XCTAssertFalse(capabilities.supportsMinimap)
             XCTAssertFalse(isAvailable)
+
         case .iOS, .catalyst:
             XCTAssertTrue(capabilities.supportsMinimap)
             XCTAssertTrue(isAvailable)
@@ -100,6 +104,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         switch platform {
         case .macOS:
             XCTAssertTrue(isAvailable)
+
         case .iOS, .catalyst:
             XCTAssertFalse(isAvailable)
         }
@@ -123,8 +128,10 @@ final class PlatformCapabilitiesTests: XCTestCase {
         switch platform {
         case .macOS:
             XCTAssertEqual(availability, .full)
+
         case .catalyst:
             XCTAssertEqual(availability, .partial)
+
         case .iOS:
             // iOS includes both iPhone and iPad
             #if canImport(UIKit)
@@ -166,8 +173,10 @@ final class PlatformCapabilitiesTests: XCTestCase {
         switch platform {
         case .macOS:
             XCTAssertEqual(availability, .full)
+
         case .catalyst:
             XCTAssertEqual(availability, .full)
+
         case .iOS:
             // Both iPhone and iPad get full symbol navigation
             XCTAssertEqual(availability, .full)
@@ -192,9 +201,11 @@ final class PlatformCapabilitiesTests: XCTestCase {
         case .macOS:
             // macOS uses default config values
             break
+
         case .iOS:
             XCTAssertEqual(config.display.fontSize, 16.0)
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
+
         case .catalyst:
             XCTAssertEqual(config.display.fontSize, 14.0)
             XCTAssertEqual(config.layout.gutterWidth, 45.0)
@@ -228,6 +239,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         case .macOS:
             XCTAssertTrue(capabilities.isFeatureAvailable(.multipleCursors))
             XCTAssertFalse(capabilities.isFeatureAvailable(.minimap))
+
         case .iOS, .catalyst:
             XCTAssertFalse(capabilities.isFeatureAvailable(.multipleCursors))
             XCTAssertTrue(capabilities.isFeatureAvailable(.minimap))
@@ -240,7 +252,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     func testPlatformDetectionPerformance() {
         let capabilities = PlatformCapabilities.shared
         measure {
-            for _ in 0..<1000 {
+            for _ in 0..<1_000 {
                 _ = capabilities.currentPlatform
             }
         }
@@ -250,7 +262,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     func testFeatureAvailabilityPerformance() {
         let capabilities = PlatformCapabilities.shared
         measure {
-            for _ in 0..<1000 {
+            for _ in 0..<1_000 {
                 _ = capabilities.isFeatureAvailable(.syntaxHighlighting)
                 _ = capabilities.getFeatureAvailability(.goToDefinition)
             }

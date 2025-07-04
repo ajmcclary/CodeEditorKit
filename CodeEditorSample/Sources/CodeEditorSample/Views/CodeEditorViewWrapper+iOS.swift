@@ -1,7 +1,7 @@
 #if canImport(UIKit)
-import UIKit
 import CodeEditorPlugin
 import SwiftUI
+import UIKit
 
 // MARK: - CodeEditorViewWrapper
 

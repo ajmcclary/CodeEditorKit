@@ -403,7 +403,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         adjustFeaturesForPlatform()
     }
     
-    private func orientationDidChange() {
+    internal func orientationDidChange() {
         #if canImport(UIKit)
         // Adjust UI for new orientation
         let orientation = UIDevice.current.orientation

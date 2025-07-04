@@ -86,8 +86,7 @@ let package = Package(
             name: "CodeEditorSample",
             dependencies: [
                 .product(name: "CodeEditorPlugin", package: "CodeEditorPlugin")
-            ],
-            exclude: ["Info.plist"]
+            ]
         ),
         .testTarget(
             name: "CodeEditorSampleTests",
