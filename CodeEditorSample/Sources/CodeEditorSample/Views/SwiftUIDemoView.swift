@@ -25,6 +25,7 @@ struct SwiftUIDemoView: View {
                     language: selectedLanguage.name.lowercased()
                 )
                 .environmentObject(appState)
+                .environment(\.codeEditorTheme, selectedTheme)
             }
         }
         .navigationTitle("SwiftUI Demo")
@@ -71,6 +72,7 @@ struct SwiftUIDemoView: View {
                 )
                 SafeToggle("Editable", isOn: $appState.currentConfiguration.behavior.isEditable)
             }
+            
             
             // Sample code buttons - using SafeButton to avoid MainActor crashes
             VStack(spacing: 8) {

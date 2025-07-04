@@ -281,6 +281,229 @@ public final class TextKitBridge {
         return nil
     }
     
+    // MARK: - Cursor and Layout Calculations
+    
+    /// Get the cursor rect for a given character index
+    public func cursorRect(at characterIndex: Int) -> CGRect? {
+        guard textView != nil else { return nil }
+        
+        if isUsingTextKit2 {
+            return cursorRectTextKit2(at: characterIndex)
+        } else {
+            return cursorRectTextKit1(at: characterIndex)
+        }
+    }
+    
+    private func cursorRectTextKit1(at characterIndex: Int) -> CGRect? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let layoutManager = textView?.layoutManager else { return nil }
+        
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: characterIndex)
+        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
+        let glyphLocation = layoutManager.location(forGlyphAt: glyphIndex)
+        
+        return CGRect(x: glyphLocation.x, y: lineRect.origin.y, width: 1, height: lineRect.height)
+        #elseif canImport(UIKit)
+        // For iOS/Catalyst, we need to use caretRect
+        guard let textView = textView,
+              let position = textView.position(from: textView.beginningOfDocument, offset: characterIndex) else {
+            return nil
+        }
+        return textView.caretRect(for: position)
+        #endif
+    }
+    
+    private func cursorRectTextKit2(at characterIndex: Int) -> CGRect? {
+        guard let textLayoutManager = textView?.textLayoutManager,
+              let textContentManager = textLayoutManager.textContentManager else { return nil }
+        
+        // Get the text location for the character index
+        guard let location = textContentManager.location(textContentManager.documentRange.location, offsetBy: characterIndex) else {
+            return nil
+        }
+        
+        // Create a zero-length range at the cursor position
+        _ = NSTextRange(location: location, end: location)
+        
+        // Get the layout fragment containing this location
+        var cursorRect: CGRect?
+        textLayoutManager.enumerateTextLayoutFragments(from: location) { fragment in
+            // Get the frame for the cursor position
+            if let lineFragment = fragment.textLineFragments.first {
+                let lineOrigin = lineFragment.typographicBounds.origin
+                let lineHeight = lineFragment.typographicBounds.height
+                
+                // Calculate x position within the line
+                _ = textContentManager.offset(from: fragment.rangeInElement.location, to: location)
+                let glyphOrigin = lineFragment.glyphOrigin
+                
+                cursorRect = CGRect(
+                    x: fragment.layoutFragmentFrame.origin.x + lineOrigin.x + glyphOrigin.x,
+                    y: fragment.layoutFragmentFrame.origin.y + lineOrigin.y,
+                    width: 1,
+                    height: lineHeight
+                )
+            }
+            return false // Stop after first fragment
+        }
+        
+        return cursorRect
+    }
+    
+    /// Get the bounding rect for a character range
+    public func boundingRect(for range: NSRange) -> CGRect? {
+        guard textView != nil else { return nil }
+        
+        if isUsingTextKit2 {
+            return boundingRectTextKit2(for: range)
+        } else {
+            return boundingRectTextKit1(for: range)
+        }
+    }
+    
+    private func boundingRectTextKit1(for range: NSRange) -> CGRect? {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let layoutManager = textView?.layoutManager,
+              let textContainer = textView?.textContainer else { return nil }
+        
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        #elseif canImport(UIKit)
+        // For iOS/Catalyst, we need to use firstRect
+        guard let textView = textView,
+              let startPosition = textView.position(from: textView.beginningOfDocument, offset: range.location),
+              let endPosition = textView.position(from: startPosition, offset: range.length),
+              let textRange = textView.textRange(from: startPosition, to: endPosition) else {
+            return nil
+        }
+        return textView.firstRect(for: textRange)
+        #endif
+    }
+    
+    private func boundingRectTextKit2(for range: NSRange) -> CGRect? {
+        guard let textRange = textRangeFromNSRange(range),
+              let textLayoutManager = textView?.textLayoutManager else { return nil }
+        
+        var boundingRect = CGRect.null
+        
+        textLayoutManager.enumerateTextLayoutFragments(from: textRange.location) { fragment in
+            // Check if this fragment intersects with our range
+            let fragmentRange = fragment.rangeInElement
+            
+            // If the fragment is within our range, include its frame
+            if fragmentRange.location.compare(textRange.endLocation) == .orderedAscending &&
+               fragmentRange.endLocation.compare(textRange.location) == .orderedDescending {
+                if boundingRect.isNull {
+                    boundingRect = fragment.layoutFragmentFrame
+                } else {
+                    boundingRect = boundingRect.union(fragment.layoutFragmentFrame)
+                }
+            }
+            
+            // Continue until we've processed the entire range
+            return fragmentRange.endLocation.compare(textRange.endLocation) == .orderedAscending
+        }
+        
+        return boundingRect.isNull ? nil : boundingRect
+    }
+    
+    // MARK: - Attributes Management
+    
+    /// Set temporary attributes for a range (TextKit1) or rendering attributes (TextKit2)
+    public func setTemporaryAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
+        guard textView != nil else { return }
+        
+        if isUsingTextKit2 {
+            setRenderingAttributesTextKit2(attributes, for: range)
+        } else {
+            setTemporaryAttributesTextKit1(attributes, for: range)
+        }
+    }
+    
+    private func setTemporaryAttributesTextKit1(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let layoutManager = textView?.layoutManager else { return }
+        layoutManager.setTemporaryAttributes(attributes, forCharacterRange: range)
+        #elseif canImport(UIKit)
+        // UIKit doesn't support temporary attributes in the same way
+        // We need to use attributed text instead
+        if let textView = textView {
+            let mutableAttributedString = NSMutableAttributedString(attributedString: textView.attributedText ?? NSAttributedString())
+            mutableAttributedString.addAttributes(attributes, range: range)
+            textView.attributedText = mutableAttributedString
+        }
+        #endif
+    }
+    
+    private func setRenderingAttributesTextKit2(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
+        guard let textRange = textRangeFromNSRange(range),
+              let textLayoutManager = textView?.textLayoutManager else { return }
+        
+        // TextKit2 uses rendering attributes on layout fragments
+        textLayoutManager.enumerateTextLayoutFragments(from: textRange.location) { fragment in
+            // Apply rendering attributes to the fragment
+            // Note: This is a simplified implementation - TextKit2's rendering attributes
+            // work differently than TextKit1's temporary attributes
+            fragment.invalidateLayout()
+            
+            // Continue until we've processed the entire range
+            return fragment.rangeInElement.endLocation.compare(textRange.endLocation) == .orderedAscending
+        }
+        
+        // Trigger a layout update
+        textLayoutManager.ensureLayout(for: textRange)
+    }
+    
+    /// Remove temporary/rendering attributes for a range
+    public func removeTemporaryAttributes(for range: NSRange) {
+        setTemporaryAttributes([:], for: range)
+    }
+    
+    // MARK: - Line Height Calculation
+    
+    /// Calculate line height for a given font
+    public func calculateLineHeight(for font: PlatformFont) -> CGFloat {
+        // This doesn't need TextKit version checking as it's font-based
+        return TextMetricsCalculator.calculateLineHeight(for: font)
+    }
+    
+    // MARK: - Text Container Properties
+    
+    /// Get or set the text container size
+    public var textContainerSize: CGSize {
+        get {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            return textView?.textContainer?.containerSize ?? .zero
+            #else
+            return textView?.textContainer.size ?? .zero
+            #endif
+        }
+        set {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView?.textContainer?.containerSize = newValue
+            #else
+            textView?.textContainer.size = newValue
+            #endif
+        }
+    }
+    
+    /// Get or set whether width tracks the text view
+    public var widthTracksTextView: Bool {
+        get {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            return textView?.textContainer?.widthTracksTextView ?? false
+            #else
+            // iOS doesn't have this property, width always tracks
+            return true
+            #endif
+        }
+        set {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView?.textContainer?.widthTracksTextView = newValue
+            #endif
+        }
+    }
+    
     // MARK: - Performance Optimization
     
     /// Optimize for a specific file size

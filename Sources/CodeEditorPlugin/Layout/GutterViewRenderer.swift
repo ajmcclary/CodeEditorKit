@@ -47,38 +47,20 @@ public class GutterViewRenderer {
         gutterBounds: CGRect,
         fillBackground: Bool = false
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer = textView.textContainer,
-              let layoutManager = textView.layoutManager,
-              let textStorage = textView.textStorage else {
-            return
-        }
-        #else
-        let textContainer = textView.textContainer
-        let layoutManager = textView.layoutManager
-        let textStorage = textView.textStorage
-        #endif
-        
         // Fill background if requested (UIKit needs this)
         if fillBackground {
             context.setFillColor(PlatformColors.controlBackground.cgColor)
             context.fill(rect)
         }
         
-        // Get visible text range
-        let visibleRect = getVisibleRect(for: textView)
+        // Use TextKitLineNumberHelper to get visible line ranges
+        let helper = TextKitLineNumberHelper(textView: textView)
+        let lineRanges = helper.getVisibleLineRanges()
         
-        // Guard against invalid rect
-        guard visibleRect.width > 0, visibleRect.height > 0 else {
+        // Guard against no visible lines
+        guard !lineRanges.isEmpty else {
             return
         }
-        
-        let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        let visibleCharacterRange = layoutManager.characterRange(forGlyphRange: visibleGlyphRange, actualGlyphRange: nil)
-        
-        // Get line ranges for visible area
-        let text = textStorage.string
-        let lineRanges = getLineRanges(for: text, in: visibleCharacterRange)
         
         // Set up text attributes
         let attributes: [NSAttributedString.Key: Any] = [
@@ -91,7 +73,7 @@ public class GutterViewRenderer {
             drawLineNumber(
                 lineNumber,
                 for: lineRange,
-                layoutManager: layoutManager,
+                helper: helper,
                 attributes: attributes,
                 gutterBounds: gutterBounds,
                 context: context,
@@ -104,7 +86,7 @@ public class GutterViewRenderer {
                 drawFoldingControl(
                     for: lineNumber,
                     lineRange: lineRange,
-                    layoutManager: layoutManager,
+                    helper: helper,
                     gutterBounds: gutterBounds,
                     context: context,
                     textView: textView
@@ -115,36 +97,20 @@ public class GutterViewRenderer {
     
     // MARK: - Private Helpers
     
-    /// Get the visible rectangle for the text view
-    private func getVisibleRect(for textView: CodeEditorView) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return UnifiedDrawingCoordinator.calculateVisibleTextRect(for: textView)
-        #else
-        // For iOS/Catalyst, the visible rect is simply the scrolled area
-        return CGRect(
-            origin: textView.contentOffset,
-            size: textView.bounds.size
-        )
-        #endif
-    }
-    
     /// Draw a single line number
     private func drawLineNumber(
         _ lineNumber: Int,
         for lineRange: NSRange,
-        layoutManager: NSLayoutManager,
+        helper: TextKitLineNumberHelper,
         attributes _: [NSAttributedString.Key: Any],
         gutterBounds: CGRect,
         context _: CGContext,
         textView: CodeEditorView
     ) {
-        // Get the rect for this line
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: lineRange.location)
-        let lineRect = layoutManager.lineFragmentRect(
-            forGlyphAt: glyphIndex,
-            effectiveRange: nil,
-            withoutAdditionalLayout: true
-        )
+        // Get the rect for this line using helper
+        guard let lineRect = helper.getLineFragmentRect(for: lineRange) else {
+            return
+        }
         
         // Calculate drawing position
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -194,82 +160,12 @@ public class GutterViewRenderer {
         UnifiedDrawingCoordinator.restoreGraphicsState()
     }
     
-    /// Calculate line ranges for the visible text
-    internal func getLineRanges(for text: String, in range: NSRange) -> [(Int, NSRange)] {
-        var lineRanges: [(Int, NSRange)] = []
-        var lineNumber = 1
-        
-        // Handle empty range or invalid range
-        guard range.location >= 0,
-              range.location <= text.utf16.count,
-              range.length > 0 || range.location < text.utf16.count else {
-            return lineRanges
-        }
-        
-        // Clamp range to valid bounds
-        let clampedLocation = max(0, min(range.location, text.utf16.count))
-        let maxLength = max(0, text.utf16.count - clampedLocation)
-        let clampedLength = max(0, min(range.length, maxLength))
-        
-        let validRange = NSRange(
-            location: clampedLocation,
-            length: clampedLength
-        )
-        
-        // Count lines before the visible range
-        if validRange.location > 0 {
-            let beforeRange = NSRange(location: 0, length: validRange.location)
-            if let beforeText = text.substring(with: beforeRange) {
-                lineNumber += beforeText.components(separatedBy: .newlines).count - 1
-            }
-        }
-        
-        // Process visible range
-        var currentLocation = validRange.location
-        let endLocation = min(validRange.location + validRange.length, text.utf16.count)
-        
-        // Special case: if we're at the beginning of the text, ensure we include the first line
-        if validRange.location == 0 && !text.utf16.isEmpty {
-            currentLocation = 0
-        }
-        
-        while currentLocation <= endLocation && currentLocation < text.utf16.count {
-            // Find the end of the current line
-            var lineEndLocation = currentLocation
-            
-            // Search for line ending
-            if let substring = text.substring(from: currentLocation) {
-                if let lineEndRange = substring.range(of: "\n") {
-                    let distance = substring.distance(from: substring.startIndex, to: lineEndRange.lowerBound)
-                    lineEndLocation = currentLocation + distance + 1
-                } else {
-                    // No more line endings, this is the last line
-                    lineEndLocation = text.utf16.count
-                }
-            }
-            
-            // Create range for this line
-            let lineRange = NSRange(location: currentLocation, length: lineEndLocation - currentLocation)
-            lineRanges.append((lineNumber, lineRange))
-            
-            // Move to next line
-            lineNumber += 1
-            currentLocation = lineEndLocation
-            
-            // Stop if we've reached the end of the visible range
-            if currentLocation >= endLocation {
-                break
-            }
-        }
-        
-        return lineRanges
-    }
     
     /// Draw folding control (▶️/▼ icon) for foldable lines
     private func drawFoldingControl(
         for lineNumber: Int,
         lineRange: NSRange,
-        layoutManager: NSLayoutManager,
+        helper: TextKitLineNumberHelper,
         gutterBounds: CGRect,
         context: CGContext,
         textView: CodeEditorView
@@ -277,13 +173,10 @@ public class GutterViewRenderer {
         // Check if this line is foldable
         guard textView.isFoldable(at: lineNumber) else { return }
         
-        // Get the rect for this line
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: lineRange.location)
-        let lineRect = layoutManager.lineFragmentRect(
-            forGlyphAt: glyphIndex,
-            effectiveRange: nil,
-            withoutAdditionalLayout: true
-        )
+        // Get the rect for this line using helper
+        guard let lineRect = helper.getLineFragmentRect(for: lineRange) else {
+            return
+        }
         
         // Calculate folding control position
         let controlSize = textView.configuration.layout.foldingControlSize
@@ -399,19 +292,3 @@ private enum TriangleDirection {
     case down
 }
 
-// MARK: - String Helpers
-
-extension String {
-    /// Safe substring extraction using NSRange
-    func substring(with range: NSRange) -> String? {
-        guard let rangeInString = Range(range, in: self) else { return nil }
-        return String(self[rangeInString])
-    }
-    
-    /// Safe substring extraction from a given offset
-    func substring(from offset: Int) -> String? {
-        guard offset < utf16.count else { return nil }
-        let startIndex = index(self.startIndex, offsetBy: offset, limitedBy: endIndex) ?? endIndex
-        return String(self[startIndex...])
-    }
-}

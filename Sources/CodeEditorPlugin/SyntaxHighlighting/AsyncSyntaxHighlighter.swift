@@ -250,9 +250,6 @@ public final class AsyncSyntaxHighlighter {
         let textStorage = textView.textStorage
         #endif
         
-        // Log highlighting application
-        kLogger.debug("✅ Applying \(tokens.count) syntax highlighting tokens")
-        
         // Determine range to apply
         let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -262,21 +259,20 @@ public final class AsyncSyntaxHighlighter {
             #endif
         }())
         
-        // Filter tokens to visible range if specified
-        let tokensToApply = visibleRange != nil
-            ? tokens.filter { $0.range.intersection(rangeToHighlight) != nil }
-            : tokens
-        
-        kLogger.debug("📝 Applying \(tokensToApply.count) tokens to range \(rangeToHighlight)")
-        
         // Update text storage efficiently with both TextKit1 and TextKit2 support
         textStorage.beginEditing()
         
-        // Remove existing syntax highlighting attributes
-        textStorage.removeAttribute(.foregroundColor, range: rangeToHighlight)
+        // First, apply base text color to the entire range
+        #if targetEnvironment(macCatalyst)
+        // Force UIColor.label on Mac Catalyst to avoid NSColor contamination
+        let baseTextColor = UIColor.label
+        #else
+        let baseTextColor = textView.textColor ?? PlatformColors.label
+        #endif
+        textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
         
         // Apply new highlighting
-        for token in tokensToApply {
+        for token in tokens {
             // Prevent out-of-bounds NSRange crashes, required for stability:
             // Validate that token.range.location and length are within textStorage bounds
             guard
@@ -287,12 +283,43 @@ public final class AsyncSyntaxHighlighter {
             else {
                 continue
             }
+            
+            // Special handling for Mac Catalyst to ensure colors are visible
+            #if targetEnvironment(macCatalyst)
+            // Force use explicit UIColor system colors on Mac Catalyst
+            // This bypasses any potential NSColor contamination
+            let tokenColor: UIColor
+            switch token.type {
+            case .keyword: tokenColor = UIColor.systemPurple
+            case .string: tokenColor = UIColor.systemRed
+            case .number: tokenColor = UIColor.systemBlue
+            case .comment: tokenColor = UIColor.systemGreen
+            case .type: tokenColor = UIColor.systemTeal
+            case .function: tokenColor = UIColor.systemIndigo
+            case .property: tokenColor = UIColor.systemOrange
+            case .operator: tokenColor = UIColor.systemBrown
+            case .preprocessor: tokenColor = UIColor.systemPink
+            case .punctuation: tokenColor = UIColor.secondaryLabel
+            case .identifier: tokenColor = UIColor.label
+            default: tokenColor = UIColor.label
+            }
+            
+            // Debug logging to verify we're using UIColor
+            if token.range.location == 0 {
+                let colorType = String(describing: type(of: tokenColor))
+                let colorDesc = String(describing: tokenColor)
+                let tokenTypeDesc = String(describing: token.type)
+                kLogger.debug("Mac Catalyst: Applying syntax color \(colorDesc) of type \(colorType) for token type \(tokenTypeDesc)")
+            }
+            
+            // Apply the color directly - the system colors already adapt to light/dark mode
+            textStorage.addAttribute(.foregroundColor, value: tokenColor, range: token.range)
+            #else
             textStorage.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
+            #endif
         }
         
         textStorage.endEditing()
-        
-        kLogger.debug("✅ Syntax highlighting applied successfully")
     }
     
     private func clearHighlighting(for textView: CodeEditorView) {
@@ -307,7 +334,19 @@ public final class AsyncSyntaxHighlighter {
         #else
             let range = NSRange(location: 0, length: textView.text?.count ?? 0)
         #endif
-        textStorage.removeAttribute(.foregroundColor, range: range)
+        
+        textStorage.beginEditing()
+        
+        // Instead of removing the color, reset to the base text color
+        #if targetEnvironment(macCatalyst)
+        // Force UIColor.label on Mac Catalyst to avoid NSColor contamination
+        let baseTextColor = UIColor.label
+        #else
+        let baseTextColor = textView.textColor ?? PlatformColors.label
+        #endif
+        textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: range)
+        
+        textStorage.endEditing()
     }
     
     deinit {

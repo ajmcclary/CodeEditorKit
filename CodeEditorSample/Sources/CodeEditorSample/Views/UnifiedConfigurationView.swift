@@ -333,7 +333,7 @@ struct UnifiedConfigurationView: View {
     
     @ViewBuilder
     private func adaptiveBackgroundColor() -> some View {
-        #if os(iOS)
+        #if canImport(UIKit)
         Color(.systemGroupedBackground)
         #else
         Color(.windowBackgroundColor)
@@ -342,7 +342,7 @@ struct UnifiedConfigurationView: View {
     
     @ViewBuilder
     private func adaptiveSearchBackground() -> some View {
-        #if os(iOS)
+        #if canImport(UIKit)
         Color(.systemBackground)
         #else
         Color(.textBackgroundColor)

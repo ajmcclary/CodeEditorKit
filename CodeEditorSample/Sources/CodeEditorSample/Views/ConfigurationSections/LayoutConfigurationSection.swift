@@ -18,7 +18,7 @@ struct LayoutConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Insert Spaces for Tabs", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.insertSpacesForTabs },
@@ -29,7 +29,7 @@ struct LayoutConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             // Note: showGutter is not available in the current EditorConfiguration
             
@@ -360,16 +360,5 @@ struct LayoutConfigurationSection: View {
         case .xxxLarge: return 20
         default: return 13
         }
-    }
-    
-    private func configurationToggleStyle() -> some ToggleStyle {
-        #if os(iOS)
-        return SwitchToggleStyle(tint: .blue)
-        #elseif targetEnvironment(macCatalyst)
-        return SwitchToggleStyle(tint: .blue)
-        #else
-        // Use default toggle style for macOS (modern switch)
-        return DefaultToggleStyle()
-        #endif
     }
 }

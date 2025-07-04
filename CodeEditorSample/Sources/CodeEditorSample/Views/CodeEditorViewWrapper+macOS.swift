@@ -1,15 +1,10 @@
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-#endif
-#if canImport(UIKit)
-import UIKit
-#endif
 import CodeEditorPlugin
 import SwiftUI
 
 // MARK: - CodeEditorViewWrapper
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String
@@ -35,7 +30,8 @@ struct CodeEditorViewWrapper: View {
             language: language,
             onTextViewReady: onTextViewReady
         )
-        // Note: Background color now managed by the plugin's theme system
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(PlatformColors.textBackgroundColor))
     }
 }
 
@@ -46,97 +42,122 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     @Binding var text: String
     let language: String
     let onTextViewReady: ((CodeEditorView) -> Void)?
+    
+    typealias NSViewType = NSScrollView
 
-    func makeNSView(context: Context) -> CodeEditorContainerView {
-        // Create the container view which manages the text view, gutter, and minimap
-        let containerView = CodeEditorContainerView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
-        let textView = containerView.textView
-
-        // Set delegate
+    func makeNSView(context: Context) -> NSScrollView {
+        // Create scroll view first
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
+        scrollView.autohidesScrollers = false
+        scrollView.borderType = .noBorder
+        scrollView.autoresizingMask = [.width, .height]
+        
+        // Create text view with a reasonable initial size
+        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 300, height: 300))
+        
+        // Configure text view for scrolling
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.autoresizingMask = .width
+        
+        // Configure text container
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        textView.textContainer?.containerSize = NSSize(
+            width: configuration.layout.wrapLines ? 300 : CGFloat.greatestFiniteMagnitude,
+            height: CGFloat.greatestFiniteMagnitude
+        )
+        
+        // Set up scroll view
+        scrollView.documentView = textView
+        
+        // Configure the text view
+        configuration.apply(to: textView)
+        textView.setLanguage(fileExtension: language)
+        textView.text = text
+        
+        // Configure the delegate
         textView.textDelegate = context.coordinator
         
-        // Apply configuration to both the container view and text view
-        // IMPORTANT: Apply configuration to container first
-        // The container will handle line numbers via its own gutter
-        containerView.configuration = configuration
-        
-        // CRITICAL: Don't apply the full configuration to text view yet
-        // The container needs to process it first to disable internal line numbers
-        
-        // Set language and text
-        textView.setLanguage(fileExtension: language)
-        textView.string = text
-        
-        // Set up annotation manager if enabled
+        // Setup annotation manager
+        context.coordinator.annotationManager = AnnotationManager(textView: textView)
         if configuration.display.enableAnnotations {
-            context.coordinator.annotationManager = AnnotationManager(textView: textView)
             context.coordinator.annotationManager?.scanForAnnotations()
         }
-
-        // Notify that text view is ready if callback provided
+        
+        // Store reference to text view for updates
+        context.coordinator.textView = textView
+        
+        // Call ready callback if provided
         onTextViewReady?(textView)
-
-        return containerView
+        
+        return scrollView
     }
 
-    func updateNSView(_ containerView: CodeEditorContainerView, context: Context) {
-        print("🔧 CodeEditorViewWrapper.updateNSView called")
-        let textView = containerView.textView
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        guard let textView = context.coordinator.textView else { return }
         
-        // Update text if changed
-        if textView.string != text {
-            textView.string = text
-        }
-
-        // Only apply configuration if it has actually changed
-        if containerView.configuration != configuration {
-            // Apply configuration to container only - it will handle the text view
-            containerView.configuration = configuration
+        // Only update text if it's different to avoid cursor jumps
+        if textView.text != text {
+            textView.text = text
         }
         
-        // Update language separately (doesn't affect line numbers)
+        // Update configuration
+        configuration.apply(to: textView)
+        
+        // Update language if needed
         textView.setLanguage(fileExtension: language)
         
-        // Update annotations
+        // Update scroll view settings
+        nsView.hasHorizontalScroller = !configuration.layout.wrapLines
+        textView.isHorizontallyResizable = !configuration.layout.wrapLines
+        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
+        
+        // Update annotation scanning based on configuration
         if configuration.display.enableAnnotations {
             if context.coordinator.annotationManager == nil {
                 context.coordinator.annotationManager = AnnotationManager(textView: textView)
             }
             context.coordinator.annotationManager?.scanForAnnotations()
         } else {
-            // Clear annotations if disabled
-            context.coordinator.annotationManager?.clearAnnotations()
             context.coordinator.annotationManager = nil
         }
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(parent: self)
     }
 
     // MARK: - Coordinator
-
-    @MainActor
+    
     class Coordinator: NSObject, CodeEditorViewDelegate {
-        var parent: UnifiedCodeEditorView
+        let parent: UnifiedCodeEditorView
         var annotationManager: AnnotationManager?
+        weak var textView: CodeEditorView?
 
-        init(_ parent: UnifiedCodeEditorView) {
+        init(parent: UnifiedCodeEditorView) {
             self.parent = parent
             super.init()
         }
 
-        // MARK: - CodeEditorViewDelegate
-
-        func undoManager(for _: CodeEditorView) -> UndoManager? {
+        // MARK: - CodeEditorViewDelegate Required Methods
+        
+        func undoManager(for textView: CodeEditorView) -> UndoManager? {
             nil
         }
-
-        func textViewWillChangeText(_: Notification) {
+        
+        func textViewWillChangeText(_ notification: Notification) {
+            // Default implementation
+        }
+        
+        func textViewDidChangeText(_ notification: Notification) {
             // Default implementation
         }
 
-        func textViewDidChangeText(_ notification: Notification) {
+        // MARK: - Text Change Notifications
+
+        func textDidChange(_ notification: Notification) {
             if let textView = notification.object as? CodeEditorView {
                 parent.text = textView.text ?? ""
                 
@@ -191,11 +212,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
             // For the sample app, we don't provide completion functionality
             // Return a minimal implementation that satisfies the protocol
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return NoOpCompletionViewController()
-            #else
-            return NoOpCompletionViewController()
-            #endif
         }
 
         func textViewInsertionPointView(
@@ -222,65 +239,24 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
     }
 }
-#endif
-
-// MARK: - iOS Implementation
-
-#if canImport(UIKit)
-struct CodeEditorViewWrapper: View {
-    let configuration: EditorConfiguration
-    @Binding var text: String
-    let language: String
-    let onTextViewReady: ((CodeEditorView) -> Void)?
-
-    init(
-        configuration: EditorConfiguration,
-        text: Binding<String>,
-        language: String,
-        onTextViewReady: ((CodeEditorView) -> Void)? = nil
-    ) {
-        self.configuration = configuration
-        self._text = text
-        self.language = language
-        self.onTextViewReady = onTextViewReady
-    }
-
-    var body: some View {
-        // Use the modern CodeEditor implementation
-        CodeEditor(text: $text)
-            .codeLanguage(detectLanguage(from: language))
-            .environment(\.codeEditorConfiguration, configuration)
-            // Don't use .id() - the CodeEditor handles configuration updates internally
-    }
-    
-    private func detectLanguage(from fileExtension: String) -> Language {
-        let coordinator = SyntaxHighlightingCoordinator()
-        return coordinator.detectLanguage(from: fileExtension)
-    }
-}
-#endif
 
 // MARK: - NoOpCompletionViewController
 
-/// A minimal completion view controller implementation for the sample app
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-private class NoOpCompletionViewController: NSViewController, CompletionViewControllerProtocol {
+class NoOpCompletionViewController: NSViewController, CompletionViewControllerProtocol {
     var items: [any CompletionItem] = []
-    var delegate: CompletionViewControllerDelegate?
+    weak var delegate: CompletionViewControllerDelegate?
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view = NSView()
+    func present(in containerView: PlatformView, at location: CGPoint) {
+        // No-op
+    }
+    
+    func dismiss() {
+        // No-op
+    }
+    
+    func update(with items: [any CompletionItem]) {
+        self.items = items
     }
 }
-#else
-private class NoOpCompletionViewController: UIViewController, CompletionViewControllerProtocol {
-    var items: [any CompletionItem] = []
-    var delegate: CompletionViewControllerDelegate?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view = UIView()
-    }
-}
+
 #endif

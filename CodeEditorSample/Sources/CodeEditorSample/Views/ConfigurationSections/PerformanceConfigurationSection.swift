@@ -18,7 +18,7 @@ struct PerformanceConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Smooth Scrolling", isOn: Binding(
                 get: { appState.coordinator.configuration.performance.smoothScrolling },
@@ -29,7 +29,7 @@ struct PerformanceConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Animate Code Folding", isOn: Binding(
                 get: { appState.coordinator.configuration.performance.animateCodeFolding },
@@ -40,7 +40,7 @@ struct PerformanceConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             .help("Animate folding and unfolding operations for smooth visual transitions")
             
             // Note: Background processing setting not available in current configuration
@@ -205,16 +205,5 @@ struct PerformanceConfigurationSection: View {
         case .xxxLarge: return 21
         default: return 14
         }
-    }
-    
-    private func configurationToggleStyle() -> some ToggleStyle {
-        #if os(iOS)
-        return SwitchToggleStyle(tint: .blue)
-        #elseif targetEnvironment(macCatalyst)
-        return SwitchToggleStyle(tint: .blue)
-        #else
-        // Use default toggle style for macOS (modern switch)
-        return DefaultToggleStyle()
-        #endif
     }
 }

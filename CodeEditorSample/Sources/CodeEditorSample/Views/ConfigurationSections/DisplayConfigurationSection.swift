@@ -18,7 +18,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Highlight Current Line", isOn: Binding(
                 get: { appState.coordinator.configuration.display.highlightSelectedLine },
@@ -29,7 +29,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Show Invisible Characters", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showInvisibleCharacters },
@@ -40,7 +40,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Enable Syntax Highlighting", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableSyntaxHighlighting },
@@ -51,7 +51,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Enable Annotations", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableAnnotations },
@@ -62,7 +62,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Show Indent Guides", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showIndentGuides },
@@ -73,7 +73,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Show Minimap", isOn: Binding(
                 get: { appState.coordinator.configuration.display.showMinimap },
@@ -84,7 +84,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Enable Code Folding", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableCodeFolding },
@@ -95,7 +95,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             .help("Allow collapsing and expanding code sections like functions, classes, and blocks")
             
             Toggle("Show Folding Controls", isOn: Binding(
@@ -107,7 +107,7 @@ struct DisplayConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             .help("Display ▶️/▼ fold/unfold buttons in the gutter")
             .disabled(!appState.coordinator.configuration.display.enableCodeFolding)
             
@@ -243,16 +243,5 @@ struct DisplayConfigurationSection: View {
         case .xxxLarge: return 20
         default: return 13
         }
-    }
-    
-    private func configurationToggleStyle() -> some ToggleStyle {
-        #if os(iOS)
-        return SwitchToggleStyle(tint: .blue)
-        #elseif targetEnvironment(macCatalyst)
-        return SwitchToggleStyle(tint: .blue)
-        #else
-        // Use default toggle style for macOS (modern switch)
-        return DefaultToggleStyle()
-        #endif
     }
 }

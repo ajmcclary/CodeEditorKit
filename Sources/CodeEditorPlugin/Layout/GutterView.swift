@@ -250,38 +250,9 @@ extension GutterView {
     
     /// Find the line number at the given point
     private func findLineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else {
-            return nil
-        }
-        #else
-        let layoutManager = textView.layoutManager
-        let textContainer = textView.textContainer
-        #endif
-        
-        // Convert point to text view coordinates
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS: Point is already in the correct coordinate system
-        let textPoint = CGPoint(x: 0, y: point.y)
-        #else
-        // iOS/Catalyst: Account for text container inset and scroll offset
-        let textContainerInset = textView.textContainerInset
-        let textPoint = CGPoint(
-            x: 0,
-            y: point.y + textView.contentOffset.y - textContainerInset.top
-        )
-        #endif
-        
-        // Find the glyph at this point
-        let glyphIndex = layoutManager.glyphIndex(for: textPoint, in: textContainer)
-        let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
-        
-        // Convert character index to line number
-        let text = textView.text ?? ""
-        let lineNumber = text.prefix(characterIndex).components(separatedBy: .newlines).count
-        
-        return lineNumber > 0 ? lineNumber : 1
+        // Use TextKitLineNumberHelper to avoid forcing TextKit 1
+        let helper = TextKitLineNumberHelper(textView: textView)
+        return helper.lineNumber(at: point)
     }
     
     /// Check if the click was on a folding control

@@ -52,27 +52,11 @@ extension UnifiedTextViewProtocol {
         #endif
     }
     
-    /// Returns the bounding rectangle for the given text range using layout manager
+    /// Returns the bounding rectangle for the given text range using TextKitBridge
     func unifiedBoundingRect(for range: NSRange) -> CGRect? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let layoutManager,
-              let textContainer else {
-            return nil
-        }
-        #else
-        let layoutManager = self.layoutManager
-        let textContainer = self.textContainer
-        #endif
-        
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let origin = textContainerOrigin
-        return rect.offsetBy(dx: origin.x, dy: origin.y)
-        #else
-        return rect
-        #endif
+        guard let textView = self as? PlatformTextView else { return nil }
+        let textKitBridge = TextKitBridge(textView: textView)
+        return textKitBridge.boundingRect(for: range)
     }
 }
 
@@ -96,29 +80,15 @@ extension TextView {
 extension TextView {
     /// Apply attributes that do not affect layout, if supported by the text system
     public func setRenderingAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
-        // First determine if TextKit 2 is enabled to avoid downgrading
-        if #available(macOS 12.0, iOS 16.0, *), let textLayoutManager {
-            guard
-                let contentManager = textLayoutManager.textContentManager,
-                let textRange = NSTextRange(range, provider: contentManager)
-            else {
-                return
-            }
-
-            // Apply rendering attributes
-            textLayoutManager.setRenderingAttributes(attributes, for: textRange)
-            
-            // Force refresh by temporarily changing selection
+        let textKitBridge = TextKitBridge(textView: self)
+        textKitBridge.setTemporaryAttributes(attributes, for: range)
+        
+        // Force refresh by temporarily changing selection if using TextKit2
+        if textKitBridge.version == .textKit2 {
             let currentSelection = getCurrentSelection()
             setTemporarySelection(range)
             restoreSelection(currentSelection)
-            return
         }
-
-        // Fallback to TextKit 1 for macOS
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        layoutManager?.setTemporaryAttributes(attributes, forCharacterRange: range)
-        #endif
     }
     
     /// Clear rendering attributes for the specified range

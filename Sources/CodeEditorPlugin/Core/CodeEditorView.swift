@@ -551,11 +551,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
         
         // Try to ensure we're using TextKit2 if possible
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
             kLogger.debug("CodeEditorView setupTextView: Attempting to initialize with TextKit2")
             // Force TextKit2 initialization if needed
             // This is a fallback - normally NSTextView should auto-initialize with TextKit2
         }
+        #else
+        // For iOS/Mac Catalyst, textLayoutManager is always nil since UITextView doesn't expose TextKit2
+        kLogger.debug("CodeEditorView setupTextView: TextKit2 detection not available on iOS/Mac Catalyst")
+        #endif
 
         // Set up the text view
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -619,11 +624,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         ModernTextKitHelper.configureTextView(self)
         ModernTextKitHelper.applyPerformanceOptimizations(to: self)
-        #endif
         
         // Ensure TextKit2 is used if available and beneficial
         let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)
         kLogger.debug("CodeEditorView setupTextView: Using TextKit2: \(usingTextKit2)")
+        #else
+        // ModernTextKitHelper is not available for iOS/Mac Catalyst
+        kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (iOS/Mac Catalyst)")
+        #endif
 
         // Ensure proper sizing and layout
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -682,8 +690,77 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         textColor = PlatformColors.label
         font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
         kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
+        #else
+        // iOS/Mac Catalyst configuration
+        #if targetEnvironment(macCatalyst)
+        // Force explicit UIColor types on Mac Catalyst to prevent NSColor contamination
+        backgroundColor = UIColor.systemBackground
+        textColor = UIColor.label
+        font = UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular)
+        kLogger.debug("setupDefaultTheme: Mac Catalyst - forcing UIColor types")
+        #else
+        backgroundColor = PlatformColors.textBackgroundColor
+        textColor = PlatformColors.label
+        font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
+        #endif
+        kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
         #endif
     }
+    
+    // MARK: - View Lifecycle
+    
+    #if canImport(UIKit)
+    override open func didMoveToWindow() {
+        super.didMoveToWindow()
+        
+        #if targetEnvironment(macCatalyst)
+        // On Mac Catalyst, we need to reapply text color when the view is added to window
+        if window != nil {
+            // Apply immediately
+            applyTextColorForMacCatalyst()
+            
+            // Also apply after a short delay to ensure view hierarchy is ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.applyTextColorForMacCatalyst()
+            }
+        }
+        #endif
+    }
+    
+    
+    /// Apply text color specifically for Mac Catalyst
+    /// This ensures text is visible by applying color attributes to all text
+    private func applyTextColorForMacCatalyst() {
+        let textStorage = self.textStorage
+        
+        // Force use UIColor.label on Mac Catalyst to avoid any NSColor contamination
+        let textColor = self.textColor ?? UIColor.label
+        let font = self.font ?? UIFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        
+        kLogger.debug("Mac Catalyst: Setting text color \(String(describing: textColor)) of type \(String(describing: type(of: textColor)))")
+        
+        // Apply to existing text
+        if textStorage.length > 0 {
+            textStorage.beginEditing()
+            textStorage.addAttributes([
+                .foregroundColor: textColor,
+                .font: font
+            ], range: NSRange(location: 0, length: textStorage.length))
+            textStorage.endEditing()
+        }
+        
+        // Update typing attributes
+        var typingAttrs = self.typingAttributes
+        typingAttrs[.foregroundColor] = textColor
+        typingAttrs[.font] = font
+        self.typingAttributes = typingAttrs
+        
+        // Force the text view to redraw on Mac Catalyst
+        self.setNeedsDisplay()
+        
+        kLogger.debug("Mac Catalyst: Applied text color to all text. TextColor: \(String(describing: textColor)), Font: \(String(describing: font))")
+    }
+    #endif
     
     // MARK: - Completion Setup
     
@@ -962,22 +1039,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textContainer, let layoutManager else {
-            return CGRect(x: 0, y: 0, width: 1, height: 16)
-        }
-        
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: position, length: 0), actualCharacterRange: nil)
-        return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        #else
-        // UITextView cursor positioning
-        guard let start = self.position(from: beginningOfDocument, offset: position),
-              let end = self.position(from: start, offset: 0),
-              let textRange = self.textRange(from: start, to: end) else {
-            return CGRect(x: 0, y: 0, width: 1, height: 16)
-        }
-        return caretRect(for: textRange.start)
-        #endif
+        let textKitBridge = TextKitBridge(textView: self)
+        return textKitBridge.cursorRect(at: position) ?? CGRect(x: 0, y: 0, width: 1, height: 16)
     }
     
     /// Show completion window/popover at the specified rectangle
@@ -1870,71 +1933,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Get the visible range of text in the text view
     public func visibleRange() -> NSRange {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let scrollView = enclosingScrollView {
-            let visibleRect = scrollView.contentView.visibleRect
-            return textRangeForVisibleRect(visibleRect)
-        }
-
-        // Fallback to entire text range
-        return NSRange(location: 0, length: string.count)
-        #else
-        // For iOS, calculate visible range based on content offset and bounds
-        let visibleRect = CGRect(origin: contentOffset, size: bounds.size)
-        return textRangeForVisibleRect(visibleRect)
-        #endif
-    }
-    
-    /// Convert visible rect to text range using TextKit2-compatible approach
-    private func textRangeForVisibleRect(_ visibleRect: CGRect) -> NSRange {
-        // First try TextKit2 approach if available
-        if let textLayoutManager = self.textLayoutManager,
-           let textContentManager = textLayoutManager.textContentManager {
-            // Use TextKit2's viewport-based enumeration
-            var startLocation: NSTextLocation?
-            var endLocation: NSTextLocation?
-            
-            textLayoutManager.enumerateTextLayoutFragments(from: textLayoutManager.documentRange.location, options: []) { fragment in
-                let fragmentFrame = fragment.layoutFragmentFrame
-                
-                if fragmentFrame.intersects(visibleRect) {
-                    if startLocation == nil {
-                        startLocation = fragment.rangeInElement.location
-                    }
-                    endLocation = fragment.rangeInElement.endLocation
-                }
-                
-                // Continue until we've passed the visible rect
-                return fragmentFrame.minY <= visibleRect.maxY
-            }
-            
-            if let start = startLocation, let end = endLocation {
-                let startOffset = textContentManager.offset(from: textLayoutManager.documentRange.location, to: start)
-                let endOffset = textContentManager.offset(from: textLayoutManager.documentRange.location, to: end)
-                return NSRange(location: startOffset, length: endOffset - startOffset)
-            }
-        } else {
-            // Fallback to TextKit1 approach only if TextKit2 is not available
-            // Note: This access to layoutManager should only happen as a last resort
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
-                return NSRange(location: 0, length: 0)
-            }
-            let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-            return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-            #else
-            // On iOS/Catalyst, layoutManager and textContainer are not optional
-            let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-            return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-            #endif
-        }
-        
-        // Final fallback
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return NSRange(location: 0, length: string.count)
-        #else
-        return NSRange(location: 0, length: text?.count ?? 0)
-        #endif
+        let textKitBridge = TextKitBridge(textView: self)
+        return textKitBridge.visibleRange ?? NSRange(location: 0, length: text?.count ?? 0)
     }
 
     // MARK: - Additional CodeEditorView Methods
@@ -1943,28 +1943,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     public var widthTracksTextView: Bool {
         get {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let textContainer = super.textContainer {
-                return textContainer.widthTracksTextView
-            } else {
-                return false
-            }
-            #elseif targetEnvironment(macCatalyst)
-            let textContainer = super.textContainer
-            return textContainer.widthTracksTextView
-            #else
-            return false // UITextView doesn't have this property
-            #endif
+            let textKitBridge = TextKitBridge(textView: self)
+            return textKitBridge.widthTracksTextView
         }
         set {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let textContainer = super.textContainer {
-                textContainer.widthTracksTextView = newValue
-            }
-            #elseif targetEnvironment(macCatalyst)
-            let textContainer = super.textContainer
-            textContainer.widthTracksTextView = newValue
-            #endif
+            let textKitBridge = TextKitBridge(textView: self)
+            textKitBridge.widthTracksTextView = newValue
         }
     }
 
@@ -2102,43 +2086,19 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Calculate line rect using TextKit2-compatible approach that doesn't force TextKit1
     private func calculateLineRect(for range: NSRange) -> CGRect? {
-        // First try TextKit2 approach if available
-        if let textLayoutManager = self.textLayoutManager,
-           let textContentManager = textLayoutManager.textContentManager {
-            // Use TextKit2 APIs
-            guard let startLocation = textContentManager.location(textLayoutManager.documentRange.location, offsetBy: range.location),
-                  let endLocation = textContentManager.location(startLocation, offsetBy: range.length) else {
-                return nil
-            }
-            
-            guard let textRange = NSTextRange(location: startLocation, end: endLocation) else {
-                return nil
-            }
-            return textLayoutManager.textSegmentFrame(in: textRange, type: .standard)
-        } else {
-            // Fallback to TextKit1 approach only if TextKit2 is not available
-            // Note: This access to layoutManager should only happen as a last resort
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            guard let layoutManager = self.layoutManager, let textContainer = self.textContainer else {
-                return nil
-            }
-            #else
-            // On iOS/Catalyst, layoutManager and textContainer are not optional
-            let layoutManager = self.layoutManager
-            let textContainer = self.textContainer
-            #endif
-            
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-            return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        }
+        let textKitBridge = TextKitBridge(textView: self)
+        return textKitBridge.boundingRect(for: range)
     }
 
     // MARK: - TextKit Version Detection
     
     /// Detects which TextKit version is currently being used and logs warnings for compatibility mode
     public func detectTextKitVersion() -> String {
+        let textKitBridge = TextKitBridge(textView: self)
+        let version = textKitBridge.version
+        
         #if canImport(UIKit)
-        if textLayoutManager != nil {
+        if version == .textKit2 {
             kLogger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else {
@@ -2146,7 +2106,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             return "TextKit 1 (fallback)"
         }
         #else
-        if textLayoutManager != nil {
+        if version == .textKit2 {
             kLogger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else if responds(to: #selector(getter: NSTextView.layoutManager)) {
@@ -2161,11 +2121,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Validates that TextKit 2 is being used properly
     public func validateTextKit2Usage() -> Bool {
-        let version = detectTextKitVersion()
-        let isUsingTextKit2 = version.contains("TextKit 2")
+        let textKitBridge = TextKitBridge(textView: self)
+        let isUsingTextKit2 = textKitBridge.version == .textKit2
         
         if !isUsingTextKit2 {
-            kLogger.warning("TextKit 2 validation failed: \(version)")
+            kLogger.warning("TextKit 2 validation failed: \(textKitBridge.version.description)")
         }
         
         return isUsingTextKit2

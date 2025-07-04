@@ -18,7 +18,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Auto Indent", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoIndent },
@@ -29,7 +29,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Enable Code Completion", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.enableCodeCompletion },
@@ -40,7 +40,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Spell Checking", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled },
@@ -51,7 +51,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Smart Quotes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled },
@@ -62,7 +62,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Auto Close Brackets", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoCloseBrackets },
@@ -73,7 +73,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Auto Close Quotes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoCloseQuotes },
@@ -84,7 +84,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Is Selectable", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isSelectable },
@@ -95,7 +95,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Grammar Checking", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isGrammarCheckingEnabled },
@@ -106,7 +106,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Smart Dashes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled },
@@ -117,7 +117,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Text Replacement", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled },
@@ -128,7 +128,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Spell Correction", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled },
@@ -139,7 +139,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Text Completion", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled },
@@ -150,7 +150,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             
             Toggle("Auto Scroll to Cursor", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoScrollToCursor },
@@ -161,7 +161,7 @@ struct BehaviorConfigurationSection: View {
                     appState.objectWillChange.send()
                 }
             ))
-            .toggleStyle(configurationToggleStyle())
+            .toggleStyle(.platform)
             .help("When enabled, the editor automatically scrolls to make the cursor visible")
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
@@ -189,14 +189,4 @@ struct BehaviorConfigurationSection: View {
         }
     }
     
-    private func configurationToggleStyle() -> some ToggleStyle {
-        #if os(iOS)
-        return SwitchToggleStyle(tint: .blue)
-        #elseif targetEnvironment(macCatalyst)
-        return SwitchToggleStyle(tint: .blue)
-        #else
-        // Use default toggle style for macOS (modern switch)
-        return DefaultToggleStyle()
-        #endif
-    }
 }

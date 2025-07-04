@@ -210,7 +210,7 @@ struct ConfigurationSection<Content: View>: View {
     
     @ViewBuilder
     private func sectionHeaderBackground() -> some View {
-        #if os(iOS)
+        #if canImport(UIKit)
         Color(.systemGray6)
         #else
         Color(.controlBackgroundColor)
@@ -219,7 +219,7 @@ struct ConfigurationSection<Content: View>: View {
     
     @ViewBuilder
     private func sectionBackground() -> some View {
-        #if os(iOS)
+        #if canImport(UIKit)
         Color(.systemBackground)
         #else
         Color(.windowBackgroundColor)
@@ -227,7 +227,7 @@ struct ConfigurationSection<Content: View>: View {
     }
     
     private func sectionShadowColor() -> Color {
-        #if os(iOS)
+        #if canImport(UIKit)
         return Color.black.opacity(0.1)
         #else
         return Color.black.opacity(0.05)
@@ -370,13 +370,13 @@ struct PresetRow: View {
     @ViewBuilder
     private func presetRowBackground() -> some View {
         if isSelected {
-            #if os(iOS)
+            #if canImport(UIKit)
             Color.blue.opacity(0.1)
             #else
             Color.blue.opacity(0.1)
             #endif
         } else {
-            #if os(iOS)
+            #if canImport(UIKit)
             Color(.systemGray6)
             #else
             Color(.controlBackgroundColor)
