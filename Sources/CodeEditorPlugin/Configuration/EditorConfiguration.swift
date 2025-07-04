@@ -266,7 +266,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         ///
         /// When enabled, displays ▶️/▼ fold/unfold buttons in the gutter
         /// next to foldable code regions. Allows interactive folding control.
-        public var showFoldingControls: Bool = true
+        public var showFoldingControls: Bool = false
         
         /// Minimum number of lines required for a foldable region.
         ///

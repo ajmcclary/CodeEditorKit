@@ -188,5 +188,4 @@ struct BehaviorConfigurationSection: View {
         default: return 16
         }
     }
-    
 }

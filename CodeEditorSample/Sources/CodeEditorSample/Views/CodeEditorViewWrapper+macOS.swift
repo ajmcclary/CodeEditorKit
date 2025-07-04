@@ -167,15 +167,15 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 
         // MARK: - CodeEditorViewDelegate Required Methods
         
-        func undoManager(for textView: CodeEditorView) -> UndoManager? {
+        func undoManager(for _: CodeEditorView) -> UndoManager? {
             nil
         }
         
-        func textViewWillChangeText(_ notification: Notification) {
+        func textViewWillChangeText(_: Notification) {
             // Default implementation
         }
         
-        func textViewDidChangeText(_ notification: Notification) {
+        func textViewDidChangeText(_: Notification) {
             // Default implementation
         }
 
@@ -197,8 +197,8 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _ textView: CodeEditorView,
-            shouldChangeTextIn affectedCharRange: NSTextRange,
+            _: CodeEditorView,
+            shouldChangeTextIn _: NSTextRange,
             replacementString: String?
         ) -> Bool {
             guard replacementString != nil else { return true }
@@ -210,9 +210,9 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         }
 
         func textView(
-            _ textView: CodeEditorView,
-            willChangeTextIn affectedCharRange: NSTextRange,
-            replacementString: String
+            _: CodeEditorView,
+            willChangeTextIn _: NSTextRange,
+            replacementString _: String
         ) {
             // Default implementation
         }
@@ -236,7 +236,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
             // For the sample app, we don't provide completion functionality
             // Return a minimal implementation that satisfies the protocol
-            return NoOpCompletionViewController()
+            NoOpCompletionViewController()
         }
 
         func textViewInsertionPointView(
@@ -270,7 +270,7 @@ class NoOpCompletionViewController: NSViewController, CompletionViewControllerPr
     var items: [any CompletionItem] = []
     weak var delegate: CompletionViewControllerDelegate?
     
-    func present(in containerView: PlatformView, at location: CGPoint) {
+    func present(in _: PlatformView, at _: CGPoint) {
         // No-op
     }
     
