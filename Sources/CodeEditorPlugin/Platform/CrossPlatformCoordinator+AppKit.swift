@@ -66,6 +66,15 @@ extension CrossPlatformCoordinator {
         }
     }
     
+    func handleMacOSPencilInput(location: CGPoint, pressure: CGFloat, azimuth: CGFloat, in textView: CodeEditorView) -> Bool {
+        // Apple Pencil not supported on macOS
+        _ = location
+        _ = pressure
+        _ = azimuth
+        _ = textView
+        return false
+    }
+    
     // MARK: - MacOS Context Menu
     
     func createMacOSContextMenu(for _: CodeEditorView, at _: CGPoint) -> NSMenu {

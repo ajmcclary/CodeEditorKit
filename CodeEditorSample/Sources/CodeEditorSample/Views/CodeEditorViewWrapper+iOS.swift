@@ -27,7 +27,7 @@ import UIKit
 ///    maintenance burden while providing all necessary functionality for iOS.
 /// 5. **Container View Separation**: On iOS, the CodeEditorContainerView handles
 ///    gutter management separately, while macOS integrates it into the scroll view.
-struct CodeEditorViewWrapper: View {
+struct IOSCodeEditorViewWrapper: View, CodeEditorViewWrapperProtocol {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
@@ -56,10 +56,6 @@ struct CodeEditorViewWrapper: View {
             }
     }
     
-    private func detectLanguage(from fileExtension: String) -> Language {
-        let coordinator = SyntaxHighlightingCoordinator()
-        return coordinator.detectLanguage(from: fileExtension)
-    }
 }
 
 #endif

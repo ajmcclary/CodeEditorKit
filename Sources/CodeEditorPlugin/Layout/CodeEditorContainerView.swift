@@ -25,7 +25,6 @@ public final class CodeEditorContainerView: PlatformView {
     #if canImport(UIKit)
     public let contentView: EditorContentView
     private var keyboardObservers: [NSObjectProtocol] = []
-    private nonisolated(unsafe) var keyboardObserversForDeinit: [NSObjectProtocol] = []
     private var keyboardHeight: CGFloat = 0
     #else
     public let scrollView: NSScrollView
@@ -630,7 +629,6 @@ public final class CodeEditorContainerView: PlatformView {
         }
         
         keyboardObservers = [willShow, willHide]
-        keyboardObserversForDeinit = keyboardObservers
     }
     
     private func handleKeyboardWillShow(keyboardFrame: CGRect?, duration: Double?) {
@@ -706,18 +704,12 @@ public final class CodeEditorContainerView: PlatformView {
     private func cleanupKeyboardObservers() {
         keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
         keyboardObservers.removeAll()
-        keyboardObserversForDeinit = keyboardObservers
     }
     #endif
     
     deinit {
-        #if canImport(UIKit)
-        // Perform cleanup synchronously to avoid capturing self after deinit begins
-        keyboardObserversForDeinit.forEach { NotificationCenter.default.removeObserver($0) }
-        keyboardObserversForDeinit.removeAll()
-        #endif
-        
         // Remove any selector-based observers
+        // NotificationCenter automatically removes all observers for an object when it's deallocated
         NotificationCenter.default.removeObserver(self)
     }
 }

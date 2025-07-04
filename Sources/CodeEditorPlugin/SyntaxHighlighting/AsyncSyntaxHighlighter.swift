@@ -17,7 +17,7 @@ public final class AsyncSyntaxHighlighter {
     private let backgroundHighlighter: BackgroundSyntaxHighlighter
     private var highlightingTask: Task<Void, Never>?
     private var debounceTimer: Timer?
-    private nonisolated(unsafe) var periodicOptimizationTimer: Timer?
+    private var periodicOptimizationTimer: Timer?
     private let debounceInterval: TimeInterval
     private let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
     
@@ -264,12 +264,7 @@ public final class AsyncSyntaxHighlighter {
         textStorage.beginEditing()
         
         // First, apply base text color to the entire range
-        #if targetEnvironment(macCatalyst)
-        // Force UIColor.label on Mac Catalyst to avoid NSColor contamination
-        let baseTextColor = UIColor.label
-        #else
         let baseTextColor = textView.textColor ?? PlatformColors.label
-        #endif
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
         
         // Apply new highlighting
@@ -285,39 +280,9 @@ public final class AsyncSyntaxHighlighter {
                 continue
             }
             
-            // Special handling for Mac Catalyst to ensure colors are visible
-            #if targetEnvironment(macCatalyst)
-            // Force use explicit UIColor system colors on Mac Catalyst
-            // This bypasses any potential NSColor contamination
-            let tokenColor: UIColor
-            switch token.type {
-            case .keyword: tokenColor = UIColor.systemPurple
-            case .string: tokenColor = UIColor.systemRed
-            case .number: tokenColor = UIColor.systemBlue
-            case .comment: tokenColor = UIColor.systemGreen
-            case .type: tokenColor = UIColor.systemTeal
-            case .function: tokenColor = UIColor.systemIndigo
-            case .property: tokenColor = UIColor.systemOrange
-            case .operator: tokenColor = UIColor.systemBrown
-            case .preprocessor: tokenColor = UIColor.systemPink
-            case .punctuation: tokenColor = UIColor.secondaryLabel
-            case .identifier: tokenColor = UIColor.label
-            default: tokenColor = UIColor.label
-            }
-            
-            // Debug logging to verify we're using UIColor
-            if token.range.location == 0 {
-                let colorType = String(describing: type(of: tokenColor))
-                let colorDesc = String(describing: tokenColor)
-                let tokenTypeDesc = String(describing: token.type)
-                kLogger.debug("Mac Catalyst: Applying syntax color \(colorDesc) of type \(colorType) for token type \(tokenTypeDesc)")
-            }
-            
-            // Apply the color directly - the system colors already adapt to light/dark mode
+            // Apply color using platform abstraction for all platforms including Catalyst
+            let tokenColor = token.type.adaptiveColor
             textStorage.addAttribute(.foregroundColor, value: tokenColor, range: token.range)
-            #else
-            textStorage.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
-            #endif
         }
         
         textStorage.endEditing()
@@ -339,12 +304,7 @@ public final class AsyncSyntaxHighlighter {
         textStorage.beginEditing()
         
         // Instead of removing the color, reset to the base text color
-        #if targetEnvironment(macCatalyst)
-        // Force UIColor.label on Mac Catalyst to avoid NSColor contamination
-        let baseTextColor = UIColor.label
-        #else
         let baseTextColor = textView.textColor ?? PlatformColors.label
-        #endif
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: range)
         
         textStorage.endEditing()
@@ -361,9 +321,8 @@ public final class AsyncSyntaxHighlighter {
     }
     
     deinit {
-        // Note: deinit is nonisolated, so we can access nonisolated(unsafe) properties
-        periodicOptimizationTimer?.invalidate()
-        // Other timers and tasks will be cleaned up automatically by ARC
+        // Timer cleanup is handled in the cleanup() method which should be called before deallocation
+        // The @MainActor isolated properties can't be accessed directly in deinit
     }
     
     // MARK: - Cache Management

@@ -106,6 +106,31 @@ extension CrossPlatformCoordinator {
         return false
     }
     
+    func handleIOSMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
+        // Limited mouse support on iOS
+        if isPointingDeviceConnected() {
+            switch type {
+            case .rightClick:
+                showContextMenu(at: location, in: textView)
+                return true
+                
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
+    func handleIOSPencilInput(location: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in textView: CodeEditorView) -> Bool {
+        // Handle Apple Pencil input
+        if pressure > 0.5 {
+            // Heavy pressure for selection
+            startSelection(at: location, in: textView)
+            return true
+        }
+        return false
+    }
+    
     // MARK: - IOS Context Menu
     
     func createIOSContextMenu(for textView: CodeEditorView, at _: CGPoint) -> UIMenu {
@@ -160,10 +185,10 @@ extension CrossPlatformCoordinator {
         #if targetEnvironment(macCatalyst)
         return true
         #else
-        if let keyboardScene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIScene })
-            .first(where: { $0.activationState == .foregroundActive }) {
-            return platformAdjustments.keyboardHeight < 100 // External keyboard shows minimal toolbar
+        // Check for external keyboard by examining the input view controller
+        // When an external keyboard is connected, the software keyboard is typically hidden
+        if let firstResponder = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.firstResponder {
+            return firstResponder.inputView == nil
         }
         return false
         #endif

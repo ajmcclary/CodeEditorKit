@@ -134,7 +134,7 @@ enum ConfigurationPreset: String, CaseIterable {
                 .insertSpacesForTabs(true)
                 .fontSize(14)
                 .lineSpacing(1.2)
-                .enableAnnotations(false)
+                .enableAnnotations(true)
                 .useHardwareAcceleration(true)
                 .enableCodeCompletion(false)
                 .enableSyntaxHighlighting(true)

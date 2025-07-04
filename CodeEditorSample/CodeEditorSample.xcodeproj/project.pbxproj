@@ -44,6 +44,7 @@
 		680EE03720454308316484F2 /* JavaSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC22DB831BCF26F7C56E5E4 /* JavaSamples.swift */; };
 		6D16029740F935A4CA556E38 /* SwiftSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3019F883273CFCC0CAD533 /* SwiftSamples.swift */; };
 		74E97DBDDF470790AE80DC5E /* EditorToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB79933788941603576D264 /* EditorToolbar.swift */; };
+		75AC576E7C21D8440A745F9D /* CodeEditorViewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */; };
 		7685FECED5C72C16A5A1A761 /* WebSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37986D28FE9BB790D40DD20 /* WebSamples.swift */; };
 		7756AD4A68DA30C788A902D0 /* ConfigurationSectionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */; };
 		7C865E572D404F910CC6F04B /* LanguageSampleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */; };
@@ -75,6 +76,7 @@
 		C09F7E803EFACEA7807A885A /* BehaviorConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E719D29B7771F6D3D211BCD2 /* BehaviorConfigurationSection.swift */; };
 		C651E18DA515F98203310CF3 /* ConfigurationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD6DDC0888E3B256631752E /* ConfigurationUITests.swift */; };
 		C6BC0C3338A6DAABB7BCDAF2 /* PlatformToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DB85BEEA8F01C60C5D8135 /* PlatformToggleStyle.swift */; };
+		C82F368F51C834152F785200 /* CodeEditorViewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */; };
 		D0F47A280C42D1991E8A7209 /* SwiftSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3019F883273CFCC0CAD533 /* SwiftSamples.swift */; };
 		DC6DDF0DDBA830A6AB621EA6 /* SampleCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF38C2A6F4ED69B89E21634F /* SampleCodeTests.swift */; };
 		E0F7B7F3013F4430D191BC37 /* PythonSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C75C1C4EEB77FF30305F37 /* PythonSamples.swift */; };
@@ -120,6 +122,7 @@
 		27E030B1CED76B18E3F4E581 /* AdvancedFeaturesShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedFeaturesShowcaseView.swift; sourceTree = "<group>"; };
 		511107E1AB80474BE220AD4E /* SafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeButton.swift; sourceTree = "<group>"; };
 		56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickIsFlippedTest.swift; sourceTree = "<group>"; };
+		5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorViewWrapper.swift; sourceTree = "<group>"; };
 		5ABF21044590ADDC0BB8626F /* CodeEditorSample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CodeEditorSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B7B40F69440B113274BA53D /* SystemsSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemsSamples.swift; sourceTree = "<group>"; };
 		63A2A4F0BBCBCE884CBF6FB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -302,6 +305,7 @@
 			isa = PBXGroup;
 			children = (
 				27E030B1CED76B18E3F4E581 /* AdvancedFeaturesShowcaseView.swift */,
+				5721E44FFDFB503C442FC6F5 /* CodeEditorViewWrapper.swift */,
 				63A2C339C77C7C8C09B64FD7 /* CodeEditorViewWrapper+iOS.swift */,
 				66F7D7878B81809EC72C2F75 /* CodeEditorViewWrapper+macOS.swift */,
 				BAB79933788941603576D264 /* EditorToolbar.swift */,
@@ -476,6 +480,7 @@
 				F52D8C7CBA5DA84EFFD84B33 /* CodeEditorSampleApp.swift in Sources */,
 				8E6896D1FD7E153253C753CF /* CodeEditorViewWrapper+iOS.swift in Sources */,
 				9B014AD0570E6E195EFE42E4 /* CodeEditorViewWrapper+macOS.swift in Sources */,
+				C82F368F51C834152F785200 /* CodeEditorViewWrapper.swift in Sources */,
 				22F9C8EF5FF2DC139B13E15D /* ConfigSamples.swift in Sources */,
 				E83AC298C2013858B23BA427 /* ConfigurationCoordinator.swift in Sources */,
 				585F68AAFFE6359EF4F901EE /* ConfigurationExporter.swift in Sources */,
@@ -530,6 +535,7 @@
 				2F8033BCF9F93704DCE5CA09 /* CodeEditorSampleApp.swift in Sources */,
 				11EE880293D231E5A184E734 /* CodeEditorViewWrapper+iOS.swift in Sources */,
 				A477424106B825A862996BFF /* CodeEditorViewWrapper+macOS.swift in Sources */,
+				75AC576E7C21D8440A745F9D /* CodeEditorViewWrapper.swift in Sources */,
 				BF2FBA37FDA22542ED74D4BB /* ConfigSamples.swift in Sources */,
 				9E3F73BAAFF0273ACF8E88AC /* ConfigurationCoordinator.swift in Sources */,
 				B374CDC211F74EF95859DB83 /* ConfigurationExporter.swift in Sources */,

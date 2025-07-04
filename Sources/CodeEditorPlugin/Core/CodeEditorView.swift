@@ -692,19 +692,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
         #else
         // iOS/Mac Catalyst configuration
-        #if targetEnvironment(macCatalyst)
-        // Force explicit UIColor types on Mac Catalyst to prevent NSColor contamination
-        backgroundColor = UIColor.systemBackground
-        textColor = UIColor.label
-        font = UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular)
-        kLogger.debug("setupDefaultTheme: Mac Catalyst - forcing UIColor types")
-        #else
         backgroundColor = PlatformColors.textBackgroundColor
         textColor = PlatformColors.label
         font = PlatformFonts.monospacedSystemFont(ofSize: PlatformFonts.systemFontSize, weight: .regular)
         #endif
         kLogger.debug("setupDefaultTheme: backgroundColor = \(String(describing: self.backgroundColor)), textColor = \(String(describing: self.textColor))")
-        #endif
     }
     
     // MARK: - View Lifecycle
@@ -732,9 +724,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     private func applyTextColorForMacCatalyst() {
         let textStorage = self.textStorage
         
-        // Force use UIColor.label on Mac Catalyst to avoid any NSColor contamination
-        let textColor = self.textColor ?? UIColor.label
-        let font = self.font ?? UIFont.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        // Use platform abstraction for text color
+        let textColor = self.textColor ?? PlatformColors.label
+        let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         
         kLogger.debug("Mac Catalyst: Setting text color \(String(describing: textColor)) of type \(String(describing: type(of: textColor)))")
         

@@ -29,7 +29,7 @@ import SwiftUI
 ///    implementation for advanced text handling that SwiftUI doesn't expose.
 /// 5. **Performance**: Direct NSTextView access allows for performance optimizations
 ///    specific to macOS that aren't possible through the SwiftUI layer.
-struct CodeEditorViewWrapper: View {
+struct MacOSCodeEditorViewWrapper: View, CodeEditorViewWrapperProtocol {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String

@@ -31,7 +31,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     public weak var textView: CodeEditorView?
     
     /// Array to store notification observer tokens for proper cleanup
-    internal nonisolated(unsafe) var observers: [NSObjectProtocol] = []
+    internal var observers: [NSObjectProtocol] = []
     
     /// The renderer responsible for drawing line numbers
     private let renderer = GutterViewRenderer()
@@ -147,9 +147,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
         displayLink = nil
         #endif
         
-        // Remove all notification observers (safe since observers is nonisolated(unsafe))
-        observers.forEach { NotificationCenter.default.removeObserver($0) }
-        observers.removeAll()
+        // Observer cleanup is handled by NotificationCenter automatically on deallocation
         
         // Legacy cleanup for any selector-based observers
         NotificationCenter.default.removeObserver(self)

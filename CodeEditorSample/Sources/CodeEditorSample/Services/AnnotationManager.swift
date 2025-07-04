@@ -291,7 +291,7 @@ class SampleAnnotationView: NSView {
         layer?.borderColor = annotation.type.color.withAlphaComponent(0.8).cgColor
         
         // Add shadow for better visibility
-        layer?.shadowColor = NSColor.black.cgColor
+        layer?.shadowColor = PlatformColors.black.cgColor
         layer?.shadowOffset = CGSize(width: 0, height: 1)
         layer?.shadowRadius = 2
         layer?.shadowOpacity = 0.2
@@ -486,7 +486,7 @@ class SampleAnnotationView: UIView {
         layer.borderColor = annotation.type.color.withAlphaComponent(0.8).cgColor
         
         // Add shadow for better visibility
-        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowColor = PlatformColors.black.cgColor
         layer.shadowOffset = CGSize(width: 0, height: 1)
         layer.shadowRadius = 2
         layer.shadowOpacity = 0.2

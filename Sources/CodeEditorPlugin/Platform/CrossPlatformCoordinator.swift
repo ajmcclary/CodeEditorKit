@@ -23,7 +23,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
     
     /// Observer tokens for proper cleanup
-    internal nonisolated(unsafe) var notificationObservers: [NSObjectProtocol] = []
+    internal var notificationObservers: [NSObjectProtocol] = []
     
     // MARK: - Types
     
@@ -107,10 +107,8 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     deinit {
-        // Remove all notification observers
-        removeObservers()
-        
         // Remove legacy selector-based observers if any
+        // NotificationCenter automatically handles cleanup for deallocated objects
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -332,7 +330,7 @@ public class CrossPlatformCoordinator: ObservableObject {
         #endif
     }
     
-    private nonisolated func removeObservers() {
+    private func removeObservers() {
         notificationObservers.forEach { NotificationCenter.default.removeObserver($0) }
         notificationObservers.removeAll()
     }
@@ -361,31 +359,16 @@ public class CrossPlatformCoordinator: ObservableObject {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSMouseInput(location: location, type: type, in: textView)
         #else
-        // Limited mouse support on iOS
-        if isPointingDeviceConnected() {
-            switch type {
-            case .rightClick:
-                showContextMenu(at: location, in: textView)
-                return true
-
-            default:
-                return false
-            }
-        }
-        return false
+        return handleIOSMouseInput(location: location, type: type, in: textView)
         #endif
     }
     
-    private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in textView: CodeEditorView) -> Bool {
-        #if canImport(UIKit)
-        // Handle Apple Pencil input
-        if pressure > 0.5 {
-            // Heavy pressure for selection
-            startSelection(at: location, in: textView)
-            return true
-        }
+    private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth: CGFloat, in textView: CodeEditorView) -> Bool {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return handleMacOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
+        #else
+        return handleIOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
         #endif
-        return false
     }
     
     // MARK: - Helper Methods

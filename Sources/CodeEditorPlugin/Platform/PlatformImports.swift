@@ -15,6 +15,7 @@ public typealias PlatformPasteboard = NSPasteboard
 public typealias PlatformViewController = NSViewController
 public typealias PlatformContextMenu = NSMenu
 public typealias PlatformTableView = NSTableView
+public typealias PlatformTableViewCell = NSTableCellView
 public typealias PlatformTableColumn = NSTableColumn
 public typealias PlatformTextField = NSTextField
 public typealias PlatformLabel = NSTextField

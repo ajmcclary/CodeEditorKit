@@ -4,41 +4,28 @@ This guide helps Gemini and other AI code assistants effectively work with the C
 
 ## Project Overview
 
-CodeEditorPlugin is a **production-ready**, **Swift 6-based** code editor component for macOS, iOS, and Mac Catalyst.
+CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Mac Catalyst.
 
 ### Key Differentiators
 - **Swift 6 Actor System**: Full concurrency safety with modern actors
-- **True Cross-Platform**: Not a port - built from the ground up for all platforms
+- **True Cross-Platform**: Built from the ground up for all platforms
 - **17 Languages**: SwiftSyntax for Swift, optimized regex for others
-- **172 Tests**: Comprehensive test coverage ensuring reliability (106 core + 66 sample)
+- **319 Tests**: Comprehensive test coverage ensuring reliability (284 core + 35 sample)
 - **Zero Technical Debt**: Clean architecture, no linting violations
-- **Advanced Features**: Plugin architecture, LSP integration, performance monitoring
 - **74% Simpler**: Directory structure reduced from 39 to 10 directories
 
 ## Essential Commands
 
 ### Development Workflow
 ```bash
-# Build the main package
-swift build
+# Build, lint, and test (standard workflow)
+swift build && swiftlint && swift test
 
 # Run the sample application
 cd CodeEditorSample && swift run CodeEditorSample
 
-# Run all tests (172 total)
-swift test
-
-# Quality check (build + lint + test)
-swift build && swiftlint && swift test
-```
-
-### Code Quality
-```bash
 # Auto-fix linting issues
 swiftlint --fix
-
-# Check for violations (should be 0)
-swiftlint
 
 # Clean rebuild
 swift package clean && swift build
@@ -47,8 +34,6 @@ swift package clean && swift build
 ## Architecture & Structure
 
 ### Feature-Based Organization
-The codebase is organized by feature for clarity and maintainability:
-
 ```
 Sources/CodeEditorPlugin/
 ├── Core/                    # Text editing engine (CodeEditorView)
@@ -56,34 +41,24 @@ Sources/CodeEditorPlugin/
 ├── SyntaxHighlighting/      # Language highlighting
 ├── Layout/                  # UI components (GutterView)
 ├── SwiftUI/                 # SwiftUI integration
-├── Documentation.docc/      # Comprehensive DocC documentation
 ├── Platform/                # Cross-platform abstractions
 ├── TextProcessing/          # Actor-based processing
 ├── Completion/              # Code completion
 ├── LSP/                     # Language Server Protocol
-├── Plugin/                  # Plugin architecture
 └── Extensions/              # Type extensions (+Extensions)
 ```
 
-### Core Components Explained
+### Core Components
 
-**1. CodeEditorView** (`Core/CodeEditorView.swift`)
-- The heart of the editor - TextKit2-based text view
-- Handles text editing, selection, and input
-- Platform-aware with proper iOS/macOS support
+**CodeEditorView** (`Core/CodeEditorView.swift`)
+- Main TextKit2-based text view with platform-aware support
 
-**2. EditorConfiguration** (`Configuration/EditorConfiguration.swift`)
+**EditorConfiguration** (`Configuration/EditorConfiguration.swift`)
 - Nested configuration: display, layout, behavior, performance
 - Presets: default, minimal, readOnly, markdown, presentation
 - Immutable updates with `.with()` pattern
 
-**3. SyntaxHighlightingCoordinator** (`SyntaxHighlighting/`)
-- Manages language detection and highlighting
-- SwiftSyntax for accurate Swift AST analysis
-- Regex patterns for 16+ other languages
-- Viewport-optimized for performance
-
-**4. Platform Abstraction** (`Platform/`)
+**Platform Abstraction** (`Platform/`)
 - Unified types: PlatformColor, PlatformFont, PlatformView
 - Capability detection: hardware acceleration, TextKit2
 - Ensures native feel on each platform
@@ -151,7 +126,7 @@ if PlatformCapabilities.shared.supportsHardwareAcceleration {
 - Add tests for new features
 - Run on all platforms (macOS, iOS, Mac Catalyst)
 - Include performance benchmarks
-- Maintain 172+ test count
+- Maintain 319+ test count
 
 ## Common Development Tasks
 
@@ -184,12 +159,9 @@ swiftlint --fix
 swift test --filter TestName --verbose
 
 # Build issues
-swift package clean
-rm -rf .build
-swift build
+swift package clean && swift build
 
-# Performance issues
-# Use Instruments with the sample app
+# Performance issues - use Instruments with sample app
 ```
 
 ### Platform-Specific Testing
@@ -207,13 +179,13 @@ xcodebuild -scheme CodeEditorSample -destination 'platform=macOS,variant=Mac Cat
 ## Project Standards
 
 ### Quality Metrics
-- **Test Count**: 172 (106 main + 66 sample)
+- **Test Count**: 319 (284 main + 35 sample)
 - **SwiftLint**: Zero violations required
 - **Platforms**: Must work on all three
 - **Performance**: <16ms frame time (60fps target)
 
 ### Supported Languages
-Swift (AST-based), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON, YAML, Markdown, Go, Java, Ruby, PHP, SQL, XML, Shell
+Swift (AST-based), Python, JavaScript, TypeScript, Rust, C/C++, HTML, CSS, JSON, YAML, Markdown, Go, Java, Ruby, PHP, SQL, XML, Shell
 
 ### Platform Requirements
 - **macOS**: 12.0+ (optimized for 14+)
@@ -243,61 +215,39 @@ Swift (AST-based), Python, JavaScript, TypeScript, Rust, C, C++, HTML, CSS, JSON
 - Hover documentation tooltips
 - Automated refactoring support
 
-### Advanced Editing Capabilities
-- Smart context-aware indentation
-- Code folding with persistence
-- Symbol navigation and breadcrumbs
-- Incremental parsing for performance
-- Intelligent bracket matching
-- Powerful search & replace with regex
-
 ## Key Achievements
 - **Architecture**: 74% directory reduction through reorganization
 - **Swift 6**: Full migration to actor-based concurrency
 - **Cross-Platform**: All rendering issues resolved
 - **Performance**: Viewport optimization implemented
 - **Quality**: Zero linting violations maintained
-- **Advanced Features**: Plugin system and LSP integration added
 
 ### Recent CodeEditorSample Improvements
 - **Modern UI**: Replaced old checkboxes with platform-appropriate toggles
 - **Configuration Fix**: Settings now apply correctly on all platforms
-- **Double Line Numbers**: Resolved gutter duplication on macOS Native
+- **Unified Wrapper Architecture**: Protocol-based wrapper system with platform implementations
 - **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst
-- **State Management**: Proper SwiftUI updates with objectWillChange
-- **File Count**: Increased to 40 files while maintaining zero violations
+- **File Count**: Streamlined to 36 files while maintaining zero violations
 
 ## Documentation System
 
 CodeEditorPlugin includes comprehensive DocC documentation in `Sources/CodeEditorPlugin/Documentation.docc/`:
 
-### Documentation Structure
+### Key Documentation
 - **Main Hub**: `CodeEditorPlugin.md` - Central documentation entry point
-- **Interactive Tutorials**: Step-by-step guides in `Tutorials/` directory
 - **Getting Started**: `GettingStarted.md` - Quick setup and basic usage
 - **Configuration Guide**: `Configuration-System.md` - Complete config documentation
-- **Integration Guides**: `SwiftUI-Integration.md`, `iOS-Integration.md`, `macOS-Integration.md`
-- **Architecture Deep Dives**: `Architecture-Overview.md`, `Platform-Abstraction.md`
-- **Feature Documentation**: `Syntax-Highlighting.md`, `Annotation-System.md`
+- **Integration Guides**: `SwiftUI-Integration.md`, `Platform-Abstraction.md`
 
 ### Viewing Documentation
 ```bash
 # Generate documentation
 swift package generate-documentation --target CodeEditorPlugin
 
-# Generate for static hosting
-swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
-
 # View in browser
+swift package --allow-writing-to-directory docs generate-documentation --target CodeEditorPlugin --output-path docs --transform-for-static-hosting
 open docs/documentation/codeeditorplugin/index.html
 ```
-
-### Working with Documentation
-- **Reference DocC first** when explaining features or architecture
-- **Update documentation** when adding new APIs or changing behavior
-- **Use DocC cross-references** (`<doc:Configuration-System>`) for navigation
-- **Include practical examples** in documentation for complex integration patterns
-- **Keep tutorials synchronized** with latest API changes and best practices
 
 ## Remember
 This is a **production-ready** component used in real applications. Every change should maintain or improve the quality standards. When in doubt, add tests and check performance!

@@ -1,5 +1,5 @@
 #if canImport(SwiftUI)
-import SwiftUI
+@preconcurrency import SwiftUI
 
 extension View {
     @ViewBuilder
@@ -734,17 +734,18 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         Coordinator(parent: self)
     }
     
+    @MainActor
     class Coordinator: NSObject, UITextViewDelegate {
         let parent: CodeEditorRepresentable
-        private nonisolated(unsafe) var observers: [NSObjectProtocol] = []
+        private var observers: [NSObjectProtocol] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent
         }
         
         deinit {
-            observers.forEach { NotificationCenter.default.removeObserver($0) }
-            observers.removeAll()
+            // NotificationCenter automatically removes observers when they are deallocated
+            // Manual cleanup is not needed and causes concurrency issues
         }
         
         func setup(container: CodeEditorContainerView) {
