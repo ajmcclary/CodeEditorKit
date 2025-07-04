@@ -6,6 +6,32 @@ import os.log
 #endif
 
 /// Language Server Protocol client implementation
+///
+/// Provides integration with Language Server Protocol (LSP) servers for
+/// advanced code intelligence features including:
+/// - Code completion
+/// - Go to definition
+/// - Hover documentation
+/// - Diagnostics
+/// - Symbol navigation
+///
+/// - Important: LSP functionality is **only available on macOS** as it requires
+///   the `Process` API to launch and communicate with language servers.
+///   On iOS and Mac Catalyst, LSP methods will throw `LSPError.notSupported`.
+///
+/// ## Platform Support
+/// - ✅ macOS: Full support
+/// - ❌ iOS: Not supported (no Process API)
+/// - ❌ Mac Catalyst: Not supported (no Process API)
+///
+/// ## Example Usage
+/// ```swift
+/// // Check platform before using LSP
+/// if PlatformCapabilities.shared.currentPlatform == .macOS {
+///     let client = LSPClient()
+///     try await client.connect(configuration: serverConfig)
+/// }
+/// ```
 @MainActor
 public final class LSPClient: ObservableObject {
     // MARK: - Configuration

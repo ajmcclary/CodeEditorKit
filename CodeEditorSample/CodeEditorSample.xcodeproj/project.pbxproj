@@ -37,7 +37,6 @@
 		5469D69FF2048E94E3E29C47 /* SafeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511107E1AB80474BE220AD4E /* SafeButton.swift */; };
 		582B960C5A3A7A6EAF8CF725 /* ConfigurationSectionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */; };
 		585F68AAFFE6359EF4F901EE /* ConfigurationExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8D5C8B697D6BDCBA6ACF7 /* ConfigurationExporter.swift */; };
-		58C227A25EE43078A1250CC4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F00ABC48EF45BA8965DFA5E /* ContentView.swift */; };
 		5BBDB16958016D755BF9C88A /* FeatureTourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B9FB47D1185ED23156B1361 /* FeatureTourView.swift */; };
 		5C8E8B16EA5EC99559A614B7 /* PerformanceConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FA75724BB22A43930F3FDF /* PerformanceConfigurationSection.swift */; };
 		5CCA5B75135A7135150CCF70 /* QuickIsFlippedTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56389FE09CA75CDEF2BB0BB9 /* QuickIsFlippedTest.swift */; };
@@ -46,7 +45,6 @@
 		680EE03720454308316484F2 /* JavaSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC22DB831BCF26F7C56E5E4 /* JavaSamples.swift */; };
 		6D16029740F935A4CA556E38 /* SwiftSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3019F883273CFCC0CAD533 /* SwiftSamples.swift */; };
 		74E97DBDDF470790AE80DC5E /* EditorToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB79933788941603576D264 /* EditorToolbar.swift */; };
-		759BAE85C1609009C58770A2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F00ABC48EF45BA8965DFA5E /* ContentView.swift */; };
 		7685FECED5C72C16A5A1A761 /* WebSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37986D28FE9BB790D40DD20 /* WebSamples.swift */; };
 		7756AD4A68DA30C788A902D0 /* ConfigurationSectionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */; };
 		7C865E572D404F910CC6F04B /* LanguageSampleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */; };
@@ -116,7 +114,6 @@
 
 /* Begin PBXFileReference section */
 		0DECDBA45DBCE4E748CFC456 /* ConfigSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigSamples.swift; sourceTree = "<group>"; };
-		0F00ABC48EF45BA8965DFA5E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		16E8D5C8B697D6BDCBA6ACF7 /* ConfigurationExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationExporter.swift; sourceTree = "<group>"; };
 		1B9FB47D1185ED23156B1361 /* FeatureTourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureTourView.swift; sourceTree = "<group>"; };
 		1FC22DB831BCF26F7C56E5E4 /* JavaSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaSamples.swift; sourceTree = "<group>"; };
@@ -311,7 +308,6 @@
 				27E030B1CED76B18E3F4E581 /* AdvancedFeaturesShowcaseView.swift */,
 				63A2C339C77C7C8C09B64FD7 /* CodeEditorViewWrapper+iOS.swift */,
 				66F7D7878B81809EC72C2F75 /* CodeEditorViewWrapper+macOS.swift */,
-				0F00ABC48EF45BA8965DFA5E /* ContentView.swift */,
 				BAB79933788941603576D264 /* EditorToolbar.swift */,
 				1B9FB47D1185ED23156B1361 /* FeatureTourView.swift */,
 				78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */,
@@ -488,7 +484,6 @@
 				E83AC298C2013858B23BA427 /* ConfigurationCoordinator.swift in Sources */,
 				585F68AAFFE6359EF4F901EE /* ConfigurationExporter.swift in Sources */,
 				7756AD4A68DA30C788A902D0 /* ConfigurationSectionComponents.swift in Sources */,
-				759BAE85C1609009C58770A2 /* ContentView.swift in Sources */,
 				9807BF9578027A0C5E74898B /* DisplayConfigurationSection.swift in Sources */,
 				9C94F3D0FE3AACEA1A0F0DB3 /* EditorConfiguration.swift in Sources */,
 				74E97DBDDF470790AE80DC5E /* EditorToolbar.swift in Sources */,
@@ -544,7 +539,6 @@
 				9E3F73BAAFF0273ACF8E88AC /* ConfigurationCoordinator.swift in Sources */,
 				B374CDC211F74EF95859DB83 /* ConfigurationExporter.swift in Sources */,
 				582B960C5A3A7A6EAF8CF725 /* ConfigurationSectionComponents.swift in Sources */,
-				58C227A25EE43078A1250CC4 /* ContentView.swift in Sources */,
 				17029DF400798B40065A4919 /* DisplayConfigurationSection.swift in Sources */,
 				9487336CDD8CEDA14A9C024F /* EditorConfiguration.swift in Sources */,
 				25C3962C03FCBEB562910285 /* EditorToolbar.swift in Sources */,

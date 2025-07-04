@@ -197,25 +197,37 @@ public enum RangeUtilities {
                 continue
             } else if contains(range, deletionRange) {
                 // Deletion is within range, shrink it
-                adjusted.append(NSRange(
-                    location: range.location,
-                    length: range.length - deletionRange.length
-                ))
+                let newLength = range.length - deletionRange.length
+                // Ensure length is never negative
+                if newLength > 0 {
+                    adjusted.append(NSRange(
+                        location: range.location,
+                        length: newLength
+                    ))
+                }
             } else {
                 // Partial overlap, adjust accordingly
                 let intersection = NSIntersectionRange(range, deletionRange)
                 if intersection.location == range.location {
                     // Overlap at start
-                    adjusted.append(NSRange(
-                        location: deletionRange.location,
-                        length: range.length - intersection.length
-                    ))
+                    let newLength = range.length - intersection.length
+                    // Ensure length is never negative
+                    if newLength > 0 {
+                        adjusted.append(NSRange(
+                            location: deletionRange.location,
+                            length: newLength
+                        ))
+                    }
                 } else {
                     // Overlap at end
-                    adjusted.append(NSRange(
-                        location: range.location,
-                        length: range.location + range.length - NSMaxRange(deletionRange)
-                    ))
+                    let newLength = range.location + range.length - NSMaxRange(deletionRange)
+                    // Ensure length is never negative
+                    if newLength > 0 {
+                        adjusted.append(NSRange(
+                            location: range.location,
+                            length: newLength
+                        ))
+                    }
                 }
             }
         }

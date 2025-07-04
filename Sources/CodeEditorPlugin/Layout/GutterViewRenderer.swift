@@ -160,7 +160,6 @@ public class GutterViewRenderer {
         UnifiedDrawingCoordinator.restoreGraphicsState()
     }
     
-    
     /// Draw folding control (▶️/▼ icon) for foldable lines
     private func drawFoldingControl(
         for lineNumber: Int,
@@ -291,4 +290,3 @@ private enum TriangleDirection {
     case right
     case down
 }
-

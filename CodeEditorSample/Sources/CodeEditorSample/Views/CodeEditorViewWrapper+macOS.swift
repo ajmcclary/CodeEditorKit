@@ -5,6 +5,30 @@ import SwiftUI
 
 // MARK: - CodeEditorViewWrapper
 
+/// Wrapper for CodeEditor on macOS native platform.
+///
+/// This wrapper provides NSViewRepresentable integration for macOS, which allows:
+/// - Direct access to the underlying `CodeEditorView` (NSTextView)
+/// - Manual scroll view configuration
+/// - Annotation manager integration
+/// - Fine-grained control over text view behavior
+///
+/// The complexity is necessary on macOS to properly integrate with AppKit
+/// and provide features that SwiftUI doesn't expose natively.
+///
+/// ## Why Different from iOS/Catalyst?
+/// 
+/// The macOS version requires a custom NSViewRepresentable implementation because:
+/// 1. **Scroll View Management**: macOS needs explicit NSScrollView setup and configuration,
+///    while iOS handles this automatically through UITextView's built-in scrolling.
+/// 2. **Annotation Manager Access**: The macOS wrapper provides direct access to the text view
+///    for annotation scanning, which isn't available through the SwiftUI CodeEditor component.
+/// 3. **Text Container Configuration**: macOS requires manual configuration of text container
+///    properties for proper text wrapping and resizing behavior.
+/// 4. **Delegate Pattern**: The NSViewRepresentable allows full CodeEditorViewDelegate
+///    implementation for advanced text handling that SwiftUI doesn't expose.
+/// 5. **Performance**: Direct NSTextView access allows for performance optimizations
+///    specific to macOS that aren't possible through the SwiftUI layer.
 struct CodeEditorViewWrapper: View {
     let configuration: EditorConfiguration
     @Binding var text: String

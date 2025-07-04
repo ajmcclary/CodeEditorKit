@@ -17,6 +17,7 @@ public final class AsyncSyntaxHighlighter {
     private let backgroundHighlighter: BackgroundSyntaxHighlighter
     private var highlightingTask: Task<Void, Never>?
     private var debounceTimer: Timer?
+    private nonisolated(unsafe) var periodicOptimizationTimer: Timer?
     private let debounceInterval: TimeInterval
     private let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
     
@@ -349,16 +350,27 @@ public final class AsyncSyntaxHighlighter {
         textStorage.endEditing()
     }
     
+    /// Clean up resources before deinitialization
+    public func cleanup() {
+        debounceTimer?.invalidate()
+        debounceTimer = nil
+        periodicOptimizationTimer?.invalidate()
+        periodicOptimizationTimer = nil
+        highlightingTask?.cancel()
+        highlightingTask = nil
+    }
+    
     deinit {
-        // Note: deinit is nonisolated, so we can't access actor properties
-        // Timer and Task will be cleaned up automatically
+        // Note: deinit is nonisolated, so we can access nonisolated(unsafe) properties
+        periodicOptimizationTimer?.invalidate()
+        // Other timers and tasks will be cleaned up automatically by ARC
     }
     
     // MARK: - Cache Management
     
     private func setupPeriodicCacheOptimization() {
         // Set up timer to periodically optimize cache (every 5 minutes)
-        Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
+        periodicOptimizationTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             Task { [weak self] in
                 await self?.optimizeCache()
             }

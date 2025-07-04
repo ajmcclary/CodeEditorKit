@@ -305,7 +305,7 @@ public final class TextKitBridge {
         return CGRect(x: glyphLocation.x, y: lineRect.origin.y, width: 1, height: lineRect.height)
         #elseif canImport(UIKit)
         // For iOS/Catalyst, we need to use caretRect
-        guard let textView = textView,
+        guard let textView,
               let position = textView.position(from: textView.beginningOfDocument, offset: characterIndex) else {
             return nil
         }
@@ -370,7 +370,7 @@ public final class TextKitBridge {
         return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
         #elseif canImport(UIKit)
         // For iOS/Catalyst, we need to use firstRect
-        guard let textView = textView,
+        guard let textView,
               let startPosition = textView.position(from: textView.beginningOfDocument, offset: range.location),
               let endPosition = textView.position(from: startPosition, offset: range.length),
               let textRange = textView.textRange(from: startPosition, to: endPosition) else {
@@ -427,7 +427,7 @@ public final class TextKitBridge {
         #elseif canImport(UIKit)
         // UIKit doesn't support temporary attributes in the same way
         // We need to use attributed text instead
-        if let textView = textView {
+        if let textView {
             let mutableAttributedString = NSMutableAttributedString(attributedString: textView.attributedText ?? NSAttributedString())
             mutableAttributedString.addAttributes(attributes, range: range)
             textView.attributedText = mutableAttributedString
@@ -435,7 +435,7 @@ public final class TextKitBridge {
         #endif
     }
     
-    private func setRenderingAttributesTextKit2(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
+    private func setRenderingAttributesTextKit2(_: [NSAttributedString.Key: Any], for range: NSRange) {
         guard let textRange = textRangeFromNSRange(range),
               let textLayoutManager = textView?.textLayoutManager else { return }
         
@@ -464,7 +464,7 @@ public final class TextKitBridge {
     /// Calculate line height for a given font
     public func calculateLineHeight(for font: PlatformFont) -> CGFloat {
         // This doesn't need TextKit version checking as it's font-based
-        return TextMetricsCalculator.calculateLineHeight(for: font)
+        TextMetricsCalculator.calculateLineHeight(for: font)
     }
     
     // MARK: - Text Container Properties

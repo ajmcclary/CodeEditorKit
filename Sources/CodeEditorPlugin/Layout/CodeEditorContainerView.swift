@@ -130,7 +130,6 @@ public final class CodeEditorContainerView: PlatformView {
         #endif
     }
     
-    
     private func setupObservers() {
         #if canImport(UIKit)
         setupKeyboardObservers()

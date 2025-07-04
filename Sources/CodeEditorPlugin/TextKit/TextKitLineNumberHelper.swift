@@ -28,7 +28,7 @@ public final class TextKitLineNumberHelper {
     
     /// Get visible line ranges without accessing layoutManager directly on iOS/Catalyst
     public func getVisibleLineRanges() -> [(lineNumber: Int, range: NSRange)] {
-        guard let textView = textView else {
+        guard let textView else {
             return []
         }
         
@@ -52,7 +52,7 @@ public final class TextKitLineNumberHelper {
     
     /// Get line fragment rect for a specific line range
     public func getLineFragmentRect(for lineRange: NSRange) -> CGRect? {
-        guard let textView = textView else { return nil }
+        guard let textView else { return nil }
         
         // For TextKit 2, we can use the text layout manager
         if let textLayoutManager = textView.textLayoutManager,
@@ -80,7 +80,7 @@ public final class TextKitLineNumberHelper {
     
     /// Get the visible rect for the text view (platform-agnostic)
     public func getVisibleRect() -> CGRect {
-        guard let textView = textView else { return .zero }
+        guard let textView else { return .zero }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS: Use the visible rect
@@ -96,7 +96,7 @@ public final class TextKitLineNumberHelper {
     
     /// Convert a point to the corresponding line number
     public func lineNumber(at point: CGPoint) -> Int? {
-        guard let textView = textView,
+        guard let textView,
               let text = textView.text else {
             return nil
         }
@@ -165,7 +165,7 @@ public final class TextKitLineNumberHelper {
     
     /// Adjust point for platform-specific text container insets
     private func adjustPoint(_ point: CGPoint) -> CGPoint {
-        guard let textView = textView else { return point }
+        guard let textView else { return point }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS: Point is already in the correct coordinate system
@@ -227,7 +227,7 @@ public final class TextKitLineNumberHelper {
     
     /// Estimate line number based on approximate line height
     private func estimateLineNumber(at point: CGPoint, text: String) -> Int? {
-        guard let textView = textView else { return nil }
+        guard let textView else { return nil }
         
         // Get an approximate line height
         let font = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
@@ -243,7 +243,7 @@ public final class TextKitLineNumberHelper {
     
     /// Calculate approximate line rect when layout information is not available
     private func calculateApproximateLineRect(for lineRange: NSRange) -> CGRect {
-        guard let textView = textView,
+        guard let textView,
               let text = textView.text else {
             return .zero
         }

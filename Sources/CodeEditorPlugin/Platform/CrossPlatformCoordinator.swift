@@ -16,14 +16,14 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Properties
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
-    private let capabilities = PlatformCapabilities.shared
+    internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
+    internal let capabilities = PlatformCapabilities.shared
     
     /// Platform-specific adjustments
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
     
     /// Observer tokens for proper cleanup
-    private nonisolated(unsafe) var notificationObservers: [Any] = []
+    internal nonisolated(unsafe) var notificationObservers: [NSObjectProtocol] = []
     
     // MARK: - Types
     
@@ -298,7 +298,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Private Methods
     
-    private func adjustFeaturesForPlatform() {
+    internal func adjustFeaturesForPlatform() {
         // Platform-specific adjustments are now handled by PlatformCapabilities
         // This method is kept for backward compatibility but can be removed in the future
         
@@ -322,34 +322,13 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func setupPlatformSpecificObservers() {
-        #if canImport(UIKit)
         // Remove any existing observers first
         removeObservers()
         
-        // Observe keyboard connection changes
-        let keyboardObserver = NotificationCenter.default.addObserver(
-            forName: UIResponder.keyboardDidShowNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            // Hop to the main actor to safely call main actor-isolated method
-            Task { @MainActor in
-                self?.keyboardDidConnect()
-            }
-        }
-        notificationObservers.append(keyboardObserver)
-        
-        // Observe device orientation changes
-        let orientationObserver = NotificationCenter.default.addObserver(
-            forName: UIDevice.orientationDidChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.orientationDidChange()
-            }
-        }
-        notificationObservers.append(orientationObserver)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        setupMacOSNotifications()
+        #elseif canImport(UIKit)
+        setupIOSNotifications()
         #endif
     }
     
@@ -358,119 +337,29 @@ public class CrossPlatformCoordinator: ObservableObject {
         notificationObservers.removeAll()
     }
     
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    private func optimizeForMacOS(_ textView: CodeEditorView) {
-        // Enable platform-specific features
-        // Note: CodeEditorView doesn't currently support multiple selection
-        
-        // Set up rulers and guides
-        if let scrollView = textView.enclosingScrollView {
-            scrollView.rulersVisible = false // Can be toggled by user
-        }
-    }
-    #else
-    private func optimizeForIOS(_ textView: CodeEditorView) {
-        // Configure for touch
-        textView.isSelectable = true
-        textView.isEditable = true
-        
-        // Adjust content insets for safe area
-        if let window = textView.window {
-            let safeArea = window.safeAreaInsets
-            let insets = EdgeInsets(
-                top: safeArea.top + 8,
-                left: 0,
-                bottom: safeArea.bottom + 8,
-                right: 0
-            )
-            textView.setUnifiedTextContainerInsets(insets)
-        }
-        
-        // Configure keyboard
-        textView.keyboardType = .default
-        textView.autocorrectionType = .no
-        textView.autocapitalizationType = .none
-        textView.smartDashesType = .no
-        textView.smartQuotesType = .no
-        
-        // Add input accessory view for iPad
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            textView.inputAccessoryView = createInputAccessoryView()
-        }
-    }
-    
-    private func createInputAccessoryView() -> UIView {
-        let toolbar = UIToolbar()
-        toolbar.sizeToFit()
-        
-        let items = [
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: nil, action: #selector(undo)),
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: nil, action: #selector(redo)),
-            UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: nil, action: #selector(find)),
-            UIBarButtonItem(image: UIImage(systemName: "keyboard.chevron.compact.down"), style: .plain, target: nil, action: #selector(dismissKeyboard))
-        ]
-        
-        toolbar.items = items
-        return toolbar
-    }
-    #endif
+    // Platform-specific optimization is now in extensions:
+    // - CrossPlatformCoordinator+AppKit.swift for macOS
+    // - CrossPlatformCoordinator+UIKit.swift for iOS
     
     private func handleKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
-        // Platform-specific key handling
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Full keyboard shortcut support
-        if modifiers.contains(.command) {
-            switch key {
-            case "d": selectNextOccurrence(in: textView); return true
-            case "l": selectLine(in: textView); return true
-            case "/": toggleComment(in: textView); return true
-            default: break
-            }
-        }
+        return handleMacOSKeyInput(key: key, modifiers: modifiers, in: textView)
         #else
-        // Limited keyboard support on iOS
-        if isExternalKeyboardConnected() && modifiers.contains(.command) {
-            switch key {
-            case "f": showFind(in: textView); return true
-            case "z": textView.undoManager?.undo(); return true
-            default: break
-            }
-        }
+        return handleIOSKeyInput(key: key, modifiers: modifiers, in: textView)
         #endif
-        
-        return false
     }
     
     private func handleTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
         #if canImport(UIKit)
-        // Handle multi-touch gestures
-        if touches.count == 2 {
-            // Two-finger tap for context menu
-            if phase == .ended {
-                showContextMenu(in: textView)
-                return true
-            }
-        }
-        #endif
+        return handleIOSTouchInput(touches: touches, phase: phase, in: textView)
+        #else
         return false
+        #endif
     }
     
     private func handleMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Handle mouse events
-        switch type {
-        case .rightClick:
-            showContextMenu(at: location, in: textView)
-            return true
-
-        case .hover:
-            // Show hover information
-            return false
-
-        default:
-            return false
-        }
+        return handleMacOSMouseInput(location: location, type: type, in: textView)
         #else
         // Limited mouse support on iOS
         if isPointingDeviceConnected() {
@@ -502,13 +391,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Helper Methods
     
     #if canImport(UIKit)
-    private func isExternalKeyboardConnected() -> Bool {
-        // Check if external keyboard is connected
-        // This is a simplified check
-        UIDevice.current.userInterfaceIdiom == .pad
-    }
-    
-    private func isPointingDeviceConnected() -> Bool {
+    func isPointingDeviceConnected() -> Bool {
         // Check if mouse/trackpad is connected
         if #available(iOS 13.4, *) {
             return UIDevice.current.userInterfaceIdiom == .pad
@@ -539,22 +422,35 @@ public class CrossPlatformCoordinator: ObservableObject {
         #endif
     }
     
-    @objc private func dismissKeyboard() {
+    #endif
+    
+    // MARK: - Common Actions
+    
+    @objc func undo() {
+        logger.debug("Undo requested")
+        // Implementation would perform undo
+    }
+    
+    @objc func redo() {
+        logger.debug("Redo requested")
+        // Implementation would perform redo
+    }
+    
+    @objc func find() {
+        logger.debug("Find requested")
+        // Implementation would show find UI
+    }
+    
+    @objc func toggleComment() {
+        logger.debug("Toggle comment requested")
+        // Implementation would toggle comments
+    }
+    
+    #if canImport(UIKit)
+    @objc func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     #endif
-    
-    @objc private func undo() {
-        // Undo implementation
-    }
-    
-    @objc private func redo() {
-        // Redo implementation
-    }
-    
-    @objc private func find() {
-        // Find implementation
-    }
     
     private func performGoToDefinition(at range: NSRange, in _: CodeEditorView?) {
         // Go to definition implementation
@@ -581,11 +477,11 @@ public class CrossPlatformCoordinator: ObservableObject {
         logger.info("Extract variable at range: \(range)")
     }
     
-    private func selectNextOccurrence(in _: CodeEditorView) {
+    internal func selectNextOccurrence(in _: CodeEditorView) {
         // Select next occurrence implementation
     }
     
-    private func selectLine(in _: CodeEditorView) {
+    internal func selectLine(in _: CodeEditorView) {
         // Select line implementation
     }
     
@@ -593,19 +489,19 @@ public class CrossPlatformCoordinator: ObservableObject {
         // Toggle comment implementation
     }
     
-    private func showFind(in _: CodeEditorView) {
+    internal func showFind(in _: CodeEditorView) {
         // Show find UI
     }
     
-    private func showContextMenu(in textView: CodeEditorView) {
+    internal func showContextMenu(in textView: CodeEditorView) {
         showContextMenu(at: CGPoint.zero, in: textView)
     }
     
-    private func showContextMenu(at _: CGPoint, in _: CodeEditorView) {
+    internal func showContextMenu(at _: CGPoint, in _: CodeEditorView) {
         // Show context menu at location
     }
     
-    private func startSelection(at _: CGPoint, in _: CodeEditorView) {
+    internal func startSelection(at _: CGPoint, in _: CodeEditorView) {
         // Start selection at location
     }
     

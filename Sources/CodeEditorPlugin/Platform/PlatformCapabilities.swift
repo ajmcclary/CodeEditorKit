@@ -65,7 +65,19 @@ import AppKit
 public final class PlatformCapabilities {
     public static let shared = PlatformCapabilities()
     
-    private init() {}
+    /// Cached platform value since it's determined at compile time
+    private let _currentPlatform: Platform
+    
+    private init() {
+        // Cache the platform since it's compile-time determined
+        #if targetEnvironment(macCatalyst)
+        self._currentPlatform = .catalyst
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        self._currentPlatform = .macOS
+        #else
+        self._currentPlatform = .iOS
+        #endif
+    }
     
     deinit {
         // Cleanup is handled automatically by ARC
@@ -99,13 +111,7 @@ public final class PlatformCapabilities {
     }
     
     public var currentPlatform: Platform {
-        #if targetEnvironment(macCatalyst)
-        return .catalyst
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return .macOS
-        #else
-        return .iOS
-        #endif
+        _currentPlatform
     }
     
     public var systemVersion: String {

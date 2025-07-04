@@ -727,7 +727,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         #endif
     }
     
-    
     /// Apply text color specifically for Mac Catalyst
     /// This ensures text is visible by applying color attributes to all text
     private func applyTextColorForMacCatalyst() {

@@ -736,7 +736,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     
     class Coordinator: NSObject, UITextViewDelegate {
         let parent: CodeEditorRepresentable
-        private nonisolated(unsafe) var observers: [Any] = []
+        private nonisolated(unsafe) var observers: [NSObjectProtocol] = []
         
         init(parent: CodeEditorRepresentable) {
             self.parent = parent

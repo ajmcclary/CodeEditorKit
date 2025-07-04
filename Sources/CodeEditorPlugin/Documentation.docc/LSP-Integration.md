@@ -17,8 +17,8 @@ CodeEditorPlugin includes foundational support for the Language Server Protocol 
 - **macOS 12.0+**: Full LSP support with process-based language servers
 
 ### ❌ Unsupported Platforms
-- **iOS 16.0+**: Not supported due to sandboxing restrictions
-- **Mac Catalyst 16.0+**: Not supported due to process limitations
+- **iOS 16.0+**: Not supported (requires Process API which is unavailable)
+- **Mac Catalyst 16.0+**: Not supported (Process API is restricted)
 
 > Note: LSP integration is currently in preview with support for Swift, TypeScript, and Python. Full LSP 3.17 compliance is targeted for v2.0.
 

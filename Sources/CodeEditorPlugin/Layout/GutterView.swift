@@ -31,7 +31,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     public weak var textView: CodeEditorView?
     
     /// Array to store notification observer tokens for proper cleanup
-    internal nonisolated(unsafe) var observers: [Any] = []
+    internal nonisolated(unsafe) var observers: [NSObjectProtocol] = []
     
     /// The renderer responsible for drawing line numbers
     private let renderer = GutterViewRenderer()
