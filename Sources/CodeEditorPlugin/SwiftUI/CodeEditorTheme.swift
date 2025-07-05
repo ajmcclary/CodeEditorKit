@@ -68,6 +68,20 @@ public struct CodeEditorBecomeFirstResponderKey: EnvironmentKey {
 }
 
 @available(macOS 12.0, iOS 16.0, *)
+public struct CodeEditorConfigurationKey: EnvironmentKey {
+    public static let defaultValue = EditorConfiguration()
+    
+    public typealias Value = EditorConfiguration
+}
+
+@available(macOS 12.0, iOS 16.0, *)
+public struct CodeEditorLanguageKey: EnvironmentKey {
+    public static let defaultValue = Language.swift
+    
+    public typealias Value = Language
+}
+
+@available(macOS 12.0, iOS 16.0, *)
 extension EnvironmentValues {
     public var codeEditorTheme: CodeEditorSwiftUITheme {
         get { self[CodeEditorThemeKey.self] }
@@ -77,6 +91,16 @@ extension EnvironmentValues {
     public var codeEditorBecomeFirstResponder: Bool {
         get { self[CodeEditorBecomeFirstResponderKey.self] }
         set { self[CodeEditorBecomeFirstResponderKey.self] = newValue }
+    }
+    
+    public var codeEditorConfiguration: EditorConfiguration {
+        get { self[CodeEditorConfigurationKey.self] }
+        set { self[CodeEditorConfigurationKey.self] = newValue }
+    }
+    
+    public var codeEditorLanguage: Language {
+        get { self[CodeEditorLanguageKey.self] }
+        set { self[CodeEditorLanguageKey.self] = newValue }
     }
 }
 

@@ -26,17 +26,14 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Current highlighting statistics
     @Published public private(set) var statistics = BackgroundHighlightingStatistics()
     
-    /// Background operation queue
-    private let operationQueue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.name = "com.codeeditor.background-highlighting"
-        queue.qualityOfService = .userInitiated
-        queue.maxConcurrentOperationCount = 3
-        return queue
-    }()
+    /// Actor for managing concurrent highlighting operations
+    private let highlightingActor = HighlightingActor()
     
     /// Pending highlighting requests
     private var pendingRequests: [String: HighlightingRequest] = [:]
+    
+    /// Active tasks for cancellation
+    private var activeTasks: [String: Task<Void, Never>] = [:]
     
     /// Completed highlighting results cache
     private var resultCache: [String: CachedHighlightResult] = [:]
@@ -58,17 +55,16 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     // MARK: - Initialization
     
     public init() {
-        configureOperationQueue()
-        
         // Register with memory monitor
         registerWithMemoryMonitor()
     }
     
     deinit {
-        // Note: Cannot access MainActor isolated properties from deinit
-        // Timer and OperationQueue will be cleaned up automatically
-        // The operation queue will cancel all operations when deallocated
-        operationQueue.cancelAllOperations()
+        // Cancel all active tasks
+        for (_, task) in activeTasks {
+            task.cancel()
+        }
+        // Timer will be cleaned up automatically when deallocated
     }
     
     // MARK: - Public Methods
@@ -135,21 +131,26 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Cancel a specific highlighting request
     /// - Parameter requestId: ID of the request to cancel
     public func cancelRequest(_ requestId: String) {
-        if let request = pendingRequests.removeValue(forKey: requestId) {
-            request.operation?.cancel()
+        if pendingRequests.removeValue(forKey: requestId) != nil {
+            if let task = activeTasks.removeValue(forKey: requestId) {
+                task.cancel()
+            }
             statistics.recordCancellation()
         }
     }
     
     /// Cancel all pending highlighting requests
     public func cancelAllRequests() {
-        for (_, request) in pendingRequests {
-            request.operation?.cancel()
-        }
-        pendingRequests.removeAll()
-        operationQueue.cancelAllOperations()
+        let count = pendingRequests.count
         
-        statistics.recordBulkCancellation(count: pendingRequests.count)
+        for (_, task) in activeTasks {
+            task.cancel()
+        }
+        
+        pendingRequests.removeAll()
+        activeTasks.removeAll()
+        
+        statistics.recordBulkCancellation(count: count)
     }
     
     /// Clear the highlighting cache
@@ -161,129 +162,125 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Configure operation queue settings
     /// - Parameters:
     ///   - maxConcurrentOperations: Maximum concurrent operations
-    ///   - qualityOfService: Quality of service for operations
+    ///   - qualityOfService: Quality of service for operations (maintained for API compatibility)
     public func configureQueue(
         maxConcurrentOperations: Int,
         qualityOfService: QualityOfService = .userInitiated
     ) {
         self.maxConcurrentOperations = maxConcurrentOperations
-        operationQueue.maxConcurrentOperationCount = maxConcurrentOperations
-        operationQueue.qualityOfService = qualityOfService
+        // QoS is now handled by Task priority
+        _ = qualityOfService // Maintained for API compatibility
     }
     
     // MARK: - Private Methods
     
-    private func configureOperationQueue() {
-        operationQueue.maxConcurrentOperationCount = maxConcurrentOperations
-        operationQueue.qualityOfService = .userInitiated
-    }
-    
     private func processRequest(_ request: HighlightingRequest) async {
         let startTime = Date()
         
-        do {
-            let tokens: [HighlightedToken]
+        // Create task for this request
+        let task = Task { [weak self] in
+            guard let self else { return }
             
-            // Choose highlighting strategy based on text size
-            if request.text.count > maxBackgroundTextLength {
-                tokens = try await processLargeText(request)
-            } else {
-                tokens = try await processNormalText(request)
-            }
-            
-            // Cache the result
-            let cacheKey = createCacheKey(text: request.text, language: request.language)
-            let cachedResult = CachedHighlightResult(
-                tokens: tokens,
-                timestamp: Date(),
-                expirationTime: 300 // 5 minutes
-            )
-            resultCache[cacheKey] = cachedResult
-            
-            // Complete the request
-            let processingTime = Date().timeIntervalSince(startTime)
-            statistics.recordCompletion(processingTime: processingTime, tokenCount: tokens.count)
-            
-            // Call completion on main thread
-            await MainActor.run {
-                request.completion(.success(tokens))
-                pendingRequests.removeValue(forKey: request.id)
-            }
-        } catch {
-            let processingTime = Date().timeIntervalSince(startTime)
-            statistics.recordError(processingTime: processingTime)
-            
-            await MainActor.run {
-                request.completion(.failure(error))
-                pendingRequests.removeValue(forKey: request.id)
+            do {
+                let tokens: [HighlightedToken]
+                
+                // Choose highlighting strategy based on text size
+                if request.text.count > self.maxBackgroundTextLength {
+                    tokens = try await self.processLargeText(request)
+                } else {
+                    tokens = try await self.highlightingActor.highlight(
+                        text: request.text,
+                        language: request.language,
+                        priority: request.priority,
+                        maxConcurrentOperations: self.maxConcurrentOperations
+                    )
+                }
+                
+                // Check for cancellation
+                try Task.checkCancellation()
+                
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    
+                    // Cache the result
+                    let cacheKey = self.createCacheKey(text: request.text, language: request.language)
+                    let cachedResult = CachedHighlightResult(
+                        tokens: tokens,
+                        timestamp: Date(),
+                        expirationTime: 300 // 5 minutes
+                    )
+                    self.resultCache[cacheKey] = cachedResult
+                    
+                    // Complete the request
+                    let processingTime = Date().timeIntervalSince(startTime)
+                    self.statistics.recordCompletion(processingTime: processingTime, tokenCount: tokens.count)
+                    
+                    request.completion(.success(tokens))
+                    self.pendingRequests.removeValue(forKey: request.id)
+                    self.activeTasks.removeValue(forKey: request.id)
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    
+                    let processingTime = Date().timeIntervalSince(startTime)
+                    self.statistics.recordError(processingTime: processingTime)
+                    
+                    let finalError = error is CancellationError ? HighlightingError.cancelled : error
+                    request.completion(.failure(finalError))
+                    self.pendingRequests.removeValue(forKey: request.id)
+                    self.activeTasks.removeValue(forKey: request.id)
+                }
             }
         }
-    }
-    
-    private func processNormalText(_ request: HighlightingRequest) async throws -> [HighlightedToken] {
-        // Create highlighting operation
-        let operation = HighlightingOperation(
-            text: request.text,
-            language: request.language,
-            priority: request.priority
-        )
         
-        // Store operation reference for cancellation
-        await MainActor.run {
-            if var storedRequest = pendingRequests[request.id] {
-                storedRequest.operation = operation
-                pendingRequests[request.id] = storedRequest
-            }
-        }
-        
-        // Add to operation queue
-        operationQueue.addOperation(operation)
-        
-        // Wait for completion
-        while !operation.isFinished && !operation.isCancelled {
-            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-        }
-        
-        if operation.isCancelled {
-            throw HighlightingError.cancelled
-        }
-        
-        return operation.result
+        activeTasks[request.id] = task
     }
     
     private func processLargeText(_ request: HighlightingRequest) async throws -> [HighlightedToken] {
         // Split large text into chunks for processing
         let chunks = splitTextIntoChunks(request.text, chunkSize: chunkSize)
-        var allTokens: [HighlightedToken] = []
         
-        for (index, chunk) in chunks.enumerated() {
-            // Process each chunk
-            let chunkRequest = HighlightingRequest(
-                id: "\(request.id)-chunk-\(index)",
-                text: chunk.text,
-                language: request.language,
-                priority: request.priority,
-                visibleRange: request.visibleRange
-            ) { _ in } // Empty completion for chunks
-            
-            let chunkTokens = try await processNormalText(chunkRequest)
-            
-            // Adjust token ranges to match original text positions
-            let adjustedTokens = chunkTokens.map { token in
-                HighlightedToken(
-                    range: NSRange(
-                        location: token.range.location + chunk.offset,
-                        length: token.range.length
-                    ),
-                    type: token.type,
-                    text: token.text
-                )
+        // Process chunks concurrently using TaskGroup
+        return try await withThrowingTaskGroup(of: (Int, [HighlightedToken]).self) { group in
+            for (index, chunk) in chunks.enumerated() {
+                group.addTask { [weak self] in
+                    guard let self else { throw HighlightingError.cancelled }
+                    
+                    let chunkTokens = try await self.highlightingActor.highlight(
+                        text: chunk.text,
+                        language: request.language,
+                        priority: request.priority,
+                        maxConcurrentOperations: self.maxConcurrentOperations
+                    )
+                    
+                    // Adjust token ranges to match original text positions
+                    let adjustedTokens = chunkTokens.map { token in
+                        HighlightedToken(
+                            range: NSRange(
+                                location: token.range.location + chunk.offset,
+                                length: token.range.length
+                            ),
+                            type: token.type,
+                            text: token.text
+                        )
+                    }
+                    
+                    return (index, adjustedTokens)
+                }
             }
             
-            allTokens.append(contentsOf: adjustedTokens)
+            // Collect results in order
+            var results: [(Int, [HighlightedToken])] = []
+            for try await result in group {
+                results.append(result)
+            }
+            
+            // Sort by chunk index and flatten
+            return results
+                .sorted { $0.0 < $1.0 }
+                .flatMap { $0.1 }
         }
-        
-        return allTokens
     }
     
     private func splitTextIntoChunks(_ text: String, chunkSize: Int) -> [(text: String, offset: Int)] {
@@ -307,18 +304,25 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     }
     
     private func reprioritizePendingRequests() {
-        // Sort requests by priority and visible range overlap
-        for (_, request) in pendingRequests {
+        // Update priority based on visible range overlap
+        for (requestId, request) in pendingRequests {
             if let visibleRange = request.visibleRange,
                let textRange = request.textRange {
                 // Calculate overlap with current visible range
                 let overlap = calculateRangeOverlap(visibleRange, textRange)
                 
-                // Boost priority for visible content
-                if overlap > 0 {
-                    request.operation?.queuePriority = .high
-                } else {
-                    request.operation?.queuePriority = .normal
+                // Cancel and restart tasks with updated priority if needed
+                if overlap > 0 && request.priority != .high {
+                    if let task = activeTasks[requestId] {
+                        task.cancel()
+                        var updatedRequest = request
+                        updatedRequest.priority = .high
+                        pendingRequests[requestId] = updatedRequest
+                        let capturedRequest = updatedRequest
+                        Task {
+                            await processRequest(capturedRequest)
+                        }
+                    }
                 }
             }
         }
@@ -348,7 +352,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
                 }
                 
                 // Cancel all operations
-                self.operationQueue.cancelAllOperations()
+                self.cancelAllRequests()
                 
                 // Clear cache
                 let beforeCacheSize = self.resultCache.count
@@ -381,6 +385,22 @@ public enum HighlightingPriority: Int, CaseIterable, Sendable {
     case normal = 1
     case high = 2
     case critical = 3
+    
+    var taskPriority: _Concurrency.TaskPriority? {
+        switch self {
+        case .low:
+            return .low
+            
+        case .normal:
+            return nil  // Use default priority
+            
+        case .high:
+            return .high
+            
+        case .critical:
+            return .high // Task priority doesn't have a critical level
+        }
+    }
 }
 
 /// Highlighting request data
@@ -388,10 +408,9 @@ public struct HighlightingRequest: Sendable {
     let id: String
     let text: String
     let language: Language
-    let priority: HighlightingPriority
+    var priority: HighlightingPriority
     let visibleRange: NSRange?
     let completion: BackgroundSyntaxHighlighter.HighlightingCompletion
-    var operation: HighlightingOperation?
     
     var textRange: NSRange? {
         NSRange(location: 0, length: text.count)
@@ -409,42 +428,28 @@ public struct CachedHighlightResult: Sendable {
     }
 }
 
-/// Background highlighting operation
-public class HighlightingOperation: Operation, @unchecked Sendable {
-    let text: String
-    let language: Language
-    let priority: HighlightingPriority
-    
-    private(set) var result: [HighlightedToken] = []
-    
-    init(text: String, language: Language, priority: HighlightingPriority) {
-        self.text = text
-        self.language = language
-        self.priority = priority
-        super.init()
+/// Actor for managing concurrent highlighting operations
+actor HighlightingActor {
+    /// Perform syntax highlighting for text
+    func highlight(
+        text: String,
+        language: Language,
+        priority: HighlightingPriority,
+        maxConcurrentOperations: Int
+    ) async throws -> [HighlightedToken] {
+        try Task.checkCancellation()
+        _ = maxConcurrentOperations // Reserved for future use
         
-        // Set operation priority
-        switch priority {
-        case .low:
-            queuePriority = .low
-
-        case .normal:
-            queuePriority = .normal
-
-        case .high:
-            queuePriority = .high
-
-        case .critical:
-            queuePriority = .veryHigh
+        // Use task priority based on highlighting priority
+        if let taskPriority = priority.taskPriority {
+            return await Task(priority: taskPriority) {
+                createBasicHighlighting(for: text, language: language)
+            }.value
+        } else {
+            return await Task {
+                createBasicHighlighting(for: text, language: language)
+            }.value
         }
-    }
-    
-    override public func main() {
-        guard !isCancelled else { return }
-        
-        // For now, create a simple highlighting result
-        // In a full implementation, this would use a background-compatible highlighter
-        result = createBasicHighlighting(for: text, language: language)
     }
     
     private func createBasicHighlighting(for text: String, language: Language) -> [HighlightedToken] {
@@ -506,10 +511,6 @@ public class HighlightingOperation: Operation, @unchecked Sendable {
         }
         
         return tokens
-    }
-    
-    deinit {
-        // Cleanup if needed
     }
 }
 

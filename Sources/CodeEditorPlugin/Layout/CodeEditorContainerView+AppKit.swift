@@ -225,16 +225,14 @@ extension CodeEditorContainerView {
 // MARK: - Folding support for macOS
 extension LineNumberRulerView {
     /// Draw folding control for a line
-    func drawFoldingControl(at _: Int, in _: NSRect) {
-        // TODO: Implement when folding API is available in CodeEditorView
-        /*
+    func drawFoldingControl(at lineNumber: Int, in lineRect: NSRect) {
         guard let textView = textView as? CodeEditorView else { return }
         
         // Check if this line can be folded
-        guard textView.canFold(at: lineNumber) else { return }
+        guard textView.isFoldable(at: lineNumber) else { return }
         
-        let controlSize = textView.configuration.layout.foldingControlSize
-        let controlPadding = textView.configuration.layout.foldingControlPadding
+        let controlSize: CGFloat = 12.0
+        let controlPadding: CGFloat = 4.0
         
         // Calculate control position (left side of line numbers)
         let controlRect = NSRect(
@@ -259,7 +257,6 @@ extension LineNumberRulerView {
         
         // Draw the triangle icon
         drawFoldingIcon(in: controlRect.insetBy(dx: controlSize * 0.25, dy: controlSize * 0.25), isFolded: isFolded)
-        */
     }
     
     private func drawFoldingIcon(in rect: NSRect, isFolded: Bool) {
@@ -303,19 +300,12 @@ extension LineNumberRulerView {
         }
         
         // Find which line was clicked
-        // TODO: Implement when folding API is available in CodeEditorView
-        /*
         if let lineNumber = lineNumber(at: point) {
-            if textView.canFold(at: lineNumber) {
-                if textView.isFolded(at: lineNumber) {
-                    textView.unfold(at: lineNumber)
-                } else {
-                    textView.fold(at: lineNumber)
-                }
+            if textView.isFoldable(at: lineNumber) {
+                _ = textView.toggleFold(at: lineNumber)
                 needsDisplay = true
             }
         }
-        */
         
         super.mouseDown(with: event)
     }

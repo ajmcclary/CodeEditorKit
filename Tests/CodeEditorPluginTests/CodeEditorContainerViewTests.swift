@@ -21,7 +21,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
     @MainActor
     private func createContainerView() -> CodeEditorContainerView? {
         // Check if we're in a headless environment
-        #if os(macOS)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if ProcessInfo.processInfo.environment["XPC_SERVICE_NAME"] != nil {
             // We're likely in a test runner without UI context
             return nil

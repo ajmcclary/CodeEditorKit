@@ -167,7 +167,7 @@ extension CodeEditorView {
         // Set up code folding engine
         setupCodeFoldingEngine()
         
-        // TODO: Set up LSP integration
+        // LSP integration can be set up here when needed
         // setupLSPIntegration()
         
         // Set up TextKit2 rendering optimization

@@ -69,14 +69,12 @@ final class ContextMenuTests: XCTestCase {
     
     func testContextMenuBuilder() {
         var builder = ContextMenuBuilder()
-        var cutExecuted = false
-        var copyExecuted = false
         
         builder.addAction(ContextMenuAction(
             title: "Cut",
             keyEquivalent: "x"
         ) {
-            cutExecuted = true
+            // Action handler
         })
         
         builder.addSeparator()
@@ -85,17 +83,13 @@ final class ContextMenuTests: XCTestCase {
             title: "Copy",
             keyEquivalent: "c"
         ) {
-            copyExecuted = true
+            // Action handler
         })
         
         let menu = builder.build()
         
         #if canImport(AppKit)
-        XCTAssertTrue(menu is NSMenu)
-        guard let nsMenu = menu as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let nsMenu = menu
         XCTAssertEqual(nsMenu.items.count, 3)
         XCTAssertEqual(nsMenu.items[0].title, "Cut")
         XCTAssertEqual(nsMenu.items[1].title, "") // Separator
@@ -121,11 +115,7 @@ final class ContextMenuTests: XCTestCase {
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         #if canImport(AppKit)
-        XCTAssertTrue(menu is NSMenu)
-        guard let nsMenu = menu as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let nsMenu = menu
         
         // Check standard editing actions
         let menuTitles = nsMenu.items.map { $0.title }
@@ -164,10 +154,7 @@ final class ContextMenuTests: XCTestCase {
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         #if canImport(AppKit)
-        guard let nsMenu = menu as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let nsMenu = menu
         
         // Cut should be disabled without selection
         let cutItem = nsMenu.items.first { $0.title == "Cut" }
@@ -206,10 +193,7 @@ final class ContextMenuTests: XCTestCase {
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         #if canImport(AppKit)
-        guard let nsMenu = menu as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let nsMenu = menu
         
         // Cut should be disabled for read-only
         let cutItem = nsMenu.items.first { $0.title == "Cut" }
@@ -260,10 +244,7 @@ final class ContextMenuTests: XCTestCase {
         var builder = ContextMenuBuilder()
         builder.addAction(action)
         
-        guard let menu = builder.build() as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let menu = builder.build()
         let menuItem = menu.items.first!
         
         XCTAssertEqual(menuItem.title, "Test")
@@ -276,10 +257,7 @@ final class ContextMenuTests: XCTestCase {
         var builder = ContextMenuBuilder()
         builder.addSeparator()
         
-        guard let menu = builder.build() as? NSMenu else {
-            XCTFail("Expected NSMenu")
-            return
-        }
+        let menu = builder.build()
         let menuItem = menu.items.first!
         
         XCTAssertTrue(menuItem.isSeparatorItem)

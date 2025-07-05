@@ -49,7 +49,7 @@ extension CodeEditorView {
                 checkForCompletionTrigger(at: editedRange)
             }
             
-            // TODO: Update LSP document context
+            // LSP document context can be updated here when integrated
             // updateLSPDocumentContext()
         }
     }

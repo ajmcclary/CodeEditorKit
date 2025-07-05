@@ -342,7 +342,7 @@ final class CodeEditorViewTests: XCTestCase {
             print("Using TextKit1 path")
             layoutManager.ensureLayout(for: textContainer)
             
-            let textRange = NSRange(location: 0, length: textLength)
+            _ = NSRange(location: 0, length: textLength)
             
             // Ensure glyphs are generated
             _ = layoutManager.glyphRange(for: textContainer)

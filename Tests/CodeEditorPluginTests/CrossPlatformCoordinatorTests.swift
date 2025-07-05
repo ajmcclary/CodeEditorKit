@@ -82,7 +82,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         #elseif targetEnvironment(macCatalyst)
         XCTAssertEqual(goToDefAvailability, .partial)
         XCTAssertEqual(symbolNavAvailability, .full)
-        #elseif os(iOS)
+        #elseif canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCTAssertEqual(goToDefAvailability, .partial)
             XCTAssertEqual(symbolNavAvailability, .full)
@@ -128,7 +128,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(items.contains { $0.id == "replace" })
         XCTAssertTrue(items.contains { $0.id == "symbol" })
         XCTAssertTrue(items.contains { $0.id == "format" })
-        #elseif os(iOS)
+        #elseif canImport(UIKit)
         // iOS should have limited toolbar
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCTAssertTrue(items.contains { $0.id == "symbol" })
