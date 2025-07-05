@@ -14,4 +14,4 @@ swiftlint --fix
 swiftlint
 ```
 
-Success criteria: "Found 0 violations, 0 serious" across all 272 Swift files.
+Success criteria: "Found 0 violations, 0 serious" across all 274 Swift files.

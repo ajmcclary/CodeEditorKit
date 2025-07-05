@@ -21,7 +21,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs, supporting custom language extensions, tool integrations, and advanced IDE features.
 
-- ✅ **Production-Grade Quality:** Verified with **319 automated tests** (284 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 270 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **319 automated tests** (284 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 274 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -127,7 +127,7 @@ The codebase is organized by feature rather than by type, making it intuitive to
 - **74% Directory Reduction**: Simplified from 39 to 10 core feature directories, dramatically reducing cognitive load
 - **Self-Contained Features**: Each feature includes its own models, views, and logic in one place
 - **Enhanced Platform Abstraction**: Replaced all `#if os()` with `#if canImport()` for better Catalyst support
-- **Improved File Organization**: 270 total Swift files (229 plugin + 41 sample app) with clear separation
+- **Improved File Organization**: 274 total Swift files (208 plugin + 66 sample app) with clear separation
 - **Better Testability**: Feature isolation makes unit testing more straightforward
 
 #### Key Components
@@ -384,7 +384,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 We maintain the highest code quality standards in the Swift ecosystem:
 
-- **Zero Linting Violations**: Not a single SwiftLint violation across all 270 source files
+- **Zero Linting Violations**: Not a single SwiftLint violation across all 274 source files
 - **Swift 6 Strict Concurrency**: Full compliance with Swift's strictest concurrency checking – no data races possible
 - **100% Actor Safety**: All concurrent operations use Swift 6 actors for guaranteed thread safety
 - **Enhanced Platform Abstraction**: Sophisticated cross-platform layer with zero compromise on native performance

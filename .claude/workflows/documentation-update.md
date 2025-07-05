@@ -40,7 +40,7 @@ Update `/Users/ajmcclary/Dev/CodeEditorPlugin/README.md`:
 #### Quality Metrics Section
 - **319 Total Tests**: 284 core package tests + 35 sample app tests
 - **100% Test Pass Rate**: All tests passing with zero failures
-- **Zero Linting Violations**: 0 violations across 272 files
+- **Zero Linting Violations**: 0 violations across 274 files
 - **Swift 6 Strict Concurrency**: Complete compliance
 
 ### 3. Update Sample App README.md
@@ -56,11 +56,11 @@ Update `/Users/ajmcclary/Dev/CodeEditorPlugin/CodeEditorSample/README.md`:
 
 #### Test Breakdown
 - BasicFunctionalityTests (4 tests)
-- ConfigurationUITests (12 tests)
-- PluginConfigurationTests (11 tests)
+- ConfigurationUITests (9 tests)
+- PluginConfigurationTests (8 tests)
 - QuickIsFlippedTest (1 test)
-- SampleCodeTests (12 tests)
-- SimplifiedIntegrationTests (6 tests)
+- SampleCodeTests (9 tests)
+- SimplifiedIntegrationTests (4 tests)
 
 ### 4. Update CLAUDE.md
 Update project instructions with latest achievements:
@@ -72,7 +72,7 @@ Update project instructions with latest achievements:
 ### 5. Sync Achievement Sections
 Update achievement callouts across all docs:
 - ✅ Perfect Test Suite: 319 tests passing
-- ✅ Zero Code Quality Issues: 0 violations across 272 files
+- ✅ Zero Code Quality Issues: 0 violations across 274 files
 - ✅ Swift 6 Ready: Full actor-based concurrency
 - ✅ Production Performance: Optimized builds
 - ✅ Cross-Platform Excellence: macOS, iOS, Catalyst verified
@@ -98,7 +98,7 @@ Update achievement callouts across all docs:
 ### Quality Metrics Template
 ```markdown
 ### Code Quality Standards
-- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 272 files**
+- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 274 files**
 - **Swift 6 Strict Concurrency**: Complete compliance with Swift's strictest concurrency checking
 - **Actor-Based Safety**: All potentially unsafe operations properly isolated to background actors
 ```

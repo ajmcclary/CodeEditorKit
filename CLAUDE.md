@@ -9,7 +9,7 @@ CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Ma
 - **Enhanced cross-platform abstraction** using `#if canImport()` patterns
 - **17 programming languages** with syntax highlighting
 - **319 comprehensive tests** (284 main + 35 sample app)
-- **Zero SwiftLint violations** across all 270 files
+- **Zero SwiftLint violations** across all 274 files
 - **Feature-based architecture** (74% directory reduction)
 
 ## Essential Commands
