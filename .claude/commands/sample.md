@@ -1,11 +1,24 @@
 ---
-description: Sample app specific operations and integration testing
+description: CodeEditorSample build, test, and run operations
 ---
 
-# Sample App Workflow
+# Sample App Operations
 
-Execute the sample-app-workflow:
+Build, test, and run the CodeEditorSample:
 
-@/Users/ajmcclary/Dev/CodeEditorPlugin/.claude/workflows/sample-app-workflow.md
+```bash
+cd CodeEditorSample
 
-Testing and validation of the CodeEditorSample demonstration application.
+# Build sample app
+swift build
+
+# Run sample tests (35 tests)
+swift test
+
+# Run sample app
+swift run CodeEditorSample
+
+cd ..
+```
+
+Validates the demonstration application functionality and integration.

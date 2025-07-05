@@ -31,16 +31,16 @@ Update `/Users/ajmcclary/Dev/CodeEditorPlugin/README.md`:
 
 #### Status Badges
 ```markdown
-[![Tests](https://img.shields.io/badge/tests-322%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-319%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
 ```
 
 #### Quality Metrics Section
-- **322 Total Tests**: 276 core package tests + 46 sample app tests
+- **319 Total Tests**: 284 core package tests + 35 sample app tests
 - **100% Test Pass Rate**: All tests passing with zero failures
-- **Zero Linting Violations**: 0 violations across 204 files
+- **Zero Linting Violations**: 0 violations across 272 files
 - **Swift 6 Strict Concurrency**: Complete compliance
 
 ### 3. Update Sample App README.md
@@ -48,10 +48,10 @@ Update `/Users/ajmcclary/Dev/CodeEditorPlugin/CodeEditorSample/README.md`:
 
 #### Status Badges
 ```markdown
-[![Tests](https://img.shields.io/badge/tests-46%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-36-blue)](#quality-metrics)
+[![Files](https://img.shields.io/badge/files-66-blue)](#quality-metrics)
 ```
 
 #### Test Breakdown
@@ -71,8 +71,8 @@ Update project instructions with latest achievements:
 
 ### 5. Sync Achievement Sections
 Update achievement callouts across all docs:
-- ✅ Perfect Test Suite: 322 tests passing
-- ✅ Zero Code Quality Issues: 0 violations across 204 files
+- ✅ Perfect Test Suite: 319 tests passing
+- ✅ Zero Code Quality Issues: 0 violations across 272 files
 - ✅ Swift 6 Ready: Full actor-based concurrency
 - ✅ Production Performance: Optimized builds
 - ✅ Cross-Platform Excellence: macOS, iOS, Catalyst verified
@@ -98,7 +98,7 @@ Update achievement callouts across all docs:
 ### Quality Metrics Template
 ```markdown
 ### Code Quality Standards
-- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across {FILE_COUNT} files**
+- **Zero Linting Violations**: Strict SwiftLint configuration with **0 violations across 272 files**
 - **Swift 6 Strict Concurrency**: Complete compliance with Swift's strictest concurrency checking
 - **Actor-Based Safety**: All potentially unsafe operations properly isolated to background actors
 ```

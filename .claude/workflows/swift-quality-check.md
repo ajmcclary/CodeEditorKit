@@ -32,7 +32,7 @@ swift build
 ```
 
 ### 4. Run Main Package Tests
-Execute all 276 core tests:
+Execute all 284 core tests:
 ```bash
 swift test
 ```
@@ -44,7 +44,7 @@ cd CodeEditorSample && swift build
 ```
 
 ### 6. Run Sample App Tests  
-Execute all 46 sample tests:
+Execute all 35 sample tests:
 ```bash
 cd CodeEditorSample && swift test
 ```
@@ -52,10 +52,10 @@ cd CodeEditorSample && swift test
 ## Success Criteria
 - ✅ SwiftLint shows 0 violations across all files
 - ✅ Main package builds without errors
-- ✅ All 276 core tests pass (100% pass rate)
+- ✅ All 284 core tests pass (100% pass rate)
 - ✅ Sample app builds without errors  
-- ✅ All 46 sample tests pass (100% pass rate)
-- ✅ Total: 322 tests passing
+- ✅ All 35 sample tests pass (100% pass rate)
+- ✅ Total: 319 tests passing
 
 ## Error Handling
 
@@ -93,7 +93,7 @@ If tests fail:
 
 ## Notes
 This workflow maintains our project standards:
-- Zero SwiftLint violations across 204 files
-- 100% test pass rate (322/322 tests)
+- Zero SwiftLint violations across 272 files
+- 100% test pass rate (319/319 tests)
 - Swift 6 concurrency compliance
 - Production-ready quality gates

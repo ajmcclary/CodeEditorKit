@@ -1,11 +1,17 @@
 ---
-description: Cross-platform testing for macOS, iOS, and Mac Catalyst compatibility
+description: Run all tests for main package and sample app
 ---
 
-# Cross-Platform Testing
+# Complete Test Suite
 
-Execute the cross-platform-test workflow:
+Run all 319 tests across main package and sample app:
 
-@/Users/ajmcclary/Dev/CodeEditorPlugin/.claude/workflows/cross-platform-test.md
+```bash
+# Run main package tests (284 tests)
+swift test
 
-Validates cross-platform compatibility across macOS, iOS, and Mac Catalyst.
+# Run sample app tests (35 tests)
+cd CodeEditorSample && swift test && cd ..
+```
+
+Success criteria: 100% pass rate across all 319 tests.
