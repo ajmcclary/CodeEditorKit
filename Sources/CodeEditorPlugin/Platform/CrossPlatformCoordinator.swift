@@ -107,8 +107,8 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     deinit {
-        // Remove legacy selector-based observers if any
         // NotificationCenter automatically handles cleanup for deallocated objects
+        // The removeObservers() method should be called explicitly before deallocation if needed
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -373,39 +373,12 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Helper Methods
     
-    #if canImport(UIKit)
-    func isPointingDeviceConnected() -> Bool {
-        // Check if mouse/trackpad is connected
-        if #available(iOS 13.4, *) {
-            return UIDevice.current.userInterfaceIdiom == .pad
-        }
-        return false
+    /// Update platform adjustments - internal method for extensions
+    internal func updatePlatformAdjustments(_ update: (inout PlatformAdjustments) -> Void) {
+        update(&platformAdjustments)
     }
     
-    private func keyboardDidConnect() {
-        adjustFeaturesForPlatform()
-    }
-    
-    internal func orientationDidChange() {
-        #if canImport(UIKit)
-        // Adjust UI for new orientation
-        let orientation = UIDevice.current.orientation
-        
-        // Update platform adjustments based on orientation
-        if orientation.isLandscape {
-            // In landscape, we can use slightly smaller touch targets
-            platformAdjustments.minimumTouchTargetSize = 40
-        } else {
-            // Portrait uses standard iOS touch target size
-            platformAdjustments.minimumTouchTargetSize = 44
-        }
-        
-        // Notify observers of the change
-        objectWillChange.send()
-        #endif
-    }
-    
-    #endif
+    // iOS-specific helper methods moved to CrossPlatformCoordinator+UIKit.swift
     
     // MARK: - Common Actions
     

@@ -9,19 +9,9 @@ public typealias PlatformTextView = NSTextView
 public typealias PlatformImage = NSImage
 public typealias PlatformBezierPath = NSBezierPath
 public typealias PlatformEvent = NSEvent
-public typealias PlatformTouch = NSTouch
 public typealias PlatformGestureRecognizer = NSGestureRecognizer
-public typealias PlatformPasteboard = NSPasteboard
 public typealias PlatformViewController = NSViewController
 public typealias PlatformContextMenu = NSMenu
-public typealias PlatformTableView = NSTableView
-public typealias PlatformTableViewCell = NSTableCellView
-public typealias PlatformTableColumn = NSTableColumn
-public typealias PlatformTextField = NSTextField
-public typealias PlatformLabel = NSTextField
-public typealias PlatformLayoutManager = NSLayoutManager
-public typealias PlatformTextContainer = NSTextContainer
-public typealias PlatformTextStorage = NSTextStorage
 #else
 import UIKit
 public typealias PlatformColor = UIColor
@@ -32,19 +22,9 @@ public typealias PlatformTextView = UITextView
 public typealias PlatformImage = UIImage
 public typealias PlatformBezierPath = UIBezierPath
 public typealias PlatformEvent = UIEvent
-public typealias PlatformTouch = UITouch
 public typealias PlatformGestureRecognizer = UIGestureRecognizer
-public typealias PlatformPasteboard = UIPasteboard
 public typealias PlatformViewController = UIViewController
 public typealias PlatformContextMenu = UIMenu
-public typealias PlatformTableView = UITableView
-public typealias PlatformTableViewCell = UITableViewCell
-public typealias PlatformTextField = UITextField
-public typealias PlatformLabel = UILabel
-// Note: UIKit uses NSLayoutManager from Foundation for text layout
-public typealias PlatformLayoutManager = NSLayoutManager
-public typealias PlatformTextContainer = NSTextContainer
-public typealias PlatformTextStorage = NSTextStorage
 #endif
 
 // Cross-platform color aliases

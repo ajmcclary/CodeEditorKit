@@ -60,11 +60,8 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     }
     
     deinit {
-        // Cancel all active tasks
-        for (_, task) in activeTasks {
-            task.cancel()
-        }
-        // Timer will be cleaned up automatically when deallocated
+        // Timer and tasks will be cleaned up automatically when deallocated
+        // The cleanup() method should be called explicitly before deallocation
     }
     
     // MARK: - Public Methods
@@ -170,6 +167,27 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         self.maxConcurrentOperations = maxConcurrentOperations
         // QoS is now handled by Task priority
         _ = qualityOfService // Maintained for API compatibility
+    }
+    
+    /// Explicitly cleanup all resources including timers and tasks
+    /// This method can be called before the object is deallocated to ensure
+    /// all resources are properly released
+    public func cleanup() {
+        // Invalidate debounce timer
+        debounceTimer?.invalidate()
+        debounceTimer = nil
+        
+        // Cancel all active tasks
+        for (_, task) in activeTasks {
+            task.cancel()
+        }
+        activeTasks.removeAll()
+        
+        // Clear pending requests
+        pendingRequests.removeAll()
+        
+        // Clear cache
+        resultCache.removeAll()
     }
     
     // MARK: - Private Methods

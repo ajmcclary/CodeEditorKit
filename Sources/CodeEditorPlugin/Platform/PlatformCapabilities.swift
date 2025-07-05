@@ -331,7 +331,10 @@ public final class PlatformCapabilities {
         case .pad: return "iPad"
         case .tv: return "Apple TV"
         case .mac: return "Mac"
-        default: return "Unknown"
+        case .carPlay: return "CarPlay"
+        case .vision: return "Apple Vision Pro"
+        case .unspecified: return "Unspecified"
+        @unknown default: return "Unknown"
         }
         #else
         return "Unknown"
@@ -546,7 +549,12 @@ extension PlatformCapabilities {
             }
             
         // Features that are either fully available or not
-        default:
+        case .syntaxHighlighting, .codeCompletion, .lineNumbers, .codeFolding, .minimap,
+             .multipleCursors, .smartBrackets, .autoIndent, .columnSelection, .quickOpen,
+             .hardwareAcceleration, .virtualScrolling, .incrementalParsing, .backgroundProcessing,
+             .languageServerProtocol, .pluginSystem, .externalTools, .fileWatching,
+             .splitView, .tabs, .sidebars, .floatingPanels, .contextMenus, .touchBarSupport,
+             .gestureNavigation, .pencilSupport:
             return isFeatureAvailable(feature) ? .full : .unavailable
         }
     }

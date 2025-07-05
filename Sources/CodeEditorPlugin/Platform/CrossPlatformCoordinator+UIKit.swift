@@ -220,5 +220,40 @@ extension CrossPlatformCoordinator {
         logger.debug("Two-finger tap detected")
         // Could trigger quick actions menu
     }
+    
+    // MARK: - IOS Device Detection
+    
+    func isPointingDeviceConnected() -> Bool {
+        // Check if mouse/trackpad is connected
+        if #available(iOS 13.4, *) {
+            return UIDevice.current.userInterfaceIdiom == .pad
+        }
+        return false
+    }
+    
+    private func keyboardDidConnect() {
+        adjustFeaturesForPlatform()
+    }
+    
+    internal func orientationDidChange() {
+        // Adjust UI for new orientation
+        let orientation = UIDevice.current.orientation
+        
+        // Update platform adjustments based on orientation
+        if orientation.isLandscape {
+            // In landscape, we can use slightly smaller touch targets
+            updatePlatformAdjustments { adjustments in
+                adjustments.minimumTouchTargetSize = 40
+            }
+        } else {
+            // Portrait uses standard iOS touch target size
+            updatePlatformAdjustments { adjustments in
+                adjustments.minimumTouchTargetSize = 44
+            }
+        }
+        
+        // Notify observers of the change
+        objectWillChange.send()
+    }
 }
 #endif
