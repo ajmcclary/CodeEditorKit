@@ -33,6 +33,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     var onTextChangeCallback: ((String) -> Void)?
     var onSelectionChangeCallback: ((NSRange) -> Void)?
     
+    /// Debounce task for text changes
+    var textUpdateTask: Task<Void, Never>?
+    
+    /// Debounce interval for text changes
+    var textDebounceInterval: TimeInterval = 0.1
+    
     // MARK: - Update Management
     
     /// Tracks the last update to prevent unnecessary updates
@@ -80,12 +86,33 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         guard newText != currentText else { return }
         
         currentText = newText
+        
+        // Cancel any existing debounce task
+        textUpdateTask?.cancel()
+        
+        // Immediate update for internal state
         onTextChange?(newText)
         
-        // Update SwiftUI binding if available
-        if let textBinding, textBinding.wrappedValue != newText {
-            textBinding.wrappedValue = newText
-            onTextChangeCallback?(newText)
+        // Debounced update for SwiftUI binding and callbacks
+        textUpdateTask = Task { [weak self] in
+            do {
+                guard let self else { return }
+                try await Task.sleep(for: .seconds(self.textDebounceInterval))
+                
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    
+                    // Update SwiftUI binding if available
+                    if let textBinding = self.textBinding, textBinding.wrappedValue != newText {
+                        textBinding.wrappedValue = newText
+                    }
+                    
+                    // Call the debounced callback
+                    self.onTextChangeCallback?(newText)
+                }
+            } catch {
+                // Task was cancelled, which is expected behavior
+            }
         }
     }
     

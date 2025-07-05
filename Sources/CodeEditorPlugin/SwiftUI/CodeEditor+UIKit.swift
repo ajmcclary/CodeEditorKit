@@ -11,6 +11,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     let theme: CodeEditorSwiftUITheme
     let configuration: EditorConfiguration
     @Binding var isFocused: Bool
+    let textDebounceInterval: Duration
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
     
@@ -34,8 +35,63 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         context.coordinator.updateContainer(uiView, text: text, language: language, theme: theme, configuration: configuration)
     }
     
+    static func dismantleUIView(_: CodeEditorContainerView, coordinator: CodeEditorCoordinator) {
+        // Clean up resources when view is being removed
+        coordinator.removeNotificationObservers()
+        coordinator.textUpdateTask?.cancel()
+    }
+    
+    @available(iOS 16.0, *)
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: CodeEditorContainerView, context _: Context) -> CGSize? {
+        let textView = uiView.textView
+        
+        // Save current frame
+        let originalFrame = textView.frame
+        
+        // Set a temporary width for size calculation
+        let width = proposal.width ?? UIScreen.main.bounds.width
+        textView.frame.size.width = width
+        
+        // Calculate content size
+        let sizeThatFits = textView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        
+        // Restore original frame
+        textView.frame = originalFrame
+        
+        var size = sizeThatFits
+        
+        // Add padding for line numbers if enabled
+        if configuration.display.showLineNumbers {
+            size.width += configuration.layout.gutterWidth
+        }
+        
+        // Add text container insets
+        let containerInset = textView.textContainerInset
+        size.width += containerInset.left + containerInset.right
+        size.height += containerInset.top + containerInset.bottom
+        
+        // Respect proposal constraints
+        if let proposedWidth = proposal.width {
+            size.width = min(size.width, proposedWidth)
+        }
+        
+        if let proposedHeight = proposal.height {
+            size.height = min(size.height, proposedHeight)
+        }
+        
+        // Ensure minimum size
+        size.width = max(size.width, 100)
+        size.height = max(size.height, 50)
+        
+        return size
+    }
+    
     func makeCoordinator() -> CodeEditorCoordinator {
-        CodeEditorCoordinator(text: $text, onTextChange: onTextChange, onSelectionChange: onSelectionChange)
+        let coordinator = CodeEditorCoordinator(text: $text, onTextChange: onTextChange, onSelectionChange: onSelectionChange)
+        // Convert Duration to TimeInterval (seconds)
+        // Convert Duration to TimeInterval (seconds)
+        coordinator.textDebounceInterval = Double(textDebounceInterval.components.seconds) + Double(textDebounceInterval.components.attoseconds) / 1e18
+        return coordinator
     }
     
     typealias Coordinator = CodeEditorCoordinator

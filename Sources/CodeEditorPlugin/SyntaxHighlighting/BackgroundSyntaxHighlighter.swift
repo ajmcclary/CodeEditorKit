@@ -41,8 +41,8 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Current visible range for priority highlighting
     private var visibleRange = NSRange(location: 0, length: 0)
     
-    /// Debounce timer for text changes
-    private var debounceTimer: Timer?
+    /// Debounce task for text changes
+    private var debounceTask: Task<Void, Never>?
     
     /// Logger for debugging
     private let logger = Logger(subsystem: "com.codeeditor.highlighting", category: "BackgroundSyntaxHighlighter")
@@ -105,10 +105,20 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         pendingRequests[requestId] = request
         
         // Debounce the highlighting to avoid excessive operations
-        debounceTimer?.invalidate()
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: highlightingDelay, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                await self?.processRequest(request)
+        debounceTask?.cancel()
+        debounceTask = Task { [weak self] in
+            do {
+                guard let self else { return }
+                try await Task.sleep(for: .seconds(self.highlightingDelay))
+                
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    Task {
+                        await self.processRequest(request)
+                    }
+                }
+            } catch {
+                // Task was cancelled, which is expected behavior
             }
         }
         
@@ -189,9 +199,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// highlighter.cleanup()
     /// ```
     public func cleanup() {
-        // Invalidate debounce timer
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        // Cancel debounce task
+        debounceTask?.cancel()
+        debounceTask = nil
         
         // Cancel all active tasks
         for (_, task) in activeTasks {

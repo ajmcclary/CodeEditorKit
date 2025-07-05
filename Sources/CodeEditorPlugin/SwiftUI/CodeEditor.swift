@@ -192,6 +192,7 @@ public struct CodeEditor: View {
                 get: { isFocused },
                 set: { isFocused = $0 }
             ),
+            textDebounceInterval: textDebounceInterval,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )

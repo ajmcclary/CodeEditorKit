@@ -19,8 +19,8 @@ public final class CompletionDebouncer: ObservableObject {
 
     // MARK: - State
 
-    /// Current debounce timer
-    private var debounceTimer: Timer?
+    /// Current debounce task
+    private var debounceTask: Task<Void, Never>?
 
     /// Last throttle execution time
     private var lastThrottleTime = Date.distantPast
@@ -86,9 +86,9 @@ public final class CompletionDebouncer: ObservableObject {
             return
         }
 
-        // Cancel existing debounce timer
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        // Cancel existing debounce task
+        debounceTask?.cancel()
+        debounceTask = nil
 
         // Check if we should execute immediately (high priority or immediate trigger)
         if shouldExecuteImmediately(request) {
@@ -104,8 +104,8 @@ public final class CompletionDebouncer: ObservableObject {
 
     /// Cancel all pending requests
     public func cancelAllRequests() {
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        debounceTask?.cancel()
+        debounceTask = nil
 
         // Cancel active request
         activeRequest?.cancel()
@@ -122,8 +122,8 @@ public final class CompletionDebouncer: ObservableObject {
 
     /// Force execute any pending requests immediately
     public func flushPendingRequests() {
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        debounceTask?.cancel()
+        debounceTask = nil
 
         // Execute the highest priority queued request
         if let highestPriorityRequest = getHighestPriorityRequest() {
@@ -171,10 +171,17 @@ public final class CompletionDebouncer: ObservableObject {
         // Add to queue
         queueRequest(request)
 
-        // Start debounce timer
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: debounceDelay, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                self?.processDebouncedRequests()
+        // Start debounce task
+        debounceTask = Task { [weak self] in
+            do {
+                guard let self else { return }
+                try await Task.sleep(for: .seconds(self.debounceDelay))
+                
+                await MainActor.run { [weak self] in
+                    self?.processDebouncedRequests()
+                }
+            } catch {
+                // Task was cancelled, which is expected behavior
             }
         }
     }

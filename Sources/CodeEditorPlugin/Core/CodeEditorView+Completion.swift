@@ -155,7 +155,7 @@ extension CodeEditorView {
             defer: false
         )
         
-        window.contentViewController = viewController as NSViewController
+        window.contentViewController = viewController as PlatformViewController
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = PlatformColors.clear
@@ -179,7 +179,7 @@ extension CodeEditorView {
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
         
-        let popoverVC = viewController as UIViewController
+        guard let popoverVC = viewController as? PlatformViewController else { return }
         popoverVC.modalPresentationStyle = .popover
         
         if let popover = popoverVC.popoverPresentationController {

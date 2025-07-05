@@ -16,8 +16,8 @@ public final class AsyncSyntaxHighlighter {
     private let coordinator: SyntaxHighlightingCoordinator
     private let backgroundHighlighter: BackgroundSyntaxHighlighter
     private var highlightingTask: Task<Void, Never>?
-    private var debounceTimer: Timer?
-    private var periodicOptimizationTimer: Timer?
+    private var debounceTask: Task<Void, Never>?
+    private var periodicOptimizationTask: Task<Void, Never>?
     private let debounceInterval: TimeInterval
     private let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
     
@@ -52,14 +52,23 @@ public final class AsyncSyntaxHighlighter {
         language: Language,
         visibleRange: NSRange? = nil
     ) {
-        // Cancel any pending debounce timer
-        debounceTimer?.invalidate()
+        // Cancel any pending debounce task
+        debounceTask?.cancel()
         
         // Schedule new highlighting
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: debounceInterval, repeats: false) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                await self.performHighlighting(for: textView, language: language, visibleRange: visibleRange)
+        debounceTask = Task { [weak self] in
+            do {
+                guard let self else { return }
+                try await Task.sleep(for: .seconds(self.debounceInterval))
+                
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    Task {
+                        await self.performHighlighting(for: textView, language: language, visibleRange: visibleRange)
+                    }
+                }
+            } catch {
+                // Task was cancelled, which is expected behavior
             }
         }
     }
@@ -70,17 +79,17 @@ public final class AsyncSyntaxHighlighter {
         language: Language,
         visibleRange: NSRange? = nil
     ) async {
-        // Cancel debounce timer
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        // Cancel debounce task
+        debounceTask?.cancel()
+        debounceTask = nil
         
         await performHighlighting(for: textView, language: language, visibleRange: visibleRange)
     }
     
     /// Cancel all pending highlighting operations
     public func cancelAllHighlighting() {
-        debounceTimer?.invalidate()
-        debounceTimer = nil
+        debounceTask?.cancel()
+        debounceTask = nil
         highlightingTask?.cancel()
         highlightingTask = nil
         backgroundHighlighter.cancelAllRequests()
@@ -313,10 +322,10 @@ public final class AsyncSyntaxHighlighter {
     
     /// Clean up resources before deinitialization
     public func cleanup() {
-        debounceTimer?.invalidate()
-        debounceTimer = nil
-        periodicOptimizationTimer?.invalidate()
-        periodicOptimizationTimer = nil
+        debounceTask?.cancel()
+        debounceTask = nil
+        periodicOptimizationTask?.cancel()
+        periodicOptimizationTask = nil
         highlightingTask?.cancel()
         highlightingTask = nil
     }
@@ -329,10 +338,22 @@ public final class AsyncSyntaxHighlighter {
     // MARK: - Cache Management
     
     private func setupPeriodicCacheOptimization() {
-        // Set up timer to periodically optimize cache (every 5 minutes)
-        periodicOptimizationTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
-            Task { [weak self] in
-                await self?.optimizeCache()
+        // Set up task to periodically optimize cache (every 5 minutes)
+        periodicOptimizationTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(300)) // 5 minutes
+                    
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        Task {
+                            await self.optimizeCache()
+                        }
+                    }
+                } catch {
+                    // Task was cancelled
+                    break
+                }
             }
         }
     }

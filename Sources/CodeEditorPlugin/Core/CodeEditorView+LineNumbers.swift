@@ -41,11 +41,7 @@ extension CodeEditorView {
 
         let gutter = GutterView()
         gutter.textView = self
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        gutter.autoresizingMask = NSView.AutoresizingMask.height // Only resize height, not width
-        #else
-        gutter.autoresizingMask = [.flexibleHeight] // Only resize height, not width
-        #endif
+        gutter.autoresizingMask = PlatformAutoresizing.flexibleHeight // Only resize height, not width
 
         // Add gutter directly to the text view since we might not be in a scroll view
         // Position it below the text content so it doesn't block text
