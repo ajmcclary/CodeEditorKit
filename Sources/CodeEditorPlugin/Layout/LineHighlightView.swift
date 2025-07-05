@@ -5,6 +5,7 @@ import AppKit
 // MARK: - LineHighlightView
 
 /// View for highlighting the current line
+@MainActor
 public class LineHighlightView: NSView {
     public var highlightColor: PlatformColor = PlatformColors.controlAccentColor.withAlphaComponent(0.1) {
         didSet {

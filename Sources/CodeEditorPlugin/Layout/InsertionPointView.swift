@@ -5,6 +5,7 @@ import AppKit
 // MARK: - InsertionPointView
 
 /// View representing the text insertion point (cursor)
+@MainActor
 public class InsertionPointView: NSView {
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -43,6 +44,7 @@ import UIKit
 // MARK: - InsertionPointView (iOS Stub)
 
 /// Stub implementation for iOS
+@MainActor
 public class InsertionPointView: UIView {
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)

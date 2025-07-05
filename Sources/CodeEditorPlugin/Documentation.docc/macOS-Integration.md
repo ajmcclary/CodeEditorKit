@@ -14,7 +14,7 @@ CodeEditorPlugin provides deep integration with macOS, supporting native feature
 
 ### Using Platform Types
 
-Always use the platform abstraction types for consistency:
+Always use the platform abstraction types for consistency. As of the 2025 refactoring, all platform detection uses `#if canImport()` patterns for better Catalyst compatibility:
 
 ```swift
 import CodeEditorPlugin

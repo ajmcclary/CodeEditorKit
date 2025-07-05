@@ -220,10 +220,10 @@ public protocol CodeEditorViewDelegate: AnyObject {
     func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItem)
 
     /// Provides a custom completion view controller
-    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol
+    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerRepresentable
 
     /// Provides a custom insertion point view
-    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicatorProtocol)?
+    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicating)?
 
     // MARK: Attachment Support
 
@@ -277,7 +277,7 @@ extension CodeEditorViewDelegate {
         // Default implementation
     }
 
-    func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
+    func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerRepresentable {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         CompletionViewController()
         #elseif canImport(UIKit)
@@ -287,7 +287,7 @@ extension CodeEditorViewDelegate {
         #endif
     }
 
-    func textViewInsertionPointView(_: CodeEditorView, frame _: CGRect) -> (InsertionPointIndicatorProtocol)? {
+    func textViewInsertionPointView(_: CodeEditorView, frame _: CGRect) -> (InsertionPointIndicating)? {
         nil
     }
 
@@ -306,7 +306,7 @@ extension CodeEditorViewDelegate {
 
 #if canImport(UIKit)
 @MainActor
-private class NoOpCompletionViewController: UIViewController, CompletionViewControllerProtocol {
+private class NoOpCompletionViewController: UIViewController, CompletionViewControllerRepresentable {
     var items: [any CompletionItem] = []
     weak var delegate: CompletionViewControllerDelegate?
 

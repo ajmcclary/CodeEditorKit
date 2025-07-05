@@ -11,7 +11,7 @@ CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Ma
 - **True Cross-Platform**: Built from the ground up for all platforms
 - **17 Languages**: SwiftSyntax for Swift, optimized regex for others
 - **319 Tests**: Comprehensive test coverage ensuring reliability (284 core + 35 sample)
-- **Zero Technical Debt**: Clean architecture, no linting violations
+- **Zero Technical Debt**: Clean architecture, no linting violations across 270 files
 - **74% Simpler**: Directory structure reduced from 39 to 10 directories
 
 ## Essential Commands
@@ -41,7 +41,7 @@ Sources/CodeEditorPlugin/
 ├── SyntaxHighlighting/      # Language highlighting
 ├── Layout/                  # UI components (GutterView)
 ├── SwiftUI/                 # SwiftUI integration
-├── Platform/                # Cross-platform abstractions
+├── Platform/                # Enhanced cross-platform abstractions
 ├── TextProcessing/          # Actor-based processing
 ├── Completion/              # Code completion
 ├── LSP/                     # Language Server Protocol
@@ -60,7 +60,9 @@ Sources/CodeEditorPlugin/
 
 **Platform Abstraction** (`Platform/`)
 - Unified types: PlatformColor, PlatformFont, PlatformView
-- Capability detection: hardware acceleration, TextKit2
+- Enhanced with `#if canImport()` patterns replacing `#if os()`
+- Runtime capability detection: hardware acceleration, TextKit2
+- CrossPlatformCoordinator for unified input handling
 - Ensures native feel on each platform
 
 ## Code Examples
@@ -180,7 +182,7 @@ xcodebuild -scheme CodeEditorSample -destination 'platform=macOS,variant=Mac Cat
 
 ### Quality Metrics
 - **Test Count**: 319 (284 main + 35 sample)
-- **SwiftLint**: Zero violations required
+- **SwiftLint**: Zero violations across 270 files (229 plugin + 41 sample)
 - **Platforms**: Must work on all three
 - **Performance**: <16ms frame time (60fps target)
 
@@ -222,12 +224,13 @@ Swift (AST-based), Python, JavaScript, TypeScript, Rust, C/C++, HTML, CSS, JSON,
 - **Performance**: Viewport optimization implemented
 - **Quality**: Zero linting violations maintained
 
-### Recent CodeEditorSample Improvements
+### Recent Major Refactoring (2025)
+- **Platform Abstraction Enhancement**: Replaced all `#if os()` with `#if canImport()` patterns
 - **Modern UI**: Replaced old checkboxes with platform-appropriate toggles
 - **Configuration Fix**: Settings now apply correctly on all platforms
 - **Unified Wrapper Architecture**: Protocol-based wrapper system with platform implementations
 - **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst
-- **File Count**: Streamlined to 36 files while maintaining zero violations
+- **File Organization**: 270 total Swift files (229 plugin + 41 sample app)
 
 ## Documentation System
 

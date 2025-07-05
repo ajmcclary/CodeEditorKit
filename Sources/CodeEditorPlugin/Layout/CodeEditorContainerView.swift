@@ -8,7 +8,7 @@ import UIKit
 #endif
 
 // Local logger instance for container view
-private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView")
+private let kContainerLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView")
 
 /// Cross-platform container view that holds the text view, gutter view, and minimap
 /// This allows the gutter and minimap to remain fixed while the text view scrolls

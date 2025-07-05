@@ -80,10 +80,10 @@ class LineNumberRulerView: NSRulerView {
         // Debug info
         #if DEBUG
         if characterRange.location == 0 {
-            kLogger.debug("📍 At top: range=\(characterRange)")
+            kAppKitContainerLogger.debug("📍 At top: range=\(characterRange)")
         }
         if characterRange.location + characterRange.length >= textLength && textLength > 0 {
-            kLogger.debug("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
+            kAppKitContainerLogger.debug("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
         }
         #endif
         
@@ -347,5 +347,5 @@ extension LineNumberRulerView {
     }
 }
 // Private logger instance
-private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.AppKit")
+private let kAppKitContainerLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.AppKit")
 #endif

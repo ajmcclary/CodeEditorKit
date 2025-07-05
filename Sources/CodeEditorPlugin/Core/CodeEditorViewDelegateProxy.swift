@@ -92,11 +92,11 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
         source?.textView(textView, insertCompletionItem: item)
     }
 
-    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerProtocol {
+    func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerRepresentable {
         source?.textViewCompletionViewController(textView) ?? CompletionViewController()
     }
 
-    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicatorProtocol)? {
+    func textViewInsertionPointView(_ textView: CodeEditorView, frame: CGRect) -> (InsertionPointIndicating)? {
         source?.textViewInsertionPointView(textView, frame: frame)
     }
 

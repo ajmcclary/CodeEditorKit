@@ -11,6 +11,21 @@ import UIKit
 
 /// Tests to ensure proper memory management and no retain cycles
 final class MemoryLeakTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        // Add at least one non-trivial statement to satisfy SwiftLint
+        continueAfterFailure = false
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        // Force cleanup to prevent memory issues between tests
+        autoreleasepool {
+            // Give the system time to clean up autorelease pools
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+        }
+    }
+    
     // MARK: - CodeEditorView Memory Tests
     
     @MainActor

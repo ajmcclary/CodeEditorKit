@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/tests-318%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-319%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
@@ -21,7 +21,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs, supporting custom language extensions, tool integrations, and advanced IDE features.
 
-- ✅ **Production-Grade Quality:** Verified with **318 automated tests** (282 core + 36 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 259 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **319 automated tests** (284 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 270 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -122,12 +122,12 @@ CodeEditorPlugin features a clean, modern architecture optimized for performance
 
 ### Simplified Feature-Based Architecture
 
-The codebase is organized by feature rather than by type, making it intuitive to understand, maintain, and extend. This clean, modular design makes the codebase easier to understand, maintain, and extend by:
+The codebase is organized by feature rather than by type, making it intuitive to understand, maintain, and extend. This clean, modular design achieved through our recent major refactoring:
 
-- **74% Directory Reduction**: Simplified from 39 to 10 directories, dramatically reducing cognitive load
+- **74% Directory Reduction**: Simplified from 39 to 10 core feature directories, dramatically reducing cognitive load
 - **Self-Contained Features**: Each feature includes its own models, views, and logic in one place
-- **Faster Development**: No more jumping between multiple directories to understand a single feature
-- **Easier Onboarding**: New contributors can understand and modify features independently
+- **Enhanced Platform Abstraction**: Replaced all `#if os()` with `#if canImport()` for better Catalyst support
+- **Improved File Organization**: 270 total Swift files (229 plugin + 41 sample app) with clear separation
 - **Better Testability**: Feature isolation makes unit testing more straightforward
 
 #### Key Components
@@ -152,8 +152,9 @@ The codebase is organized by feature rather than by type, making it intuitive to
   - `GutterView`: Platform-aware line number display with proper scrolling synchronization
   - `CodeEditorContainerView`: iOS-specific container architecture for proper text view containment
 
-- **`Platform/`** - **Sophisticated Abstraction Layer**
+- **`Platform/`** - **Enhanced Abstraction Layer**
   - The foundation that enables true cross-platform support without compromises
+  - Recently refactored to use `#if canImport()` throughout for better Catalyst support
   - See dedicated Platform Abstraction System section below
 
 - **`SwiftUI/`** - **Native SwiftUI Integration**
@@ -337,10 +338,10 @@ The **CodeEditorSample** app serves as both a comprehensive demonstration and a 
 ```bash
 cd CodeEditorSample
 swift run CodeEditorSample  # Launch the demo app
-swift test               # Run 66 comprehensive tests
+swift test               # Run 35 comprehensive tests
 ```
 
-The sample app maintains the same quality standards as the core plugin with **36 automated tests** (100% passing) and **zero linting violations** across 41 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
+The sample app maintains the same quality standards as the core plugin with **35 automated tests** (100% passing) and **zero linting violations** across 41 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
 
 ## 🧪 Testing & Quality
 
@@ -348,9 +349,9 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 ### Comprehensive Test Coverage
 
-**318 Total Tests** across the entire project, ensuring reliability at every level:
+**319 Total Tests** across the entire project, ensuring reliability at every level:
 
-#### Core Plugin Tests (282 tests)
+#### Core Plugin Tests (284 tests)
 - **`CodeEditorViewTests`** (33 tests): Validates core text view functionality, editing operations, and platform behavior
 - **`ConfigurationIntegrationTests`** (24 tests): Ensures configuration system works flawlessly across all settings
 - **`AnnotationTests`** (19 tests): Verifies TODO/FIXME detection and rendering
@@ -364,16 +365,15 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`CompletionSystemTests`** (14 tests): Code completion and LSP integration
 - **Plus 115+ additional specialized tests** covering memory management, edge cases, and platform-specific behavior
 
-#### Sample App Tests (36 tests)
+#### Sample App Tests (35 tests)
 - **`ConfigurationUITests`** (12 tests): UI-level configuration testing across platforms
 - **`SampleCodeTests`** (12 tests): Validates all language samples compile and highlight correctly
 - **`SimplifiedIntegrationTests`** (6 tests): Full integration testing scenarios
 - **`BasicFunctionalityTests`** (4 tests): Core feature verification
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
-- **Plus additional specialized tests** covering sample app specific functionality
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 318 tests passing in continuous integration
+- **100% Test Pass Rate**: All 319 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -384,7 +384,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 We maintain the highest code quality standards in the Swift ecosystem:
 
-- **Zero Linting Violations**: Not a single SwiftLint violation across all 259 source files
+- **Zero Linting Violations**: Not a single SwiftLint violation across all 270 source files
 - **Swift 6 Strict Concurrency**: Full compliance with Swift's strictest concurrency checking – no data races possible
 - **100% Actor Safety**: All concurrent operations use Swift 6 actors for guaranteed thread safety
 - **Enhanced Platform Abstraction**: Sophisticated cross-platform layer with zero compromise on native performance
@@ -400,7 +400,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 318 tests
+swift test                   # Run all 319 tests
 swift test --parallel        # Run tests in parallel for speed
 
 # Sample app quality checks

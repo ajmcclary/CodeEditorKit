@@ -233,7 +233,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             // Default implementation
         }
 
-        func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerProtocol {
+        func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerRepresentable {
             // For the sample app, we don't provide completion functionality
             // Return a minimal implementation that satisfies the protocol
             NoOpCompletionViewController()
@@ -242,7 +242,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         func textViewInsertionPointView(
             _: CodeEditorView,
             frame _: CGRect
-        ) -> (any InsertionPointIndicatorProtocol)? {
+        ) -> (any InsertionPointIndicating)? {
             nil
         }
 
@@ -266,7 +266,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 
 // MARK: - NoOpCompletionViewController
 
-class NoOpCompletionViewController: NSViewController, CompletionViewControllerProtocol {
+class NoOpCompletionViewController: NSViewController, CompletionViewControllerRepresentable {
     var items: [any CompletionItem] = []
     weak var delegate: CompletionViewControllerDelegate?
     

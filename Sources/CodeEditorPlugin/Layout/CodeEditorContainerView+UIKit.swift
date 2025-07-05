@@ -51,7 +51,7 @@ extension CodeEditorContainerView {
     
     /// Updates the iOS-specific gutter view with new configuration
     func updateIOSGutter() {
-        kLogger
+        uiKitContainerLogger
             .debug(
                 "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers)"
             )
@@ -64,14 +64,14 @@ extension CodeEditorContainerView {
             for constraint in gutterView.constraints where constraint.firstAttribute == .width {
                 constraint.constant = configuration.layout.gutterWidth
                 foundWidthConstraint = true
-                kLogger
+                uiKitContainerLogger
                     .debug(
                         "🔧 Updated gutter width constraint to: \(self.configuration.layout.gutterWidth)"
                     )
             }
             
             if !foundWidthConstraint {
-                kLogger.debug("⚠️ No width constraint found for gutter view")
+                uiKitContainerLogger.debug("⚠️ No width constraint found for gutter view")
             }
             
             // GutterView configuration is handled through the parent container
@@ -83,11 +83,11 @@ extension CodeEditorContainerView {
         for constraint in textView.constraints where constraint.firstAttribute == .leading {
             constraint.constant = configuration.display.showLineNumbers ? 0 : -configuration.layout.gutterWidth
             foundLeadingConstraint = true
-            kLogger.debug("🔧 Updated text view leading constraint to: \(constraint.constant)")
+            uiKitContainerLogger.debug("🔧 Updated text view leading constraint to: \(constraint.constant)")
         }
         
         if !foundLeadingConstraint {
-            kLogger.debug("⚠️ No leading constraint found for text view")
+            uiKitContainerLogger.debug("⚠️ No leading constraint found for text view")
         }
     }
 }
@@ -130,6 +130,6 @@ extension CodeEditorContainerView: UITextViewDelegate {
 }
 
 // Private logger instance
-private let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.UIKit")
+private let uiKitContainerLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.UIKit")
 
 #endif

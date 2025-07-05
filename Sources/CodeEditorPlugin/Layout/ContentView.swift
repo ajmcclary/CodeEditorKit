@@ -5,6 +5,7 @@ import AppKit
 // MARK: - ContentView
 
 /// Content view that contains layout fragments
+@MainActor
 public class ContentView: NSView, @preconcurrency NSTextInputClient {
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

@@ -19,7 +19,7 @@ CodeEditorPlugin provides full support for Mac Catalyst applications, allowing y
 
 ## Platform Detection
 
-> Important: Always use `#if canImport()` instead of `#if os()` for platform detection. This ensures proper Catalyst compatibility.
+> Important: Always use `#if canImport()` instead of `#if os()` for platform detection. This ensures proper Catalyst compatibility. As of the 2025 refactoring, all `#if os()` patterns have been replaced throughout the codebase.
 
 ### Runtime Checks
 

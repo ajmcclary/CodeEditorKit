@@ -19,6 +19,9 @@ public typealias PlatformTableViewCell = NSTableCellView
 public typealias PlatformTableColumn = NSTableColumn
 public typealias PlatformTextField = NSTextField
 public typealias PlatformLabel = NSTextField
+public typealias PlatformLayoutManager = NSLayoutManager
+public typealias PlatformTextContainer = NSTextContainer
+public typealias PlatformTextStorage = NSTextStorage
 #else
 import UIKit
 public typealias PlatformColor = UIColor
@@ -38,6 +41,10 @@ public typealias PlatformTableView = UITableView
 public typealias PlatformTableViewCell = UITableViewCell
 public typealias PlatformTextField = UITextField
 public typealias PlatformLabel = UILabel
+// Note: UIKit uses NSLayoutManager from Foundation for text layout
+public typealias PlatformLayoutManager = NSLayoutManager
+public typealias PlatformTextContainer = NSTextContainer
+public typealias PlatformTextStorage = NSTextStorage
 #endif
 
 // Cross-platform color aliases
@@ -89,8 +96,14 @@ public enum PlatformColors {
     public static var tintColor: PlatformColor { UIColor.tintColor }
     public static var textBackgroundColor: PlatformColor { UIColor.systemBackground }
     public static var placeholderTextColor: PlatformColor { UIColor.placeholderText }
-    public static var selectedTextColor: PlatformColor { UIColor.label } // iOS doesn't have selectedTextColor, using label
-    public static var selectedTextBackgroundColor: PlatformColor { UIColor.systemBlue.withAlphaComponent(0.3) } // iOS doesn't have selectedTextBackgroundColor
+    public static var selectedTextColor: PlatformColor { 
+        UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+    }
+    public static var selectedTextBackgroundColor: PlatformColor { 
+        UIColor.tintColor.withAlphaComponent(0.3)
+    }
     
     // System colors
     public static var systemRed: PlatformColor { UIColor.systemRed }

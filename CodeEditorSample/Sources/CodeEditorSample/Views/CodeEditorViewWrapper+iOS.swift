@@ -31,6 +31,8 @@ struct IOSCodeEditorViewWrapper: View, CodeEditorViewWrapperProtocol {
     let configuration: EditorConfiguration
     @Binding var text: String
     let language: String
+    /// - Warning: `onTextViewReady` is not supported on iOS/Catalyst platforms
+    ///   due to SwiftUI component encapsulation. This parameter is ignored.
     let onTextViewReady: ((CodeEditorView) -> Void)?
 
     init(
@@ -52,7 +54,7 @@ struct IOSCodeEditorViewWrapper: View, CodeEditorViewWrapperProtocol {
             .environment(\.codeEditorConfiguration, configuration)
             .onAppear {
                 // Note: On iOS, we don't have direct access to the underlying text view
-                // through the SwiftUI component
+                // through the SwiftUI component, so onTextViewReady callback cannot be invoked
             }
     }
     

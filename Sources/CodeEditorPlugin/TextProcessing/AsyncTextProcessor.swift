@@ -265,12 +265,19 @@ actor AsyncTextProcessor {
 
 /// Processing task handle for cancellation
 public struct ProcessingTaskHandle: Sendable {
-    let id: UUID
-    weak var processor: AsyncTextProcessor?
+    private let id: UUID
+    private let cancellationHandler: @Sendable () async -> Void
+    
+    init(id: UUID, processor: AsyncTextProcessor) {
+        self.id = id
+        self.cancellationHandler = { [weak processor] in
+            await processor?.cancel(taskId: id)
+        }
+    }
     
     /// Cancel this task
     public func cancel() async {
-        await processor?.cancel(taskId: id)
+        await cancellationHandler()
     }
 }
 

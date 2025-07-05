@@ -6,7 +6,7 @@ import AppKit
 import UIKit
 #endif
 
-private let kLogger = Logger(subsystem: "com.codeeditor.syntaxhighlighting", category: "AsyncSyntaxHighlighter")
+private let kAsyncHighlightLogger = Logger(subsystem: "com.codeeditor.syntaxhighlighting", category: "AsyncSyntaxHighlighter")
 
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
@@ -252,13 +252,14 @@ public final class AsyncSyntaxHighlighter {
         #endif
         
         // Determine range to apply
-        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                return textView.string.count
-            #else
-                return textView.text?.count ?? 0
-            #endif
-        }())
+        let rangeToHighlight = visibleRange ?? NSRange(location: 0, length: textStorage.length)
+        
+        // Validate range
+        guard rangeToHighlight.location >= 0,
+              rangeToHighlight.location + rangeToHighlight.length <= textStorage.length else {
+            kLogger.warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
+            return
+        }
         
         // Update text storage efficiently with both TextKit1 and TextKit2 support
         textStorage.beginEditing()
@@ -648,7 +649,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         
         // Log slow operations
         if duration > 0.1 {
-            kLogger.debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration))s")
+            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration))s")
         }
     }
     

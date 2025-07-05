@@ -6,10 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Mac Catalyst:
 - **Swift 6 concurrency** with actor-based architecture
-- **Cross-platform abstraction layer** for native performance
+- **Enhanced cross-platform abstraction** using `#if canImport()` patterns
 - **17 programming languages** with syntax highlighting
 - **319 comprehensive tests** (284 main + 35 sample app)
-- **Zero SwiftLint violations** across all 231 files
+- **Zero SwiftLint violations** across all 270 files
 - **Feature-based architecture** (74% directory reduction)
 
 ## Essential Commands
@@ -160,22 +160,26 @@ textView.language = .python
 2. Add abstraction in `Platform/` if needed
 3. Test on all platforms
 
-## Recent Architecture Improvements
+## Recent Major Refactoring (2025)
 
-### Unified Wrapper System
-- Implemented `CodeEditorViewWrapperProtocol` for sample app
-- Platform-specific implementations: `MacOSCodeEditorViewWrapper`, `IOSCodeEditorViewWrapper`
-- Eliminated code duplication through protocol-based architecture
+### Enhanced Platform Abstraction
+- **Replaced all `#if os()` with `#if canImport()`** for proper Catalyst support
+- **Unified type system**: `PlatformColor`, `PlatformFont`, `PlatformView` throughout
+- **Runtime capability detection**: `PlatformCapabilities.shared` for feature availability
+- **Cross-platform coordinator**: Manages input handling across all platforms
 
-### Platform Abstraction Enhancements
-- Replaced direct UIColor/NSColor with `PlatformColors`
-- Enhanced concurrency safety with proper actor isolation
-- Fixed platform-specific build issues
+### CodeEditorSample Improvements
+- **Unified wrapper protocol**: `CodeEditorViewWrapperProtocol` with platform implementations
+- **Direct SwiftUI integration**: iOS/Catalyst now use `CodeEditor` component directly
+- **Fixed configuration flow**: All settings apply correctly across platforms
+- **Resolved double line numbers**: Proper gutter view management on macOS
 
-### Quality Achievements
-- **319 comprehensive tests** with 100% pass rate
-- **Zero build errors** and SwiftLint violations
-- **Enhanced cross-platform consistency**
+### Architecture Achievements
+- **74% directory reduction**: From 39 to 10 core feature directories
+- **270 total Swift files**: 229 plugin + 41 sample app (well organized)
+- **319 comprehensive tests**: 284 plugin + 35 sample app (100% passing)
+- **Zero SwiftLint violations**: Maintained across entire codebase
+- **Swift 6 concurrency compliance**: Full actor isolation and `@preconcurrency` usage
 
 ## Important Reminders
 

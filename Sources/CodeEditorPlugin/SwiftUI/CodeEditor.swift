@@ -638,8 +638,9 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         }
         
         deinit {
-            // Cleanup will happen automatically when the object is deallocated
-            // NotificationCenter removes observers automatically on dealloc
+            // Explicitly remove observers for clarity and safety
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+            observers.removeAll()
         }
         
         @MainActor func setup(container: CodeEditorContainerView) {
@@ -744,8 +745,9 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         }
         
         deinit {
-            // NotificationCenter automatically removes observers when they are deallocated
-            // Manual cleanup is not needed and causes concurrency issues
+            // Explicitly remove observers for clarity and safety
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+            observers.removeAll()
         }
         
         func setup(container: CodeEditorContainerView) {

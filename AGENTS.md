@@ -10,7 +10,7 @@ CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Ma
 - **Cross-Platform Excellence**: Sophisticated abstraction layer for native performance
 - **17 Languages Supported**: SwiftSyntax for Swift, regex for others
 - **319 Comprehensive Tests**: Production-quality coverage (284 core + 35 sample)
-- **Zero Technical Debt**: No SwiftLint violations, clean architecture
+- **Zero Technical Debt**: No SwiftLint violations across 270 files, clean architecture
 - **74% Directory Reduction**: Simplified from 39 to 10 directories
 
 ## Quick Reference Commands
@@ -40,11 +40,11 @@ Sources/CodeEditorPlugin/
 ├── SyntaxHighlighting/      # Language support
 ├── Layout/                  # UI components
 ├── SwiftUI/                 # SwiftUI integration
-├── Platform/                # Cross-platform abstractions
+├── Platform/                # Enhanced cross-platform abstractions
 ├── TextProcessing/          # Actor-based processing
 ├── Extensions/              # Type extensions (+Extensions suffix)
-├── Plugin/                  # Plugin architecture
-└── LSP/                     # Language Server Protocol
+├── LSP/                     # Language Server Protocol
+└── Features/                # Additional features (folding, search, etc.)
 ```
 
 ### Key Components
@@ -59,7 +59,9 @@ Sources/CodeEditorPlugin/
 
 **Platform Abstraction** (`Platform/`)
 - Unified types: PlatformColor, PlatformFont, PlatformView
-- Runtime capability detection
+- Enhanced with `#if canImport()` patterns (replaced all `#if os()`)
+- Runtime capability detection via PlatformCapabilities
+- CrossPlatformCoordinator for unified input handling
 - Zero-compromise native experience
 
 ## Code Patterns & Best Practices
@@ -155,12 +157,13 @@ textView.language = .python
 - **17 Languages**: Comprehensive syntax highlighting
 - **Unified Wrapper Architecture**: Protocol-based sample app wrappers
 
-### CodeEditorSample Improvements
+### Recent Major Refactoring (2025)
+- **Platform Abstraction Enhancement**: Replaced all `#if os()` with `#if canImport()`
 - **Modern UI Controls**: Platform-appropriate toggle switches
 - **Fixed Configuration**: Settings apply correctly across platforms
 - **Resolved Double Line Numbers**: Fixed gutter duplication
 - **Simplified Architecture**: Direct CodeEditor usage for iOS/Catalyst
-- **36 Files**: Streamlined architecture maintaining zero violations
+- **41 Files**: Well-organized sample app maintaining zero violations
 
 ## Advanced Features
 

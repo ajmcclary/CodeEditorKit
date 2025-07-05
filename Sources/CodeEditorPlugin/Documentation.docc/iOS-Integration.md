@@ -14,7 +14,7 @@ CodeEditorPlugin provides comprehensive iOS support with touch-optimized interac
 
 ### Using Platform Types
 
-Always use the platform abstraction types for cross-platform compatibility:
+Always use the platform abstraction types for cross-platform compatibility. As of the 2025 refactoring, all platform detection uses `#if canImport()` patterns:
 
 ```swift
 import CodeEditorPlugin
