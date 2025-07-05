@@ -79,8 +79,8 @@ extension CodeEditorView {
             updateLineHighlightFrame()
             updateAnnotationViews()
         } else {
-            // Dispatch to main thread if called from background
-            DispatchQueue.main.async { [weak self] in
+            // Use Swift concurrency to dispatch to main actor
+            Task { @MainActor [weak self] in
                 self?.layout()
             }
         }

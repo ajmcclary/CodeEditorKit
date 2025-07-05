@@ -463,14 +463,13 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         let pub = eventPublisher
         
         // Defer setup to avoid capturing self in init
-        DispatchQueue.main.async {
+        Task { @MainActor in
             let wrapper = HandlerWrapper()
             wrapper.handlerBox = box
             pub.subscribe(wrapper)
             
-            self.lock.lock()
+            // Safe to access directly since we're on MainActor
             self.handlerWrapper = wrapper
-            self.lock.unlock()
         }
     }
     
@@ -489,7 +488,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         
         if let wrapper {
             let pub = eventPublisher
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 pub.unsubscribe(wrapper)
             }
         }

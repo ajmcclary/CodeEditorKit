@@ -22,9 +22,16 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// The current configuration
     @Published var currentConfiguration: EditorConfiguration = .default
     
-    /// Callbacks
+    /// Callbacks (common across platforms)
     var onTextChange: ((String) -> Void)?
     var onSelectionChange: ((NSRange) -> Void)?
+    
+    /// Text binding for SwiftUI integration
+    var textBinding: Binding<String>?
+    
+    /// Additional callbacks for extended functionality
+    var onTextChangeCallback: ((String) -> Void)?
+    var onSelectionChangeCallback: ((NSRange) -> Void)?
     
     // MARK: - Update Management
     
@@ -74,11 +81,18 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         
         currentText = newText
         onTextChange?(newText)
+        
+        // Update SwiftUI binding if available
+        if let textBinding, textBinding.wrappedValue != newText {
+            textBinding.wrappedValue = newText
+            onTextChangeCallback?(newText)
+        }
     }
     
     /// Handle selection changes from the editor
     func handleSelectionChange(_ range: NSRange) {
         onSelectionChange?(range)
+        onSelectionChangeCallback?(range)
     }
     
     // MARK: - Notification Management
@@ -147,8 +161,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     }
     
     deinit {
-        // Must be done synchronously in deinit - cannot access MainActor properties
-        // The observers are cleaned up when the view disappears
+        // Cannot access MainActor isolated properties in deinit with Swift 6
+        // removeNotificationObservers() should be called explicitly when view disappears
+        // NotificationCenter automatically removes observers when object is deallocated
     }
     
     // MARK: - Common Update Logic
@@ -322,31 +337,11 @@ extension CodeEditorBaseCoordinator {
 /// macOS-specific coordinator for CodeEditor
 @MainActor
 final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
-    var textBinding: Binding<String>
-    var onTextChangeCallback: ((String) -> Void)?
-    var onSelectionChangeCallback: ((NSRange) -> Void)?
-    
     init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
+        super.init()
         self.textBinding = text
         self.onTextChangeCallback = onTextChange
         self.onSelectionChangeCallback = onSelectionChange
-        super.init()
-    }
-    
-    override func handleTextChange(_ newText: String) {
-        // Update binding if text changed
-        if textBinding.wrappedValue != newText {
-            textBinding.wrappedValue = newText
-            onTextChangeCallback?(newText)
-        }
-        
-        // Call base implementation
-        super.handleTextChange(newText)
-    }
-    
-    override func handleSelectionChange(_ range: NSRange) {
-        onSelectionChangeCallback?(range)
-        super.handleSelectionChange(range)
     }
 }
 
@@ -355,31 +350,11 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
 /// iOS-specific coordinator for CodeEditor
 @MainActor
 final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate {
-    var textBinding: Binding<String>
-    var onTextChangeCallback: ((String) -> Void)?
-    var onSelectionChangeCallback: ((NSRange) -> Void)?
-    
     init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
+        super.init()
         self.textBinding = text
         self.onTextChangeCallback = onTextChange
         self.onSelectionChangeCallback = onSelectionChange
-        super.init()
-    }
-    
-    override func handleTextChange(_ newText: String) {
-        // Update binding if text changed
-        if textBinding.wrappedValue != newText {
-            textBinding.wrappedValue = newText
-            onTextChangeCallback?(newText)
-        }
-        
-        // Call base implementation
-        super.handleTextChange(newText)
-    }
-    
-    override func handleSelectionChange(_ range: NSRange) {
-        onSelectionChangeCallback?(range)
-        super.handleSelectionChange(range)
     }
     
     func setupTextViewDelegate(_ textView: CodeEditorView) {

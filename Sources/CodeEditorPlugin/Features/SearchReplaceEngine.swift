@@ -362,7 +362,8 @@ public class SearchReplaceEngine: ObservableObject {
             range: range
         )
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
             textStorage.removeAttribute(
                 .backgroundColor,
                 range: range

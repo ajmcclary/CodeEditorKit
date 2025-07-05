@@ -67,7 +67,7 @@ extension CrossPlatformCoordinator {
                 self?.handleKeyboardWillShow(keyboardInfo: keyboardInfo, duration: duration)
             }
         }
-        notificationObservers.append(keyboardObserver)
+        addObserver(keyboardObserver)
         
         // Orientation change notifications
         let orientationObserver = NotificationCenter.default.addObserver(
@@ -79,7 +79,7 @@ extension CrossPlatformCoordinator {
                 self?.orientationDidChange()
             }
         }
-        notificationObservers.append(orientationObserver)
+        addObserver(orientationObserver)
     }
     
     func handleIOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {

@@ -173,6 +173,25 @@ let markdownConfig = EditorConfiguration.markdown
 let demoConfig = EditorConfiguration.presentation
 ```
 
+### Theme Integration
+
+Apply themes to your configuration:
+
+```swift
+// Use built-in themes
+config.display.theme = .xcode
+config.display.theme = .vsDark
+config.display.theme = .github
+config.display.theme = .solarizedDark
+config.display.theme = .minimal
+config.display.theme = .presentation
+
+// Themes automatically configure colors for:
+// - Background and text
+// - Syntax highlighting (keywords, strings, comments)
+// - UI elements (selection, gutter, line numbers)
+```
+
 ## Builder Pattern
 
 Create configurations using the builder pattern:
@@ -227,14 +246,58 @@ extension EditorConfiguration {
 
 ## Import/Export
 
-Save and load configurations:
+Save and load configurations as JSON:
 
 ```swift
-// Export to JSON
-let jsonData = try configuration.toJSON()
+// Export configuration to JSON string
+if let jsonString = appState.exportConfigurationAsJSON() {
+    // Save to file or share
+    try jsonString.write(to: url, atomically: true, encoding: .utf8)
+}
 
-// Import from JSON
-let imported = try EditorConfiguration.from(json: jsonData)
+// Import configuration from JSON string
+let jsonString = try String(contentsOf: url, encoding: .utf8)
+if appState.importConfiguration(from: jsonString) {
+    print("Configuration imported successfully")
+} else {
+    print("Invalid configuration format")
+}
+
+// Copy to clipboard (cross-platform)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+NSPasteboard.general.setString(jsonString, forType: .string)
+#else
+UIPasteboard.general.string = jsonString
+#endif
+```
+
+### Configuration Management
+
+The sample app demonstrates comprehensive configuration management:
+
+```swift
+// Search and filter configuration options
+struct UnifiedConfigurationView: View {
+    @State private var searchText = ""
+    
+    // Searchable sections with keywords
+    private var filteredSections: [SearchableSection] {
+        // Implementation filters by keywords like:
+        // "theme", "color", "font", "layout", "behavior"
+    }
+}
+
+// Platform-specific import/export
+// macOS: Uses NSOpenPanel/NSSavePanel
+// iOS: Uses share sheet and clipboard
+func shareConfiguration() {
+    #if canImport(UIKit)
+    let activityVC = UIActivityViewController(activityItems: [json], applicationActivities: nil)
+    // Present share sheet
+    #else
+    // Copy to clipboard on macOS
+    #endif
+}
 ```
 
 ## Best Practices

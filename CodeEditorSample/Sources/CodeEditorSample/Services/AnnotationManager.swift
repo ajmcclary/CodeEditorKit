@@ -361,7 +361,8 @@ class SampleAnnotationView: NSView {
     
     override func mouseExited(with event: NSEvent) {
         // Delay hiding to prevent flicker
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             guard let self = self,
                   let popover = self.popover,
                   popover.isShown else {
@@ -667,7 +668,8 @@ class SampleAnnotationView: UIView {
         }
         
         // Auto-dismiss after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak contentView] in
+        Task { @MainActor [weak contentView] in
+            try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
             UIView.animate(withDuration: 0.3, animations: {
                 contentView?.alpha = 0
             }, completion: { _ in

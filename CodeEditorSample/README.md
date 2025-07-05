@@ -3,7 +3,7 @@
 [![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-66-blue)](#quality-metrics)
+[![Files](https://img.shields.io/badge/files-37-blue)](#quality-metrics)
 
 **The definitive showcase and comprehensive reference implementation for CodeEditorPlugin.**
 
@@ -156,7 +156,7 @@ The CodeEditorSample has undergone comprehensive improvements following the majo
 - **iOS/iPadOS**: Simplified to use native SwiftUI CodeEditor component
 
 #### Code Quality Improvements
-- **Zero SwiftLint Violations**: Maintained across all 66 files (increased from proper wrapper architecture)
+- **Zero SwiftLint Violations**: Maintained across all 37 files
 - **Swift 6 Compliance**: Full compatibility with Swift 6 concurrency features
 - **Better Separation of Concerns**: Clear platform-specific code paths with proper conditional compilation
 
@@ -183,7 +183,7 @@ The app launches a complete code editing environment demonstrating all features 
 ### 🎊 Recent Achievements
 
 - ✅ **Perfect Test Suite**: All **35 tests passing** with comprehensive coverage
-- ✅ **Zero Code Quality Issues**: **0 SwiftLint violations** across all 66 files
+- ✅ **Zero Code Quality Issues**: **0 SwiftLint violations** across all 37 files
 - ✅ **Swift 6 Ready**: Full actor-based concurrency and strict compliance
 - ✅ **Production Performance**: Optimized builds and fast test execution
 - ✅ **Cross-Platform Excellence**: Verified on macOS, iOS, and Mac Catalyst
@@ -345,7 +345,7 @@ The test suite has been streamlined to focus on sample app specific functionalit
 
 ### Quality Metrics That Matter
 
-- **Zero SwiftLint Violations**: Not a single style issue across all 66 source files
+- **Zero SwiftLint Violations**: Not a single style issue across all 37 source files
 - **100% Test Pass Rate**: All 35 tests passing consistently in CI/CD
 - **Swift 6 Strict Concurrency**: Full compliance with actor isolation and Sendable requirements
 - **Enhanced Platform Abstraction**: Consolidated wrapper architecture leveraging improved CodeEditorPlugin abstractions

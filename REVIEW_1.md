@@ -2,64 +2,50 @@
 
 # Overall Health Summary
 
-The CodeEditorPlugin package and CodeEditorSample app present a well‑structured, feature‑based architecture with strong platform abstractions. All platform‑specific types are wrapped via `#if canImport(AppKit)` / `#if canImport(UIKit)` blocks. The plugin provides a broad API surface with actors for background work and a thorough PlatformCapabilities system. The sample app demonstrates the editor effectively across macOS, iOS, and Catalyst. Documentation is extensive and the codebase shows no SwiftLint violations.
+The repository presents a mature Swift‑6 codebase with an explicit cross‑platform architecture. Platform abstractions (PlatformColor, PlatformFont, PlatformView) are conditionally defined in PlatformImports.swift to map AppKit and UIKit types through `#if canImport(...)` checks. Platform-aware adjustments (e.g., default font size and spacing) are handled via CrossPlatformCoordinator and use the same conditional style. The sample app includes a toggle style that adapts to iOS and macOS using the same pattern.
+
+Concurrency relies heavily on actors, such as AsyncOperationManager for scheduling work and SinglePhaseRangeValidator for thread‑safe text validation. The sample's state model demonstrates environment-based configuration updates and safe binding propagation.
+
+Documentation and previous reviews indicate zero SwiftLint violations, comprehensive tests, and a consistent architecture. Conditional compilation uses `#if canImport` rather than `#if os`, and platform-specific logic is often isolated in dedicated files.
 
 ## Critical Issues
 
-No crash‑level or build‑blocking issues were discovered during static inspection. The cross‑platform wrappers compile conditionally and the actors appear correctly isolated.
+No crash-level defects or platform-breaking problems were observed during static inspection. The code compiles conditionally and actors appear properly isolated.
 
 ## Improvement Suggestions
 
-### Platform Abstraction
+### Platform Abstraction Layer
 
-**Duplicate Color Definitions**
-PlatformColors repeats many similar properties for AppKit and UIKit. Consider extracting shared logic or using helper methods to minimize duplication and ensure consistency.
-
-**Async Dispatch for Catalyst**
-CodeEditorView+PlatformSpecific.swift uses `DispatchQueue.main.asyncAfter` to work around Mac Catalyst view hierarchy timing. Using a Task on the MainActor would integrate better with Swift 6 concurrency.
+- **Observer cleanup** – CrossPlatformCoordinator relies on NotificationCenter's automatic cleanup and only removes observers when new ones are registered. Explicitly calling `removeObservers()` in deinit would better guarantee release of tokens.
+- **Toggle style duplication** – The sample's PlatformToggleStyle uses identical branches for iOS and Mac Catalyst. These can be consolidated into a single `#if canImport(UIKit)` clause to reduce duplication.
 
 ### Swift 6 Concurrency
 
-**Explicit MainActor where needed**
-Several asynchronous callbacks rely on DispatchQueue to return to the main thread (e.g., in AsyncOperationManager and other utilities). Marking APIs with `@MainActor` and using `Task { @MainActor in … }` would clarify thread expectations.
-
-**Consider Actor-based Caches**
-RangeUtilities notes that a cache was removed for concurrency reasons. Reintroducing it as an actor (or using `@MainActor` isolated storage) would improve performance without sacrificing thread safety.
+- **Manual dispatching** – Several sections (e.g., annotation scanning) still call `DispatchQueue.main.asyncAfter` rather than `Task { @MainActor in ... }`. Adopting Swift concurrency primitives would keep thread guarantees consistent.
 
 ### Conditional Compilation and Platform Logic
 
-**Large #if Blocks in CrossPlatformCoordinator**
-The coordinator's main file contains long conditional branches for input handling. Moving each platform's implementation to dedicated extensions (as partially done) would further isolate platform code.
+- **Large #if blocks** – Files such as CrossPlatformCoordinator.swift contain substantial conditional sections. Additional extraction of macOS vs. iOS implementations into separate extension files would further simplify the core file.
 
 ### SwiftUI Integration
 
-**macOS Wrapper Complexity**
-MacOSCodeEditorViewWrapper maintains a custom NSViewRepresentable with many configuration steps. Review whether some setup (scroll view, annotation manager) can be shared with the iOS wrapper through a common helper to reduce duplication.
+- **Binding boilerplate** – BehaviorConfigurationSection contains a TODO to migrate configuration bindings to `appState.updateConfiguration()` for consistency. Completing this work reduces duplicated object‑change notifications.
+- **Coordinator cleanup** – The macOS CodeEditorViewWrapper manages annotation scanning and delegate updates manually. Some of this setup could be shared with the iOS wrapper through helper functions to minimize platform‑specific duplication.
 
-**Optional Callback Unused on iOS**
-In the iOS wrapper the onTextViewReady parameter is ignored. Document this limitation clearly in API comments or consider providing a limited callback through introspection to avoid confusion.
+### Architectural Consistency and Maintainability
 
-### Architectural Consistency
-
-**PlatformCapabilities Expansion**
-PlatformCapabilities is comprehensive but quite large. Breaking it into focused extensions (e.g., Rendering, Input, Device) would keep the file maintainable without altering API surface.
-
-**DispatchQueue Usage in Core**
-Several files perform UI updates with `DispatchQueue.main.async`. Replace these with Task/await when possible for cleaner concurrency semantics.
-
-### CodeEditorSample Best Practices
-
-**Menu Notification Approach**
-The sample app uses NotificationCenter for menu actions (e.g., toggle line numbers). A more SwiftUI‑centric approach could use environment objects or dedicated binding values for clearer data flow.
+- **Observer helper methods** – Keyboard, scroll, and notification observers could be modularized into small helper types to keep CrossPlatformCoordinator focused.
+- **Documentation updates** – Several comments still reference future work or partially implemented features (e.g., "TODO" comments in configuration views). Removing or resolving these notes will present a cleaner production-ready codebase.
 
 ## Action Plan
 
-1. Refactor PlatformColors for shared logic to eliminate duplication.
-2. Replace `DispatchQueue.main.async*` patterns with `@MainActor` tasks across the plugin.
-3. Reintroduce a concurrency‑safe cache in RangeUtilities (actor‑based).
-4. Split PlatformCapabilities into smaller extensions (PlatformCapabilities+Rendering.swift, etc.).
-5. Review the macOS wrapper to extract shared setup utilities and clarify the unsupported callback on iOS.
-6. Consider moving remaining `#if` logic in CrossPlatformCoordinator into dedicated platform files to keep the core coordinator lean.
-7. Update sample app menu handling to use SwiftUI bindings or environment objects instead of notifications.
+1. Ensure CrossPlatformCoordinator calls `removeObservers()` during deinitialization for guaranteed cleanup.
+2. Consolidate PlatformToggleStyle branches for iOS and Mac Catalyst.
+3. Replace remaining `DispatchQueue.main.async*` calls with Task‑based concurrency on `@MainActor`.
+4. Continue extracting platform-specific implementations from large `#if` blocks into dedicated files or extensions.
+5. Finish migrating configuration bindings in the sample app to `updateConfiguration()` and remove TODO comments.
+6. Refactor shared setup code in CodeEditorViewWrapper to reduce macOS/iOS divergence.
+7. Modularize observer setup/teardown helpers within CrossPlatformCoordinator to simplify maintenance.
+8. Review comments and documentation to remove outdated TODOs and clarify current behavior.
 
-These steps would further solidify the cross‑platform architecture, modernize concurrency handling, and keep the code maintainable.
+Executing these steps will further strengthen the cross-platform architecture, improve concurrency safety, and polish the sample application as a reference implementation.

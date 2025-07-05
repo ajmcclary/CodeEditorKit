@@ -130,7 +130,8 @@ public class GutterView: PlatformView, GutterViewProtocol {
         }
         
         // Auto-pause after a short time to save battery
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
             // Only pause if we haven't moved recently
             if self?.lastContentOffset == scrollView.contentOffset {
                 self?.displayLink?.isPaused = true

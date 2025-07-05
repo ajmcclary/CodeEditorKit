@@ -90,6 +90,49 @@ extension CodeEditorContainerView {
             kUIKitContainerLogger.debug("⚠️ No leading constraint found for text view")
         }
     }
+    
+    /// Layout views using UIKit-specific logic  
+    func layoutViewsUIKit() {
+        // Calculate layout dimensions
+        let gutterWidth = configuration.layout.gutterWidth
+        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        
+        // Position content view to fill the container
+        contentView.frame = bounds
+        
+        // Position gutter on the left - fixed position
+        gutterView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: gutterWidth,
+            height: bounds.height
+        )
+        
+        // Position minimap on the right - fixed position
+        if configuration.display.showMinimap {
+            minimapView.frame = CGRect(
+                x: bounds.width - minimapWidth,
+                y: 0,
+                width: minimapWidth,
+                height: bounds.height
+            )
+            minimapView.isHidden = false
+        } else {
+            minimapView.isHidden = true
+        }
+        
+        // Position text view within content view to take remaining space between gutter and minimap
+        let textViewWidth = bounds.width - minimapWidth
+        textView.frame = CGRect(
+            x: 0,  // Text view starts at 0, but has inset for gutter
+            y: 0,
+            width: textViewWidth,
+            height: bounds.height
+        )
+        
+        // Ensure content insets are maintained
+        updateContentInsets()
+    }
 }
 
 // MARK: - UITextViewDelegate

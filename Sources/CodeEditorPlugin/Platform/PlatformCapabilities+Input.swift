@@ -1,6 +1,9 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
+#if canImport(GameController)
+import GameController
+#endif
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
@@ -302,9 +305,22 @@ extension PlatformCapabilities {
     /// Check if external keyboard is connected (iOS only)
     private func isExternalKeyboardConnected() -> Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        // This is a simplified check - in practice, you might want to use
-        // more sophisticated detection methods
-        return true // Placeholder implementation
+        // Use GCKeyboard to detect hardware keyboards (iOS 14+)
+        #if canImport(GameController)
+        if #available(iOS 14.0, *) {
+            return GCKeyboard.coalesced != nil
+        }
+        #endif
+        
+        // Fallback: Check for command key availability (hardware keyboards support Command key)
+        if let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow }) {
+            return window.canBecomeFirstResponder && UIDevice.current.userInterfaceIdiom == .pad
+        }
+        
+        return false
         #else
         return false
         #endif
@@ -313,9 +329,21 @@ extension PlatformCapabilities {
     /// Check if pointing device is connected (iOS only)
     private func isPointingDeviceConnected() -> Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        // This is a simplified check - in practice, you might want to use
-        // more sophisticated detection methods
-        return supportsTrackpad
+        // Check for trackpad/mouse support on iPadOS 13.4+
+        if #available(iOS 13.4, *) {
+            // Check if any scene supports indirect input (trackpad/mouse)
+            return UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .contains { scene in
+                    scene.traitCollection.userInterfaceIdiom == .pad &&
+                    scene.windows.contains { window in
+                        window.traitCollection.primaryInteractionSource == .indirect
+                    }
+                }
+        }
+        
+        // For older iOS versions, assume no pointing device
+        return false
         #else
         return false
         #endif

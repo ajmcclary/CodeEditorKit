@@ -221,7 +221,85 @@ extension CodeEditorContainerView {
             scrollView.verticalRulerView = nil
         }
     }
+    
+    /// Layout views using AppKit-specific logic
+    func layoutViewsAppKit() {
+        // Calculate layout dimensions
+        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        
+        // Position scroll view to fill entire width (ruler view is inside the scroll view)
+        scrollView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: bounds.width - minimapWidth,
+            height: bounds.height
+        )
+        
+        // Position minimap on the right
+        if configuration.display.showMinimap {
+            minimapView.frame = CGRect(
+                x: bounds.width - minimapWidth,
+                y: 0,
+                width: minimapWidth,
+                height: bounds.height
+            )
+            minimapView.isHidden = false
+            
+            // When minimap is shown, we need to constrain the text view
+            if !configuration.layout.wrapLines {
+                // Force the scroll view to update its content view
+                scrollView.contentView.frame = scrollView.bounds
+                
+                // Get the actual content width (scroll view width minus ruler if present)
+                let contentWidth = scrollView.contentView.bounds.width
+                
+                // Remove width from autoresizing mask so text view doesn't expand beyond scroll view
+                textView.autoresizingMask = [.height]
+                
+                // Text view should not be horizontally resizable when minimap is shown
+                textView.isHorizontallyResizable = false
+                
+                // Set a fixed frame for the text view that matches the content width
+                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
+                
+                // Set text container to match the content width minus gutters
+                let textWidth = contentWidth - configuration.layout.gutterWidth - configuration.layout.lineNumberPadding
+                textView.textContainer?.containerSize = NSSize(
+                    width: textWidth,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+                
+                // Ensure the text container tracks the text view width
+                textView.textContainer?.widthTracksTextView = true
+                
+                // Force layout update
+                textView.needsDisplay = true
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+            }
+        } else {
+            minimapView.isHidden = true
+            
+            // Restore normal behavior when minimap is hidden
+            if !configuration.layout.wrapLines {
+                // Restore autoresizing mask
+                textView.autoresizingMask = [.width, .height]
+                
+                // Restore horizontal resizability
+                textView.isHorizontallyResizable = true
+                
+                // Restore infinite width
+                textView.textContainer?.containerSize = NSSize(
+                    width: CGFloat.greatestFiniteMagnitude,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+                
+                // Text container should not track width when not wrapping
+                textView.textContainer?.widthTracksTextView = false
+            }
+        }
+    }
 }
+
 // MARK: - Folding support for macOS
 extension LineNumberRulerView {
     /// Draw folding control for a line

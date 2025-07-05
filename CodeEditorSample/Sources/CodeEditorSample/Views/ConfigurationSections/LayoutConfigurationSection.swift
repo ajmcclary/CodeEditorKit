@@ -12,10 +12,9 @@ struct LayoutConfigurationSection: View {
             Toggle("Wrap Lines", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.wrapLines },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.layout.wrapLines = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -23,10 +22,9 @@ struct LayoutConfigurationSection: View {
             Toggle("Insert Spaces for Tabs", isOn: Binding(
                 get: { appState.coordinator.configuration.layout.insertSpacesForTabs },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.layout.insertSpacesForTabs = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -48,10 +46,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { Double(appState.coordinator.configuration.layout.tabWidth) },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.tabWidth = Int(newValue)
+                            appState.updateConfiguration { config in
+                                config.layout.tabWidth = Int(newValue.clamped(to: 1...8))
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 1...8,
@@ -75,10 +72,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.lineSpacing },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.lineSpacing = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.lineSpacing = newValue.clamped(to: 0.8...3.0)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 0.8...3.0,
@@ -102,10 +98,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.gutterWidth },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.gutterWidth = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.gutterWidth = newValue.clamped(to: 20...100)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 30...100,
@@ -129,10 +124,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.lineNumberPadding },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.lineNumberPadding = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.lineNumberPadding = newValue.clamped(to: 4...20)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 4...20,
@@ -156,10 +150,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.annotationBadgeSize },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.annotationBadgeSize = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.annotationBadgeSize = newValue.clamped(to: 8...24)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 8...24,
@@ -183,10 +176,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.annotationBadgePadding },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.annotationBadgePadding = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.annotationBadgePadding = newValue.clamped(to: 2...10)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 2...12,
@@ -210,10 +202,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.foldingControlSize },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.foldingControlSize = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.foldingControlSize = newValue.clamped(to: 8...20)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 8...20,
@@ -243,10 +234,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.foldingControlPadding },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.foldingControlPadding = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.foldingControlPadding = newValue.clamped(to: 2...10)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 1...8,
@@ -276,10 +266,9 @@ struct LayoutConfigurationSection: View {
                     value: Binding(
                         get: { appState.coordinator.configuration.layout.minimapWidth },
                         set: { newValue in
-                            appState.coordinator.update { config in
-                                config.layout.minimapWidth = newValue
+                            appState.updateConfiguration { config in
+                                config.layout.minimapWidth = newValue.clamped(to: 50...200)
                             }
-                            appState.objectWillChange.send()
                         }
                     ),
                     in: 80...200,
@@ -360,5 +349,13 @@ struct LayoutConfigurationSection: View {
         case .xxxLarge: return 20
         default: return 13
         }
+    }
+}
+
+// MARK: - Comparable Extension for Validation
+
+private extension Comparable {
+    func clamped(to limits: ClosedRange<Self>) -> Self {
+        return min(max(self, limits.lowerBound), limits.upperBound)
     }
 }

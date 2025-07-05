@@ -25,7 +25,7 @@ extension CrossPlatformCoordinator {
         ) { [weak self] _ in
             self?.logger.debug("Application activated")
         }
-        notificationObservers.append(workspaceObserver)
+        addObserver(workspaceObserver)
     }
     
     func handleMacOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {

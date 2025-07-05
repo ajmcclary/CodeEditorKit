@@ -103,26 +103,26 @@ class ViewController: UIViewController {
 
 ## Quick Configuration
 
-Use the builder pattern for easy configuration:
+Use configuration presets for common scenarios:
 
 ```swift
-// Quick configurations for common scenarios
-let swiftConfig = EditorConfigurationBuilder.swift()
-let webConfig = EditorConfigurationBuilder.web()
-let readOnlyConfig = EditorConfigurationBuilder.readOnly()
+// Start with built-in presets
+var config = EditorConfiguration.default
+config.display.showLineNumbers = true
 
-// Custom configuration
-let customConfig = EditorConfigurationBuilder()
-    .fontSize(16)
-    .theme(.dark)
-    .language(.python)
-    .tabWidth(4)
-    .enableCodeCompletion(true)
-    .wrapLines(false)
-    .build()
+// Or use specialized presets
+let readOnlyConfig = EditorConfiguration.readOnly
+let minimalConfig = EditorConfiguration.minimal
+let presentationConfig = EditorConfiguration.presentation
+
+// Apply configuration changes
+config.display.fontSize = 16
+config.layout.tabWidth = 4
+config.behavior.enableCodeCompletion = true
+config.layout.wrapLines = false
 
 // Apply to editor
-editor.configuration = customConfig
+config.apply(to: editor)
 ```
 
 ## Key Features

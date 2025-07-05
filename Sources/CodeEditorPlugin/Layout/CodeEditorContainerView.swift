@@ -323,8 +323,8 @@ public final class CodeEditorContainerView: PlatformView {
             super.layout()
             layoutViews()
         } else {
-            // Dispatch to main thread if called from background
-            DispatchQueue.main.async { [weak self] in
+            // Use Swift concurrency to dispatch to main actor
+            Task { @MainActor [weak self] in
                 self?.layout()
             }
         }
@@ -337,121 +337,11 @@ public final class CodeEditorContainerView: PlatformView {
     #endif
     
     private func layoutViews() {
-        // Calculate layout dimensions
-        let gutterWidth = configuration.layout.gutterWidth
-        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
-        
+        // Delegate to platform-specific implementations
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS layout
-        
-        // Position scroll view to fill entire width (ruler view is inside the scroll view)
-        scrollView.frame = CGRect(
-            x: 0,
-            y: 0,
-            width: bounds.width - minimapWidth,
-            height: bounds.height
-        )
-        
-        // Position minimap on the right
-        if configuration.display.showMinimap {
-            minimapView.frame = CGRect(
-                x: bounds.width - minimapWidth,
-                y: 0,
-                width: minimapWidth,
-                height: bounds.height
-            )
-            minimapView.isHidden = false
-            
-            // When minimap is shown, we need to constrain the text view
-            if !configuration.layout.wrapLines {
-                // Force the scroll view to update its content view
-                scrollView.contentView.frame = scrollView.bounds
-                
-                // Get the actual content width (scroll view width minus ruler if present)
-                let contentWidth = scrollView.contentView.bounds.width
-                
-                // Remove width from autoresizing mask so text view doesn't expand beyond scroll view
-                textView.autoresizingMask = [.height]
-                
-                // Text view should not be horizontally resizable when minimap is shown
-                textView.isHorizontallyResizable = false
-                
-                // Set a fixed frame for the text view that matches the content width
-                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
-                
-                // Set text container to match the content width minus gutters
-                let textWidth = contentWidth - configuration.layout.gutterWidth - configuration.layout.lineNumberPadding
-                textView.textContainer?.containerSize = NSSize(
-                    width: textWidth,
-                    height: CGFloat.greatestFiniteMagnitude
-                )
-                
-                // Ensure the text container tracks the text view width
-                textView.textContainer?.widthTracksTextView = true
-                
-                // Force layout update
-                textView.needsDisplay = true
-                scrollView.reflectScrolledClipView(scrollView.contentView)
-            }
-        } else {
-            minimapView.isHidden = true
-            
-            // Restore normal behavior when minimap is hidden
-            if !configuration.layout.wrapLines {
-                // Restore autoresizing mask
-                textView.autoresizingMask = [.width, .height]
-                
-                // Restore horizontal resizability
-                textView.isHorizontallyResizable = true
-                
-                // Restore infinite width
-                textView.textContainer?.containerSize = NSSize(
-                    width: CGFloat.greatestFiniteMagnitude,
-                    height: CGFloat.greatestFiniteMagnitude
-                )
-                
-                // Text container should not track width when not wrapping
-                textView.textContainer?.widthTracksTextView = false
-            }
-        }
+        layoutViewsAppKit()
         #else
-        // iOS layout
-        
-        // Position content view to fill the container
-        contentView.frame = bounds
-        
-        // Position gutter on the left - fixed position
-        gutterView.frame = CGRect(
-            x: 0,
-            y: 0,
-            width: gutterWidth,
-            height: bounds.height
-        )
-        
-        // Position minimap on the right - fixed position
-        if configuration.display.showMinimap {
-            minimapView.frame = CGRect(
-                x: bounds.width - minimapWidth,
-                y: 0,
-                width: minimapWidth,
-                height: bounds.height
-            )
-            minimapView.isHidden = false
-        } else {
-            minimapView.isHidden = true
-        }
-        
-        // Position text view within content view to take remaining space between gutter and minimap
-        let textViewWidth = bounds.width - minimapWidth
-        textView.frame = CGRect(
-            x: 0,  // Text view starts at 0, but has inset for gutter
-            y: 0,
-            width: textViewWidth,
-            height: bounds.height
-        )
-        
-        // Ensure content insets are maintained
-        updateContentInsets()
+        layoutViewsUIKit()
         #endif
         
         // Force gutter to update when layout changes

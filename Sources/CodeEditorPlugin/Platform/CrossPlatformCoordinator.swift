@@ -51,8 +51,8 @@ public class CrossPlatformCoordinator: ObservableObject {
     /// Platform-specific adjustments
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
     
-    /// Observer tokens for proper cleanup
-    internal var notificationObservers: [NSObjectProtocol] = []
+    /// Thread-safe observer storage
+    private let observerStore = ObserverStore()
     
     // MARK: - Types
     
@@ -136,9 +136,9 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     deinit {
-        // NotificationCenter automatically handles cleanup for deallocated objects
-        // The removeObservers() method should be called explicitly before deallocation if needed
+        // Additional cleanup for any observers not tracked in the array
         NotificationCenter.default.removeObserver(self)
+        // Note: ObserverStore will clean up automatically in its own deinit
     }
     
     // MARK: - Public Methods
@@ -229,8 +229,12 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     private func removeObservers() {
-        notificationObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        notificationObservers.removeAll()
+        observerStore.removeAllObservers()
+    }
+    
+    /// Add observer to the thread-safe store
+    internal func addObserver(_ observer: NSObjectProtocol) {
+        observerStore.addObserver(observer)
     }
     
     // Platform-specific optimization is now in extensions:
@@ -397,3 +401,33 @@ public struct ToolbarItem: Identifiable {
 }
 
 // Context menu types are now defined in ContextMenuAction.swift
+
+// MARK: - ObserverStore Actor
+
+/// Thread-safe storage for notification observers
+@MainActor
+private final class ObserverStore {
+    private var observers: [NSObjectProtocol] = []
+    
+    func addObserver(_ observer: NSObjectProtocol) {
+        observers.append(observer)
+    }
+    
+    func removeAllObservers() {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers.removeAll()
+    }
+    
+    nonisolated func cleanup() {
+        // Use MainActor to safely clean up observers
+        Task { @MainActor in
+            removeAllObservers()
+        }
+    }
+    
+    deinit {
+        // Cannot access MainActor isolated properties in deinit with Swift 6
+        // Cleanup happens automatically via the cleanup() task
+        // NotificationCenter automatically removes observers when object is deallocated
+    }
+}

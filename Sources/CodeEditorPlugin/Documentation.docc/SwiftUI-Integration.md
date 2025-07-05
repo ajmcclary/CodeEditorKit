@@ -51,34 +51,50 @@ struct MyEditor: View {
 }
 ```
 
-### Configuration Toolbar
+### Configuration Interface
 
-Create a toolbar to control editor settings:
+The sample app provides a comprehensive configuration interface:
 
 ```swift
-struct EditorWithToolbar: View {
-    @State private var code = ""
-    @State private var configuration = EditorConfiguration()
+struct UnifiedConfigurationView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var searchText = ""
+    
+    var body: some View {
+        ScrollView {
+            VStack {
+                // Search bar for filtering options
+                TextField("Search settings...", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                // Configuration sections
+                ForEach(filteredSections, id: \.id) { section in
+                    ConfigurationSection(title: section.title) {
+                        section.content()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Theme selection with preview
+struct ThemeConfigurationSection: View {
+    @EnvironmentObject var appState: AppState
+    @State private var selectedTheme: ColorTheme = .xcode
     
     var body: some View {
         VStack {
-            // Toolbar
-            HStack {
-                Toggle("Line Numbers", isOn: $configuration.display.showLineNumbers)
-                Toggle("Minimap", isOn: $configuration.display.showMinimap)
-                
-                Picker("Theme", selection: $configuration.display.theme) {
-                    Text("Xcode").tag(Theme.xcode)
-                    Text("VS Dark").tag(Theme.vsDark)
-                    Text("GitHub").tag(Theme.github)
+            ForEach(ColorTheme.allCases, id: \.self) { theme in
+                ThemeRow(theme: theme, isSelected: selectedTheme == theme) {
+                    selectedTheme = theme
+                    applyTheme(theme)
                 }
             }
-            .padding()
             
-            // Editor
-            CodeEditor(text: $code)
-                .codeLanguage(.swift)
-                .environment(\.codeEditorConfiguration, configuration)
+            // Live preview of theme
+            ThemePreview(theme: selectedTheme)
+                .frame(height: 120)
         }
     }
 }
@@ -190,9 +206,13 @@ CodeEditor(text: $code)
 
 1. **Use @State Wisely**: Keep code text in @State for responsiveness
 2. **Environment Configuration**: Always use environment for configuration
-3. **Lazy Loading**: For large files, load content asynchronously
-4. **Memory Management**: Use weak references in closures
-5. **Platform Testing**: Test on all target platforms
+3. **Consistent Updates**: Use helper methods like `appState.updateConfiguration()` for consistent state management
+4. **Search and Discovery**: Implement searchable configuration interfaces with keywords
+5. **Input Validation**: Use bounds checking for numeric inputs (e.g., `.clamped(to: 1...8)`)
+6. **Platform-Specific UI**: Adapt interface elements to each platform's conventions
+7. **Lazy Loading**: For large files, load content asynchronously
+8. **Memory Management**: Use weak references in closures
+9. **Platform Testing**: Test on all target platforms
 
 ## Advanced Patterns
 

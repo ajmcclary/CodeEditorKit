@@ -1,8 +1,8 @@
 import CodeEditorPlugin
 import SwiftUI
 
-// TODO: Update remaining configuration bindings to use appState.updateConfiguration() helper method
-// This reduces code duplication and ensures consistent objectWillChange.send() calls
+/// Behavior configuration section for the unified configuration view.
+/// Uses consistent `appState.updateConfiguration()` helper for all configuration updates.
 
 /// Behavior configuration section for the unified configuration view.
 @available(macOS 13.0, iOS 16.0, *)
@@ -45,10 +45,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Spell Checking", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isContinuousSpellCheckingEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isContinuousSpellCheckingEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -56,10 +55,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Smart Quotes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticQuoteSubstitutionEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isAutomaticQuoteSubstitutionEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -67,10 +65,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Auto Close Brackets", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoCloseBrackets },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.autoCloseBrackets = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -78,10 +75,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Auto Close Quotes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoCloseQuotes },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.autoCloseQuotes = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -89,10 +85,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Is Selectable", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isSelectable },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isSelectable = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -100,10 +95,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Grammar Checking", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isGrammarCheckingEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isGrammarCheckingEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -111,10 +105,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Smart Dashes", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticDashSubstitutionEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isAutomaticDashSubstitutionEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -122,10 +115,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Text Replacement", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticTextReplacementEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isAutomaticTextReplacementEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -133,10 +125,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Spell Correction", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticSpellingCorrectionEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isAutomaticSpellingCorrectionEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -144,10 +135,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Text Completion", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isAutomaticTextCompletionEnabled },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isAutomaticTextCompletionEnabled = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -155,10 +145,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Auto Scroll to Cursor", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoScrollToCursor },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.autoScrollToCursor = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
