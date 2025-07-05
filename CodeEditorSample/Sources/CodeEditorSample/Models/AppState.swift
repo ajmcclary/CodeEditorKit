@@ -317,4 +317,30 @@ class AppState: ObservableObject {
         coordinator.reset()
         selectedPreset = .fullFeatured
     }
+    
+    /// Helper method for updating configuration and triggering UI updates.
+    ///
+    /// This method consolidates the common pattern of updating configuration
+    /// through the coordinator and notifying SwiftUI of the change.
+    ///
+    /// - Parameter updateBlock: A closure that modifies the configuration.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// appState.updateConfiguration { config in
+    ///     config.display.showLineNumbers = true
+    ///     config.display.fontSize = 16
+    /// }
+    /// ```
+    ///
+    /// ## Benefits
+    ///
+    /// - Ensures consistent update pattern across the app
+    /// - Prevents forgetting to call `objectWillChange.send()`
+    /// - Reduces code duplication in configuration sections
+    func updateConfiguration(_ updateBlock: @escaping (inout EditorConfiguration) -> Void) {
+        coordinator.update(updateBlock)
+        objectWillChange.send()
+    }
 }

@@ -106,7 +106,8 @@ struct PerformanceIndicator: View {
     }
 
     private func updatePerformanceMetrics() {
-        // Get memory usage
+        #if canImport(Darwin) && !targetEnvironment(simulator)
+        // Get memory usage using Mach APIs (available on real devices)
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
 
@@ -124,7 +125,13 @@ struct PerformanceIndicator: View {
         if result == KERN_SUCCESS {
             let usedMemoryMB = Double(info.resident_size) / 1024.0 / 1024.0
             memoryUsage = String(format: "%.0f MB", usedMemoryMB)
+        } else {
+            memoryUsage = "N/A"
         }
+        #else
+        // Fallback for platforms without Mach APIs
+        memoryUsage = "N/A"
+        #endif
 
         // Simplified CPU usage (this is just for demonstration)
         cpuUsage = "~1%"

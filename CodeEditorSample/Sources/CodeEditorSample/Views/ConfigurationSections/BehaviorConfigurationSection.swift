@@ -1,6 +1,9 @@
 import CodeEditorPlugin
 import SwiftUI
 
+// TODO: Update remaining configuration bindings to use appState.updateConfiguration() helper method
+// This reduces code duplication and ensures consistent objectWillChange.send() calls
+
 /// Behavior configuration section for the unified configuration view.
 @available(macOS 13.0, iOS 16.0, *)
 struct BehaviorConfigurationSection: View {
@@ -12,10 +15,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Enable Editing", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.isEditable },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.isEditable = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -23,10 +25,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Auto Indent", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.autoIndent },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.autoIndent = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)
@@ -34,10 +35,9 @@ struct BehaviorConfigurationSection: View {
             Toggle("Enable Code Completion", isOn: Binding(
                 get: { appState.coordinator.configuration.behavior.enableCodeCompletion },
                 set: { newValue in
-                    appState.coordinator.update { config in
+                    appState.updateConfiguration { config in
                         config.behavior.enableCodeCompletion = newValue
                     }
-                    appState.objectWillChange.send()
                 }
             ))
             .toggleStyle(.platform)

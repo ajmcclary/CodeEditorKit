@@ -5,7 +5,6 @@ import AppKit
 import UIKit
 #endif
 import CodeEditorPlugin
-import Combine
 import SwiftUI
 
 /// Coordinator for managing the editor view lifecycle and configuration updates.
@@ -77,7 +76,6 @@ struct SampleCodeEditorView: View {
     // Force view updates when configuration changes
     @State private var configurationHash: Int = 0
     @State private var viewID = UUID()
-    @State private var cancellables = Set<AnyCancellable>()
 
     var body: some View {
         ZStack {

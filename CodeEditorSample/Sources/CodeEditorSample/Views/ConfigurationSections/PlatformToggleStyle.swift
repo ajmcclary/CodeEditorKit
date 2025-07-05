@@ -3,10 +3,8 @@ import SwiftUI
 /// Platform-specific toggle style that provides consistent styling across macOS, iOS, and Mac Catalyst
 struct PlatformToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
-        #if targetEnvironment(macCatalyst)
-        Toggle(configuration)
-            .toggleStyle(SwitchToggleStyle(tint: .blue))
-        #elseif canImport(UIKit)
+        #if canImport(UIKit)
+        // iOS and Mac Catalyst use the same switch style
         Toggle(configuration)
             .toggleStyle(SwitchToggleStyle(tint: .blue))
         #else

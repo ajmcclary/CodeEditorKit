@@ -57,30 +57,61 @@ struct UnifiedContentView: View {
     @Environment(\.sizeCategory) private var sizeCategory
     
     var body: some View {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if !isIPad() {
-            // iPhone: Use NavigationStack
-            NavigationStack {
-                editorView
-                    .environmentObject(appState)
-                    .navigationTitle("CodeEditor")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            NavigationLink(destination: UnifiedConfigurationView().environmentObject(appState)) {
-                                Image(systemName: "gear")
-                            }
+        Group {
+            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            if !isIPad() {
+                iPhoneLayout
+            } else {
+                iPadLayout
+            }
+            #else
+            desktopLayout
+            #endif
+        }
+    }
+    
+    // MARK: - Platform-Specific Layouts
+    
+    @ViewBuilder
+    private var iPhoneLayout: some View {
+        NavigationStack {
+            editorView
+                .environmentObject(appState)
+                .navigationTitle("CodeEditor")
+                #if canImport(UIKit)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .toolbar {
+                    ToolbarItem(placement: {
+                        #if canImport(UIKit)
+                        return .navigationBarLeading
+                        #else
+                        return .automatic
+                        #endif
+                    }()) {
+                        NavigationLink(destination: UnifiedConfigurationView().environmentObject(appState)) {
+                            Image(systemName: "gear")
                         }
                     }
-            }
-        } else {
-            // iPad: Use NavigationSplitView
-            navigationSplitView
+                }
         }
-        #else
-        // macOS and Mac Catalyst: Use NavigationSplitView
+    }
+    
+    @ViewBuilder
+    private var iPadLayout: some View {
         navigationSplitView
-        #endif
+            #if canImport(UIKit)
+            .navigationBarTitleDisplayMode(.large)
+            #endif
+            .navigationSplitViewStyle(.automatic)
+    }
+    
+    @ViewBuilder
+    private var desktopLayout: some View {
+        navigationSplitView
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            .navigationSplitViewStyle(.prominentDetail)
+            #endif
     }
     
     @ViewBuilder
@@ -94,25 +125,13 @@ struct UnifiedContentView: View {
                     ideal: adaptiveColumnWidth().ideal,
                     max: adaptiveColumnWidth().max
                 )
-                #if targetEnvironment(macCatalyst)
-                .frame(minWidth: 350)
-                #elseif canImport(UIKit)
-                // iPad-specific adjustments
-                .frame(minWidth: horizontalSizeClass == .regular ? 375 : 300)
-                #endif
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                .navigationSplitViewStyle(.prominentDetail)
-                #endif
+                .frame(minWidth: adaptiveSidebarMinWidth())
         } detail: {
             // Main editor view
             editorView
                 .environmentObject(appState)
         }
         .navigationTitle("CodeEditor Configuration Demo")
-        #if canImport(UIKit)
-        .navigationBarTitleDisplayMode(isIPad() ? .large : .inline)
-        .navigationSplitViewStyle(.automatic)
-        #endif
     }
     
     // MARK: - Adaptive Layout Helpers
@@ -138,6 +157,16 @@ struct UnifiedContentView: View {
         #else
         // macOS/Catalyst default
         return ColumnWidth(min: 300, ideal: 350, max: 400)
+        #endif
+    }
+    
+    private func adaptiveSidebarMinWidth() -> CGFloat {
+        #if targetEnvironment(macCatalyst)
+        return 350
+        #elseif canImport(UIKit)
+        return horizontalSizeClass == .regular ? 375 : 300
+        #else
+        return 300
         #endif
     }
     
@@ -462,44 +491,40 @@ struct UnifiedContentView: View {
             }
         )
         
-        // Show additional toggles only on iPad and macOS
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            PlatformSafeButton(
-                action: {
-                    appState.coordinator.update { config in
-                        config.display.showMinimap.toggle()
-                    }
-                },
-                label: {
-                    Image(systemName: "map")
-                        .imageScale(dynamicImageScale())
-                        .foregroundColor(
-                            appState.coordinator.configuration.display.showMinimap
-                                ? .accentColor : .secondary
-                        )
-                        .help("Toggle Minimap")
-                }
-            )
-            
-            PlatformSafeButton(
-                action: {
-                    appState.coordinator.update { config in
-                        config.display.showInvisibleCharacters.toggle()
-                    }
-                },
-                label: {
-                    Image(systemName: "paragraph")
-                        .imageScale(dynamicImageScale())
-                        .foregroundColor(
-                            appState.coordinator.configuration.display.showInvisibleCharacters
-                                ? .accentColor : .secondary
-                        )
-                        .help("Toggle Invisible Characters")
-                }
-            )
+        // Show additional toggles on platforms that support them
+        if shouldShowExtendedToggles() {
+            minimapToggleButton
+            invisibleCharactersToggleButton
         }
-        #elseif canImport(AppKit)
+        
+        PlatformSafeButton(
+            action: {
+                appState.coordinator.update { config in
+                    config.behavior.isEditable.toggle()
+                }
+            },
+            label: {
+                let isEditable = appState.coordinator.configuration.behavior.isEditable
+                Image(systemName: isEditable ? "pencil" : "pencil.slash")
+                    .imageScale(dynamicImageScale())
+                    .foregroundColor(isEditable ? .accentColor : .secondary)
+                    .help("Toggle Editing")
+            }
+        )
+    }
+    
+    // MARK: - Toggle Button Helpers
+    
+    private func shouldShowExtendedToggles() -> Bool {
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        return isIPad()
+        #else
+        return true
+        #endif
+    }
+    
+    @ViewBuilder
+    private var minimapToggleButton: some View {
         PlatformSafeButton(
             action: {
                 appState.coordinator.update { config in
@@ -516,7 +541,10 @@ struct UnifiedContentView: View {
                     .help("Toggle Minimap")
             }
         )
-        
+    }
+    
+    @ViewBuilder
+    private var invisibleCharactersToggleButton: some View {
         PlatformSafeButton(
             action: {
                 appState.coordinator.update { config in
@@ -531,22 +559,6 @@ struct UnifiedContentView: View {
                             ? .accentColor : .secondary
                     )
                     .help("Toggle Invisible Characters")
-            }
-        )
-        #endif
-        
-        PlatformSafeButton(
-            action: {
-                appState.coordinator.update { config in
-                    config.behavior.isEditable.toggle()
-                }
-            },
-            label: {
-                let isEditable = appState.coordinator.configuration.behavior.isEditable
-                Image(systemName: isEditable ? "pencil" : "pencil.slash")
-                    .imageScale(dynamicImageScale())
-                    .foregroundColor(isEditable ? .accentColor : .secondary)
-                    .help("Toggle Editing")
             }
         )
     }
