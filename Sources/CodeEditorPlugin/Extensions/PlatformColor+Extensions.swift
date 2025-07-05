@@ -148,45 +148,9 @@ extension PlatformColor {
 }
 
 // MARK: - Semantic Color Extensions
-
-extension PlatformColor {
-    /// Returns an appropriate highlight color for the selected line
-    /// Adapts to light/dark mode automatically
-    public static var selectedLineHighlight: PlatformColor {
-        #if canImport(UIKit)
-        return PlatformColors.tintColor.withAlpha(0.15)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.controlAccentColor.withAlpha(0.15)
-        #endif
-    }
-    
-    /// Returns an appropriate color for code editor background
-    public static var codeBackground: PlatformColor {
-        #if canImport(UIKit)
-        return PlatformColors.systemBackground
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.textBackgroundColor
-        #endif
-    }
-    
-    /// Returns an appropriate color for gutter background
-    static var gutterBackground: PlatformColor {
-        #if canImport(UIKit)
-        return PlatformColors.secondarySystemBackground
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.controlBackground
-        #endif
-    }
-    
-    /// Returns an appropriate color for line numbers
-    public static var lineNumberColor: PlatformColor {
-        #if canImport(UIKit)
-        return PlatformColors.tertiaryLabel
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return PlatformColors.tertiaryLabel
-        #endif
-    }
-}
+// 
+// Semantic colors have been moved to PlatformColors.swift for better organization
+// This extension now focuses on color manipulation utilities
 
 // MARK: - Platform-Specific Helpers
 

@@ -166,7 +166,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     }
     
     /// The color for highlighting the selected line
-    public var selectedLineHighlightColor = PlatformColor.selectedLineHighlight {
+    public var selectedLineHighlightColor = PlatformColors.selectedLineHighlight {
         didSet {
             updateSelectedLineHighlight()
         }

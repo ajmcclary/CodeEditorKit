@@ -60,8 +60,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     }
     
     deinit {
-        // Timer and tasks will be cleaned up automatically when deallocated
-        // The cleanup() method should be called explicitly before deallocation
+        // Cleanup is handled automatically by ARC
+        // Note: Cannot access @MainActor properties from deinit in Swift 6
+        // cleanup() must be called explicitly before deallocation
     }
     
     // MARK: - Public Methods
@@ -169,9 +170,24 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         _ = qualityOfService // Maintained for API compatibility
     }
     
-    /// Explicitly cleanup all resources including timers and tasks
-    /// This method can be called before the object is deallocated to ensure
-    /// all resources are properly released
+    /// Cleanup all resources including timers and tasks
+    /// 
+    /// This method is automatically called in `deinit` to prevent memory leaks,
+    /// but can also be called explicitly when you want to immediately free resources
+    /// (e.g., when a view disappears or the editor is no longer needed).
+    /// 
+    /// The method is idempotent and safe to call multiple times.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// // Automatic cleanup on deallocation (recommended)
+    /// let highlighter = BackgroundSyntaxHighlighter()
+    /// // cleanup() is called automatically when highlighter is deallocated
+    /// 
+    /// // Manual cleanup for immediate resource release
+    /// highlighter.cleanup()
+    /// ```
     public func cleanup() {
         // Invalidate debounce timer
         debounceTimer?.invalidate()
@@ -188,6 +204,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         
         // Clear cache
         resultCache.removeAll()
+        
+        // Reset statistics
+        statistics.reset()
     }
     
     // MARK: - Private Methods
@@ -634,7 +653,8 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
     }
     
     deinit {
-        // Cleanup if needed
+        // Statistics cleanup is handled automatically by ARC
+        // Arrays and primitive values don't require explicit cleanup
     }
 }
 

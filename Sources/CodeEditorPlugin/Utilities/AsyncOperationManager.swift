@@ -851,7 +851,7 @@ public enum OperationError: Error {
 
 // MARK: - Convenience Functions
 
-/// Creates a global debounced function using Grand Central Dispatch.
+/// Creates a global debounced function using Swift Concurrency.
 ///
 /// This convenience function provides a simple way to debounce synchronous
 /// operations without needing an `AsyncOperationManager` instance.
@@ -873,31 +873,32 @@ public enum OperationError: Error {
 ///
 /// - Parameters:
 ///   - delay: Time to wait after the last call before executing, in seconds.
-///   - queue: The dispatch queue to execute on. Defaults to `.main`.
 ///   - action: The synchronous action to debounce.
 ///
 /// - Returns: A function that debounces the action. Returns the last result.
 ///
 /// - Note: For async operations, use ``AsyncOperationManager/debounce(key:delay:operation:)`` instead.
+@MainActor
 public func debounce<T>(
     delay: TimeInterval,
-    queue: DispatchQueue = .main,
-    action: @escaping () -> T
-) -> () -> T? {
-    var workItem: DispatchWorkItem?
+    action: @escaping @MainActor () -> T
+) -> @MainActor () -> T? {
+    var activeTask: Task<Void, Never>?
     var result: T?
     
-    return {
-        workItem?.cancel()
-        workItem = DispatchWorkItem {
-            result = action()
+    return { @MainActor in
+        activeTask?.cancel()
+        activeTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            if !Task.isCancelled {
+                result = action()
+            }
         }
-        queue.asyncAfter(deadline: .now() + delay, execute: workItem!)
         return result
     }
 }
 
-/// Creates a global throttled function using Grand Central Dispatch.
+/// Creates a global throttled function with thread safety.
 ///
 /// This convenience function provides a simple way to throttle synchronous
 /// operations without needing an `AsyncOperationManager` instance.
@@ -917,22 +918,21 @@ public func debounce<T>(
 ///
 /// - Parameters:
 ///   - interval: Minimum time interval between executions, in seconds.
-///   - queue: The dispatch queue to execute on (parameter ignored in current implementation).
 ///   - action: The synchronous action to throttle.
 ///
 /// - Returns: A function that throttles the action. Returns the last result
 ///   if throttled, or the new result if executed.
 ///
 /// - Note: For async operations, use ``AsyncOperationManager/throttle(key:interval:operation:)`` instead.
+@MainActor
 public func throttle<T>(
     interval: TimeInterval,
-    queue _: DispatchQueue = .main,
-    action: @escaping () -> T
-) -> () -> T? {
+    action: @escaping @MainActor () -> T
+) -> @MainActor () -> T? {
     var lastRun: Date?
     var result: T?
     
-    return {
+    return { @MainActor in
         let now = Date()
         if let lastRun {
             let timeSinceLastRun = now.timeIntervalSince(lastRun)

@@ -7,7 +7,31 @@ import AppKit
 #endif
 import os.log
 
-/// Coordinator for ensuring cross-platform feature parity and smooth operation
+/// Main coordinator for ensuring cross-platform feature parity and smooth operation
+///
+/// `CrossPlatformCoordinator` serves as the central coordination point for cross-platform
+/// functionality, delegating specialized tasks to focused coordinators while maintaining
+/// overall system coherence.
+///
+/// ## Architecture
+///
+/// The coordinator follows a delegation pattern where specialized coordinators handle
+/// specific domains:
+/// - ``InputCoordinator``: Handles input events (keyboard, mouse, touch, pencil)
+/// - ``ToolbarCoordinator``: Manages toolbar creation and configuration
+/// - ``ContextMenuCoordinator``: Handles context menu creation and actions
+///
+/// ## Responsibilities
+///
+/// - Platform-specific adjustments and optimizations
+/// - Capability detection and feature availability
+/// - Text view optimization and configuration
+/// - Notification and observer management
+/// - Platform abstraction coordination
+///
+/// - SeeAlso: ``InputCoordinator`` for input handling
+/// - SeeAlso: ``ToolbarCoordinator`` for toolbar management
+/// - SeeAlso: ``ContextMenuCoordinator`` for context menu handling
 @MainActor
 public class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Singleton
@@ -18,6 +42,11 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
     internal let capabilities = PlatformCapabilities.shared
+    
+    /// Specialized coordinators for focused responsibilities
+    public let inputCoordinator = InputCoordinator.shared
+    public let toolbarCoordinator = ToolbarCoordinator.shared
+    public let contextMenuCoordinator = ContextMenuCoordinator.shared
     
     /// Platform-specific adjustments
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
@@ -141,180 +170,49 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     
     /// Create platform-appropriate toolbar items
+    ///
+    /// Delegates to the specialized ``ToolbarCoordinator`` for consistent toolbar management.
+    ///
+    /// - Returns: Array of toolbar items appropriate for the current platform
     public func createToolbarItems() -> [ToolbarItem] {
-        var items: [ToolbarItem] = []
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Full toolbar on macOS
-        items.append(ToolbarItem(
-            id: "find",
-            title: "Find",
-            icon: "magnifyingglass",
-            action: .find
-        ))
-        
-        items.append(ToolbarItem(
-            id: "replace",
-            title: "Replace",
-            icon: "arrow.left.arrow.right",
-            action: .replace
-        ))
-        
-        items.append(ToolbarItem(
-            id: "symbol",
-            title: "Symbols",
-            icon: "list.bullet.indent",
-            action: .showSymbols
-        ))
-        
-        items.append(ToolbarItem(
-            id: "format",
-            title: "Format",
-            icon: "text.alignleft",
-            action: .format
-        ))
-        #else
-        // Simplified toolbar on iOS
-        items.append(ToolbarItem(
-            id: "find",
-            title: "Find",
-            icon: "magnifyingglass",
-            action: .find
-        ))
-        
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            items.append(ToolbarItem(
-                id: "symbol",
-                title: "Symbols",
-                icon: "list.bullet.indent",
-                action: .showSymbols
-            ))
-        }
-        #endif
-        
-        return items
+        toolbarCoordinator.createToolbarItems()
     }
     
     /// Handle platform-specific input events
+    ///
+    /// Delegates to the specialized ``InputCoordinator`` for consistent input handling.
+    ///
+    /// - Parameters:
+    ///   - event: The platform input event to handle
+    ///   - textView: The target text view
+    /// - Returns: True if the event was handled, false otherwise
     public func handlePlatformInput(_ event: PlatformInputEvent, in textView: CodeEditorView) -> Bool {
-        switch event {
-        case let .keyDown(key, modifiers):
-            return handleKeyInput(key: key, modifiers: modifiers, in: textView)
-            
-        case let .touch(touches, phase):
-            return handleTouchInput(touches: touches, phase: phase, in: textView)
-            
-        case let .mouse(location, type):
-            return handleMouseInput(location: location, type: type, in: textView)
-            
-        case let .pencil(location, pressure, azimuth):
-            return handlePencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
-        }
+        inputCoordinator.handleInput(event, in: textView)
     }
     
     /// Create cross-platform context menu using modern action-based API
+    ///
+    /// Delegates to the specialized ``ContextMenuCoordinator`` for consistent menu management.
+    ///
+    /// - Parameters:
+    ///   - range: The text range associated with the menu
+    ///   - textView: The target text view
+    /// - Returns: Platform-appropriate context menu
     public func createContextMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
-        var builder = ContextMenuBuilder()
-        
-        // Common editing actions - now using abstracted methods
-        builder.addAction(ContextMenuAction(
-            title: "Cut",
-            keyEquivalent: "x",
-            isEnabled: textView.canCut
-        ) { @MainActor [weak textView] in
-            textView?.performCut()
-        })
-        
-        builder.addAction(ContextMenuAction(
-            title: "Copy",
-            keyEquivalent: "c",
-            isEnabled: textView.canCopy
-        ) { @MainActor [weak textView] in
-            textView?.performCopy()
-        })
-        
-        builder.addAction(ContextMenuAction(
-            title: "Paste",
-            keyEquivalent: "v",
-            isEnabled: textView.canPaste
-        ) { @MainActor [weak textView] in
-            textView?.performPaste()
-        })
-        
-        builder.addSeparator()
-        
-        // Code navigation actions
-        if capabilities.isFeatureAvailable(.goToDefinition) {
-            builder.addAction(ContextMenuAction(
-                title: "Go to Definition",
-                keyEquivalent: nil,
-                isEnabled: true
-            ) { @MainActor [weak self, weak textView] in
-                self?.performGoToDefinition(at: range, in: textView)
-            })
-        }
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        builder.addAction(ContextMenuAction(
-            title: "Find References",
-            keyEquivalent: nil,
-            isEnabled: true
-        ) { @MainActor [weak self, weak textView] in
-            self?.performFindReferences(at: range, in: textView)
-        })
-        
-        builder.addSeparator()
-        
-        // Refactoring submenu
-        builder.addAction(ContextMenuAction(
-            title: "Rename...",
-            keyEquivalent: nil,
-            isEnabled: true
-        ) { @MainActor [weak self, weak textView] in
-            self?.performRename(at: range, in: textView)
-        })
-        
-        builder.addAction(ContextMenuAction(
-            title: "Extract Method...",
-            keyEquivalent: nil,
-            isEnabled: range.length > 0
-        ) { @MainActor [weak self, weak textView] in
-            self?.performExtractMethod(at: range, in: textView)
-        })
-        
-        builder.addAction(ContextMenuAction(
-            title: "Extract Variable...",
-            keyEquivalent: nil,
-            isEnabled: range.length > 0
-        ) { @MainActor [weak self, weak textView] in
-            self?.performExtractVariable(at: range, in: textView)
-        })
-        #endif
-        
-        return builder.build()
+        contextMenuCoordinator.createContextMenu(for: range, in: textView)
     }
     
     // MARK: - Private Methods
     
     internal func adjustFeaturesForPlatform() {
         // Platform-specific adjustments are now handled by PlatformCapabilities
-        // This method is kept for backward compatibility but can be removed in the future
+        // This method maintains runtime adjustments only
         
         #if canImport(UIKit)
         // Update platform adjustments based on runtime checks
         if UIDevice.current.userInterfaceIdiom == .pad {
             // iPad gets larger touch targets
             platformAdjustments.minimumTouchTargetSize = 44.0
-        }
-        
-        // Check for external keyboard to adjust UI
-        if isExternalKeyboardConnected() {
-            // Could adjust UI for keyboard usage
-        }
-        
-        // Check for mouse/trackpad to adjust hover behaviors
-        if isPointingDeviceConnected() {
-            // Could enable hover effects
         }
         #endif
     }
@@ -339,37 +237,7 @@ public class CrossPlatformCoordinator: ObservableObject {
     // - CrossPlatformCoordinator+AppKit.swift for macOS
     // - CrossPlatformCoordinator+UIKit.swift for iOS
     
-    private func handleKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return handleMacOSKeyInput(key: key, modifiers: modifiers, in: textView)
-        #else
-        return handleIOSKeyInput(key: key, modifiers: modifiers, in: textView)
-        #endif
-    }
-    
-    private func handleTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
-        #if canImport(UIKit)
-        return handleIOSTouchInput(touches: touches, phase: phase, in: textView)
-        #else
-        return false
-        #endif
-    }
-    
-    private func handleMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return handleMacOSMouseInput(location: location, type: type, in: textView)
-        #else
-        return handleIOSMouseInput(location: location, type: type, in: textView)
-        #endif
-    }
-    
-    private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth: CGFloat, in textView: CodeEditorView) -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return handleMacOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
-        #else
-        return handleIOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
-        #endif
-    }
+    // Input handling is now delegated to InputCoordinator
     
     // MARK: - Helper Methods
     
@@ -408,77 +276,56 @@ public class CrossPlatformCoordinator: ObservableObject {
     }
     #endif
     
-    private func performGoToDefinition(at range: NSRange, in _: CodeEditorView?) {
-        // Go to definition implementation
-        logger.info("Go to definition at range: \(range)")
-    }
+    // Context menu actions are now handled by ContextMenuCoordinator
     
-    private func performFindReferences(at range: NSRange, in _: CodeEditorView?) {
-        // Find references implementation
-        logger.info("Find references at range: \(range)")
-    }
-    
-    private func performRename(at range: NSRange, in _: CodeEditorView?) {
-        // Rename implementation
-        logger.info("Rename at range: \(range)")
-    }
-    
-    private func performExtractMethod(at range: NSRange, in _: CodeEditorView?) {
-        // Extract method implementation
-        logger.info("Extract method at range: \(range)")
-    }
-    
-    private func performExtractVariable(at range: NSRange, in _: CodeEditorView?) {
-        // Extract variable implementation
-        logger.info("Extract variable at range: \(range)")
-    }
-    
+    // These methods are stubs and should be implemented as needed
     internal func selectNextOccurrence(in _: CodeEditorView) {
-        // Select next occurrence implementation
+        logger.debug("selectNextOccurrence not yet implemented")
     }
     
     internal func selectLine(in _: CodeEditorView) {
-        // Select line implementation
+        logger.debug("selectLine not yet implemented")
     }
     
     private func toggleComment(in _: CodeEditorView) {
-        // Toggle comment implementation
+        logger.debug("toggleComment not yet implemented")
     }
     
     internal func showFind(in _: CodeEditorView) {
-        // Show find UI
+        logger.debug("showFind not yet implemented")
     }
     
+    /// Show context menu at default location
+    ///
+    /// - Parameter textView: The target text view
     internal func showContextMenu(in textView: CodeEditorView) {
         showContextMenu(at: CGPoint.zero, in: textView)
     }
     
-    internal func showContextMenu(at _: CGPoint, in _: CodeEditorView) {
-        // Show context menu at location
+    /// Show context menu at specified location
+    ///
+    /// Delegates to the specialized ``ContextMenuCoordinator`` for consistent menu handling.
+    ///
+    /// - Parameters:
+    ///   - location: The location to show the menu
+    ///   - textView: The target text view
+    internal func showContextMenu(at location: CGPoint, in textView: CodeEditorView) {
+        let menu = contextMenuCoordinator.createContextMenu(for: NSRange(), in: textView)
+        contextMenuCoordinator.showContextMenu(menu, at: location, in: textView)
     }
     
     internal func startSelection(at _: CGPoint, in _: CodeEditorView) {
         // Start selection at location
     }
     
-    // Context menu helper methods
+    /// Configure input handling for a text view
+    ///
+    /// Delegates to the specialized ``InputCoordinator`` for consistent input setup.
+    ///
+    /// - Parameter textView: The text view to configure
     private func configureInputHandling(for textView: CodeEditorView) {
-        #if canImport(UIKit)
-        // Add gesture recognizers for iOS
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        textView.addGestureRecognizer(longPressGesture)
-        #endif
+        inputCoordinator.configureGestures(for: textView)
     }
-    
-    #if canImport(UIKit)
-    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began,
-              let textView = gesture.view as? CodeEditorView else { return }
-        
-        let location = gesture.location(in: textView)
-        showContextMenu(at: location, in: textView)
-    }
-    #endif
 }
 
 // MARK: - Supporting Types

@@ -20,6 +20,9 @@ public struct ContextMenuAction: Sendable {
     /// Optional keyboard shortcut
     public let keyEquivalent: String?
     
+    /// Optional modifier flags for keyboard shortcut
+    public let modifiers: PlatformModifierFlags
+    
     /// The action to perform when selected
     public let handler: @MainActor @Sendable () -> Void
     
@@ -33,11 +36,13 @@ public struct ContextMenuAction: Sendable {
     public init(
         title: String,
         keyEquivalent: String? = nil,
+        modifiers: PlatformModifierFlags = [],
         isEnabled: Bool = true,
         handler: @escaping @MainActor @Sendable () -> Void
     ) {
         self.title = title
         self.keyEquivalent = keyEquivalent
+        self.modifiers = modifiers
         self.isEnabled = isEnabled
         self.handler = handler
         self.isSeparator = false
@@ -59,7 +64,8 @@ public struct ContextMenuAction: Sendable {
             keyEquivalent: keyEquivalent,
             isEnabled: isEnabled,
             handler: handler,
-            isSeparator: true
+            isSeparator: true,
+            modifiers: modifiers
         )
         return action
     }
@@ -69,10 +75,12 @@ public struct ContextMenuAction: Sendable {
         keyEquivalent: String?,
         isEnabled: Bool,
         handler: @escaping @MainActor @Sendable () -> Void,
-        isSeparator: Bool
+        isSeparator: Bool,
+        modifiers: PlatformModifierFlags = []
     ) {
         self.title = title
         self.keyEquivalent = keyEquivalent
+        self.modifiers = modifiers
         self.isEnabled = isEnabled
         self.handler = handler
         self.isSeparator = isSeparator
@@ -81,7 +89,7 @@ public struct ContextMenuAction: Sendable {
 
 /// A builder for creating context menus with modern action-based API
 public struct ContextMenuBuilder: Sendable {
-    private var actions: [ContextMenuAction] = []
+    internal var actions: [ContextMenuAction] = []
     
     public init() {}
     

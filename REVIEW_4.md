@@ -2,60 +2,56 @@
 
 # Overall Health Summary
 
-The project is well structured with a feature-based architecture, extensive cross-platform abstractions, and broad use of Swift 6 actors.
+The repository shows a well-structured cross-platform architecture centered on a dedicated Platform layer. Platform abstractions (PlatformColor, PlatformFont, PlatformView, etc.) are defined via `#if canImport(AppKit)` / `#if canImport(UIKit)` checks and used throughout the package. Actors handle background tasks in the TextProcessing and SyntaxHighlighting features, providing strict concurrency safety. SwiftUI wrappers (CodeEditorRepresentable) manage AppKit/UIKit differences via coordinators. The sample app (CodeEditorSample) demonstrates live configuration updates and adaptive layouts for macOS, iOS, and Mac Catalyst.
 
-Platform abstractions (`PlatformColor`, `PlatformFont`, `PlatformView`, etc.) are consistently applied throughout. Conditional compilation follows the `#if canImport()` style in all examined files.
+Build and test commands fail in this environment because SwiftSyntax and SwiftLint cannot be fetched, but this is a limitation of the execution environment—not the repository.
 
-Swift 6 concurrency is leveraged via several actors (e.g., `AsyncTextProcessor`, `BackgroundProcessor`, `SmartTokenCache`), providing clear isolation for background work.
+## Critical Issues
 
-SwiftUI integration uses `NSViewRepresentable`/`UIViewRepresentable` wrappers with dedicated coordinators to bridge configuration and event handling.
+No crash-level defects or data corruption risks were found during static inspection. Conditional compilation appears correct, and actor usage prevents obvious race conditions.
 
-The sample app demonstrates best practices such as environment-based configuration and modern toggle controls, serving as a good reference implementation.
+## Improvement Suggestions
 
-# Critical Issues
+### Platform Abstraction Layer
 
-No immediately obvious crash-level or build-blocking issues were found during static inspection.
+- **Unused default clause** – The switch inside `PlatformCapabilities.getFeatureAvailability` exhausts all enum cases and doesn't require a default branch, which could hide future enum additions. Removing that clause clarifies the logic.
+- **Direct AppKit imports** – Several non-platform files (e.g., Theme.swift) import AppKit explicitly. Ensure these imports remain wrapped in `#if canImport(AppKit)` to avoid Catalyst build errors.
 
-# Improvement Suggestions
+### Swift 6 Concurrency Model
 
-## Platform Abstraction
+- **Observer cleanup** – `CrossPlatformCoordinator` registers notifications in `setupIOSNotifications` and `setupMacOSNotifications`, but `removeObservers()` must be called explicitly. Guarantee deinitialization always removes observers to avoid potential leaks.
+- **Actor-based caching** – `SinglePhaseRangeValidator` comments mention removed caches. Introducing an actor-based cache would regain performance while maintaining thread safety.
 
-**Ensure default cases aren't needed in `PlatformCapabilities.getFeatureAvailability`** - The switch already exhausts all enum cases, making the default branch redundant. Consider removing or asserting instead to avoid hiding future additions.
+### Conditional Compilation and Platform Logic
 
-**Clean up unused typealiases if not required** - `PlatformTableView`, `PlatformTableColumn`, etc., are declared but no usages were found. Removing unused aliases keeps the abstraction lean.
+- **Large #if blocks** – `UnifiedContentView` contains extensive platform checks within one file, making it harder to follow. Extract iPhone/iPad/macOS layouts into separate subviews or files for clarity.
+- **Simplify toggle style** – `PlatformToggleStyle` has separate branches for Catalyst and iOS, but they share identical code. Combine them into one `#if canImport(UIKit)` clause to reduce duplication.
 
-## Swift 6 Concurrency
+### SwiftUI Integration
 
-**Verify actor isolation for text processing** - Files like `AsyncTextProcessor` and `SmartTokenCache` use actors correctly, but ensure that any synchronous entry points never access actor-isolated state. Example actor declaration:
+- **Binding updates** – The coordinators manually update text bindings on every change. Explore using `ObservableObject` or `Binding.projectedValue` to minimize manual state management.
+- **View recreation on macOS** – `SampleCodeEditorView` forces a new view via `.id(viewID)` on every configuration change. Consider updating the editor in place when possible to avoid losing state, or document the necessity of recreation on macOS.
 
-## SwiftUI Integration
+### Architectural Consistency and Maintainability
 
-**Remove unused state in `SampleCodeEditorView`** - The `cancellables` set is never used. Deleting it avoids confusion.
+- **Observer helper methods** – Several platform-specific observers (keyboard, orientation, workspace) are implemented inline. Creating small helper types or extensions would further modularize `CrossPlatformCoordinator` and reduce `#if` complexity.
+- **Documentation cleanup** – Some comments reference future implementations or outdated behavior (e.g., caching TODOs). Review comments to ensure they reflect the current architecture.
 
-**Consider encapsulating `objectWillChange.send()`** - Configuration update bindings repeatedly call `appState.objectWillChange.send()` after `coordinator.update { … }`. If feasible, move this into a helper method so views don't have to trigger updates manually. Example of current pattern:
+### CodeEditorSample as a Best-Practice Reference
 
-## Conditional Compilation
+- **Unified layout builders** – The sample's main view could provide dedicated builders (`makePhoneLayout()`, `makeDesktopLayout()`) to clearly show recommended integration patterns without embedded `#if` sections.
+- **Persisting configuration** – Demonstrate saving and restoring `EditorConfiguration` across launches to show real-world usage.
 
-**Simplify `PlatformToggleStyle`** - The catalyst and iOS branches share the same implementation. They could be combined for readability.
+## Action Plan
 
-## Sample App Enhancements
+1. Remove the unused default case in `PlatformCapabilities.getFeatureAvailability`.
+2. Ensure all AppKit/UIKit imports outside the Platform layer are guarded with `#if canImport()` checks.
+3. Add automatic observer cleanup in `CrossPlatformCoordinator` or document the required call sites.
+4. Implement an actor-based caching layer for `SinglePhaseRangeValidator` and related utilities.
+5. Refactor `UnifiedContentView` to move platform-specific layouts into separate subviews; simplify `PlatformToggleStyle`.
+6. Evaluate coordinator binding updates and macOS view recreation to reduce unnecessary re-instantiation.
+7. Modularize notification setup in `CrossPlatformCoordinator` into small extensions for each platform.
+8. Expand documentation in the sample app to include configuration persistence and clarify architectural rules.
+9. Add CI lint checks to prevent new `#if os(...)` patterns or direct platform imports.
 
-**Clarify performance monitoring portability** - `EditorToolbar.updatePerformanceMetrics()` uses Mach APIs without platform guards. Confirm these calls work on iOS and Catalyst or wrap them in `#if` checks.
-
-# Action Plan
-
-1. Remove the default clause in `PlatformCapabilities.getFeatureAvailability` or replace it with an assertion to catch unhandled enum cases.
-
-2. Audit and delete unused platform typealiases in `PlatformImports.swift`.
-
-3. Double-check actor entry points for synchronous access in text processing modules.
-
-4. Delete the unused `cancellables` property from `SampleCodeEditorView`.
-
-5. Introduce a helper in `AppState` or `ConfigurationCoordinator` that both updates configuration and sends the necessary `objectWillChange` notification to reduce duplicate code across configuration sections.
-
-6. Merge the catalyst/iOS branches in `PlatformToggleStyle` to a single `#if canImport(UIKit)` block.
-
-7. Add platform guards around Mach API usage in `EditorToolbar.updatePerformanceMetrics()` to ensure safe compilation on all targets.
-
-These steps will further polish the cross-platform architecture and maintainability of the codebase.
+These steps will further strengthen the cross-platform architecture, maintain concurrency safety, and polish the sample app as a production-quality reference.

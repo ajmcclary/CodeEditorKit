@@ -32,7 +32,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private var trackingArea: NSTrackingArea?
-    private var popover: NSPopover?
+    private var nsPopover: NSPopover?
     #else
     private var popoverController: UIViewController?
     private var overlayView: UIView?
@@ -76,20 +76,20 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         addSubview(iconView)
     }
     
-    private func createIconView() -> PlatformView {
+    private func createIconView() -> PlatformImageView {
+        let iconView = PlatformImageView(frame: bounds.insetBy(dx: 4, dy: 4))
+        
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let iconView = NSImageView(frame: bounds.insetBy(dx: 4, dy: 4))
         iconView.image = NSImage(systemSymbolName: iconName, accessibilityDescription: annotationType)
         iconView.contentTintColor = PlatformColors.white
         iconView.imageScaling = .scaleProportionallyUpOrDown
-        return iconView
         #else
-        let iconView = UIImageView(frame: bounds.insetBy(dx: 4, dy: 4))
         iconView.image = UIImage(systemName: iconName)
         iconView.contentMode = .scaleAspectFit
         iconView.tintColor = PlatformColors.white
-        return iconView
         #endif
+        
+        return iconView
     }
     
     private func setupInteraction() {
@@ -217,8 +217,8 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     
     public func hidePopup() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        popover?.close()
-        popover = nil
+        nsPopover?.close()
+        nsPopover = nil
         #else
         popoverController?.dismiss(animated: true)
         popoverController = nil
@@ -231,7 +231,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func showPopupMacOS(detachable: Bool) {
-        guard popover == nil else { return }
+        guard nsPopover == nil else { return }
         
         let popover = NSPopover()
         popover.behavior = detachable ? .semitransient : .transient
@@ -247,7 +247,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         popover.contentViewController = contentVC
         popover.show(relativeTo: bounds, of: self, preferredEdge: .maxY)
         
-        self.popover = popover
+        self.nsPopover = popover
     }
     
     private func createPopupContentViewMacOS() -> NSView {
@@ -436,8 +436,14 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         }
         
         // Auto-dismiss after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self, weak contentView] in
-            guard self?.overlayView === contentView else { return }
+        Task { @MainActor [weak self, weak contentView] in
+            do {
+                try await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+                guard self?.overlayView === contentView else { return }
+            } catch {
+                // Sleep was cancelled, ignore
+                return
+            }
             
             UIView.animate(
                 withDuration: 0.3,
@@ -502,29 +508,36 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     
     override public func mouseExited(with _: NSEvent) {
         // Delay hiding to prevent flicker
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            guard let self,
-                  let popover = self.popover,
-                  popover.isShown else {
+        Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                guard let self,
+                      let popover = self.nsPopover,
+                      popover.isShown else {
+                    self?.hidePopup()
+                    return
+                }
+                
+                // Check if mouse is still over the popover
+                if let popoverWindow = popover.contentViewController?.view.window {
+                    let mouseLocation = NSEvent.mouseLocation
+                    let popoverScreenFrame = popoverWindow.frame
+                    
+                    if !popoverScreenFrame.contains(mouseLocation) {
+                        self.hidePopup()
+                    }
+                }
+            } catch {
+                // Sleep was cancelled, hide popup immediately
                 self?.hidePopup()
                 return
-            }
-            
-            // Check if mouse is still over the popover
-            if let popoverWindow = popover.contentViewController?.view.window {
-                let mouseLocation = NSEvent.mouseLocation
-                let popoverScreenFrame = popoverWindow.frame
-                
-                if !popoverScreenFrame.contains(mouseLocation) {
-                    self.hidePopup()
-                }
             }
         }
     }
     
     override public func mouseDown(with _: NSEvent) {
         // Toggle popover on click
-        if popover?.isShown == true {
+        if nsPopover?.isShown == true {
             hidePopup()
         } else {
             showPopup(detachable: true)

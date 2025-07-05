@@ -2,49 +2,38 @@
 
 # Overall Health Summary
 
-The repository shows a thoughtful, modern architecture. The plugin uses a feature-based directory structure with a strong platform abstraction layer. PlatformImports.swift defines unified aliases for platform types, enabling shared code across macOS, iOS and Mac Catalyst. SwiftUI integration is implemented via platform‐specific wrappers, e.g. CodeEditorRepresentable for AppKit. Platform detection logic is centralized in PlatformCapabilities with runtime checks for features such as TextKit 2 availability. Conditional compilation consistently relies on `#if canImport(…)`, and the sample app employs the same pattern.
-
-Actors are used in components like AsyncTextProcessor and BackgroundProcessor to ensure concurrency safety. The project enforces zero SwiftLint violations (though SwiftLint is missing in this environment). Overall code organization and documentation indicate a production-ready standard.
+The repository demonstrates a modern, feature‑based architecture with an extensive platform abstraction layer and clear SwiftUI integration. The package targets macOS, iOS, and Mac Catalyst using `#if canImport(AppKit)` / `#if canImport(UIKit)` throughout, and many components leverage Swift 6 actors for concurrency safety. The sample app mirrors these standards, providing cross‑platform examples with zero SwiftLint violations.
 
 ## Critical Issues
 
-No crash-level issues are apparent through static inspection. Build and test commands failed in this environment because required dependencies (e.g., swift-syntax) could not be fetched and swiftlint was missing. These failures are environmental rather than repository flaws.
+- **Background resource cleanup** `BackgroundSyntaxHighlighter` relies on an explicit `cleanup()` call. If consumers forget to invoke it, timers and tasks may remain active, leading to memory leaks. This is indicated in its initializer and `deinit` comments
 
 ## Improvement Suggestions
 
-### Platform Abstraction Layer
+### 1. Platform Abstraction Layer
 
-- **Simplify large conditionals** – CrossPlatformCoordinator still has extensive `#if` blocks for input handling and context menu creation. Consider moving macOS- and iOS-specific portions to separate files (some already exist) to improve readability.
-- **PlatformCapabilities size** – PlatformCapabilities.swift is lengthy (~500+ lines). Splitting detection logic into focused extensions (e.g., PlatformCapabilities+Input.swift, +Performance.swift) would aid maintainability.
-- **Direct AppKit/UIKit Imports** – Utilities such as CoordinateSystemHelper directly import AppKit/UIKit. They could rely on the unified types defined in Platform to reduce platform checks.
+- **Long conditional blocks in drawing utilities** `UnifiedDrawingCoordinator` mixes AppKit and UIKit code within single methods, producing large `#if` sections (e.g., `currentContext()` through `setNeedsDisplay`). *Why:* Splitting these into platform‑specific extensions (e.g., `UnifiedDrawingCoordinator+AppKit.swift`) would improve readability and reduce conditional complexity.
 
-### Swift 6 Concurrency
+### 2. Swift 6 Concurrency Model
 
-- **Actor boundaries** – In CrossPlatformCoordinator, some async handlers capture self weakly then immediately call `Task { @MainActor in ... }`. Verify that actor isolation is preserved and consider using structured concurrency directly when possible.
-- **Shared caches** – Comments in RangeUtilities.swift mention a removed cache for concurrency compliance. Reintroducing an actor-based cache (as TODO) would restore performance benefits while staying thread-safe.
+- **Explicit cleanup required for background highlighting** `BackgroundSyntaxHighlighter` comments indicate that `cleanup()` should be called before deallocation, but no automatic cleanup is enforced. *Why:* Forgetting to call `cleanup()` may leave `Timer` or `Task` instances running. Exposing `cleanup()` through `deinit` or ensuring clients call it (e.g., via `onDisappear`) would prevent leaks.
 
-### Conditional Compilation
+### 3. Conditional Compilation and Platform Logic
 
-- **Audit for stray #if os(...)** – The current codebase appears clean, but automated linting to prevent regressions would be useful.
-- **Dedicated platform files** – For example, UnifiedDrawingCoordinator contains several platform checks. Splitting drawing code into +AppKit and +UIKit files would further reduce conditional complexity.
+- **Large in‑body `#if` blocks in layout views** `UnifiedContentView` switches layouts inside a single body using several conditional branches. *Why:* Moving iPhone, iPad, and desktop layouts into dedicated view builders or files will keep the primary view concise and easier to maintain.
 
-### SwiftUI Integration
+### 4. SwiftUI Integration
 
-- **State synchronization** – The coordinators update bindings manually in handleTextChange. Ensure that updating the binding and local state does not cause redundant updateUIView calls.
-- **Avoid duplication** – CodeEditorViewWrapper for macOS and iOS share some logic. Evaluate whether shared helper methods could reduce code duplication.
+- **Manual update notifications** `ConfigurationCoordinator.update()` forces a view refresh by sending `objectWillChange` after modifying the configuration. *Why:* Relying on property wrappers (`@Published` with `struct` updates) generally triggers updates automatically. Investigate whether manual `objectWillChange.send()` is still necessary or if state management can be simplified.
 
-### Architectural Consistency
+### 5. Architectural Consistency
 
-- **Documentation** – Some comments reference future implementations or removed features (e.g., caching). Clean up outdated comments to avoid confusion.
-- **Sample app** – The sample demonstrates configuration updates well. Consider adding a short section or view demonstrating how to persist configurations across launches to fully showcase best practices.
+- **Duplicated platform code** Context‑menu creation and input handling in `CrossPlatformCoordinator+AppKit.swift` and `CrossPlatformCoordinator+UIKit.swift` repeat similar logic. Consider extracting common parts into shared helpers to minimize duplication.
 
 ## Action Plan
 
-1. **Refactor CrossPlatformCoordinator** – Extract macOS- and iOS-specific code paths into dedicated files to minimize conditional branches.
-2. **Modularize PlatformCapabilities** – Split large capability checks into thematic extensions.
-3. **Reintroduce thread-safe caching** – Implement the planned actor-based cache in RangeUtilities or related utilities.
-4. **Improve coordinator state flow** – Review the SwiftUI coordinators for redundant updates and ensure bindings are updated only once per change.
-5. **Enhance documentation** – Remove or update comments marked as temporary and add persistence examples in CodeEditorSample.
-6. **Automated linting** – Add a CI step to flag any new `#if os(...)` blocks or direct AppKit/UIKit usage outside the Platform layer.
-
-These steps will further polish the cross-platform architecture and maintainability while keeping concurrency robust.
+1. Provide automatic cleanup for `BackgroundSyntaxHighlighter`—call `cleanup()` from `deinit` or document its usage clearly.
+2. Split lengthy `#if` sections in `UnifiedDrawingCoordinator` and similar files into platform‑specific extensions.
+3. Refactor platform branches in `UnifiedContentView` into separate builders or files for readability.
+4. Review `ConfigurationCoordinator`'s manual `objectWillChange.send()`; replace with standard `@Published` behavior if possible.
+5. Consolidate duplicated code in `CrossPlatformCoordinator` extensions to enforce architectural consistency.

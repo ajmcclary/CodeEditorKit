@@ -72,8 +72,13 @@ extension CodeEditorView {
             applyTextColorForMacCatalyst()
             
             // Also apply after a short delay to ensure view hierarchy is ready
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.applyTextColorForMacCatalyst()
+            Task { @MainActor [weak self] in
+                do {
+                    try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                    self?.applyTextColorForMacCatalyst()
+                } catch {
+                    // Sleep was cancelled, ignore
+                }
             }
         }
         #endif

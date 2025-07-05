@@ -7,6 +7,7 @@ public typealias PlatformView = NSView
 public typealias PlatformScrollView = NSScrollView
 public typealias PlatformTextView = NSTextView
 public typealias PlatformImage = NSImage
+public typealias PlatformImageView = NSImageView
 public typealias PlatformBezierPath = NSBezierPath
 public typealias PlatformEvent = NSEvent
 public typealias PlatformGestureRecognizer = NSGestureRecognizer
@@ -20,6 +21,7 @@ public typealias PlatformView = UIView
 public typealias PlatformScrollView = UIScrollView
 public typealias PlatformTextView = UITextView
 public typealias PlatformImage = UIImage
+public typealias PlatformImageView = UIImageView
 public typealias PlatformBezierPath = UIBezierPath
 public typealias PlatformEvent = UIEvent
 public typealias PlatformGestureRecognizer = UIGestureRecognizer
@@ -27,78 +29,8 @@ public typealias PlatformViewController = UIViewController
 public typealias PlatformContextMenu = UIMenu
 #endif
 
-// Cross-platform color aliases
-public enum PlatformColors {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    public static var label: PlatformColor { NSColor.labelColor }
-    public static var secondaryLabel: PlatformColor { NSColor.secondaryLabelColor }
-    public static var tertiaryLabel: PlatformColor { NSColor.tertiaryLabelColor }
-    public static var systemBackground: PlatformColor { NSColor.windowBackgroundColor }
-    public static var secondarySystemBackground: PlatformColor { NSColor.controlBackgroundColor }
-    public static var controlBackground: PlatformColor { NSColor.controlBackgroundColor }
-    public static var separator: PlatformColor { NSColor.separatorColor }
-    public static var disabledControlText: PlatformColor { NSColor.disabledControlTextColor }
-    public static var black: PlatformColor { NSColor.black }
-    public static var white: PlatformColor { NSColor.white }
-    public static var clear: PlatformColor { NSColor.clear }
-    public static var controlAccentColor: PlatformColor { NSColor.controlAccentColor }
-    public static var tintColor: PlatformColor { NSColor.controlAccentColor } // macOS doesn't have tintColor, using controlAccentColor
-    public static var textBackgroundColor: PlatformColor { NSColor.textBackgroundColor }
-    public static var placeholderTextColor: PlatformColor { NSColor.placeholderTextColor }
-    public static var selectedTextColor: PlatformColor { NSColor.selectedTextColor }
-    public static var selectedTextBackgroundColor: PlatformColor { NSColor.selectedTextBackgroundColor }
-    
-    // System colors
-    public static var systemRed: PlatformColor { NSColor.systemRed }
-    public static var systemBlue: PlatformColor { NSColor.systemBlue }
-    public static var systemGreen: PlatformColor { NSColor.systemGreen }
-    public static var systemPurple: PlatformColor { NSColor.systemPurple }
-    public static var systemOrange: PlatformColor { NSColor.systemOrange }
-    public static var systemTeal: PlatformColor { NSColor.systemTeal }
-    public static var systemIndigo: PlatformColor { NSColor.systemIndigo }
-    public static var systemPink: PlatformColor { NSColor.systemPink }
-    public static var systemBrown: PlatformColor { NSColor.systemBrown }
-    public static var systemYellow: PlatformColor { NSColor.systemYellow }
-    public static var systemGray: PlatformColor { NSColor.systemGray }
-    #else
-    public static var label: PlatformColor { UIColor.label }
-    public static var secondaryLabel: PlatformColor { UIColor.secondaryLabel }
-    public static var tertiaryLabel: PlatformColor { UIColor.tertiaryLabel }
-    public static var systemBackground: PlatformColor { UIColor.systemBackground }
-    public static var secondarySystemBackground: PlatformColor { UIColor.secondarySystemBackground }
-    public static var controlBackground: PlatformColor { UIColor.systemGray6 }
-    public static var separator: PlatformColor { UIColor.separator }
-    public static var disabledControlText: PlatformColor { UIColor.tertiaryLabel }
-    public static var black: PlatformColor { UIColor.black }
-    public static var white: PlatformColor { UIColor.white }
-    public static var clear: PlatformColor { UIColor.clear }
-    public static var controlAccentColor: PlatformColor { UIColor.systemBlue }
-    public static var tintColor: PlatformColor { UIColor.tintColor }
-    public static var textBackgroundColor: PlatformColor { UIColor.systemBackground }
-    public static var placeholderTextColor: PlatformColor { UIColor.placeholderText }
-    public static var selectedTextColor: PlatformColor { 
-        UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
-        }
-    }
-    public static var selectedTextBackgroundColor: PlatformColor { 
-        UIColor.tintColor.withAlphaComponent(0.3)
-    }
-    
-    // System colors
-    public static var systemRed: PlatformColor { UIColor.systemRed }
-    public static var systemBlue: PlatformColor { UIColor.systemBlue }
-    public static var systemGreen: PlatformColor { UIColor.systemGreen }
-    public static var systemPurple: PlatformColor { UIColor.systemPurple }
-    public static var systemOrange: PlatformColor { UIColor.systemOrange }
-    public static var systemTeal: PlatformColor { UIColor.systemTeal }
-    public static var systemIndigo: PlatformColor { UIColor.systemIndigo }
-    public static var systemPink: PlatformColor { UIColor.systemPink }
-    public static var systemBrown: PlatformColor { UIColor.systemBrown }
-    public static var systemYellow: PlatformColor { UIColor.systemYellow }
-    public static var systemGray: PlatformColor { UIColor.systemGray }
-    #endif
-}
+// Cross-platform color aliases are now defined in PlatformColors.swift
+// This keeps PlatformImports focused on type definitions
 
 // Cross-platform font helpers
 public enum PlatformFonts {

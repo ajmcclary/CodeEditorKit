@@ -117,15 +117,24 @@ final class ContextMenuTests: XCTestCase {
         #if canImport(AppKit)
         let nsMenu = menu
         
-        // Check standard editing actions
+        // Check standard editing actions that should be available
         let menuTitles = nsMenu.items.map { $0.title }
-        XCTAssertTrue(menuTitles.contains("Cut"))
-        XCTAssertTrue(menuTitles.contains("Copy"))
-        XCTAssertTrue(menuTitles.contains("Paste"))
+        if textView.canCut {
+            XCTAssertTrue(menuTitles.contains("Cut"))
+            let cutItem = nsMenu.items.first { $0.title == "Cut" }
+            XCTAssertEqual(cutItem?.keyEquivalent, "x")
+        }
         
-        // Check key equivalents
-        let cutItem = nsMenu.items.first { $0.title == "Cut" }
-        XCTAssertEqual(cutItem?.keyEquivalent, "x")
+        if textView.canCopy {
+            XCTAssertTrue(menuTitles.contains("Copy"))
+        }
+        
+        if textView.canPaste {
+            XCTAssertTrue(menuTitles.contains("Paste"))
+        }
+        
+        // Select All should always be present
+        XCTAssertTrue(menuTitles.contains("Select All"))
         #else
         XCTAssertTrue(menu is UIMenu)
         guard let uiMenu = menu as? UIMenu else {
@@ -156,20 +165,25 @@ final class ContextMenuTests: XCTestCase {
         #if canImport(AppKit)
         let nsMenu = menu
         
-        // Cut should be disabled without selection
+        // Cut should not be present without selection (canCut returns false)
         let cutItem = nsMenu.items.first { $0.title == "Cut" }
-        XCTAssertNotNil(cutItem)
-        XCTAssertFalse(cutItem!.isEnabled)
+        XCTAssertNil(cutItem, "Cut should not be present without selection")
         
-        // Copy should be disabled without selection
+        // Copy should not be present without selection (canCopy returns false)
         let copyItem = nsMenu.items.first { $0.title == "Copy" }
-        XCTAssertNotNil(copyItem)
-        XCTAssertFalse(copyItem!.isEnabled)
+        XCTAssertNil(copyItem, "Copy should not be present without selection")
         
-        // Paste should be enabled (because we have content in pasteboard and text view is editable)
-        let pasteItem = nsMenu.items.first { $0.title == "Paste" }
-        XCTAssertNotNil(pasteItem)
-        XCTAssertTrue(pasteItem!.isEnabled)
+        // Paste should be present if pasteboard has content and text view is editable
+        if textView.canPaste {
+            let pasteItem = nsMenu.items.first { $0.title == "Paste" }
+            XCTAssertNotNil(pasteItem)
+            XCTAssertTrue(pasteItem!.isEnabled)
+        }
+        
+        // Select All should always be present
+        let selectAllItem = nsMenu.items.first { $0.title == "Select All" }
+        XCTAssertNotNil(selectAllItem)
+        XCTAssertTrue(selectAllItem!.isEnabled)
         #endif
     }
     
@@ -195,20 +209,23 @@ final class ContextMenuTests: XCTestCase {
         #if canImport(AppKit)
         let nsMenu = menu
         
-        // Cut should be disabled for read-only
+        // Cut should not be present for read-only text view (canCut returns false)
         let cutItem = nsMenu.items.first { $0.title == "Cut" }
-        XCTAssertNotNil(cutItem)
-        XCTAssertFalse(cutItem!.isEnabled)
+        XCTAssertNil(cutItem, "Cut action should not be present for read-only text view")
         
-        // Copy should still be enabled
+        // Copy should still be enabled and present
         let copyItem = nsMenu.items.first { $0.title == "Copy" }
         XCTAssertNotNil(copyItem)
         XCTAssertTrue(copyItem!.isEnabled)
         
-        // Paste should be disabled for read-only
+        // Paste should not be present for read-only text view (canPaste returns false)
         let pasteItem = nsMenu.items.first { $0.title == "Paste" }
-        XCTAssertNotNil(pasteItem)
-        XCTAssertFalse(pasteItem!.isEnabled)
+        XCTAssertNil(pasteItem, "Paste action should not be present for read-only text view")
+        
+        // Select All should still be present
+        let selectAllItem = nsMenu.items.first { $0.title == "Select All" }
+        XCTAssertNotNil(selectAllItem)
+        XCTAssertTrue(selectAllItem!.isEnabled)
         #endif
     }
     

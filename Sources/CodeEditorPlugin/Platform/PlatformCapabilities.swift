@@ -130,197 +130,23 @@ public final class PlatformCapabilities {
     }
     
     // MARK: - TextKit Capabilities
-    
-    public var supportsTextKit2: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // TextKit2 is stable on macOS 13.0+
-        return systemVersionComponents.major >= 13
-        #elseif canImport(UIKit)
-        // TextKit2 is available on iOS 16.0+
-        return systemVersionComponents.major >= 16
-        #else
-        return false
-        #endif
-    }
-    
-    public var preferTextKit2: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Prefer TextKit2 on macOS 14.0+ for better stability
-        return systemVersionComponents.major >= 14
-        #elseif canImport(UIKit)
-        // Always prefer TextKit2 on iOS when available
-        return supportsTextKit2
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsTextLayoutFragments: Bool {
-        supportsTextKit2
-    }
-    
-    public var supportsRenderingAttributes: Bool {
-        supportsTextKit2
-    }
+    // Moved to PlatformCapabilities+TextKit.swift
     
     // MARK: - UI Capabilities
-    
-    public var supportsMinimap: Bool {
-        // Currently only implemented for iOS
-        currentPlatform == .iOS || currentPlatform == .catalyst
-    }
-    
-    public var supportsMultipleWindows: Bool {
-        currentPlatform == .macOS || currentPlatform == .catalyst
-    }
-    
-    public var supportsTouchBar: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return true
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsHapticFeedback: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return UIDevice.current.userInterfaceIdiom == .phone
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsGestureRecognizers: Bool {
-        currentPlatform == .iOS || currentPlatform == .catalyst
-    }
-    
-    public var supportsContextMenus: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return true
-        #elseif canImport(UIKit)
-        // iOS 13.0+ supports context menus
-        return systemVersionComponents.major >= 13
-        #else
-        return false
-        #endif
-    }
+    // Moved to PlatformCapabilities+UI.swift
     
     // MARK: - Performance Capabilities
-    
-    public var supportsHardwareAcceleration: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // Metal is available on all supported macOS versions
-        return true
-        #elseif canImport(UIKit)
-        // Check for Metal support on iOS
-        return UIDevice.current.userInterfaceIdiom != .tv
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsBackgroundProcessing: Bool {
-        // All platforms support GCD/async-await
-        true
-    }
-    
-    public var recommendedCacheSize: Int {
-        let memorySize = ProcessInfo.processInfo.physicalMemory
-        let baseSize = 50 * 1_024 * 1_024 // 50MB base
-        
-        if memorySize > 16 * 1_024 * 1_024 * 1_024 { // > 16GB
-            return baseSize * 4
-        } else if memorySize > 8 * 1_024 * 1_024 * 1_024 { // > 8GB
-            return baseSize * 2
-        } else {
-            return baseSize
-        }
-    }
-    
-    public var maxRecommendedFileSize: Int {
-        let memorySize = ProcessInfo.processInfo.physicalMemory
-        
-        if memorySize > 16 * 1_024 * 1_024 * 1_024 { // > 16GB
-            return 100 * 1_024 * 1_024 // 100MB
-        } else if memorySize > 8 * 1_024 * 1_024 * 1_024 { // > 8GB
-            return 50 * 1_024 * 1_024 // 50MB
-        } else {
-            return 20 * 1_024 * 1_024 // 20MB
-        }
-    }
+    // Moved to PlatformCapabilities+Performance.swift
     
     // MARK: - Rendering Capabilities
-    
-    public var supportsCADisplayLink: Bool {
-        // Available on all iOS versions, macOS 14.0+
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return true
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return systemVersionComponents.major >= 14
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsVibrantMaterials: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return true
-        #elseif canImport(UIKit)
-        // iOS 13.0+ supports materials
-        return systemVersionComponents.major >= 13
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsSmoothScrolling: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // ProMotion displays and smooth scrolling
-        return true
-        #elseif canImport(UIKit)
-        // iOS devices with ProMotion
-        return UIScreen.main.maximumFramesPerSecond > 60
-        #else
-        return false
-        #endif
-    }
+    // Moved to PlatformCapabilities+UI.swift and PlatformCapabilities+Performance.swift
     
     // MARK: - Input Capabilities
-    
-    public var supportsKeyboardShortcuts: Bool {
-        currentPlatform == .macOS || currentPlatform == .catalyst
-    }
-    
-    public var supportsPencilInput: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return UIDevice.current.userInterfaceIdiom == .pad
-        #else
-        return false
-        #endif
-    }
-    
-    public var supportsTrackpad: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return true
-        #elseif canImport(UIKit)
-        // iPadOS 13.4+ supports trackpad
-        return UIDevice.current.userInterfaceIdiom == .pad && 
-               systemVersionComponents.major >= 13 && 
-               systemVersionComponents.minor >= 4
-        #else
-        return false
-        #endif
-    }
+    // Moved to PlatformCapabilities+Input.swift
     
     // MARK: - Device Capabilities
     
-    public var isAppleSilicon: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst) && arch(arm64)
-        return true
-        #else
-        return false
-        #endif
-    }
+    // Device capabilities moved to PlatformCapabilities+Performance.swift
     
     public var deviceType: String {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -341,21 +167,7 @@ public final class PlatformCapabilities {
         #endif
     }
     
-    public var hasNotch: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if #available(iOS 13.0, *) {
-            guard let window = UIApplication.shared.connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .first?.windows.first else { return false }
-            return window.safeAreaInsets.top > 20
-        } else {
-            guard let window = UIApplication.shared.keyWindow else { return false }
-            return window.safeAreaInsets.top > 20
-        }
-        #else
-        return false
-        #endif
-    }
+    // hasNotch moved to PlatformCapabilities+UI.swift
     
     // MARK: - Feature Recommendations
     
@@ -381,7 +193,8 @@ public final class PlatformCapabilities {
         }
         
         // Adjust based on performance
-        if !supportsHardwareAcceleration {
+        let perf = performanceCapabilities
+        if !perf.supportsHardwareAcceleration {
             config.performance.useHardwareAcceleration = false
             config.performance.maxSyntaxHighlightingLength = 50_000
         }
@@ -397,16 +210,20 @@ public final class PlatformCapabilities {
     // MARK: - Debug Information
     
     public var debugDescription: String {
-        """
+        let perf = performanceCapabilities
+        let textKit = textKitCapabilities
+        
+        return """
         Platform Capabilities:
         - Platform: \(currentPlatform.name)
         - System Version: \(systemVersion)
         - Device Type: \(deviceType)
-        - Apple Silicon: \(isAppleSilicon)
-        - TextKit2 Support: \(supportsTextKit2) (Preferred: \(preferTextKit2))
-        - Hardware Acceleration: \(supportsHardwareAcceleration)
-        - Recommended Cache Size: \(ByteCountFormatter.string(fromByteCount: Int64(recommendedCacheSize), countStyle: .binary))
-        - Max File Size: \(ByteCountFormatter.string(fromByteCount: Int64(maxRecommendedFileSize), countStyle: .binary))
+        - Architecture: \(perf.processorArchitecture)
+        - Memory Profile: \(perf.memoryProfile)
+        - TextKit2 Support: \(textKit.supportsTextKit2) (Preferred: \(textKit.preferTextKit2))
+        - Hardware Acceleration: \(perf.supportsHardwareAcceleration)
+        - Recommended Cache Size: \(ByteCountFormatter.string(fromByteCount: Int64(perf.recommendedCacheSize), countStyle: .binary))
+        - Max File Size: \(ByteCountFormatter.string(fromByteCount: Int64(perf.maxRecommendedFileSize), countStyle: .binary))
         """
     }
 }

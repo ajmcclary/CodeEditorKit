@@ -9,7 +9,9 @@ import UIKit
 public enum RangeUtilities {
     // MARK: - Performance Cache
     
-    // Cache removed for concurrency compliance - will be re-implemented with actor-based cache later
+    /// Actor-based cache for thread-safe range operation caching
+    /// This replaces the previous cache that was removed for concurrency compliance
+    private static let cache = RangeCacheActor()
     // MARK: - Range Conversion
     
     /// Convert NSRange to NSTextRange
@@ -291,6 +293,24 @@ public enum RangeUtilities {
         return ranges
     }
     
+    /// Get all line ranges in a string with caching (async version)
+    /// This version provides caching for expensive operations
+    public static func lineRangesAsync(in string: String) async -> [NSRange] {
+        // Check cache first
+        let cached = await cache.getCachedLineRanges(for: string)
+        if !cached.isEmpty {
+            return cached
+        }
+        
+        // Compute ranges
+        let ranges = lineRanges(in: string)
+        
+        // Cache the result
+        await cache.cacheLineRanges(ranges, for: string)
+        
+        return ranges
+    }
+    
     /// Get line number for a given character index (0-based) - optimized version
     public static func lineNumber(for index: Int, in string: String) -> Int {
         guard index >= 0 && index <= string.count else { return 0 }
@@ -407,6 +427,24 @@ public enum RangeUtilities {
         
         return []
     }
+    
+    // MARK: - Cache Management
+    
+    /// Clear all cached range data
+    /// Useful for memory management or when text changes significantly
+    public static func clearCache() {
+        Task {
+            await cache.clearCache()
+        }
+    }
+    
+    /// Clear cached data for a specific string
+    /// Useful when text content changes
+    public static func clearCache(for string: String) {
+        Task {
+            await cache.clearCache(for: string)
+        }
+    }
 }
 
 // MARK: - Extensions for Convenience
@@ -442,5 +480,129 @@ extension Array where Element == NSRange {
     /// Adjust all ranges for text deletion
     public func adjustedForDeletion(_ deletionRange: NSRange) -> [NSRange] {
         RangeUtilities.adjustRangesForDeletion(self, deletionRange: deletionRange)
+    }
+}
+
+// MARK: - Range Cache Actor
+
+/// Thread-safe actor for caching expensive range operations
+actor RangeCacheActor {
+    private var lineRangesCache: [String: [NSRange]] = [:]
+    private var lineNumberCache: [String: Int] = [:]
+    private var wordRangeCache: [String: NSRange?] = [:]
+    
+    // Cache limits to prevent memory growth
+    private let maxCacheSize = 50
+    private var cacheAccessOrder: [String] = []
+    
+    /// Cache line ranges for a string
+    func cacheLineRanges(_ ranges: [NSRange], for string: String) {
+        let key = createCacheKey(for: string)
+        lineRangesCache[key] = ranges
+        updateAccessOrder(key: key)
+        enforceMemoryLimits()
+    }
+    
+    /// Get cached line ranges for a string
+    func getCachedLineRanges(for string: String) -> [NSRange] {
+        let key = createCacheKey(for: string)
+        if let ranges = lineRangesCache[key] {
+            updateAccessOrder(key: key)
+            return ranges
+        }
+        return []
+    }
+    
+    /// Cache line number for a character index in a string
+    func cacheLineNumber(_ lineNumber: Int, for index: Int, in string: String) {
+        let key = "\(createCacheKey(for: string)):\(index)"
+        lineNumberCache[key] = lineNumber
+        updateAccessOrder(key: key)
+        enforceMemoryLimits()
+    }
+    
+    /// Get cached line number for a character index in a string
+    func getCachedLineNumber(for index: Int, in string: String) -> Int? {
+        let key = "\(createCacheKey(for: string)):\(index)"
+        if let lineNumber = lineNumberCache[key] {
+            updateAccessOrder(key: key)
+            return lineNumber
+        }
+        return nil
+    }
+    
+    /// Cache word range for a character index in a string
+    func cacheWordRange(_ range: NSRange?, for index: Int, in string: String) {
+        let key = "\(createCacheKey(for: string)):word:\(index)"
+        wordRangeCache[key] = range
+        updateAccessOrder(key: key)
+        enforceMemoryLimits()
+    }
+    
+    /// Get cached word range for a character index in a string
+    func getCachedWordRange(for index: Int, in string: String) -> NSRange?? {
+        let key = "\(createCacheKey(for: string)):word:\(index)"
+        if wordRangeCache.keys.contains(key) {
+            updateAccessOrder(key: key)
+            return wordRangeCache[key]
+        }
+        return nil
+    }
+    
+    /// Clear all caches
+    func clearCache() {
+        lineRangesCache.removeAll()
+        lineNumberCache.removeAll()
+        wordRangeCache.removeAll()
+        cacheAccessOrder.removeAll()
+    }
+    
+    /// Clear cache for a specific string
+    func clearCache(for string: String) {
+        let keyPrefix = createCacheKey(for: string)
+        
+        // Remove from line ranges cache
+        lineRangesCache.removeValue(forKey: keyPrefix)
+        
+        // Remove from line number cache
+        lineNumberCache = lineNumberCache.filter { !$0.key.hasPrefix(keyPrefix) }
+        
+        // Remove from word range cache
+        wordRangeCache = wordRangeCache.filter { !$0.key.hasPrefix(keyPrefix) }
+        
+        // Clean up access order
+        cacheAccessOrder.removeAll { key in
+            key.hasPrefix(keyPrefix)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func createCacheKey(for string: String) -> String {
+        // Create a cache key that's efficient but reasonably unique
+        let hash = string.hashValue
+        return "\(hash):\(string.count)"
+    }
+    
+    private func updateAccessOrder(key: String) {
+        // Remove key if it exists
+        cacheAccessOrder.removeAll { $0 == key }
+        // Add to front (most recently used)
+        cacheAccessOrder.insert(key, at: 0)
+    }
+    
+    private func enforceMemoryLimits() {
+        guard cacheAccessOrder.count > maxCacheSize else { return }
+        
+        // Remove least recently used items
+        let keysToRemove = cacheAccessOrder.suffix(cacheAccessOrder.count - maxCacheSize)
+        
+        for key in keysToRemove {
+            lineRangesCache.removeValue(forKey: key)
+            lineNumberCache.removeValue(forKey: key)
+            wordRangeCache.removeValue(forKey: key)
+        }
+        
+        cacheAccessOrder = Array(cacheAccessOrder.prefix(maxCacheSize))
     }
 }
