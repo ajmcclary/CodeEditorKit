@@ -19,6 +19,8 @@ CodeEditorPlugin provides full support for Mac Catalyst applications, allowing y
 
 ## Platform Detection
 
+> Important: Always use `#if canImport()` instead of `#if os()` for platform detection. This ensures proper Catalyst compatibility.
+
 ### Runtime Checks
 
 ```swift
@@ -32,15 +34,36 @@ extension CodeEditorView {
     }
     
     func configurePlatformSpecifics() {
-        if isCatalyst {
+        #if targetEnvironment(macCatalyst)
             // Catalyst-specific configuration
             configureCatalystBehavior()
-        } else {
-            // Regular iOS behavior
+        #elseif canImport(AppKit)
+            // macOS-specific configuration
+            configureMacOSBehavior()
+        #else
+            // iOS configuration
             configureIOSBehavior()
-        }
+        #endif
     }
 }
+```
+
+### Proper Platform Detection Pattern
+
+```swift
+// ✅ Correct - Works with Catalyst
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    // macOS-only code
+#elseif targetEnvironment(macCatalyst)
+    // Catalyst-specific code
+#elseif canImport(UIKit)
+    // iOS-only code
+#endif
+
+// ❌ Avoid - Causes Catalyst issues
+#if os(macOS)
+    // This won't work correctly for Catalyst
+#endif
 ```
 
 ## Window Management
@@ -322,6 +345,21 @@ The CodeEditorPlugin uses a sophisticated platform abstraction system:
    - Unified input handling
    - Context menu abstraction
    - Feature availability matrix
+
+### Hex Color Support
+
+CodeEditorPlugin provides cross-platform hex color support:
+
+```swift
+// Create colors from hex strings
+let editorBackground = PlatformColor(hexString: "#1E1E1E")
+let selectionColor = PlatformColor(hexString: "#264F78", alpha: 0.8)
+
+// Use in configuration
+var config = EditorConfiguration()
+config.display.backgroundColor = editorBackground
+config.display.selectionColor = selectionColor
+```
 
 ## Implementation Guide
 

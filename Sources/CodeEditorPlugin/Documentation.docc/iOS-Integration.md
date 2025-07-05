@@ -8,7 +8,28 @@ Create touch-optimized code editing experiences for iPhone and iPad.
 
 ## Overview
 
-CodeEditorPlugin provides comprehensive iOS support with touch-optimized interactions, proper keyboard handling, and iPad-specific features.
+CodeEditorPlugin provides comprehensive iOS support with touch-optimized interactions, proper keyboard handling, and iPad-specific features. The platform abstraction layer ensures consistent behavior while leveraging iOS-specific capabilities.
+
+## Platform Setup
+
+### Using Platform Types
+
+Always use the platform abstraction types for cross-platform compatibility:
+
+```swift
+import CodeEditorPlugin
+
+// Use platform-agnostic types
+let backgroundColor = PlatformColors.systemBackground
+let textColor = PlatformColors.label
+let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
+
+// Configure editor with platform types
+var config = EditorConfiguration()
+config.display.backgroundColor = backgroundColor
+config.display.textColor = textColor
+config.display.font = codeFont
+```
 
 ## Touch Interactions
 
@@ -246,6 +267,40 @@ extension CodeEditorView: UIDropDelegate {
 }
 ```
 
+## Container View Architecture
+
+For iOS, use `CodeEditorContainerView` to get proper gutter separation and minimap support:
+
+```swift
+import CodeEditorPlugin
+
+class EditorViewController: UIViewController {
+    private var containerView: CodeEditorContainerView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Create container view (includes gutter and optional minimap)
+        containerView = CodeEditorContainerView()
+        
+        // Access the text view
+        let textView = containerView.textView
+        textView.language = .swift
+        
+        // Configure
+        containerView.configuration = {
+            var config = EditorConfiguration.default
+            config.display.showLineNumbers = true
+            config.display.showMinimap = false // Not recommended on iPhone
+            return config
+        }()
+        
+        view.addSubview(containerView)
+        // Setup constraints...
+    }
+}
+```
+
 ## Best Practices
 
 1. **Touch Targets**: Ensure touch targets are at least 44x44 points
@@ -253,6 +308,8 @@ extension CodeEditorView: UIDropDelegate {
 3. **Memory Management**: Be mindful of memory on older devices
 4. **State Restoration**: Save and restore scroll position and selection
 5. **Accessibility**: Support VoiceOver and other accessibility features
+6. **Platform Types**: Always use `PlatformColor`, `PlatformFont`, etc.
+7. **Container View**: Use `CodeEditorContainerView` for proper layout
 
 ## See Also
 

@@ -8,7 +8,7 @@ Understand the modern, feature-based architecture that powers CodeEditorPlugin.
 
 ## Overview
 
-CodeEditorPlugin uses a clean, modern architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI.
+CodeEditorPlugin uses a clean, modern architecture optimized for performance, maintainability, and extensibility. Built with Swift 6's actor system, it provides thread-safe operations while maintaining a responsive UI. Recent enhancements include a unified wrapper system for cross-platform support and comprehensive platform abstractions.
 
 ## Feature-Based Organization
 
@@ -23,16 +23,16 @@ The codebase is organized by feature rather than by type, providing several bene
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Text editing engine
-├── Configuration/           # Unified config system
-├── SyntaxHighlighting/      # Language support
-├── Layout/                  # UI components
-├── SwiftUI/                 # SwiftUI integration
+├── Core/                    # Text editing engine (CodeEditorView)
+├── Configuration/           # EditorConfiguration system
+├── SyntaxHighlighting/      # Language support (17 languages)
+├── Layout/                  # UI components (GutterView)
+├── SwiftUI/                 # SwiftUI integration (CodeEditor)
 ├── Platform/                # Cross-platform abstractions
+├── Extensions/              # Type extensions (+Extensions naming)
 ├── TextProcessing/          # Actor-based processing
-├── Completion/              # Code completion
 ├── LSP/                     # Language Server Protocol
-└── Plugin/                  # Plugin architecture
+└── Documentation.docc/      # DocC documentation
 ```
 
 ## Core Components
@@ -128,6 +128,23 @@ let config = EditorConfigurationBuilder()
 - **Incremental Parsing**: Only changed sections are re-parsed
 - **Background Processing**: Syntax highlighting happens off the main thread
 - **Memory Efficiency**: Large files are handled with streaming
+
+## Recent Architecture Improvements
+
+### Unified Wrapper System
+- Implemented `CodeEditorViewWrapperProtocol` for sample app
+- Platform-specific implementations: `MacOSCodeEditorViewWrapper`, `IOSCodeEditorViewWrapper`
+- Eliminated code duplication through protocol-based architecture
+
+### Platform Abstraction Enhancements
+- Replaced direct UIColor/NSColor with `PlatformColors`
+- Enhanced concurrency safety with proper actor isolation
+- Fixed platform-specific build issues
+
+### Quality Achievements
+- **319 comprehensive tests** with 100% pass rate
+- **Zero build errors** and SwiftLint violations
+- **Enhanced cross-platform consistency**
 
 ## See Also
 

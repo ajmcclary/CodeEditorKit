@@ -8,7 +8,28 @@ Leverage macOS-specific features to create a native editing experience.
 
 ## Overview
 
-CodeEditorPlugin provides deep integration with macOS, supporting native features like menus, keyboard shortcuts, Touch Bar, and more.
+CodeEditorPlugin provides deep integration with macOS, supporting native features like menus, keyboard shortcuts, Touch Bar, and more. The platform abstraction layer ensures you can write cross-platform code while still accessing macOS-specific features when needed.
+
+## Platform Setup
+
+### Using Platform Types
+
+Always use the platform abstraction types for consistency:
+
+```swift
+import CodeEditorPlugin
+
+// Use platform-agnostic types
+let backgroundColor = PlatformColors.systemBackground
+let textColor = PlatformColors.label
+let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
+
+// Platform capabilities
+let capabilities = PlatformCapabilities.shared
+if capabilities.supportsHardwareAcceleration {
+    // Enable GPU acceleration
+}
+```
 
 ## Menu Bar Integration
 
