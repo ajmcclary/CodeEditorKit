@@ -126,6 +126,9 @@ public final class InputCoordinator: ObservableObject {
     private func handleMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSMouseInput(location: location, type: type, in: textView)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst supports full mouse functionality like macOS
+        return handleDesktopMouseInput(location: location, type: type, in: textView)
         #else
         return handleIOSMouseInput(location: location, type: type, in: textView)
         #endif
@@ -299,6 +302,30 @@ public final class InputCoordinator: ObservableObject {
             return false
         }
     }
+    
+    #if targetEnvironment(macCatalyst)
+    private func handleDesktopMouseInput(location: CGPoint, type: PlatformMouseEventType, in _: CodeEditorView) -> Bool {
+        logger.debug("Handling Mac Catalyst mouse input at \(String(describing: location))")
+        
+        // Mac Catalyst supports full desktop mouse functionality
+        switch type {
+        case .down:
+            // Set cursor position
+            return true
+
+        case .dragged:
+            // Extend selection
+            return true
+
+        case .rightClick:
+            // Show context menu
+            return true
+
+        default:
+            return false
+        }
+    }
+    #endif
     
     private func handleIOSPencilInput(location _: CGPoint, pressure: CGFloat, azimuth: CGFloat, in _: CodeEditorView) -> Bool {
         logger.debug("Handling iOS pencil input: pressure=\(pressure), azimuth=\(azimuth)")

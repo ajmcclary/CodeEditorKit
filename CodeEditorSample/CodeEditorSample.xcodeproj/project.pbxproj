@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -221,6 +221,7 @@
 		B20D562A0ACF7008CCC626DC /* ThemeConfigurationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeConfigurationSection.swift; sourceTree = "<group>"; };
 		B2F0655B5DA5A8C726D42CF4 /* SampleCodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeEditorView.swift; sourceTree = "<group>"; };
 		B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSectionComponents.swift; sourceTree = "<group>"; };
+		B6325A902E1B16ED00E68F19 /* CodeEditorPlugin.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = CodeEditorPlugin.xctestplan; sourceTree = "<group>"; };
 		BAB79933788941603576D264 /* EditorToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolbar.swift; sourceTree = "<group>"; };
 		BB75AEABBF786DCDE6398DB1 /* TestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
 		BC9678817AB21AF0539F4A54 /* AnnotationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationManager.swift; sourceTree = "<group>"; };
@@ -314,6 +315,7 @@
 		166F900772FF6C9CCC21F47A = {
 			isa = PBXGroup;
 			children = (
+				B6325A902E1B16ED00E68F19 /* CodeEditorPlugin.xctestplan */,
 				61873044ABD03B6F2B279AD5 /* CodeEditorPluginTests */,
 				CEB381B8FBB052C675D85F62 /* CodeEditorSample */,
 				4519069B48B9936A5B7BA4A2 /* CodeEditorSampleTests */,
@@ -664,7 +666,6 @@
 			packageReferences = (
 				69B3117AF2437787CF8B5B58 /* XCLocalSwiftPackageReference "..//" */,
 			);
-			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

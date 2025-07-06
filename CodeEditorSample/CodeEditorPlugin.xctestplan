@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "C3B16AAE-D409-4D59-981D-B9F32129B699",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CodeEditorPluginTests",
+        "name" : "CodeEditorPluginTests"
+      }
+    }
+  ],
+  "version" : 1
+}

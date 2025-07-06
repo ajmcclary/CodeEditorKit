@@ -357,7 +357,7 @@ public final class CodeEditorContainerView: PlatformView {
     
     private func updateTextContainerInsets() {
         let padding = configuration.layout.lineNumberPadding
-        let gutterWidth = configuration.display.showLineNumbers ? configuration.layout.gutterWidth : 0
+        let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
         let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -365,7 +365,7 @@ public final class CodeEditorContainerView: PlatformView {
         // When line numbers are shown: ruler view handles the spacing, minimal text inset needed
         // When line numbers are hidden: no ruler view, so minimal padding only
         let currentInsets = textView.textContainerInset
-        let leftInset = configuration.display.showLineNumbers ? padding : padding / 2  // Reduced when hidden
+        let leftInset = showsLineNumbers ? padding : padding / 2  // Reduced when hidden
         textView.textContainerInset = NSSize(
             width: leftInset,
             height: currentInsets.height

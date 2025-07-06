@@ -364,8 +364,8 @@ final class CodeEditorViewTests: XCTestCase {
             defer: false
         )
         window.contentView?.addSubview(textView)
-        #else
-        // On iOS/Catalyst, just add to a UIWindow
+        #elseif canImport(UIKit) && !targetEnvironment(macCatalyst)
+        // On iOS only, create UIWindow (skip on Mac Catalyst to avoid NSApplication issues)
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         window.addSubview(textView)
         #endif
