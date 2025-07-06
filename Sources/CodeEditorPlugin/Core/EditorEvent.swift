@@ -436,17 +436,54 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
     }
 }
 
-// We use @unchecked Sendable here because we manually ensure thread safety with locks.
-// The warnings about capturing non-sendable S.Type are expected since Subscriber types
-// are not required to be Sendable. Our implementation ensures safe access.
+// IMPORTANT: Swift Concurrency and Combine Interoperability
+//
+// This class uses @unchecked Sendable because Combine's Subscriber protocol
+// predates Swift concurrency and doesn't require Sendable conformance.
+// 
+// The warnings about capturing non-sendable S.Type in isolated closures are
+// unavoidable but safe because:
+// 1. All access to the subscriber is protected by locks
+// 2. The generic type S is never directly accessed in async contexts
+// 3. We use type-erased handlers to avoid capturing generic types where possible
+//
+// These warnings can be safely ignored as we ensure thread safety manually.
 @available(macOS 10.15, iOS 13.0, *)
 private final class EditorEventSubscription<S: Subscriber>: Subscription, @unchecked Sendable
     where S.Input == EditorEvent, S.Failure == Never {
     private let lock = NSLock()
     private var subscriber: S?
     private let eventPublisher: EditorEventPublisher
-    private var handlerWrapper: HandlerWrapper?
     private var pendingSetup = true
+    
+    // Thread-safe wrapper storage
+    private final class WrapperStorage: @unchecked Sendable {
+        private let lock = NSLock()
+        private var wrapper: HandlerWrapper?
+        
+        func set(_ wrapper: HandlerWrapper) {
+            lock.lock()
+            self.wrapper = wrapper
+            lock.unlock()
+        }
+        
+        func get() -> HandlerWrapper? {
+            lock.lock()
+            let result = wrapper
+            lock.unlock()
+            return result
+        }
+        
+        func clear() -> HandlerWrapper? {
+            lock.lock()
+            let result = wrapper
+            wrapper = nil
+            lock.unlock()
+            return result
+        }
+    }
+    
+    private let wrapperStorage = WrapperStorage()
     
     init(subscriber: S, eventPublisher: EditorEventPublisher) {
         self.subscriber = subscriber
@@ -464,22 +501,15 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         
         // Store references for async setup
         let pub = eventPublisher
+        let storage = wrapperStorage
         
-        // Create wrapper synchronously then subscribe asynchronously
-        let wrapper = HandlerWrapper()
-        wrapper.handlerBox = box
-        
-        // Store wrapper synchronously
-        lock.lock()
-        handlerWrapper = wrapper
-        lock.unlock()
-        
-        // Subscribe asynchronously without capturing self
-        // Note: wrapper and pub are local values that don't capture S
-        let subscribeTask = Task { @MainActor in
+        // Create and configure everything in MainActor context
+        Task { @MainActor in
+            let wrapper = HandlerWrapper()
+            wrapper.handlerBox = box
             pub.subscribe(wrapper)
+            storage.set(wrapper)
         }
-        _ = subscribeTask
     }
     
     private func handleEvent(_ event: EditorEvent) {
@@ -499,17 +529,13 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     nonisolated func cancel() {
         lock.lock()
         subscriber = nil
-        let wrapper = handlerWrapper
-        handlerWrapper = nil
         lock.unlock()
         
-        if let wrapper {
+        if let wrapper = wrapperStorage.clear() {
             let pub = eventPublisher
-            // Note: wrapper and pub are local values that don't capture S
-            let unsubscribeTask = Task { @MainActor in
+            Task { @MainActor in
                 pub.unsubscribe(wrapper)
             }
-            _ = unsubscribeTask
         }
     }
     
