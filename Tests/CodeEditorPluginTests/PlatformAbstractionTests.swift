@@ -40,7 +40,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Type Alias Tests
     
     func testPlatformTypeAliases() {
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(PlatformColor.self == NSColor.self)
         XCTAssertTrue(PlatformFont.self == NSFont.self)
         XCTAssertTrue(PlatformView.self == NSView.self)
@@ -208,9 +208,17 @@ final class PlatformAbstractionTests: XCTestCase {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS should have more toolbar items
         XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
-        #else
-        // iOS should have fewer toolbar items
-        XCTAssertLessThanOrEqual(toolbarItems.count, 2)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst has more toolbar items
+        XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
+        #elseif canImport(UIKit)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            // iPad has more toolbar items
+            XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
+        } else {
+            // iPhone should have fewer toolbar items
+            XCTAssertLessThanOrEqual(toolbarItems.count, 2)
+        }
         #endif
     }
     
@@ -222,10 +230,11 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertNotNil(features)
         XCTAssertTrue(features.supportsSpellChecking)
         
-        #if canImport(AppKit)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(features.supportsGrammarChecking)
         XCTAssertTrue(features.supportsAutomaticTextCompletion)
-        #elseif canImport(UIKit)
+        #else
+        // iOS and Mac Catalyst don't support these features
         XCTAssertFalse(features.supportsGrammarChecking)
         XCTAssertFalse(features.supportsAutomaticTextCompletion)
         #endif
@@ -245,6 +254,8 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 14, version.major >= 14)
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 13, version.major >= 13)
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 12, version.major >= 12)
+        #elseif targetEnvironment(macCatalyst)
+        XCTAssertEqual(capabilities.currentPlatform, .catalyst)
         #else
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
         #endif

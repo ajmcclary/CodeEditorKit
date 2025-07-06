@@ -34,7 +34,7 @@ final class EdgeInsetsTests: XCTestCase {
     
     // MARK: - Platform Conversion Tests
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     func testNSEdgeInsetsConversion() {
         let nsInsets = NSEdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
         let edgeInsets = EdgeInsets(nsEdgeInsets: nsInsets)
@@ -146,10 +146,10 @@ final class EdgeInsetsTests: XCTestCase {
         #endif
     }
     
-    #if canImport(AppKit)
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @MainActor
     func testNSTextViewExtension() {
-        let textView = NSTextView()
+        let textView = NSTextView(frame: .zero)
         let insets = EdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
         
         textView.setTextContainerEdgeInsets(insets)
@@ -191,7 +191,7 @@ final class EdgeInsetsTests: XCTestCase {
         
         measure {
             for _ in 0..<10_000 {
-                #if canImport(AppKit)
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 _ = edgeInsets.nsEdgeInsets
                 _ = edgeInsets.nsSize
                 #else

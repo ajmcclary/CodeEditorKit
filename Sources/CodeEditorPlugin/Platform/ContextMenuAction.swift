@@ -117,6 +117,7 @@ public struct ContextMenuBuilder: Sendable {
     @MainActor
     private func buildAppKitMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         
         for action in actions {
             if action.isSeparator {

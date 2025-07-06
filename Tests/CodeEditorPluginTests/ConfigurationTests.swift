@@ -1,4 +1,8 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
@@ -34,11 +38,11 @@ final class ConfigurationTests: XCTestCase {
         textView.isEditable = false
         XCTAssertFalse(textView.isEditable)
 
-        let customFont = NSFont.monospacedSystemFont(ofSize: 16, weight: .regular)
+        let customFont = PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular)
         textView.font = customFont
         XCTAssertEqual(textView.font, customFont)
 
-        let customColor = NSColor.systemBlue
+        let customColor = PlatformColors.systemBlue
         textView.textColor = customColor
         XCTAssertEqual(textView.textColor, customColor)
     }
@@ -75,16 +79,22 @@ final class ConfigurationTests: XCTestCase {
         let textView = CodeEditorView(frame: .zero)
 
         // Test width tracking
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
-        XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
+        #else
+        textView.textContainer.widthTracksTextView = true
+        XCTAssertTrue(textView.textContainer.widthTracksTextView)
+        #endif
 
         // Test resizability
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.isHorizontallyResizable = false
         XCTAssertFalse(textView.isHorizontallyResizable)
 
         textView.isVerticallyResizable = false
         XCTAssertFalse(textView.isVerticallyResizable)
+        #endif
     }
 
     // MARK: - Annotation Configuration Tests

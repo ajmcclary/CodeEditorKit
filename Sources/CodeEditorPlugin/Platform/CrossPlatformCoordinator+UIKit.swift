@@ -187,9 +187,8 @@ extension CrossPlatformCoordinator {
         #else
         // Check for external keyboard by examining the input view controller
         // When an external keyboard is connected, the software keyboard is typically hidden
-        if let firstResponder = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.firstResponder {
-            return firstResponder.inputView == nil
-        }
+        // Note: firstResponder is not available on UIWindow in newer iOS versions
+        // For now, assume no external keyboard on iOS simulator/device
         return false
         #endif
     }

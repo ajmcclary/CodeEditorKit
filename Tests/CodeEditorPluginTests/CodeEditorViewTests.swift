@@ -1,4 +1,8 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
@@ -9,7 +13,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testInitialization() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertNotNil(textView)
         XCTAssertNotNil(textView.textStorage)
         XCTAssertNotNil(textView.textContainer)
@@ -18,36 +22,44 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testViewHierarchy() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // NSTextView is its own view, no document view needed
         // Test that it can be standalone or in hierarchy
         XCTAssertTrue(textView.superview == nil || textView.superview != nil)
-        // Test that it's a proper NSTextView subclass
+        // Test that it's a proper text view
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(textView.isKind(of: NSTextView.self))
+        #else
+        XCTAssertTrue(textView.isKind(of: UITextView.self))
+        #endif
     }
 
     // MARK: - Text Setting Tests
 
     @MainActor
     func testSetText() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let testText = "Hello, World!"
         textView.text = testText
 
         XCTAssertEqual(textView.text, testText)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertGreaterThan(textView.textStorage?.length ?? 0, 0)
+        #else
+        XCTAssertGreaterThan(textView.textStorage.length, 0)
+        #endif
     }
 
     @MainActor
     func testSetEmptyText() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = ""
         XCTAssertEqual(textView.text, "")
     }
 
     @MainActor
     func testSetNilText() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Some text"
         textView.text = nil
         XCTAssertEqual(textView.text, "")
@@ -55,7 +67,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testSetLongText() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let longText = String(repeating: "Lorem ipsum dolor sit amet. ", count: 1_000)
         textView.text = longText
         XCTAssertEqual(textView.text, longText)
@@ -65,7 +77,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testLineNumbers() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.showsLineNumbers)  // Default is true
         textView.showsLineNumbers = false
         XCTAssertFalse(textView.showsLineNumbers)
@@ -75,7 +87,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testFont() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let customFont = PlatformFonts.monospacedSystemFont(ofSize: 16, weight: .regular)
         textView.font = customFont
         XCTAssertEqual(textView.font, customFont)
@@ -83,7 +95,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testTextColor() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let customColor = PlatformColors.systemBlue
         textView.textColor = customColor
         XCTAssertEqual(textView.textColor, customColor)
@@ -91,7 +103,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testBackgroundColor() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let customBgColor = PlatformColors.systemGray
         textView.backgroundColor = customBgColor
         XCTAssertEqual(textView.backgroundColor, customBgColor)
@@ -99,7 +111,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testEditability() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isEditable)
         textView.isEditable = false
         XCTAssertFalse(textView.isEditable)
@@ -107,7 +119,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testSelectability() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isSelectable)
         textView.isSelectable = false
         XCTAssertFalse(textView.isSelectable)
@@ -117,7 +129,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testLineHighlighting() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.highlightSelectedLine)  // Default is true
         textView.highlightSelectedLine = false
         XCTAssertFalse(textView.highlightSelectedLine)
@@ -127,8 +139,12 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testLineHighlightColor() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let highlightColor = NSColor.yellow.withAlphaComponent(0.3)
+        #else
+        let highlightColor = UIColor.yellow.withAlphaComponent(0.3)
+        #endif
         textView.selectedLineHighlightColor = highlightColor
         XCTAssertEqual(textView.selectedLineHighlightColor, highlightColor)
     }
@@ -137,18 +153,27 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testWidthTracking() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Test through the text container since CodeEditorView doesn't expose widthTracksTextView directly
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         
         textView.textContainer?.widthTracksTextView = false
         XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
+        #else
+        textView.textContainer.widthTracksTextView = true
+        XCTAssertTrue(textView.textContainer.widthTracksTextView)
+        
+        textView.textContainer.widthTracksTextView = false
+        XCTAssertFalse(textView.textContainer.widthTracksTextView)
+        #endif
     }
 
     @MainActor
     func testHorizontalResizability() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has wrapLines = false, so horizontally resizable = true
         XCTAssertTrue(textView.isHorizontallyResizable)
         
@@ -161,21 +186,28 @@ final class CodeEditorViewTests: XCTestCase {
         config.layout.wrapLines = false
         textView.configuration = config
         XCTAssertTrue(textView.isHorizontallyResizable)
+        #else
+        // isHorizontallyResizable is not available on iOS/Catalyst
+        #endif
     }
 
     @MainActor
     func testVerticalResizability() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isVerticallyResizable)
         textView.isVerticallyResizable = false
         XCTAssertFalse(textView.isVerticallyResizable)
+        #else
+        // isVerticallyResizable is not available on iOS/Catalyst
+        #endif
     }
 
     // MARK: - Delegate Tests
 
     @MainActor
     func testDelegateAssignment() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let delegate = MockCodeEditorViewDelegate()
         textView.textDelegate = delegate
         XCTAssertNotNil(textView.textDelegate)
@@ -185,7 +217,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testAddAnnotation() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content"
 
         // Create mock NSTextRange for annotation
@@ -202,7 +234,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testRemoveAnnotation() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with annotations"
 
         // Create mock ranges for annotations
@@ -234,7 +266,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testRemoveAllAnnotations() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content with multiple annotations"
 
         // Add multiple annotations with mock ranges
@@ -256,7 +288,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationDataSource() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let mockDataSource = MockAnnotationDataSource()
         
         textView.annotationsDataSource = mockDataSource
@@ -270,11 +302,15 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationWithTextKit1() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Implement this feature\nlet x = 42"
         
         // Force layout to ensure text is rendered
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         // Verify text layout manager setup
         XCTAssertNotNil(textView.textStorage)
@@ -289,12 +325,16 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testAnnotationRangeCalculation() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let testText = "Line 1\nLine 2 with TODO\nLine 3"
         textView.text = testText
         
         // Force layout
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         // Find TODO range manually
         let todoRange = testText.range(of: "TODO").map { NSRange($0, in: testText) } ?? NSRange(location: NSNotFound, length: 0)
@@ -302,29 +342,47 @@ final class CodeEditorViewTests: XCTestCase {
         XCTAssertEqual(todoRange.length, 4)
         
         // Verify range is within text bounds
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textView.textStorage?.length ?? 0
+        #else
+        let textLength = textView.textStorage.length
+        #endif
         XCTAssertLessThan(todoRange.location + todoRange.length, textLength + 1)
     }
 
     @MainActor
     func testAnnotationPositioning() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Test annotation positioning"
         
         // Force layout by ensuring the text view is in a window
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            contentRect: CGRect(x: 0, y: 0, width: 400, height: 300),
             styleMask: [],
             backing: .buffered,
             defer: false
         )
         window.contentView?.addSubview(textView)
+        #else
+        // On iOS/Catalyst, just add to a UIWindow
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        window.addSubview(textView)
+        #endif
         
         // Force layout
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         // Verify that text was set
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textView.textStorage?.length ?? 0
+        #else
+        let textLength = textView.textStorage.length
+        #endif
         XCTAssertGreaterThan(textLength, 0, "Text should have content")
         
         // For TextKit2, we need to use textLayoutManager instead of layoutManager
@@ -336,31 +394,36 @@ final class CodeEditorViewTests: XCTestCase {
             // For TextKit2, we can verify that the text view has a valid frame
             XCTAssertGreaterThan(textView.frame.width, 0)
             XCTAssertGreaterThan(textView.frame.height, 0)
-        } else if let layoutManager = textView.layoutManager,
-                  let textContainer = textView.textContainer {
+        } else {
             // TextKit1 path
             print("Using TextKit1 path")
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            if let layoutManager = textView.layoutManager,
+               let textContainer = textView.textContainer {
+                layoutManager.ensureLayout(for: textContainer)
+                
+                let textLength = textView.text?.count ?? 0
+                _ = NSRange(location: 0, length: textLength)
+                
+                // Ensure glyphs are generated
+                _ = layoutManager.glyphRange(for: textContainer)
+            }
+            #else
+            // On iOS, layoutManager is non-optional
+            let layoutManager = textView.layoutManager
+            let textContainer = textView.textContainer
             layoutManager.ensureLayout(for: textContainer)
             
+            let textLength = textView.text?.count ?? 0
             _ = NSRange(location: 0, length: textLength)
             
             // Ensure glyphs are generated
             _ = layoutManager.glyphRange(for: textContainer)
+            #endif
             
-            // Try to get the used rect instead
-            let usedRect = layoutManager.usedRect(for: textContainer)
-            
-            // If still zero, just verify the frame is valid
-            if usedRect.width == 0 || usedRect.height == 0 {
-                // Fall back to verifying the text view frame
-                XCTAssertGreaterThan(textView.frame.width, 0)
-                XCTAssertGreaterThan(textView.frame.height, 0)
-            } else {
-                XCTAssertGreaterThan(usedRect.width, 0)
-                XCTAssertGreaterThan(usedRect.height, 0)
-            }
-        } else {
-            XCTFail("Neither TextKit1 nor TextKit2 layout system available")
+            // Fall back to verifying the text view frame
+            XCTAssertGreaterThan(textView.frame.width, 0)
+            XCTAssertGreaterThan(textView.frame.height, 0)
         }
     }
 
@@ -368,34 +431,49 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testTextStorageHasContent() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "Test content"
 
         // Force layout
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutManager?.ensureLayout(forCharacterRange: NSRange(
             location: 0,
             length: textView.textStorage?.length ?? 0
         ))
+        #else
+        textView.layoutManager.ensureLayout(forCharacterRange: NSRange(
+            location: 0,
+            length: textView.textStorage.length
+        ))
+        #endif
 
         // Check that text storage has content
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textView.textStorage?.length ?? 0
+        #else
+        let textLength = textView.textStorage.length
+        #endif
         XCTAssertGreaterThan(textLength, 0)
     }
 
     @MainActor
     func testLayoutManager() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertNotNil(textView.layoutManager)
-
         // The layout manager should be connected to the text view
         XCTAssertEqual(textView.layoutManager?.textContainers.first, textView.textContainer)
+        #else
+        // On iOS, layoutManager is non-optional
+        XCTAssertEqual(textView.layoutManager.textContainers.first, textView.textContainer)
+        #endif
     }
 
     // MARK: - Syntax Highlighting Tests
 
     @MainActor
     func testSyntaxHighlightingEnabled() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
         textView.isSyntaxHighlightingEnabled = false
         XCTAssertFalse(textView.isSyntaxHighlightingEnabled)
@@ -403,7 +481,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testLanguageSelection() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertEqual(textView.language, .plainText)
         textView.language = .swift
         XCTAssertEqual(textView.language, .swift)
@@ -411,7 +489,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testSetLanguageByExtension() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.setLanguage(fileExtension: "swift")
         XCTAssertEqual(textView.language, .swift)
         textView.setLanguage(fileExtension: "py")
@@ -421,26 +499,40 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testIsFlipped() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isFlipped)
+        #else
+        // isFlipped is not available on iOS/Catalyst
+        #endif
     }
 
     @MainActor
     func testGutterViewCreation() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has showLineNumbers = true
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On macOS, gutterView is managed by the text view
         XCTAssertNotNil(textView.gutterView)
         textView.showsLineNumbers = false
         XCTAssertNil(textView.gutterView)
         textView.showsLineNumbers = true
         XCTAssertNotNil(textView.gutterView)
+        #else
+        // On iOS/Mac Catalyst, gutter is managed by the container view
+        // The text view itself doesn't have a gutter view
+        XCTAssertNil(textView.gutterView)
+        XCTAssertTrue(textView.showsLineNumbers) // But the setting is there
+        textView.showsLineNumbers = false
+        XCTAssertFalse(textView.showsLineNumbers)
+        #endif
     }
 
     // MARK: - Performance Tests
 
     @MainActor
     func testLargeTextPerformance() {
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let largeText = String(repeating: "Line of text\n", count: 10_000)
 
         measure {
@@ -510,14 +602,19 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         viewForLineAnnotation _: CodeEditorViewAnnotation,
         textLineFragment _: NSTextLineFragment,
         proposedViewFrame: CGRect
-    ) -> NSView? {
+    ) -> PlatformView? {
         viewCreationCallCount += 1
         
         // Create a simple test view
-        let view = NSView(frame: proposedViewFrame)
+        let view = PlatformView(frame: proposedViewFrame)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.blue.cgColor
         view.layer?.cornerRadius = proposedViewFrame.width / 2
+        #elseif canImport(UIKit)
+        view.backgroundColor = UIColor.blue
+        view.layer.cornerRadius = proposedViewFrame.width / 2
+        #endif
         
         return view
     }

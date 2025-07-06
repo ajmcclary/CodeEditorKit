@@ -332,14 +332,19 @@ extension PlatformCapabilities {
         // Check for trackpad/mouse support on iPadOS 13.4+
         if #available(iOS 13.4, *) {
             // Check if any scene supports indirect input (trackpad/mouse)
-            return UIApplication.shared.connectedScenes
+            let windowScenes = UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
-                .contains { scene in
-                    scene.traitCollection.userInterfaceIdiom == .pad &&
-                    scene.windows.contains { window in
-                        window.traitCollection.primaryInteractionSource == .indirect
+            
+            for scene in windowScenes {
+                if scene.traitCollection.userInterfaceIdiom == .pad {
+                    // Check if we have any windows on iPadOS (simplified check)
+                    if !scene.windows.isEmpty {
+                        return true
                     }
                 }
+            }
+            
+            return false
         }
         
         // For older iOS versions, assume no pointing device

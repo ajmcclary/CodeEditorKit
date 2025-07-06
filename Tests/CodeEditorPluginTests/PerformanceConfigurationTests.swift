@@ -1,3 +1,8 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
@@ -14,7 +19,11 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure {
             textView.text = largeText
             textView.showsLineNumbers = true
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.needsDisplay = true
+            #elseif canImport(UIKit)
+            textView.setNeedsDisplay()
+            #endif
         }
     }
     
@@ -26,7 +35,11 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure {
             textView.text = largeText
             textView.showsLineNumbers = false
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.needsDisplay = true
+            #elseif canImport(UIKit)
+            textView.setNeedsDisplay()
+            #endif
         }
     }
     
@@ -58,16 +71,27 @@ final class PerformanceConfigurationTests: XCTestCase {
         let textView = CodeEditorView(frame: .zero)
         let largeText = String(repeating: "This is a long line of text that should wrap around. ", count: 1_000)
         textView.text = largeText
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
+        #else
+        textView.textContainer.widthTracksTextView = true
+        #endif
         
         measure {
-            // Simulate scrolling by changing the visible range
-            if let textContainer = textView.textContainer,
-               let layoutManager = textView.layoutManager {
-                let glyphRange = layoutManager.glyphRange(for: textContainer)
-                layoutManager.ensureLayout(for: textContainer)
-                _ = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-            }
+            // Simulate scrolling by changing the visible rect
+            let visibleRect = CGRect(x: 0, y: 0, width: 400, height: 600)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView.scrollToVisible(visibleRect)
+            #else
+            textView.scrollRectToVisible(visibleRect, animated: false)
+            #endif
+            
+            // Force layout to ensure scrolling performance is measured
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView.needsDisplay = true
+            #elseif canImport(UIKit)
+            textView.setNeedsDisplay()
+            #endif
         }
     }
     
@@ -82,8 +106,16 @@ final class PerformanceConfigurationTests: XCTestCase {
             textView.showsLineNumbers.toggle()
             textView.showsInvisibleCharacters.toggle()
             textView.highlightSelectedLine.toggle()
-            textView.textContainer?.widthTracksTextView = !(textView.textContainer?.widthTracksTextView ?? false)
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            if let container = textView.textContainer {
+                container.widthTracksTextView.toggle()
+            }
+            #else
+            textView.textContainer.widthTracksTextView.toggle()
+            #endif
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.isHorizontallyResizable.toggle()
+            #endif
         }
     }
     
@@ -100,7 +132,8 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.language = .swift
         textView.isSyntaxHighlightingEnabled = true
         
-        let colorSchemes: [(bg: NSColor, text: NSColor, selectedLine: NSColor)] = [
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
             (.white, .black, NSColor.selectedTextBackgroundColor),
             (.black, .white, NSColor.selectedTextBackgroundColor.withAlphaComponent(0.3)),
             (NSColor(calibratedWhite: 0.98, alpha: 1.0), .black, NSColor.selectedTextBackgroundColor),
@@ -108,6 +141,18 @@ final class PerformanceConfigurationTests: XCTestCase {
             (.white, .black, NSColor(calibratedRed: 0.9, green: 0.9, blue: 1.0, alpha: 1.0)),
             (NSColor(calibratedWhite: 0.05, alpha: 1.0), NSColor(calibratedWhite: 0.95, alpha: 1.0), NSColor.selectedTextBackgroundColor.withAlphaComponent(0.4))
         ]
+        #elseif canImport(UIKit)
+        // swiftlint:disable object_literal
+        let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
+            (.white, .black, UIColor.systemGray4),
+            (.black, .white, UIColor.systemGray4.withAlphaComponent(0.3)),
+            (UIColor(white: 0.98, alpha: 1.0), .black, UIColor.systemGray4),
+            (UIColor(white: 0.15, alpha: 1.0), UIColor(white: 0.9, alpha: 1.0), UIColor.systemGray4.withAlphaComponent(0.3)),
+            (.white, .black, UIColor(red: 0.9, green: 0.9, blue: 1.0, alpha: 1.0)),
+            (UIColor(white: 0.05, alpha: 1.0), UIColor(white: 0.95, alpha: 1.0), UIColor.systemGray4.withAlphaComponent(0.4))
+        ]
+        // swiftlint:enable object_literal
+        #endif
         
         measure {
             for scheme in colorSchemes {
@@ -131,8 +176,12 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = largeTextWithErrors
         
         measure {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.isContinuousSpellCheckingEnabled = true
             textView.checkTextInDocument(nil)
+            #elseif canImport(UIKit)
+            textView.spellCheckingType = .yes
+            #endif
         }
     }
     
@@ -148,9 +197,15 @@ final class PerformanceConfigurationTests: XCTestCase {
         
         measure {
             textView.text = largeText
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.isAutomaticQuoteSubstitutionEnabled = true
             textView.isAutomaticDashSubstitutionEnabled = true
             textView.isAutomaticTextReplacementEnabled = true
+            #elseif canImport(UIKit)
+            textView.smartQuotesType = .yes
+            textView.smartDashesType = .yes
+            textView.autocorrectionType = .yes
+            #endif
         }
     }
     
@@ -161,6 +216,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = largeText
         
         // Test that hardware acceleration features can be configured
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.wantsLayer = true
         XCTAssertTrue(textView.wantsLayer, "Hardware acceleration should be enabled")
         XCTAssertNotNil(textView.layer, "Layer should be created for hardware acceleration")
@@ -178,6 +234,24 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Test disabling async drawing
         textView.layer?.drawsAsynchronously = false
         XCTAssertFalse(textView.layer?.drawsAsynchronously ?? true, "Asynchronous drawing should be disabled")
+        #elseif canImport(UIKit)
+        // UIKit always uses layers
+        XCTAssertNotNil(textView.layer, "Layer should always exist in UIKit")
+        
+        // Configure layer for async drawing
+        textView.layer.drawsAsynchronously = true
+        XCTAssertTrue(textView.layer.drawsAsynchronously, "Asynchronous drawing should be enabled")
+        
+        // Test that rendering works with hardware acceleration
+        textView.setNeedsDisplay()
+        
+        // Verify that the text view maintains its content with hardware acceleration
+        XCTAssertEqual(textView.text, largeText, "Text content should remain unchanged with hardware acceleration")
+        
+        // Test disabling async drawing
+        textView.layer.drawsAsynchronously = false
+        XCTAssertFalse(textView.layer.drawsAsynchronously, "Asynchronous drawing should be disabled")
+        #endif
     }
     
     @MainActor
@@ -194,8 +268,12 @@ final class PerformanceConfigurationTests: XCTestCase {
                 tv.showsInvisibleCharacters = true
                 tv.isSyntaxHighlightingEnabled = true
                 tv.language = .swift
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 tv.isContinuousSpellCheckingEnabled = true
                 tv.isGrammarCheckingEnabled = true
+                #elseif canImport(UIKit)
+                tv.spellCheckingType = .yes
+                #endif
                 textViews.append(tv)
             }
             
@@ -221,11 +299,24 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = String(repeating: complexText + "\n", count: 50)
         textView.showsLineNumbers = true
         textView.highlightSelectedLine = true
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
+        #else
+        textView.textContainer.widthTracksTextView = true
+        #endif
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        #elseif canImport(UIKit)
+        textView.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        #endif
         
         measure {
-            textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+            // Force layout using TextKit2-compatible method
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            textView.layout()
+            #elseif canImport(UIKit)
+            textView.layoutIfNeeded()
+            #endif
         }
     }
 }

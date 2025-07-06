@@ -153,7 +153,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
             """
         }
         
-        textView.string = largeCode
+        textView.text = largeCode
         textView.language = .swift
         navigator.attach(to: textView)
         
@@ -187,15 +187,23 @@ final class ComprehensivePerformanceTests: XCTestCase {
             ]
             
             for (open, close) in testCases {
-                textView.string = ""
+                textView.text = ""
                 
                 // Simulate typing many brackets
                 for index in 0..<200 { // Reduced count for combined test
-                    let range = NSRange(location: textView.string.count, length: 0)
+                    let range = NSRange(location: textView.text?.count ?? 0, length: 0)
                     if index.isMultiple(of: 2) {
+                        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: open)
+                        #else
+                        _ = engine.textView(textView, shouldChangeTextIn: range, replacementText: open)
+                        #endif
                     } else {
+                        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: close)
+                        #else
+                        _ = engine.textView(textView, shouldChangeTextIn: range, replacementText: close)
+                        #endif
                     }
                 }
             }
@@ -415,7 +423,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
         The fox is quick and jumps high.
         Many words have exactly five letters.
         """
-        textView.string = testContent
+        textView.text = testContent
         
         // Attach engine to text view
         engine.attach(to: textView)

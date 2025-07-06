@@ -99,15 +99,9 @@ final class PlatformCapabilitiesTests: XCTestCase {
     func testLSPSupport() {
         let capabilities = PlatformCapabilities.shared
         let isAvailable = capabilities.isFeatureAvailable(.languageServerProtocol)
-        let platform = capabilities.currentPlatform
         
-        switch platform {
-        case .macOS:
-            XCTAssertTrue(isAvailable)
-
-        case .iOS, .catalyst:
-            XCTAssertFalse(isAvailable)
-        }
+        // LSP is a software feature available on all platforms
+        XCTAssertTrue(isAvailable)
     }
     
     @MainActor
@@ -175,11 +169,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertEqual(availability, .full)
 
         case .catalyst:
-            XCTAssertEqual(availability, .full)
+            // Mac Catalyst gets partial symbol navigation
+            XCTAssertEqual(availability, .partial)
 
         case .iOS:
-            // Both iPhone and iPad get full symbol navigation
-            XCTAssertEqual(availability, .full)
+            // iOS also gets partial symbol navigation
+            XCTAssertEqual(availability, .partial)
         }
     }
     

@@ -180,9 +180,17 @@ class LineNumberRulerView: NSRulerView {
 extension CodeEditorContainerView {
     /// Sets up the macOS-specific views and constraints
     func setupMacOSViews() {
-        guard let scrollView = textView.enclosingScrollView else { return }
+        // Set up the scroll view and text view relationship
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
         
-        // Configure scroll view
+        // Add scroll view and minimap to container
+        addSubview(scrollView)
+        addSubview(minimapView)
+        
+        // Configure scroll view for line numbers
         scrollView.hasVerticalRuler = configuration.display.showLineNumbers
         scrollView.rulersVisible = configuration.display.showLineNumbers
         

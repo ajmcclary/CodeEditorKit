@@ -1,4 +1,8 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
@@ -17,13 +21,22 @@ final class AnnotationTests: XCTestCase {
     
     override func setUp() async throws {
         await MainActor.run {
-            _textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+            _textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 800, height: 600))
             // Ensure text storage is properly initialized
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             _textView?.string = ""
+            #else
+            _textView?.text = ""
+            #endif
             // Force layout to ensure TextKit is initialized
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             _textView?.layoutSubtreeIfNeeded()
             _textView?.needsLayout = true
             _textView?.layout()
+            #else
+            _textView?.layoutIfNeeded()
+            _textView?.setNeedsLayout()
+            #endif
         }
     }
     
@@ -53,14 +66,22 @@ final class AnnotationTests: XCTestCase {
         
         // Fallback: create a mock range for testing
         let mockLocation = MockTextLocation(offset: 0)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let mockEndLocation = MockTextLocation(offset: textView.string.count)
+        #else
+        let mockEndLocation = MockTextLocation(offset: textView.text?.count ?? 0)
+        #endif
         return NSTextRange(location: mockLocation, end: mockEndLocation)
     }
     
     // MARK: - Annotation Model Tests
     
     func testAnnotationCreation() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.string = "Test content"
+        #else
+        textView.text = "Test content"
+        #endif
         
         guard let range = createFullDocumentRange() else {
             XCTFail("Could not create text range")
@@ -75,7 +96,11 @@ final class AnnotationTests: XCTestCase {
     }
     
     func testAnnotationEquality() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.string = "Test content"
+        #else
+        textView.text = "Test content"
+        #endif
         
         guard let range1 = createFullDocumentRange(),
               let range2 = createFullDocumentRange() else {
@@ -97,7 +122,11 @@ final class AnnotationTests: XCTestCase {
     // MARK: - CodeEditorViewAnnotation Tests
     
     func testCodeEditorViewAnnotationCreation() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.string = "Test content"
+        #else
+        textView.text = "Test content"
+        #endif
         
         // Create a mock location at the beginning of the document
         let location = MockTextLocation(offset: 0)
@@ -252,7 +281,11 @@ final class AnnotationTests: XCTestCase {
         textView.addAnnotation(annotation)
         
         // Force layout to trigger annotation view creation
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         // Verify data source was accessed
         XCTAssertNotNil(textView.annotationsDataSource)
@@ -283,7 +316,11 @@ final class AnnotationTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.count, 0)
         
         // Layout should not crash
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
     }
     
     // MARK: - Annotation Layout Tests
@@ -292,7 +329,11 @@ final class AnnotationTests: XCTestCase {
         textView.text = "Test text for layout"
         
         // Force initial layout
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         guard let range = createFullDocumentRange() else {
             XCTFail("Could not create range")
@@ -303,7 +344,11 @@ final class AnnotationTests: XCTestCase {
         textView.addAnnotation(annotation)
         
         // Layout again with annotation
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.layoutSubtreeIfNeeded()
+        #else
+        textView.layoutIfNeeded()
+        #endif
         
         // Should not crash and annotation should be tracked
         XCTAssertEqual(textView.allAnnotations.count, 1)
@@ -454,16 +499,21 @@ class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         viewForLineAnnotation annotation: CodeEditorViewAnnotation,
         textLineFragment: NSTextLineFragment,
         proposedViewFrame: CGRect
-    ) -> NSView? {
+    ) -> PlatformView? {
         _ = textView
         _ = annotation
         _ = textLineFragment
         viewCreationCount += 1
         
-        let view = NSView(frame: proposedViewFrame)
+        let view = PlatformView(frame: proposedViewFrame)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.systemBlue.cgColor
         view.layer?.cornerRadius = proposedViewFrame.width / 2
+        #elseif canImport(UIKit)
+        view.backgroundColor = UIColor.systemBlue
+        view.layer.cornerRadius = proposedViewFrame.width / 2
+        #endif
         
         return view
     }

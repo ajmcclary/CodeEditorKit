@@ -119,6 +119,17 @@ public enum TextMetricsCalculator {
         totalLines: Int,
         contentOffset: CGPoint = .zero
     ) -> Range<Int> {
+        // Validate inputs to prevent crashes
+        guard lineHeight > 0, 
+              bounds.width.isFinite, 
+              bounds.height.isFinite,
+              bounds.origin.x.isFinite,
+              bounds.origin.y.isFinite,
+              contentOffset.x.isFinite,
+              contentOffset.y.isFinite else {
+            return 0..<0
+        }
+        
         let adjustedBounds = CGRect(
             x: bounds.origin.x,
             y: bounds.origin.y + contentOffset.y,
@@ -126,8 +137,18 @@ public enum TextMetricsCalculator {
             height: bounds.height
         )
         
-        let firstVisibleLine = max(0, Int(floor(adjustedBounds.minY / lineHeight)))
-        let lastVisibleLine = min(totalLines - 1, Int(ceil(adjustedBounds.maxY / lineHeight)))
+        // Additional validation for adjusted bounds
+        guard adjustedBounds.minY.isFinite, adjustedBounds.maxY.isFinite else {
+            return 0..<0
+        }
+        
+        // Safe conversion with bounds checking
+        let firstVisibleLineDouble = floor(adjustedBounds.minY / lineHeight)
+        let lastVisibleLineDouble = ceil(adjustedBounds.maxY / lineHeight)
+        
+        // Ensure values are within Int range before conversion
+        let firstVisibleLine = max(0, Int(max(Double(Int.min), min(Double(Int.max), firstVisibleLineDouble))))
+        let lastVisibleLine = min(totalLines - 1, Int(max(Double(Int.min), min(Double(Int.max), lastVisibleLineDouble))))
         
         // Ensure we don't create an invalid range
         let endLine = min(lastVisibleLine + 1, totalLines)
@@ -151,7 +172,17 @@ public enum TextMetricsCalculator {
         in bounds: CGRect,
         lineHeight: CGFloat
     ) -> Int {
-        max(1, Int(floor(bounds.height / lineHeight)))
+        // Validate inputs to prevent crashes
+        guard lineHeight > 0, 
+              bounds.height.isFinite, 
+              bounds.height >= 0 else {
+            return 1
+        }
+        
+        // Safe conversion with bounds checking
+        let visibleLinesDouble = floor(bounds.height / lineHeight)
+        let visibleLines = Int(max(Double(Int.min), min(Double(Int.max), visibleLinesDouble)))
+        return max(1, visibleLines)
     }
     
     // MARK: - Character Metrics

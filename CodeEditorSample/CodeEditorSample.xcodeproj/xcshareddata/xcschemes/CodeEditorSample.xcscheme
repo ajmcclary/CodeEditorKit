@@ -15,6 +15,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9DFF5D87CEE92D7030FD8112"
+               BuildableName = "CodeEditorPluginTests-iOS.xctest"
+               BlueprintName = "CodeEditorPluginTests-iOS"
+               ReferencedContainer = "container:CodeEditorSample.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "CECD44AB1B8929EA916C2928"
                BuildableName = "CodeEditorSample.app"
                BlueprintName = "CodeEditorSample"
@@ -69,6 +83,16 @@
                ReferencedContainer = "container:CodeEditorSample.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9DFF5D87CEE92D7030FD8112"
+               BuildableName = "CodeEditorPluginTests-iOS.xctest"
+               BlueprintName = "CodeEditorPluginTests-iOS"
+               ReferencedContainer = "container:CodeEditorSample.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
@@ -112,6 +136,8 @@
             ReferencedContainer = "container:CodeEditorSample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

@@ -1,3 +1,8 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 @testable import CodeEditorPlugin
 import XCTest
 
@@ -312,7 +317,11 @@ final class TextKit2OptimizationTests: XCTestCase {
         
         // Simulate a large file
         let largeText = String(repeating: "This is a line of code that represents a large file.\n", count: 2_000)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         codeEditorView.string = largeText
+        #elseif canImport(UIKit)
+        codeEditorView.text = largeText
+        #endif
         
         // Configure for performance
         var config = EditorConfiguration()
@@ -321,7 +330,11 @@ final class TextKit2OptimizationTests: XCTestCase {
         codeEditorView.configuration = config
         
         // Verify text was set
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(codeEditorView.string.count, largeText.count)
+        #elseif canImport(UIKit)
+        XCTAssertEqual(codeEditorView.text.count, largeText.count)
+        #endif
     }
     
     // MARK: - Performance Tests

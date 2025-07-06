@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1430"
-   version = "1.7">
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES"
-      runPostActionsOnFailure = "NO">
+      buildImplicitDependencies = "YES">
       <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9DFF5D87CEE92D7030FD8112"
+               BuildableName = "CodeEditorPluginTests-iOS.xctest"
+               BlueprintName = "CodeEditorPluginTests-iOS"
+               ReferencedContainer = "container:CodeEditorSample.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
@@ -29,9 +42,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "DC635B77EE56E6B11BFA2379"
-               BuildableName = "CodeEditorSampleTests.xctest"
-               BlueprintName = "CodeEditorSampleTests"
+               BlueprintIdentifier = "3AFB98D9291A0A7726A13B59"
+               BuildableName = "CodeEditorSampleTests-Catalyst.xctest"
+               BlueprintName = "CodeEditorSampleTests-Catalyst"
                ReferencedContainer = "container:CodeEditorSample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -41,14 +54,7 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      onlyGenerateCoverageForSpecifiedTargets = "NO">
-      <TestPlans>
-         <TestPlanReference
-            default = "YES"
-            reference = "container:Tests/CodeEditorSample.xctestplan">
-         </TestPlanReference>
-      </TestPlans>
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -63,15 +69,13 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "DC635B77EE56E6B11BFA2379"
-               BuildableName = "CodeEditorSampleTests.xctest"
-               BlueprintName = "CodeEditorSampleTests"
+               BlueprintIdentifier = "3AFB98D9291A0A7726A13B59"
+               BuildableName = "CodeEditorSampleTests-Catalyst.xctest"
+               BlueprintName = "CodeEditorSampleTests-Catalyst"
                ReferencedContainer = "container:CodeEditorSample.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -93,8 +97,6 @@
             ReferencedContainer = "container:CodeEditorSample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

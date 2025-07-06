@@ -81,14 +81,14 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(symbolNavAvailability, .full)
         #elseif targetEnvironment(macCatalyst)
         XCTAssertEqual(goToDefAvailability, .partial)
-        XCTAssertEqual(symbolNavAvailability, .full)
+        XCTAssertEqual(symbolNavAvailability, .partial)
         #elseif canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCTAssertEqual(goToDefAvailability, .partial)
-            XCTAssertEqual(symbolNavAvailability, .full)
+            XCTAssertEqual(symbolNavAvailability, .partial)
         } else {
             XCTAssertEqual(goToDefAvailability, .unavailable)
-            XCTAssertEqual(symbolNavAvailability, .full)
+            XCTAssertEqual(symbolNavAvailability, .partial)
         }
         #endif
     }
@@ -132,8 +132,12 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         // iOS should have limited toolbar
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCTAssertTrue(items.contains { $0.id == "symbol" })
+            // iPad also gets format option
+            XCTAssertTrue(items.contains { $0.id == "format" })
+        } else {
+            // iPhone doesn't get format
+            XCTAssertFalse(items.contains { $0.id == "format" })
         }
-        XCTAssertFalse(items.contains { $0.id == "format" })
         #endif
     }
     
@@ -170,6 +174,9 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(handled)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst always handles keyboard input
+        XCTAssertTrue(handled)
         #else
         // iOS only handles keyboard input with external keyboard
         XCTAssertEqual(handled, coordinator.isExternalKeyboardConnected())
@@ -187,6 +194,9 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         )
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        XCTAssertTrue(handled)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst always handles mouse input
         XCTAssertTrue(handled)
         #else
         // iOS only handles mouse with pointing device
@@ -211,10 +221,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let nsMenu = menu
         XCTAssertGreaterThan(nsMenu.items.count, 3)
         #else
-        // iOS returns UIMenu
-        if let uiMenu = menu as? UIMenu {
-            XCTAssertGreaterThanOrEqual(uiMenu.children.count, 3)
-        }
+        // iOS returns UIMenu (PlatformContextMenu is typealias for UIMenu)
+        XCTAssertGreaterThanOrEqual(menu.children.count, 3)
         #endif
     }
     

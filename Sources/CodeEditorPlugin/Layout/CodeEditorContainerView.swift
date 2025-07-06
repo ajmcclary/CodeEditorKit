@@ -361,12 +361,13 @@ public final class CodeEditorContainerView: PlatformView {
         let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // On macOS, we need to set inset to account for the ruler view and minimap
-        // Note: We don't add right inset for minimap on macOS because the scroll view
-        // width is already adjusted. The text view needs to fill the scroll view.
+        // On macOS, we use ruler view for line numbers, so text container insets work differently
+        // When line numbers are shown: ruler view handles the spacing, minimal text inset needed
+        // When line numbers are hidden: no ruler view, so minimal padding only
         let currentInsets = textView.textContainerInset
+        let leftInset = configuration.display.showLineNumbers ? padding : padding / 2  // Reduced when hidden
         textView.textContainerInset = NSSize(
-            width: gutterWidth + padding,
+            width: leftInset,
             height: currentInsets.height
         )
         #else
