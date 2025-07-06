@@ -436,6 +436,9 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
     }
 }
 
+// We use @unchecked Sendable here because we manually ensure thread safety with locks.
+// The warnings about capturing non-sendable S.Type are expected since Subscriber types
+// are not required to be Sendable. Our implementation ensures safe access.
 @available(macOS 10.15, iOS 13.0, *)
 private final class EditorEventSubscription<S: Subscriber>: Subscription, @unchecked Sendable
     where S.Input == EditorEvent, S.Failure == Never {
@@ -462,15 +465,29 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         // Store references for async setup
         let pub = eventPublisher
         
-        // Defer setup to avoid capturing self in init
-        Task { @MainActor in
-            let wrapper = HandlerWrapper()
-            wrapper.handlerBox = box
+        // Create wrapper synchronously then subscribe asynchronously
+        let wrapper = HandlerWrapper()
+        wrapper.handlerBox = box
+        
+        // Store wrapper synchronously
+        lock.lock()
+        handlerWrapper = wrapper
+        lock.unlock()
+        
+        // Subscribe asynchronously without capturing self
+        // Note: wrapper and pub are local values that don't capture S
+        let subscribeTask = Task { @MainActor in
             pub.subscribe(wrapper)
-            
-            // Safe to access directly since we're on MainActor
-            self.handlerWrapper = wrapper
         }
+        _ = subscribeTask
+    }
+    
+    private func handleEvent(_ event: EditorEvent) {
+        lock.lock()
+        let sub = subscriber
+        lock.unlock()
+        
+        _ = sub?.receive(event)
     }
     
     nonisolated func request(_: Subscribers.Demand) {
@@ -488,18 +505,12 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         
         if let wrapper {
             let pub = eventPublisher
-            Task { @MainActor in
+            // Note: wrapper and pub are local values that don't capture S
+            let unsubscribeTask = Task { @MainActor in
                 pub.unsubscribe(wrapper)
             }
+            _ = unsubscribeTask
         }
-    }
-    
-    private func handleEvent(_ event: EditorEvent) {
-        lock.lock()
-        let sub = subscriber
-        lock.unlock()
-        
-        _ = sub?.receive(event)
     }
     
     // Type-erased handler box to avoid capturing generic types
