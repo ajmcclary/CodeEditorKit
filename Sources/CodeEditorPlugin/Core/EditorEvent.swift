@@ -375,7 +375,7 @@ private final class WeakHandler {
 // MARK: - Combine Support
 
 #if canImport(Combine)
-import Combine
+@preconcurrency import Combine
 
 @available(macOS 10.15, iOS 13.0, *)
 extension EditorEventPublisher {
@@ -456,6 +456,31 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     private let eventPublisher: EditorEventPublisher
     private var pendingSetup = true
     
+    // Thread-safe handler reference
+    private final class HandlerReference: @unchecked Sendable {
+        private let lock = NSLock()
+        private var handler: ((EditorEvent) -> Void)?
+        
+        func set(_ handler: @escaping (EditorEvent) -> Void) {
+            lock.lock()
+            self.handler = handler
+            lock.unlock()
+        }
+        
+        func clear() {
+            lock.lock()
+            handler = nil
+            lock.unlock()
+        }
+        
+        func handle(_ event: EditorEvent) {
+            lock.lock()
+            let eventHandler = handler
+            lock.unlock()
+            eventHandler?(event)
+        }
+    }
+    
     // Thread-safe wrapper storage
     private final class WrapperStorage: @unchecked Sendable {
         private let lock = NSLock()
@@ -484,31 +509,36 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     }
     
     private let wrapperStorage = WrapperStorage()
+    private let handlerReference = HandlerReference()
     
     init(subscriber: S, eventPublisher: EditorEventPublisher) {
         self.subscriber = subscriber
         self.eventPublisher = eventPublisher
-    }
-    
-    private func ensureSetup() {
-        guard pendingSetup else { return }
-        pendingSetup = false
         
-        // Create handler box to avoid capturing generic type
-        let box = HandlerBox { [weak self] event in
+        // Set up the handler reference immediately
+        handlerReference.set { [weak self] event in
             self?.handleEvent(event)
         }
-        
-        // Store references for async setup
-        let pub = eventPublisher
-        let storage = wrapperStorage
-        
-        // Create and configure everything in MainActor context
-        Task { @MainActor in
+    }
+    
+    nonisolated private func ensureSetup() {
+        // Use dispatch to avoid concurrency issues with generic types
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            guard self.pendingSetup else { return }
+            self.pendingSetup = false
+            
+            // Create and set up the handler on the main queue
+            let handlerRef = self.handlerReference
+            let box = HandlerBox { event in
+                handlerRef.handle(event)
+            }
             let wrapper = HandlerWrapper()
             wrapper.handlerBox = box
-            pub.subscribe(wrapper)
-            storage.set(wrapper)
+            
+            // Subscribe the wrapper to the publisher
+            self.eventPublisher.subscribe(wrapper)
+            self.wrapperStorage.set(wrapper)
         }
     }
     
@@ -531,10 +561,13 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         subscriber = nil
         lock.unlock()
         
+        // Clear the handler reference
+        handlerReference.clear()
+        
+        // Remove wrapper and unsubscribe on main queue
         if let wrapper = wrapperStorage.clear() {
-            let pub = eventPublisher
-            Task { @MainActor in
-                pub.unsubscribe(wrapper)
+            DispatchQueue.main.async { [weak eventPublisher] in
+                eventPublisher?.unsubscribe(wrapper)
             }
         }
     }
