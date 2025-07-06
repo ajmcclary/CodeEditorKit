@@ -237,21 +237,46 @@ public final class TextKitBridge {
         return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
         #elseif canImport(UIKit)
         guard let layoutManager = textView?.layoutManager,
-              let textContainer = textView?.textContainer else { return nil }
+              let textContainer = textView?.textContainer,
+              let textView else { return nil }
         
-        let visibleRect = textView?.bounds ?? .zero
+        // Calculate the visible rect based on the scroll position and content inset
+        let contentOffset = textView.contentOffset
+        let textContainerInset = textView.textContainerInset
+        let bounds = textView.bounds
+        
+        // Create visible rect that accounts for scroll position
+        let visibleRect = CGRect(
+            x: contentOffset.x,
+            y: contentOffset.y + textContainerInset.top,
+            width: bounds.width,
+            height: bounds.height
+        )
+        
         let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         return layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
         #endif
     }
     
     private func visibleRangeTextKit2() -> NSRange? {
-        guard let textLayoutManager = textView?.textLayoutManager else { return nil }
+        guard let textLayoutManager = textView?.textLayoutManager,
+              let textView else { return nil }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let visibleRect = textView?.visibleRect ?? .zero
+        let visibleRect = textView.visibleRect
         #elseif canImport(UIKit)
-        let visibleRect = textView?.bounds ?? .zero
+        // Calculate the visible rect based on the scroll position and content inset
+        let contentOffset = textView.contentOffset
+        let textContainerInset = textView.textContainerInset
+        let bounds = textView.bounds
+        
+        // Create visible rect that accounts for scroll position
+        let visibleRect = CGRect(
+            x: contentOffset.x,
+            y: contentOffset.y + textContainerInset.top,
+            width: bounds.width,
+            height: bounds.height
+        )
         #endif
         
         var firstRange: NSRange?

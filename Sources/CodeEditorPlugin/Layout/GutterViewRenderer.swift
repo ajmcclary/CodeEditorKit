@@ -107,36 +107,8 @@ public class GutterViewRenderer {
         context _: CGContext,
         textView: CodeEditorView
     ) {
-        // Get the rect for this line using helper
-        guard let lineRect = helper.getLineFragmentRect(for: lineRange) else {
-            return
-        }
-        
-        // Calculate drawing position
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS: align with text baseline
-        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
-        let yPosition = lineRect.minY + (lineRect.height - fontLineHeight) / 2
-        #else
-        // iOS/Catalyst: Calculate position accounting for text container inset
-        let textContainerInset = textView.textContainerInset
-        
-        // The lineRect.origin.y is in text coordinates (starts at 0)
-        // We need to convert to view coordinates accounting for:
-        // 1. The text container inset (text starts at y = textContainerInset.top)
-        // 2. The scroll offset
-        // 3. Center the line number with the text baseline
-        
-        // When at scroll position 0, the first line of text is at y = textContainerInset.top
-        // So we need to add the inset and subtract the scroll
-        let baseY = lineRect.origin.y + textContainerInset.top - textView.contentOffset.y
-        
-        // Adjust for text baseline alignment (similar to macOS)
-        // The line number should be vertically centered with the text
-        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
-        let yPosition = baseY + (lineRect.height - fontLineHeight) / 2
-        
-        #endif
+        // Calculate Y position directly from line number and actual text layout
+        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, textView: textView)
         
         let drawingPoint = CGPoint(
             x: 0, // Will be adjusted by the unified drawing method for right alignment
@@ -158,6 +130,43 @@ public class GutterViewRenderer {
         
         // Restore graphics state
         UnifiedDrawingCoordinator.restoreGraphicsState()
+    }
+    
+    /// Calculate the Y position for a line number using simplified AppKit-style approach
+    private func calculateLineNumberYPosition(lineNumber: Int, lineRange: NSRange, textView: CodeEditorView) -> CGFloat {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS implementation - unchanged
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else {
+            return CGFloat(lineNumber - 1) * TextMetricsCalculator.calculateLineHeight(for: font)
+        }
+        
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
+        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
+        let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+        return lineRect.minY + (lineRect.height - fontLineHeight) / 2
+        #else
+        // iOS/Catalyst implementation - account for scroll position
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
+        
+        // Get line fragment rect directly
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
+        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
+        
+        // Calculate position in text view coordinate system
+        let textViewY = lineRect.minY + textView.textContainerInset.top
+        
+        // Convert to gutter coordinate system by accounting for scroll offset
+        // The gutter is fixed, so we need to subtract the scroll offset to get the correct position
+        let gutterY = textViewY - textView.contentOffset.y
+        
+        // Center the line number vertically within the line
+        let lineNumberHeight = font.lineHeight
+        let centeredY = gutterY + (lineRect.height - lineNumberHeight) / 2
+        
+        return centeredY
+        #endif
     }
     
     /// Draw folding control (▶️/▼ icon) for foldable lines

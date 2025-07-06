@@ -8,12 +8,12 @@ import UIKit
 extension CodeEditorContainerView {
     /// Sets up the iOS-specific views and constraints
     func setupIOSViews() {
-        // Add gutter view (iOS uses a separate view instead of ruler)
+        // Add gutter view first (fixed position, doesn't scroll)
         if configuration.display.showLineNumbers {
             addSubview(gutterView)
+            gutterView.translatesAutoresizingMaskIntoConstraints = false
             
             // Position gutter view to the left of content
-            gutterView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
                 gutterView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 gutterView.topAnchor.constraint(equalTo: topAnchor),
@@ -22,7 +22,7 @@ extension CodeEditorContainerView {
             ])
         }
         
-        // Add text view with scroll view
+        // Add text view after gutter
         addSubview(textView)
         textView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -100,17 +100,15 @@ extension CodeEditorContainerView {
         // Position content view to fill the container
         contentView.frame = bounds
         
-        // Position gutter on the left - account for content insets
-        let contentInsetTop = textView.contentInset.top
-        let contentInsetBottom = textView.contentInset.bottom
-        let availableHeight = bounds.height - contentInsetTop - contentInsetBottom
-        
-        gutterView.frame = CGRect(
-            x: 0,
-            y: contentInsetTop,  // Start after top content inset
-            width: gutterWidth,
-            height: availableHeight  // Adjust height for content insets
-        )
+        // Position gutter view (fixed, doesn't scroll)
+        if configuration.display.showLineNumbers {
+            gutterView.frame = CGRect(
+                x: 0,
+                y: 0,
+                width: gutterWidth,
+                height: bounds.height
+            )
+        }
         
         // Position minimap on the right - fixed position
         if configuration.display.showMinimap {
@@ -125,18 +123,15 @@ extension CodeEditorContainerView {
             minimapView.isHidden = true
         }
         
-        // Position text view within content view to take remaining space between gutter and minimap
+        // Position text view after gutter
         let textViewX = configuration.display.showLineNumbers ? gutterWidth : 0
         let textViewWidth = bounds.width - textViewX - minimapWidth
         textView.frame = CGRect(
-            x: textViewX,  // Text view starts after the gutter
-            y: contentInsetTop,  // Start after top content inset
+            x: textViewX,
+            y: 0,
             width: textViewWidth,
-            height: availableHeight  // Match gutter height
+            height: bounds.height
         )
-        
-        // Ensure content insets are maintained
-        updateContentInsets()
     }
 }
 

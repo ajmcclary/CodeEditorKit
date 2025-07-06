@@ -375,7 +375,7 @@ public final class CodeEditorContainerView: PlatformView {
         let currentInsets = textView.textContainerEdgeInsets
         
         #if targetEnvironment(macCatalyst)
-        // For Mac Catalyst, the text view is now positioned after the gutter
+        // For Mac Catalyst, the text view is positioned after the gutter
         // so we only need padding, not gutterWidth + padding
         let newInsets = EdgeInsets(
             top: currentInsets.top,
