@@ -101,7 +101,7 @@ public class GutterViewRenderer {
     private func drawLineNumber(
         _ lineNumber: Int,
         for lineRange: NSRange,
-        helper: TextKitLineNumberHelper,
+        helper _: TextKitLineNumberHelper,
         attributes _: [NSAttributedString.Key: Any],
         gutterBounds: CGRect,
         context _: CGContext,
@@ -163,9 +163,8 @@ public class GutterViewRenderer {
         
         // Center the line number vertically within the line
         let lineNumberHeight = font.lineHeight
-        let centeredY = gutterY + (lineRect.height - lineNumberHeight) / 2
         
-        return centeredY
+        return gutterY + (lineRect.height - lineNumberHeight) / 2
         #endif
     }
     

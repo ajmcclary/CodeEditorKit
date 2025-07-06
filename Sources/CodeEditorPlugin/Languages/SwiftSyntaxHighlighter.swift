@@ -508,14 +508,14 @@ public final class SwiftSyntaxHighlighter: Sendable {
         let numberPattern = #"\b\d+\.?\d*\b"#
         guard let regex = try? NSRegularExpression(pattern: numberPattern) else { return tokens }
         
-        let nsString = NSString(string: source)
-        let matches = regex.matches(in: source, range: NSRange(location: 0, length: nsString.length))
+        let matches = regex.matches(in: source, range: NSRange(location: 0, length: source.utf16.count))
         
         for match in matches {
+            let text = String(source[Range(match.range, in: source)!])
             tokens.append(HighlightedToken(
                 range: match.range,
                 type: .number,
-                text: nsString.substring(with: match.range)
+                text: text
             ))
         }
         
