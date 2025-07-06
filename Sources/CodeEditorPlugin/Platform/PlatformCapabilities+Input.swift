@@ -335,12 +335,10 @@ extension PlatformCapabilities {
             let windowScenes = UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
             
-            for scene in windowScenes {
-                if scene.traitCollection.userInterfaceIdiom == .pad {
-                    // Check if we have any windows on iPadOS (simplified check)
-                    if !scene.windows.isEmpty {
-                        return true
-                    }
+            for scene in windowScenes where scene.traitCollection.userInterfaceIdiom == .pad {
+                // Check if we have any windows on iPadOS (simplified check)
+                if !scene.windows.isEmpty {
+                    return true
                 }
             }
             

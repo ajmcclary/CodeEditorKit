@@ -1,6 +1,10 @@
 import Foundation
+
+// SwiftSyntax is not compatible with Mac Catalyst
+#if !targetEnvironment(macCatalyst)
 import SwiftParser
 import SwiftSyntax
+#endif
 
 #if canImport(UIKit)
 import UIKit
@@ -10,6 +14,7 @@ import AppKit
 
 // MARK: - SwiftSyntaxHighlighter
 
+#if !targetEnvironment(macCatalyst)
 /// A pure Swift syntax highlighter for Swift code using Apple's SwiftSyntax
 public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
@@ -301,3 +306,111 @@ extension NSRange {
 }
 
 // Note: SyntaxHighlighter conformance is declared in LanguageRegistry.swift
+
+#else
+// Mac Catalyst fallback - provide compatible interface
+public final class SwiftSyntaxHighlighter: Sendable {
+    public init() {}
+    
+    // Duplicate TokenType enum for Mac Catalyst compatibility
+    public enum TokenType: String, CaseIterable {
+        case keyword
+        case identifier
+        case string
+        case number
+        case comment
+        case type
+        case function
+        case property
+        case `operator`
+        case punctuation
+        case whitespace
+        case unknown
+
+        public var color: PlatformColor {
+            switch self {
+            case .keyword: return PlatformColors.systemPurple
+            case .identifier: return PlatformColors.label
+            case .string: return PlatformColors.systemRed
+            case .number: return PlatformColors.systemBlue
+            case .comment: return PlatformColors.systemGreen
+            case .type: return PlatformColors.systemTeal
+            case .function: return PlatformColors.systemIndigo
+            case .property: return PlatformColors.systemOrange
+            case .operator: return PlatformColors.systemPink
+            case .punctuation: return PlatformColors.secondaryLabel
+            case .whitespace: return PlatformColors.clear
+            case .unknown: return PlatformColors.label
+            }
+        }
+    }
+    
+    public func highlight(source: String) -> [HighlightedToken] {
+        // Fallback to basic keyword-based highlighting on Mac Catalyst
+        // Since RegexSyntaxHighlighter doesn't handle Swift, we'll do simple keyword matching
+        performBasicSwiftHighlighting(source: source)
+    }
+    
+    private func performBasicSwiftHighlighting(source: String) -> [HighlightedToken] {
+        var tokens: [HighlightedToken] = []
+        let keywords = [
+            "let", "var", "func", "class", "struct", "enum", "protocol", "extension", 
+            "import", "if", "else", "for", "while", "do", "try", "catch", "throw",
+            "return", "break", "continue", "public", "private", "internal"
+        ]
+        
+        // Simple keyword matching for Mac Catalyst fallback
+        for keyword in keywords {
+            var searchStartIndex = source.startIndex
+            
+            while searchStartIndex < source.endIndex {
+                guard let range = source.range(of: keyword, range: searchStartIndex..<source.endIndex) else { break }
+                
+                // Convert to NSRange for compatibility with existing highlighting system
+                let nsRange = NSRange(range, in: source)
+                
+                // Check if it's a whole word (basic boundary check)
+                let isWholeWord = checkWordBoundary(in: source, range: nsRange)
+                
+                if isWholeWord {
+                    tokens.append(HighlightedToken(
+                        range: nsRange,
+                        type: .keyword,
+                        text: keyword
+                    ))
+                }
+                
+                searchStartIndex = range.upperBound
+            }
+        }
+        
+        return tokens.sorted { $0.range.location < $1.range.location }
+    }
+    
+    private func checkWordBoundary(in string: String, range: NSRange) -> Bool {
+        let chars = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        let utf16 = string.utf16
+        
+        // Check character before
+        if range.location > 0 {
+            let beforeIndex = utf16.index(utf16.startIndex, offsetBy: range.location - 1)
+            let beforeChar = utf16[beforeIndex]
+            if chars.contains(UnicodeScalar(beforeChar)!) {
+                return false
+            }
+        }
+        
+        // Check character after
+        let endLocation = range.location + range.length
+        if endLocation < utf16.count {
+            let afterIndex = utf16.index(utf16.startIndex, offsetBy: endLocation)
+            let afterChar = utf16[afterIndex]
+            if chars.contains(UnicodeScalar(afterChar)!) {
+                return false
+            }
+        }
+        
+        return true
+    }
+}
+#endif
