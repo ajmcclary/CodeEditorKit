@@ -549,7 +549,7 @@ public final class CodeEditorContainerView: PlatformView {
         }
     }
     
-    private func updateContentInsets() {
+    internal func updateContentInsets() {
         // Adjust the text view's content inset to account for keyboard
         // This keeps the content scrollable without compressing the view
         let bottomInset = keyboardHeight > 0 ? keyboardHeight : 0
