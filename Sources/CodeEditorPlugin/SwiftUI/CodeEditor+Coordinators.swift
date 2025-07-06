@@ -246,14 +246,82 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         textView.string = text
         #else
         textView.text = text
+        
+        #if targetEnvironment(macCatalyst)
+        // For Mac Catalyst, immediately apply color to the newly set text
+        if !text.isEmpty {
+            let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            }
+            
+            let textStorage = textView.textStorage
+            if textStorage.length > 0 {
+                textStorage.beginEditing()
+                textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
+                textStorage.endEditing()
+            }
+        }
+        #endif
         #endif
         
         // Set language
         textView.language = language
         
         // Apply theme colors
-        textView.backgroundColor = PlatformColor(theme.backgroundColor)
-        textView.textColor = PlatformColor(theme.textColor)
+        textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
+        
+        // For Mac Catalyst, use a more robust color assignment
+        #if targetEnvironment(macCatalyst)
+        // For Mac Catalyst, ensure we have a visible text color
+        // Convert SwiftUI colors to guaranteed visible colors
+        let effectiveTextColor: PlatformColor = {
+            // Check for problematic SwiftUI colors that don't convert well
+            if theme.textColor == Color.primary || 
+               theme.textColor == Color.clear ||
+               theme.textColor == Color.accentColor {
+                // Use explicit dynamic colors for problematic cases
+                return UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }
+            } else {
+                // For custom colors, try conversion but with fallback
+                let converted = PlatformColor.from(theme.textColor)
+                // Verify the converted color isn't transparent or problematic
+                var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+                if converted.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
+                   alpha > 0.1, (red + green + blue) > 0.1 {
+                    return converted
+                } else {
+                    // Fallback for transparent or invisible colors
+                    return UIColor { traitCollection in
+                        traitCollection.userInterfaceStyle == .dark ? .white : .black
+                    }
+                }
+            }
+        }()
+        
+        textView.textColor = effectiveTextColor
+        
+        // Force immediate and comprehensive color application
+        Task { @MainActor in
+            // Apply color to text storage immediately
+            let textStorage = textView.textStorage
+            if textStorage.length > 0 {
+                textStorage.beginEditing()
+                textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
+                textStorage.endEditing()
+            }
+            
+            // Also apply through the dedicated Mac Catalyst method
+            textView.applyTextColorForMacCatalyst()
+            
+            // Apply again after a delay to handle timing issues
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            textView.applyTextColorForMacCatalyst()
+        }
+        #else
+        textView.textColor = PlatformColor.from(theme.textColor)
+        #endif
         
         // Apply initial configuration
         container.configuration = configuration
@@ -299,6 +367,23 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         let savedSelectedRange = textView.selectedRange
         if textView.text != text {
             textView.text = text
+            
+            #if targetEnvironment(macCatalyst)
+            // For Mac Catalyst, immediately apply color to the updated text
+            if !text.isEmpty {
+                let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }
+                
+                let textStorage = textView.textStorage
+                if textStorage.length > 0 {
+                    textStorage.beginEditing()
+                    textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
+                    textStorage.endEditing()
+                }
+            }
+            #endif
+            
             // Restore selection if possible
             if savedSelectedRange.location <= (textView.text ?? "").count {
                 textView.setSelectedRangeWithoutScrolling(savedSelectedRange)
@@ -312,8 +397,60 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         }
         
         // Apply theme colors
-        textView.backgroundColor = PlatformColor(theme.backgroundColor)
-        textView.textColor = PlatformColor(theme.textColor)
+        textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
+        
+        // For Mac Catalyst, use a more robust color assignment
+        #if targetEnvironment(macCatalyst)
+        // For Mac Catalyst, ensure we have a visible text color
+        // Convert SwiftUI colors to guaranteed visible colors
+        let effectiveTextColor: PlatformColor = {
+            // Check for problematic SwiftUI colors that don't convert well
+            if theme.textColor == Color.primary || 
+               theme.textColor == Color.clear ||
+               theme.textColor == Color.accentColor {
+                // Use explicit dynamic colors for problematic cases
+                return UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }
+            } else {
+                // For custom colors, try conversion but with fallback
+                let converted = PlatformColor.from(theme.textColor)
+                // Verify the converted color isn't transparent or problematic
+                var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+                if converted.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
+                   alpha > 0.1, (red + green + blue) > 0.1 {
+                    return converted
+                } else {
+                    // Fallback for transparent or invisible colors
+                    return UIColor { traitCollection in
+                        traitCollection.userInterfaceStyle == .dark ? .white : .black
+                    }
+                }
+            }
+        }()
+        
+        textView.textColor = effectiveTextColor
+        
+        // Force immediate and comprehensive color application
+        Task { @MainActor in
+            // Apply color to text storage immediately
+            let textStorage = textView.textStorage
+            if textStorage.length > 0 {
+                textStorage.beginEditing()
+                textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
+                textStorage.endEditing()
+            }
+            
+            // Also apply through the dedicated Mac Catalyst method
+            textView.applyTextColorForMacCatalyst()
+            
+            // Apply again after a delay to handle timing issues
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            textView.applyTextColorForMacCatalyst()
+        }
+        #else
+        textView.textColor = PlatformColor.from(theme.textColor)
+        #endif
         
         // Update configuration if changed
         if container.configuration != configuration {

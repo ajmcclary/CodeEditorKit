@@ -110,6 +110,9 @@ public final class InputCoordinator: ObservableObject {
     private func handleKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSKeyInput(key: key, modifiers: modifiers, in: textView)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst supports full desktop keyboard functionality like macOS
+        return handleDesktopKeyInput(key: key, modifiers: modifiers, in: textView)
         #else
         return handleIOSKeyInput(key: key, modifiers: modifiers, in: textView)
         #endif
@@ -304,6 +307,52 @@ public final class InputCoordinator: ObservableObject {
     }
     
     #if targetEnvironment(macCatalyst)
+    private func handleDesktopKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
+        logger.debug("Handling Mac Catalyst key input: \(key) with modifiers: \(modifiers.rawValue)")
+        
+        // Mac Catalyst supports full desktop keyboard functionality like macOS
+        if modifiers.contains(.command) {
+            switch key.lowercased() {
+            case "a":
+                textView.selectAll(nil)
+                return true
+
+            case "c":
+                textView.copy(nil)
+                return true
+
+            case "v":
+                textView.paste(nil)
+                return true
+
+            case "x":
+                textView.cut(nil)
+                return true
+
+            case "z":
+                if modifiers.contains(.shift) {
+                    textView.undoManager?.redo()
+                } else {
+                    textView.undoManager?.undo()
+                }
+                return true
+
+            case "f":
+                // Trigger find
+                return true
+
+            case "d":
+                // Trigger go to definition  
+                return true
+
+            default:
+                break
+            }
+        }
+        
+        return false
+    }
+    
     private func handleDesktopMouseInput(location: CGPoint, type: PlatformMouseEventType, in _: CodeEditorView) -> Bool {
         logger.debug("Handling Mac Catalyst mouse input at \(String(describing: location))")
         

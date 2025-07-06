@@ -100,12 +100,16 @@ extension CodeEditorContainerView {
         // Position content view to fill the container
         contentView.frame = bounds
         
-        // Position gutter on the left - fixed position
+        // Position gutter on the left - account for content insets
+        let contentInsetTop = textView.contentInset.top
+        let contentInsetBottom = textView.contentInset.bottom
+        let availableHeight = bounds.height - contentInsetTop - contentInsetBottom
+        
         gutterView.frame = CGRect(
             x: 0,
-            y: 0,
+            y: contentInsetTop,  // Start after top content inset
             width: gutterWidth,
-            height: bounds.height
+            height: availableHeight  // Adjust height for content insets
         )
         
         // Position minimap on the right - fixed position
@@ -122,12 +126,13 @@ extension CodeEditorContainerView {
         }
         
         // Position text view within content view to take remaining space between gutter and minimap
-        let textViewWidth = bounds.width - minimapWidth
+        let textViewX = configuration.display.showLineNumbers ? gutterWidth : 0
+        let textViewWidth = bounds.width - textViewX - minimapWidth
         textView.frame = CGRect(
-            x: 0,  // Text view starts at 0, but has inset for gutter
-            y: 0,
+            x: textViewX,  // Text view starts after the gutter
+            y: contentInsetTop,  // Start after top content inset
             width: textViewWidth,
-            height: bounds.height
+            height: availableHeight  // Match gutter height
         )
         
         // Ensure content insets are maintained

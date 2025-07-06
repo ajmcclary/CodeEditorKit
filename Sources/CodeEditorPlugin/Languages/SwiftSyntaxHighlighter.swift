@@ -353,13 +353,30 @@ public final class SwiftSyntaxHighlighter: Sendable {
     
     private func performBasicSwiftHighlighting(source: String) -> [HighlightedToken] {
         var tokens: [HighlightedToken] = []
+        
+        // Add keywords
+        tokens.append(contentsOf: highlightKeywords(in: source))
+        
+        // Add strings
+        tokens.append(contentsOf: highlightStrings(in: source))
+        
+        // Add comments
+        tokens.append(contentsOf: highlightComments(in: source))
+        
+        // Add numbers
+        tokens.append(contentsOf: highlightNumbers(in: source))
+        
+        return tokens.sorted { $0.range.location < $1.range.location }
+    }
+    
+    private func highlightKeywords(in source: String) -> [HighlightedToken] {
+        var tokens: [HighlightedToken] = []
         let keywords = [
             "let", "var", "func", "class", "struct", "enum", "protocol", "extension", 
             "import", "if", "else", "for", "while", "do", "try", "catch", "throw",
             "return", "break", "continue", "public", "private", "internal"
         ]
         
-        // Simple keyword matching for Mac Catalyst fallback
         for keyword in keywords {
             var searchStartIndex = source.startIndex
             
@@ -384,7 +401,125 @@ public final class SwiftSyntaxHighlighter: Sendable {
             }
         }
         
-        return tokens.sorted { $0.range.location < $1.range.location }
+        return tokens
+    }
+    
+    private func highlightStrings(in source: String) -> [HighlightedToken] {
+        var tokens: [HighlightedToken] = []
+        let utf16 = source.utf16
+        var index = utf16.startIndex
+        
+        while index < utf16.endIndex {
+            let char = utf16[index]
+            
+            // Check for string literals
+            if char == UnicodeScalar("\"").value {
+                let startIndex = index
+                index = utf16.index(after: index)
+                
+                // Find the end of the string
+                var foundEnd = false
+                while index < utf16.endIndex {
+                    let currentChar = utf16[index]
+                    
+                    if currentChar == UnicodeScalar("\"").value {
+                        index = utf16.index(after: index)
+                        foundEnd = true
+                        break
+                    } else if currentChar == UnicodeScalar("\\").value {
+                        // Skip escaped character
+                        index = utf16.index(after: index)
+                        if index < utf16.endIndex {
+                            index = utf16.index(after: index)
+                        }
+                    } else {
+                        index = utf16.index(after: index)
+                    }
+                }
+                
+                if foundEnd {
+                    let startOffset = utf16.distance(from: utf16.startIndex, to: startIndex)
+                    let endOffset = utf16.distance(from: utf16.startIndex, to: index)
+                    let nsRange = NSRange(location: startOffset, length: endOffset - startOffset)
+                    
+                    tokens.append(HighlightedToken(
+                        range: nsRange,
+                        type: .string,
+                        text: String(source[source.index(source.startIndex, offsetBy: startOffset)..<source.index(source.startIndex, offsetBy: endOffset)])
+                    ))
+                }
+            } else {
+                index = utf16.index(after: index)
+            }
+        }
+        
+        return tokens
+    }
+    
+    private func highlightComments(in source: String) -> [HighlightedToken] {
+        var tokens: [HighlightedToken] = []
+        let lines = source.components(separatedBy: .newlines)
+        var currentOffset = 0
+        
+        for line in lines {
+            // Single-line comments
+            if let range = line.range(of: "//") {
+                let lineStartInSource = source.index(source.startIndex, offsetBy: currentOffset)
+                let commentStartInLine = line.distance(from: line.startIndex, to: range.lowerBound)
+                let commentStartInSource = source.index(lineStartInSource, offsetBy: commentStartInLine)
+                let commentEndInSource = source.index(lineStartInSource, offsetBy: line.count)
+                
+                let nsRange = NSRange(commentStartInSource..<commentEndInSource, in: source)
+                tokens.append(HighlightedToken(
+                    range: nsRange,
+                    type: .comment,
+                    text: String(source[commentStartInSource..<commentEndInSource])
+                ))
+            }
+            
+            currentOffset += line.count + 1 // +1 for newline
+        }
+        
+        // Multi-line comments
+        var searchStartIndex = source.startIndex
+        while searchStartIndex < source.endIndex {
+            guard let startRange = source.range(of: "/*", range: searchStartIndex..<source.endIndex) else { break }
+            guard let endRange = source.range(of: "*/", range: startRange.upperBound..<source.endIndex) else { break }
+            
+            let commentRange = startRange.lowerBound..<endRange.upperBound
+            let nsRange = NSRange(commentRange, in: source)
+            
+            tokens.append(HighlightedToken(
+                range: nsRange,
+                type: .comment,
+                text: String(source[commentRange])
+            ))
+            
+            searchStartIndex = endRange.upperBound
+        }
+        
+        return tokens
+    }
+    
+    private func highlightNumbers(in source: String) -> [HighlightedToken] {
+        var tokens: [HighlightedToken] = []
+        
+        // Simple number pattern matching
+        let numberPattern = #"\b\d+\.?\d*\b"#
+        guard let regex = try? NSRegularExpression(pattern: numberPattern) else { return tokens }
+        
+        let nsString = NSString(string: source)
+        let matches = regex.matches(in: source, range: NSRange(location: 0, length: nsString.length))
+        
+        for match in matches {
+            tokens.append(HighlightedToken(
+                range: match.range,
+                type: .number,
+                text: nsString.substring(with: match.range)
+            ))
+        }
+        
+        return tokens
     }
     
     private func checkWordBoundary(in string: String, range: NSRange) -> Bool {

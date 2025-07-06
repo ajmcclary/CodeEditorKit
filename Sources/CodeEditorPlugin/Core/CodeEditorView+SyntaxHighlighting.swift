@@ -113,35 +113,82 @@ extension CodeEditorView {
     #if targetEnvironment(macCatalyst)
     /// Apply text color specifically for Mac Catalyst
     /// This ensures text is visible by applying color attributes to all text
-    internal func applyTextColorForMacCatalyst() {
+    public func applyTextColorForMacCatalyst() {
         let textStorage = self.textStorage
         
-        // Use platform abstraction for text color
-        let textColor = self.textColor ?? PlatformColors.label
-        let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        
-        kLogger.debug("Mac Catalyst: Setting text color \(String(describing: textColor)) of type \(String(describing: type(of: textColor)))")
-        
-        // Apply to existing text
-        if textStorage.length > 0 {
-            textStorage.beginEditing()
-            textStorage.addAttributes([
-                .foregroundColor: textColor,
-                .font: font
-            ], range: NSRange(location: 0, length: textStorage.length))
-            textStorage.endEditing()
+        // Use current textColor if set, otherwise fallback to a guaranteed visible color
+        // For Mac Catalyst, we need to ensure we have a proper, visible color
+        let effectiveTextColor: PlatformColor
+        if let currentColor = self.textColor {
+            // Verify the current color is actually visible
+            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+            if currentColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
+               alpha > 0.1, (red + green + blue) > 0.1 {
+                effectiveTextColor = currentColor
+            } else {
+                // Current color is invisible, use fallback
+                effectiveTextColor = UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }
+            }
+        } else {
+            // No color set, use guaranteed visible fallback
+            effectiveTextColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            }
         }
         
-        // Update typing attributes
+        let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
+        
+        kLogger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor)) of type \(String(describing: type(of: effectiveTextColor)))")
+        kLogger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
+        kLogger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
+        
+        // Apply to existing text with aggressive attribute application
+        if textStorage.length > 0 {
+            textStorage.beginEditing()
+            
+            // Remove ALL existing color-related attributes first
+            textStorage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.removeAttribute(.backgroundColor, range: NSRange(location: 0, length: textStorage.length))
+            
+            // Add the new attributes with high priority
+            let attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: effectiveTextColor,
+                .font: font,
+                .backgroundColor: UIColor.clear  // Ensure background doesn't hide text
+            ]
+            
+            textStorage.addAttributes(attributes, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.endEditing()
+            
+            kLogger.debug("Mac Catalyst: Applied attributes to \(textStorage.length) characters")
+        } else {
+            kLogger.debug("Mac Catalyst: No text content to apply color to")
+        }
+        
+        // Update typing attributes for new text
         var typingAttrs = self.typingAttributes
-        typingAttrs[.foregroundColor] = textColor
+        typingAttrs[.foregroundColor] = effectiveTextColor
         typingAttrs[.font] = font
+        typingAttrs[.backgroundColor] = UIColor.clear
         self.typingAttributes = typingAttrs
         
-        // Force the text view to redraw on Mac Catalyst
+        // Force comprehensive redraw
         self.setNeedsDisplay()
+        self.setNeedsLayout()
         
-        kLogger.debug("Mac Catalyst: Applied text color to all text. TextColor: \(String(describing: textColor)), Font: \(String(describing: font))")
+        // Force layout manager to refresh
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let layoutManager = self.layoutManager {
+            layoutManager.invalidateDisplay(forCharacterRange: NSRange(location: 0, length: textStorage.length))
+        }
+        #else
+        // On iOS/Mac Catalyst, layoutManager is not optional
+        layoutManager.invalidateDisplay(forCharacterRange: NSRange(location: 0, length: textStorage.length))
+        #endif
+        
+        kLogger.debug("Mac Catalyst: Applied text color to all text. TextColor: \(String(describing: effectiveTextColor)), Font: \(String(describing: font))")
     }
     #endif
 }

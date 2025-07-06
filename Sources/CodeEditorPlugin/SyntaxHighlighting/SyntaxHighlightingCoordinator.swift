@@ -1,6 +1,10 @@
 import Foundation
+
+// SwiftSyntax is not compatible with Mac Catalyst
+#if !targetEnvironment(macCatalyst)
 import SwiftParser
 import SwiftSyntax
+#endif
 
 #if canImport(UIKit)
 import UIKit

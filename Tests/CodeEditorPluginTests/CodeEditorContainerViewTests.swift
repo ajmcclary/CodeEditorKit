@@ -22,7 +22,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
     private func createContainerView() -> CodeEditorContainerView? {
         // Always try to create the container view for testing
         // The view components should work even in headless environments
-        return CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
+        CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
     }
     
     // MARK: - Initialization Tests

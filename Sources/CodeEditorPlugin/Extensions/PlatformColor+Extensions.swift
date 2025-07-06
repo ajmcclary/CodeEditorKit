@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
@@ -10,6 +11,16 @@ import AppKit
 
 /// Cross-platform color extensions to provide consistent API across iOS and macOS
 extension PlatformColor {
+    /// Creates a PlatformColor from a SwiftUI Color
+    /// This provides conversion between SwiftUI Color and UIColor/NSColor
+    @available(macOS 12.0, iOS 15.0, *)
+    public static func from(_ swiftUIColor: Color) -> PlatformColor {
+        #if canImport(UIKit)
+        return UIColor(swiftUIColor)
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return NSColor(swiftUIColor)
+        #endif
+    }
     /// Returns a color with the specified alpha component
     /// This abstracts the platform differences between UIColor and NSColor
     public func withAlpha(_ alpha: CGFloat) -> PlatformColor {

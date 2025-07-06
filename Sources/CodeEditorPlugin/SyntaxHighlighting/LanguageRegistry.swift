@@ -158,7 +158,12 @@ struct SwiftLanguageProvider: LanguageProvider {
     
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
-        SwiftSyntaxHighlighter()
+        #if targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use regex highlighter fallback
+        return RegexSyntaxHighlighter()
+        #else
+        return SwiftSyntaxHighlighter()
+        #endif
     }
     
     func completionKeywords() -> [String] {
@@ -422,7 +427,9 @@ extension RegexSyntaxHighlighter: SyntaxHighlighter {
 
 // MARK: - SwiftSyntaxHighlighter Extension
 
+#if !targetEnvironment(macCatalyst)
 extension SwiftSyntaxHighlighter: SyntaxHighlighter {
     // SwiftSyntaxHighlighter already has the correct highlight(source:) method signature
     // so it automatically conforms to SyntaxHighlighter
 }
+#endif

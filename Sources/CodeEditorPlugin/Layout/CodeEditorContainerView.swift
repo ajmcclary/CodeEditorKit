@@ -373,12 +373,26 @@ public final class CodeEditorContainerView: PlatformView {
         #else
         // On iOS/Catalyst, update edge insets
         let currentInsets = textView.textContainerEdgeInsets
+        
+        #if targetEnvironment(macCatalyst)
+        // For Mac Catalyst, the text view is now positioned after the gutter
+        // so we only need padding, not gutterWidth + padding
+        let newInsets = EdgeInsets(
+            top: currentInsets.top,
+            left: padding,  // Only padding since text view is positioned after gutter
+            bottom: currentInsets.bottom,
+            right: minimapWidth + padding
+        )
+        #else
+        // For iOS, include gutter width in insets since gutter might be overlaid
         let newInsets = EdgeInsets(
             top: currentInsets.top,
             left: gutterWidth + padding,
             bottom: currentInsets.bottom,
             right: minimapWidth + padding
         )
+        #endif
+        
         textView.setTextContainerEdgeInsets(newInsets)
         #endif
     }
@@ -581,6 +595,11 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Make sure the gutter redraws with proper positioning
         gutterView.setNeedsDisplay()
+        
+        // For iOS/Mac Catalyst, also update gutter frame to match text view content insets
+        #if canImport(UIKit)
+        layoutViews()  // Force layout update to sync gutter with text view
+        #endif
         
         // If keyboard is showing, ensure we can still scroll to see all content
         if keyboardHeight > 0 {
