@@ -525,7 +525,7 @@ public final class ContextMenuCoordinator: ObservableObject {
     private func showIOSContextMenu(_: PlatformContextMenu, at location: CGPoint, in _: CodeEditorView) {
         // Convert to UIMenu and show via UIMenuController or context menu interaction
         // Implementation would depend on specific UI requirements
-        logger.debug("Showing iOS context menu at \(location)")
+        logger.debug("Showing iOS context menu at (\(location.x), \(location.y))")
     }
     #endif
     

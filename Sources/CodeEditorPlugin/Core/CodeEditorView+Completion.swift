@@ -179,7 +179,7 @@ extension CodeEditorView {
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
         
-        guard let popoverVC = viewController as? PlatformViewController else { return }
+        let popoverVC = viewController
         popoverVC.modalPresentationStyle = .popover
         
         if let popover = popoverVC.popoverPresentationController {

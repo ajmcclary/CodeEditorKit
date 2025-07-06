@@ -14,6 +14,7 @@ public enum PlatformAnimation {
     ///   - options: Animation options (timing curves)
     ///   - animations: The changes to animate
     ///   - completion: Optional completion handler
+    @MainActor
     public static func animate(
         withDuration duration: TimeInterval,
         delay: TimeInterval = 0,
@@ -56,6 +57,7 @@ public enum PlatformAnimation {
     ///   - options: Animation options
     ///   - animations: The changes to animate
     ///   - completion: Optional completion handler
+    @MainActor
     public static func animateWithSpring(
         duration: TimeInterval,
         damping: CGFloat = 0.7,
@@ -87,6 +89,7 @@ public enum PlatformAnimation {
     
     /// Performs changes without animation
     /// - Parameter changes: The changes to perform
+    @MainActor
     public static func performWithoutAnimation(_ changes: @Sendable () -> Void) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NSAnimationContext.beginGrouping()

@@ -535,6 +535,40 @@ enum ColorTheme: String, CaseIterable {
         }
     }
     
+    var typeColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemTeal
+        case .vsDark:
+            return PlatformColor(red: 0.3, green: 0.81, blue: 0.69, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.42, green: 0.23, blue: 0.69, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.71, green: 0.54, blue: 0.0, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemTeal
+        case .presentation:
+            return PlatformColor(red: 0.91, green: 0.68, blue: 0.78, alpha: 1.0)
+        }
+    }
+    
+    var functionColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemIndigo
+        case .vsDark:
+            return PlatformColor(red: 0.86, green: 0.86, blue: 0.64, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.58, green: 0.35, blue: 0.0, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.15, green: 0.55, blue: 0.82, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.systemIndigo
+        case .presentation:
+            return PlatformColor(red: 0.78, green: 0.68, blue: 0.91, alpha: 1.0)
+        }
+    }
+    
     // MARK: - UI Colors
     
     var selectedLineColor: PlatformColor {
@@ -573,6 +607,131 @@ enum ColorTheme: String, CaseIterable {
     
     var insertionPointColor: PlatformColor {
         return PlatformColors.systemBlue
+    }
+    
+    var selectionColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.systemBlue.withAlphaComponent(0.3)
+        case .vsDark:
+            return PlatformColor(red: 0.26, green: 0.43, blue: 0.64, alpha: 1.0)
+        case .github:
+            return PlatformColor(red: 0.7, green: 0.84, blue: 1.0, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 0.4)
+        case .minimal:
+            return PlatformColors.systemBlue.withAlphaComponent(0.3)
+        case .presentation:
+            return PlatformColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 0.5)
+        }
+    }
+    
+    var gutterBackgroundColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColor(white: 0.96, alpha: 1.0)
+        case .vsDark:
+            return backgroundColor
+        case .github:
+            return PlatformColor(white: 0.98, alpha: 1.0)
+        case .solarizedDark:
+            return backgroundColor
+        case .minimal:
+            return PlatformColor.clear
+        case .presentation:
+            return backgroundColor.withAlphaComponent(0.8)
+        }
+    }
+    
+    var gutterTextColor: PlatformColor {
+        switch self {
+        case .xcode:
+            return PlatformColors.secondaryLabel
+        case .vsDark:
+            return PlatformColor(white: 0.5, alpha: 1.0)
+        case .github:
+            return PlatformColor(white: 0.6, alpha: 1.0)
+        case .solarizedDark:
+            return PlatformColor(red: 0.35, green: 0.43, blue: 0.46, alpha: 1.0)
+        case .minimal:
+            return PlatformColors.tertiaryLabel
+        case .presentation:
+            return PlatformColor(white: 0.4, alpha: 1.0)
+        }
+    }
+    
+    // MARK: - Token Type Mapping
+    
+    func colorForTokenType(_ tokenType: TokenType) -> PlatformColor {
+        switch tokenType {
+        case .keyword:
+            return keywordColor
+        case .identifier:
+            return textColor
+        case .string:
+            return stringColor
+        case .number:
+            return numberColor
+        case .comment:
+            return commentColor
+        case .type:
+            return typeColor
+        case .function:
+            return functionColor
+        case .property:
+            return PlatformColors.systemOrange
+        case .operator:
+            return textColor
+        case .punctuation:
+            return textColor.withAlphaComponent(0.7)
+        case .whitespace:
+            return PlatformColor.clear
+        case .preprocessor:
+            return PlatformColors.systemPink
+        case .unknown:
+            return textColor
+        }
+    }
+    
+    // MARK: - Theme Export
+    
+    var themeConfiguration: [String: Any] {
+        return [
+            "name": displayName,
+            "colors": [
+                "background": backgroundColor.hexString,
+                "text": textColor.hexString,
+                "keyword": keywordColor.hexString,
+                "string": stringColor.hexString,
+                "number": numberColor.hexString,
+                "comment": commentColor.hexString,
+                "type": typeColor.hexString,
+                "function": functionColor.hexString,
+                "selectedLine": selectedLineColor.hexString,
+                "selection": selectionColor.hexString,
+                "gutterBackground": gutterBackgroundColor.hexString,
+                "gutterText": gutterTextColor.hexString
+            ]
+        ]
+    }
+}
+
+// MARK: - PlatformColor Extension
+
+extension PlatformColor {
+    var hexString: String {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        let redInt = Int(red * 255)
+        let greenInt = Int(green * 255)
+        let blueInt = Int(blue * 255)
+        
+        return String(format: "#%02X%02X%02X", redInt, greenInt, blueInt)
     }
 }
 #endif

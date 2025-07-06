@@ -338,7 +338,7 @@ public final class InputCoordinator: ObservableObject {
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard let textView = gesture.view as? CodeEditorView else { return }
         let location = gesture.location(in: textView)
-        logger.debug("Tap gesture at \(location)")
+        logger.debug("Tap gesture at (\(location.x), \(location.y))")
         
         // Position cursor at tap location
         // Implementation would convert location to text position
@@ -349,7 +349,7 @@ public final class InputCoordinator: ObservableObject {
               let textView = gesture.view as? CodeEditorView else { return }
         
         let location = gesture.location(in: textView)
-        logger.debug("Long press gesture at \(location)")
+        logger.debug("Long press gesture at (\(location.x), \(location.y))")
         
         // Start text selection or show context menu
         // Implementation would handle selection logic
@@ -358,14 +358,14 @@ public final class InputCoordinator: ObservableObject {
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let textView = gesture.view as? CodeEditorView else { return }
         let translation = gesture.translation(in: textView)
-        logger.debug("Pan gesture with translation \(translation)")
+        logger.debug("Pan gesture with translation (\(translation.x), \(translation.y))")
         
         // Handle scrolling or text selection
         // Implementation would update scroll position or selection
     }
     
     @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
-        guard let textView = gesture.view as? CodeEditorView else { return }
+        guard gesture.view is CodeEditorView else { return }
         let scale = gesture.scale
         logger.debug("Pinch gesture with scale \(scale)")
         
