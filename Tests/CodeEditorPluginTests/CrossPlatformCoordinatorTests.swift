@@ -14,14 +14,26 @@ import AppKit
 #endif
 
 final class CrossPlatformCoordinatorTests: XCTestCase {
+    // MARK: - Properties
+    
+    // Tests create their own coordinator instances as needed
+    
     // MARK: - Initialization Tests
     
     @MainActor
-    func testSingletonInstance() {
-        let instance1 = CrossPlatformCoordinator.shared
-        let instance2 = CrossPlatformCoordinator.shared
+    func testDefaultInitialization() {
+        // Test default initialization creates proper instances
+        let coordinator = CrossPlatformCoordinator()
         
-        XCTAssertTrue(instance1 === instance2)
+        // Verify all components are initialized
+        XCTAssertNotNil(coordinator.capabilities)
+        XCTAssertNotNil(coordinator.inputCoordinator)
+        XCTAssertNotNil(coordinator.toolbarCoordinator)
+        XCTAssertNotNil(coordinator.contextMenuCoordinator)
+        
+        // Verify coordinator works correctly
+        XCTAssertNotNil(coordinator.platformAdjustments)
+        XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
     }
     
     @MainActor
@@ -52,7 +64,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testPlatformAdjustments() {
-        let coordinator = CrossPlatformCoordinator.shared
+        let coordinator = CrossPlatformCoordinator()
         let adjustments = coordinator.platformAdjustments
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -80,7 +92,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testFeatureAvailability() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         
         // Test common features
         XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
@@ -98,7 +111,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testFeatureAvailabilityLevel() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let goToDefAvailability = coordinator.getFeatureAvailability(.goToDefinition)
         let symbolNavAvailability = coordinator.getFeatureAvailability(.symbolNavigation)
         
@@ -123,7 +137,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testRecommendedConfiguration() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let config = coordinator.recommendedConfiguration()
         
         XCTAssertNotNil(config)
@@ -141,7 +156,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testCreateToolbarItems() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let items = coordinator.createToolbarItems()
         
         XCTAssertFalse(items.isEmpty)
@@ -171,7 +187,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testOptimizeTextView() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
         coordinator.optimizeTextView(textView)
@@ -190,7 +207,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testHandleKeyInput() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
         let handled = coordinator.handlePlatformInput(
@@ -211,7 +229,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testHandleMouseInput() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
         let handled = coordinator.handlePlatformInput(
@@ -234,7 +253,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testCreateContextMenu() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let range = NSRange(location: 0, length: 10)
         let menu = coordinator.createContextMenu(for: range, in: textView)
@@ -256,7 +276,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testFeatureCheckPerformance() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         
         measure {
             for _ in 0..<1_000 {
@@ -267,7 +288,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     
     @MainActor
     func testToolbarCreationPerformance() {
-        let coordinator = CrossPlatformCoordinator.shared
+        // Use instance property instead of deprecated singleton
+        let coordinator = CrossPlatformCoordinator()
         
         measure {
             for _ in 0..<100 {

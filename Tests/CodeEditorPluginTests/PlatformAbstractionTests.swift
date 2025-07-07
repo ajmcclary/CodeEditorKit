@@ -183,7 +183,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Cross-Platform Coordinator Tests
     
     func testCrossPlatformCoordinator() {
-        let coordinator = CrossPlatformCoordinator.shared
+        let coordinator = CrossPlatformCoordinator()
         
         XCTAssertNotNil(coordinator.platformAdjustments)
         
@@ -200,7 +200,7 @@ final class PlatformAbstractionTests: XCTestCase {
     }
     
     func testToolbarItemCreation() {
-        let coordinator = CrossPlatformCoordinator.shared
+        let coordinator = CrossPlatformCoordinator()
         let toolbarItems = coordinator.createToolbarItems()
         
         XCTAssertFalse(toolbarItems.isEmpty)

@@ -131,12 +131,13 @@ final class ParagraphStyleCacheTests: XCTestCase {
         expectation.expectedFulfillmentCount = 100
         
         let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+        let testCache = cache
         
         for index in 0..<100 {
             queue.async {
                 let font = PlatformFonts.monospacedSystemFont(ofSize: CGFloat(12 + (index % 5)), weight: .regular)
                 
-                _ = self.cache?.paragraphStyle(
+                _ = testCache?.paragraphStyle(
                     tabWidth: 4 + (index % 3),
                     lineHeightMultiple: 1.0 + CGFloat(index % 5) * 0.1,
                     font: font
