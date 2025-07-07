@@ -33,17 +33,22 @@ public final class ViewportManager: ObservableObject {
     /// Maximum cached ranges
     public var maxCachedRanges: Int = 10
     
+    /// Memory monitor for managing cache memory
+    private let memoryMonitor: MemoryMonitor
+    
     /// Cached visible ranges for quick access
-    private var rangeCache = LRUCache<ViewportManagerCacheKey, CachedViewportData>(capacity: 10)
+    private let rangeCache: LRUCache<ViewportManagerCacheKey, CachedViewportData>
     
     /// Active rendering tasks
     private var renderingTasks: [UUID: Task<Void, Never>] = [:]
     
     // MARK: - Initialization
     
-    public init(textView: PlatformTextView) {
+    public init(textView: PlatformTextView, memoryMonitor: MemoryMonitor) {
         self.textView = textView
         self.textKitBridge = textView.createTextKitBridge()
+        self.memoryMonitor = memoryMonitor
+        self.rangeCache = LRUCache<ViewportManagerCacheKey, CachedViewportData>(capacity: 10, memoryMonitor: memoryMonitor)
         
         setupObservers()
         updateViewport()
@@ -379,7 +384,7 @@ extension CodeEditorView {
     /// Create or get the viewport manager for this text view
     public func getViewportManager() -> ViewportManager {
         // This would need to be stored as a property in CodeEditorView
-        // For now, return a new instance
-        ViewportManager(textView: self)
+        // For now, return a new instance with a new memory monitor
+        ViewportManager(textView: self, memoryMonitor: MemoryMonitor())
     }
 }

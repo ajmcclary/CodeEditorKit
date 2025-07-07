@@ -30,7 +30,7 @@ public final class PerformanceInsights: ObservableObject {
     /// Monitoring components
     private let performanceMonitor = PerformanceMonitor.shared
     private let textKit2Monitor = TextKit2PerformanceMonitor()
-    private let memoryMonitor = MemoryMonitor.shared
+    private let memoryMonitor: MemoryMonitor
     
     /// Update timer
     private var updateTimer: Timer?
@@ -43,7 +43,8 @@ public final class PerformanceInsights: ObservableObject {
     
     // MARK: - Initialization
     
-    public init() {
+    public init(memoryMonitor: MemoryMonitor) {
+        self.memoryMonitor = memoryMonitor
         startMonitoring()
     }
     

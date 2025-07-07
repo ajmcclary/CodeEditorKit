@@ -28,15 +28,19 @@ actor AsyncTextProcessor {
     /// Adaptive performance settings
     private var adaptiveSettings = AdaptiveSettings()
     
+    /// Memory monitor
+    private let memoryMonitor: MemoryMonitor
+    
     /// Result cache
     private var resultCache: LRUCache<ProcessingCacheKey, ProcessingResult>?
     
     // MARK: - Initialization
     
-    init(maxConcurrentOperations: Int? = nil) {
+    init(memoryMonitor: MemoryMonitor, maxConcurrentOperations: Int? = nil) {
         // Cap at 4 to prevent oversubscription on highly-threaded systems
         let defaultConcurrency = min(4, ProcessInfo.processInfo.activeProcessorCount)
         self.maxConcurrentOperations = maxConcurrentOperations ?? defaultConcurrency
+        self.memoryMonitor = memoryMonitor
     }
     
     private func getCache() async -> LRUCache<ProcessingCacheKey, ProcessingResult> {
@@ -46,7 +50,7 @@ actor AsyncTextProcessor {
         
         // Initialize cache on MainActor
         let cache = await MainActor.run {
-            LRUCache<ProcessingCacheKey, ProcessingResult>(capacity: 100)
+            LRUCache<ProcessingCacheKey, ProcessingResult>(capacity: 100, memoryMonitor: self.memoryMonitor)
         }
         resultCache = cache
         return cache

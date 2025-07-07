@@ -62,7 +62,7 @@ public struct CodeEditorThemeKey: EnvironmentKey {
 
 @available(macOS 12.0, iOS 16.0, *)
 public struct CodeEditorBecomeFirstResponderKey: EnvironmentKey {
-    public static let defaultValue: Bool = true
+    public static let defaultValue: Bool = false
     
     public typealias Value = Bool
 }

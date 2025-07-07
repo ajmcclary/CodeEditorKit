@@ -143,22 +143,25 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
     
     /// Async syntax highlighter with debouncing
-    internal let asyncHighlighter = AsyncSyntaxHighlighter()
+    internal lazy var asyncHighlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
     
     /// TextKit2 rendering optimizer for large files
-    internal let renderingOptimizer = TextKit2RenderingOptimizer()
+    internal lazy var renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
     
     /// TextKit2 performance monitor
     internal let performanceMonitor = TextKit2PerformanceMonitor()
     
     /// LSP manager for language server integration
-    internal let lspManager = LSPManager()
+    internal lazy var lspManager = LSPManager(memoryMonitor: memoryMonitor)
     
     /// Code folding engine for managing foldable regions and fold states
-    public let codeFoldingEngine = CodeFoldingEngine()
+    internal let codeFoldingEngine = CodeFoldingEngine()
     
     /// Line index cache for optimized line number calculations
     internal let lineIndexCache = LineIndexCache()
+    
+    /// Memory monitor for tracking and managing memory usage
+    internal let memoryMonitor = MemoryMonitor()
     
     /// The current programming language used for syntax highlighting and code completion
     public var language: Language = .plainText {
@@ -205,7 +208,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Completion System
     
     /// Completion manager for handling multiple completion providers
-    internal let completionManager = CompletionManager()
+    internal lazy var completionManager = CompletionManager(memoryMonitor: memoryMonitor)
     
     /// Current completion view controller
     internal var completionViewController: (any CompletionViewControllerRepresentable)?
@@ -259,22 +262,25 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         setupTextView()
     }
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    override public func removeFromSuperview() {
+        // Perform cleanup before removing from superview
+        unregisterFromMemoryMonitor()
+        super.removeFromSuperview()
+    }
+    #else
+    override public func removeFromSuperview() {
+        // Perform cleanup before removing from superview
+        unregisterFromMemoryMonitor()
+        super.removeFromSuperview()
+    }
+    #endif
+    
     deinit {
         // Remove notification observers
         NotificationCenter.default.removeObserver(self)
         
-        // Unregister from memory monitor (schedule on main actor)
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            var hasher = Hasher()
-            hasher.combine(ObjectIdentifier(self))
-            let identifier = "CodeEditorView_\(hasher.finalize())"
-            Task { @MainActor in
-                MemoryMonitor.shared.unregisterCleanupHandler(identifier: identifier)
-            }
-        }
-        
-        // Note: We cannot perform MainActor-isolated cleanup in deinit
-        // The cleanup of UI elements will happen automatically when the view is deallocated
-        // Subviews are automatically removed from their superview when deallocated
+        // Note: Memory monitor cleanup is now handled in removeFromSuperview
+        // to avoid creating tasks in deinit
     }
 }

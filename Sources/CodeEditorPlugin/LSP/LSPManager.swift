@@ -171,14 +171,17 @@ public final class LSPManager: ObservableObject {
     
     // MARK: - Initialization
     
-    public init(workspaceRoot: URL? = nil) {
+    private let memoryMonitor: MemoryMonitor
+    
+    public init(memoryMonitor: MemoryMonitor, workspaceRoot: URL? = nil) {
         self.workspaceRoot = workspaceRoot
+        self.memoryMonitor = memoryMonitor
         setupDefaultConfigurations()
         
         // Register with memory monitor after initialization
         Task { @MainActor [weak self] in
             guard let self else { return }
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "lsp-manager",
                 priority: .normal
             ) { @MainActor [weak self] in

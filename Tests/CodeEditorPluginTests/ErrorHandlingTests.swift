@@ -73,7 +73,7 @@ final class ErrorHandlingTests: XCTestCase {
     
     func testMemoryPressureRecovery() async throws {
         let editorView = CodeEditorView()
-        let monitor = MemoryMonitor.shared
+        let monitor = editorView.memoryMonitor
         
         // Simulate memory pressure scenario
         let largeText = String(repeating: "func test() { print(\"memory test\") }\n", count: 1_000)
@@ -221,7 +221,9 @@ final class ErrorHandlingTests: XCTestCase {
         }
         
         // Force memory pressure cleanup
-        await MemoryMonitor.shared.performCleanup()
+        if let firstView = editorViews.first {
+            await firstView.memoryMonitor.performCleanup()
+        }
         
         // Views should still be functional after cleanup
         for (index, view) in editorViews.enumerated() {

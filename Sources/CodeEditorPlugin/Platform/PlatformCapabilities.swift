@@ -148,20 +148,22 @@ public final class PlatformCapabilities {
     
     // Device capabilities moved to PlatformCapabilities+Performance.swift
     
+    #if canImport(UIKit)
+    private static let deviceTypeMapping: [UIUserInterfaceIdiom: String] = [
+        .phone: "iPhone",
+        .pad: "iPad",
+        .tv: "Apple TV",
+        .mac: "Mac",
+        .carPlay: "CarPlay",
+        .unspecified: "Unspecified"
+    ]
+    #endif
+    
     public var deviceType: String {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return "Mac"
         #elseif canImport(UIKit)
-        switch UIDevice.current.userInterfaceIdiom {
-        case .phone: return "iPhone"
-        case .pad: return "iPad"
-        case .tv: return "Apple TV"
-        case .mac: return "Mac"
-        case .carPlay: return "CarPlay"
-        case .vision: return "Apple Vision Pro"
-        case .unspecified: return "Unspecified"
-        @unknown default: return "Unknown"
-        }
+        return Self.deviceTypeMapping[UIDevice.current.userInterfaceIdiom] ?? "Unknown"
         #else
         return "Unknown"
         #endif
@@ -327,17 +329,23 @@ extension PlatformCapabilities {
     
     /// Get feature availability level (full, partial, or unavailable)
     public func getFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability {
+        // Check input features first
+        if let availability = getInputFeatureAvailability(feature) {
+            return availability
+        }
+        
+        // Check UI features
+        if let availability = getUIFeatureAvailability(feature) {
+            return availability
+        }
+        
+        // All other features are either fully available or not
+        return isFeatureAvailable(feature) ? .full : .unavailable
+    }
+    
+    /// Get availability for input-related features
+    private func getInputFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
-        // Features with partial support on some platforms
-        case .findReplace:
-            return currentPlatform == .macOS ? .full : .partial
-
-        case .symbolNavigation, .breadcrumbs, .goToDefinition:
-            return currentPlatform == .macOS ? .full : .partial
-
-        case .toolbars:
-            return currentPlatform == .macOS ? .full : .partial
-
         case .keyboardShortcuts:
             if currentPlatform == .macOS {
                 return .full
@@ -346,7 +354,7 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable
             }
-
+            
         case .mouseSupport:
             if currentPlatform == .macOS {
                 return .full
@@ -355,7 +363,7 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable
             }
-
+            
         case .touchSupport:
             if currentPlatform == .iOS {
                 return .full
@@ -365,14 +373,19 @@ extension PlatformCapabilities {
                 return .unavailable
             }
             
-        // Features that are either fully available or not
-        case .syntaxHighlighting, .codeCompletion, .lineNumbers, .codeFolding, .minimap,
-             .multipleCursors, .smartBrackets, .autoIndent, .columnSelection, .quickOpen,
-             .hardwareAcceleration, .virtualScrolling, .incrementalParsing, .backgroundProcessing,
-             .languageServerProtocol, .pluginSystem, .externalTools, .fileWatching,
-             .splitView, .tabs, .sidebars, .floatingPanels, .contextMenus, .touchBarSupport,
-             .gestureNavigation, .pencilSupport:
-            return isFeatureAvailable(feature) ? .full : .unavailable
+        default:
+            return nil
+        }
+    }
+    
+    /// Get availability for UI-related features
+    private func getUIFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
+        switch feature {
+        case .findReplace, .symbolNavigation, .breadcrumbs, .goToDefinition, .toolbars:
+            return currentPlatform == .macOS ? .full : .partial
+            
+        default:
+            return nil
         }
     }
     

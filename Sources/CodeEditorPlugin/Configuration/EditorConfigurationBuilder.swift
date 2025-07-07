@@ -277,196 +277,74 @@ public struct EditorConfigurationBuilder {
     let enableSpellCheck: Bool
   }
 
-  /// Default language configurations
-  private static let languageSettings: [Language: LanguageSettings] = [
-    // Standard 4-space languages with spaces
-    .swift: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .python: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .java: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .sql: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .ruby: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .php: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .shell: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-
-    // 2-space languages
-    .javascript: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .typescript: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .html: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .css: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .xml: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .json: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .yaml: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 2,
-      insertSpacesForTabs: true,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-
-    // Tab languages
-    .go: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: false,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .rust: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: false,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .c: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: false,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-    .cpp: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: true,
-      autoIndent: true,
-      tabWidth: 4,
-      insertSpacesForTabs: false,
-      wrapLines: false,
-      enableSpellCheck: false
-    ),
-
-    // Document languages
-    .markdown: LanguageSettings(
-      syntaxHighlighting: true,
-      codeCompletion: false,
-      autoIndent: false,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: true,
-      enableSpellCheck: true
-    ),
-    .plainText: LanguageSettings(
-      syntaxHighlighting: false,
-      codeCompletion: false,
-      autoIndent: false,
-      tabWidth: 4,
-      insertSpacesForTabs: true,
-      wrapLines: true,
-      enableSpellCheck: true
+  /// Base language settings for code languages
+  private static let baseCodeSettings = LanguageSettings(
+    syntaxHighlighting: true,
+    codeCompletion: true,
+    autoIndent: true,
+    tabWidth: 4,
+    insertSpacesForTabs: true,
+    wrapLines: false,
+    enableSpellCheck: false
+  )
+  
+  /// Base language settings for document languages
+  private static let baseDocumentSettings = LanguageSettings(
+    syntaxHighlighting: true,
+    codeCompletion: false,
+    autoIndent: false,
+    tabWidth: 4,
+    insertSpacesForTabs: true,
+    wrapLines: true,
+    enableSpellCheck: true
+  )
+  
+  /// Helper to create language settings with custom overrides
+  private static func createSettings(
+    base: LanguageSettings,
+    tabWidth: Int? = nil,
+    insertSpacesForTabs: Bool? = nil, // swiftlint:disable:this discouraged_optional_boolean
+    syntaxHighlighting: Bool? = nil // swiftlint:disable:this discouraged_optional_boolean
+  ) -> LanguageSettings {
+    LanguageSettings(
+      syntaxHighlighting: syntaxHighlighting ?? base.syntaxHighlighting,
+      codeCompletion: base.codeCompletion,
+      autoIndent: base.autoIndent,
+      tabWidth: tabWidth ?? base.tabWidth,
+      insertSpacesForTabs: insertSpacesForTabs ?? base.insertSpacesForTabs,
+      wrapLines: base.wrapLines,
+      enableSpellCheck: base.enableSpellCheck
     )
-  ]
+  }
+  
+  /// Default language configurations
+  private static let languageSettings: [Language: LanguageSettings] = {
+    var settings: [Language: LanguageSettings] = [:]
+    
+    // Standard 4-space languages with spaces
+    let fourSpaceLanguages: [Language] = [.swift, .python, .java, .sql, .ruby, .php, .shell]
+    for language in fourSpaceLanguages {
+      settings[language] = baseCodeSettings
+    }
+    
+    // 2-space languages
+    let twoSpaceLanguages: [Language] = [.javascript, .typescript, .html, .css, .xml, .json, .yaml]
+    for language in twoSpaceLanguages {
+      settings[language] = createSettings(base: baseCodeSettings, tabWidth: 2)
+    }
+    
+    // Tab languages
+    let tabLanguages: [Language] = [.go, .rust, .c, .cpp]
+    for language in tabLanguages {
+      settings[language] = createSettings(base: baseCodeSettings, insertSpacesForTabs: false)
+    }
+    
+    // Document languages
+    settings[.markdown] = baseDocumentSettings
+    settings[.plainText] = createSettings(base: baseDocumentSettings, syntaxHighlighting: false)
+    
+    return settings
+  }()
 
   // MARK: - Convenience Methods
 

@@ -98,9 +98,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     
     func makeCoordinator() -> CodeEditorCoordinator {
         let coordinator = CodeEditorCoordinator(text: $text, onTextChange: onTextChange, onSelectionChange: onSelectionChange)
-        // Convert Duration to TimeInterval (seconds)
-        // Convert Duration to TimeInterval (seconds)
-        coordinator.textDebounceInterval = Double(textDebounceInterval.components.seconds) + Double(textDebounceInterval.components.attoseconds) / 1e18
+        coordinator.textDebounceInterval = textDebounceInterval.timeInterval
         return coordinator
     }
     

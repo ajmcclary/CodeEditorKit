@@ -33,7 +33,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
     
     @MainActor
     func testCompletionPerformanceSmallFile() throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         let provider = SwiftCompletionProvider()
         completionManager.registerProvider(provider)
         
@@ -74,7 +74,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
     
     @MainActor
     func testCompletionPerformanceLargeFile() throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         let provider = SwiftCompletionProvider()
         completionManager.registerProvider(provider)
         
@@ -182,7 +182,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         
         measure {
             autoreleasepool {
-                let completionManager = CompletionManager()
+                let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
                 let provider = SwiftCompletionProvider()
                 completionManager.registerProvider(provider)
                 

@@ -9,7 +9,7 @@ import XCTest
 final class TextKit2OptimizationTests: XCTestCase {
     @MainActor
     private func withOptimizer<T>(_ body: (TextKit2RenderingOptimizer) async throws -> T) async throws -> T {
-        let optimizer = TextKit2RenderingOptimizer()
+        let optimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
         return try await body(optimizer)
     }
     
@@ -341,7 +341,7 @@ final class TextKit2OptimizationTests: XCTestCase {
     
     @MainActor
     func testRenderingOptimizerPerformance() async throws {
-        let renderingOptimizer = TextKit2RenderingOptimizer()
+        let renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
         measure {
             // Test performance of updating visible range multiple times
             for index in 0..<100 {

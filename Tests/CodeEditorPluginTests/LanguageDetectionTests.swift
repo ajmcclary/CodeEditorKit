@@ -194,7 +194,7 @@ final class LanguageDetectionTests: XCTestCase {
     // MARK: - Completion Provider Integration Tests
     
     @MainActor func testCompletionProvidersRegistration() {
-        let engine = SmartCompletionEngine()
+        let engine = SmartCompletionEngine(memoryMonitor: MemoryMonitor())
         
         // Test that completion providers are registered for all major languages
         let testCases: [(language: Language, hasProvider: Bool)] = [

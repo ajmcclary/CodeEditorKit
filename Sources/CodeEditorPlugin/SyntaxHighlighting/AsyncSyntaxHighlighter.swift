@@ -30,12 +30,16 @@ public final class AsyncSyntaxHighlighter {
     // File size threshold for background highlighting
     public var backgroundHighlightingThreshold: Int = 10_000
     
+    // Memory monitor for managing cache memory
+    private let memoryMonitor: MemoryMonitor
+    
     // MARK: - Initialization
     
-    public init(debounceInterval: TimeInterval = 0.3) {
+    public init(memoryMonitor: MemoryMonitor, debounceInterval: TimeInterval = 0.3) {
         self.coordinator = SyntaxHighlightingCoordinator()
-        self.backgroundHighlighter = BackgroundSyntaxHighlighter()
+        self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
+        self.memoryMonitor = memoryMonitor
         
         // Set up periodic cache optimization
         setupPeriodicCacheOptimization()
@@ -61,12 +65,8 @@ public final class AsyncSyntaxHighlighter {
                 guard let self else { return }
                 try await Task.sleep(for: .seconds(self.debounceInterval))
                 
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-                    Task {
-                        await self.performHighlighting(for: textView, language: language, visibleRange: visibleRange)
-                    }
-                }
+                // Perform highlighting directly without nested tasks
+                await self.performHighlighting(for: textView, language: language, visibleRange: visibleRange)
             } catch {
                 // Task was cancelled, which is expected behavior
             }
@@ -344,12 +344,8 @@ public final class AsyncSyntaxHighlighter {
                 do {
                     try await Task.sleep(for: .seconds(300)) // 5 minutes
                     
-                    await MainActor.run { [weak self] in
-                        guard let self else { return }
-                        Task {
-                            await self.optimizeCache()
-                        }
-                    }
+                    // Optimize cache directly without nested tasks
+                    await self?.optimizeCache()
                 } catch {
                     // Task was cancelled
                     break
@@ -360,7 +356,7 @@ public final class AsyncSyntaxHighlighter {
     
     private func registerCacheWithMemoryMonitor() {
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "async-syntax-highlighter-cache",
                 priority: .normal
             ) { @MainActor [weak self] in

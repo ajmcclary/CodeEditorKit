@@ -18,15 +18,18 @@ public final class SmartCompletionEngine: ObservableObject {
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "SmartCompletion")
+    
+    /// Memory monitor for managing cache memory
+    private let memoryMonitor: MemoryMonitor
 
     /// Result cache for fast repeated completions
-    private let resultCache = LRUCache<CompletionCacheKey, CachedCompletionResult>(capacity: 100)
+    private let resultCache: LRUCache<CompletionCacheKey, CachedCompletionResult>
 
     /// Frequency cache for learning user patterns
-    private let frequencyCache = LRUCache<String, CompletionFrequency>(capacity: 500)
+    private let frequencyCache: LRUCache<String, CompletionFrequency>
 
     /// Recent selections for context-aware suggestions
-    private let recentSelections = LRUCache<String, CompletionSelection>(capacity: 50)
+    private let recentSelections: LRUCache<String, CompletionSelection>
 
     /// Active completion providers
     private var providers: [String: any CompletionProvider] = [:]
@@ -51,7 +54,11 @@ public final class SmartCompletionEngine: ObservableObject {
 
     // MARK: - Initialization
 
-    public init() {
+    public init(memoryMonitor: MemoryMonitor) {
+        self.memoryMonitor = memoryMonitor
+        self.resultCache = LRUCache<CompletionCacheKey, CachedCompletionResult>(capacity: 100, memoryMonitor: memoryMonitor)
+        self.frequencyCache = LRUCache<String, CompletionFrequency>(capacity: 500, memoryMonitor: memoryMonitor)
+        self.recentSelections = LRUCache<String, CompletionSelection>(capacity: 50, memoryMonitor: memoryMonitor)
         setupDefaultProviders()
         loadUserPatterns()
         setupCompletionDebouncer()
@@ -544,7 +551,7 @@ private struct CompletionSession {
 }
 
 /// Frequency tracking for completions
-public struct CompletionFrequency: Codable {
+public struct CompletionFrequency: Codable, Sendable {
     let identifier: String
     var usageCount: Int = 0
     var lastUsed = Date()
@@ -556,7 +563,7 @@ public struct CompletionFrequency: Codable {
 }
 
 /// Recent completion selection
-public struct CompletionSelection {
+public struct CompletionSelection: Sendable {
     let item: CompletionItemModel
     let context: CompletionContextModel
     let timestamp: Date

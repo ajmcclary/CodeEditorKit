@@ -7,7 +7,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     
     @MainActor
     func testTextProcessingPerformance() throws {
-        let processor = AsyncTextProcessor()
+        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor())
         
         // Simple test operation
         struct TestOperation: ProcessingOperation {
@@ -70,7 +70,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
         // Test the FuzzyMatcher component instead, which is a key part of SmartCompletionEngine
         // The SmartCompletionEngine itself has complex async initialization that's hard to test in isolation
         let fuzzyMatcher = FuzzyMatcher()
-        _ = SmartCompletionEngine() // Test that it can be instantiated
+        _ = SmartCompletionEngine(memoryMonitor: MemoryMonitor()) // Test that it can be instantiated
         
         // Generate test data
         let candidates = ["String", "StringProtocol", "Substring", "StaticString", "StringLiteralType"]
@@ -459,7 +459,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     
     @MainActor
     func testLSPManagerPerformance() throws {
-        let lspManager = LSPManager()
+        let lspManager = LSPManager(memoryMonitor: MemoryMonitor())
         
         // Test document management performance
         let testFiles = (0..<100).map { index in
@@ -504,7 +504,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     
     @MainActor
     func testMemoryUnderPressure() throws {
-        let monitor = MemoryMonitor.shared
+        let monitor = MemoryMonitor()
         
         measure(metrics: [XCTMemoryMetric()]) {
             let expectation = self.expectation(description: "Memory pressure test")
@@ -539,7 +539,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     
     @MainActor
     func testConcurrentCompletionRequests() throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         completionManager.registerProvider(SwiftCompletionProvider())
         
         let contexts = (0..<10).map { index in

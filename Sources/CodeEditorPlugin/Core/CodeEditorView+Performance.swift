@@ -66,7 +66,7 @@ extension CodeEditorView {
         hasher.combine(ObjectIdentifier(self))
         let identifier = "CodeEditorView_\(hasher.finalize())"
         
-        MemoryMonitor.shared.registerCleanupHandler(
+        self.memoryMonitor.registerCleanupHandler(
             identifier: identifier,
             priority: .normal
         ) { [weak self] in
@@ -133,7 +133,7 @@ extension CodeEditorView {
         var hasher = Hasher()
         hasher.combine(ObjectIdentifier(self))
         let identifier = "CodeEditorView_\(hasher.finalize())"
-        MemoryMonitor.shared.unregisterCleanupHandler(identifier: identifier)
+        self.memoryMonitor.unregisterCleanupHandler(identifier: identifier)
     }
     
     // MARK: - Visible Range

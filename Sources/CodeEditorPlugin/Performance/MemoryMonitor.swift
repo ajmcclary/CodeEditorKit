@@ -43,9 +43,10 @@ public final class MemoryMonitor: ObservableObject {
     
     // MARK: - Singleton
     
+    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with MemoryMonitor() and pass it to components that need it.")
     public static let shared = MemoryMonitor()
     
-    private init() {
+    public init() {
         // Skip monitoring in test environment
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             startMonitoring()

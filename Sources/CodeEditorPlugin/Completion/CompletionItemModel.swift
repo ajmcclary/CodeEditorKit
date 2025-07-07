@@ -435,17 +435,20 @@ public final class CompletionManager {
     private let cacheExpirationTime: TimeInterval
     private let enableCaching: Bool
     private let debouncer: CompletionDebouncer
+    private let memoryMonitor: MemoryMonitor
 
     /// Completion request statistics
     public private(set) var statistics = CompletionStatistics()
 
     public init(
+        memoryMonitor: MemoryMonitor,
         cacheSize: Int = 100,
         cacheExpirationTime: TimeInterval = 300, // 5 minutes
         enableCaching: Bool = true,
         debouncer: CompletionDebouncer? = nil
     ) {
-        self.cache = LRUCache(capacity: cacheSize)
+        self.memoryMonitor = memoryMonitor
+        self.cache = LRUCache(capacity: cacheSize, memoryMonitor: memoryMonitor)
         self.cacheExpirationTime = cacheExpirationTime
         self.enableCaching = enableCaching
         self.debouncer = debouncer ?? CompletionDebouncer()
@@ -648,7 +651,7 @@ public final class CompletionManager {
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "completion-manager",
                 priority: .normal
             ) { @MainActor [weak self] in

@@ -19,13 +19,17 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
     /// Statistics for viewport highlighting
     @Published public private(set) var statistics = ViewportStatistics()
     
+    private let memoryMonitor: MemoryMonitor
+    
     public init(
+        memoryMonitor: MemoryMonitor,
         baseCoordinator: SyntaxHighlightingCoordinator = SyntaxHighlightingCoordinator(),
         maxCacheSize: Int = 50,
         viewportExpansionRatio: Double = 1.5 // Highlight 50% more content around visible area
     ) {
         self.baseCoordinator = baseCoordinator
-        self.cache = LRUCache(capacity: maxCacheSize)
+        self.memoryMonitor = memoryMonitor
+        self.cache = LRUCache(capacity: maxCacheSize, memoryMonitor: memoryMonitor)
         self.maxCacheSize = maxCacheSize
         self.viewportExpansionRatio = viewportExpansionRatio
         
@@ -209,7 +213,7 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "viewport-syntax-coordinator",
                 priority: .normal
             ) { @MainActor [weak self] in

@@ -49,9 +49,13 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     private var layoutTimes: [TimeInterval] = []
     private let maxLayoutTimeSamples = 50
     
+    /// Memory monitor for managing cache memory
+    private let memoryMonitor: MemoryMonitor
+    
     // MARK: - Initialization
     
-    public init() {
+    public init(memoryMonitor: MemoryMonitor) {
+        self.memoryMonitor = memoryMonitor
         // Register with memory monitor
         registerWithMemoryMonitor()
     }
@@ -338,7 +342,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "textkit2-rendering-optimizer",
                 priority: .normal
             ) { @MainActor [weak self] in

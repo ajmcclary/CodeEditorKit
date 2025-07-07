@@ -2,7 +2,7 @@ import Foundation
 
 /// A thread-safe LRU (Least Recently Used) cache implementation
 @MainActor
-public final class LRUCache<Key: Hashable, Value> {
+public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     private final class Node {
         let key: Key
         var value: Value
@@ -20,6 +20,7 @@ public final class LRUCache<Key: Hashable, Value> {
     private var head: Node?
     private var tail: Node?
     private let cacheId = UUID().uuidString
+    private let memoryMonitor: MemoryMonitor
     
     /// Total number of items currently in cache
     public var count: Int { cache.count }
@@ -28,9 +29,12 @@ public final class LRUCache<Key: Hashable, Value> {
     public var maxCapacity: Int { capacity }
     
     /// Creates a new LRU cache with the specified capacity
-    /// - Parameter capacity: Maximum number of items to store
-    public init(capacity: Int) {
+    /// - Parameters:
+    ///   - capacity: Maximum number of items to store
+    ///   - memoryMonitor: Memory monitor for tracking cache memory usage
+    public init(capacity: Int, memoryMonitor: MemoryMonitor) {
         self.capacity = max(1, capacity)
+        self.memoryMonitor = memoryMonitor
         
         // Register with memory monitor for cleanup
         registerWithMemoryMonitor()
@@ -199,7 +203,7 @@ public final class LRUCache<Key: Hashable, Value> {
         }
         
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "lru-cache-\(id)",
                 priority: .normal,
                 handler: handler

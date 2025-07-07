@@ -23,21 +23,34 @@ public enum PlatformAnimation {
         completion: (@Sendable (Bool) -> Void)? = nil
     ) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = duration
-            context.allowsImplicitAnimation = true
-            context.timingFunction = options.toCAMediaTimingFunction()
-            
-            if delay > 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    animations()
+        if delay > 0 {
+            // Use Task.sleep for delay with modern concurrency
+            Task { @MainActor in
+                do {
+                    try await Task.sleep(for: .seconds(delay))
+                    NSAnimationContext.runAnimationGroup({ context in
+                        context.duration = duration
+                        context.allowsImplicitAnimation = true
+                        context.timingFunction = options.toCAMediaTimingFunction()
+                        animations()
+                    }, completionHandler: {
+                        completion?(true)
+                    })
+                } catch {
+                    // Task was cancelled, skip animation
+                    completion?(false)
                 }
-            } else {
-                animations()
             }
-        }, completionHandler: {
-            completion?(true)
-        })
+        } else {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = duration
+                context.allowsImplicitAnimation = true
+                context.timingFunction = options.toCAMediaTimingFunction()
+                animations()
+            }, completionHandler: {
+                completion?(true)
+            })
+        }
         #elseif canImport(UIKit)
         UIView.animate(
             withDuration: duration,

@@ -31,7 +31,7 @@ final class ConcurrencyTests: XCTestCase {
     // MARK: - Memory Management Tests
     
     func testMemoryMonitorActorSafety() async throws {
-        let monitor = MemoryMonitor.shared
+        let monitor = MemoryMonitor()
         
         // Test concurrent registration/unregistration
         await withTaskGroup(of: Void.self) { group in

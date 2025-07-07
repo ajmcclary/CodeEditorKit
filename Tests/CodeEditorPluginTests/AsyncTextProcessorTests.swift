@@ -4,9 +4,9 @@ import XCTest
 final class AsyncTextProcessorTests: XCTestCase {
     // MARK: - Concurrency Tests
     
-    func testDefaultConcurrencyLimit() async throws {
+    @MainActor func testDefaultConcurrencyLimit() async throws {
         // Test that default concurrency is capped at 4
-        let processor = AsyncTextProcessor()
+        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor())
         
         // Get the status to check active tasks limit
         _ = await processor.getStatus()
@@ -71,10 +71,10 @@ final class AsyncTextProcessorTests: XCTestCase {
         await processor.clearQueue()
     }
     
-    func testCustomConcurrencyLimit() async throws {
+    @MainActor func testCustomConcurrencyLimit() async throws {
         // Test that custom concurrency limit is respected
         let customLimit = 2
-        let processor = AsyncTextProcessor(maxConcurrentOperations: customLimit)
+        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor(), maxConcurrentOperations: customLimit)
         
         struct SlowOperation: ProcessingOperation {
             let name = "slow-operation"
@@ -113,7 +113,7 @@ final class AsyncTextProcessorTests: XCTestCase {
         await processor.clearQueue()
     }
     
-    func testHighConcurrencySystemsCapped() async throws {
+    @MainActor func testHighConcurrencySystemsCapped() async throws {
         // This test verifies that even if we explicitly try to set a high concurrency,
         // the default cap of 4 is applied when using default initialization
         
@@ -122,7 +122,7 @@ final class AsyncTextProcessorTests: XCTestCase {
         print("System has \(coreCount) cores")
         
         // Create processor with default settings
-        let processor = AsyncTextProcessor()
+        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor())
         
         // The expected max should be capped at 4
         let expectedMax = min(4, coreCount)

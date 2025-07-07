@@ -79,7 +79,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerProviderRegistration() async throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         let mockProvider = MockCompletionProvider()
         XCTAssertTrue(completionManager.registeredProviders.isEmpty)
         
@@ -93,7 +93,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerRequestsCompletions() async throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         let mockProvider = MockCompletionProvider()
         // Register mock provider
         completionManager.registerProvider(mockProvider)
@@ -119,7 +119,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerDeduplication() async throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         // Create two providers that return duplicate items
         let provider1 = MockCompletionProvider(id: "provider1")
         let provider2 = MockCompletionProvider(id: "provider2")
@@ -140,7 +140,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerSorting() async throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         let mockProvider = MockCompletionProvider()
         completionManager.registerProvider(mockProvider)
         
@@ -166,7 +166,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerCancellation() async throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         completionManager.registerProvider(MockSlowCompletionProvider())
         
         let language = Language.swift
@@ -291,7 +291,7 @@ final class CompletionSystemTests: XCTestCase {
     
     @MainActor
     func testCompletionManagerPerformance() throws {
-        let completionManager = CompletionManager()
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
         // Register multiple providers
         for index in 0..<10 {
             completionManager.registerProvider(MockCompletionProvider(id: "provider\(index)"))

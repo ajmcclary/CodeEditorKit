@@ -47,6 +47,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Logger for debugging
     private let logger = Logger(subsystem: "com.codeeditor.highlighting", category: "BackgroundSyntaxHighlighter")
     
+    /// Memory monitor for managing cache memory
+    private let memoryMonitor: MemoryMonitor
+    
     // MARK: - Completion Handlers
     
     /// Completion handler for highlighting results
@@ -54,7 +57,8 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     
     // MARK: - Initialization
     
-    public init() {
+    public init(memoryMonitor: MemoryMonitor) {
+        self.memoryMonitor = memoryMonitor
         // Register with memory monitor
         registerWithMemoryMonitor()
     }
@@ -392,7 +396,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Register with memory monitor for cleanup
     private func registerWithMemoryMonitor() {
         Task { @MainActor in
-            MemoryMonitor.shared.registerCleanupHandler(
+            self.memoryMonitor.registerCleanupHandler(
                 identifier: "background-syntax-highlighter",
                 priority: .normal
             ) { @MainActor [weak self] in

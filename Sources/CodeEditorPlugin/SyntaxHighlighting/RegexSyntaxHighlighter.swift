@@ -197,7 +197,10 @@ public final class RegexSyntaxHighlighter: Sendable {
                 let coordinatorTokenType = mapTokenType(rule.tokenType)
                 
                 // Only create substring when we actually need the text content
-                let text = String(source[Range(matchRange, in: source)!])
+                guard let stringRange = Range(matchRange, in: source) else {
+                    continue
+                }
+                let text = String(source[stringRange])
                 tokens.append(HighlightedToken(range: matchRange, type: coordinatorTokenType, text: text))
                 
                 // Insert range in sorted order to maintain invariant for early termination
