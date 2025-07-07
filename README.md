@@ -127,7 +127,7 @@ The codebase is organized by feature rather than by type, making it intuitive to
 - **74% Directory Reduction**: Simplified from 39 to 10 core feature directories, dramatically reducing cognitive load
 - **Self-Contained Features**: Each feature includes its own models, views, and logic in one place
 - **Enhanced Platform Abstraction**: Replaced all `#if os()` with `#if canImport()` for better Catalyst support
-- **Improved File Organization**: 253 total Swift files (216 plugin + 37 sample app) with clear separation
+- **Improved File Organization**: 299 total Swift files (257 plugin + 42 sample app) with clear separation
 - **Better Testability**: Feature isolation makes unit testing more straightforward
 
 #### Key Components
@@ -341,7 +341,7 @@ swift run CodeEditorSample  # Launch the demo app
 swift test               # Run 35 comprehensive tests
 ```
 
-The sample app maintains the same quality standards as the core plugin with **35 automated tests** (100% passing) and **zero linting violations** across 43 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
+The sample app maintains the same quality standards as the core plugin with **35 automated tests** (100% passing) and **zero linting violations** across 42 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
 
 ## 🧪 Testing & Quality
 
@@ -384,7 +384,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 We maintain the highest code quality standards in the Swift ecosystem:
 
-- **Zero Linting Violations**: Not a single SwiftLint violation across all 253 source files
+- **Zero Linting Violations**: Not a single SwiftLint violation across all 257 source files
 - **Swift 6 Strict Concurrency**: Full compliance with Swift's strictest concurrency checking – no data races possible
 - **100% Actor Safety**: All concurrent operations use Swift 6 actors for guaranteed thread safety
 - **Enhanced Platform Abstraction**: Sophisticated cross-platform layer with zero compromise on native performance

@@ -177,12 +177,26 @@ textView.language = .python
 
 ### Architecture Achievements
 - **74% directory reduction**: From 39 to 10 core feature directories
-- **299 total Swift files**: 256 plugin + 43 sample app (well organized)
+- **299 total Swift files**: 257 plugin + 42 sample app (well organized)
 - **392 comprehensive tests**: 357 plugin + 35 sample app (100% passing)
 - **Zero SwiftLint violations**: Maintained across entire codebase
 - **Swift 6 concurrency compliance**: Full actor isolation and `@preconcurrency` usage
 - **Mac Catalyst compatibility**: Resolved all platform-specific build issues
 - **Dependency injection**: Replaced singleton patterns for better testability
+
+### Latest Improvements (December 2025)
+- **Fixed AsyncSyntaxHighlighter**: Eliminated nested Task anti-pattern for cleaner async flow
+- **Removed unsafe force unwraps**: RegexSyntaxHighlighter now safely handles optional ranges
+- **Proper cleanup patterns**: CodeEditorView cleanup moved from deinit to removeFromSuperview
+- **API refinement**: Made codeFoldingEngine internal to hide implementation details
+- **Eliminated code duplication**: EditorConfigurationBuilder now uses shared base configurations
+- **Modern concurrency**: Replaced DispatchQueue.main.asyncAfter with Task.sleep
+- **Dependency injection**: MemoryMonitor singleton deprecated in favor of injected instances
+- **Simplified switch statements**: PlatformCapabilities now uses cleaner pattern matching
+- **Added Duration extension**: New timeInterval property for Swift 6 Duration conversion
+- **Enhanced type safety**: LRUCache now properly constrains Key and Value to Sendable
+- **Comprehensive DI migration**: All components now accept memoryMonitor as parameter
+
 
 ## Important Reminders
 
