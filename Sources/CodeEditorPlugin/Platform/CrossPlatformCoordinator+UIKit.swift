@@ -41,11 +41,10 @@ extension CrossPlatformCoordinator {
         toolbar.sizeToFit()
         
         let items = [
-            // TODO: Implement undo/redo/find functionality
-            // UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: self, action: #selector(undo)),
-            // UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: self, action: #selector(redo)),
+            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: self, action: #selector(undo)),
+            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: self, action: #selector(redo)),
             UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            // UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(find)),
+            UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(find)),
             UIBarButtonItem(image: UIImage(systemName: "keyboard.chevron.compact.down"), style: .plain, target: self, action: #selector(dismissKeyboard))
         ]
         
@@ -87,8 +86,7 @@ extension CrossPlatformCoordinator {
         // Limited keyboard support on iOS
         if isExternalKeyboardConnected() && modifiers.contains(.command) {
             switch key {
-            // TODO: Implement find functionality
-            // case "f": showFind(in: textView); return true
+            case "f": showFind(in: textView); return true
             case "z": textView.undoManager?.undo(); return true
             default: break
             }
@@ -150,13 +148,13 @@ extension CrossPlatformCoordinator {
         })
         
         // Code-specific actions
-        // TODO: Implement these actions when needed
         let codeActions = UIMenu(title: "Code", children: [
-            // UIAction(title: "Toggle Comment", image: UIImage(systemName: "text.bubble")) { [weak self] _ in
-            //     self?.toggleComment()
-            // },
+            UIAction(title: "Toggle Comment", image: UIImage(systemName: "text.bubble")) { [weak self] _ in
+                self?.toggleComment(in: textView)
+            },
             UIAction(title: "Format Selection", image: UIImage(systemName: "text.alignleft")) { [weak self] _ in
-                self?.logger.debug("Format selection requested - not yet implemented")
+                self?.logger.debug("Format selection requested")
+                // Implementation tracked in GitHub issue #4
             }
         ])
         actions.append(codeActions)
@@ -256,6 +254,124 @@ extension CrossPlatformCoordinator {
         
         // Notify observers of the change
         objectWillChange.send()
+    }
+    
+    // MARK: - IOS Toolbar Actions
+    
+    @objc private func undo() {
+        if let window = UIApplication.shared.keyWindow,
+           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
+            textView.undoManager?.undo()
+        }
+    }
+    
+    @objc private func redo() {
+        if let window = UIApplication.shared.keyWindow,
+           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
+            textView.undoManager?.redo()
+        }
+    }
+    
+    @objc private func find() {
+        if let window = UIApplication.shared.keyWindow,
+           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
+            showFind(in: textView)
+        }
+    }
+    
+    private func showFind(in textView: CodeEditorView) {
+        // Create a simple find interface
+        let alert = UIAlertController(title: "Find", message: nil, preferredStyle: .alert)
+        
+        alert.addTextField { textField in
+            textField.placeholder = "Search text..."
+            textField.autocapitalizationType = .none
+            textField.autocorrectionType = .no
+        }
+        
+        let findAction = UIAlertAction(title: "Find", style: .default) { [weak alert] _ in
+            if let searchText = alert?.textFields?.first?.text,
+               !searchText.isEmpty {
+                self.findText(searchText, in: textView)
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alert.addAction(findAction)
+        alert.addAction(cancelAction)
+        
+        if let viewController = textView.window?.rootViewController {
+            viewController.present(alert, animated: true)
+        }
+    }
+    
+    private func findText(_ searchText: String, in textView: CodeEditorView) {
+        guard let text = textView.text else { return }
+        
+        let nsText = text as NSString
+        let searchRange = NSRange(location: textView.selectedRange.upperBound, length: text.count - textView.selectedRange.upperBound)
+        
+        if let foundRange = nsText.range(of: searchText, options: .caseInsensitive, range: searchRange),
+           foundRange.location != NSNotFound {
+            textView.selectedRange = foundRange
+            textView.scrollRangeToVisible(foundRange)
+        } else {
+            // Search from beginning
+            let wrapRange = NSRange(location: 0, length: textView.selectedRange.location)
+            if let foundRange = nsText.range(of: searchText, options: .caseInsensitive, range: wrapRange),
+               foundRange.location != NSNotFound {
+                textView.selectedRange = foundRange
+                textView.scrollRangeToVisible(foundRange)
+            }
+        }
+    }
+    
+    private func toggleComment(in textView: CodeEditorView) {
+        guard let text = textView.text,
+              let language = textView.language else { return }
+        
+        let selectedRange = textView.selectedRange
+        let nsText = text as NSString
+        
+        // Get the comment syntax for the current language
+        let commentPrefix = getCommentPrefix(for: language)
+        
+        // Find line boundaries for the selection
+        var lineStart = 0
+        var lineEnd = 0
+        nsText.getLineStart(&lineStart, end: &lineEnd, contentsEnd: nil, for: selectedRange)
+        
+        // Check if the line is already commented
+        let lineText = nsText.substring(with: NSRange(location: lineStart, length: lineEnd - lineStart))
+        let trimmedLine = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmedLine.hasPrefix(commentPrefix) {
+            // Remove comment
+            let uncommentedLine = lineText.replacingOccurrences(of: commentPrefix, with: "", options: .anchored)
+            textView.insertText(uncommentedLine, replacementRange: NSRange(location: lineStart, length: lineEnd - lineStart))
+        } else {
+            // Add comment
+            let commentedLine = commentPrefix + " " + lineText
+            textView.insertText(commentedLine, replacementRange: NSRange(location: lineStart, length: lineEnd - lineStart))
+        }
+    }
+    
+    private func getCommentPrefix(for language: Language) -> String {
+        switch language {
+        case .swift, .javascript, .typescript, .java, .c, .cpp, .go, .rust, .php:
+            return "//"
+        case .python, .ruby, .shell, .yaml:
+            return "#"
+        case .html, .xml:
+            return "<!--"
+        case .css:
+            return "/*"
+        case .sql:
+            return "--"
+        case .markdown, .json, .plainText:
+            return "//" // Default fallback
+        }
     }
 }
 #endif
