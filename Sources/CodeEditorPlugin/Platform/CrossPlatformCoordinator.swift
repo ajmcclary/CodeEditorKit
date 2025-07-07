@@ -254,26 +254,6 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Common Actions
     
-    @objc func undo() {
-        logger.debug("Undo requested")
-        // Implementation would perform undo
-    }
-    
-    @objc func redo() {
-        logger.debug("Redo requested")
-        // Implementation would perform redo
-    }
-    
-    @objc func find() {
-        logger.debug("Find requested")
-        // Implementation would show find UI
-    }
-    
-    @objc func toggleComment() {
-        logger.debug("Toggle comment requested")
-        // Implementation would toggle comments
-    }
-    
     #if canImport(UIKit)
     @objc func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -281,23 +261,6 @@ public class CrossPlatformCoordinator: ObservableObject {
     #endif
     
     // Context menu actions are now handled by ContextMenuCoordinator
-    
-    // These methods are stubs and should be implemented as needed
-    internal func selectNextOccurrence(in _: CodeEditorView) {
-        logger.debug("selectNextOccurrence not yet implemented")
-    }
-    
-    internal func selectLine(in _: CodeEditorView) {
-        logger.debug("selectLine not yet implemented")
-    }
-    
-    private func toggleComment(in _: CodeEditorView) {
-        logger.debug("toggleComment not yet implemented")
-    }
-    
-    internal func showFind(in _: CodeEditorView) {
-        logger.debug("showFind not yet implemented")
-    }
     
     /// Show context menu at default location
     ///

@@ -145,8 +145,10 @@ final class CodeEditorViewTests: XCTestCase {
         #else
         let highlightColor = UIColor.yellow.withAlphaComponent(0.3)
         #endif
-        textView.selectedLineHighlightColor = highlightColor
-        XCTAssertEqual(textView.selectedLineHighlightColor, highlightColor)
+        var config = textView.configuration
+        config.display.selectedLineHighlightColor = highlightColor
+        textView.configuration = config
+        XCTAssertEqual(textView.configuration.display.selectedLineHighlightColor, highlightColor)
     }
 
     // MARK: - Text Container Tests

@@ -31,6 +31,13 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     
     func updateNSView(_ nsView: CodeEditorContainerView, context: Context) {
         context.coordinator.updateContainer(nsView, text: text, language: language, theme: theme, configuration: configuration)
+        
+        // Handle focus request from environment
+        if context.environment.codeEditorBecomeFirstResponder {
+            DispatchQueue.main.async {
+                nsView.window?.makeFirstResponder(nsView.textView)
+            }
+        }
     }
     
     static func dismantleNSView(_: CodeEditorContainerView, coordinator: CodeEditorCoordinator) {

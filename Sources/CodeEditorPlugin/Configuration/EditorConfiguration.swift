@@ -276,7 +276,66 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         /// - Note: Typical values range from 2 to 5 lines.
         public var minimumFoldableLines: Int = 3
         
+        /// The color used to highlight the selected line.
+        ///
+        /// When `highlightSelectedLine` is enabled, this color is used
+        /// as the background color for the line containing the cursor.
+        /// The default color adapts to light/dark mode automatically.
+        ///
+        /// - Note: Only applies when `highlightSelectedLine` is `true`.
+        public var selectedLineHighlightColor: PlatformColor = PlatformColors.selectedLineHighlight
+        
         public init() {}
+        
+        // MARK: - Codable
+        
+        enum CodingKeys: String, CodingKey {
+            case showLineNumbers
+            case highlightSelectedLine
+            case showInvisibleCharacters
+            case fontSize
+            case enableSyntaxHighlighting
+            case enableAnnotations
+            case showIndentGuides
+            case showMinimap
+            case enableCodeFolding
+            case showFoldingControls
+            case minimumFoldableLines
+            // selectedLineHighlightColor is not included - it will use default
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            showLineNumbers = try container.decode(Bool.self, forKey: .showLineNumbers)
+            highlightSelectedLine = try container.decode(Bool.self, forKey: .highlightSelectedLine)
+            showInvisibleCharacters = try container.decode(Bool.self, forKey: .showInvisibleCharacters)
+            fontSize = try container.decode(CGFloat.self, forKey: .fontSize)
+            enableSyntaxHighlighting = try container.decode(Bool.self, forKey: .enableSyntaxHighlighting)
+            enableAnnotations = try container.decode(Bool.self, forKey: .enableAnnotations)
+            showIndentGuides = try container.decode(Bool.self, forKey: .showIndentGuides)
+            showMinimap = try container.decode(Bool.self, forKey: .showMinimap)
+            enableCodeFolding = try container.decode(Bool.self, forKey: .enableCodeFolding)
+            showFoldingControls = try container.decode(Bool.self, forKey: .showFoldingControls)
+            minimumFoldableLines = try container.decode(Int.self, forKey: .minimumFoldableLines)
+            // Use default color
+            selectedLineHighlightColor = PlatformColors.selectedLineHighlight
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(showLineNumbers, forKey: .showLineNumbers)
+            try container.encode(highlightSelectedLine, forKey: .highlightSelectedLine)
+            try container.encode(showInvisibleCharacters, forKey: .showInvisibleCharacters)
+            try container.encode(fontSize, forKey: .fontSize)
+            try container.encode(enableSyntaxHighlighting, forKey: .enableSyntaxHighlighting)
+            try container.encode(enableAnnotations, forKey: .enableAnnotations)
+            try container.encode(showIndentGuides, forKey: .showIndentGuides)
+            try container.encode(showMinimap, forKey: .showMinimap)
+            try container.encode(enableCodeFolding, forKey: .enableCodeFolding)
+            try container.encode(showFoldingControls, forKey: .showFoldingControls)
+            try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)
+            // Don't encode selectedLineHighlightColor
+        }
     }
     
     /// Behavior-related configuration.

@@ -117,4 +117,13 @@ extension View {
     public func codeEditorBecomeFirstResponder(_ become: Bool) -> some View {
         environment(\.codeEditorBecomeFirstResponder, become)
     }
+    
+    /// Set the selected line highlight color for the code editor
+    public func codeEditorLineHighlightColor(_ color: PlatformColor) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            var display = config.display
+            display.selectedLineHighlightColor = color
+            config = config.with(display: display)
+        }
+    }
 }

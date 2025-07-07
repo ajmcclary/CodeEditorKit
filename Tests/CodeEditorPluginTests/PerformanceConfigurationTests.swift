@@ -158,7 +158,9 @@ final class PerformanceConfigurationTests: XCTestCase {
             for scheme in colorSchemes {
                 textView.backgroundColor = scheme.bg
                 textView.textColor = scheme.text
-                textView.selectedLineHighlightColor = scheme.selectedLine
+                var config = textView.configuration
+                config.display.selectedLineHighlightColor = scheme.selectedLine
+                textView.configuration = config
             }
         }
     }

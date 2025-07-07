@@ -41,10 +41,11 @@ extension CrossPlatformCoordinator {
         toolbar.sizeToFit()
         
         let items = [
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: self, action: #selector(undo)),
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: self, action: #selector(redo)),
+            // TODO: Implement undo/redo/find functionality
+            // UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: self, action: #selector(undo)),
+            // UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: self, action: #selector(redo)),
             UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-            UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(find)),
+            // UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(find)),
             UIBarButtonItem(image: UIImage(systemName: "keyboard.chevron.compact.down"), style: .plain, target: self, action: #selector(dismissKeyboard))
         ]
         
@@ -86,7 +87,8 @@ extension CrossPlatformCoordinator {
         // Limited keyboard support on iOS
         if isExternalKeyboardConnected() && modifiers.contains(.command) {
             switch key {
-            case "f": showFind(in: textView); return true
+            // TODO: Implement find functionality
+            // case "f": showFind(in: textView); return true
             case "z": textView.undoManager?.undo(); return true
             default: break
             }
@@ -148,12 +150,13 @@ extension CrossPlatformCoordinator {
         })
         
         // Code-specific actions
+        // TODO: Implement these actions when needed
         let codeActions = UIMenu(title: "Code", children: [
-            UIAction(title: "Toggle Comment", image: UIImage(systemName: "text.bubble")) { [weak self] _ in
-                self?.toggleComment()
-            },
+            // UIAction(title: "Toggle Comment", image: UIImage(systemName: "text.bubble")) { [weak self] _ in
+            //     self?.toggleComment()
+            // },
             UIAction(title: "Format Selection", image: UIImage(systemName: "text.alignleft")) { [weak self] _ in
-                self?.logger.debug("Format selection requested")
+                self?.logger.debug("Format selection requested - not yet implemented")
             }
         ])
         actions.append(codeActions)

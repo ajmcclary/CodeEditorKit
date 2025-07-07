@@ -16,9 +16,6 @@ import UIKit
 public class GutterViewRenderer {
     // MARK: - Properties
     
-    /// The font used for line numbers
-    private let font = PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
-    
     /// The color used for line numbers
     private let textColor = PlatformColors.secondaryLabel
     
@@ -62,9 +59,12 @@ public class GutterViewRenderer {
             return
         }
         
+        // Use the same font as the text view for proper baseline alignment
+        let textViewFont = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
+        
         // Set up text attributes
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
+            .font: textViewFont,
             .foregroundColor: textColor
         ]
         
@@ -75,6 +75,7 @@ public class GutterViewRenderer {
                 for: lineRange,
                 helper: helper,
                 attributes: attributes,
+                font: textViewFont,
                 gutterBounds: gutterBounds,
                 context: context,
                 textView: textView
@@ -103,12 +104,13 @@ public class GutterViewRenderer {
         for lineRange: NSRange,
         helper _: TextKitLineNumberHelper,
         attributes _: [NSAttributedString.Key: Any],
+        font: PlatformFont,
         gutterBounds: CGRect,
         context _: CGContext,
         textView: CodeEditorView
     ) {
         // Calculate Y position directly from line number and actual text layout
-        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, textView: textView)
+        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, font: font, textView: textView)
         
         let drawingPoint = CGPoint(
             x: 0, // Will be adjusted by the unified drawing method for right alignment
@@ -133,7 +135,7 @@ public class GutterViewRenderer {
     }
     
     /// Calculate the Y position for a line number using simplified AppKit-style approach
-    private func calculateLineNumberYPosition(lineNumber: Int, lineRange: NSRange, textView: CodeEditorView) -> CGFloat {
+    private func calculateLineNumberYPosition(lineNumber: Int, lineRange: NSRange, font: PlatformFont, textView: CodeEditorView) -> CGFloat {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS implementation - unchanged
         guard let layoutManager = textView.layoutManager,
@@ -154,17 +156,18 @@ public class GutterViewRenderer {
         let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
         
-        // Calculate position in text view coordinate system
+        // The lineRect is in the text container's coordinate system
+        // We need to convert it to the gutter view's coordinate system
+        
+        // The lineRect.minY is relative to the text container
+        // To get the position in the text view's coordinate system, we add the container inset
         let textViewY = lineRect.minY + textView.textContainerInset.top
         
         // Convert to gutter coordinate system by accounting for scroll offset
-        // The gutter is fixed, so we need to subtract the scroll offset to get the correct position
+        // The gutter is fixed, so we need to subtract the scroll offset
         let gutterY = textViewY - textView.contentOffset.y
         
-        // Center the line number vertically within the line
-        let lineNumberHeight = font.lineHeight
-        
-        return gutterY + (lineRect.height - lineNumberHeight) / 2
+        return gutterY
         #endif
     }
     

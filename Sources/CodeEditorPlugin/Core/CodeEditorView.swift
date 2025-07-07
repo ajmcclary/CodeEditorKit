@@ -8,9 +8,6 @@ import UIKit
 import AppKit
 #endif
 
-// Local logger instance for CodeEditorView
-internal let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
-
 // MARK: - CodeEditorView
 
 /// A powerful, cross-platform text view designed specifically for code editing.
@@ -103,6 +100,11 @@ internal let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "Cod
 /// ```
 @objc @MainActor
 open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEditorAPI, CompletionViewControllerDelegate {
+    // MARK: - Static Properties
+    
+    /// Logger instance for CodeEditorView
+    internal static let logger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
+    
     // This file contains the core class definition with all stored properties.
     // All methods have been moved to focused extension files:
     //
@@ -162,13 +164,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                 applySyntaxHighlighting()
                 updateCompletionTriggerCharacters()
             }
-        }
-    }
-    
-    /// The color for highlighting the selected line
-    public var selectedLineHighlightColor = PlatformColors.selectedLineHighlight {
-        didSet {
-            updateSelectedLineHighlight()
         }
     }
     
@@ -236,7 +231,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     override public init(frame frameRect: NSRect) {
         // Use default NSTextView initialization - don't create custom text container
         // The custom text container creation was breaking text rendering
-        kLogger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
+        Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
         
         // Use default NSTextView initialization
         // NSTextView should automatically use TextKit2 on supported systems
@@ -251,7 +246,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     public convenience init(frame frameRect: CGRect) {
         // Use default UITextView initialization
-        kLogger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
+        Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
         self.init(frame: frameRect, textContainer: nil)
     }
     #endif

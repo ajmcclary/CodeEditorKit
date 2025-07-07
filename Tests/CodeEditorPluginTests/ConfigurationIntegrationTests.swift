@@ -129,7 +129,9 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Set appearance properties directly on the view
         textView.backgroundColor = PlatformColors.systemBackground
         textView.textColor = PlatformColors.label
-        textView.selectedLineHighlightColor = PlatformColors.systemGray
+        var updatedConfig = textView.configuration
+        updatedConfig.display.selectedLineHighlightColor = PlatformColors.systemGray
+        textView.configuration = updatedConfig
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.insertionPointColor = PlatformColors.systemBlue
@@ -140,7 +142,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Verify settings were applied
         XCTAssertEqual(textView.backgroundColor, PlatformColors.systemBackground)
         XCTAssertEqual(textView.textColor, PlatformColors.label)
-        XCTAssertEqual(textView.selectedLineHighlightColor, PlatformColors.systemGray)
+        XCTAssertEqual(textView.configuration.display.selectedLineHighlightColor, PlatformColors.systemGray)
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(textView.insertionPointColor, PlatformColors.systemBlue)

@@ -13,48 +13,48 @@ extension CodeEditorView {
     // MARK: - Setup Methods
     
     internal func setupTextView() {
-        kLogger.debug("CodeEditorView setupTextView: Starting setup")
-        kLogger.debug("CodeEditorView setupTextView: textStorage = exists")
+        Self.logger.debug("CodeEditorView setupTextView: Starting setup")
+        Self.logger.debug("CodeEditorView setupTextView: textStorage = exists")
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        kLogger.debug("CodeEditorView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
+        Self.logger.debug("CodeEditorView setupTextView: layoutManager = \(self.layoutManager != nil ? "exists" : "nil")")
         #else
-        kLogger.debug("CodeEditorView setupTextView: layoutManager = exists")
+        Self.logger.debug("CodeEditorView setupTextView: layoutManager = exists")
         #endif
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        kLogger.debug("CodeEditorView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
+        Self.logger.debug("CodeEditorView setupTextView: textContainer = \(self.textContainer != nil ? "exists" : "nil")")
         #else
-        kLogger.debug("CodeEditorView setupTextView: textContainer = exists")
+        Self.logger.debug("CodeEditorView setupTextView: textContainer = exists")
         #endif
-        kLogger.debug("CodeEditorView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
+        Self.logger.debug("CodeEditorView setupTextView: textLayoutManager = \(self.textLayoutManager != nil ? "exists" : "nil")")
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        kLogger.debug("CodeEditorView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
+        Self.logger.debug("CodeEditorView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
         #endif
         
         // Check which TextKit version we're using
         if textLayoutManager != nil {
-            kLogger.debug("CodeEditorView setupTextView: Using TextKit2")
+            Self.logger.debug("CodeEditorView setupTextView: Using TextKit2")
         } else {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if layoutManager != nil {
-                kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (fallback)")
+                Self.logger.debug("CodeEditorView setupTextView: Using TextKit1 (fallback)")
             } else {
-                kLogger.debug("CodeEditorView setupTextView: WARNING - No layout manager detected!")
+                Self.logger.debug("CodeEditorView setupTextView: WARNING - No layout manager detected!")
             }
             #else
-            kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (UITextView default)")
+            Self.logger.debug("CodeEditorView setupTextView: Using TextKit1 (UITextView default)")
             #endif
         }
         
         // Try to ensure we're using TextKit2 if possible
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
-            kLogger.debug("CodeEditorView setupTextView: Attempting to initialize with TextKit2")
+            Self.logger.debug("CodeEditorView setupTextView: Attempting to initialize with TextKit2")
             // Force TextKit2 initialization if needed
             // This is a fallback - normally NSTextView should auto-initialize with TextKit2
         }
         #else
         // For iOS/Mac Catalyst, textLayoutManager is always nil since UITextView doesn't expose TextKit2
-        kLogger.debug("CodeEditorView setupTextView: TextKit2 detection not available on iOS/Mac Catalyst")
+        Self.logger.debug("CodeEditorView setupTextView: TextKit2 detection not available on iOS/Mac Catalyst")
         #endif
         
         // Set up the text view
@@ -122,10 +122,10 @@ extension CodeEditorView {
         
         // Ensure TextKit2 is used if available and beneficial
         let usingTextKit2 = ModernTextKitHelper.ensureTextKit2(for: self)
-        kLogger.debug("CodeEditorView setupTextView: Using TextKit2: \(usingTextKit2)")
+        Self.logger.debug("CodeEditorView setupTextView: Using TextKit2: \(usingTextKit2)")
         #else
         // ModernTextKitHelper is not available for iOS/Mac Catalyst
-        kLogger.debug("CodeEditorView setupTextView: Using TextKit1 (iOS/Mac Catalyst)")
+        Self.logger.debug("CodeEditorView setupTextView: Using TextKit1 (iOS/Mac Catalyst)")
         #endif
         
         // Ensure proper sizing and layout
@@ -151,11 +151,11 @@ extension CodeEditorView {
         maxSize = NSSize(width: 10_000, height: 10_000)
         #endif
         
-        kLogger.debug("CodeEditorView setupTextView: Final frame = \(String(describing: self.frame))")
+        Self.logger.debug("CodeEditorView setupTextView: Final frame = \(String(describing: self.frame))")
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? NSSize(width: 0, height: 0)))")
+        Self.logger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer?.containerSize ?? NSSize(width: 0, height: 0)))")
         #else
-        kLogger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer.size))")
+        Self.logger.debug("CodeEditorView setupTextView: Final container size = \(String(describing: self.textContainer.size))")
         #endif
         
         // Initial syntax highlighting

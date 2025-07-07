@@ -39,6 +39,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     #if canImport(UIKit)
     private nonisolated(unsafe) var displayLink: CADisplayLink?
     private var lastContentOffset: CGPoint = .zero
+    private var pauseTask: Task<Void, Never>?
     #endif
     
     // MARK: - Initialization
@@ -129,12 +130,20 @@ public class GutterView: PlatformView, GutterViewProtocol {
             setNeedsDisplay()
         }
         
-        // Auto-pause after a short time to save battery
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-            // Only pause if we haven't moved recently
-            if self?.lastContentOffset == scrollView.contentOffset {
-                self?.displayLink?.isPaused = true
+        // Cancel any existing pause task
+        pauseTask?.cancel()
+        
+        // Schedule a new pause task
+        pauseTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                // Only pause if we haven't moved recently
+                if self?.lastContentOffset == scrollView.contentOffset {
+                    self?.displayLink?.isPaused = true
+                    self?.pauseTask = nil
+                }
+            } catch {
+                // Task was cancelled, which is expected behavior
             }
         }
     }
@@ -144,6 +153,8 @@ public class GutterView: PlatformView, GutterViewProtocol {
     
     deinit {
         #if canImport(UIKit)
+        pauseTask?.cancel()
+        pauseTask = nil
         displayLink?.invalidate()
         displayLink = nil
         #endif

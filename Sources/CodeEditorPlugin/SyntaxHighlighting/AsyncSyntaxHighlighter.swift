@@ -266,7 +266,7 @@ public final class AsyncSyntaxHighlighter {
         // Validate range
         guard rangeToHighlight.location >= 0,
               rangeToHighlight.location + rangeToHighlight.length <= textStorage.length else {
-            kLogger.warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
+            kAsyncHighlightLogger.warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
             return
         }
         

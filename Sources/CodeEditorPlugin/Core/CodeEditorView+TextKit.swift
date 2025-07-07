@@ -67,7 +67,7 @@ extension CodeEditorView {
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #else
-            kLogger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
+            Self.logger.debug("📍 selectedRange setter called with range: \(newValue), autoScrollToCursor: \(self.configuration.behavior.autoScrollToCursor)")
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #endif
@@ -187,21 +187,21 @@ extension CodeEditorView {
         
         #if canImport(UIKit)
         if version == .textKit2 {
-            kLogger.info("✅ Using TextKit 2 with textLayoutManager")
+            Self.logger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else {
-            kLogger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
+            Self.logger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
             return "TextKit 1 (fallback)"
         }
         #else
         if version == .textKit2 {
-            kLogger.info("✅ Using TextKit 2 with textLayoutManager")
+            Self.logger.info("✅ Using TextKit 2 with textLayoutManager")
             return "TextKit 2"
         } else if responds(to: #selector(getter: NSTextView.layoutManager)) {
-            kLogger.warning("❌ TextKit 1 compatibility mode active - this may cause performance issues")
+            Self.logger.warning("❌ TextKit 1 compatibility mode active - this may cause performance issues")
             return "TextKit 1 (compatibility mode)"
         } else {
-            kLogger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
+            Self.logger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
             return "TextKit 1 (fallback)"
         }
         #endif
@@ -213,7 +213,7 @@ extension CodeEditorView {
         let isUsingTextKit2 = textKitBridge.version == .textKit2
         
         if !isUsingTextKit2 {
-            kLogger.warning("TextKit 2 validation failed: \(textKitBridge.version.description)")
+            Self.logger.warning("TextKit 2 validation failed: \(textKitBridge.version.description)")
         }
         
         return isUsingTextKit2

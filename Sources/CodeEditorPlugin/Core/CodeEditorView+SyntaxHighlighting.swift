@@ -57,15 +57,15 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        kLogger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
+        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
         
         guard isSyntaxHighlightingEnabled else {
-            kLogger.debug("❌ Syntax highlighting disabled, cancelling")
+            Self.logger.debug("❌ Syntax highlighting disabled, cancelling")
             asyncHighlighter.cancelAllHighlighting()
             return
         }
         
-        kLogger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name)")
+        Self.logger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name)")
         
         // Use async highlighting with debouncing
         asyncHighlighter.scheduleHighlighting(
@@ -140,9 +140,9 @@ extension CodeEditorView {
         
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         
-        kLogger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor)) of type \(String(describing: type(of: effectiveTextColor)))")
-        kLogger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
-        kLogger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
+        Self.logger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor)) of type \(String(describing: type(of: effectiveTextColor)))")
+        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
+        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
         
         // Apply to existing text with aggressive attribute application
         if textStorage.length > 0 {
@@ -162,9 +162,9 @@ extension CodeEditorView {
             textStorage.addAttributes(attributes, range: NSRange(location: 0, length: textStorage.length))
             textStorage.endEditing()
             
-            kLogger.debug("Mac Catalyst: Applied attributes to \(textStorage.length) characters")
+            Self.logger.debug("Mac Catalyst: Applied attributes to \(textStorage.length) characters")
         } else {
-            kLogger.debug("Mac Catalyst: No text content to apply color to")
+            Self.logger.debug("Mac Catalyst: No text content to apply color to")
         }
         
         // Update typing attributes for new text
@@ -188,7 +188,7 @@ extension CodeEditorView {
         layoutManager.invalidateDisplay(forCharacterRange: NSRange(location: 0, length: textStorage.length))
         #endif
         
-        kLogger.debug("Mac Catalyst: Applied text color to all text. TextColor: \(String(describing: effectiveTextColor)), Font: \(String(describing: font))")
+        Self.logger.debug("Mac Catalyst: Applied text color to all text. TextColor: \(String(describing: effectiveTextColor)), Font: \(String(describing: font))")
     }
     #endif
 }

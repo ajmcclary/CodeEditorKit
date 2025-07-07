@@ -33,6 +33,13 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     
     func updateUIView(_ uiView: CodeEditorContainerView, context: Context) {
         context.coordinator.updateContainer(uiView, text: text, language: language, theme: theme, configuration: configuration)
+        
+        // Handle focus request from environment
+        if context.environment.codeEditorBecomeFirstResponder {
+            DispatchQueue.main.async {
+                uiView.textView.becomeFirstResponder()
+            }
+        }
     }
     
     static func dismantleUIView(_: CodeEditorContainerView, coordinator: CodeEditorCoordinator) {

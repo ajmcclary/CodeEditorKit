@@ -106,7 +106,7 @@ extension CodeEditorView {
                     showCompletionPopup(with: result.items, at: cursorPosition)
                 }
             } catch {
-                kLogger.error("Completion request failed: \(error)")
+                Self.logger.error("Completion request failed: \(error)")
             }
         }
     }

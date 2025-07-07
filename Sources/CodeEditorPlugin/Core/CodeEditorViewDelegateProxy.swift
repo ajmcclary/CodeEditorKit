@@ -126,8 +126,8 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
         if let textView = notification.object as? CodeEditorView {
-            let stNotification = Notification(name: NSText.didChangeNotification, object: textView)
-            textViewDidChangeText(stNotification)
+            let textChangeNotification = Notification(name: NSText.didChangeNotification, object: textView)
+            textViewDidChangeText(textChangeNotification)
         }
     }
 
@@ -152,8 +152,8 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         // Forward UITextView's textViewDidChange to our custom notification
         if let codeEditorView = textView as? CodeEditorView {
-            let stNotification = Notification(name: UITextView.textDidChangeNotification, object: codeEditorView)
-            textViewDidChangeText(stNotification)
+            let textChangeNotification = Notification(name: UITextView.textDidChangeNotification, object: codeEditorView)
+            textViewDidChangeText(textChangeNotification)
         }
     }
 

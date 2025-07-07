@@ -155,7 +155,7 @@ extension CodeEditorView {
     // MARK: - Notifications
     
     /// Custom notification for CodeEditorView selection changes
-    public static let stTextViewDidChangeSelectionNotification = Notification
+    public static let codeEditorViewDidChangeSelectionNotification = Notification
         .Name("CodeEditorViewDidChangeSelectionNotification")
         
     // MARK: - CompletionViewControllerDelegate

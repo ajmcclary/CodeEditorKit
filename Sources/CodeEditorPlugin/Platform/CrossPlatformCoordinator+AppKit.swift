@@ -28,13 +28,14 @@ extension CrossPlatformCoordinator {
         addObserver(workspaceObserver)
     }
     
-    func handleMacOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
+    func handleMacOSKeyInput(key: String, modifiers: PlatformModifierFlags, in _: CodeEditorView) -> Bool {
         // Full keyboard shortcut support
         if modifiers.contains(.command) {
             switch key {
-            case "d": selectNextOccurrence(in: textView); return true
-            case "l": selectLine(in: textView); return true
-            case "/": toggleComment(); return true
+            // TODO: Implement these keyboard shortcuts when needed
+            // case "d": selectNextOccurrence(in: textView); return true
+            // case "l": selectLine(in: textView); return true
+            // case "/": toggleComment(in: textView); return true
             default: break
             }
         }
@@ -89,7 +90,8 @@ extension CrossPlatformCoordinator {
         // Code-specific actions
         let codeMenu = NSMenuItem(title: "Code", action: nil, keyEquivalent: "")
         let codeSubmenu = NSMenu()
-        codeSubmenu.addItem(NSMenuItem(title: "Toggle Comment", action: #selector(toggleComment), keyEquivalent: "/"))
+        // TODO: Implement toggle comment functionality
+        // codeSubmenu.addItem(NSMenuItem(title: "Toggle Comment", action: #selector(toggleComment), keyEquivalent: "/"))
         codeSubmenu.addItem(NSMenuItem(title: "Format Selection", action: #selector(formatSelection), keyEquivalent: ""))
         codeSubmenu.addItem(NSMenuItem.separator())
         codeSubmenu.addItem(NSMenuItem(title: "Go to Definition", action: #selector(goToDefinition), keyEquivalent: ""))
@@ -102,19 +104,17 @@ extension CrossPlatformCoordinator {
     
     // MARK: - MacOS Specific Actions
     
+    // TODO: Implement these actions when needed
     @objc private func formatSelection() {
-        logger.debug("Format selection requested")
-        // Implementation would format selected code
+        logger.debug("Format selection requested - not yet implemented")
     }
     
     @objc private func goToDefinition() {
-        logger.debug("Go to definition requested")
-        // Implementation would navigate to symbol definition
+        logger.debug("Go to definition requested - not yet implemented")
     }
     
     @objc private func findReferences() {
-        logger.debug("Find references requested")
-        // Implementation would find all references to symbol
+        logger.debug("Find references requested - not yet implemented")
     }
 }
 #endif

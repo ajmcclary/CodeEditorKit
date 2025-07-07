@@ -100,8 +100,8 @@ extension CodeEditorView {
         delegateProxy.textViewDidChangeSelection(notification)
 
         // Post our own notification
-        let stNotification = Notification(name: Self.stTextViewDidChangeSelectionNotification, object: self)
-        NotificationCenter.default.post(stNotification)
+        let selectionNotification = Notification(name: Self.codeEditorViewDidChangeSelectionNotification, object: self)
+        NotificationCenter.default.post(selectionNotification)
         
         // Publish selection changed event
         eventPublisher.publish(.textSelectionDidChange(selectedRange))
@@ -125,9 +125,9 @@ extension CodeEditorView {
         let highlight = PlatformView()
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         highlight.wantsLayer = true
-        highlight.layer?.backgroundColor = selectedLineHighlightColor.cgColor
+        highlight.layer?.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
         #else
-        highlight.layer.backgroundColor = selectedLineHighlightColor.cgColor
+        highlight.layer.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
         #endif
 
         // Add as background overlay
@@ -180,17 +180,13 @@ extension CodeEditorView {
         var frame = lineRect
         frame.origin.x = 0
         frame.size.width = bounds.width
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        frame.origin.y += textContainerInset.height
-        #else
-        frame.origin.y += textContainerInset.top
-        #endif
+        // Don't add textContainerInset here - calculateLineRect already accounts for it
 
         highlightView.frame = frame
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        highlightView.layer?.backgroundColor = selectedLineHighlightColor.cgColor
+        highlightView.layer?.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
         #else
-        highlightView.layer.backgroundColor = selectedLineHighlightColor.cgColor
+        highlightView.layer.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
         #endif
     }
 
