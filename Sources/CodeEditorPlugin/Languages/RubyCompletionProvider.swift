@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Ruby language
 @MainActor
-public final class RubyCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class RubyCompletionProvider: CompletionProvider {
     public let id = "ruby-builtin"
     public let supportedLanguages: [Language] = [.ruby]
     public let triggerCharacters = [".", ":", "@", "$", " ", "(", "[", "{", "|"]

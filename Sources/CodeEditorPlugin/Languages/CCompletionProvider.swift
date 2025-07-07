@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for C and C++ languages
 @MainActor
-public final class CCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class CCompletionProvider: CompletionProvider {
     public let id = "c-cpp-builtin"
     public let supportedLanguages: [Language] = [.c, .cpp]
     public let triggerCharacters = [".", "->", "::", "(", "<", " ", "#"]

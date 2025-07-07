@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for PHP language
 @MainActor
-public final class PHPCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class PHPCompletionProvider: CompletionProvider {
     public let id = "php-builtin"
     public let supportedLanguages: [Language] = [.php]
     public let triggerCharacters = ["$", "->", "::", "(", " ", "\\", "<?", "=", "["]

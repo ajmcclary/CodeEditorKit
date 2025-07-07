@@ -109,7 +109,7 @@ final class ErrorHandlingTests: XCTestCase {
         XCTAssertTrue(errors2.contains { $0.field == "layout.tabWidth" })
         
         // Test invalid line spacing
-        config.layout.lineSpacing = -1.0
+        config.layout.lineHeightMultiple = -1.0
         let errors3 = config.validate()
         XCTAssertTrue(errors3.contains { $0.field == "layout.lineSpacing" })
         

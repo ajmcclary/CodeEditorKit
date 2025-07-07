@@ -433,7 +433,7 @@ public class CoordinateSystemHelper {
 // MARK: - Supporting Types
 
 /// Edge insets
-public struct EdgeInsets: Sendable {
+public struct EdgeInsets: Sendable, Equatable {
     public let top: CGFloat
     public let left: CGFloat
     public let bottom: CGFloat

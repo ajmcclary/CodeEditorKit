@@ -236,7 +236,7 @@ public protocol EditorEventHandler: AnyObject, Sendable {
 ///
 /// - SeeAlso: ``EditorEventHandler``, ``EditorEvent``
 @MainActor
-public final class ClosureEventHandler: EditorEventHandler, @unchecked Sendable {
+public final class ClosureEventHandler: EditorEventHandler {
     private let handler: @Sendable (EditorEvent) -> Void
     
     /// Creates a closure-based event handler.

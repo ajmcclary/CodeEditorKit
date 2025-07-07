@@ -145,6 +145,7 @@ enum ConfigurationPreset: String, CaseIterable {
                 .fontSize(14)
                 .lineSpacing(1.5)
                 .wrapLines(true)
+                .highlightSelectedLine(false)
                 .build()
 
         case .readOnly:
@@ -160,12 +161,17 @@ enum ConfigurationPreset: String, CaseIterable {
                 .fontSize(16)
                 .lineSpacing(1.6)
                 .tabWidth(2)
+                .showLineNumbers(false)
+                .enableSpellCheck(true)
                 .build()
 
         case .presentation:
             return EditorConfigurationBuilder(base: .presentation)
                 .fontSize(20)
                 .lineSpacing(1.4)
+                .showLineNumbers(true)
+                .highlightSelectedLine(true)
+                .wrapLines(false)
                 .build()
         }
     }

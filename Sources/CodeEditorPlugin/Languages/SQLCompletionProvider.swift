@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for SQL language
 @MainActor
-public final class SQLCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class SQLCompletionProvider: CompletionProvider {
     public let id = "sql-builtin"
     public let supportedLanguages: [Language] = [.sql]
     public let triggerCharacters = [" ", ".", "(", ",", "=", "*"]

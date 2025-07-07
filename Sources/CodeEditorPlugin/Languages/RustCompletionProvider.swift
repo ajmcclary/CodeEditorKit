@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Rust language
 @MainActor
-public final class RustCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class RustCompletionProvider: CompletionProvider {
     public let id = "rust-builtin"
     public let supportedLanguages: [Language] = [.rust]
     public let triggerCharacters = [".", "::", "(", "<", " ", "!"]

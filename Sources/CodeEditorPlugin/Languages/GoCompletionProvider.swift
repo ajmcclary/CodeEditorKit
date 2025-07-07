@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Go language
 @MainActor
-public final class GoCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class GoCompletionProvider: CompletionProvider {
     public let id = "go-builtin"
     public let supportedLanguages: [Language] = [.go]
     public let triggerCharacters = [".", "(", "[", " ", ":"]

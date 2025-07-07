@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Python language
 @MainActor
-public final class PythonCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class PythonCompletionProvider: CompletionProvider {
     public let id = "python-builtin"
     public let supportedLanguages: [Language] = [.python]
     public let triggerCharacters = [".", "(", "[", " ", ":"]

@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Shell/Bash language
 @MainActor
-public final class ShellCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class ShellCompletionProvider: CompletionProvider {
     public let id = "shell-builtin"
     public let supportedLanguages: [Language] = [.shell]
     public let triggerCharacters = [" ", "$", "(", ")", "[", "]", "|", "&", ";", "<", ">", "`", "\"", "'", "\\", "/", "-"]

@@ -129,31 +129,20 @@ extension CodeEditorView {
     // MARK: - Private Methods
     
     private func updateAnnotationView(for annotation: Annotation) {
-        Self.logger.debug("updateAnnotationView called for annotation: \(annotation.id)")
-        Self.logger.debug("- annotation range: \(String(describing: annotation.range))")
-        Self.logger.debug("- annotation content: \(annotation.content)")
-        Self.logger.debug("- textLayoutManager exists: \(self.textLayoutManager != nil)")
-        Self.logger.debug("- annotationsDataSource exists: \(self.annotationsDataSource != nil)")
-        
         // Remove existing view if any
         if let existingView = annotationViews[annotation.id] {
-            Self.logger.debug("Removing existing annotation view")
             existingView.removeFromSuperview()
         }
 
         // Create new annotation view using data source
         guard let dataSource = annotationsDataSource else {
-            Self.logger.debug("No annotations data source - annotation will not be displayed")
             return
         }
 
         // Check if we're using TextKit2
         guard let textLayoutManager else {
-            Self.logger.debug("No textLayoutManager (not using TextKit2?) - annotation will not be displayed")
             return
         }
-        
-        Self.logger.debug("Using TextKit2 with textLayoutManager")
         
         // Convert Annotation to CodeEditorViewAnnotation
         let textViewAnnotation = CodeEditorViewAnnotation(
@@ -164,30 +153,23 @@ extension CodeEditorView {
 
         // Ensure layout for the annotation range
         textLayoutManager.ensureLayout(for: annotation.range)
-        Self.logger.debug("ensureLayout completed for range")
         
         // Get text layout fragment for the annotation location
         guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotation.range.location) else {
-            Self.logger.debug("Could not get textLayoutFragment for location: \(String(describing: annotation.range.location))")
             return
         }
-        Self.logger.debug("Got textLayoutFragment")
         
         guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotation.range.location) else {
-            Self.logger.debug("Could not get textLineFragment at location: \(String(describing: annotation.range.location))")
             return
         }
-        Self.logger.debug("Got textLineFragment")
 
         // Get the exact text segment frame for the annotation range
         guard let segmentFrame = textLayoutManager.textSegmentFrame(
             in: annotation.range,
             type: .standard
         ) else { 
-            Self.logger.debug("Could not get textSegmentFrame for range: \(String(describing: annotation.range))")
             return 
         }
-        Self.logger.debug("Got segmentFrame: \(String(describing: segmentFrame))")
 
         // Calculate inline annotation position using configuration values
         let badgeSize = configuration.layout.annotationBadgeSize
@@ -206,9 +188,6 @@ extension CodeEditorView {
             width: badgeSize,
             height: badgeSize
         ).integral
-        
-        Self.logger.debug("Calculated proposedFrame: \(String(describing: proposedFrame))")
-        Self.logger.debug("textContainerInset: \(String(describing: self.textContainerInset))")
 
         // Create annotation view
         if let annotationView = dataSource.textView(
@@ -217,15 +196,8 @@ extension CodeEditorView {
             textLineFragment: textLineFragment,
             proposedViewFrame: proposedFrame
         ) {
-            Self.logger.debug("Successfully created annotation view")
-            Self.logger.debug("Adding annotation view to subview hierarchy")
-            Self.logger.debug("Current view bounds: \(String(describing: self.bounds))")
-            Self.logger.debug("Current view subviews count: \(self.subviews.count)")
-            
             addSubview(annotationView)
             annotationViews[annotation.id] = annotationView
-            
-            Self.logger.debug("Added annotation view, new subviews count: \(self.subviews.count)")
             
             // Force view update
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -235,15 +207,11 @@ extension CodeEditorView {
             annotationView.setNeedsDisplay()
             setNeedsDisplay()
             #endif
-        } else {
-            Self.logger.debug("Data source returned nil annotation view")
         }
     }
     
     /// Update all annotation views (called during layout)
     internal func updateAnnotationViews() {
-        Self.logger.debug("updateAnnotationViews called, total annotations: \(self.annotations.count)")
-        
         for annotation in annotations {
             updateAnnotationView(for: annotation)
         }

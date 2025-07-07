@@ -18,7 +18,7 @@ extension CodeEditorView {
         let paragraphStyle = NSMutableParagraphStyle()
         
         // Set line spacing multiplier
-        paragraphStyle.lineHeightMultiple = configuration.layout.lineSpacing
+        paragraphStyle.lineHeightMultiple = configuration.layout.lineHeightMultiple
         
         // Set tab stops based on tab width
         let tabWidth = CGFloat(configuration.layout.tabWidth)

@@ -63,17 +63,17 @@ struct LayoutConfigurationSection: View {
                     Text("Line Spacing")
                         .font(.system(size: adaptiveControlLabelFontSize(), weight: .medium))
                     Spacer()
-                    Text(String(format: "%.1fx", appState.coordinator.configuration.layout.lineSpacing))
+                    Text(String(format: "%.1fx", appState.coordinator.configuration.layout.lineHeightMultiple))
                         .font(.system(size: adaptiveControlValueFontSize()))
                         .foregroundColor(.secondary)
                 }
                 
                 Slider(
                     value: Binding(
-                        get: { appState.coordinator.configuration.layout.lineSpacing },
+                        get: { appState.coordinator.configuration.layout.lineHeightMultiple },
                         set: { newValue in
                             appState.updateConfiguration { config in
-                                config.layout.lineSpacing = newValue.clamped(to: 0.8...3.0)
+                                config.layout.lineHeightMultiple = newValue.clamped(to: 0.8...3.0)
                             }
                         }
                     ),

@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import os
 
 // MARK: - ConfigurationHotReload
 
@@ -8,13 +9,15 @@ import Foundation
 public final class ConfigurationHotReload: ObservableObject {
     // MARK: - Properties
     
+    private static let logger = Logger(subsystem: "com.CodeEditorPlugin", category: "ConfigurationHotReload")
+    
     /// Current configuration
     @Published public private(set) var configuration: EditorConfiguration
     
     /// Configuration history for undo/redo
     private var configurationHistory: [EditorConfiguration] = []
     private var historyIndex: Int = -1
-    private let maxHistorySize: Int = 50
+    private let maxHistorySize: Int = PlatformConstants.maxConfigurationHistorySize
     
     /// Configuration change observers
     private var observers: [UUID: ConfigurationObserver] = [:]
@@ -24,7 +27,7 @@ public final class ConfigurationHotReload: ObservableObject {
     
     /// Animation settings for configuration changes
     public var animateChanges: Bool = true
-    public var animationDuration: TimeInterval = 0.3
+    public var animationDuration: TimeInterval = PlatformConstants.defaultAnimationDuration
     
     /// Validation rules
     private var validationRules: [ConfigurationValidationRule] = []
@@ -278,11 +281,21 @@ public final class ConfigurationHotReload: ObservableObject {
         }
     }
     
-    private func applyAnimatedTransitions(for _: [HotReloadConfigurationChange]) {
-        // Platform-specific animation code would go here
-        // For now, just notify observers that animation should occur
-        // Animation implementation would go here
-        // For now, changes are applied immediately
+    /// Applies configuration changes with animations.
+    ///
+    /// - Parameter changes: The configuration changes to animate
+    ///
+    /// - Note: Animation support is not yet implemented. Changes are applied immediately.
+    ///         Future versions may add cross-platform animation support using:
+    ///         - NSAnimationContext on macOS
+    ///         - UIView.animate on iOS
+    ///         - Coordinated animations for complex changes
+    private func applyAnimatedTransitions(for changes: [HotReloadConfigurationChange]) {
+        // Log that animations were requested but not supported
+        Self.logger.debug("Animation requested for \(changes.count) changes, but animations are not yet supported")
+        
+        // Apply changes immediately without animation
+        // In the future, this could coordinate animations across different UI elements
     }
     
     private func setupDefaultValidationRules() {

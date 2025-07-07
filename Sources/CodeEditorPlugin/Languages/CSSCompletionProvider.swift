@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for CSS language
 @MainActor
-public final class CSSCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class CSSCompletionProvider: CompletionProvider {
     public let id = "css-builtin"
     public let supportedLanguages: [Language] = [.css]
     public let triggerCharacters = [".", "#", ":", " ", "-", "(", "\"", "'"]

@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for TypeScript language
 @MainActor
-public final class TypeScriptCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class TypeScriptCompletionProvider: CompletionProvider {
     public let id = "typescript-builtin"
     public let supportedLanguages: [Language] = [.typescript]
     public let triggerCharacters = [".", "(", "[", "{", " ", ":", "<", ">"]

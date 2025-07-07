@@ -22,7 +22,7 @@ final class ConfigurationUITests: XCTestCase {
         config.layout.tabWidth = 8
         config.layout.insertSpacesForTabs = false
         config.display.fontSize = 18
-        config.layout.lineSpacing = 2.0
+        config.layout.lineHeightMultiple = 2.0
         // Theme is handled by the color system separately
         // config.textContainerInset and config.lineFragmentPadding are TextKit properties handled in apply method
         config.display.enableAnnotations = true
@@ -40,7 +40,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertEqual(config.layout.tabWidth, 8)
         XCTAssertFalse(config.layout.insertSpacesForTabs)
         XCTAssertEqual(config.display.fontSize, 18)
-        XCTAssertEqual(config.layout.lineSpacing, 2.0)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 2.0)
         // Theme, textContainerInset, lineFragmentPadding are handled separately
         XCTAssertTrue(config.display.enableAnnotations)
         // enableCustomPlugin is no longer part of the configuration structure
@@ -60,7 +60,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertEqual(config.layout.tabWidth, 4)
         XCTAssertTrue(config.layout.insertSpacesForTabs)
         XCTAssertEqual(config.display.fontSize, 14)
-        XCTAssertEqual(config.layout.lineSpacing, 1.2)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.2)
         // theme is handled separately in the color system
         XCTAssertTrue(config.display.enableAnnotations)
         // enableCustomPlugin is no longer in configuration structure
@@ -80,7 +80,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertEqual(config.layout.tabWidth, 4)
         XCTAssertTrue(config.layout.insertSpacesForTabs)
         XCTAssertEqual(config.display.fontSize, 14)
-        XCTAssertEqual(config.layout.lineSpacing, 1.5)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.5)
         // theme is handled separately in the color system
         XCTAssertFalse(config.display.enableAnnotations)
         // enableCustomPlugin is no longer in configuration structure
@@ -110,7 +110,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertTrue(config.behavior.autoIndent)
         XCTAssertEqual(config.layout.tabWidth, 2)
         XCTAssertEqual(config.display.fontSize, 16)
-        XCTAssertEqual(config.layout.lineSpacing, 1.6)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.6)
         // theme is handled separately in the color system
         XCTAssertTrue(config.behavior.isContinuousSpellCheckingEnabled) // Special for markdown
     }
@@ -123,7 +123,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertFalse(config.layout.wrapLines)
         XCTAssertFalse(config.behavior.isEditable)
         XCTAssertEqual(config.display.fontSize, 20)
-        XCTAssertEqual(config.layout.lineSpacing, 1.4)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.4)
         // theme is handled separately in the color system
     }
     

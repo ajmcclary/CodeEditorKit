@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Markdown language
 @MainActor
-public final class MarkdownCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class MarkdownCompletionProvider: CompletionProvider {
     public let id = "markdown-builtin"
     public let supportedLanguages: [Language] = [.markdown]
     public let triggerCharacters = ["#", "*", "_", "[", "]", "(", ")", "`", "!", "|", "-", "+", ":", "<", ">", " "]

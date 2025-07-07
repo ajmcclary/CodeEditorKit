@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Java language
 @MainActor
-public final class JavaCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class JavaCompletionProvider: CompletionProvider {
     public let id = "java-builtin"
     public let supportedLanguages: [Language] = [.java]
     public let triggerCharacters = [".", "(", " ", "@", ":"]

@@ -87,12 +87,12 @@ public struct ConfigurationValidator {
         }
         
         // Line spacing validation
-        if layout.lineSpacing < 0 {
+        if layout.lineHeightMultiple < 0 {
             issues.append(ValidationIssue(
                 severity: .error,
                 path: "layout.lineSpacing",
                 message: "Line spacing cannot be negative",
-                suggestedValue: max(0, layout.lineSpacing)
+                suggestedValue: max(0, layout.lineHeightMultiple)
             ))
         }
         
@@ -226,9 +226,9 @@ public struct ConfigurationValidator {
             }
             
         case ("layout", "lineSpacing"):
-            oldValue = configuration.layout.lineSpacing
+            oldValue = configuration.layout.lineHeightMultiple
             if let newValue = suggestedValue as? CGFloat {
-                configuration.layout.lineSpacing = newValue
+                configuration.layout.lineHeightMultiple = newValue
             }
             
         // Note: autoSaveDelay property not available in current Behavior structure

@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for HTML language
 @MainActor
-public final class HTMLCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class HTMLCompletionProvider: CompletionProvider {
     public let id = "html-builtin"
     public let supportedLanguages: [Language] = [.html]
     public let triggerCharacters = ["<", ">", " ", "\"", "=", "/", "&"]

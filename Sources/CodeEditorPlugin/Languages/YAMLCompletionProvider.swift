@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for YAML language
 @MainActor
-public final class YAMLCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class YAMLCompletionProvider: CompletionProvider {
     public let id = "yaml-builtin"
     public let supportedLanguages: [Language] = [.yaml]
     public let triggerCharacters = [":", "-", " ", ".", "$", "{"]

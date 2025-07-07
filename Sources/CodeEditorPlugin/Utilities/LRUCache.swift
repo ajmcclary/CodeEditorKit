@@ -2,7 +2,7 @@ import Foundation
 
 /// A thread-safe LRU (Least Recently Used) cache implementation
 @MainActor
-public final class LRUCache<Key: Hashable, Value>: @unchecked Sendable {
+public final class LRUCache<Key: Hashable, Value> {
     private final class Node {
         let key: Key
         var value: Value

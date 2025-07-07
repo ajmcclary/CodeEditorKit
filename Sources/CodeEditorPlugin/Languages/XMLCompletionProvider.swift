@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for XML language
 @MainActor
-public final class XMLCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class XMLCompletionProvider: CompletionProvider {
     public let id = "xml-builtin"
     public let supportedLanguages: [Language] = [.xml]
     public let triggerCharacters = ["<", ">", " ", "\"", "=", "/", "&", ":", "!"]

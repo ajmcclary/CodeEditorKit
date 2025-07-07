@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for JavaScript language
 @MainActor
-public final class JavaScriptCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class JavaScriptCompletionProvider: CompletionProvider {
     public let id = "javascript-builtin"
     public let supportedLanguages: [Language] = [.javascript]
     public let triggerCharacters = [".", "(", "[", "{", " ", ":"]

@@ -101,7 +101,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
         let config = EditorConfigurationBuilder()
             .lineSpacing(1.5)
             .build()
-        XCTAssertEqual(config.layout.lineSpacing, 1.5)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.5)
     }
     
     // MARK: - Behavior Settings Tests
@@ -281,7 +281,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
         XCTAssertEqual(config.layout.tabWidth, 2)
         XCTAssertTrue(config.layout.insertSpacesForTabs)
         XCTAssertFalse(config.layout.wrapLines)
-        XCTAssertEqual(config.layout.lineSpacing, 1.3)
+        XCTAssertEqual(config.layout.lineHeightMultiple, 1.3)
         
         // Behavior assertions
         XCTAssertTrue(config.behavior.isEditable)

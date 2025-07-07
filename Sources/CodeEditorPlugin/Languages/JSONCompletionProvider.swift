@@ -4,7 +4,7 @@ import Foundation
 
 /// Built-in completion provider for JSON language
 @MainActor
-public final class JSONCompletionProvider: CompletionProvider, @unchecked Sendable {
+public final class JSONCompletionProvider: CompletionProvider {
     public let id = "json-builtin"
     public let supportedLanguages: [Language] = [.json]
     public let triggerCharacters = ["\"", ":", ",", "[", "{", " "]
