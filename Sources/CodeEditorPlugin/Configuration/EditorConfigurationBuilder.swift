@@ -6,6 +6,10 @@ import AppKit
 import UIKit
 #endif
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 // MARK: - EditorConfigurationBuilder
 
 /// A fluent builder for creating EditorConfiguration instances with a simplified API
@@ -373,6 +377,34 @@ public struct EditorConfigurationBuilder {
                 .tabWidth(4)
                 .insertSpacesForTabs(true)
         }
+    }
+    
+    /// Configures the editor with a predefined theme
+    /// - Parameter theme: The theme to apply (.default, .dark, or custom)
+    /// - Returns: The builder for chaining
+    @discardableResult
+    public func theme(_ theme: CodeEditorSwiftUITheme) -> Self {
+        // Note: CodeEditorSwiftUITheme provides colors for SwiftUI environment
+        // The actual theme colors are applied through the syntax highlighting system
+        // This method configures the editor to match the theme's style
+        
+        var builder = self
+        
+        // Apply dark theme specific settings
+        if theme.name == "dark" {
+            builder = builder
+                .highlightSelectedLine(true)
+                .enableSyntaxHighlighting(true)
+        } else if theme.name == "default" {
+            builder = builder
+                .highlightSelectedLine(true)
+                .enableSyntaxHighlighting(true)
+        }
+        
+        // Note: Background and text colors are handled by the platform-specific
+        // views based on the system appearance and the syntax highlighting theme
+        
+        return builder
     }
     
     /// Configures the editor for presentation mode

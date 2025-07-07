@@ -328,25 +328,25 @@ public struct CodeEditor: View {
     /// ## Example
     ///
     /// ```swift
+    /// // Use default debouncing (100ms)
     /// CodeEditor(text: $code)
     ///     .onTextChange { newText in
     ///         logger.debug("Text changed: \(newText.count) characters")
     ///     }
-    ///     .onTextChange(debounce: .milliseconds(500)) { newText in
-    ///         // Called with 500ms debouncing
+    /// 
+    /// // Or specify custom debouncing in initializer
+    /// CodeEditor(text: $code, debounceInterval: .milliseconds(500))
+    ///     .onTextChange { newText in
     ///         saveToDatabase(newText)
     ///     }
     /// ```
     public func onTextChange(
-        debounce: Duration? = nil,
         perform action: @escaping (String) -> Void
-    ) -> Self {
+    ) -> some View {
         var copy = self
         copy.onTextChange = action
-        if let debounce {
-            copy = Self(text: _text, debounceInterval: debounce)
-            copy.onTextChange = action
-        }
+        // Note: If a custom debounce is needed, users should pass it to the initializer
+        // This avoids recreating the view and losing other modifier state
         return copy
     }
     
@@ -373,7 +373,7 @@ public struct CodeEditor: View {
     /// ```
     public func onSelectionChange(
         perform action: @escaping (Range<String.Index>?) -> Void
-    ) -> Self {
+    ) -> some View {
         var copy = self
         copy.onSelectionChange = action
         return copy
@@ -408,7 +408,7 @@ public struct CodeEditor: View {
     /// ```
     public func codeCompletion(
         provider: @escaping (CompletionContext) async -> [SwiftUICompletionItem]
-    ) -> Self {
+    ) -> some View {
         var copy = self
         copy.completionProvider = provider
         return copy

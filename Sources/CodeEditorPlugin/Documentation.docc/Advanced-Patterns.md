@@ -378,8 +378,8 @@ do {
     try editor.replaceTextSafe(in: range, with: "new text")
     
     // Async operations with error handling
-    let hover = try await editor.requestHoverSafe(at: position)
-    let completions = try await editor.requestCompletionSafe(at: position)
+    let hover = try await editor.requestHover(at: position)
+    let completions = try await editor.requestCompletion(at: position)
 } catch let error as CodeEditorError {
     print("Editor error: \(error.localizedDescription)")
     

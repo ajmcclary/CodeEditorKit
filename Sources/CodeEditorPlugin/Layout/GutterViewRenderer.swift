@@ -62,23 +62,18 @@ public class GutterViewRenderer {
         // Use the same font as the text view for proper baseline alignment
         let textViewFont = textView.font ?? PlatformFonts.monospacedSystemFont(ofSize: 12, weight: .regular)
         
-        // Set up text attributes
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: textViewFont,
-            .foregroundColor: textColor
-        ]
-        
         // Draw each line number
         for (lineNumber, lineRange) in lineRanges {
+            let drawingContext = LineDrawingContext(
+                font: textViewFont,
+                gutterBounds: gutterBounds,
+                textView: textView
+            )
+            
             drawLineNumber(
                 lineNumber,
                 for: lineRange,
-                helper: helper,
-                attributes: attributes,
-                font: textViewFont,
-                gutterBounds: gutterBounds,
-                context: context,
-                textView: textView
+                context: drawingContext
             )
             
             // Draw folding controls if enabled
@@ -98,19 +93,21 @@ public class GutterViewRenderer {
     
     // MARK: - Private Helpers
     
+    /// Context for drawing line numbers
+    private struct LineDrawingContext {
+        let font: PlatformFont
+        let gutterBounds: CGRect
+        let textView: CodeEditorView
+    }
+    
     /// Draw a single line number
     private func drawLineNumber(
         _ lineNumber: Int,
         for lineRange: NSRange,
-        helper _: TextKitLineNumberHelper,
-        attributes _: [NSAttributedString.Key: Any],
-        font: PlatformFont,
-        gutterBounds: CGRect,
-        context _: CGContext,
-        textView: CodeEditorView
+        context: LineDrawingContext
     ) {
         // Calculate Y position directly from line number and actual text layout
-        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, font: font, textView: textView)
+        let yPosition = calculateLineNumberYPosition(lineNumber: lineNumber, lineRange: lineRange, font: context.font, textView: context.textView)
         
         let drawingPoint = CGPoint(
             x: 0, // Will be adjusted by the unified drawing method for right alignment
@@ -124,10 +121,10 @@ public class GutterViewRenderer {
         UnifiedDrawingCoordinator.drawLineNumber(
             lineNumber,
             at: drawingPoint,
-            font: font,
+            font: context.font,
             color: textColor,
             alignment: .right,
-            maxWidth: gutterBounds.width - rightPadding
+            maxWidth: context.gutterBounds.width - rightPadding
         )
         
         // Restore graphics state
@@ -165,9 +162,8 @@ public class GutterViewRenderer {
         
         // Convert to gutter coordinate system by accounting for scroll offset
         // The gutter is fixed, so we need to subtract the scroll offset
-        let gutterY = textViewY - textView.contentOffset.y
         
-        return gutterY
+        return textViewY - textView.contentOffset.y
         #endif
     }
     
