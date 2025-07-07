@@ -259,24 +259,24 @@ extension CrossPlatformCoordinator {
     // MARK: - IOS Toolbar Actions
     
     @objc private func undo() {
-        if let window = UIApplication.shared.keyWindow,
-           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
-            textView.undoManager?.undo()
-        }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
+              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        textView.undoManager?.undo()
     }
     
     @objc private func redo() {
-        if let window = UIApplication.shared.keyWindow,
-           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
-            textView.undoManager?.redo()
-        }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
+              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        textView.undoManager?.redo()
     }
     
     @objc private func find() {
-        if let window = UIApplication.shared.keyWindow,
-           let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView {
-            showFind(in: textView)
-        }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
+              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        showFind(in: textView)
     }
     
     private func showFind(in textView: CodeEditorView) {
@@ -312,16 +312,16 @@ extension CrossPlatformCoordinator {
         let searchRange = NSRange(location: textView.selectedRange.upperBound, length: text.count - textView.selectedRange.upperBound)
         
         // swiftlint:disable:next legacy_objc_type
-        if let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: searchRange),
-           foundRange.location != NSNotFound {
+        let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: searchRange)
+        if foundRange.location != NSNotFound {
             textView.selectedRange = foundRange
             textView.scrollRangeToVisible(foundRange)
         } else {
             // Search from beginning
             let wrapRange = NSRange(location: 0, length: textView.selectedRange.location)
             // swiftlint:disable:next legacy_objc_type
-            if let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: wrapRange),
-               foundRange.location != NSNotFound {
+            let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: wrapRange)
+            if foundRange.location != NSNotFound {
                 textView.selectedRange = foundRange
                 textView.scrollRangeToVisible(foundRange)
             }
@@ -329,8 +329,8 @@ extension CrossPlatformCoordinator {
     }
     
     private func toggleComment(in textView: CodeEditorView) {
-        guard let text = textView.text,
-              let language = textView.language else { return }
+        guard let text = textView.text else { return }
+        let language = textView.language
         
         let selectedRange = textView.selectedRange
         
@@ -351,11 +351,17 @@ extension CrossPlatformCoordinator {
         if trimmedLine.hasPrefix(commentPrefix) {
             // Remove comment
             let uncommentedLine = lineText.replacingOccurrences(of: commentPrefix, with: "", options: .anchored)
-            textView.insertText(uncommentedLine, replacementRange: NSRange(location: lineStart, length: lineEnd - lineStart))
+            if textView.responds(to: #selector(UITextView.insertText(_:))) {
+                textView.selectedRange = NSRange(location: lineStart, length: lineEnd - lineStart)
+                textView.insertText(uncommentedLine)
+            }
         } else {
             // Add comment
             let commentedLine = commentPrefix + " " + lineText
-            textView.insertText(commentedLine, replacementRange: NSRange(location: lineStart, length: lineEnd - lineStart))
+            if textView.responds(to: #selector(UITextView.insertText(_:))) {
+                textView.selectedRange = NSRange(location: lineStart, length: lineEnd - lineStart)
+                textView.insertText(commentedLine)
+            }
         }
     }
     
