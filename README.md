@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/tests-319%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-392%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
@@ -21,7 +21,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs, supporting custom language extensions, tool integrations, and advanced IDE features.
 
-- ✅ **Production-Grade Quality:** Verified with **319 automated tests** (284 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 253 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **392 automated tests** (357 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 299 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -341,7 +341,7 @@ swift run CodeEditorSample  # Launch the demo app
 swift test               # Run 35 comprehensive tests
 ```
 
-The sample app maintains the same quality standards as the core plugin with **35 automated tests** (100% passing) and **zero linting violations** across 37 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
+The sample app maintains the same quality standards as the core plugin with **35 automated tests** (100% passing) and **zero linting violations** across 43 files. The sample app has been significantly refactored with consolidated wrapper implementations and enhanced cross-platform support.
 
 ## 🧪 Testing & Quality
 
@@ -349,9 +349,9 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 ### Comprehensive Test Coverage
 
-**319 Total Tests** across the entire project, ensuring reliability at every level:
+**392 Total Tests** across the entire project, ensuring reliability at every level:
 
-#### Core Plugin Tests (284 tests)
+#### Core Plugin Tests (357 tests)
 - **`CodeEditorViewTests`** (33 tests): Validates core text view functionality, editing operations, and platform behavior
 - **`ConfigurationIntegrationTests`** (24 tests): Ensures configuration system works flawlessly across all settings
 - **`AnnotationTests`** (19 tests): Verifies TODO/FIXME detection and rendering
@@ -373,7 +373,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 319 tests passing in continuous integration
+- **100% Test Pass Rate**: All 392 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -400,7 +400,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 319 tests
+swift test                   # Run all 392 tests
 swift test --parallel        # Run tests in parallel for speed
 
 # Sample app quality checks
