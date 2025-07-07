@@ -389,29 +389,51 @@ public final class AsyncSyntaxHighlighter {
 /// Smart cache for syntax highlighting tokens with intelligent eviction strategies
 actor SmartTokenCache {
     struct CacheKey: Hashable {
-        let text: String
+        let textHash: Int
+        let textLength: Int
         let language: Language
         let version: Int
         
-        func hash(into hasher: inout Hasher) {
-            // Optimized hashing without substring allocations
+        init(text: String, language: Language, version: Int) {
+            // Create efficient hash without storing full text
+            var hasher = Hasher()
             hasher.combine(text.count)
             hasher.combine(language)
             hasher.combine(version)
             
-            // Hash first and last characters instead of creating substrings
-            if !text.isEmpty {
-                hasher.combine(text.first!)
-                if text.count > 1 {
-                    hasher.combine(text.last!)
+            // Hash strategic characters for better distribution
+            if let first = text.first {
+                hasher.combine(first)
+                if text.count > 1, let last = text.last {
+                    hasher.combine(last)
                 }
                 
-                // Hash a few strategic characters for better distribution
+                // Hash middle character for longer texts
                 if text.count > 100 {
                     let midIndex = text.index(text.startIndex, offsetBy: text.count / 2)
                     hasher.combine(text[midIndex])
                 }
+                
+                // For very large files, hash a few more strategic points
+                if text.count > 10_000 {
+                    let quarterIndex = text.index(text.startIndex, offsetBy: text.count / 4)
+                    let threeQuarterIndex = text.index(text.startIndex, offsetBy: (text.count * 3) / 4)
+                    hasher.combine(text[quarterIndex])
+                    hasher.combine(text[threeQuarterIndex])
+                }
             }
+            
+            self.textHash = hasher.finalize()
+            self.textLength = text.count
+            self.language = language
+            self.version = version
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(textHash)
+            hasher.combine(textLength)
+            hasher.combine(language)
+            hasher.combine(version)
         }
     }
     
@@ -503,7 +525,7 @@ actor SmartTokenCache {
             timestamp: Date(),
             accessCount: 1,
             computationTime: computationTime,
-            textLength: key.text.count
+            textLength: key.textLength
         )
         
         cache[key] = entry

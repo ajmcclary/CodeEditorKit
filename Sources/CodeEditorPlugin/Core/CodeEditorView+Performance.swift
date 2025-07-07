@@ -62,7 +62,9 @@ extension CodeEditorView {
             return
         }
         
-        let identifier = "CodeEditorView_\(ObjectIdentifier(self).hashValue)"
+        var hasher = Hasher()
+        hasher.combine(ObjectIdentifier(self))
+        let identifier = "CodeEditorView_\(hasher.finalize())"
         
         MemoryMonitor.shared.registerCleanupHandler(
             identifier: identifier,
@@ -128,7 +130,9 @@ extension CodeEditorView {
             return
         }
         
-        let identifier = "CodeEditorView_\(ObjectIdentifier(self).hashValue)"
+        var hasher = Hasher()
+        hasher.combine(ObjectIdentifier(self))
+        let identifier = "CodeEditorView_\(hasher.finalize())"
         MemoryMonitor.shared.unregisterCleanupHandler(identifier: identifier)
     }
     

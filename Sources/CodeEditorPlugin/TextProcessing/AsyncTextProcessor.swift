@@ -370,7 +370,9 @@ private struct ProcessingCacheKey: Hashable {
     init(text: String, range: NSRange, operation: ProcessingOperation) {
         // Use hash of text substring for efficiency
         let substring = String(text.dropFirst(range.location).prefix(range.length))
-        self.textHash = substring.hashValue
+        var hasher = Hasher()
+        hasher.combine(substring)
+        self.textHash = hasher.finalize()
         self.range = range
         self.operationName = operation.name
     }

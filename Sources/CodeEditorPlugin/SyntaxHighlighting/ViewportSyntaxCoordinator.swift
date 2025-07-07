@@ -56,9 +56,11 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         let expandedRange = calculateExpandedRange(visibleRange: range, sourceLength: source.count)
         
         // Check cache first
+        var hasher = Hasher()
+        hasher.combine(source)
         let cacheKey = ViewportCacheKey(
             range: expandedRange,
-            sourceHash: source.hashValue,
+            sourceHash: hasher.finalize(),
             language: language.identifier
         )
         

@@ -383,7 +383,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     
     private func createCacheKey(text: String, language: Language) -> String {
         // Create a cache key that's efficient but reasonably unique
-        let textHash = text.prefix(100).hashValue // Use first 100 chars for hash
+        var hasher = Hasher()
+        hasher.combine(text.prefix(100)) // Use first 100 chars for hash
+        let textHash = hasher.finalize()
         return "\(language.identifier)-\(textHash)-\(text.count)"
     }
     

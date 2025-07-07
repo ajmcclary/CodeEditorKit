@@ -552,7 +552,7 @@ enum FeatureDemo: String, CaseIterable {
     var explanation: String {
         switch self {
         case .syntaxHighlighting:
-            return "Our syntax highlighting system supports 15+ programming languages with SwiftSyntax " +
+            return "Our syntax highlighting system supports 17+ programming languages with SwiftSyntax " +
                    "integration for Swift and regex-based highlighting for other languages. Features " +
                    "hardware acceleration and viewport-based rendering for optimal performance."
             
@@ -587,7 +587,7 @@ enum FeatureDemo: String, CaseIterable {
         switch self {
         case .syntaxHighlighting:
             return [
-                "15+ programming languages supported",
+                "17+ programming languages supported",
                 "SwiftSyntax AST-based highlighting for Swift",
                 "Regex-based highlighting for other languages",
                 "Hardware acceleration support",

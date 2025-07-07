@@ -4,7 +4,7 @@
     @PageColor(green)
 }
 
-Learn about CodeEditorPlugin's sophisticated syntax highlighting system supporting 20 programming languages.
+Learn about CodeEditorPlugin's sophisticated syntax highlighting system supporting 17+ programming languages.
 
 ## Overview
 

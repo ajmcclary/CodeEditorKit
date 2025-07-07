@@ -16,7 +16,7 @@ internal let kLogger = Logger(subsystem: "com.codeeditor.plugin", category: "Cod
 /// A powerful, cross-platform text view designed specifically for code editing.
 ///
 /// `CodeEditorView` provides advanced features for code editing including:
-/// - **Syntax highlighting** with support for 15+ programming languages
+/// - **Syntax highlighting** with support for 17+ programming languages
 /// - **Code completion** with LSP integration and custom providers
 /// - **Line numbers** with customizable gutter display
 /// - **Annotations** for displaying TODOs, FIXMEs, and custom markers
@@ -267,7 +267,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         
         // Unregister from memory monitor (schedule on main actor)
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            let identifier = "CodeEditorView_\(ObjectIdentifier(self).hashValue)"
+            var hasher = Hasher()
+            hasher.combine(ObjectIdentifier(self))
+            let identifier = "CodeEditorView_\(hasher.finalize())"
             Task { @MainActor in
                 MemoryMonitor.shared.unregisterCleanupHandler(identifier: identifier)
             }

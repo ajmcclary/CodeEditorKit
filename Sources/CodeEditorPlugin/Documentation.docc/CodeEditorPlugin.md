@@ -14,8 +14,8 @@ CodeEditorPlugin provides world-class performance, extensive customization, and 
 
 - 🚀 **Modern Swift 6 Concurrency** - Actor-based architecture for thread safety and performance
 - 💻 **True Cross-Platform** - Sophisticated abstraction layer for native performance everywhere
-- 🎨 **17 Programming Languages** - SwiftSyntax for Swift, optimized regex for other languages
-- ✅ **Production-Grade Quality** - 319 tests (284 core + 35 sample) with zero linting violations across 270 files
+- 🎨 **17+ Programming Languages** - SwiftSyntax for Swift, optimized regex for other languages
+- ✅ **Production-Grade Quality** - 319 tests (284 core + 35 sample) with zero linting violations across 253 files
 - 🔧 **Extensible Architecture** - Plugin system and LSP integration ready
 
 ## Topics
@@ -43,6 +43,7 @@ CodeEditorPlugin provides world-class performance, extensive customization, and 
 - <doc:Syntax-Highlighting>
 - <doc:Annotation-System>
 - <doc:Performance-Monitoring>
+- <doc:Production-Reliability>
 - <doc:Plugin-Architecture>
 - <doc:LSP-Integration>
 

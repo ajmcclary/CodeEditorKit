@@ -580,7 +580,9 @@ actor RangeCacheActor {
     
     private func createCacheKey(for string: String) -> String {
         // Create a cache key that's efficient but reasonably unique
-        let hash = string.hashValue
+        var hasher = Hasher()
+        hasher.combine(string)
+        let hash = hasher.finalize()
         return "\(hash):\(string.count)"
     }
     
