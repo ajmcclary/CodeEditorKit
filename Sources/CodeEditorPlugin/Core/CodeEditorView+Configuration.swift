@@ -108,7 +108,7 @@ extension CodeEditorView {
     }
 
     internal func updateSelectedLineHighlight() {
-        guard highlightSelectedLine else {
+        guard showsSelectedLineHighlight else {
             removeLineHighlight()
             return
         }

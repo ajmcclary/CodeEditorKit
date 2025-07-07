@@ -330,6 +330,72 @@ final class SyntaxHighlightingTests: XCTestCase {
         }
     }
 
+    // MARK: - Cancellation Tests
+    
+    @MainActor
+    func testApplyHighlightingCancellation() async throws {
+        let coordinator = SyntaxHighlightingCoordinator()
+        let largeCode = String(repeating: "let x = 10; var y = 20; ", count: 5_000)
+        let tokens = coordinator.highlight(source: largeCode, language: .swift)
+        
+        // Create an attributed string
+        let attributedString = NSMutableAttributedString(string: largeCode)
+        
+        // Create a task that will be cancelled
+        let task = Task {
+            try await coordinator.applyHighlighting(
+                to: attributedString,
+                tokens: tokens,
+                progressHandler: nil
+            )
+        }
+        
+        // Cancel the task immediately
+        task.cancel()
+        
+        // Verify that the task throws a cancellation error
+        do {
+            try await task.value
+            XCTFail("Expected cancellation error")
+        } catch {
+            XCTAssertTrue(Task.isCancelled || error is CancellationError, "Should throw cancellation error")
+        }
+    }
+    
+    @MainActor
+    func testApplyHighlightingProgressHandler() async throws {
+        let coordinator = SyntaxHighlightingCoordinator()
+        let code = String(repeating: "let x = 10; ", count: 200)
+        let tokens = coordinator.highlight(source: code, language: .swift)
+        
+        // Create an attributed string
+        let attributedString = NSMutableAttributedString(string: code)
+        
+        // Track progress updates
+        var progressUpdates: [Double] = []
+        
+        // Apply highlighting with progress handler
+        try await coordinator.applyHighlighting(
+            to: attributedString,
+            tokens: tokens
+        ) { progress in
+                progressUpdates.append(progress)
+        }
+        
+        // Verify progress was reported
+        XCTAssertFalse(progressUpdates.isEmpty, "Should report progress")
+        XCTAssertEqual(progressUpdates.last, 1.0, "Final progress should be 1.0")
+        
+        // Verify highlighting was applied
+        var hasHighlighting = false
+        attributedString.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: attributedString.length)) { value, _, _ in
+            if value != nil {
+                hasHighlighting = true
+            }
+        }
+        XCTAssertTrue(hasHighlighting, "Should have applied highlighting")
+    }
+
     deinit {
         // Cleanup if needed
     }

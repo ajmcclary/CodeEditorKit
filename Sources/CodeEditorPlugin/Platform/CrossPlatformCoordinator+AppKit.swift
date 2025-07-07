@@ -107,9 +107,11 @@ extension CrossPlatformCoordinator {
               selectedRange.length > 0,
               let selectedText = textView.text else { return }
         
+        // swiftlint:disable:next legacy_objc_type
         let searchString = (selectedText as NSString).substring(with: selectedRange)
         let searchRange = NSRange(location: selectedRange.upperBound, length: selectedText.count - selectedRange.upperBound)
         
+        // swiftlint:disable:next legacy_objc_type
         let nextRange = (selectedText as NSString).range(of: searchString, options: [], range: searchRange)
         if nextRange.location != NSNotFound {
             textView.selectedRange = nextRange
@@ -117,6 +119,7 @@ extension CrossPlatformCoordinator {
         } else {
             // Search from beginning
             let wrapRange = NSRange(location: 0, length: selectedRange.location)
+            // swiftlint:disable:next legacy_objc_type
             let nextRange = (selectedText as NSString).range(of: searchString, options: [], range: wrapRange)
             if nextRange.location != NSNotFound {
                 textView.selectedRange = nextRange
@@ -128,7 +131,8 @@ extension CrossPlatformCoordinator {
     private func selectLine(in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         let selectedRange = textView.selectedRange
-        let nsText = text as NSString
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = (text as NSString)
         
         // Find line boundaries
         var lineStart = 0
@@ -147,7 +151,8 @@ extension CrossPlatformCoordinator {
         let language = textView.language
         
         let selectedRange = textView.selectedRange
-        let nsText = text as NSString
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = (text as NSString)
         
         // Get the comment syntax for the current language
         let commentPrefix = getCommentPrefix(for: language)
@@ -176,14 +181,19 @@ extension CrossPlatformCoordinator {
         switch language {
         case .swift, .javascript, .typescript, .java, .c, .cpp, .go, .rust, .php:
             return "//"
+
         case .python, .ruby, .shell, .yaml:
             return "#"
+
         case .html, .xml:
             return "<!--"
+
         case .css:
             return "/*"
+
         case .sql:
             return "--"
+
         case .markdown, .json, .plainText:
             return "//" // Default fallback
         }

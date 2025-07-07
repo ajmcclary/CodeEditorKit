@@ -76,9 +76,6 @@ extension EditorConfiguration {
         /// Whether to show a minimap
         public var showMinimap: Bool = false
         
-        /// Whether to automatically scroll to keep cursor visible
-        public var autoScrollToCursor: Bool = true
-        
         // MARK: - Initialization
         
         public init() {}
@@ -103,7 +100,6 @@ extension EditorConfiguration.Display: Codable {
         case minimumFoldableLines
         case animateCodeFolding
         case showMinimap
-        case autoScrollToCursor
     }
     
     public init(from decoder: Decoder) throws {
@@ -126,7 +122,6 @@ extension EditorConfiguration.Display: Codable {
         minimumFoldableLines = try container.decodeIfPresent(Int.self, forKey: .minimumFoldableLines) ?? 3
         animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
         showMinimap = try container.decodeIfPresent(Bool.self, forKey: .showMinimap) ?? false
-        autoScrollToCursor = try container.decodeIfPresent(Bool.self, forKey: .autoScrollToCursor) ?? true
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -145,6 +140,5 @@ extension EditorConfiguration.Display: Codable {
         try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)
         try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
         try container.encode(showMinimap, forKey: .showMinimap)
-        try container.encode(autoScrollToCursor, forKey: .autoScrollToCursor)
     }
 }

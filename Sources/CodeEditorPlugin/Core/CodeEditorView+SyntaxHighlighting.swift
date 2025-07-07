@@ -20,6 +20,9 @@ extension CodeEditorView {
             return
         }
 
+        // Invalidate line index cache when text changes
+        lineIndexCache.invalidate()
+
         // Update gutter when text changes
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         gutterViewStorage?.needsDisplay = true
@@ -45,7 +48,7 @@ extension CodeEditorView {
             #endif
             
             // Check for completion triggering
-            if isCompletionEnabled {
+            if enablesCodeCompletion {
                 checkForCompletionTrigger(at: editedRange)
             }
             
@@ -57,9 +60,9 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
+        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.showsSyntaxHighlighting), language: \(self.language.name)")
         
-        guard isSyntaxHighlightingEnabled else {
+        guard showsSyntaxHighlighting else {
             Self.logger.debug("❌ Syntax highlighting disabled, cancelling")
             asyncHighlighter.cancelAllHighlighting()
             return
@@ -80,7 +83,7 @@ extension CodeEditorView {
             return
         }
         
-        guard isSyntaxHighlightingEnabled else {
+        guard showsSyntaxHighlighting else {
             return
         }
         

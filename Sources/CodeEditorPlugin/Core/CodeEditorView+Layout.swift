@@ -14,29 +14,15 @@ extension CodeEditorView {
     
     /// Apply paragraph style settings for tab width and line spacing
     internal func applyParagraphStyle() {
-        // Create a new paragraph style with the configured settings
-        let paragraphStyle = NSMutableParagraphStyle()
-        
-        // Set line spacing multiplier
-        paragraphStyle.lineHeightMultiple = configuration.layout.lineHeightMultiple
-        
-        // Set tab stops based on tab width
-        let tabWidth = CGFloat(configuration.layout.tabWidth)
+        // Get font to use for calculations
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        let spaceWidth = "    ".size(withAttributes: [.font: font]).width / 4.0 // Width of one space
-        let tabInterval = spaceWidth * tabWidth
         
-        // Clear existing tab stops and set new ones
-        paragraphStyle.tabStops = []
-        var tabPosition: CGFloat = tabInterval
-        for _ in 0..<50 { // Create enough tab stops for reasonable content
-            let tabStop = NSTextTab(textAlignment: .left, location: tabPosition, options: [:])
-            paragraphStyle.tabStops.append(tabStop)
-            tabPosition += tabInterval
-        }
-        
-        // Set default tab interval
-        paragraphStyle.defaultTabInterval = tabInterval
+        // Get cached paragraph style instead of creating new one each time
+        let paragraphStyle = ParagraphStyleCache.shared.paragraphStyle(
+            tabWidth: configuration.layout.tabWidth,
+            lineHeightMultiple: configuration.layout.lineHeightMultiple,
+            font: font
+        )
         
         // Apply the paragraph style to all text
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

@@ -322,17 +322,10 @@ public class CodeFoldingEngine: ObservableObject {
 
         let contentRange = NSRange(location: contentStart, length: contentLength)
 
-        // Create a paragraph style with zero line height to collapse the content
-        let hiddenParagraphStyle = NSMutableParagraphStyle()
-        hiddenParagraphStyle.minimumLineHeight = 0
-        hiddenParagraphStyle.maximumLineHeight = 0
-        hiddenParagraphStyle.lineSpacing = 0
-        hiddenParagraphStyle.paragraphSpacing = 0
-        hiddenParagraphStyle.paragraphSpacingBefore = 0
-
+        // Use cached hidden paragraph style instead of creating new one
         // Apply attributes to hide content
         textStorage.addAttributes([
-            .paragraphStyle: hiddenParagraphStyle,
+            .paragraphStyle: ParagraphStyleCache.hiddenParagraphStyle,
             .font: PlatformFont.systemFont(ofSize: 0.1), // Nearly invisible font
             .foregroundColor: PlatformColors.clear,
             .foldedRegion: region.id

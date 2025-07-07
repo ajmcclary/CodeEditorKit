@@ -113,7 +113,7 @@ public final class SyntaxHighlightingCoordinator {
         to attributedString: NSMutableAttributedString,
         tokens: [HighlightedToken],
         progressHandler: ((Double) -> Void)? = nil
-    ) async {
+    ) async throws {
         // Remove existing syntax highlighting
         let range = NSRange(location: 0, length: attributedString.length)
         attributedString.removeAttribute(.foregroundColor, range: range)
@@ -125,6 +125,7 @@ public final class SyntaxHighlightingCoordinator {
         for (index, token) in tokens.enumerated() {
             // Check for cancellation periodically
             if index.isMultiple(of: batchSize) {
+                try Task.checkCancellation()
                 await Task.yield()
                 progressHandler?(Double(index) / Double(totalTokens))
             }

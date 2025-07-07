@@ -34,59 +34,7 @@ import Foundation
 public struct EditorConfigurationBuilder {
   // MARK: - Properties
 
-  private var configuration = EditorConfiguration()
-
-  // MARK: - Generic Setters
-
-  /// Generic method to set display configuration values
-  private func withDisplay<T>(_ keyPath: WritableKeyPath<EditorConfiguration.Display, T>, value: T)
-    -> Self {
-    var display = configuration.display
-    display[keyPath: keyPath] = value
-    var newConfig = configuration
-    newConfig = newConfig.with(display: display)
-    var newBuilder = self
-    newBuilder.configuration = newConfig
-    return newBuilder
-  }
-
-  /// Generic method to set layout configuration values
-  private func withLayout<T>(_ keyPath: WritableKeyPath<EditorConfiguration.Layout, T>, value: T)
-    -> Self {
-    var layout = configuration.layout
-    layout[keyPath: keyPath] = value
-    var newConfig = configuration
-    newConfig = newConfig.with(layout: layout)
-    var newBuilder = self
-    newBuilder.configuration = newConfig
-    return newBuilder
-  }
-
-  /// Generic method to set behavior configuration values
-  private func withBehavior<T>(
-    _ keyPath: WritableKeyPath<EditorConfiguration.Behavior, T>, value: T
-  ) -> Self {
-    var behavior = configuration.behavior
-    behavior[keyPath: keyPath] = value
-    var newConfig = configuration
-    newConfig = newConfig.with(behavior: behavior)
-    var newBuilder = self
-    newBuilder.configuration = newConfig
-    return newBuilder
-  }
-
-  /// Generic method to set performance configuration values
-  private func withPerformance<T>(
-    _ keyPath: WritableKeyPath<EditorConfiguration.Performance, T>, value: T
-  ) -> Self {
-    var performance = configuration.performance
-    performance[keyPath: keyPath] = value
-    var newConfig = configuration
-    newConfig = newConfig.with(performance: performance)
-    var newBuilder = self
-    newBuilder.configuration = newConfig
-    return newBuilder
-  }
+  private var configuration: EditorConfiguration
 
   // MARK: - Initialization
 
@@ -103,7 +51,9 @@ public struct EditorConfigurationBuilder {
   ///     .showLineNumbers(true)
   ///     .build()
   /// ```
-  public init() {}
+  public init() {
+    self.configuration = EditorConfiguration()
+  }
 
   /// Creates a configuration builder starting from an existing configuration.
   ///
@@ -130,6 +80,15 @@ public struct EditorConfigurationBuilder {
     self.configuration = base
   }
 
+  // MARK: - Private Helper
+
+  /// Creates a new builder with the modified configuration
+  private func with(_ modifier: (inout EditorConfiguration) -> Void) -> Self {
+    var copy = self
+    modifier(&copy.configuration)
+    return copy
+  }
+
   // MARK: - Display Settings
 
   /// Sets the font size for the editor.
@@ -153,7 +112,7 @@ public struct EditorConfigurationBuilder {
   /// - Note: Font sizes outside 8-72 range will trigger validation warnings
   @discardableResult
   public func fontSize(_ size: CGFloat) -> Self {
-    withDisplay(\.fontSize, value: size)
+    with { $0.display.fontSize = size }
   }
 
   /// Controls whether line numbers are shown in the gutter.
@@ -176,7 +135,7 @@ public struct EditorConfigurationBuilder {
   /// - SeeAlso: `gutterWidth(_:)` for customizing gutter size
   @discardableResult
   public func showLineNumbers(_ show: Bool) -> Self {
-    withDisplay(\.showLineNumbers, value: show)
+    with { $0.display.showLineNumbers = show }
   }
 
   /// Controls whether syntax highlighting is enabled
@@ -184,7 +143,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func enableSyntaxHighlighting(_ enabled: Bool) -> Self {
-    withDisplay(\.enableSyntaxHighlighting, value: enabled)
+    with { $0.display.enableSyntaxHighlighting = enabled }
   }
 
   /// Controls whether the current line is highlighted
@@ -192,7 +151,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func highlightSelectedLine(_ highlight: Bool) -> Self {
-    withDisplay(\.highlightSelectedLine, value: highlight)
+    with { $0.display.highlightSelectedLine = highlight }
   }
 
   /// Sets the color used to highlight the selected line
@@ -200,7 +159,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func selectedLineHighlightColor(_ color: PlatformColor) -> Self {
-    withDisplay(\.selectedLineHighlightColor, value: color)
+    with { $0.display.selectedLineHighlightColor = color }
   }
 
   /// Controls whether annotations (TODO, FIXME, etc.) are shown
@@ -208,7 +167,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func enableAnnotations(_ enabled: Bool) -> Self {
-    withDisplay(\.enableAnnotations, value: enabled)
+    with { $0.display.enableAnnotations = enabled }
   }
 
   /// Controls whether invisible characters are shown
@@ -216,7 +175,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func showInvisibleCharacters(_ show: Bool) -> Self {
-    withDisplay(\.showInvisibleCharacters, value: show)
+    with { $0.display.showInvisibleCharacters = show }
   }
 
   // MARK: - Layout Settings
@@ -226,7 +185,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func tabWidth(_ width: Int) -> Self {
-    withLayout(\.tabWidth, value: width)
+    with { $0.layout.tabWidth = width }
   }
 
   /// Controls whether to insert spaces instead of tabs
@@ -234,7 +193,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func insertSpacesForTabs(_ insertSpaces: Bool) -> Self {
-    withLayout(\.insertSpacesForTabs, value: insertSpaces)
+    with { $0.layout.insertSpacesForTabs = insertSpaces }
   }
 
   /// Controls whether long lines are wrapped
@@ -242,7 +201,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func wrapLines(_ wrap: Bool) -> Self {
-    withLayout(\.wrapLines, value: wrap)
+    with { $0.layout.wrapLines = wrap }
   }
 
   /// Sets the line spacing multiplier
@@ -250,7 +209,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func lineSpacing(_ spacing: CGFloat) -> Self {
-    withLayout(\.lineHeightMultiple, value: spacing)
+    with { $0.layout.lineHeightMultiple = spacing }
   }
 
   // MARK: - Behavior Settings
@@ -260,7 +219,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func isEditable(_ editable: Bool) -> Self {
-    withBehavior(\.isEditable, value: editable)
+    with { $0.behavior.isEditable = editable }
   }
 
   /// Controls whether auto-indentation is enabled
@@ -268,7 +227,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func autoIndent(_ enabled: Bool) -> Self {
-    withBehavior(\.autoIndent, value: enabled)
+    with { $0.behavior.autoIndent = enabled }
   }
 
   /// Controls whether code completion is enabled
@@ -276,7 +235,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func enableCodeCompletion(_ enabled: Bool) -> Self {
-    withBehavior(\.enableCodeCompletion, value: enabled)
+    with { $0.behavior.enableCodeCompletion = enabled }
   }
 
   /// Controls whether spell checking is enabled
@@ -284,7 +243,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func enableSpellCheck(_ enabled: Bool) -> Self {
-    withBehavior(\.isContinuousSpellCheckingEnabled, value: enabled)
+    with { $0.behavior.isContinuousSpellCheckingEnabled = enabled }
   }
 
   // MARK: - Performance Settings
@@ -294,7 +253,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func useHardwareAcceleration(_ enabled: Bool) -> Self {
-    withPerformance(\.useHardwareAcceleration, value: enabled)
+    with { $0.performance.useHardwareAcceleration = enabled }
   }
 
   /// Sets the maximum length for syntax highlighting
@@ -302,7 +261,7 @@ public struct EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   @discardableResult
   public func maxHighlightingLength(_ length: Int) -> Self {
-    withPerformance(\.maxSyntaxHighlightingLength, value: length)
+    with { $0.performance.maxSyntaxHighlightingLength = length }
   }
 
   // MARK: - Language Configuration
@@ -556,13 +515,11 @@ public struct EditorConfigurationBuilder {
 
     // Apply dark theme specific settings
     if theme.name == "dark" {
-      builder =
-        builder
+      builder = builder
         .highlightSelectedLine(true)
         .enableSyntaxHighlighting(true)
     } else if theme.name == "default" {
-      builder =
-        builder
+      builder = builder
         .highlightSelectedLine(true)
         .enableSyntaxHighlighting(true)
     }

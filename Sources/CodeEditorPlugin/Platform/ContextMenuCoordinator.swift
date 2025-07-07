@@ -52,10 +52,13 @@ import os.log
 /// - SeeAlso: ``ContextMenuAction`` for menu action definitions
 @MainActor
 public final class ContextMenuCoordinator: ObservableObject {
+    /// Shared instance for backward compatibility
+    /// - Warning: This property is deprecated. Use dependency injection instead.
+    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = ContextMenuCoordinator()
     
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "ContextMenuCoordinator")
-    private let capabilities = PlatformCapabilities.shared
+    private let capabilities: PlatformCapabilities
     
     /// Context types for menu customization
     public enum MenuContext {
@@ -69,7 +72,10 @@ public final class ContextMenuCoordinator: ObservableObject {
     
     // MARK: - Initialization
     
-    private init() {
+    /// Creates a new ContextMenuCoordinator instance
+    /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
+    public init(capabilities: PlatformCapabilities? = nil) {
+        self.capabilities = capabilities ?? PlatformCapabilities.shared
         logger.debug("ContextMenuCoordinator initialized")
     }
     

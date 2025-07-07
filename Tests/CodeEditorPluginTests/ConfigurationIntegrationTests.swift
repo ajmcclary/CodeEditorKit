@@ -65,8 +65,8 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Verify settings were applied
         XCTAssertTrue(textView.showsLineNumbers)
         XCTAssertTrue(textView.showsInvisibleCharacters)
-        XCTAssertTrue(textView.highlightSelectedLine)
-        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
+        XCTAssertTrue(textView.showsSelectedLineHighlight)
+        XCTAssertTrue(textView.showsSyntaxHighlighting)
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(textView.font?.pointSize, 16.0)
@@ -260,7 +260,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         """
         
         // Verify theme and syntax highlighting work together
-        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
+        XCTAssertTrue(textView.showsSyntaxHighlighting)
         XCTAssertEqual(textView.language, .swift)
         
         // Note: usesFindBar and displaysLinkToolTips are not part of the CodeEditorView API

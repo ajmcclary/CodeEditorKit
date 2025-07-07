@@ -51,8 +51,8 @@ extension CodeEditorView {
         }
     }
 
-    /// Enable/disable syntax highlighting (convenience property)
-    public var isSyntaxHighlightingEnabled: Bool {
+    /// Controls whether syntax highlighting is enabled (convenience property)
+    public var showsSyntaxHighlighting: Bool {
         get { configuration.display.enableSyntaxHighlighting }
         set {
             var display = configuration.display
@@ -72,7 +72,7 @@ extension CodeEditorView {
     }
 
     /// Controls whether the current line is highlighted (convenience property)
-    public var highlightSelectedLine: Bool {
+    public var showsSelectedLineHighlight: Bool {
         get { configuration.display.highlightSelectedLine }
         set {
             var display = configuration.display
@@ -113,34 +113,14 @@ extension CodeEditorView {
 
     // MARK: - Completion System
     
-    /// Whether completion should be enabled
-    public var isCompletionEnabled: Bool {
+    /// Controls whether code completion is enabled (convenience property)
+    public var enablesCodeCompletion: Bool {
         get { configuration.behavior.enableCodeCompletion }
         set {
             var behavior = configuration.behavior
             behavior.enableCodeCompletion = newValue
             configuration = configuration.with(behavior: behavior)
         }
-    }
-    
-    // MARK: - Improved Boolean Property Aliases (Consistent Naming)
-    
-    /// Improved alias for isSyntaxHighlightingEnabled (consistent with shows* pattern)
-    public var showsSyntaxHighlighting: Bool {
-        get { isSyntaxHighlightingEnabled }
-        set { isSyntaxHighlightingEnabled = newValue }
-    }
-    
-    /// Improved alias for highlightSelectedLine (consistent with shows* pattern)  
-    public var showsSelectedLineHighlight: Bool {
-        get { highlightSelectedLine }
-        set { highlightSelectedLine = newValue }
-    }
-    
-    /// Improved alias for isCompletionEnabled (consistent with enables* pattern)
-    public var enablesCodeCompletion: Bool {
-        get { isCompletionEnabled }
-        set { isCompletionEnabled = newValue }
     }
 
     // MARK: - Coordinate System

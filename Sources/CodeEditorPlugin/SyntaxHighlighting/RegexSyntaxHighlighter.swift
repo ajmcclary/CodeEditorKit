@@ -42,7 +42,8 @@ public final class RegexSyntaxHighlighter: Sendable {
         public init(name: String, fileExtensions: [String], rules: [HighlightRule]) {
             self.name = name
             self.fileExtensions = fileExtensions
-            self.rules = rules
+            // Pre-sort rules by priority once during initialization
+            self.rules = rules.sorted { $0.priority > $1.priority }
         }
     }
 
@@ -162,14 +163,12 @@ public final class RegexSyntaxHighlighter: Sendable {
         
         let range = NSRange(location: 0, length: source.utf16.count)
 
-        // Sort rules by priority (higher priority first)
-        let sortedRules = language.rules.sorted { $0.priority > $1.priority }
-
         // Use sorted array for processed ranges to enable binary search optimization
         var processedRanges: [NSRange] = []
         processedRanges.reserveCapacity(min(source.count / 20, 1_000))
 
-        for rule in sortedRules {
+        // Rules are already pre-sorted by priority in LanguageDefinition
+        for rule in language.rules {
             let matches = rule.pattern.matches(in: source, options: [], range: range)
 
             for match in matches {

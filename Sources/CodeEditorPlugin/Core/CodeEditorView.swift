@@ -157,6 +157,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Code folding engine for managing foldable regions and fold states
     public let codeFoldingEngine = CodeFoldingEngine()
     
+    /// Line index cache for optimized line number calculations
+    internal let lineIndexCache = LineIndexCache()
+    
     /// The current programming language used for syntax highlighting and code completion
     public var language: Language = .plainText {
         didSet {

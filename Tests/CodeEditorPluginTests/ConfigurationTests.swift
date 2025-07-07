@@ -21,7 +21,7 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
         XCTAssertTrue(textView.showsLineNumbers)
-        XCTAssertTrue(textView.highlightSelectedLine)
+        XCTAssertTrue(textView.showsSelectedLineHighlight)
     }
 
     @MainActor
@@ -32,8 +32,8 @@ final class ConfigurationTests: XCTestCase {
         textView.showsLineNumbers = true
         XCTAssertTrue(textView.showsLineNumbers)
 
-        textView.highlightSelectedLine = true
-        XCTAssertTrue(textView.highlightSelectedLine)
+        textView.showsSelectedLineHighlight = true
+        XCTAssertTrue(textView.showsSelectedLineHighlight)
 
         textView.isEditable = false
         XCTAssertFalse(textView.isEditable)

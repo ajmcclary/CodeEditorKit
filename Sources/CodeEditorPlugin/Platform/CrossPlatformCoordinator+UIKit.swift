@@ -309,17 +309,18 @@ extension CrossPlatformCoordinator {
     private func findText(_ searchText: String, in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         
-        let nsText = text as NSString
         let searchRange = NSRange(location: textView.selectedRange.upperBound, length: text.count - textView.selectedRange.upperBound)
         
-        if let foundRange = nsText.range(of: searchText, options: .caseInsensitive, range: searchRange),
+        // swiftlint:disable:next legacy_objc_type
+        if let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: searchRange),
            foundRange.location != NSNotFound {
             textView.selectedRange = foundRange
             textView.scrollRangeToVisible(foundRange)
         } else {
             // Search from beginning
             let wrapRange = NSRange(location: 0, length: textView.selectedRange.location)
-            if let foundRange = nsText.range(of: searchText, options: .caseInsensitive, range: wrapRange),
+            // swiftlint:disable:next legacy_objc_type
+            if let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: wrapRange),
                foundRange.location != NSNotFound {
                 textView.selectedRange = foundRange
                 textView.scrollRangeToVisible(foundRange)
@@ -332,7 +333,6 @@ extension CrossPlatformCoordinator {
               let language = textView.language else { return }
         
         let selectedRange = textView.selectedRange
-        let nsText = text as NSString
         
         // Get the comment syntax for the current language
         let commentPrefix = getCommentPrefix(for: language)
@@ -340,10 +340,12 @@ extension CrossPlatformCoordinator {
         // Find line boundaries for the selection
         var lineStart = 0
         var lineEnd = 0
-        nsText.getLineStart(&lineStart, end: &lineEnd, contentsEnd: nil, for: selectedRange)
+        // swiftlint:disable:next legacy_objc_type
+        (text as NSString).getLineStart(&lineStart, end: &lineEnd, contentsEnd: nil, for: selectedRange)
         
         // Check if the line is already commented
-        let lineText = nsText.substring(with: NSRange(location: lineStart, length: lineEnd - lineStart))
+        // swiftlint:disable:next legacy_objc_type
+        let lineText = (text as NSString).substring(with: NSRange(location: lineStart, length: lineEnd - lineStart))
         let trimmedLine = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         if trimmedLine.hasPrefix(commentPrefix) {
@@ -361,14 +363,19 @@ extension CrossPlatformCoordinator {
         switch language {
         case .swift, .javascript, .typescript, .java, .c, .cpp, .go, .rust, .php:
             return "//"
+
         case .python, .ruby, .shell, .yaml:
             return "#"
+
         case .html, .xml:
             return "<!--"
+
         case .css:
             return "/*"
+
         case .sql:
             return "--"
+
         case .markdown, .json, .plainText:
             return "//" // Default fallback
         }

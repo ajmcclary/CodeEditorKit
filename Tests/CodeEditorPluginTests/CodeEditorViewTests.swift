@@ -130,11 +130,11 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineHighlighting() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        XCTAssertTrue(textView.highlightSelectedLine)  // Default is true
-        textView.highlightSelectedLine = false
-        XCTAssertFalse(textView.highlightSelectedLine)
-        textView.highlightSelectedLine = true
-        XCTAssertTrue(textView.highlightSelectedLine)
+        XCTAssertTrue(textView.showsSelectedLineHighlight)  // Default is true
+        textView.showsSelectedLineHighlight = false
+        XCTAssertFalse(textView.showsSelectedLineHighlight)
+        textView.showsSelectedLineHighlight = true
+        XCTAssertTrue(textView.showsSelectedLineHighlight)
     }
 
     @MainActor
@@ -476,9 +476,9 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testSyntaxHighlightingEnabled() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
-        textView.isSyntaxHighlightingEnabled = false
-        XCTAssertFalse(textView.isSyntaxHighlightingEnabled)
+        XCTAssertTrue(textView.showsSyntaxHighlighting)
+        textView.showsSyntaxHighlighting = false
+        XCTAssertFalse(textView.showsSyntaxHighlighting)
     }
 
     @MainActor

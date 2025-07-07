@@ -125,6 +125,12 @@ public final class TextKitLineNumberHelper {
     
     /// Calculate line ranges from text without using layoutManager
     private func calculateLineRanges(in text: String, visibleRange: NSRange) -> [(lineNumber: Int, range: NSRange)] {
+        // Use the line index cache if available through the text view
+        if let textView {
+            return textView.lineIndexCache.visibleLineInfo(in: text, visibleRange: visibleRange)
+        }
+        
+        // Fallback to the original implementation if not using CodeEditorView
         var lineRanges: [(Int, NSRange)] = []
         var lineNumber = 1
         
@@ -182,6 +188,29 @@ public final class TextKitLineNumberHelper {
     
     /// Calculate line number using TextKit 2
     private func lineNumberTextKit2(at point: CGPoint, textLayoutManager: NSTextLayoutManager, text: String) -> Int? {
+        // Use the line index cache if available through the text view
+        if let textView {
+            var foundLine: Int?
+            
+            textLayoutManager.enumerateTextLayoutFragments(from: textLayoutManager.documentRange.location) { fragment in
+                let frame = fragment.layoutFragmentFrame
+                
+                // Check if point is within this fragment
+                if point.y >= frame.minY && point.y <= frame.maxY {
+                    // Calculate line number up to this fragment using cache
+                    if let fragmentRange = self.textKitBridge.nsRangeFromTextRange(fragment.rangeInElement) {
+                        foundLine = textView.lineIndexCache.lineNumber(at: fragmentRange.location, in: text)
+                    }
+                    return false // Stop enumeration
+                }
+                
+                return frame.maxY < point.y // Continue if we haven't reached the point yet
+            }
+            
+            return foundLine
+        }
+        
+        // Fallback to original implementation
         var lineNumber = 1
         var foundLine: Int?
         
@@ -219,7 +248,12 @@ public final class TextKitLineNumberHelper {
         let glyphIndex = layoutManager.glyphIndex(for: point, in: textContainer)
         let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
         
-        // Count lines up to this character
+        // Use the line index cache if available through the text view
+        if let textView {
+            return textView.lineIndexCache.lineNumber(at: characterIndex, in: text)
+        }
+        
+        // Fallback: Count lines up to this character
         let textUpToPoint = String(text.prefix(characterIndex))
         return textUpToPoint.components(separatedBy: .newlines).count
     }
@@ -236,8 +270,8 @@ public final class TextKitLineNumberHelper {
         // Estimate line number
         let estimatedLine = Int(point.y / lineHeight) + 1
         
-        // Clamp to valid range
-        let totalLines = text.components(separatedBy: .newlines).count
+        // Clamp to valid range using cache if available
+        let totalLines = textView.lineIndexCache.lineCount(in: text)
         return min(max(1, estimatedLine), totalLines)
     }
     

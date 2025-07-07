@@ -207,35 +207,17 @@ extension CodeEditorView {
     
     /// Get line number for position
     public func lineNumber(at position: String.Index) -> Int {
-        let substring = content[..<position]
-        return substring.components(separatedBy: .newlines).count
+        lineIndexCache.lineNumber(at: position, in: content)
     }
     
     /// Get line range for line number
     public func lineRange(for lineNumber: Int) -> Range<String.Index>? {
-        let lines = content.components(separatedBy: .newlines)
-        guard lineNumber > 0, lineNumber <= lines.count else { return nil }
-        
-        var currentIndex = content.startIndex
-        for (index, line) in lines.enumerated() {
-            if index == lineNumber - 1 {
-                let endIndex = content.index(currentIndex, offsetBy: line.count)
-                return currentIndex..<endIndex
-            }
-            // Move past the line and the newline character
-            if currentIndex < content.endIndex {
-                currentIndex = content.index(currentIndex, offsetBy: line.count)
-                if currentIndex < content.endIndex {
-                    currentIndex = content.index(after: currentIndex) // Skip newline
-                }
-            }
-        }
-        return nil
+        lineIndexCache.lineRange(for: lineNumber, in: content)
     }
     
     /// Total number of lines
     public var lineCount: Int {
-        content.components(separatedBy: .newlines).count
+        lineIndexCache.lineCount(in: content)
     }
     
     // MARK: - Undo/Redo

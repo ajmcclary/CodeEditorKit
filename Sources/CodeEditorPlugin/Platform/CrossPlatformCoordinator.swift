@@ -34,19 +34,22 @@ import os.log
 /// - SeeAlso: ``ContextMenuCoordinator`` for context menu handling
 @MainActor
 public class CrossPlatformCoordinator: ObservableObject {
-    // MARK: - Singleton
+    // MARK: - Singleton (Deprecated)
     
+    /// Shared instance for backward compatibility
+    /// - Warning: This property is deprecated. Use dependency injection instead.
+    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = CrossPlatformCoordinator()
     
     // MARK: - Properties
     
     internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
-    internal let capabilities = PlatformCapabilities.shared
+    internal let capabilities: PlatformCapabilities
     
     /// Specialized coordinators for focused responsibilities
-    public let inputCoordinator = InputCoordinator.shared
-    public let toolbarCoordinator = ToolbarCoordinator.shared
-    public let contextMenuCoordinator = ContextMenuCoordinator.shared
+    public let inputCoordinator: InputCoordinator
+    public let toolbarCoordinator: ToolbarCoordinator
+    public let contextMenuCoordinator: ContextMenuCoordinator
     
     /// Platform-specific adjustments
     @Published public private(set) var platformAdjustments = PlatformAdjustments()
@@ -130,9 +133,37 @@ public class CrossPlatformCoordinator: ObservableObject {
     
     // MARK: - Initialization
     
-    private init() {
+    /// Creates a new instance with specified dependencies
+    /// - Parameters:
+    ///   - capabilities: Platform capabilities provider (defaults to shared instance)
+    ///   - inputCoordinator: Input handling coordinator (defaults to new instance)
+    ///   - toolbarCoordinator: Toolbar management coordinator (defaults to new instance)
+    ///   - contextMenuCoordinator: Context menu coordinator (defaults to new instance)
+    public init(
+        capabilities: PlatformCapabilities? = nil,
+        inputCoordinator: InputCoordinator? = nil,
+        toolbarCoordinator: ToolbarCoordinator? = nil,
+        contextMenuCoordinator: ContextMenuCoordinator? = nil
+    ) {
+        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.inputCoordinator = inputCoordinator ?? InputCoordinator()
+        self.toolbarCoordinator = toolbarCoordinator ?? ToolbarCoordinator()
+        self.contextMenuCoordinator = contextMenuCoordinator ?? ContextMenuCoordinator()
+        
         adjustFeaturesForPlatform()
         setupPlatformSpecificObservers()
+    }
+    
+    /// Private initializer for the deprecated singleton
+    private convenience init() {
+        // Create new instances with shared capabilities for backward compatibility
+        let sharedCapabilities = PlatformCapabilities.shared
+        self.init(
+            capabilities: sharedCapabilities,
+            inputCoordinator: InputCoordinator(capabilities: sharedCapabilities),
+            toolbarCoordinator: ToolbarCoordinator(capabilities: sharedCapabilities),
+            contextMenuCoordinator: ContextMenuCoordinator(capabilities: sharedCapabilities)
+        )
     }
     
     deinit {

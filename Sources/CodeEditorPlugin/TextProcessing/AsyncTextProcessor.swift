@@ -34,7 +34,9 @@ actor AsyncTextProcessor {
     // MARK: - Initialization
     
     init(maxConcurrentOperations: Int? = nil) {
-        self.maxConcurrentOperations = maxConcurrentOperations ?? ProcessInfo.processInfo.activeProcessorCount
+        // Cap at 4 to prevent oversubscription on highly-threaded systems
+        let defaultConcurrency = min(4, ProcessInfo.processInfo.activeProcessorCount)
+        self.maxConcurrentOperations = maxConcurrentOperations ?? defaultConcurrency
     }
     
     private func getCache() async -> LRUCache<ProcessingCacheKey, ProcessingResult> {

@@ -62,7 +62,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure {
             textView.text = largeCode
             textView.language = .swift
-            textView.isSyntaxHighlightingEnabled = true
+            textView.showsSyntaxHighlighting = true
         }
     }
     
@@ -105,7 +105,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             // Toggle multiple configurations
             textView.showsLineNumbers.toggle()
             textView.showsInvisibleCharacters.toggle()
-            textView.highlightSelectedLine.toggle()
+            textView.showsSelectedLineHighlight.toggle()
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let container = textView.textContainer {
                 container.widthTracksTextView.toggle()
@@ -130,7 +130,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         """
         textView.text = sampleCode
         textView.language = .swift
-        textView.isSyntaxHighlightingEnabled = true
+        textView.showsSyntaxHighlighting = true
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
@@ -266,9 +266,9 @@ final class PerformanceConfigurationTests: XCTestCase {
                 let tv = CodeEditorView(frame: .zero)
                 tv.text = String(repeating: "Sample text\n", count: 100)
                 tv.showsLineNumbers = true
-                tv.highlightSelectedLine = true
+                tv.showsSelectedLineHighlight = true
                 tv.showsInvisibleCharacters = true
-                tv.isSyntaxHighlightingEnabled = true
+                tv.showsSyntaxHighlighting = true
                 tv.language = .swift
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 tv.isContinuousSpellCheckingEnabled = true
@@ -300,7 +300,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         
         textView.text = String(repeating: complexText + "\n", count: 50)
         textView.showsLineNumbers = true
-        textView.highlightSelectedLine = true
+        textView.showsSelectedLineHighlight = true
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
         #else

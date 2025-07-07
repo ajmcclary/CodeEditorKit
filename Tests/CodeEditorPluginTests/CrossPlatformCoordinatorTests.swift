@@ -25,6 +25,32 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     }
     
     @MainActor
+    func testDependencyInjection() {
+        // Create custom dependencies
+        let customCapabilities = PlatformCapabilities.shared
+        let customInputCoordinator = InputCoordinator(capabilities: customCapabilities)
+        let customToolbarCoordinator = ToolbarCoordinator(capabilities: customCapabilities)
+        let customContextMenuCoordinator = ContextMenuCoordinator(capabilities: customCapabilities)
+        
+        // Create coordinator with dependency injection
+        let coordinator = CrossPlatformCoordinator(
+            capabilities: customCapabilities,
+            inputCoordinator: customInputCoordinator,
+            toolbarCoordinator: customToolbarCoordinator,
+            contextMenuCoordinator: customContextMenuCoordinator
+        )
+        
+        // Verify dependencies are used
+        XCTAssertTrue(coordinator.inputCoordinator === customInputCoordinator)
+        XCTAssertTrue(coordinator.toolbarCoordinator === customToolbarCoordinator)
+        XCTAssertTrue(coordinator.contextMenuCoordinator === customContextMenuCoordinator)
+        
+        // Verify coordinator works correctly
+        XCTAssertNotNil(coordinator.platformAdjustments)
+        XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
+    }
+    
+    @MainActor
     func testPlatformAdjustments() {
         let coordinator = CrossPlatformCoordinator.shared
         let adjustments = coordinator.platformAdjustments

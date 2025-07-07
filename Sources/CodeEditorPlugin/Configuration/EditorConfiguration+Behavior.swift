@@ -99,8 +99,16 @@ extension EditorConfiguration.Behavior: Codable {
         case isAutomaticLinkDetectionEnabled
         case isAutomaticQuoteSubstitutionEnabled
         case isAutomaticDashSubstitutionEnabled
+        case autoCloseBrackets
+        case autoCloseQuotes
+        case isContinuousSpellCheckingEnabled
+        case isGrammarCheckingEnabled
+        case isAutomaticTextReplacementEnabled
+        case isAutomaticSpellingCorrectionEnabled
+        case isAutomaticTextCompletionEnabled
         case showInlineCompletionSuggestions
         case completionTriggerCharacters
+        case autoScrollToCursor
     }
     
     public init(from decoder: Decoder) throws {
@@ -119,6 +127,16 @@ extension EditorConfiguration.Behavior: Codable {
         } else {
             completionTriggerCharacters = [".", ":", "\"", "'", "/", "<", " "]
         }
+        
+        // Additional properties with defaults
+        autoCloseBrackets = try container.decodeIfPresent(Bool.self, forKey: .autoCloseBrackets) ?? true
+        autoCloseQuotes = try container.decodeIfPresent(Bool.self, forKey: .autoCloseQuotes) ?? true
+        isContinuousSpellCheckingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isContinuousSpellCheckingEnabled) ?? false
+        isGrammarCheckingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isGrammarCheckingEnabled) ?? false
+        isAutomaticTextReplacementEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticTextReplacementEnabled) ?? false
+        isAutomaticSpellingCorrectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticSpellingCorrectionEnabled) ?? false
+        isAutomaticTextCompletionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticTextCompletionEnabled) ?? false
+        autoScrollToCursor = try container.decodeIfPresent(Bool.self, forKey: .autoScrollToCursor) ?? false
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -132,5 +150,13 @@ extension EditorConfiguration.Behavior: Codable {
         try container.encode(isAutomaticDashSubstitutionEnabled, forKey: .isAutomaticDashSubstitutionEnabled)
         try container.encode(showInlineCompletionSuggestions, forKey: .showInlineCompletionSuggestions)
         try container.encode(String(completionTriggerCharacters), forKey: .completionTriggerCharacters)
+        try container.encode(autoCloseBrackets, forKey: .autoCloseBrackets)
+        try container.encode(autoCloseQuotes, forKey: .autoCloseQuotes)
+        try container.encode(isContinuousSpellCheckingEnabled, forKey: .isContinuousSpellCheckingEnabled)
+        try container.encode(isGrammarCheckingEnabled, forKey: .isGrammarCheckingEnabled)
+        try container.encode(isAutomaticTextReplacementEnabled, forKey: .isAutomaticTextReplacementEnabled)
+        try container.encode(isAutomaticSpellingCorrectionEnabled, forKey: .isAutomaticSpellingCorrectionEnabled)
+        try container.encode(isAutomaticTextCompletionEnabled, forKey: .isAutomaticTextCompletionEnabled)
+        try container.encode(autoScrollToCursor, forKey: .autoScrollToCursor)
     }
 }
