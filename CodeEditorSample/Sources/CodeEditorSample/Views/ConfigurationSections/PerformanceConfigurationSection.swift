@@ -109,7 +109,7 @@ struct PerformanceConfigurationSection: View {
                     Spacer()
                     Text(String(
                         format: "%.1fs", 
-                        appState.coordinator.configuration.performance.textChangeDebounceInterval
+                        appState.coordinator.configuration.performance.textChangeDebounceInterval.timeInterval
                     ))
                         .font(.system(size: adaptiveControlValueFontSize()))
                         .foregroundColor(.secondary)
@@ -117,10 +117,10 @@ struct PerformanceConfigurationSection: View {
                 
                 Slider(
                     value: Binding(
-                        get: { appState.coordinator.configuration.performance.textChangeDebounceInterval },
+                        get: { appState.coordinator.configuration.performance.textChangeDebounceInterval.timeInterval },
                         set: { newValue in
                             appState.coordinator.update { config in
-                                config.performance.textChangeDebounceInterval = newValue
+                                config.performance.textChangeDebounceInterval = .seconds(newValue)
                             }
                             appState.objectWillChange.send()
                         }

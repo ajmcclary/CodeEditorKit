@@ -27,7 +27,7 @@ public final class ConfigurationHotReload: ObservableObject {
     
     /// Animation settings for configuration changes
     public var animateChanges: Bool = true
-    public var animationDuration: TimeInterval = PlatformConstants.defaultAnimationDuration
+    public var animationDuration: Duration = .seconds(PlatformConstants.defaultAnimationDuration)
     
     /// Validation rules
     private var validationRules: [ConfigurationValidationRule] = []
@@ -386,7 +386,7 @@ public enum ConfigurationEvent {
     case configurationChanged(old: EditorConfiguration, new: EditorConfiguration, changes: [HotReloadConfigurationChange])
     case historyNavigated(configuration: EditorConfiguration, isUndo: Bool)
     case validationFailed(ConfigurationError)
-    case animationRequested(changes: [HotReloadConfigurationChange], duration: TimeInterval)
+    case animationRequested(changes: [HotReloadConfigurationChange], duration: Duration)
 }
 
 /// Observer token for removing observers

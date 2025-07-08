@@ -177,11 +177,11 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             errors.append(ValidationError(field: "performance.maxSyntaxHighlightingLength", value: performance.maxSyntaxHighlightingLength, constraint: "must be 0 or greater"))
         }
         
-        if performance.textChangeDebounceInterval < 0 {
-            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval, constraint: "must be 0 or greater"))
+        if performance.textChangeDebounceInterval < Duration.zero {
+            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval.timeInterval, constraint: "must be 0 or greater"))
         }
-        if performance.textChangeDebounceInterval > 5.0 {
-            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval, constraint: "must be 5 seconds or less"))
+        if performance.textChangeDebounceInterval > Duration.seconds(5) {
+            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval.timeInterval, constraint: "must be 5 seconds or less"))
         }
         
         return errors
@@ -261,7 +261,7 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     /// CodeFoldingConfiguration that can be used by the CodeFoldingEngine.
     ///
     /// - Returns: A configured CodeFoldingConfiguration instance
-    public func createCodeFoldingConfiguration() -> CodeFoldingConfiguration {
+    internal func createCodeFoldingConfiguration() -> CodeFoldingConfiguration {
         var config = CodeFoldingConfiguration()
         config.enabled = display.enableCodeFolding
         config.showGutterControls = display.showFoldingControls

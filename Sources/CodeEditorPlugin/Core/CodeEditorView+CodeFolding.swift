@@ -141,7 +141,7 @@ extension CodeEditorView {
     /// // Fold all comments
     /// editor.foldAll(type: .comment)
     /// ```
-    public func foldAll(type: FoldingType) {
+    internal func foldAll(type: FoldingType) {
         guard configuration.display.enableCodeFolding else { return }
         
         let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
@@ -160,7 +160,7 @@ extension CodeEditorView {
     /// // Expand all folded code
     /// editor.unfoldAll()
     /// ```
-    public func unfoldAll() {
+    internal func unfoldAll() {
         guard configuration.display.enableCodeFolding else { return }
         codeFoldingEngine.unfoldAll()
     }
@@ -180,7 +180,7 @@ extension CodeEditorView {
     ///     logger.debug("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
     /// }
     /// ```
-    public var foldableRegions: [FoldableRegion] {
+    internal var foldableRegions: [FoldableRegion] {
         guard configuration.display.enableCodeFolding else { return [] }
         return codeFoldingEngine.foldableRegions
     }
@@ -188,7 +188,7 @@ extension CodeEditorView {
     /// Get all currently folded regions.
     ///
     /// - Returns: Array of currently folded regions
-    public var foldedRegions: [FoldableRegion] {
+    internal var foldedRegions: [FoldableRegion] {
         guard configuration.display.enableCodeFolding else { return [] }
         return codeFoldingEngine.foldableRegions.filter { region in
             codeFoldingEngine.foldedRegions.contains(region.id)

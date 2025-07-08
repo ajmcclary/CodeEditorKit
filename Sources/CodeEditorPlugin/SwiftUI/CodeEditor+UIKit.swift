@@ -36,7 +36,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         
         // Handle focus request from environment
         if context.environment.codeEditorBecomeFirstResponder {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 uiView.textView.becomeFirstResponder()
             }
         }

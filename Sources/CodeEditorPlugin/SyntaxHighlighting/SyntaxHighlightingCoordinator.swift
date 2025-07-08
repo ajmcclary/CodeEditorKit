@@ -479,7 +479,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     #endif
 
     /// Convert from SwiftSyntax token type
-    init(fromSwiftType swiftType: SwiftSyntaxHighlighter.TokenType) {
+    init(fromSwiftType swiftType: SwiftTokenType) {
         switch swiftType {
         case .keyword: self = .keyword
         case .identifier: self = .identifier

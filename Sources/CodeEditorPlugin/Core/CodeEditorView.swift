@@ -32,6 +32,22 @@ import AppKit
 /// editor.enablesCodeCompletion = true
 /// ```
 ///
+/// ## Memory Monitoring
+///
+/// CodeEditorView supports dependency injection for memory monitoring:
+///
+/// ```swift
+/// // Use default memory monitor (created internally)
+/// let editor = CodeEditorView()
+/// 
+/// // Or inject a shared memory monitor for multiple views
+/// let sharedMonitor = MemoryMonitor()
+/// let editor1 = CodeEditorView()
+/// let editor2 = CodeEditorView()
+/// editor1.memoryMonitor = sharedMonitor
+/// editor2.memoryMonitor = sharedMonitor
+/// ```
+///
 /// ## Configuration
 ///
 /// Use `EditorConfiguration` for comprehensive customization:
@@ -161,7 +177,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal let lineIndexCache = LineIndexCache()
     
     /// Memory monitor for tracking and managing memory usage
-    internal let memoryMonitor = MemoryMonitor()
+    /// 
+    /// By default, creates a new MemoryMonitor instance. You can inject a custom
+    /// instance for testing or to share monitoring across multiple views.
+    public var memoryMonitor = MemoryMonitor() {
+        didSet {
+            // Update all components that use memoryMonitor
+            updateMemoryMonitorReferences()
+        }
+    }
     
     /// The current programming language used for syntax highlighting and code completion
     public var language: Language = .plainText {
@@ -282,5 +306,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         
         // Note: Memory monitor cleanup is now handled in removeFromSuperview
         // to avoid creating tasks in deinit
+    }
+    
+    // MARK: - Private Methods
+    
+    /// Updates memory monitor references in all dependent components
+    private func updateMemoryMonitorReferences() {
+        // Update completion manager
+        completionManager = CompletionManager(memoryMonitor: memoryMonitor)
+        
+        // Update other components that use memoryMonitor
+        // Note: Most components already receive memoryMonitor through their initializers
+        // This method is called when memoryMonitor is changed after initialization
     }
 }

@@ -187,7 +187,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Apply complex performance configuration
         var config = EditorConfiguration()
         config.performance.maxSyntaxHighlightingLength = 100_000
-        config.performance.textChangeDebounceInterval = 0.5
+        config.performance.textChangeDebounceInterval = .milliseconds(500)
         config.performance.useHardwareAcceleration = true
         // Note: largeFileOptimizations is handled automatically based on file size
         

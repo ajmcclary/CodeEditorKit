@@ -12,6 +12,65 @@ import UIKit
 import AppKit
 #endif
 
+// MARK: - Shared TokenType (Available for all platforms)
+
+/// Token types for Swift syntax highlighting
+public enum SwiftTokenType: String, CaseIterable {
+    case keyword
+    case identifier
+    case string
+    case number
+    case comment
+    case type
+    case function
+    case property
+    case `operator`
+    case punctuation
+    case whitespace
+    case unknown
+    
+    /// Returns the appropriate color for this token type
+    public var color: PlatformColor {
+        switch self {
+        case .keyword:
+            PlatformColors.systemPurple
+
+        case .identifier:
+            PlatformColors.label
+
+        case .string:
+            PlatformColors.systemRed
+
+        case .number:
+            PlatformColors.systemBlue
+
+        case .comment:
+            PlatformColors.systemGreen
+
+        case .type:
+            PlatformColors.systemTeal
+
+        case .function:
+            PlatformColors.systemIndigo
+
+        case .property:
+            PlatformColors.systemOrange
+
+        case .operator:
+            PlatformColors.systemPink
+
+        case .punctuation:
+            PlatformColors.secondaryLabel
+
+        case .whitespace:
+            PlatformColors.clear
+
+        case .unknown:
+            PlatformColors.label
+        }
+    }
+}
+
 // MARK: - SwiftSyntaxHighlighter
 
 #if !targetEnvironment(macCatalyst)
@@ -36,62 +95,8 @@ public final class SwiftSyntaxHighlighter: Sendable {
     /// Optimized punctuation character set
     static let punctuation: Set<Character> = ["(", ")", "{", "}", "[", "]", ",", ".", ";", ":"]
 
-    // MARK: - Token Types
-
-    public enum TokenType: String, CaseIterable {
-        case keyword
-        case identifier
-        case string
-        case number
-        case comment
-        case type
-        case function
-        case property
-        case `operator`
-        case punctuation
-        case whitespace
-        case unknown
-
-        public var color: PlatformColor {
-            switch self {
-            case .keyword:
-                PlatformColors.systemPurple
-
-            case .identifier:
-                PlatformColors.label
-
-            case .string:
-                PlatformColors.systemRed
-
-            case .number:
-                PlatformColors.systemBlue
-
-            case .comment:
-                PlatformColors.systemGreen
-
-            case .type:
-                PlatformColors.systemTeal
-
-            case .function:
-                PlatformColors.systemIndigo
-
-            case .property:
-                PlatformColors.systemOrange
-
-            case .operator:
-                PlatformColors.systemPink
-
-            case .punctuation:
-                PlatformColors.secondaryLabel
-
-            case .whitespace:
-                PlatformColors.clear
-
-            case .unknown:
-                PlatformColors.label
-            }
-        }
-    }
+    // Note: Using shared SwiftTokenType instead of nested TokenType
+    public typealias TokenType = SwiftTokenType
 
     // Note: HighlightedToken is defined in SyntaxHighlightingCoordinator.swift
 
@@ -312,38 +317,8 @@ extension NSRange {
 public final class SwiftSyntaxHighlighter: Sendable {
     public init() {}
     
-    // Duplicate TokenType enum for Mac Catalyst compatibility
-    public enum TokenType: String, CaseIterable {
-        case keyword
-        case identifier
-        case string
-        case number
-        case comment
-        case type
-        case function
-        case property
-        case `operator`
-        case punctuation
-        case whitespace
-        case unknown
-
-        public var color: PlatformColor {
-            switch self {
-            case .keyword: return PlatformColors.systemPurple
-            case .identifier: return PlatformColors.label
-            case .string: return PlatformColors.systemRed
-            case .number: return PlatformColors.systemBlue
-            case .comment: return PlatformColors.systemGreen
-            case .type: return PlatformColors.systemTeal
-            case .function: return PlatformColors.systemIndigo
-            case .property: return PlatformColors.systemOrange
-            case .operator: return PlatformColors.systemPink
-            case .punctuation: return PlatformColors.secondaryLabel
-            case .whitespace: return PlatformColors.clear
-            case .unknown: return PlatformColors.label
-            }
-        }
-    }
+    // Use shared SwiftTokenType instead of duplicating
+    public typealias TokenType = SwiftTokenType
     
     public func highlight(source: String) -> [HighlightedToken] {
         // Fallback to basic keyword-based highlighting on Mac Catalyst

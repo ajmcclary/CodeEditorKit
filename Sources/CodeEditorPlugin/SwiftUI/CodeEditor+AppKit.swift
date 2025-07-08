@@ -34,7 +34,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         
         // Handle focus request from environment
         if context.environment.codeEditorBecomeFirstResponder {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 nsView.window?.makeFirstResponder(nsView.textView)
             }
         }

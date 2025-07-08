@@ -8,14 +8,14 @@ import os.log
 
 /// Engine for managing code folding in the editor
 @MainActor
-public class CodeFoldingEngine: ObservableObject {
+internal class CodeFoldingEngine: ObservableObject {
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "CodeFoldingEngine")
 
     // MARK: - Published Properties
 
-    @Published public private(set) var foldableRegions: [FoldableRegion] = []
-    @Published public private(set) var foldedRegions: Set<UUID> = []
-    @Published public private(set) var isProcessing = false
+    @Published internal private(set) var foldableRegions: [FoldableRegion] = []
+    @Published internal private(set) var foldedRegions: Set<UUID> = []
+    @Published internal private(set) var isProcessing = false
 
     // MARK: - Properties
 
@@ -26,16 +26,16 @@ public class CodeFoldingEngine: ObservableObject {
 
     // MARK: - Configuration
 
-    public var configuration = CodeFoldingConfiguration()
+    internal var configuration = CodeFoldingConfiguration()
 
     // MARK: - Initialization
 
-    public init() {
+    internal init() {
         setupDefaultProviders()
     }
 
     /// Attach to a text view
-    public func attach(to textView: CodeEditorView) {
+    internal func attach(to textView: CodeEditorView) {
         self.textView = textView
         updateFoldableRegions()
     }
@@ -43,7 +43,7 @@ public class CodeFoldingEngine: ObservableObject {
     // MARK: - Provider Management
 
     /// Register a folding provider for a language
-    public func registerProvider(_ provider: CodeFoldingProvider, for language: Language) {
+    internal func registerProvider(_ provider: CodeFoldingProvider, for language: Language) {
         providers[language] = provider
         logger.info("Registered folding provider for \(language.name)")
     }
@@ -85,7 +85,7 @@ public class CodeFoldingEngine: ObservableObject {
     // MARK: - Folding Operations
 
     /// Toggle fold at line
-    public func toggleFold(at line: Int) {
+    internal func toggleFold(at line: Int) {
         guard let region = foldableRegion(at: line) else { return }
 
         if foldedRegions.contains(region.id) {
@@ -96,7 +96,7 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Fold a specific region
-    public func fold(_ region: FoldableRegion) {
+    internal func fold(_ region: FoldableRegion) {
         guard !foldedRegions.contains(region.id),
               let textView else { return }
 
@@ -121,7 +121,7 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Unfold a specific region
-    public func unfold(_ region: FoldableRegion) {
+    internal func unfold(_ region: FoldableRegion) {
         guard foldedRegions.contains(region.id),
               let textView else { return }
 
@@ -146,14 +146,14 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Fold all regions
-    public func foldAll() {
+    internal func foldAll() {
         for region in foldableRegions where !foldedRegions.contains(region.id) {
             fold(region)
         }
     }
 
     /// Unfold all regions
-    public func unfoldAll() {
+    internal func unfoldAll() {
         let regionsToUnfold = foldableRegions.filter { foldedRegions.contains($0.id) }
 
         for region in regionsToUnfold {
@@ -162,7 +162,7 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Fold all regions at a specific level
-    public func foldLevel(_ level: Int) {
+    internal func foldLevel(_ level: Int) {
         for region in foldableRegions where region.level == level {
             if !foldedRegions.contains(region.id) {
                 fold(region)
@@ -171,7 +171,7 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Get foldable region at line
-    public func foldableRegion(at line: Int) -> FoldableRegion? {
+    internal func foldableRegion(at line: Int) -> FoldableRegion? {
         foldableRegions.first { region in
             let startLine = lineNumber(for: region.range.location)
             let endLine = lineNumber(for: NSMaxRange(region.range))
@@ -180,13 +180,13 @@ public class CodeFoldingEngine: ObservableObject {
     }
 
     /// Check if line is in a folded region
-    public func isLineFolded(_ line: Int) -> Bool {
+    internal func isLineFolded(_ line: Int) -> Bool {
         guard let region = foldableRegion(at: line) else { return false }
         return foldedRegions.contains(region.id)
     }
     
     /// Check if line is the start of a foldable region
-    public func isStartOfFoldableRegion(_ line: Int) -> Bool {
+    internal func isStartOfFoldableRegion(_ line: Int) -> Bool {
         foldableRegions.contains { region in
             let startLine = lineNumber(for: region.range.location)
             return line == startLine
@@ -196,7 +196,7 @@ public class CodeFoldingEngine: ObservableObject {
     // MARK: - Region Detection
 
     /// Update foldable regions based on current text
-    public func updateFoldableRegions() {
+    internal func updateFoldableRegions() {
         updateTask?.cancel()
 
         updateTask = Task { [weak self] in
@@ -394,16 +394,16 @@ public class CodeFoldingEngine: ObservableObject {
 // MARK: - Supporting Types
 
 /// Foldable region in the text
-public struct FoldableRegion: Identifiable {
-    public let id = UUID()
-    public var range: NSRange
-    public var title: String
-    public var type: FoldingType
-    public var level: Int = 0
-    public var parentId: UUID?
-    public var foldedText: String?
+internal struct FoldableRegion: Identifiable {
+    internal let id = UUID()
+    internal var range: NSRange
+    internal var title: String
+    internal var type: FoldingType
+    internal var level: Int = 0
+    internal var parentId: UUID?
+    internal var foldedText: String?
 
-    public init(range: NSRange, title: String, type: FoldingType) {
+    init(range: NSRange, title: String, type: FoldingType) {
         self.range = range
         self.title = title
         self.type = type
@@ -411,7 +411,7 @@ public struct FoldableRegion: Identifiable {
 }
 
 /// Types of foldable regions
-public enum FoldingType: Equatable {
+internal enum FoldingType: Equatable {
     case function
     case `class`
     case method
@@ -423,21 +423,21 @@ public enum FoldingType: Equatable {
 }
 
 /// Code folding configuration
-public struct CodeFoldingConfiguration {
-    public var enabled = true
-    public var showGutterControls = true
-    public var hidesFoldedContent = true
-    public var minimumLineCount = 3
-    public var foldedIndicator = " ⋯ "
+internal struct CodeFoldingConfiguration {
+    internal var enabled = true
+    internal var showGutterControls = true
+    internal var hidesFoldedContent = true
+    internal var minimumLineCount = 3
+    internal var foldedIndicator = " ⋯ "
 
-    public var indicatorColor = PlatformColors.secondaryLabel
+    internal var indicatorColor = PlatformColors.secondaryLabel
 
-    public var animatesFolding = true
-    public var saveFoldState = true
+    internal var animatesFolding = true
+    internal var saveFoldState = true
 }
 
 /// Protocol for language-specific folding providers
-public protocol CodeFoldingProvider {
+internal protocol CodeFoldingProvider {
     func detectFoldableRegions(in text: String) async -> [FoldableRegion]
 }
 

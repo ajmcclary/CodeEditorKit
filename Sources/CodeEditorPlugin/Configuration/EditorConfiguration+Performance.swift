@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(SwiftUI)
+import SwiftUI // For Duration type
+#endif
 
 extension EditorConfiguration {
     /// Performance configuration options for optimization settings.
@@ -28,19 +31,19 @@ extension EditorConfiguration {
         public var maxVisibleLines: Int = PlatformConstants.maxVisibleLines
         
         /// Delay before triggering syntax highlighting
-        public var highlightingDebounceInterval: TimeInterval = PlatformConstants.defaultHighlightingDebounceInterval
+        public var highlightingDebounceInterval: Duration = .seconds(PlatformConstants.defaultHighlightingDebounceInterval)
         
         /// Whether to enable smooth scrolling
         public var smoothScrolling: Bool = true
         
-        /// Debounce interval for text changes (in seconds).
+        /// Debounce interval for text changes.
         ///
         /// Delays processing of rapid text changes to improve performance.
         /// Syntax highlighting and other expensive operations wait for this
         /// duration of inactivity before processing.
         ///
         /// - Note: Lower values provide more responsive feedback but use more CPU.
-        public var textChangeDebounceInterval: TimeInterval = 0.1
+        public var textChangeDebounceInterval: Duration = .milliseconds(100)
         
         /// Whether to animate code folding operations.
         ///
@@ -77,6 +80,9 @@ extension EditorConfiguration.Performance: Codable {
         case renderingUpdateStrategy
         case maxVisibleLines
         case highlightingDebounceInterval
+        case textChangeDebounceInterval
+        case smoothScrolling
+        case animateCodeFolding
     }
     
     public init(from decoder: Decoder) throws {
@@ -85,7 +91,15 @@ extension EditorConfiguration.Performance: Codable {
         useHardwareAcceleration = try container.decodeIfPresent(Bool.self, forKey: .useHardwareAcceleration) ?? true
         renderingUpdateStrategy = try container.decodeIfPresent(RenderingUpdateStrategy.self, forKey: .renderingUpdateStrategy) ?? .adaptive
         maxVisibleLines = try container.decodeIfPresent(Int.self, forKey: .maxVisibleLines) ?? 1_000
-        highlightingDebounceInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .highlightingDebounceInterval) ?? 0.1
+        // Decode as TimeInterval for backward compatibility, then convert to Duration
+        let highlightInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .highlightingDebounceInterval) ?? 0.1
+        highlightingDebounceInterval = .seconds(highlightInterval)
+        
+        let textInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .textChangeDebounceInterval) ?? 0.1
+        textChangeDebounceInterval = .seconds(textInterval)
+        
+        smoothScrolling = try container.decodeIfPresent(Bool.self, forKey: .smoothScrolling) ?? true
+        animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -94,6 +108,10 @@ extension EditorConfiguration.Performance: Codable {
         try container.encode(useHardwareAcceleration, forKey: .useHardwareAcceleration)
         try container.encode(renderingUpdateStrategy, forKey: .renderingUpdateStrategy)
         try container.encode(maxVisibleLines, forKey: .maxVisibleLines)
-        try container.encode(highlightingDebounceInterval, forKey: .highlightingDebounceInterval)
+        // Encode as TimeInterval for backward compatibility
+        try container.encode(highlightingDebounceInterval.timeInterval, forKey: .highlightingDebounceInterval)
+        try container.encode(textChangeDebounceInterval.timeInterval, forKey: .textChangeDebounceInterval)
+        try container.encode(smoothScrolling, forKey: .smoothScrolling)
+        try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
     }
 }

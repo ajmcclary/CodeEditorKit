@@ -448,6 +448,7 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
 // 3. We use type-erased handlers to avoid capturing generic types where possible
 //
 // These warnings can be safely ignored as we ensure thread safety manually.
+
 @available(macOS 10.15, iOS 13.0, *)
 private final class EditorEventSubscription<S: Subscriber>: Subscription, @unchecked Sendable
     where S.Input == EditorEvent, S.Failure == Never {

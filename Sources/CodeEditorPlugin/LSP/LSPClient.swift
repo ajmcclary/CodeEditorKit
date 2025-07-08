@@ -104,10 +104,39 @@ public final class LSPClient: ObservableObject {
     
     // MARK: - Initialization
     
+    /// Creates a new LSP client.
+    /// 
+    /// - Important: The message handler is not automatically set up in the initializer.
+    ///   Use `createAndSetup()` for a fully initialized client, or call `setupMessageHandler()`
+    ///   manually after initialization.
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Option 1: Use the factory method (recommended)
+    /// let client = await LSPClient.createAndSetup()
+    /// 
+    /// // Option 2: Manual setup
+    /// let client = LSPClient()
+    /// await client.setupMessageHandler()
+    /// ```
     public init() {
-        Task {
-            await setupMessageHandler()
-        }
+        // No async work in synchronous init
+    }
+    
+    /// Creates and sets up a new LSP client with message handlers initialized.
+    /// This is the preferred way to create an LSP client.
+    ///
+    /// ## Example
+    /// ```swift
+    /// let client = await LSPClient.createAndSetup()
+    /// try await client.connect(configuration: serverConfig)
+    /// ```
+    ///
+    /// - Returns: A fully initialized LSP client ready for connection
+    public static func createAndSetup() async -> LSPClient {
+        let client = LSPClient()
+        await client.setupMessageHandler()
+        return client
     }
     
     deinit {
@@ -330,7 +359,11 @@ public final class LSPClient: ObservableObject {
     
     // MARK: - Private Methods
     
-    private func setupMessageHandler() async {
+    /// Sets up the message handler callbacks for processing LSP messages.
+    /// This method is automatically called by `createAndSetup()`.
+    ///
+    /// - Note: This method is idempotent and can be called multiple times safely.
+    public func setupMessageHandler() async {
         await messageHandler.setNotificationCallback { [weak self] method, params in
             Task { @MainActor [weak self] in
                 await self?.handleNotification(method: method, params: params)
