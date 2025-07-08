@@ -20,8 +20,8 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertNotNil(textView.backgroundColor)
         XCTAssertTrue(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
-        XCTAssertTrue(textView.showsLineNumbers)
-        XCTAssertTrue(textView.showsSelectedLineHighlight)
+        XCTAssertTrue(textView.isLineNumbersEnabled)
+        XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
     }
 
     @MainActor
@@ -29,11 +29,11 @@ final class ConfigurationTests: XCTestCase {
         let textView = CodeEditorView(frame: .zero)
 
         // Test changing configuration
-        textView.showsLineNumbers = true
-        XCTAssertTrue(textView.showsLineNumbers)
+        textView.isLineNumbersEnabled = true
+        XCTAssertTrue(textView.isLineNumbersEnabled)
 
-        textView.showsSelectedLineHighlight = true
-        XCTAssertTrue(textView.showsSelectedLineHighlight)
+        textView.isSelectedLineHighlightEnabled = true
+        XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
 
         textView.isEditable = false
         XCTAssertFalse(textView.isEditable)
