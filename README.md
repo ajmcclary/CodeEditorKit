@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/tests-425%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-418%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
@@ -21,7 +21,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs, supporting custom language extensions, tool integrations, and advanced IDE features.
 
-- ✅ **Production-Grade Quality:** Verified with **425 automated tests** (390 core + 35 sample app, 100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 42 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **418 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 42 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -71,7 +71,6 @@ struct ContentView: View {
     @State private var code = """
         func greetWorld() {
             print("Hello, CodeEditorPlugin!")
-            // TODO: Add more features
         }
         """
     @State private var configuration = EditorConfiguration.default
@@ -422,7 +421,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 425 tests passing in continuous integration
+- **100% Test Pass Rate**: All 418 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -449,7 +448,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 425 tests
+swift test                   # Run all 418 tests
 swift test --parallel        # Run tests in parallel for speed
 ```
 

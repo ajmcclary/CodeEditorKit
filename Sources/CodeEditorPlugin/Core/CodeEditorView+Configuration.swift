@@ -100,7 +100,7 @@ extension CodeEditorView {
     }
 
     internal func updateSelectedLineHighlight() {
-        guard showsSelectedLineHighlight else {
+        guard isSelectedLineHighlightEnabled else {
             removeLineHighlight()
             return
         }
@@ -186,7 +186,7 @@ extension CodeEditorView {
 
     private func updateLayoutManagerSettings() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        layoutManager?.showsInvisibleCharacters = showsInvisibleCharacters
+        layoutManager?.showsInvisibleCharacters = isInvisibleCharactersEnabled
         #else
         // UITextView's layout manager doesn't support showsInvisibleCharacters
         #endif

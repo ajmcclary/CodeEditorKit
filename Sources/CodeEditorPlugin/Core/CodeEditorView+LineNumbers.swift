@@ -14,7 +14,7 @@ extension CodeEditorView {
     
     internal func updateGutterVisibility() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if showsLineNumbers {
+        if isLineNumbersEnabled {
             createGutterIfNeeded()
         } else {
             removeGutter()

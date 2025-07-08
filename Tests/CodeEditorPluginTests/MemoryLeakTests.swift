@@ -40,7 +40,7 @@ final class MemoryLeakTests: XCTestCase {
             // Configure the editor
             editor.text = "test content"
             editor.language = .swift
-            editor.showsLineNumbers = true
+            editor.isLineNumbersEnabled = true
             
             // Ensure it exists before we release it
             XCTAssertNotNil(weakEditor)
@@ -193,7 +193,7 @@ final class MemoryLeakTests: XCTestCase {
             
             // Enable syntax highlighting
             editor.language = .swift
-            editor.showsSyntaxHighlighting = true
+            editor.isSyntaxHighlightingEnabled = true
             editor.text = "func hello() { print(\"world\") }"
             
             // Force layout update
@@ -204,7 +204,7 @@ final class MemoryLeakTests: XCTestCase {
             #endif
             
             // Explicit cleanup to break syntax highlighting retain cycles
-            editor.showsSyntaxHighlighting = false
+            editor.isSyntaxHighlightingEnabled = false
             editor.text = ""
             editor.removeFromSuperview()
         }

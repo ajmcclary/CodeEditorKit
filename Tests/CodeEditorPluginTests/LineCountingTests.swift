@@ -12,7 +12,7 @@ final class LineCountingTests: XCTestCase {
         editor.text = ""
         
         // Private method - we'll test through the gutter view
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         
         // The gutter view should exist on macOS only
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -29,7 +29,7 @@ final class LineCountingTests: XCTestCase {
         
         // Test that the line count is calculated correctly
         // We'll validate by checking that gutter is created with proper width
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertNotNil(editor.gutterView)
         #else
@@ -42,7 +42,7 @@ final class LineCountingTests: XCTestCase {
         let editor = CodeEditorView(frame: .zero)
         editor.text = "Line 1\nLine 2\nLine 3"
         
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertNotNil(editor.gutterView)
         #else
@@ -56,7 +56,7 @@ final class LineCountingTests: XCTestCase {
         editor.text = "Line 1\nLine 2\n"
         
         // This should show 3 lines (the empty line after the last newline)
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertNotNil(editor.gutterView)
         #else
@@ -88,7 +88,7 @@ final class LineCountingTests: XCTestCase {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let editor = CodeEditorView(frame: .zero)
         editor.text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         
         // Force layout
         editor.layout()

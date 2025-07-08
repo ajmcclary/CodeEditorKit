@@ -63,10 +63,10 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.configuration = config
         
         // Verify settings were applied
-        XCTAssertTrue(textView.showsLineNumbers)
-        XCTAssertTrue(textView.showsInvisibleCharacters)
-        XCTAssertTrue(textView.showsSelectedLineHighlight)
-        XCTAssertTrue(textView.showsSyntaxHighlighting)
+        XCTAssertTrue(textView.isLineNumbersEnabled)
+        XCTAssertTrue(textView.isInvisibleCharactersEnabled)
+        XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
+        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(textView.font?.pointSize, 16.0)
@@ -211,7 +211,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         
         // Test minimal configuration then switch to full
         textView.configuration = .minimal
-        XCTAssertFalse(textView.showsLineNumbers)
+        XCTAssertFalse(textView.isLineNumbersEnabled)
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         #else
@@ -260,7 +260,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         """
         
         // Verify theme and syntax highlighting work together
-        XCTAssertTrue(textView.showsSyntaxHighlighting)
+        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
         XCTAssertEqual(textView.language, .swift)
         
         // Note: usesFindBar and displaysLinkToolTips are not part of the CodeEditorView API
@@ -283,7 +283,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.configuration = config
         
         // Modify individual properties
-        textView.showsLineNumbers = false
+        textView.isLineNumbersEnabled = false
         
         // Apply new configuration
         var newConfig = EditorConfiguration()
@@ -294,7 +294,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         textView.configuration = newConfig
         
         // Verify new configuration is applied
-        XCTAssertTrue(textView.showsLineNumbers)
+        XCTAssertTrue(textView.isLineNumbersEnabled)
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Verify behavior properties from the default configuration

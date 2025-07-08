@@ -28,8 +28,8 @@ import AppKit
 /// let editor = CodeEditorView()
 /// editor.string = "func hello() {\n    logger.debug(\"Hello, World!\")\n}"
 /// editor.language = .swift
-/// editor.showsLineNumbers = true
-/// editor.enablesCodeCompletion = true
+/// editor.isLineNumbersEnabled = true
+/// editor.isCodeCompletionEnabled = true
 /// ```
 ///
 /// ## Memory Monitoring
@@ -180,7 +180,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// 
     /// By default, creates a new MemoryMonitor instance. You can inject a custom
     /// instance for testing or to share monitoring across multiple views.
-    internal var memoryMonitor = MemoryMonitor() {
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let sharedMonitor = MemoryMonitor()
+    /// let editor = CodeEditorView()
+    /// editor.memoryMonitor = sharedMonitor
+    /// ```
+    public var memoryMonitor = MemoryMonitor() {
         didSet {
             // Update all components that use memoryMonitor
             updateMemoryMonitorReferences()

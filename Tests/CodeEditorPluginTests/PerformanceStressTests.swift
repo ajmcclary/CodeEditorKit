@@ -132,7 +132,7 @@ final class PerformanceStressTests: XCTestCase {
             let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             editor.text = "Editor \(index): " + String(repeating: "test ", count: 1_000)
             editor.language = .swift
-            editor.showsLineNumbers = true
+            editor.isLineNumbersEnabled = true
             editors.append(editor)
         }
         

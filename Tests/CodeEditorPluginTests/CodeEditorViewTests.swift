@@ -78,11 +78,11 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineNumbers() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        XCTAssertTrue(textView.showsLineNumbers)  // Default is true
-        textView.showsLineNumbers = false
-        XCTAssertFalse(textView.showsLineNumbers)
-        textView.showsLineNumbers = true
-        XCTAssertTrue(textView.showsLineNumbers)
+        XCTAssertTrue(textView.isLineNumbersEnabled)  // Default is true
+        textView.isLineNumbersEnabled = false
+        XCTAssertFalse(textView.isLineNumbersEnabled)
+        textView.isLineNumbersEnabled = true
+        XCTAssertTrue(textView.isLineNumbersEnabled)
     }
 
     @MainActor
@@ -130,11 +130,11 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineHighlighting() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        XCTAssertTrue(textView.showsSelectedLineHighlight)  // Default is true
-        textView.showsSelectedLineHighlight = false
-        XCTAssertFalse(textView.showsSelectedLineHighlight)
-        textView.showsSelectedLineHighlight = true
-        XCTAssertTrue(textView.showsSelectedLineHighlight)
+        XCTAssertTrue(textView.isSelectedLineHighlightEnabled)  // Default is true
+        textView.isSelectedLineHighlightEnabled = false
+        XCTAssertFalse(textView.isSelectedLineHighlightEnabled)
+        textView.isSelectedLineHighlightEnabled = true
+        XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
     }
 
     @MainActor
@@ -476,9 +476,9 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testSyntaxHighlightingEnabled() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        XCTAssertTrue(textView.showsSyntaxHighlighting)
-        textView.showsSyntaxHighlighting = false
-        XCTAssertFalse(textView.showsSyntaxHighlighting)
+        XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
+        textView.isSyntaxHighlightingEnabled = false
+        XCTAssertFalse(textView.isSyntaxHighlightingEnabled)
     }
 
     @MainActor
@@ -516,17 +516,17 @@ final class CodeEditorViewTests: XCTestCase {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, gutterView is managed by the text view
         XCTAssertNotNil(textView.gutterView)
-        textView.showsLineNumbers = false
+        textView.isLineNumbersEnabled = false
         XCTAssertNil(textView.gutterView)
-        textView.showsLineNumbers = true
+        textView.isLineNumbersEnabled = true
         XCTAssertNotNil(textView.gutterView)
         #else
         // On iOS/Mac Catalyst, gutter is managed by the container view
         // The text view itself doesn't have a gutter view
         XCTAssertNil(textView.gutterView)
-        XCTAssertTrue(textView.showsLineNumbers) // But the setting is there
-        textView.showsLineNumbers = false
-        XCTAssertFalse(textView.showsLineNumbers)
+        XCTAssertTrue(textView.isLineNumbersEnabled) // But the setting is there
+        textView.isLineNumbersEnabled = false
+        XCTAssertFalse(textView.isLineNumbersEnabled)
         #endif
     }
 

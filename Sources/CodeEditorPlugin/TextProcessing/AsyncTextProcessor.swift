@@ -174,8 +174,15 @@ actor AsyncTextProcessor {
         
         activeTasks[nextTask.id] = processingTask
         
-        // Handle completion
+        // Handle completion with guaranteed cleanup
         Task { @Sendable in
+            defer {
+                // Ensure cleanup happens even on cancellation
+                Task {
+                    await self.taskCompleted(nextTask.id)
+                }
+            }
+            
             do {
                 let result = try await processingTask.value
                 nextTask.completion(.success(result))
@@ -184,9 +191,6 @@ actor AsyncTextProcessor {
                     nextTask.completion(.failure(error))
                 }
             }
-            
-            // Clean up and process next
-            await self.taskCompleted(nextTask.id)
         }
         
         updateProcessingLoad()

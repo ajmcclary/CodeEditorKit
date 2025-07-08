@@ -71,7 +71,7 @@ class ViewController: NSViewController {
         
         let editor = CodeEditorView()
         editor.language = .swift
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         editor.text = "print(\"Hello, World!\")"
         
         view.addSubview(editor)
@@ -92,7 +92,7 @@ class ViewController: UIViewController {
         
         let editor = CodeEditorView()
         editor.language = .swift
-        editor.showsLineNumbers = true
+        editor.isLineNumbersEnabled = true
         editor.text = "print(\"Hello, iOS!\")"
         
         view.addSubview(editor)
@@ -118,7 +118,7 @@ let presentationConfig = EditorConfiguration.presentation
 // Apply configuration changes
 config.display.fontSize = 16
 config.layout.tabWidth = 4
-config.behavior.enableCodeCompletion = true
+config.behavior.isCodeCompletionEnabled = true
 config.layout.wrapLines = false
 
 // Apply to editor
@@ -135,7 +135,7 @@ editor.isSyntaxHighlightingEnabled = true
 
 ### Code Completion
 ```swift
-editor.enablesCodeCompletion = true
+editor.isCodeCompletionEnabled = true
 ```
 
 ### Annotations (TODO, FIXME, etc.)
@@ -146,7 +146,7 @@ editor.enablesAnnotations = true
 
 ### Line Numbers
 ```swift
-editor.showsLineNumbers = true
+editor.isLineNumbersEnabled = true
 ```
 
 ## Supported Languages

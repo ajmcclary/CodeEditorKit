@@ -17,7 +17,7 @@ extension CodeEditorView {
         super.insertText(string, replacementRange: replacementRange)
 
         // Update syntax highlighting for the affected area
-        if showsSyntaxHighlighting {
+        if isSyntaxHighlightingEnabled {
             let range = replacementRange.location != NSNotFound ? replacementRange : selectedRange
             applySyntaxHighlighting(in: range)
         }

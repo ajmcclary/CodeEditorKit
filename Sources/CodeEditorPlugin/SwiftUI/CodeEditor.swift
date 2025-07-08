@@ -38,6 +38,20 @@ extension View {
 /// }
 /// ```
 ///
+/// ## Setting Language and Theme
+///
+/// Use modifiers or factory methods to configure language and theme:
+///
+/// ```swift
+/// // Using modifiers (recommended)
+/// CodeEditor(text: $code)
+///     .codeLanguage(.swift)
+///     .codeTheme(.monokai)
+///
+/// // Using factory method
+/// CodeEditor.withLanguage($code, language: .swift, theme: .monokai)
+/// ```
+///
 /// ## Environment-Based Configuration
 ///
 /// Configure the editor using SwiftUI environment values:
@@ -177,77 +191,6 @@ public struct CodeEditor: View {
     /// ```
     public init(
         text: Binding<String>,
-        debounceInterval: Duration = .milliseconds(100)
-    ) {
-        self._text = text
-        self.textDebounceInterval = debounceInterval
-    }
-    
-    /// Creates a new code editor with text binding, language, and optional theme.
-    ///
-    /// This convenience initializer allows setting the language and theme directly
-    /// without requiring modifier chains, simplifying basic usage.
-    ///
-    /// - Parameters:
-    ///   - text: A binding to the text content of the editor
-    ///   - language: The programming language for syntax highlighting
-    ///   - theme: The color theme to apply (default: .default)
-    ///   - debounceInterval: Time interval to debounce text change events (default: 100ms)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// @State private var swiftCode = "func hello() { }"
-    /// 
-    /// var body: some View {
-    ///     CodeEditor(
-    ///         text: $swiftCode,
-    ///         language: .swift,
-    ///         theme: .monokai
-    ///     )
-    /// }
-    /// ```
-    public init(
-        text: Binding<String>,
-        language _: Language,
-        theme _: CodeEditorSwiftUITheme = .default,
-        debounceInterval: Duration = .milliseconds(100)
-    ) {
-        self._text = text
-        self.textDebounceInterval = debounceInterval
-    }
-    
-    /// Creates a new code editor with text binding and full configuration.
-    ///
-    /// This initializer provides complete control over the editor's configuration,
-    /// allowing you to pass a pre-configured `EditorConfiguration` instance.
-    ///
-    /// - Parameters:
-    ///   - text: A binding to the text content of the editor
-    ///   - configuration: The complete editor configuration
-    ///   - language: The programming language for syntax highlighting (default: .plainText)
-    ///   - theme: The color theme to apply (default: .default)
-    ///   - debounceInterval: Time interval to debounce text change events (default: 100ms)
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// @State private var code = "// Your code here"
-    /// 
-    /// var body: some View {
-    ///     CodeEditor(
-    ///         text: $code,
-    ///         configuration: .presentation,
-    ///         language: .python,
-    ///         theme: .custom(myTheme)
-    ///     )
-    /// }
-    /// ```
-    public init(
-        text: Binding<String>,
-        configuration _: EditorConfiguration,
-        language _: Language = .plainText,
-        theme _: CodeEditorSwiftUITheme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) {
         self._text = text

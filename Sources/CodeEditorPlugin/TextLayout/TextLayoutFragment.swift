@@ -5,7 +5,7 @@
 
 final class TextLayoutFragment: NSTextLayoutFragment {
     private let defaultParagraphStyle: NSParagraphStyle
-    var showsInvisibleCharacters: Bool = false
+    var isInvisibleCharactersEnabled: Bool = false
 
     init(textElement: NSTextElement, range rangeInElement: NSTextRange?, paragraphStyle: NSParagraphStyle) {
         defaultParagraphStyle = paragraphStyle
@@ -14,7 +14,7 @@ final class TextLayoutFragment: NSTextLayoutFragment {
 
     required init?(coder: NSCoder) {
         defaultParagraphStyle = NSParagraphStyle.default
-        showsInvisibleCharacters = false
+        isInvisibleCharactersEnabled = false
         super.init(coder: coder)
     }
 
@@ -83,7 +83,7 @@ final class TextLayoutFragment: NSTextLayoutFragment {
         // }
         // #endif
 
-        if showsInvisibleCharacters {
+        if isInvisibleCharactersEnabled {
             drawInvisibles(at: point, in: context)
         }
 

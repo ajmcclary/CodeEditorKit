@@ -18,7 +18,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         
         measure {
             textView.text = largeText
-            textView.showsLineNumbers = true
+            textView.isLineNumbersEnabled = true
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.needsDisplay = true
             #elseif canImport(UIKit)
@@ -34,7 +34,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         
         measure {
             textView.text = largeText
-            textView.showsLineNumbers = false
+            textView.isLineNumbersEnabled = false
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.needsDisplay = true
             #elseif canImport(UIKit)
@@ -62,7 +62,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure {
             textView.text = largeCode
             textView.language = .swift
-            textView.showsSyntaxHighlighting = true
+            textView.isSyntaxHighlightingEnabled = true
         }
     }
     
@@ -103,9 +103,9 @@ final class PerformanceConfigurationTests: XCTestCase {
         
         measure {
             // Toggle multiple configurations
-            textView.showsLineNumbers.toggle()
-            textView.showsInvisibleCharacters.toggle()
-            textView.showsSelectedLineHighlight.toggle()
+            textView.isLineNumbersEnabled.toggle()
+            textView.isInvisibleCharactersEnabled.toggle()
+            textView.isSelectedLineHighlightEnabled.toggle()
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let container = textView.textContainer {
                 container.widthTracksTextView.toggle()
@@ -130,7 +130,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         """
         textView.text = sampleCode
         textView.language = .swift
-        textView.showsSyntaxHighlighting = true
+        textView.isSyntaxHighlightingEnabled = true
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
@@ -265,10 +265,10 @@ final class PerformanceConfigurationTests: XCTestCase {
             for _ in 0..<10 {
                 let tv = CodeEditorView(frame: .zero)
                 tv.text = String(repeating: "Sample text\n", count: 100)
-                tv.showsLineNumbers = true
-                tv.showsSelectedLineHighlight = true
-                tv.showsInvisibleCharacters = true
-                tv.showsSyntaxHighlighting = true
+                tv.isLineNumbersEnabled = true
+                tv.isSelectedLineHighlightEnabled = true
+                tv.isInvisibleCharactersEnabled = true
+                tv.isSyntaxHighlightingEnabled = true
                 tv.language = .swift
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 tv.isContinuousSpellCheckingEnabled = true
@@ -299,8 +299,8 @@ final class PerformanceConfigurationTests: XCTestCase {
         """
         
         textView.text = String(repeating: complexText + "\n", count: 50)
-        textView.showsLineNumbers = true
-        textView.showsSelectedLineHighlight = true
+        textView.isLineNumbersEnabled = true
+        textView.isSelectedLineHighlightEnabled = true
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
         #else

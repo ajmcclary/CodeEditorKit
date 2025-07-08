@@ -228,29 +228,12 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     ///
     /// - SeeAlso: ``CodeEditorView/configuration``
     @MainActor public func apply(to view: CodeEditorView) {
-        // Only set configuration if it's different
-        if view.configuration != self {
-            // Set the view's configuration property which will trigger applyConfiguration()
-            view.configuration = self
-        }
+        // Set the view's configuration property which will trigger applyConfiguration()
+        // This will apply all the settings internally
+        view.configuration = self
         
-        // Apply cross-platform text input features
+        // Apply cross-platform text input features that aren't handled by applyConfiguration
         applyTextInputFeatures(to: view)
-        
-        // Apply shared settings across all platforms
-        view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.textColor = PlatformColors.label
-        
-        // Apply platform-specific settings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if layout.wrapLines {
-            view.textContainer?.widthTracksTextView = true
-            view.isHorizontallyResizable = false
-        } else {
-            view.textContainer?.widthTracksTextView = false
-            view.isHorizontallyResizable = true
-        }
-        #endif
     }
     
     /// Create a CodeFoldingConfiguration from this EditorConfiguration.

@@ -10,7 +10,10 @@ import AppKit
 package protocol CodeEditorViewProtocol {
     associatedtype GutterView
 
+    @available(*, deprecated, renamed: "isInvisibleCharactersEnabled", message: "Use isInvisibleCharactersEnabled for consistent naming")
     var showsInvisibleCharacters: Bool { get set }
+    
+    var isInvisibleCharactersEnabled: Bool { get set }
 
     associatedtype Color
     associatedtype Font
@@ -32,7 +35,10 @@ package protocol CodeEditorViewProtocol {
     var highlightSelectedLine: Bool { get set }
     var selectedLineHighlightColor: Color { get set }
 
+    @available(*, deprecated, renamed: "isLineNumbersEnabled", message: "Use isLineNumbersEnabled for consistent naming")
     var showsLineNumbers: Bool { get set }
+    
+    var isLineNumbersEnabled: Bool { get set }
 
     var font: Font { get set }
     var textColor: Color { get set }

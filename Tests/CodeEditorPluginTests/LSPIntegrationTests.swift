@@ -295,13 +295,16 @@ final class LSPIntegrationTests: XCTestCase {
     
     // MARK: - Platform Availability Tests
     
+    @MainActor
     func testPlatformAvailability() {
-        #if os(macOS)
-        // LSP should be available on macOS
-        XCTAssertTrue(true, "Running on macOS where LSP is supported")
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // LSP should be available on native macOS
+        let lspAvailability = PlatformCapabilities.shared.isFeatureAvailable(.languageServerProtocol)
+        XCTAssertTrue(lspAvailability, "LSP should be supported on native macOS")
         #else
         // LSP is not available on iOS/Catalyst
-        XCTAssertTrue(true, "Running on iOS/Catalyst where LSP is not supported")
+        let lspAvailability = PlatformCapabilities.shared.isFeatureAvailable(.languageServerProtocol)
+        XCTAssertFalse(lspAvailability, "LSP should not be supported on iOS/Catalyst")
         #endif
     }
     

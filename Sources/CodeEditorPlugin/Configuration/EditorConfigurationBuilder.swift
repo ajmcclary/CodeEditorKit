@@ -494,6 +494,35 @@ public struct EditorConfigurationBuilder {
     
     return finalConfig
   }
+  
+  /// Build the configuration with validation feedback.
+  ///
+  /// This method returns both the final configuration and any validation fixes that were applied.
+  /// Use this when you need to know if any configuration values were adjusted during validation.
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// let (config, fixes) = EditorConfigurationBuilder()
+  ///     .fontSize(200) // Too large
+  ///     .buildWithFeedback()
+  ///
+  /// if !fixes.isEmpty {
+  ///     for fix in fixes {
+  ///         logger.debug("Fixed \(fix.issue.path): \(fix.oldValue ?? "nil") -> \(fix.newValue)")
+  ///     }
+  /// }
+  /// ```
+  ///
+  /// - Returns: A tuple containing the final configuration and any validation fixes applied
+  public func buildWithFeedback() -> (configuration: EditorConfiguration, fixes: [ValidationFix]) {
+    // Validate and auto-fix any issues
+    var finalConfig = configuration
+    let validator = ConfigurationValidator()
+    let fixes = validator.autoFix(&finalConfig)
+    
+    return (finalConfig, fixes)
+  }
 }
 
 // MARK: - Convenience Extensions

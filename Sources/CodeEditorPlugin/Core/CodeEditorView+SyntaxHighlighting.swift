@@ -48,7 +48,7 @@ extension CodeEditorView {
             #endif
             
             // Check for completion triggering
-            if enablesCodeCompletion {
+            if isCodeCompletionEnabled {
                 checkForCompletionTrigger(at: editedRange)
             }
             
@@ -60,9 +60,9 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.showsSyntaxHighlighting), language: \(self.language.name)")
+        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
         
-        guard showsSyntaxHighlighting else {
+        guard isSyntaxHighlightingEnabled else {
             Self.logger.debug("❌ Syntax highlighting disabled, cancelling")
             asyncHighlighter.cancelAllHighlighting()
             return
@@ -83,7 +83,7 @@ extension CodeEditorView {
             return
         }
         
-        guard showsSyntaxHighlighting else {
+        guard isSyntaxHighlightingEnabled else {
             return
         }
         

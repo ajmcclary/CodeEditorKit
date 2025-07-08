@@ -14,7 +14,7 @@ extension CodeEditorView {
     
     /// Check if completion should be triggered after text editing
     internal func checkForCompletionTrigger(at editedRange: NSRange) {
-        guard enablesCodeCompletion,
+        guard isCodeCompletionEnabled,
               editedRange.length <= 1 // Only trigger on single character insertion
         else {
             return
@@ -69,11 +69,11 @@ extension CodeEditorView {
     /// editor.requestCompletion(triggerKind: .automatic, triggerCharacter: ".")
     /// ```
     ///
-    /// - Note: Completion must be enabled via `enablesCodeCompletion` or configuration
+    /// - Note: Completion must be enabled via `isCodeCompletionEnabled` or configuration
     ///
-    /// - SeeAlso: `hideCompletionPopup()`, `enablesCodeCompletion`, `CompletionProvider`
+    /// - SeeAlso: `hideCompletionPopup()`, `isCodeCompletionEnabled`, `CompletionProvider`
     public func requestCompletion(triggerKind: CompletionTriggerKind = .manual, triggerCharacter: String? = nil) {
-        guard enablesCodeCompletion else { return }
+        guard isCodeCompletionEnabled else { return }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let cursorPosition = selectedRange.location

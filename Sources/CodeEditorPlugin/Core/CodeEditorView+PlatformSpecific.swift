@@ -89,7 +89,7 @@ extension CodeEditorView {
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func toggleRuler(_: Any?) {
-        showsLineNumbers.toggle()
+        isLineNumbersEnabled.toggle()
     }
     #endif
     

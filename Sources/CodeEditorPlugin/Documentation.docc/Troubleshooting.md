@@ -82,7 +82,7 @@ config.behavior.syntaxHighlightingDebounce = 100 // milliseconds
 ```swift
 // Option 1: Direct view (macOS handles gutter internally)
 let editor = CodeEditorView()
-editor.showsLineNumbers = true
+editor.isLineNumbersEnabled = true
 
 // Option 2: Container view (manages gutter separately)
 let container = CodeEditorContainerView()
@@ -132,7 +132,7 @@ xcodebuild -workspace CodeEditorSample.xcworkspace \
 **Solution**: LSP is macOS-only due to sandboxing. Use enhanced local completion:
 ```swift
 config.behavior.enableLSP = false  // Disable on iOS
-config.behavior.enableCodeCompletion = true  // Use local providers
+config.behavior.isCodeCompletionEnabled = true  // Use local providers
 ```
 
 ### Context Menu Not Appearing

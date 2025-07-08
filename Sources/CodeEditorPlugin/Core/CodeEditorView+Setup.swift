@@ -13,6 +13,7 @@ extension CodeEditorView {
     // MARK: - Setup Methods
     
     internal func setupTextView() {
+        #if DEBUG
         Self.logger.debug("CodeEditorView setupTextView: Starting setup")
         Self.logger.debug("CodeEditorView setupTextView: textStorage = exists")
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -29,8 +30,10 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         Self.logger.debug("CodeEditorView setupTextView: textContentStorage = \(self.textContentStorage != nil ? "exists" : "nil")")
         #endif
+        #endif
         
         // Check which TextKit version we're using
+        #if DEBUG
         if textLayoutManager != nil {
             Self.logger.debug("CodeEditorView setupTextView: Using TextKit2")
         } else {
@@ -44,17 +47,22 @@ extension CodeEditorView {
             Self.logger.debug("CodeEditorView setupTextView: Using TextKit1 (UITextView default)")
             #endif
         }
+        #endif
         
         // Try to ensure we're using TextKit2 if possible
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if DEBUG
         if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
             Self.logger.debug("CodeEditorView setupTextView: Attempting to initialize with TextKit2")
             // Force TextKit2 initialization if needed
             // This is a fallback - normally NSTextView should auto-initialize with TextKit2
         }
+        #endif
         #else
         // For iOS/Mac Catalyst, textLayoutManager is always nil since UITextView doesn't expose TextKit2
+        #if DEBUG
         Self.logger.debug("CodeEditorView setupTextView: TextKit2 detection not available on iOS/Mac Catalyst")
+        #endif
         #endif
         
         // Set up the text view

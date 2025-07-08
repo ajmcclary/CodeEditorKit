@@ -222,6 +222,24 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration.apply(to: textView)
     }
     
+    /// Apply text color for Mac Catalyst
+    #if targetEnvironment(macCatalyst)
+    func applyMacCatalystTextColor(to textView: UITextView) {
+        guard !textView.text.isEmpty else { return }
+        
+        let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        
+        let textStorage = textView.textStorage
+        if textStorage.length > 0 {
+            textStorage.beginEditing()
+            textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.endEditing()
+        }
+    }
+    #endif
+    
     // MARK: - Container Setup and Update
     
     /// Set up a container view with initial values
@@ -249,18 +267,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         
         #if targetEnvironment(macCatalyst)
         // For Mac Catalyst, immediately apply color to the newly set text
-        if !text.isEmpty {
-            let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? .white : .black
-            }
-            
-            let textStorage = textView.textStorage
-            if textStorage.length > 0 {
-                textStorage.beginEditing()
-                textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
-                textStorage.endEditing()
-            }
-        }
+        applyMacCatalystTextColor(to: textView)
         #endif
         #endif
         
@@ -370,18 +377,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             
             #if targetEnvironment(macCatalyst)
             // For Mac Catalyst, immediately apply color to the updated text
-            if !text.isEmpty {
-                let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
-                    traitCollection.userInterfaceStyle == .dark ? .white : .black
-                }
-                
-                let textStorage = textView.textStorage
-                if textStorage.length > 0 {
-                    textStorage.beginEditing()
-                    textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
-                    textStorage.endEditing()
-                }
-            }
+            applyMacCatalystTextColor(to: textView)
             #endif
             
             // Restore selection if possible
