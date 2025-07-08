@@ -22,7 +22,7 @@ final class QuickIsFlippedTest: XCTestCase {
         XCTAssertTrue(textView.isFlipped, "CodeEditorView handles flipped coordinates internally")
 
         // Test 3: Enable line numbers and check gutter view
-        textView.showsLineNumbers = true
+        textView.isLineNumbersEnabled = true
         textView.layoutSubtreeIfNeeded()
 
         if let gutterView = textView.subviews.first(where: { $0 is GutterView }) {

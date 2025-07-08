@@ -33,16 +33,16 @@ final class SimplifiedIntegrationTests: XCTestCase {
             // Verify configuration
             switch preset {
             case .fullFeatured:
-                XCTAssertTrue(textView.showsLineNumbers)
+                XCTAssertTrue(textView.isLineNumbersEnabled)
                 XCTAssertTrue(textView.isEditable)
 
             case .minimal:
-                XCTAssertFalse(textView.showsLineNumbers)
+                XCTAssertFalse(textView.isLineNumbersEnabled)
                 XCTAssertTrue(textView.isEditable)
 
             case .readOnly:
                 XCTAssertFalse(textView.isEditable)
-                XCTAssertTrue(textView.showsLineNumbers)
+                XCTAssertTrue(textView.isLineNumbersEnabled)
 
             case .markdown:
                 XCTAssertTrue(config.layout.wrapLines)
@@ -102,11 +102,11 @@ final class SimplifiedIntegrationTests: XCTestCase {
 
         // 1. Start with full featured config
         let config = ConfigurationPreset.fullFeatured.configuration
-        textView.showsLineNumbers = config.display.showLineNumbers
+        textView.isLineNumbersEnabled = config.display.showLineNumbers
         textView.isEditable = config.behavior.isEditable
         textView.text = "Initial code"
 
-        XCTAssertTrue(textView.showsLineNumbers)
+        XCTAssertTrue(textView.isLineNumbersEnabled)
         XCTAssertTrue(textView.isEditable)
         XCTAssertEqual(textView.text, "Initial code")
 
