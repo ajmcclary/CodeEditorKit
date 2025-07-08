@@ -36,11 +36,8 @@ class TextLocationRange: UITextRange {
 }
 
 extension UITextRange {
-    var nsTextRange: NSTextRange {
-        guard let range = self as? TextLocationRange else {
-            fatalError("Invalid type")
-        }
-        return range.textRange
+    var nsTextRange: NSTextRange? {
+        (self as? TextLocationRange)?.textRange
     }
 }
 #else

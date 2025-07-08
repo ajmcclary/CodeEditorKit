@@ -137,6 +137,28 @@ public struct EditorConfigurationBuilder {
   public func showLineNumbers(_ show: Bool) -> Self {
     with { $0.display.showLineNumbers = show }
   }
+  
+  /// Sets the width of the gutter area.
+  ///
+  /// The gutter contains line numbers and other editor annotations.
+  /// Adjust this to accommodate different line number lengths or touch targets.
+  ///
+  /// - Parameter width: The gutter width in points (recommended: 30-60)
+  /// - Returns: The builder instance for method chaining
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// let config = EditorConfigurationBuilder()
+  ///     .gutterWidth(40)   // Default width
+  ///     .gutterWidth(50)   // Wider for touch targets on iOS
+  ///     .gutterWidth(30)   // Compact for small screens
+  ///     .build()
+  /// ```
+  @discardableResult
+  public func gutterWidth(_ width: CGFloat) -> Self {
+    with { $0.layout.gutterWidth = width }
+  }
 
   /// Controls whether syntax highlighting is enabled
   /// - Parameter enabled: Whether to enable syntax highlighting
@@ -286,6 +308,14 @@ public struct EditorConfigurationBuilder {
   @discardableResult
   public func maxHighlightingLength(_ length: Int) -> Self {
     with { $0.performance.maxSyntaxHighlightingLength = length }
+  }
+  
+  /// Sets a custom memory monitor instance
+  /// - Parameter monitor: The memory monitor to use, or nil to use default
+  /// - Returns: The builder for chaining
+  @discardableResult
+  public func memoryMonitor(_ monitor: MemoryMonitor?) -> Self {
+    with { $0.performance.memoryMonitor = monitor }
   }
 
   // MARK: - Language Configuration

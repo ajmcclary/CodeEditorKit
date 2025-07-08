@@ -159,7 +159,8 @@ public struct CodeEditor: View {
     @Environment(\.codeEditorConfiguration) private var configuration
     
     // Initial values from convenience initializers
-    // No longer needed - we'll use environment values directly
+    private var initialLanguage: Language?
+    private var initialTheme: CodeEditorSwiftUITheme?
     
     // Callbacks
     private var onTextChange: ((String) -> Void)?
@@ -195,15 +196,56 @@ public struct CodeEditor: View {
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
+        self.initialLanguage = nil
+        self.initialTheme = nil
+    }
+    
+    /// Creates a new code editor with text binding, language, and theme.
+    ///
+    /// This convenience initializer allows you to specify the language and theme
+    /// directly without using environment modifiers or factory methods.
+    ///
+    /// - Parameters:
+    ///   - text: A binding to the text content of the editor
+    ///   - language: The programming language for syntax highlighting
+    ///   - theme: The color theme to apply
+    ///   - debounceInterval: Time interval to debounce text change events (default: 100ms)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @State private var code = "// Hello, World!"
+    /// 
+    /// var body: some View {
+    ///     CodeEditor(
+    ///         text: $code,
+    ///         language: .swift,
+    ///         theme: .dark
+    ///     )
+    /// }
+    /// ```
+    public init(
+        text: Binding<String>,
+        language: Language,
+        theme: CodeEditorSwiftUITheme = .default,
+        debounceInterval: Duration = .milliseconds(100)
+    ) {
+        self._text = text
+        self.textDebounceInterval = debounceInterval
+        self.initialLanguage = language
+        self.initialTheme = theme
     }
     
     // MARK: - Body
     
     public var body: some View {
-        CodeEditorRepresentable(
+        let effectiveLanguage = initialLanguage ?? language
+        let effectiveTheme = initialTheme ?? theme
+        
+        return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
-            language: language,
-            theme: theme,
+            language: effectiveLanguage,
+            theme: effectiveTheme,
             configuration: configuration,
             isFocused: Binding(
                 get: { isFocused },
@@ -216,8 +258,8 @@ public struct CodeEditor: View {
         .searchable(text: $searchText)
         .codeEditorFocusable()
         .focused($isFocused)
-        .environment(\.codeEditorLanguage, language)
-        .environment(\.codeEditorTheme, theme)
+        .environment(\.codeEditorLanguage, effectiveLanguage)
+        .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, configuration)
     }
     

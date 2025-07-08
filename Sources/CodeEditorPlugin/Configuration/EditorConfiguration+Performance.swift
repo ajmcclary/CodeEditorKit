@@ -8,7 +8,7 @@ extension EditorConfiguration {
     ///
     /// Controls performance-related features including syntax highlighting limits,
     /// rendering optimizations, and resource usage.
-    public struct Performance: Equatable, Sendable {
+    public struct Performance: Sendable {
         // MARK: - Properties
         
         /// Maximum file length for syntax highlighting (0 = unlimited)
@@ -52,6 +52,21 @@ extension EditorConfiguration {
         ///
         /// - Note: Disable for better performance with very large files.
         public var animateCodeFolding: Bool = true
+        
+        /// Custom memory monitor instance for tracking memory usage.
+        ///
+        /// When nil, the code editor will create its own instance.
+        /// Set this to share a memory monitor across multiple views or
+        /// to provide a custom implementation for testing.
+        ///
+        /// ## Example
+        ///
+        /// ```swift
+        /// var config = EditorConfiguration()
+        /// config.performance.memoryMonitor = MemoryMonitor()
+        /// editor.apply(config)
+        /// ```
+        public var memoryMonitor: MemoryMonitor?
         
         // MARK: - Initialization
         
@@ -100,6 +115,7 @@ extension EditorConfiguration.Performance: Codable {
         
         smoothScrolling = try container.decodeIfPresent(Bool.self, forKey: .smoothScrolling) ?? true
         animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
+        // memoryMonitor is not decoded - it's a runtime dependency
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -113,5 +129,23 @@ extension EditorConfiguration.Performance: Codable {
         try container.encode(textChangeDebounceInterval.timeInterval, forKey: .textChangeDebounceInterval)
         try container.encode(smoothScrolling, forKey: .smoothScrolling)
         try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
+        // memoryMonitor is not encoded - it's a runtime dependency
+    }
+}
+
+// MARK: - Equatable Implementation
+
+extension EditorConfiguration.Performance: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        // Compare all properties except memoryMonitor
+        lhs.maxSyntaxHighlightingLength == rhs.maxSyntaxHighlightingLength &&
+        lhs.useHardwareAcceleration == rhs.useHardwareAcceleration &&
+        lhs.renderingUpdateStrategy == rhs.renderingUpdateStrategy &&
+        lhs.maxVisibleLines == rhs.maxVisibleLines &&
+        lhs.highlightingDebounceInterval == rhs.highlightingDebounceInterval &&
+        lhs.smoothScrolling == rhs.smoothScrolling &&
+        lhs.textChangeDebounceInterval == rhs.textChangeDebounceInterval &&
+        lhs.animateCodeFolding == rhs.animateCodeFolding
+        // memoryMonitor is intentionally excluded from equality comparison
     }
 }

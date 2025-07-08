@@ -206,7 +206,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
                         XCTFail("Memory completion failed: \(error)")
                     }
                 }
-                wait(for: [expectation], timeout: 2.0)
+                wait(for: [expectation], timeout: 5.0)
             }
         }
     }

@@ -13,6 +13,11 @@ extension CodeEditorView {
     // MARK: - Configuration Application
     
     internal func applyConfiguration() {
+        // Apply performance settings first (including memory monitor)
+        if let configMemoryMonitor = configuration.performance.memoryMonitor {
+            memoryMonitor = configMemoryMonitor
+        }
+        
         // Apply display settings
         if configuration.display.showLineNumbers {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)

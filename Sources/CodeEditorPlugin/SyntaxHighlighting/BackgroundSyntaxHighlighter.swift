@@ -112,17 +112,24 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         debounceTask?.cancel()
         debounceTask = Task { [weak self] in
             do {
-                guard let self else { return }
+                guard let self else { 
+                    // Self is nil, request won't be processed
+                    return 
+                }
                 try await Task.sleep(for: .seconds(self.highlightingDelay))
                 
                 await MainActor.run { [weak self] in
-                    guard let self else { return }
+                    guard let self else { 
+                        // Self is nil, request won't be processed
+                        return 
+                    }
                     Task {
                         await self.processRequest(request)
                     }
                 }
             } catch {
                 // Task was cancelled, which is expected behavior
+                // The request will be handled by cancelRequest if needed
             }
         }
         

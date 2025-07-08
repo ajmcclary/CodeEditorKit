@@ -68,9 +68,7 @@ public final class ViewportManager: ObservableObject {
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.updateViewport()
-                }
+                self?.updateViewport()
             }
             .store(in: &cancellables)
         #elseif canImport(UIKit)
@@ -80,9 +78,7 @@ public final class ViewportManager: ObservableObject {
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.updateViewport()
-                }
+                self?.updateViewport()
             }
             .store(in: &cancellables)
         #endif
@@ -92,10 +88,8 @@ public final class ViewportManager: ObservableObject {
             .compactMap { [weak self] _ in self?.textView }
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.invalidateCache()
-                    self?.updateViewport()
-                }
+                self?.invalidateCache()
+                self?.updateViewport()
             }
             .store(in: &cancellables)
     }

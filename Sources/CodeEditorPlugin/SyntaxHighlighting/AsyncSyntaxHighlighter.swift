@@ -174,7 +174,7 @@ public final class AsyncSyntaxHighlighter {
             let startTime = CFAbsoluteTimeGetCurrent()
             await performanceMonitor.measure(category: .syntaxHighlighting) {
                 // Choose highlighting strategy based on text size and settings
-                let tokens: [HighlightedToken]
+                var tokens: [HighlightedToken]
                 
                 if self.enableBackgroundHighlighting && textLength > self.backgroundHighlightingThreshold {
                     // Use background highlighter for large files
@@ -183,6 +183,11 @@ public final class AsyncSyntaxHighlighter {
                         language: language, 
                         visibleRange: visibleRange
                     )
+                    
+                    // If background highlighting failed (returned empty), fall back to synchronous
+                    if tokens.isEmpty {
+                        tokens = await self.highlightInBackground(text: text, language: language)
+                    }
                 } else {
                     // Use synchronous highlighting for small files
                     tokens = await self.highlightInBackground(text: text, language: language)
@@ -204,11 +209,9 @@ public final class AsyncSyntaxHighlighter {
         }
     }
     
+    @MainActor
     private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {
-        await Task { @MainActor [weak self] in
-            guard let self else { return [] }
-            return self.coordinator.highlight(source: text, language: language)
-        }.value
+        coordinator.highlight(source: text, language: language)
     }
     
     private func highlightWithBackgroundHighlighter(
@@ -216,35 +219,38 @@ public final class AsyncSyntaxHighlighter {
         language: Language,
         visibleRange: NSRange?
     ) async -> [HighlightedToken] {
-        await withCheckedContinuation { continuation in
-            let requestId = UUID().uuidString
-            
-            // Update visible range for priority highlighting
-            if let visibleRange {
-                backgroundHighlighter.updateVisibleRange(visibleRange)
-            }
-            
-            // Request background highlighting with high priority for visible content
-            let priority: HighlightingPriority = visibleRange != nil ? .high : .normal
-            
-            backgroundHighlighter.requestHighlighting(
-                text: text,
-                language: language,
-                requestId: requestId,
-                priority: priority
-            ) { result in
-                switch result {
-                case .success(let tokens):
-                    continuation.resume(returning: tokens)
-
-                case .failure:
-                    // Fallback to synchronous highlighting on error
-                    Task {
-                        let fallbackTokens = await self.highlightInBackground(text: text, language: language)
-                        continuation.resume(returning: fallbackTokens)
+        // Use async/await pattern to avoid continuation management issues
+        await withTaskCancellationHandler {
+            await withUnsafeContinuation { continuation in
+                let requestId = UUID().uuidString
+                
+                // Update visible range for priority highlighting
+                if let visibleRange {
+                    backgroundHighlighter.updateVisibleRange(visibleRange)
+                }
+                
+                // Request background highlighting with high priority for visible content
+                let priority: HighlightingPriority = visibleRange != nil ? .high : .normal
+                
+                backgroundHighlighter.requestHighlighting(
+                    text: text,
+                    language: language,
+                    requestId: requestId,
+                    priority: priority
+                ) { result in
+                    switch result {
+                    case .success(let tokens):
+                        continuation.resume(returning: tokens)
+                        
+                    case .failure:
+                        // For any error, return empty array instead of throwing
+                        continuation.resume(returning: [])
                     }
                 }
             }
+        } onCancel: {
+            // If the task is cancelled, we rely on the backgroundHighlighter's
+            // cleanup mechanisms to handle the request appropriately
         }
     }
     

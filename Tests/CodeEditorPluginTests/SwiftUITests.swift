@@ -27,7 +27,7 @@ final class SwiftUITests: XCTestCase {
         XCTAssertNotNil(mirror.descendant("modifier"))
         
         // Test default value
-        XCTAssertEqual(CodeEditorLanguageKey.defaultValue, .swift)
+        XCTAssertEqual(CodeEditorLanguageKey.defaultValue, .plainText)
     }
     
     @MainActor
@@ -156,6 +156,21 @@ final class SwiftUITests: XCTestCase {
         XCTAssertNotNil(mirror.descendant("modifier"))
     }
     
+    // MARK: - Initializer Tests
+    
+    @MainActor
+    func testConvenienceInitializer() {
+        let binding = Binding<String>(
+            get: { "test" },
+            set: { _ in }
+        )
+        
+        let view = CodeEditor(text: binding, language: .python, theme: .dark)
+        
+        // The initializer should create a valid view
+        XCTAssertNotNil(view)
+    }
+    
     // MARK: - Factory Method Tests
     
     @MainActor
@@ -179,7 +194,7 @@ final class SwiftUITests: XCTestCase {
         )
         let config = EditorConfiguration.presentation
         
-        let view = CodeEditor.withConfiguration(binding, configuration: config, language: .swift)
+        let view = CodeEditor.withConfiguration(binding, configuration: config, language: .plainText)
         
         // The factory should return a view with environment values set
         XCTAssertNotNil(view)
@@ -295,7 +310,7 @@ final class SwiftUITests: XCTestCase {
     
     func testDefaultLanguageValue() {
         let defaultLanguage = CodeEditorLanguageKey.defaultValue
-        XCTAssertEqual(defaultLanguage, .swift)
+        XCTAssertEqual(defaultLanguage, .plainText)
     }
     
     func testDefaultThemeValue() {

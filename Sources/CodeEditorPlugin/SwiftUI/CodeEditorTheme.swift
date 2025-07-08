@@ -76,7 +76,7 @@ public struct CodeEditorConfigurationKey: EnvironmentKey {
 
 @available(macOS 12.0, iOS 16.0, *)
 public struct CodeEditorLanguageKey: EnvironmentKey {
-    public static let defaultValue = Language.swift
+    public static let defaultValue = Language.plainText
     
     public typealias Value = Language
 }

@@ -178,17 +178,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Memory monitor for tracking and managing memory usage
     /// 
-    /// By default, creates a new MemoryMonitor instance. You can inject a custom
-    /// instance for testing or to share monitoring across multiple views.
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// let sharedMonitor = MemoryMonitor()
-    /// let editor = CodeEditorView()
-    /// editor.memoryMonitor = sharedMonitor
-    /// ```
-    public var memoryMonitor = MemoryMonitor() {
+    /// This is now managed through EditorConfiguration.performance.memoryMonitor
+    /// for better encapsulation and dependency injection.
+    internal var memoryMonitor = MemoryMonitor() {
         didSet {
             // Update all components that use memoryMonitor
             updateMemoryMonitorReferences()
