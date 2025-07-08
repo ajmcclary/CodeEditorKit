@@ -12,7 +12,7 @@ import AppKit
 extension CodeEditorView {
     // MARK: - Gutter Management
     
-    public func updateGutterVisibility() {
+    internal func updateGutterVisibility() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if showsLineNumbers {
             createGutterIfNeeded()

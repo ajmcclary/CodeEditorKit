@@ -99,6 +99,9 @@ public final class CodeEditorContainerView: PlatformView {
     // MARK: - Setup
     
     private func setupViews() {
+        // Set the container reference in the text view
+        textView.containerView = self
+        
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         setupMacOSViews()
         #else

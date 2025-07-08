@@ -436,6 +436,87 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
     }
 }
 
+// MARK: - Helper Types for EditorEventSubscription
+
+// Thread-safe handler reference
+@available(macOS 10.15, iOS 13.0, *)
+private final class HandlerReference: @unchecked Sendable {
+    private let lock = NSLock()
+    private var handler: ((EditorEvent) -> Void)?
+    
+    func set(_ handler: @escaping (EditorEvent) -> Void) {
+        lock.lock()
+        self.handler = handler
+        lock.unlock()
+    }
+    
+    func clear() {
+        lock.lock()
+        handler = nil
+        lock.unlock()
+    }
+    
+    func handle(_ event: EditorEvent) {
+        lock.lock()
+        let eventHandler = handler
+        lock.unlock()
+        eventHandler?(event)
+    }
+}
+
+// Thread-safe wrapper storage
+@available(macOS 10.15, iOS 13.0, *)
+private final class WrapperStorage: @unchecked Sendable {
+    private let lock = NSLock()
+    private var wrapper: HandlerWrapper?
+    
+    func set(_ wrapper: HandlerWrapper) {
+        lock.lock()
+        self.wrapper = wrapper
+        lock.unlock()
+    }
+    
+    func get() -> HandlerWrapper? {
+        lock.lock()
+        let result = wrapper
+        lock.unlock()
+        return result
+    }
+    
+    func clear() -> HandlerWrapper? {
+        lock.lock()
+        let result = wrapper
+        wrapper = nil
+        lock.unlock()
+        return result
+    }
+}
+
+// Type-erased handler box to avoid capturing generic types
+@available(macOS 10.15, iOS 13.0, *)
+private final class HandlerBox: @unchecked Sendable {
+    private let handler: (EditorEvent) -> Void
+    
+    init(handler: @escaping (EditorEvent) -> Void) {
+        self.handler = handler
+    }
+    
+    func handle(_ event: EditorEvent) {
+        handler(event)
+    }
+}
+
+// Wrapper class to handle events on MainActor
+@available(macOS 10.15, iOS 13.0, *)
+@MainActor
+private final class HandlerWrapper: EditorEventHandler {
+    var handlerBox: HandlerBox?
+    
+    func handle(_ event: EditorEvent) {
+        handlerBox?.handle(event)
+    }
+}
+
 // IMPORTANT: Swift Concurrency and Combine Interoperability
 //
 // This class uses @unchecked Sendable because Combine's Subscriber protocol
@@ -456,59 +537,6 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     private var subscriber: S?
     private let eventPublisher: EditorEventPublisher
     private var pendingSetup = true
-    
-    // Thread-safe handler reference
-    private final class HandlerReference: @unchecked Sendable {
-        private let lock = NSLock()
-        private var handler: ((EditorEvent) -> Void)?
-        
-        func set(_ handler: @escaping (EditorEvent) -> Void) {
-            lock.lock()
-            self.handler = handler
-            lock.unlock()
-        }
-        
-        func clear() {
-            lock.lock()
-            handler = nil
-            lock.unlock()
-        }
-        
-        func handle(_ event: EditorEvent) {
-            lock.lock()
-            let eventHandler = handler
-            lock.unlock()
-            eventHandler?(event)
-        }
-    }
-    
-    // Thread-safe wrapper storage
-    private final class WrapperStorage: @unchecked Sendable {
-        private let lock = NSLock()
-        private var wrapper: HandlerWrapper?
-        
-        func set(_ wrapper: HandlerWrapper) {
-            lock.lock()
-            self.wrapper = wrapper
-            lock.unlock()
-        }
-        
-        func get() -> HandlerWrapper? {
-            lock.lock()
-            let result = wrapper
-            lock.unlock()
-            return result
-        }
-        
-        func clear() -> HandlerWrapper? {
-            lock.lock()
-            let result = wrapper
-            wrapper = nil
-            lock.unlock()
-            return result
-        }
-    }
-    
     private let wrapperStorage = WrapperStorage()
     private let handlerReference = HandlerReference()
     
@@ -523,14 +551,20 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     }
     
     nonisolated private func ensureSetup() {
-        // Use dispatch to avoid concurrency issues with generic types
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            guard self.pendingSetup else { return }
-            self.pendingSetup = false
-            
-            // Create and set up the handler on the main queue
-            let handlerRef = self.handlerReference
+        // Extract all necessary values before entering the Task to avoid capturing self
+        let isPendingSetup = pendingSetup
+        guard isPendingSetup else { return }
+        
+        let handlerRef = self.handlerReference
+        let publisher = self.eventPublisher
+        let storage = self.wrapperStorage
+        
+        // Mark as not pending immediately to avoid race conditions
+        pendingSetup = false
+        
+        // Use structured concurrency for main actor isolation
+        Task { @MainActor in
+            // Create and set up the handler on the main actor
             let box = HandlerBox { event in
                 handlerRef.handle(event)
             }
@@ -538,8 +572,8 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
             wrapper.handlerBox = box
             
             // Subscribe the wrapper to the publisher
-            self.eventPublisher.subscribe(wrapper)
-            self.wrapperStorage.set(wrapper)
+            publisher.subscribe(wrapper)
+            storage.set(wrapper)
         }
     }
     
@@ -565,34 +599,14 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         // Clear the handler reference
         handlerReference.clear()
         
-        // Remove wrapper and unsubscribe on main queue
-        if let wrapper = wrapperStorage.clear() {
-            DispatchQueue.main.async { [weak eventPublisher] in
-                eventPublisher?.unsubscribe(wrapper)
-            }
-        }
-    }
-    
-    // Type-erased handler box to avoid capturing generic types
-    private final class HandlerBox: @unchecked Sendable {
-        private let handler: (EditorEvent) -> Void
+        // Remove wrapper and unsubscribe on main actor
+        let wrapper = wrapperStorage.clear()
+        guard let wrappedValue = wrapper else { return }
         
-        init(handler: @escaping (EditorEvent) -> Void) {
-            self.handler = handler
-        }
-        
-        func handle(_ event: EditorEvent) {
-            handler(event)
-        }
-    }
-    
-    // Wrapper class to handle events on MainActor
-    @MainActor
-    private final class HandlerWrapper: EditorEventHandler {
-        var handlerBox: HandlerBox?
-        
-        func handle(_ event: EditorEvent) {
-            handlerBox?.handle(event)
+        // Extract publisher before Task to avoid capturing self
+        let publisher = eventPublisher
+        Task { @MainActor in
+            publisher.unsubscribe(wrappedValue)
         }
     }
 }

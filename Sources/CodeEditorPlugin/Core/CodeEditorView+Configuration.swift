@@ -79,15 +79,7 @@ extension CodeEditorView {
         #endif
         
         // Notify container view to update gutter width if needed
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let containerView = superview?.superview as? CodeEditorContainerView {
-            containerView.applyConfiguration()
-        }
-        #else
-        if let containerView = superview?.superview as? CodeEditorContainerView {
-            containerView.applyConfiguration()
-        }
-        #endif
+        containerView?.applyConfiguration()
     }
     
     // MARK: - Line Highlighting

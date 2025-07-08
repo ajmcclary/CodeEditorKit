@@ -145,9 +145,7 @@ public struct CodeEditor: View {
     @Environment(\.codeEditorConfiguration) private var configuration
     
     // Initial values from convenience initializers
-    @State private var initialLanguage: Language?
-    @State private var initialTheme: CodeEditorSwiftUITheme?
-    @State private var initialConfiguration: EditorConfiguration?
+    // No longer needed - we'll use environment values directly
     
     // Callbacks
     private var onTextChange: ((String) -> Void)?
@@ -183,11 +181,6 @@ public struct CodeEditor: View {
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
-        
-        // No initial values for the basic initializer
-        self._initialLanguage = State(initialValue: nil)
-        self._initialTheme = State(initialValue: nil)
-        self._initialConfiguration = State(initialValue: nil)
     }
     
     /// Creates a new code editor with text binding, language, and optional theme.
@@ -216,17 +209,12 @@ public struct CodeEditor: View {
     /// ```
     public init(
         text: Binding<String>,
-        language: Language,
-        theme: CodeEditorSwiftUITheme = .default,
+        language _: Language,
+        theme _: CodeEditorSwiftUITheme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
-        
-        // Store initial values for application in body
-        self._initialLanguage = State(initialValue: language)
-        self._initialTheme = State(initialValue: theme)
-        self._initialConfiguration = State(initialValue: nil)
     }
     
     /// Creates a new code editor with text binding and full configuration.
@@ -257,18 +245,13 @@ public struct CodeEditor: View {
     /// ```
     public init(
         text: Binding<String>,
-        configuration: EditorConfiguration,
-        language: Language = .plainText,
-        theme: CodeEditorSwiftUITheme = .default,
+        configuration _: EditorConfiguration,
+        language _: Language = .plainText,
+        theme _: CodeEditorSwiftUITheme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
-        
-        // Store initial values for application in body
-        self._initialLanguage = State(initialValue: language)
-        self._initialTheme = State(initialValue: theme)
-        self._initialConfiguration = State(initialValue: configuration)
     }
     
     // MARK: - Body
@@ -276,9 +259,9 @@ public struct CodeEditor: View {
     public var body: some View {
         CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
-            language: initialLanguage ?? language,
-            theme: initialTheme ?? theme,
-            configuration: initialConfiguration ?? configuration,
+            language: language,
+            theme: theme,
+            configuration: configuration,
             isFocused: Binding(
                 get: { isFocused },
                 set: { isFocused = $0 }
@@ -290,9 +273,9 @@ public struct CodeEditor: View {
         .searchable(text: $searchText)
         .codeEditorFocusable()
         .focused($isFocused)
-        .environment(\.codeEditorLanguage, initialLanguage ?? language)
-        .environment(\.codeEditorTheme, initialTheme ?? theme)
-        .environment(\.codeEditorConfiguration, initialConfiguration ?? configuration)
+        .environment(\.codeEditorLanguage, language)
+        .environment(\.codeEditorTheme, theme)
+        .environment(\.codeEditorConfiguration, configuration)
     }
     
     // MARK: - Private Methods
@@ -693,6 +676,81 @@ public struct CodeEditor: View {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.performance.animateCodeFolding = animate
         }
+    }
+    
+    /// Requests that the code editor become the first responder (keyboard focus).
+    ///
+    /// This is a more intuitive API than using the environment key directly.
+    /// When called, the editor will attempt to become the first responder on the
+    /// next view update cycle.
+    ///
+    /// - Returns: A view that will request focus when displayed
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .becomeFirstResponder()
+    ///     .onAppear {
+    ///         // Editor will automatically gain focus when view appears
+    ///     }
+    /// ```
+    ///
+    /// - Note: On iOS, the keyboard will appear when the editor gains focus.
+    ///         On macOS, the editor will receive keyboard input.
+    public func becomeFirstResponder() -> some View {
+        environment(\.codeEditorBecomeFirstResponder, true)
+    }
+}
+
+// MARK: - Convenience Factory Methods
+
+extension CodeEditor {
+    /// Creates a code editor with the specified language and theme.
+    ///
+    /// This factory method ensures the environment values are properly set for the
+    /// provided language and theme parameters.
+    ///
+    /// - Parameters:
+    ///   - text: A binding to the text content
+    ///   - language: The programming language for syntax highlighting
+    ///   - theme: The color theme to apply (default: .default)
+    ///   - debounceInterval: Time interval to debounce text changes (default: 100ms)
+    /// - Returns: A CodeEditor view with the specified environment values
+    public static func withLanguage(
+        _ text: Binding<String>,
+        language: Language,
+        theme: CodeEditorSwiftUITheme = .default,
+        debounceInterval: Duration = .milliseconds(100)
+    ) -> some View {
+        CodeEditor(text: text, debounceInterval: debounceInterval)
+            .environment(\.codeEditorLanguage, language)
+            .environment(\.codeEditorTheme, theme)
+    }
+    
+    /// Creates a code editor with the specified configuration.
+    ///
+    /// This factory method ensures the environment values are properly set for the
+    /// provided configuration parameters.
+    ///
+    /// - Parameters:
+    ///   - text: A binding to the text content
+    ///   - configuration: The complete editor configuration
+    ///   - language: The programming language (default: .plainText)
+    ///   - theme: The color theme (default: .default)
+    ///   - debounceInterval: Time interval to debounce text changes (default: 100ms)
+    /// - Returns: A CodeEditor view with the specified environment values
+    public static func withConfiguration(
+        _ text: Binding<String>,
+        configuration: EditorConfiguration,
+        language: Language = .plainText,
+        theme: CodeEditorSwiftUITheme = .default,
+        debounceInterval: Duration = .milliseconds(100)
+    ) -> some View {
+        CodeEditor(text: text, debounceInterval: debounceInterval)
+            .environment(\.codeEditorConfiguration, configuration)
+            .environment(\.codeEditorLanguage, language)
+            .environment(\.codeEditorTheme, theme)
     }
 }
 

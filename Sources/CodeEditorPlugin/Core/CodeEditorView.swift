@@ -180,7 +180,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// 
     /// By default, creates a new MemoryMonitor instance. You can inject a custom
     /// instance for testing or to share monitoring across multiple views.
-    public var memoryMonitor = MemoryMonitor() {
+    internal var memoryMonitor = MemoryMonitor() {
         didSet {
             // Update all components that use memoryMonitor
             updateMemoryMonitorReferences()
@@ -202,6 +202,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Line highlight view
     internal var lineHighlightView: PlatformView?
+    
+    /// Weak reference to the container view to avoid fragile superview traversal
+    internal weak var containerView: CodeEditorContainerView?
     
     /// The current annotations displayed in the editor
     public private(set) var annotations: [Annotation] = []

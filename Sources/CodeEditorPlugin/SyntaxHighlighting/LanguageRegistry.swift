@@ -64,6 +64,7 @@ extension SyntaxHighlighter {
 public final class LanguageRegistry {
     // MARK: - Singleton
     
+    /// Shared instance for convenience. Consider using dependency injection instead.
     public static let shared = LanguageRegistry()
     
     // MARK: - Properties
@@ -73,8 +74,12 @@ public final class LanguageRegistry {
     
     // MARK: - Initialization
     
-    private init() {
-        registerBuiltInLanguages()
+    /// Creates a new language registry instance.
+    /// - Parameter includeBuiltInLanguages: Whether to automatically register built-in languages (default: true)
+    public init(includeBuiltInLanguages: Bool = true) {
+        if includeBuiltInLanguages {
+            registerBuiltInLanguages()
+        }
     }
     
     // MARK: - Registration

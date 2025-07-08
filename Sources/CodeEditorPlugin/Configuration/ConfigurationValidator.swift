@@ -96,6 +96,16 @@ public struct ConfigurationValidator {
             ))
         }
         
+        // Text container width fraction validation
+        if layout.textContainerWidthFraction < 0 || layout.textContainerWidthFraction > 1 {
+            issues.append(ValidationIssue(
+                severity: .warning,
+                path: "layout.textContainerWidthFraction",
+                message: "Text container width fraction \(layout.textContainerWidthFraction) is outside valid range (0...1)",
+                suggestedValue: max(0, min(1, layout.textContainerWidthFraction))
+            ))
+        }
+        
         return issues
     }
     

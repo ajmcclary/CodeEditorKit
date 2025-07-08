@@ -94,7 +94,7 @@ final class ConfigurationUITests: XCTestCase {
         XCTAssertTrue(config.display.highlightSelectedLine)  // Default value, not modified by readOnly preset
         XCTAssertFalse(config.layout.wrapLines)
         XCTAssertFalse(config.behavior.isEditable)
-        XCTAssertTrue(config.behavior.autoIndent)  // Default value, not modified by readOnly preset
+        XCTAssertFalse(config.behavior.autoIndent)  // Disabled for read-only mode since editing is not allowed
         XCTAssertEqual(config.display.fontSize, 13)
         // theme is handled separately in the color system
         XCTAssertTrue(config.display.enableAnnotations)

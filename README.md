@@ -116,6 +116,56 @@ class ViewController: PlatformViewController {
 }
 ```
 
+### Mac Catalyst
+
+```swift
+import CodeEditorPlugin
+import UIKit
+
+class CatalystViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Create the code editor
+        let textView = CodeEditorView()
+        textView.text = "// Your Mac Catalyst code here"
+        
+        // Configure for Mac Catalyst environment
+        let config = EditorConfigurationBuilder()
+            .fontSize(14)  // Slightly larger for desktop
+            .showLineNumbers(true)
+            .tabWidth(4)
+            .enableCodeFolding(true)
+            .showFoldingControls(true)
+            .build()
+        
+        config.apply(to: textView)
+        
+        // Set language and theme
+        textView.setLanguage(fileExtension: "swift")
+        
+        // Add to view hierarchy
+        view.addSubview(textView)
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        // Mac Catalyst specific: Enable desktop-style features
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            // Running on Mac via Catalyst
+            textView.isScrollEnabled = true
+            textView.allowsEditingTextAttributes = true
+        }
+    }
+}
+```
+
+**Note**: CodeEditorPlugin fully supports Mac Catalyst with proper platform detection and adaptive UI. The editor automatically adjusts its behavior for the desktop environment while maintaining iOS compatibility.
+
 ## 🏗️ Architecture
 
 CodeEditorPlugin features a clean, modern architecture optimized for performance, maintainability, and extensibility. Every architectural decision prioritizes developer productivity and code reliability.

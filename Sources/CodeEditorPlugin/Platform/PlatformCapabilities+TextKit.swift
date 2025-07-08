@@ -59,10 +59,12 @@ extension PlatformCapabilities {
     public var supportsTextKit2: Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // TextKit2 is stable on macOS 13.0+
-        return systemVersionComponents.major >= 13
+        let (major, minor, _) = systemVersionComponents
+        return major > 13 || (major == 13 && minor >= 0)
         #elseif canImport(UIKit)
         // TextKit2 is available on iOS 16.0+
-        return systemVersionComponents.major >= 16
+        let (major, minor, _) = systemVersionComponents
+        return major > 16 || (major == 16 && minor >= 0)
         #else
         return false
         #endif
@@ -82,7 +84,8 @@ extension PlatformCapabilities {
     public var preferTextKit2: Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Prefer TextKit2 on macOS 14.0+ for better stability
-        return systemVersionComponents.major >= 14
+        let (major, minor, _) = systemVersionComponents
+        return major > 14 || (major == 14 && minor >= 0)
         #elseif canImport(UIKit)
         // Always prefer TextKit2 on iOS when available
         return supportsTextKit2

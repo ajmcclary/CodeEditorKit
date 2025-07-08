@@ -23,6 +23,7 @@ extension EditorConfiguration {
         var config = EditorConfiguration()
         config.behavior.isEditable = false
         config.behavior.enableCodeCompletion = false
+        config.behavior.autoIndent = false  // No need for auto-indent in read-only mode
         config.behavior.isAutomaticQuoteSubstitutionEnabled = false
         config.behavior.isAutomaticDashSubstitutionEnabled = false
         return config

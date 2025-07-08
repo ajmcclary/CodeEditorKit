@@ -237,11 +237,12 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         // Apply cross-platform text input features
         applyTextInputFeatures(to: view)
         
-        // Also apply additional settings that aren't handled by the internal applyConfiguration
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // Apply shared settings across all platforms
         view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
         view.textColor = PlatformColors.label
         
+        // Apply platform-specific settings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if layout.wrapLines {
             view.textContainer?.widthTracksTextView = true
             view.isHorizontallyResizable = false
@@ -249,9 +250,6 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
             view.textContainer?.widthTracksTextView = false
             view.isHorizontallyResizable = true
         }
-        #elseif canImport(UIKit)
-        view.font = PlatformFonts.monospacedSystemFont(ofSize: display.fontSize, weight: .regular)
-        view.textColor = PlatformColors.label
         #endif
     }
     

@@ -11,6 +11,7 @@ actor BackgroundProcessor<Value: Sendable> {
 
     private let value: Value
     private var pendingCount = 0
+    private var currentTask: Task<Void, Never>?
 
     init(value: Value) {
         self.value = value
@@ -58,23 +59,34 @@ actor BackgroundProcessor<Value: Sendable> {
     ) async throws -> T {
         beginBackgroundWork()
         
+        // Store the current task so it can be cancelled
+        let task = Task<T, Error> {
+            try await operation(value)
+        }
+        
+        // Track the task for potential cancellation
+        currentTask = Task {
+            _ = await task.result
+        }
+        
         do {
-            let result = try await withTaskCancellationHandler {
-                try await operation(value)
-            } onCancel: {
-                Task { await self.endBackgroundWork() }
-            }
-            
+            let result = try await task.value
             endBackgroundWork()
+            currentTask = nil
             return result
         } catch {
             endBackgroundWork()
+            currentTask = nil
             throw error
         }
     }
     
     /// Cancel any pending operations
     func cancelPendingOperations() {
+        // Cancel the current task if any
+        currentTask?.cancel()
+        currentTask = nil
+        
         // Reset pending count since we're cancelling all operations
         pendingCount = 0
     }

@@ -109,13 +109,3 @@ public struct CodeEditorPlugin {
 // Main text view types (for backward compatibility)
 public typealias CodeEditorTextView = CodeEditorView
 public typealias CodeEditorDelegate = CodeEditorViewDelegate
-
-// MARK: - CodeEditorPluginModule
-
-public enum CodeEditorPluginModule {
-    /// Initialize the CodeEditorPlugin module with default configuration
-    public static func initialize() {
-        // Perform any necessary module initialization
-        // This could include registering default themes, languages, etc.
-    }
-}

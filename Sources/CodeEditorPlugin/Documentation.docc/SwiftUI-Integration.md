@@ -202,6 +202,87 @@ CodeEditor(text: $code)
 #endif
 ```
 
+## Environment Keys Reference
+
+CodeEditorPlugin provides several environment keys for configuration and state management:
+
+### Available Environment Keys
+
+#### `\.codeEditorConfiguration`
+- **Type**: `EditorConfiguration`
+- **Default**: `EditorConfiguration()`
+- **Usage**: Sets the complete editor configuration
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorConfiguration, .presentation)
+```
+
+#### `\.codeEditorLanguage`
+- **Type**: `Language`
+- **Default**: `.swift`
+- **Usage**: Sets the programming language for syntax highlighting
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorLanguage, .python)
+```
+
+#### `\.codeEditorTheme`
+- **Type**: `CodeEditorSwiftUITheme`
+- **Default**: `.default`
+- **Usage**: Sets the color theme
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorTheme, .dark)
+```
+
+#### `\.codeEditorBecomeFirstResponder`
+- **Type**: `Bool`
+- **Default**: `false`
+- **Usage**: Requests focus when set to true
+```swift
+CodeEditor(text: $code)
+    .environment(\.codeEditorBecomeFirstResponder, true)
+// Or use the convenience modifier:
+CodeEditor(text: $code)
+    .becomeFirstResponder()
+```
+
+### Using Environment Keys
+
+Environment keys can be set at any level in the view hierarchy and will propagate to all child views:
+
+```swift
+struct ContentView: View {
+    @State private var code = ""
+    
+    var body: some View {
+        VStack {
+            // Configuration applies to all child CodeEditor views
+            CodeEditor(text: $code)
+            CodeEditor(text: $code)
+        }
+        .environment(\.codeEditorConfiguration, .minimal)
+        .environment(\.codeEditorLanguage, .javascript)
+    }
+}
+```
+
+### Reading Environment Values
+
+You can read environment values in your custom views:
+
+```swift
+struct CustomEditorWrapper: View {
+    @Environment(\.codeEditorConfiguration) var config
+    @Environment(\.codeEditorLanguage) var language
+    @Environment(\.codeEditorTheme) var theme
+    
+    var body: some View {
+        Text("Current language: \(language.rawValue)")
+    }
+}
+```
+
 ## Best Practices
 
 1. **Use @State Wisely**: Keep code text in @State for responsiveness

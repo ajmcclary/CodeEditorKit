@@ -34,13 +34,6 @@ import os.log
 /// - SeeAlso: ``ContextMenuCoordinator`` for context menu handling
 @MainActor
 public class CrossPlatformCoordinator: ObservableObject {
-    // MARK: - Singleton (Deprecated)
-    
-    /// Shared instance for backward compatibility
-    /// - Warning: This property is deprecated. Use dependency injection instead.
-    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
-    public static let shared = CrossPlatformCoordinator()
-    
     // MARK: - Properties
     
     internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")

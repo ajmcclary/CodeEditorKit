@@ -178,6 +178,30 @@ public struct EditorConfigurationBuilder {
     with { $0.display.showInvisibleCharacters = show }
   }
 
+  /// Controls whether to show the minimap
+  /// - Parameter show: Whether to show the minimap
+  /// - Returns: The builder for chaining
+  @discardableResult
+  public func showMinimap(_ show: Bool) -> Self {
+    with { $0.display.showMinimap = show }
+  }
+
+  /// Controls whether code folding is enabled
+  /// - Parameter enable: Whether to enable code folding
+  /// - Returns: The builder for chaining
+  @discardableResult
+  public func enableCodeFolding(_ enable: Bool) -> Self {
+    with { $0.display.enableCodeFolding = enable }
+  }
+
+  /// Controls whether folding controls are shown in the gutter
+  /// - Parameter show: Whether to show folding controls
+  /// - Returns: The builder for chaining
+  @discardableResult
+  public func showFoldingControls(_ show: Bool) -> Self {
+    with { $0.display.showFoldingControls = show }
+  }
+
   // MARK: - Layout Settings
 
   /// Sets the tab width in spaces
@@ -463,7 +487,12 @@ public struct EditorConfigurationBuilder {
   ///
   /// - SeeAlso: `EditorConfiguration.validate()`, `EditorConfiguration.apply(to:)`
   public func build() -> EditorConfiguration {
-    configuration
+    // Validate and auto-fix any issues
+    var finalConfig = configuration
+    let validator = ConfigurationValidator()
+    _ = validator.autoFix(&finalConfig)
+    
+    return finalConfig
   }
 }
 

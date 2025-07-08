@@ -12,11 +12,7 @@ enum ContainerViewHelper {
     
     /// Navigate to a specific line number in the text view
     static func navigateToLine(_ lineNumber: Int, in textView: CodeEditorView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let text = textView.string
-        #else
-        let text = textView.text ?? ""
-        #endif
+        let text = getText(from: textView)
         let lines = text.components(separatedBy: CharacterSet.newlines)
         
         guard lineNumber < lines.count else { return }
@@ -25,17 +21,31 @@ enum ContainerViewHelper {
         let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
         let targetPosition = lineNumber > 0 ? lineStart + 1 : 0
         
+        performNavigation(to: targetPosition, in: textView)
+    }
+    
+    // MARK: - Platform-Specific Navigation
+    
+    private static func getText(from textView: CodeEditorView) -> String {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return textView.string
+        #else
+        return textView.text ?? ""
+        #endif
+    }
+    
+    private static func performNavigation(to position: Int, in textView: CodeEditorView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS navigation
-        textView.setSelectedRange(NSRange(location: targetPosition, length: 0))
+        textView.setSelectedRange(NSRange(location: position, length: 0))
         
         // Only scroll if autoScrollToCursor is enabled
         if textView.configuration.behavior.autoScrollToCursor {
-            textView.scrollRangeToVisible(NSRange(location: targetPosition, length: 0))
+            textView.scrollRangeToVisible(NSRange(location: position, length: 0))
         }
         #else
         // iOS navigation
-        if let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) {
+        if let position = textView.position(from: textView.beginningOfDocument, offset: position) {
             let textRange = textView.textRange(from: position, to: position)
             
             // Use the new method that respects autoScrollToCursor configuration
@@ -54,6 +64,13 @@ enum ContainerViewHelper {
     
     /// Configure the text view for scrolling behavior
     static func configureTextViewScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
+        configurePlatformScrolling(textView, wrapLines: wrapLines)
+        
+        // Common configuration
+        textView.backgroundColor = PlatformColors.clear
+    }
+    
+    private static func configurePlatformScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = !wrapLines
@@ -73,9 +90,6 @@ enum ContainerViewHelper {
         textView.alwaysBounceVertical = true
         textView.isScrollEnabled = true
         #endif
-        
-        // Common configuration
-        textView.backgroundColor = PlatformColors.clear
     }
     
     // MARK: - Background Configuration
@@ -135,12 +149,7 @@ enum ContainerViewHelper {
     
     /// Calculate the height for gutter and minimap views
     static func calculateSideViewHeight(bounds: CGRect, textView: CodeEditorView) -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return bounds.height
-        #else
-        let contentSize = textView.contentSize
-        return max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
-        #endif
+        platformCalculateSideViewHeight(bounds: bounds, textView: textView)
     }
     
     // MARK: - Text Container Insets
@@ -148,7 +157,10 @@ enum ContainerViewHelper {
     /// Update text container insets for gutter width
     static func updateTextContainerInsets(textView: CodeEditorView, gutterWidth: CGFloat, padding: CGFloat) {
         let leftInset = gutterWidth + padding
-        
+        updatePlatformInsets(textView, leftInset: leftInset)
+    }
+    
+    private static func updatePlatformInsets(_ textView: CodeEditorView, leftInset: CGFloat) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let currentInsets = textView.textContainerInset
         textView.textContainerInset = NSSize(
@@ -167,3 +179,20 @@ enum ContainerViewHelper {
         #endif
     }
 }
+
+// MARK: - Platform-Specific Extensions
+
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+extension ContainerViewHelper {
+    static func platformCalculateSideViewHeight(bounds: CGRect, textView _: CodeEditorView) -> CGFloat {
+        bounds.height
+    }
+}
+#else
+extension ContainerViewHelper {
+    static func platformCalculateSideViewHeight(bounds: CGRect, textView: CodeEditorView) -> CGFloat {
+        let contentSize = textView.contentSize
+        return max(bounds.height, contentSize.height + textView.contentInset.top + textView.contentInset.bottom)
+    }
+}
+#endif
