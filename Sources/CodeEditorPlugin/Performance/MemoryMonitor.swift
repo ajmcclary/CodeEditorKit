@@ -41,7 +41,6 @@ import os.log
 ///
 /// For comprehensive examples and patterns, see:
 /// - <doc:MemoryMonitor-Injection>
-/// - <doc:MemoryMonitorExamples>
 ///
 @MainActor
 public final class MemoryMonitor: ObservableObject {

@@ -180,6 +180,6 @@ CodeEditor(text: $code)
 
 ## See Also
 
-- <doc:Platform-Abstraction> - Cross-platform development
-- <doc:Theme-System> - Creating custom themes
-- <doc:Performance-Monitoring> - Optimizing for large files
+- <doc:Platform-Abstraction>
+- <doc:Theme-System>
+- <doc:Performance-Monitoring>

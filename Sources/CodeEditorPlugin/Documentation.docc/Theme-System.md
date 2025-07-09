@@ -396,6 +396,6 @@ var darkVariant: ColorTheme {
 
 ## See Also
 
-- <doc:Configuration-System> - Complete configuration system
-- <doc:SwiftUI-Integration> - SwiftUI theme integration
-- <doc:Platform-Abstraction> - Cross-platform color support
+- <doc:Configuration-System>
+- <doc:SwiftUI-Integration>
+- <doc:Platform-Abstraction>

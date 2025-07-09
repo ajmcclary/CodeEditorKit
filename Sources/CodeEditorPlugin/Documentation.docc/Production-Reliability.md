@@ -186,6 +186,6 @@ MemoryMonitor.shared.registerCleanupHandler(
 
 ## See Also
 
-- <doc:Swift6-Concurrency> for concurrency architecture details
-- <doc:Performance-Monitoring> for performance optimization
-- <doc:Troubleshooting> for common issues and solutions
+- <doc:Swift6-Concurrency>
+- <doc:Performance-Monitoring>
+- <doc:Troubleshooting>

@@ -342,6 +342,6 @@ func testCleanup() async {
 ## See Also
 
 - <doc:Configuration-System>
-- <doc:Performance-Optimization>
+- <doc:Performance-Monitoring>
 - ``MemoryMonitor``
 - ``EditorConfiguration/Performance``
