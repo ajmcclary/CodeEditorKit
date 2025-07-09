@@ -380,7 +380,6 @@ public struct CodeEditor: View {
     /// Adds a text change handler with optional debouncing.
     ///
     /// - Parameters:
-    ///   - debounce: Optional debounce interval to control callback frequency
     ///   - action: Closure called when text changes
     /// - Returns: A new view with the text change handler attached
     ///
