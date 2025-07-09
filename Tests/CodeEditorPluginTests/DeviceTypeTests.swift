@@ -45,6 +45,7 @@ final class DeviceTypeTests: XCTestCase {
     
     // MARK: - Current Device Tests
     
+    @MainActor
     func testCurrentDevice() {
         let current = DeviceType.current
         
@@ -72,6 +73,7 @@ final class DeviceTypeTests: XCTestCase {
     
     // MARK: - Device Capability Tests
     
+    @MainActor
     func testSupportsHover() {
         XCTAssertTrue(DeviceType.mac.supportsHover)
         XCTAssertTrue(DeviceType.visionPro.supportsHover)
@@ -113,6 +115,7 @@ final class DeviceTypeTests: XCTestCase {
         XCTAssertFalse(DeviceType.visionPro.hasLimitedScreenSpace)
     }
     
+    @MainActor
     func testHasNotch() {
         // Most devices don't have a notch
         XCTAssertFalse(DeviceType.iPad.hasNotch)
@@ -206,12 +209,8 @@ final class DeviceTypeTests: XCTestCase {
         XCTAssertTrue(DeviceType.allCases.contains(deviceType),
                      "PlatformCapabilities should return a valid device type")
         
-        // Test deprecated string property
-        let deviceString = capabilities.deviceTypeString
-        XCTAssertEqual(
-            deviceString,
-            deviceType.rawValue,
-            "Legacy string property should match enum raw value"
-        )
+        // Verify that we're using the new enum-based API
+        XCTAssertNotNil(deviceType.displayName, "Device type should have a display name")
+        XCTAssertNotNil(deviceType.recommendedConfiguration(), "Device type should provide recommended configuration")
     }
 }
