@@ -100,8 +100,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
         let capabilities = PlatformCapabilities.shared
         let isAvailable = capabilities.isFeatureAvailable(.languageServerProtocol)
         
-        // LSP is a software feature available on all platforms
+        // LSP requires process spawning, only available on macOS
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(isAvailable)
+        #else
+        XCTAssertFalse(isAvailable)
+        #endif
     }
     
     @MainActor

@@ -20,29 +20,39 @@ public enum CatalystColorHelper {
     /// - Returns: A UIColor that is guaranteed to be visible
     @available(iOS 14.0, macCatalyst 14.0, *)
     public static func effectiveTextColor(from color: Color) -> UIColor {
-        // Check for problematic SwiftUI colors that don't convert well
-        if color == Color.primary || 
-           color == Color.clear ||
-           color == Color.accentColor {
-            // Use explicit dynamic colors for problematic cases
+        // Handle special SwiftUI colors first
+        if color == Color.primary {
+            // Use dynamic color that works with getRed
             return UIColor { traitCollection in
                 traitCollection.userInterfaceStyle == .dark ? .white : .black
             }
-        } else {
-            // For custom colors, try conversion but with fallback
-            let converted = PlatformColor.from(color)
-            
-            // Verify the converted color isn't transparent or problematic
-            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-            if converted.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
-               alpha > 0.1, (red + green + blue) > 0.1 {
-                return converted
-            } else {
-                // Fallback for transparent or invisible colors
-                return UIColor { traitCollection in
-                    traitCollection.userInterfaceStyle == .dark ? .white : .black
-                }
+        } else if color == Color.clear {
+            // Clear color should become a visible color
+            return UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
             }
+        } else if color == Color.accentColor {
+            // Use a concrete blue color
+            return UIColor.systemBlue
+        }
+        
+        // For custom colors, try conversion but with fallback
+        let converted = PlatformColor.from(color)
+        
+        // Verify the converted color has valid components
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        
+        // Try to get RGB components
+        if converted.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            // Check if color is visible
+            if alpha > 0.1 && (red + green + blue) > 0.1 {
+                return converted
+            }
+        }
+        
+        // If getRed fails or color is not visible, fallback to dynamic color
+        return UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
         }
     }
     

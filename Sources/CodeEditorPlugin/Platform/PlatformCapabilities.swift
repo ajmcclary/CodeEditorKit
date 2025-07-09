@@ -280,8 +280,10 @@ extension PlatformCapabilities {
             return true // Software optimizations
             
         // Integration features
-        case .languageServerProtocol, .pluginSystem:
-            return true // Software features
+        case .languageServerProtocol:
+            return currentPlatform == .macOS // Only available on macOS due to process restrictions
+        case .pluginSystem:
+            return true // Software feature
         case .externalTools:
             return currentPlatform == .macOS
 
@@ -347,7 +349,7 @@ extension PlatformCapabilities {
     private func getInputFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
         case .keyboardShortcuts:
-            if currentPlatform == .macOS {
+            if currentPlatform == .macOS || currentPlatform == .catalyst {
                 return .full
             } else if currentPlatform == .iOS && isIPad {
                 return .partial
