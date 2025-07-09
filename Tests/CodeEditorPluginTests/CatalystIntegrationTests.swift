@@ -305,4 +305,3 @@ final class CatalystIntegrationTests: XCTestCase {
 }
 
 #endif
-

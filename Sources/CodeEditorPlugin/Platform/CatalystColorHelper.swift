@@ -37,7 +37,7 @@ public enum CatalystColorHelper {
         let converted = PlatformColor.from(color)
         
         // Test if the color has extractable components
-        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat   = 0
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         
         // Try to get RGB components using getRed first
         let testColor = converted.resolvedColor(with: UITraitCollection.current)

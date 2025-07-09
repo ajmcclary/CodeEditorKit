@@ -3,7 +3,7 @@
 [![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#quality-metrics)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
-[![Files](https://img.shields.io/badge/files-42-blue)](#quality-metrics)
+[![Files](https://img.shields.io/badge/files-43-blue)](#quality-metrics)
 
 **The definitive showcase and comprehensive reference implementation for CodeEditorPlugin.**
 
@@ -156,7 +156,7 @@ The CodeEditorSample has undergone comprehensive improvements following the majo
 - **iOS/iPadOS**: Simplified to use native SwiftUI CodeEditor component
 
 #### Code Quality Improvements
-- **Zero SwiftLint Violations**: Maintained across all 42 files
+- **Zero SwiftLint Violations**: Maintained across all 43 files
 - **Swift 6 Compliance**: Full compatibility with Swift 6 concurrency features
 - **Better Separation of Concerns**: Clear platform-specific code paths with proper conditional compilation
 
