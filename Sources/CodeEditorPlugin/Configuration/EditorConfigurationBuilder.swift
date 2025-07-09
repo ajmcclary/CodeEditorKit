@@ -526,6 +526,57 @@ public struct EditorConfigurationBuilder {
   }
   
   /// Build the configuration with validation feedback.
+  /// 
+  /// This method returns a Result type containing either the validated configuration
+  /// or validation issues that were found. Unlike `build()`, this method does not
+  /// automatically fix issues - it returns them for the caller to handle.
+  ///
+  /// - Returns: A Result containing either the configuration or validation error
+  public func buildWithValidation() -> Result<EditorConfiguration, ConfigurationValidationError> {
+    let validator = ConfigurationValidator()
+    let issues = validator.validate(configuration)
+    
+    if issues.isEmpty {
+      return .success(configuration)
+    } else {
+      // Return only non-auto-fixable issues if there are any
+      let criticalIssues = issues.filter { !$0.isAutoFixable }
+      if !criticalIssues.isEmpty {
+        return .failure(ConfigurationValidationError(issues: criticalIssues))
+      } else {
+        // All issues are auto-fixable, return success with the original config
+        // The caller can choose to apply fixes if desired
+        return .success(configuration)
+      }
+    }
+  }
+  
+  /// Build the configuration with detailed validation report.
+  /// 
+  /// This method returns both the configuration and a validation report containing
+  /// all issues found and any fixes that were applied.
+  ///
+  /// - Returns: A tuple containing the configuration and validation report
+  public func buildWithReport() -> (configuration: EditorConfiguration, report: ValidationReport) {
+    let validator = ConfigurationValidator()
+    var finalConfig = configuration
+    
+    // Get initial issues
+    let issues = validator.validate(configuration)
+    
+    // Apply auto-fixes
+    let fixes = validator.autoFix(&finalConfig)
+    
+    // Create report
+    let report = ValidationReport(
+      originalIssues: issues,
+      appliedFixes: fixes,
+      finalConfiguration: finalConfig
+    )
+    
+    return (finalConfig, report)
+  }
+  
   ///
   /// This method returns both the final configuration and any validation fixes that were applied.
   /// Use this when you need to know if any configuration values were adjusted during validation.

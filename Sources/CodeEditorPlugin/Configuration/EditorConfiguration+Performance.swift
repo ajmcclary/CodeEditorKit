@@ -62,10 +62,31 @@ extension EditorConfiguration {
         /// ## Example
         ///
         /// ```swift
+        /// // Create custom monitor
+        /// let monitor = MemoryMonitor()
+        /// monitor.memoryThresholdMB = 200.0
+        /// monitor.enableAutomaticCleanup = true
+        /// 
+        /// // Inject via configuration
         /// var config = EditorConfiguration()
-        /// config.performance.memoryMonitor = MemoryMonitor()
-        /// editor.apply(config)
+        /// config.performance.memoryMonitor = monitor
+        /// config.apply(to: editorView)
         /// ```
+        /// 
+        /// ## Shared Monitor Pattern
+        /// 
+        /// ```swift
+        /// // Share monitor across multiple editors
+        /// let sharedMonitor = MemoryMonitor()
+        /// 
+        /// var config = EditorConfiguration()
+        /// config.performance.memoryMonitor = sharedMonitor
+        /// 
+        /// config.apply(to: editor1)
+        /// config.apply(to: editor2)
+        /// ```
+        ///
+        /// - SeeAlso: <doc:MemoryMonitor-Injection>
         public var memoryMonitor: MemoryMonitor?
         
         // MARK: - Initialization

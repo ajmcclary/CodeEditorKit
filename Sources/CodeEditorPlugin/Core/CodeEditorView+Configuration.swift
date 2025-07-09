@@ -199,7 +199,7 @@ extension CodeEditorView {
     
     // MARK: - Syntax Highlighting Toggle
     
-    private func removeSyntaxHighlighting() {
+    internal func removeSyntaxHighlighting() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = self.textStorage else { return }
         #else

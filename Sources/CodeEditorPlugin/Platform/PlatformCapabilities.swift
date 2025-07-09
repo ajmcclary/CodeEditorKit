@@ -148,25 +148,15 @@ public final class PlatformCapabilities {
     
     // Device capabilities moved to PlatformCapabilities+Performance.swift
     
-    #if canImport(UIKit)
-    private static let deviceTypeMapping: [UIUserInterfaceIdiom: String] = [
-        .phone: "iPhone",
-        .pad: "iPad",
-        .tv: "Apple TV",
-        .mac: "Mac",
-        .carPlay: "CarPlay",
-        .unspecified: "Unspecified"
-    ]
-    #endif
+    /// The current device type
+    public var deviceType: DeviceType {
+        DeviceType.current
+    }
     
-    public var deviceType: String {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return "Mac"
-        #elseif canImport(UIKit)
-        return Self.deviceTypeMapping[UIDevice.current.userInterfaceIdiom] ?? "Unknown"
-        #else
-        return "Unknown"
-        #endif
+    /// Legacy string-based device type for backward compatibility
+    @available(*, deprecated, message: "Use deviceType property which returns DeviceType enum instead")
+    public var deviceTypeString: String {
+        deviceType.rawValue
     }
     
     // hasNotch moved to PlatformCapabilities+UI.swift
@@ -174,14 +164,14 @@ public final class PlatformCapabilities {
     // MARK: - Feature Recommendations
     
     public func recommendedConfiguration() -> EditorConfiguration {
-        var config = EditorConfiguration.default
+        // Start with device-specific configuration
+        var config = deviceType.recommendedConfiguration()
         
-        // Adjust based on platform
+        // Further adjust based on platform specifics
         switch currentPlatform {
         case .iOS:
-            config.display.fontSize = 16.0 // Larger for touch
-            config.layout.gutterWidth = 50.0 // Wider for touch targets
-            // Touch-specific behaviors would be configured here
+            // iOS-specific adjustments already handled by deviceType
+            break
             
         case .catalyst:
             // Catalyst apps run on Mac but may support touch
@@ -190,7 +180,7 @@ public final class PlatformCapabilities {
             config.performance.useHardwareAcceleration = true
             
         case .macOS:
-            // Default configuration is already optimized for macOS
+            // macOS-specific adjustments already handled by deviceType
             break
         }
         
@@ -219,7 +209,7 @@ public final class PlatformCapabilities {
         Platform Capabilities:
         - Platform: \(currentPlatform.name)
         - System Version: \(systemVersion)
-        - Device Type: \(deviceType)
+        - Device Type: \(deviceType.displayName)
         - Architecture: \(perf.processorArchitecture)
         - Memory Profile: \(perf.memoryProfile)
         - TextKit2 Support: \(textKit.supportsTextKit2) (Preferred: \(textKit.preferTextKit2))

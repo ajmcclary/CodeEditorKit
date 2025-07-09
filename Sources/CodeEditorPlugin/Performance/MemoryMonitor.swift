@@ -2,6 +2,47 @@ import Foundation
 import os.log
 
 /// Monitors memory usage and provides automatic cleanup capabilities
+///
+/// MemoryMonitor provides sophisticated memory tracking and automatic cleanup for the code editor.
+/// It supports dependency injection for better testability and allows sharing monitors across components.
+///
+/// ## Overview
+///
+/// Instead of using the deprecated singleton pattern, create MemoryMonitor instances and inject them
+/// through `EditorConfiguration` or directly into components that need memory management.
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// // Create and configure a monitor
+/// let monitor = MemoryMonitor()
+/// monitor.memoryThresholdMB = 150.0
+/// monitor.enableAutomaticCleanup = true
+///
+/// // Inject via configuration
+/// var config = EditorConfiguration()
+/// config.performance.memoryMonitor = monitor
+/// config.apply(to: editorView)
+/// ```
+///
+/// ## Cleanup Handlers
+///
+/// Register custom cleanup handlers for your resources:
+///
+/// ```swift
+/// monitor.registerCleanupHandler(
+///     identifier: "cache-cleanup",
+///     priority: .high
+/// ) { @MainActor in
+///     let freed = MyCache.shared.clear()
+///     return CleanupResult(memoryFreedMB: freed)
+/// }
+/// ```
+///
+/// For comprehensive examples and patterns, see:
+/// - <doc:MemoryMonitor-Injection>
+/// - <doc:MemoryMonitorExamples>
+///
 @MainActor
 public final class MemoryMonitor: ObservableObject {
     // MARK: - Configuration

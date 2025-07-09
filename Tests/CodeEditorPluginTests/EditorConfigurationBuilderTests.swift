@@ -354,4 +354,95 @@ final class EditorConfigurationBuilderTests: XCTestCase {
         XCTAssertTrue(config.display.enableSyntaxHighlighting)
         XCTAssertEqual(config.display.fontSize, 14)
     }
+    
+    // MARK: - Validation Tests
+    
+    func testBuildWithValidation_ValidConfiguration() {
+        let result = EditorConfigurationBuilder()
+            .fontSize(14)
+            .showLineNumbers(true)
+            .buildWithValidation()
+        
+        switch result {
+        case .success(let config):
+            XCTAssertEqual(config.display.fontSize, 14)
+            XCTAssertTrue(config.display.showLineNumbers)
+            
+        case .failure(let error):
+            XCTFail("Expected success but got validation error: \(error.localizedDescription)")
+        }
+    }
+    
+    func testBuildWithValidation_InvalidFontSize() {
+        let result = EditorConfigurationBuilder()
+            .fontSize(0) // Invalid: too small
+            .buildWithValidation()
+        
+        // The validator should auto-fix this, so we expect success
+        switch result {
+        case .success(let config):
+            // The original config is returned, not the auto-fixed one
+            XCTAssertEqual(config.display.fontSize, 0)
+            
+        case .failure:
+            XCTFail("Expected success with auto-fixable issues")
+        }
+    }
+    
+    func testBuildWithReport_ValidConfiguration() {
+        let (config, report) = EditorConfigurationBuilder()
+            .fontSize(14)
+            .showLineNumbers(true)
+            .buildWithReport()
+        
+        XCTAssertEqual(config.display.fontSize, 14)
+        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertFalse(report.hasIssues)
+        XCTAssertTrue(report.summary.contains("✅"))
+    }
+    
+    func testBuildWithReport_WithAutoFixes() {
+        let (config, report) = EditorConfigurationBuilder()
+            .fontSize(0) // Invalid: will be auto-fixed
+            .tabWidth(0) // Invalid: will be auto-fixed
+            .buildWithReport()
+        
+        // Check that fixes were applied
+        XCTAssertGreaterThan(config.display.fontSize, 0)
+        XCTAssertGreaterThan(config.layout.tabWidth, 0)
+        
+        // Check report
+        XCTAssertTrue(report.hasIssues)
+        XCTAssertFalse(report.appliedFixes.isEmpty)
+        XCTAssertTrue(report.summary.contains("🔧"))
+    }
+    
+    func testBuildWithValidation_ComparisonWithBuild() {
+        let builder = EditorConfigurationBuilder()
+            .fontSize(0) // Invalid
+            .tabWidth(0) // Invalid
+        
+        // Test build() - should auto-fix
+        let buildConfig = builder.build()
+        XCTAssertGreaterThan(buildConfig.display.fontSize, 0)
+        XCTAssertGreaterThan(buildConfig.layout.tabWidth, 0)
+        
+        // Test buildWithValidation() - should not auto-fix
+        let validationResult = builder.buildWithValidation()
+        switch validationResult {
+        case .success(let config):
+            XCTAssertEqual(config.display.fontSize, 0)
+            XCTAssertEqual(config.layout.tabWidth, 0)
+            
+        case .failure:
+            XCTFail("Expected success with auto-fixable issues")
+        }
+        
+        // Test buildWithReport() - should auto-fix and report
+        let (reportConfig, report) = builder.buildWithReport()
+        XCTAssertGreaterThan(reportConfig.display.fontSize, 0)
+        XCTAssertGreaterThan(reportConfig.layout.tabWidth, 0)
+        XCTAssertTrue(report.hasIssues)
+        XCTAssertFalse(report.appliedFixes.isEmpty)
+    }
 }

@@ -112,17 +112,9 @@ public struct ConfigurationValidator {
     // MARK: - Behavior Validation
     
     private func validateBehavior(_: EditorConfiguration.Behavior) -> [ValidationIssue] {
-        // Auto-save validation (properties not available in current Behavior structure)
-        // if behavior.autoSave && behavior.autoSaveDelay < 1.0 {
-        //     issues.append(ValidationIssue(
-        //         severity: .warning,
-        //         path: "behavior.autoSaveDelay",
-        //         message: "Auto-save delay \(behavior.autoSaveDelay)s may be too frequent",
-        //         suggestedValue: max(5.0, behavior.autoSaveDelay)
-        //     ))
-        // }
-        
-        [] as [ValidationIssue]
+        // Currently no behavior-specific validation rules
+        // Future validation rules can be added here
+        []
     }
     
     // MARK: - Performance Validation
@@ -139,16 +131,6 @@ public struct ConfigurationValidator {
                 suggestedValue: max(10_000, performance.maxSyntaxHighlightingLength)
             ))
         }
-        
-        // Large file threshold validation (property not available in current Performance structure)
-        // if performance.largeFileThreshold < performance.maxSyntaxHighlightingLength {
-        //     issues.append(ValidationIssue(
-        //         severity: .error,
-        //         path: "performance.largeFileThreshold", 
-        //         message: "Large file threshold should be greater than max syntax highlighting length",
-        //         suggestedValue: performance.maxSyntaxHighlightingLength * 2
-        //     ))
-        // }
         
         return issues
     }
@@ -210,19 +192,6 @@ public struct ConfigurationValidator {
                 configuration.display.fontSize = newValue
             }
             
-        // Note: lineHeightMultiplier and fontName properties not available in current Display structure
-        // case ("display", "lineHeightMultiplier"):
-        //     oldValue = configuration.display.lineHeightMultiplier
-        //     if let newValue = suggestedValue as? CGFloat {
-        //         configuration.display.lineHeightMultiplier = newValue
-        //     }
-            
-        // case ("display", "fontName"):
-        //     oldValue = configuration.display.fontName
-        //     if let newValue = suggestedValue as? String {
-        //         configuration.display.fontName = newValue
-        //     }
-            
         case ("layout", "tabWidth"):
             oldValue = configuration.layout.tabWidth
             if let newValue = suggestedValue as? Int {
@@ -240,13 +209,6 @@ public struct ConfigurationValidator {
             if let newValue = suggestedValue as? CGFloat {
                 configuration.layout.lineHeightMultiple = newValue
             }
-            
-        // Note: autoSaveDelay property not available in current Behavior structure
-        // case ("behavior", "autoSaveDelay"):
-        //     oldValue = configuration.behavior.autoSaveDelay
-        //     if let newValue = suggestedValue as? TimeInterval {
-        //         configuration.behavior.autoSaveDelay = newValue
-        //     }
             
         case ("behavior", "autoIndent"):
             oldValue = configuration.behavior.autoIndent
@@ -266,13 +228,6 @@ public struct ConfigurationValidator {
                 configuration.performance.maxSyntaxHighlightingLength = newValue
             }
             
-        // Note: largeFileThreshold property not available in current Performance structure
-        // case ("performance", "largeFileThreshold"):
-        //     oldValue = configuration.performance.largeFileThreshold
-        //     if let newValue = suggestedValue as? Int {
-        //         configuration.performance.largeFileThreshold = newValue
-        //     }
-            
         case ("performance", "smoothScrolling"):
             oldValue = configuration.performance.smoothScrolling
             if let newValue = suggestedValue as? Bool {
@@ -285,8 +240,8 @@ public struct ConfigurationValidator {
         
         return ValidationFix(
             issue: issue,
-            oldValue: oldValue,
-            newValue: suggestedValue,
+            oldValue: ValidationValue(from: oldValue),
+            newValue: ValidationValue(from: suggestedValue),
             applied: Date()
         )
     }
@@ -435,12 +390,127 @@ public struct ValidationIssue: Sendable {
     }
 }
 
+/// Wrapper for values in validation fixes
+public enum ValidationValue: Sendable {
+    case int(Int)
+    case double(Double)
+    case float(CGFloat)
+    case bool(Bool)
+    case string(String)
+    case null
+    
+    init(from value: Any?) {
+        guard let value else {
+            self = .null
+            return
+        }
+        
+        switch value {
+        case let intValue as Int:
+            self = .int(intValue)
+            
+        case let doubleValue as Double:
+            self = .double(doubleValue)
+            
+        case let floatValue as CGFloat:
+            self = .float(floatValue)
+            
+        case let boolValue as Bool:
+            self = .bool(boolValue)
+            
+        case let stringValue as String:
+            self = .string(stringValue)
+            
+        default:
+            self = .string("\(value)")
+        }
+    }
+    
+    public var description: String {
+        switch self {
+        case .int(let value): return "\(value)"
+        case .double(let value): return "\(value)"
+        case .float(let value): return "\(value)"
+        case .bool(let value): return "\(value)"
+        case .string(let value): return value
+        case .null: return "nil"
+        }
+    }
+}
+
 /// Fix applied to resolve a validation issue
-public struct ValidationFix {
+public struct ValidationFix: Sendable {
     public let issue: ValidationIssue
-    public let oldValue: Any?
-    public let newValue: Any
+    public let oldValue: ValidationValue
+    public let newValue: ValidationValue
     public let applied: Date
+}
+
+/// Validation report containing issues and fixes
+public struct ValidationReport: Sendable {
+    public let originalIssues: [ValidationIssue]
+    public let appliedFixes: [ValidationFix]
+    public let finalConfiguration: EditorConfiguration
+    
+    public var hasIssues: Bool {
+        !originalIssues.isEmpty
+    }
+    
+    public var hasCriticalIssues: Bool {
+        originalIssues.contains { $0.severity == .error }
+    }
+    
+    public var summary: String {
+        var parts: [String] = []
+        
+        if originalIssues.isEmpty {
+            parts.append("✅ Configuration is valid")
+        } else {
+            let errors = originalIssues.filter { $0.severity == .error }.count
+            let warnings = originalIssues.filter { $0.severity == .warning }.count
+            let infos = originalIssues.filter { $0.severity == .info }.count
+            
+            if errors > 0 {
+                parts.append("❌ \(errors) error\(errors == 1 ? "" : "s")")
+            }
+            if warnings > 0 {
+                parts.append("⚠️ \(warnings) warning\(warnings == 1 ? "" : "s")")
+            }
+            if infos > 0 {
+                parts.append("ℹ️ \(infos) info\(infos == 1 ? "" : "s")")
+            }
+        }
+        
+        if !appliedFixes.isEmpty {
+            parts.append("🔧 \(appliedFixes.count) fix\(appliedFixes.count == 1 ? "" : "es") applied")
+        }
+        
+        return parts.joined(separator: ", ")
+    }
+}
+
+/// Configuration validation error containing issues found during validation
+public struct ConfigurationValidationError: Error, Sendable {
+    public let issues: [ValidationIssue]
+    
+    public init(issues: [ValidationIssue]) {
+        self.issues = issues
+    }
+    
+    public var localizedDescription: String {
+        let errorCount = issues.filter { $0.severity == .error }.count
+        let warningCount = issues.filter { $0.severity == .warning }.count
+        
+        var parts: [String] = []
+        if errorCount > 0 {
+            parts.append("\(errorCount) error\(errorCount == 1 ? "" : "s")")
+        }
+        if warningCount > 0 {
+            parts.append("\(warningCount) warning\(warningCount == 1 ? "" : "s")")
+        }
+        
+        return "Configuration validation failed with \(parts.joined(separator: " and "))"
+    }
 }
 
 /// Migration error types

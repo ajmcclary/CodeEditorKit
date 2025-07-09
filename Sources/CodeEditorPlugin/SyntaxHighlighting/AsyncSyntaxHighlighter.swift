@@ -272,7 +272,7 @@ public final class AsyncSyntaxHighlighter {
         // Validate range
         guard rangeToHighlight.location >= 0,
               rangeToHighlight.location + rangeToHighlight.length <= textStorage.length else {
-            kAsyncHighlightLogger.warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
+            kAsyncHighlightLogger.warning("Invalid range for highlighting: \(rangeToHighlight, privacy: .public) with text length: \(textStorage.length, privacy: .public)")
             return
         }
         
@@ -734,7 +734,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         
         // Log slow operations
         if duration > 0.1 {
-            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration))s")
+            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue, privacy: .public): \(String(format: "%.3f", duration), privacy: .public)s")
         }
     }
     

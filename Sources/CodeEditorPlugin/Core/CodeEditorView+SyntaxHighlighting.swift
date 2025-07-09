@@ -60,7 +60,7 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
+        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled, privacy: .public), language: \(self.language.name, privacy: .public)")
         
         guard isSyntaxHighlightingEnabled else {
             Self.logger.debug("❌ Syntax highlighting disabled, cancelling")
@@ -68,7 +68,7 @@ extension CodeEditorView {
             return
         }
         
-        Self.logger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name)")
+        Self.logger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name, privacy: .public)")
         
         // Use async highlighting with debouncing
         asyncHighlighter.scheduleHighlighting(
@@ -93,22 +93,6 @@ extension CodeEditorView {
             language: language,
             visibleRange: range
         )
-    }
-
-    // MARK: - Remove Highlighting
-    
-    private func removeSyntaxHighlighting() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let textStorage = self.textStorage else { return }
-        #else
-        let textStorage = self.textStorage
-        #endif
-
-        let fullRange = NSRange(location: 0, length: textStorage.length)
-        textStorage.removeAttribute(.foregroundColor, range: fullRange)
-
-        // Restore default text color
-        textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColors.label, range: fullRange)
     }
 
     // MARK: - Mac Catalyst Support
@@ -143,9 +127,9 @@ extension CodeEditorView {
         
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         
-        Self.logger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor)) of type \(String(describing: type(of: effectiveTextColor)))")
-        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
-        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
+        Self.logger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor), privacy: .public) of type \(String(describing: type(of: effectiveTextColor)), privacy: .public)")
+        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length, privacy: .public)")
+        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)), privacy: .public)")
         
         // Apply to existing text with aggressive attribute application
         if textStorage.length > 0 {

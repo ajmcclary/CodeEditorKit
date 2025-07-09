@@ -43,6 +43,14 @@ actor AsyncTextProcessor {
         self.memoryMonitor = memoryMonitor
     }
     
+    deinit {
+        // Note: Cannot call async cleanup() from deinit
+        // Users should call cleanup() explicitly before releasing the actor
+        for task in activeTasks.values {
+            task.cancel()
+        }
+    }
+    
     private func getCache() async -> LRUCache<ProcessingCacheKey, ProcessingResult> {
         if let cache = resultCache {
             return cache
@@ -136,6 +144,19 @@ actor AsyncTextProcessor {
         updateProcessingLoad()
     }
     
+    /// Cleanup method to be called before deallocation
+    func cleanup() async {
+        clearQueue()
+        
+        // Wait for all active tasks to complete
+        for (_, task) in activeTasks {
+            _ = try? await task.value
+        }
+        
+        // Clear the cache
+        resultCache = nil
+    }
+    
     // MARK: - Private Methods
     
     private func processNextTaskIfPossible() async {
@@ -144,23 +165,44 @@ actor AsyncTextProcessor {
             return
         }
         
-        // Start processing
-        let processingTask = Task { @Sendable () -> ProcessingResult in
+        // Capture task data for use in Task closure
+        let taskId = nextTask.id
+        let taskText = nextTask.text
+        let taskRange = nextTask.range
+        let taskOperation = nextTask.operation
+        let taskCompletion = nextTask.completion
+        
+        // Start processing with proper isolation
+        let processingTask = Task { [weak self] () -> ProcessingResult in
+            guard let self else {
+                throw ProcessingError.processorDeallocated
+            }
+            
             let startTime = CFAbsoluteTimeGetCurrent()
             
             do {
+                // Create local task for processing to avoid capturing nextTask
+                let localTask = ProcessingTask(
+                    id: taskId,
+                    text: taskText,
+                    range: taskRange,
+                    operation: taskOperation,
+                    priority: nextTask.priority,
+                    completion: taskCompletion
+                )
+                
                 // Perform the actual processing
-                let result = try await self.performProcessing(nextTask)
+                let result = try await self.performProcessing(localTask)
                 
                 // Record metrics
                 let duration = CFAbsoluteTimeGetCurrent() - startTime
-                await self.performanceMonitor.recordProcessingTime(duration, for: nextTask.operation)
+                await self.performanceMonitor.recordProcessingTime(duration, for: taskOperation)
                 
                 // Cache the result
                 let cacheKey = ProcessingCacheKey(
-                    text: nextTask.text,
-                    range: nextTask.range,
-                    operation: nextTask.operation
+                    text: taskText,
+                    range: taskRange,
+                    operation: taskOperation
                 )
                 let cache = await self.getCache()
                 await cache.set(result, forKey: cacheKey)
@@ -172,23 +214,23 @@ actor AsyncTextProcessor {
             }
         }
         
-        activeTasks[nextTask.id] = processingTask
+        activeTasks[taskId] = processingTask
         
         // Handle completion with guaranteed cleanup
-        Task { @Sendable in
+        Task { [weak self] in
             defer {
                 // Ensure cleanup happens even on cancellation
-                Task {
-                    await self.taskCompleted(nextTask.id)
+                Task { [weak self] in
+                    await self?.taskCompleted(taskId)
                 }
             }
             
             do {
                 let result = try await processingTask.value
-                nextTask.completion(.success(result))
+                taskCompletion(.success(result))
             } catch {
                 if !Task.isCancelled {
-                    nextTask.completion(.failure(error))
+                    taskCompletion(.failure(error))
                 }
             }
         }
@@ -276,23 +318,21 @@ actor AsyncTextProcessor {
 /// Processing task handle for cancellation
 public struct ProcessingTaskHandle: Sendable {
     private let id: UUID
-    private let cancellationHandler: @Sendable () async -> Void
+    private let processor: AsyncTextProcessor
     
     init(id: UUID, processor: AsyncTextProcessor) {
         self.id = id
-        self.cancellationHandler = { [weak processor] in
-            await processor?.cancel(taskId: id)
-        }
+        self.processor = processor
     }
     
     /// Cancel this task
     public func cancel() async {
-        await cancellationHandler()
+        await processor.cancel(taskId: id)
     }
 }
 
 /// Processing task priority
-public enum TaskPriority: Int, Comparable {
+public enum TaskPriority: Int, Comparable, Sendable {
     case low = 0
     case normal = 1
     case high = 2
@@ -341,7 +381,7 @@ public struct ProcessingResult: Sendable {
 }
 
 /// Processing error types
-public enum ProcessingError: Error {
+public enum ProcessingError: Error, Sendable {
     case processorDeallocated
     case operationFailed(String)
     case timeout

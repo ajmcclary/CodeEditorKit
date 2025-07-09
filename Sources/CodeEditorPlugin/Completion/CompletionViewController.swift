@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
@@ -8,6 +9,8 @@ public final class CompletionViewController: CompletionViewControllerBase, Compl
     public typealias Item = any CompletionItem
 
     // MARK: - Private Properties
+
+    private static let logger = Logger(subsystem: "com.codeeditor.plugin", category: "CompletionViewController")
 
     private lazy var scrollView: NSScrollView = {
         let scrollView = NSScrollView()
@@ -330,7 +333,14 @@ extension CompletionViewController: UITableViewDataSource {
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "CompletionCell", for: indexPath) as? CompletionTableViewCell else {
-            fatalError("Failed to dequeue CompletionTableViewCell")
+            Logger(subsystem: "com.codeeditor.plugin", category: "CompletionViewController").error("Failed to dequeue CompletionTableViewCell at indexPath: \(indexPath)")
+            // Return a fallback cell to prevent crash
+            let fallbackCell = UITableViewCell(style: .default, reuseIdentifier: nil)
+            if indexPath.row < completionItems.count {
+                let item = completionItems[indexPath.row]
+                fallbackCell.textLabel?.text = item.label
+            }
+            return fallbackCell
         }
         let item = completionItems[indexPath.row]
         cell.configure(with: item)
