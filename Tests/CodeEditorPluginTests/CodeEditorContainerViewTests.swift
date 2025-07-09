@@ -408,7 +408,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         // If content size is still not calculated, check if we can scroll
         if contentHeight <= frameHeight {
             // At least verify that the text view has content
-            XCTAssertGreaterThan(containerView.textView.text.count, 1000, "Text view should have large content")
+            XCTAssertGreaterThan(containerView.textView.text.count, 1_000, "Text view should have large content")
             XCTAssertTrue(containerView.textView.isScrollEnabled, "Scroll should be enabled")
         } else {
             XCTAssertGreaterThan(contentHeight, frameHeight, "Content should be larger than visible area")
