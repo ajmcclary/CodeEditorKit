@@ -6,7 +6,7 @@ import AppKit
 
 // MARK: - TextLayoutManager
 
-open class TextLayoutManager: NSTextLayoutManager {
+public class TextLayoutManager: NSTextLayoutManager {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Posted when the selected range of characters changes.
     public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
@@ -25,7 +25,7 @@ open class TextLayoutManager: NSTextLayoutManager {
         }
     }
 
-    @objc override open dynamic var usageBoundsForTextContainer: CGRect {
+    @objc override public dynamic var usageBoundsForTextContainer: CGRect {
         var rect = super.usageBoundsForTextContainer
         if Self.needsBoundsWorkaround {
             // FB13290979: NSTextContainer.lineFragmentPadding does not affect end of the fragment usageBoundsForTextContainer rectangle

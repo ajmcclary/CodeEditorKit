@@ -128,7 +128,7 @@ extension CodeEditor {
     ///     }
     /// ```
     public func onTextChange(
-        perform action: @escaping (String) -> Void
+        perform action: @escaping @Sendable (String) -> Void
     ) -> CodeEditor {
         var copy = self
         copy.onTextChange = action
@@ -159,7 +159,7 @@ extension CodeEditor {
     ///     }
     /// ```
     public func onSelectionChange(
-        perform action: @escaping (Range<String.Index>?) -> Void
+        perform action: @escaping @Sendable (Range<String.Index>?) -> Void
     ) -> CodeEditor {
         var copy = self
         copy.onSelectionChange = action
@@ -194,7 +194,7 @@ extension CodeEditor {
     ///     }
     /// ```
     public func codeCompletion(
-        provider: @escaping (CompletionContext) async -> [SwiftUICompletionItem]
+        provider: @escaping @Sendable (CompletionContext) async -> [SwiftUICompletionItem]
     ) -> CodeEditor {
         var copy = self
         copy.completionProvider = provider
@@ -410,6 +410,43 @@ extension CodeEditor {
     ///         On macOS, the editor will receive keyboard input.
     public func becomeFirstResponder() -> some View {
         environment(\.codeEditorBecomeFirstResponder, true)
+    }
+    
+    /// Configures a custom memory monitor for the editor.
+    ///
+    /// - Parameter monitor: The memory monitor instance to use
+    /// - Returns: A view with the custom memory monitor environment value
+    ///
+    /// Use this modifier to inject a custom memory monitor for testing or to share
+    /// a single monitor instance across multiple editor instances.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let sharedMonitor = MemoryMonitor()
+    /// 
+    /// var body: some View {
+    ///     VStack {
+    ///         CodeEditor(text: $code1)
+    ///             .memoryMonitor(sharedMonitor)
+    ///         
+    ///         CodeEditor(text: $code2)
+    ///             .memoryMonitor(sharedMonitor)
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// ## Testing Example
+    ///
+    /// ```swift
+    /// let testMonitor = MemoryMonitor()
+    /// testMonitor.isUnderPressure = true  // Simulate memory pressure
+    /// 
+    /// CodeEditor(text: $code)
+    ///     .memoryMonitor(testMonitor)
+    /// ```
+    public func memoryMonitor(_ monitor: MemoryMonitor) -> some View {
+        environment(\.codeEditorMemoryMonitor, monitor)
     }
 }
 

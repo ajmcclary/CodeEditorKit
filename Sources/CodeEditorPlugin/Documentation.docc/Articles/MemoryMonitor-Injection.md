@@ -117,7 +117,26 @@ monitor.registerCleanupHandler(
 
 ### SwiftUI Integration
 
-When using CodeEditor in SwiftUI, inject MemoryMonitor through the environment:
+When using CodeEditor in SwiftUI, you have two options for injecting MemoryMonitor:
+
+#### Option 1: Using the Dedicated Environment Key (Recommended)
+
+```swift
+import SwiftUI
+import CodeEditorPlugin
+
+struct ContentView: View {
+    @State private var code = "// Your code here"
+    let memoryMonitor = MemoryMonitor()
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .memoryMonitor(memoryMonitor)  // Direct modifier
+    }
+}
+```
+
+#### Option 2: Through Configuration
 
 ```swift
 import SwiftUI
@@ -134,6 +153,26 @@ struct ContentView: View {
                     .memoryMonitor(memoryMonitor)
                     .build()
             )
+    }
+}
+```
+
+#### Using Environment Values
+
+Access the memory monitor from child views:
+
+```swift
+struct ChildView: View {
+    @Environment(\.codeEditorMemoryMonitor) var memoryMonitor
+    
+    var body: some View {
+        Button("Force Cleanup") {
+            Task {
+                if let monitor = memoryMonitor {
+                    await monitor.performCleanup()
+                }
+            }
+        }
     }
 }
 ```

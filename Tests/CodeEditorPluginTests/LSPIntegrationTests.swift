@@ -315,22 +315,28 @@ final class LSPIntegrationTests: XCTestCase {
         weak var weakManager: LSPManager?
         weak var weakMonitor: MemoryMonitor?
         
-        autoreleasepool {
+        // Create and use resources
+        do {
             let monitor = MemoryMonitor()
             let manager = LSPManager(memoryMonitor: monitor)
             weakManager = manager
             weakMonitor = monitor
             
             // Open and close a document
-            Task {
-                try? await manager.openDocument(
-                    filePath: "/test/temp.swift",
-                    content: "// Test",
-                    languageId: "swift"
-                )
-                try? await manager.closeDocument(filePath: "/test/temp.swift")
-            }
+            try? await manager.openDocument(
+                filePath: "/test/temp.swift",
+                content: "// Test",
+                languageId: "swift"
+            )
+            try? await manager.closeDocument(filePath: "/test/temp.swift")
+            
+            // Stop all servers and monitoring before deallocation
+            await manager.stopAllServers()
+            monitor.stopMonitoring()
         }
+        
+        // Force cleanup
+        autoreleasepool { }
         
         // Give time for cleanup
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds

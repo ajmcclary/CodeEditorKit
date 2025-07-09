@@ -85,20 +85,24 @@ internal class CodeFoldingEngine: ObservableObject {
     // MARK: - Folding Operations
 
     /// Toggle fold at line
-    internal func toggleFold(at line: Int) {
-        guard let region = foldableRegion(at: line) else { return }
+    /// - Returns: `true` if fold state was changed, `false` if no foldable region exists
+    internal func toggleFold(at line: Int) -> Bool {
+        guard let region = foldableRegion(at: line) else { return false }
 
         if foldedRegions.contains(region.id) {
             unfold(region)
         } else {
             fold(region)
         }
+        return true
     }
 
     /// Fold a specific region
-    internal func fold(_ region: FoldableRegion) {
+    /// - Returns: `true` if the region was folded, `false` if it was already folded or textView is nil
+    @discardableResult
+    internal func fold(_ region: FoldableRegion) -> Bool {
         guard !foldedRegions.contains(region.id),
-              let textView else { return }
+              let textView else { return false }
 
         foldedRegions.insert(region.id)
 
@@ -118,12 +122,15 @@ internal class CodeFoldingEngine: ObservableObject {
         #endif
 
         logger.debug("Folded region: \(region.title)")
+        return true
     }
 
     /// Unfold a specific region
-    internal func unfold(_ region: FoldableRegion) {
+    /// - Returns: `true` if the region was unfolded, `false` if it wasn't folded or textView is nil
+    @discardableResult
+    internal func unfold(_ region: FoldableRegion) -> Bool {
         guard foldedRegions.contains(region.id),
-              let textView else { return }
+              let textView else { return false }
 
         foldedRegions.remove(region.id)
 
@@ -143,6 +150,7 @@ internal class CodeFoldingEngine: ObservableObject {
         #endif
 
         logger.debug("Unfolded region: \(region.title)")
+        return true
     }
 
     /// Fold all regions

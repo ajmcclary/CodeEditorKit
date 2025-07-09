@@ -29,8 +29,7 @@ extension CodeEditorView {
     public func toggleFold(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
         
-        codeFoldingEngine.toggleFold(at: lineNumber)
-        return true
+        return codeFoldingEngine.toggleFold(at: lineNumber)
     }
     
     /// Fold a code region at the specified line number.
@@ -53,8 +52,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return false }
         
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
-            codeFoldingEngine.fold(region)
-            return true
+            return codeFoldingEngine.fold(region)
         }
         return false
     }
@@ -78,8 +76,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return false }
         
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
-            codeFoldingEngine.unfold(region)
-            return true
+            return codeFoldingEngine.unfold(region)
         }
         return false
     }

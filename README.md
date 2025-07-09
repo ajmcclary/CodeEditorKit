@@ -41,7 +41,9 @@ struct ContentView: View {
     @State private var code = "print(\"Hello, World!\")"
     
     var body: some View {
-        CodeEditor(text: $code, language: .swift, theme: .dark)
+        CodeEditor(text: $code)
+            .codeLanguage(.swift)
+            .codeTheme(.dark)
             .frame(minHeight: 300)
     }
 }
@@ -98,6 +100,12 @@ struct ContentView: View {
     var body: some View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
+            .codeTheme(.default)
+            .lineNumbers(true)
+            .highlightSelectedLine(true)
+            .tabWidth(4)
+            .enableCodeFolding(true)
+            .showFoldingControls(true)
             .environment(\.codeEditorConfiguration, configuration)
             .frame(minHeight: 400)
             .padding()
@@ -120,15 +128,29 @@ import UIKit
 class ViewController: PlatformViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Create code editor with optional memory monitor injection
         let textView = CodeEditorView()
         textView.text = "// Your code here"
         
-        // Apply a standard configuration
-        let config = EditorConfiguration.default
+        // Optional: Inject a shared memory monitor
+        let sharedMonitor = MemoryMonitor()
+        textView.memoryMonitor = sharedMonitor
+        
+        // Apply configuration using builder pattern
+        let config = EditorConfigurationBuilder()
+            .fontSize(14)
+            .showLineNumbers(true)
+            .tabWidth(4)
+            .enableSyntaxHighlighting(true)
+            .enableCodeFolding(true)
+            .showFoldingControls(true)
+            .build()
+        
         config.apply(to: textView)
         
         // Set language for syntax highlighting
-        textView.setLanguage(fileExtension: "swift")
+        textView.language = .swift
         
         // Add to view hierarchy...
     }
@@ -137,53 +159,56 @@ class ViewController: PlatformViewController {
 
 ### Mac Catalyst
 
+For Mac Catalyst, use the SwiftUI approach for best results:
+
 ```swift
 import CodeEditorPlugin
-import UIKit
+import SwiftUI
 
+struct CatalystContentView: View {
+    @State private var code = "// Your Mac Catalyst code here"
+    @State private var config = EditorConfiguration.default
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .codeLanguage(.swift)
+            .codeTheme(.default)
+            .fontSize(14)  // Slightly larger for desktop
+            .lineNumbers(true)
+            .tabWidth(4)
+            .enableCodeFolding(true)
+            .showFoldingControls(true)
+            .environment(\.codeEditorConfiguration, config)
+            .frame(minHeight: 600)
+    }
+}
+
+// For UIKit-based Catalyst apps
 class CatalystViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Create the code editor
-        let textView = CodeEditorView()
-        textView.text = "// Your Mac Catalyst code here"
+        let hostingController = UIHostingController(
+            rootView: CatalystContentView()
+        )
         
-        // Configure for Mac Catalyst environment
-        let config = EditorConfigurationBuilder()
-            .fontSize(14)  // Slightly larger for desktop
-            .showLineNumbers(true)
-            .tabWidth(4)
-            .enableCodeFolding(true)
-            .showFoldingControls(true)
-            .build()
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
         
-        config.apply(to: textView)
-        
-        // Set language and theme
-        textView.setLanguage(fileExtension: "swift")
-        
-        // Add to view hierarchy
-        view.addSubview(textView)
-        textView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            hostingController.view.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        // Mac Catalyst specific: Enable desktop-style features
-        if ProcessInfo.processInfo.isiOSAppOnMac {
-            // Running on Mac via Catalyst
-            textView.isScrollEnabled = true
-            textView.allowsEditingTextAttributes = true
-        }
+        hostingController.didMove(toParent: self)
     }
 }
 ```
 
-**Note**: CodeEditorPlugin fully supports Mac Catalyst with proper platform detection and adaptive UI. The editor automatically adjusts its behavior for the desktop environment while maintaining iOS compatibility.
+**Note**: CodeEditorPlugin fully supports Mac Catalyst with proper platform detection and adaptive UI. The SwiftUI integration provides the best experience for Catalyst apps.
 
 ## 🏗️ Architecture
 
@@ -475,6 +500,115 @@ swift test --parallel        # Run tests in parallel for speed
 ### Quality Commitment
 
 Every release of CodeEditorPlugin maintains these standards. We don't just aim for quality – we guarantee it through automation, testing, and a commitment to excellence that's verified with every commit.
+
+## 🔥 New API Features
+
+### Memory Monitor Dependency Injection
+
+CodeEditorPlugin now supports dependency injection for memory monitoring, allowing you to share monitors across multiple editors or inject test doubles:
+
+```swift
+// SwiftUI: Inject via environment
+let sharedMonitor = MemoryMonitor()
+
+var body: some View {
+    VStack {
+        CodeEditor(text: $code1)
+            .memoryMonitor(sharedMonitor)
+        
+        CodeEditor(text: $code2)
+            .memoryMonitor(sharedMonitor)
+    }
+}
+
+// UIKit/AppKit: Direct injection
+let editor = CodeEditorView()
+editor.memoryMonitor = sharedMonitor
+```
+
+### Enhanced Code Folding API
+
+The code folding API now returns success/failure status for better control flow:
+
+```swift
+// Toggle folding with result handling
+if editor.toggleFold(at: 25) {
+    print("Fold state changed")
+} else {
+    print("No foldable region at line 25")
+}
+
+// Fold all functions in a file
+if editor.foldAll(matching: .functions) {
+    print("All functions folded")
+}
+
+// Check if a line is foldable
+if editor.isFoldable(at: lineNumber) {
+    showFoldingIndicator()
+}
+```
+
+### @Sendable Callback Support
+
+All callbacks now support Swift 6 concurrency with @Sendable closures:
+
+```swift
+CodeEditor(text: $code)
+    .onTextChange { @Sendable newText in
+        // Safe to use in concurrent contexts
+        Task {
+            await validateSyntax(newText)
+        }
+    }
+    .onSelectionChange { @Sendable range in
+        // Thread-safe selection handling
+        await updateSelectionUI(range)
+    }
+    .codeCompletion { @Sendable context in
+        // Async completion provider
+        await fetchCompletions(for: context)
+    }
+```
+
+### EditorConfigurationBuilder Enhancements
+
+The configuration builder now uses extension-based organization for better discoverability:
+
+```swift
+let config = EditorConfigurationBuilder()
+    // Display settings
+    .fontSize(16)
+    .showLineNumbers(true)
+    .highlightSelectedLine(true)
+    .showInvisibleCharacters(false)
+    
+    // Layout settings
+    .tabWidth(4)
+    .gutterWidth(50)
+    
+    // Behavior settings
+    .editable(true)
+    .autoIndent(true)
+    
+    // Performance settings
+    .enableHardwareAcceleration(true)
+    .maxFileSizeForSyntaxHighlighting(1_000_000)
+    
+    // Language & theme
+    .language(.swift)
+    .theme(.monokai)
+    
+    // Build with validation
+    .buildWithFeedback()
+
+// Handle validation feedback
+if !config.fixes.isEmpty {
+    for fix in config.fixes {
+        print("Applied fix: \(fix.issue.path) -> \(fix.newValue)")
+    }
+}
+```
 
 ## 📚 Documentation
 

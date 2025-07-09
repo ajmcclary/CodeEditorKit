@@ -30,7 +30,9 @@ struct ContentView: View {
     @State private var code = "print(\"Hello, World!\")"
     
     var body: some View {
-        CodeEditor(text: $code, language: .swift, theme: .dark)
+        CodeEditor(text: $code)
+            .codeLanguage(.swift)
+            .codeTheme(.dark)
             .frame(minHeight: 300)
     }
 }
@@ -64,6 +66,7 @@ See <doc:QuickStart> for more examples and advanced usage.
 - <doc:Annotation-System>
 - <doc:Performance-Monitoring>
 - <doc:MemoryMonitor-Injection>
+- <doc:Code-Folding-API>
 - <doc:Production-Reliability>
 - <doc:Plugin-Architecture>
 - <doc:LSP-Integration>
@@ -73,6 +76,12 @@ See <doc:QuickStart> for more examples and advanced usage.
 - <doc:SwiftUI-Integration>
 - <doc:UIKit-AppKit-Integration>
 - <doc:Advanced-Patterns>
+
+### Swift 6 & Modern APIs
+
+- <doc:Sendable-Callbacks>
+- <doc:Duration-API-Migration>
+- <doc:Configuration-Builder-Enhancements>
 
 ### Documentation
 

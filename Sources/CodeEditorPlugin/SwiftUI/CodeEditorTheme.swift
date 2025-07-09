@@ -82,6 +82,13 @@ public struct CodeEditorLanguageKey: EnvironmentKey {
 }
 
 @available(macOS 12.0, iOS 16.0, *)
+public struct CodeEditorMemoryMonitorKey: EnvironmentKey {
+    public static let defaultValue: MemoryMonitor? = nil
+    
+    public typealias Value = MemoryMonitor?
+}
+
+@available(macOS 12.0, iOS 16.0, *)
 extension EnvironmentValues {
     public var codeEditorTheme: CodeEditorSwiftUITheme {
         get { self[CodeEditorThemeKey.self] }
@@ -101,6 +108,11 @@ extension EnvironmentValues {
     public var codeEditorLanguage: Language {
         get { self[CodeEditorLanguageKey.self] }
         set { self[CodeEditorLanguageKey.self] = newValue }
+    }
+    
+    public var codeEditorMemoryMonitor: MemoryMonitor? {
+        get { self[CodeEditorMemoryMonitorKey.self] }
+        set { self[CodeEditorMemoryMonitorKey.self] = newValue }
     }
 }
 

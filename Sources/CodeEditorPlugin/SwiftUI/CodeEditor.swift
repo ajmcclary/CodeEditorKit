@@ -157,15 +157,19 @@ public struct CodeEditor: View {
     @Environment(\.codeEditorLanguage) private var language
     @Environment(\.codeEditorTheme) private var theme
     @Environment(\.codeEditorConfiguration) private var configuration
+    @Environment(\.codeEditorMemoryMonitor) private var environmentMemoryMonitor
+    
+    // Default memory monitor created on MainActor
+    @State private var defaultMemoryMonitor = MemoryMonitor()
     
     // Initial values from convenience initializers
     private var initialLanguage: Language?
     private var initialTheme: CodeEditorSwiftUITheme?
     
     // Callbacks
-    internal var onTextChange: ((String) -> Void)?
-    internal var onSelectionChange: ((Range<String.Index>?) -> Void)?
-    internal var completionProvider: ((CompletionContext) async -> [SwiftUICompletionItem])?
+    internal var onTextChange: (@Sendable (String) -> Void)?
+    internal var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
+    internal var completionProvider: (@Sendable (CompletionContext) async -> [SwiftUICompletionItem])?
     
     // Debouncing
     private let textDebounceInterval: Duration
@@ -241,12 +245,14 @@ public struct CodeEditor: View {
     public var body: some View {
         let effectiveLanguage = initialLanguage ?? language
         let effectiveTheme = initialTheme ?? theme
+        let effectiveMemoryMonitor = environmentMemoryMonitor ?? defaultMemoryMonitor
         
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
             theme: effectiveTheme,
             configuration: configuration,
+            memoryMonitor: effectiveMemoryMonitor,
             isFocused: Binding(
                 get: { isFocused },
                 set: { isFocused = $0 }

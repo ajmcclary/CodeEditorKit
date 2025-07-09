@@ -69,11 +69,11 @@ public final class MemoryMonitor: ObservableObject {
     /// Registered cleanup handlers
     private var cleanupHandlers: [String: CleanupHandler] = [:]
     
-    /// Memory monitoring timer
-    private var monitoringTimer: Timer?
+    /// Memory monitoring task
+    private var monitoringTask: Task<Void, Never>?
     
-    /// Periodic cleanup timer
-    private var cleanupTimer: Timer?
+    /// Periodic cleanup task
+    private var cleanupTask: Task<Void, Never>?
     
     /// Logger
     private let logger = Logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
@@ -95,7 +95,7 @@ public final class MemoryMonitor: ObservableObject {
     
     deinit {
         // Note: Cannot call stopMonitoring() in deinit as it's @MainActor isolated
-        // Timer invalidation will happen automatically when the monitor is deallocated
+        // Task cancellation will happen automatically when the monitor is deallocated
     }
     
     // MARK: - Public Methods
@@ -206,16 +206,36 @@ public final class MemoryMonitor: ObservableObject {
     public func startMonitoring() {
         stopMonitoring()
         
-        monitoringTimer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                await self?.checkMemoryUsage()
+        // Start monitoring task
+        monitoringTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                
+                await self.checkMemoryUsage()
+                
+                do {
+                    try await Task.sleep(for: .seconds(self.monitoringInterval))
+                } catch {
+                    // Task was cancelled
+                    return
+                }
             }
         }
         
+        // Start periodic cleanup task if enabled
         if enablePeriodicCleanup {
-            cleanupTimer = Timer.scheduledTimer(withTimeInterval: periodicCleanupInterval, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    await self?.performPeriodicCleanup()
+            cleanupTask = Task { [weak self] in
+                while !Task.isCancelled {
+                    guard let self else { return }
+                    
+                    do {
+                        try await Task.sleep(for: .seconds(self.periodicCleanupInterval))
+                    } catch {
+                        // Task was cancelled
+                        return
+                    }
+                    
+                    await self.performPeriodicCleanup()
                 }
             }
         }
@@ -225,11 +245,11 @@ public final class MemoryMonitor: ObservableObject {
     
     /// Stop memory monitoring
     public func stopMonitoring() {
-        monitoringTimer?.invalidate()
-        monitoringTimer = nil
+        monitoringTask?.cancel()
+        monitoringTask = nil
         
-        cleanupTimer?.invalidate()
-        cleanupTimer = nil
+        cleanupTask?.cancel()
+        cleanupTask = nil
         
         logger.info("Memory monitoring stopped")
     }

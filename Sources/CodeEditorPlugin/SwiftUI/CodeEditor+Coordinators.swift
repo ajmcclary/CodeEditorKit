@@ -87,14 +87,21 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         
         currentText = newText
         
-        // Cancel any existing debounce task
-        textUpdateTask?.cancel()
+        // Cancel any existing debounce task and wait for it
+        let taskToCancel = textUpdateTask
+        textUpdateTask = nil
         
         // Immediate update for internal state
         onTextChange?(newText)
         
-        // Debounced update for SwiftUI binding and callbacks
+        // Create new debounced update task
         textUpdateTask = Task { [weak self] in
+            // First, await the cancellation of the previous task if it exists
+            if let taskToCancel {
+                taskToCancel.cancel()
+                _ = await taskToCancel.value
+            }
+            
             do {
                 guard let self else { return }
                 try await Task.sleep(for: .seconds(self.textDebounceInterval))
@@ -241,6 +248,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         language: Language,
         theme: CodeEditorSwiftUITheme,
         configuration: EditorConfiguration,
+        memoryMonitor: MemoryMonitor,
         onTextChange: ((String) -> Void)? = nil,
         onSelectionChange: ((NSRange) -> Void)? = nil
     ) {
@@ -250,6 +258,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         
         // Get the text view
         let textView = container.textView
+        
+        // Set the memory monitor
+        textView.memoryMonitor = memoryMonitor
         
         // Set initial text
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

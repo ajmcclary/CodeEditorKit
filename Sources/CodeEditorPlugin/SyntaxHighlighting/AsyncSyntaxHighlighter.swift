@@ -18,7 +18,7 @@ public final class AsyncSyntaxHighlighter {
     private var highlightingTask: Task<Void, Never>?
     private var debounceTask: Task<Void, Never>?
     private var periodicOptimizationTask: Task<Void, Never>?
-    private let debounceInterval: TimeInterval
+    private let debounceInterval: Duration
     private let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
     
     // Smart cache for highlight results
@@ -35,7 +35,7 @@ public final class AsyncSyntaxHighlighter {
     
     // MARK: - Initialization
     
-    public init(memoryMonitor: MemoryMonitor, debounceInterval: TimeInterval = 0.3) {
+    public init(memoryMonitor: MemoryMonitor, debounceInterval: Duration = .milliseconds(300)) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
@@ -63,7 +63,7 @@ public final class AsyncSyntaxHighlighter {
         debounceTask = Task { [weak self] in
             do {
                 guard let self else { return }
-                try await Task.sleep(for: .seconds(self.debounceInterval))
+                try await Task.sleep(for: self.debounceInterval)
                 
                 // Perform highlighting directly without nested tasks
                 await self.performHighlighting(for: textView, language: language, visibleRange: visibleRange)
@@ -119,7 +119,7 @@ public final class AsyncSyntaxHighlighter {
     public func configureCacheSettings(
         maxCacheSize: Int? = nil,
         maxMemoryUsageMB: Double? = nil,
-        staleThreshold: TimeInterval? = nil
+        staleThreshold: Duration? = nil
     ) async {
         await tokenCache.configureCacheSettings(
             maxCacheSize: maxCacheSize,
@@ -198,7 +198,7 @@ public final class AsyncSyntaxHighlighter {
                 
                 // Cache the results with performance metrics
                 let endTime = CFAbsoluteTimeGetCurrent()
-                let computationTime = endTime - startTime
+                let computationTime = Duration.seconds(endTime - startTime)
                 await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
                 
                 // Apply tokens on main thread
@@ -483,15 +483,16 @@ actor SmartTokenCache {
         let tokens: [HighlightedToken]
         let timestamp: Date
         let accessCount: Int
-        let computationTime: TimeInterval
+        let computationTime: Duration
         let textLength: Int
         
         var score: Double {
             // Calculate cache value score based on multiple factors
-            let ageFactor = 1.0 / (Date().timeIntervalSince(timestamp) + 1.0)
+            let ageInSeconds = Date.now.timeIntervalSince(timestamp)
+            let ageFactor = 1.0 / (ageInSeconds + 1.0)
             let accessFactor = Double(accessCount)
             let sizeFactor = Double(textLength) / 10_000.0 // Favor larger files
-            let computationFactor = computationTime * 10.0 // Favor expensive computations
+            let computationFactor = computationTime.timeInterval * 10.0 // Favor expensive computations
             
             return ageFactor * 0.3 + accessFactor * 0.3 + sizeFactor * 0.2 + computationFactor * 0.2
         }
@@ -506,10 +507,10 @@ actor SmartTokenCache {
     var maxMemoryUsageMB: Double = 100.0
     
     /// Time threshold for considering entries stale (in seconds)
-    var staleThreshold: TimeInterval = 3_600 // 1 hour
+    var staleThreshold: Duration = .seconds(3_600) // 1 hour
     
     /// Minimum computation time to cache (avoid caching trivial computations)
-    var minComputationTimeToCache: TimeInterval = 0.01 // 10ms
+    var minComputationTimeToCache: Duration = .milliseconds(10)
     
     // MARK: - State
     
@@ -524,7 +525,8 @@ actor SmartTokenCache {
     func getCachedTokens(for key: CacheKey) -> [HighlightedToken] {
         if var entry = cache[key] {
             // Check if entry is stale
-            if Date().timeIntervalSince(entry.timestamp) > staleThreshold {
+            let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
+            if age > staleThreshold {
                 // Remove stale entry
                 cache.removeValue(forKey: key)
                 accessOrder.removeAll { $0 == key }
@@ -557,7 +559,7 @@ actor SmartTokenCache {
     func setCachedTokens(
         _ tokens: [HighlightedToken], 
         for key: CacheKey, 
-        computationTime: TimeInterval
+        computationTime: Duration
     ) {
         // Don't cache trivial computations
         guard computationTime >= minComputationTimeToCache else { return }
@@ -604,7 +606,8 @@ actor SmartTokenCache {
     func optimizeCache() {
         // Remove stale entries
         let staleKeys = cache.compactMap { key, entry in
-            Date().timeIntervalSince(entry.timestamp) > staleThreshold ? key : nil
+            let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
+            return age > staleThreshold ? key : nil
         }
         
         for key in staleKeys {
@@ -620,7 +623,7 @@ actor SmartTokenCache {
     func configureCacheSettings(
         maxCacheSize: Int? = nil,
         maxMemoryUsageMB: Double? = nil,
-        staleThreshold: TimeInterval? = nil
+        staleThreshold: Duration? = nil
     ) {
         if let maxCacheSize {
             self.maxCacheSize = maxCacheSize
@@ -706,7 +709,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         case cacheOperation = "CacheOperation"
     }
     
-    private var metrics: [Category: [TimeInterval]] = [:]
+    private var metrics: [Category: [Duration]] = [:]
     private let metricsLimit = 100
     
     func measure<T>(
@@ -715,13 +718,13 @@ final class SyntaxHighlightingPerformanceMonitor {
     ) async rethrows -> T {
         let startTime = CFAbsoluteTimeGetCurrent()
         defer {
-            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            let duration = Duration.seconds(CFAbsoluteTimeGetCurrent() - startTime)
             recordMetric(category: category, duration: duration)
         }
         return try await operation()
     }
     
-    private func recordMetric(category: Category, duration: TimeInterval) {
+    private func recordMetric(category: Category, duration: Duration) {
         var categoryMetrics = metrics[category] ?? []
         categoryMetrics.append(duration)
         
@@ -733,16 +736,20 @@ final class SyntaxHighlightingPerformanceMonitor {
         metrics[category] = categoryMetrics
         
         // Log slow operations
-        if duration > 0.1 {
-            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue, privacy: .public): \(String(format: "%.3f", duration), privacy: .public)s")
+        if duration > .milliseconds(100) {
+            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue, privacy: .public): \(String(format: "%.3f", duration.timeInterval), privacy: .public)s")
         }
     }
     
-    func getAverageTime(for category: Category) -> TimeInterval? {
+    func getAverageTime(for category: Category) -> Duration? {
         guard let categoryMetrics = metrics[category], !categoryMetrics.isEmpty else {
             return nil
         }
-        return categoryMetrics.reduce(0, +) / Double(categoryMetrics.count)
+        // Sum all durations and divide by count
+        let totalSeconds = categoryMetrics.reduce(0.0) { sum, duration in
+            sum + duration.timeInterval
+        }
+        return Duration.seconds(totalSeconds / Double(categoryMetrics.count))
     }
     
     func reset() {
