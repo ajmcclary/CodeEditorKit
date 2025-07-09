@@ -22,37 +22,54 @@ public enum CatalystColorHelper {
     public static func effectiveTextColor(from color: Color) -> UIColor {
         // Handle special SwiftUI colors first
         if color == Color.primary {
-            // Use dynamic color that works with getRed
+            // Create a dynamic color that works with getRed
             return UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? .white : .black
+                if traitCollection.userInterfaceStyle == .dark {
+                    return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0) // White
+                } else {
+                    return UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // Black
+                }
             }
         } else if color == Color.clear {
             // Clear color should become a visible color
             return UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? .white : .black
+                if traitCollection.userInterfaceStyle == .dark {
+                    return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0) // White
+                } else {
+                    return UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // Black
+                }
             }
         } else if color == Color.accentColor {
-            // Use a concrete blue color
-            return UIColor.systemBlue
+            // Use a concrete blue color that works with getRed
+            return UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0) // System blue RGB values
         }
         
         // For custom colors, try conversion but with fallback
         let converted = PlatformColor.from(color)
         
-        // Verify the converted color has valid components
+        // For dynamic colors, we need to resolve them in a trait collection
+        // Create a trait collection to test the color
+        let testTraitCollection = UITraitCollection.current
+        let resolvedColor = converted.resolvedColor(with: testTraitCollection)
+        
+        // Verify the resolved color has valid components
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         
-        // Try to get RGB components
-        if converted.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+        // Try to get RGB components from the resolved color
+        if resolvedColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
             // Check if color is visible
             if alpha > 0.1 && (red + green + blue) > 0.1 {
-                return converted
+                return converted // Return the original dynamic color
             }
         }
         
-        // If getRed fails or color is not visible, fallback to dynamic color
+        // If getRed fails or color is not visible, fallback to dynamic black/white
         return UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
+            if traitCollection.userInterfaceStyle == .dark {
+                return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0) // White
+            } else {
+                return UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // Black
+            }
         }
     }
     
