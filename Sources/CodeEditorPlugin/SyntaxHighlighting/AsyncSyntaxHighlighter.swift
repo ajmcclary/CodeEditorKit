@@ -283,7 +283,9 @@ public final class AsyncSyntaxHighlighter {
         let baseTextColor = textView.textColor ?? PlatformColors.label
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
         
-        // Apply new highlighting
+        // Apply new highlighting - batch tokens by color for performance
+        var tokensByColor: [PlatformColor: [NSRange]] = [:]
+        
         for token in tokens {
             // Prevent out-of-bounds NSRange crashes, required for stability:
             // Validate that token.range.location and length are within textStorage bounds
@@ -296,9 +298,18 @@ public final class AsyncSyntaxHighlighter {
                 continue
             }
             
-            // Apply color using platform abstraction for all platforms including Catalyst
+            // Group tokens by color
             let tokenColor = token.type.adaptiveColor
-            textStorage.addAttribute(.foregroundColor, value: tokenColor, range: token.range)
+            tokensByColor[tokenColor, default: []].append(token.range)
+        }
+        
+        // Apply each color group in a single operation for better performance
+        for (color, ranges) in tokensByColor {
+            // Merge adjacent or overlapping ranges for even better performance
+            let mergedRanges = mergeAdjacentRanges(ranges)
+            for range in mergedRanges {
+                textStorage.addAttribute(.foregroundColor, value: color, range: range)
+            }
         }
         
         textStorage.endEditing()
@@ -324,6 +335,35 @@ public final class AsyncSyntaxHighlighter {
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: range)
         
         textStorage.endEditing()
+    }
+    
+    /// Merge adjacent or overlapping ranges for more efficient attribute application
+    private func mergeAdjacentRanges(_ ranges: [NSRange]) -> [NSRange] {
+        guard !ranges.isEmpty else { return [] }
+        
+        // Sort ranges by location
+        let sorted = ranges.sorted { $0.location < $1.location }
+        var merged: [NSRange] = []
+        var current = sorted[0]
+        
+        for index in 1..<sorted.count {
+            let next = sorted[index]
+            
+            // Check if ranges are adjacent or overlapping
+            if current.location + current.length >= next.location {
+                // Merge ranges
+                let endLocation = max(current.location + current.length, next.location + next.length)
+                current = NSRange(location: current.location, length: endLocation - current.location)
+            } else {
+                // Ranges are not adjacent, add current to result
+                merged.append(current)
+                current = next
+            }
+        }
+        
+        // Don't forget the last range
+        merged.append(current)
+        return merged
     }
     
     /// Clean up resources before deinitialization

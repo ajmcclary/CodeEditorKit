@@ -222,20 +222,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration.apply(to: textView)
     }
     
-    /// Apply text color for Mac Catalyst
+    /// Apply theme colors for Mac Catalyst
     #if targetEnvironment(macCatalyst)
-    func applyMacCatalystTextColor(to textView: UITextView) {
-        guard !textView.text.isEmpty else { return }
-        
-        let effectiveTextColor = textView.textColor ?? UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
-        }
-        
-        let textStorage = textView.textStorage
-        if textStorage.length > 0 {
-            textStorage.beginEditing()
-            textStorage.addAttribute(.foregroundColor, value: effectiveTextColor, range: NSRange(location: 0, length: textStorage.length))
-            textStorage.endEditing()
+    func applyCatalystThemeColors(theme: CodeEditorSwiftUITheme, to textView: CodeEditorView) {
+        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
+        Task { @MainActor in
+            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView)
         }
     }
     #endif
@@ -264,11 +256,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         textView.string = text
         #else
         textView.text = text
-        
-        #if targetEnvironment(macCatalyst)
-        // For Mac Catalyst, immediately apply color to the newly set text
-        applyMacCatalystTextColor(to: textView)
-        #endif
         #endif
         
         // Set language
@@ -277,12 +264,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Apply theme colors
         textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
         
-        // For Mac Catalyst, use a more robust color assignment
+        // Apply text color
         #if targetEnvironment(macCatalyst)
-        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
-        Task { @MainActor in
-            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView)
-        }
+        applyCatalystThemeColors(theme: theme, to: textView)
         #else
         textView.textColor = PlatformColor.from(theme.textColor)
         #endif
@@ -332,11 +316,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         if textView.text != text {
             textView.text = text
             
-            #if targetEnvironment(macCatalyst)
-            // For Mac Catalyst, immediately apply color to the updated text
-            applyMacCatalystTextColor(to: textView)
-            #endif
-            
             // Restore selection if possible
             if savedSelectedRange.location <= (textView.text ?? "").count {
                 textView.setSelectedRangeWithoutScrolling(savedSelectedRange)
@@ -352,12 +331,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Apply theme colors
         textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
         
-        // For Mac Catalyst, use a more robust color assignment
+        // Apply text color
         #if targetEnvironment(macCatalyst)
-        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
-        Task { @MainActor in
-            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView)
-        }
+        applyCatalystThemeColors(theme: theme, to: textView)
         #else
         textView.textColor = PlatformColor.from(theme.textColor)
         #endif

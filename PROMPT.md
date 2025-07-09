@@ -2,7 +2,7 @@
 
 **Persona:** You are a senior Swift engineer and an expert in API design, specializing in building and maintaining high-quality, reusable software components. You have a keen eye for modern Swift practices, including actor-based concurrency, platform abstraction, and API ergonomics. You value clean architecture, comprehensive testing, and clear documentation.
 
-**Context:** I have developed a production-ready code editor component called `CodeEditorPlugin`. It's built with Swift 6 and supports macOS, iOS, and Mac Catalyst. The project prioritizes a clean, feature-based architecture, extensive test coverage (319 tests), and zero SwiftLint violations. It uses `SwiftSyntax` for AST-based Swift highlighting and performant regex for 16 other languages. A key feature is its sophisticated platform abstraction layer that uses `#if canImport()` for true cross-platform support, avoiding simple `#if os()` checks.
+**Context:** I have developed a production-ready code editor component called `CodeEditorPlugin`. It's built with Swift 6 and supports macOS, iOS, and Mac Catalyst. The project prioritizes a clean, feature-based architecture, extensive test coverage (425 tests), and zero SwiftLint violations. It uses `SwiftSyntax` for AST-based Swift highlighting and performant regex for 16 other languages. A key feature is its sophisticated platform abstraction layer that uses `#if canImport()` for true cross-platform support, avoiding simple `#if os()` checks.
 
 **Request:** Please conduct a thorough code review of the `CodeEditorPlugin` project. I am looking for actionable feedback to elevate it from a great component to an exceptional one.
 
@@ -24,7 +24,7 @@
     *   Check for potential performance bottlenecks, especially in the rendering pipeline (`Core/`), text processing (`TextProcessing/`), and syntax highlighting (`SyntaxHighlighting/`).
 
 4.  **Testing & Reliability:**
-    *   Given the existing 319 tests, what critical areas might be under-tested?
+    *   Given the existing 425 tests, what critical areas might be under-tested?
     *   Suggest specific scenarios for new integration, performance, or UI tests that would increase confidence in the component's reliability.
 
 5.  **Documentation & Clarity:**

@@ -106,11 +106,11 @@ editor.text = "New content continues to work"
 
 ## Testing Coverage
 
-### Comprehensive Test Suite (319 total tests)
-- **Core Plugin**: 284 tests covering all functionality
+### Comprehensive Test Suite (425 total tests)
+- **Core Plugin**: 390 tests covering all functionality
 - **Sample App**: 35 tests for integration scenarios
 - **100% Pass Rate**: All tests passing on macOS, iOS, and Mac Catalyst
-- **Zero Linting Violations**: Maintained across 253 source files
+- **Zero Linting Violations**: Maintained across all source files
 
 ### Test Categories
 - **Concurrency Tests**: Swift 6 actor isolation and thread safety

@@ -47,12 +47,14 @@ final class PlatformPresetsTests: XCTestCase {
         XCTAssertNotNil(config)
         
         // Should have platform-appropriate settings based on compile-time platform
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(config.display.fontSize, 16.0)
         #elseif targetEnvironment(macCatalyst)
         XCTAssertEqual(config.display.fontSize, 14.0)
-        #else
+        #elseif canImport(AppKit)
         XCTAssertEqual(config.display.fontSize, 13.0)
+        #else
+        XCTAssertEqual(config.display.fontSize, 13.0) // default fontSize
         #endif
     }
     

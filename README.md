@@ -29,6 +29,26 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🎯 **SwiftUI Native:** First-class SwiftUI integration with environment-based configuration, making it as easy to use as any built-in SwiftUI component while maintaining full customization capabilities.
 
+## 🚀 Quick Start
+
+Get a fully functional code editor running in your app with just a few lines:
+
+```swift
+import SwiftUI
+import CodeEditorPlugin
+
+struct ContentView: View {
+    @State private var code = "print(\"Hello, World!\")"
+    
+    var body: some View {
+        CodeEditor(text: $code, language: .swift, theme: .dark)
+            .frame(minHeight: 300)
+    }
+}
+```
+
+That's it! You now have a production-ready code editor with syntax highlighting, line numbers, and full platform optimization.
+
 ## 📋 Requirements
 
 - **Swift**: 6.0+ (with full actor-based concurrency support)
@@ -421,7 +441,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 418 tests passing in continuous integration
+- **100% Test Pass Rate**: All 425 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -448,7 +468,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 418 tests
+swift test                   # Run all 425 tests
 swift test --parallel        # Run tests in parallel for speed
 ```
 

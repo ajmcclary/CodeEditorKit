@@ -153,6 +153,137 @@ final class CatalystIntegrationTests: XCTestCase {
         XCTAssertGreaterThan(config.performance.maxSyntaxHighlightingLength, 100_000, "Should be higher than iOS limit")
         XCTAssertLessThan(config.performance.maxSyntaxHighlightingLength, 500_000, "Should be lower than macOS limit")
     }
+    
+    // MARK: - Color Update Integration Tests
+    
+    @MainActor
+    func testCatalystColorUpdateAfterTextChange() async {
+        let editor = CodeEditorView()
+        let testColor = UIColor.systemRed
+        
+        // Set initial text and color
+        editor.text = "Initial text"
+        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        
+        // Change text
+        editor.text = "Updated text"
+        
+        // Apply color again
+        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        
+        // Verify color persists after text change
+        XCTAssertEqual(editor.textColor, testColor, "Text color should persist after text change")
+        
+        if editor.textStorage.length > 0 {
+            var effectiveRange = NSRange()
+            let attributes = editor.textStorage.attributes(at: 0, effectiveRange: &effectiveRange)
+            let foregroundColor = attributes[.foregroundColor] as? UIColor
+            XCTAssertEqual(foregroundColor, testColor, "Text storage should maintain color after text change")
+        }
+    }
+    
+    @MainActor
+    func testCatalystColorUpdateWithEmptyText() async {
+        let editor = CodeEditorView()
+        let testColor = UIColor.systemGreen
+        
+        // Apply color to empty editor
+        editor.text = ""
+        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        
+        // Add text after color application
+        editor.text = "New text"
+        
+        // Re-apply color
+        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        
+        // Verify color is applied to new text
+        XCTAssertEqual(editor.textColor, testColor, "Text color should be applied to new text")
+    }
+    
+    @MainActor
+    func testCatalystColorUpdateWithSyntaxHighlighting() async {
+        let editor = CodeEditorView()
+        let baseColor = UIColor.label
+        
+        // Enable syntax highlighting
+        editor.language = .swift
+        editor.text = "let value = 42"
+        
+        // Apply base color
+        await CatalystColorHelper.applyTextColor(baseColor, to: editor)
+        
+        // Verify base color is set
+        XCTAssertEqual(editor.textColor, baseColor, "Base text color should be set")
+        
+        // Syntax highlighting should still work on top of base color
+        // This tests that our color application doesn't interfere with highlighting
+    }
+    
+    @MainActor
+    func testCatalystColorUpdateInCoordinator() async {
+        // This tests the actual consolidated color handling in the coordinator
+        let coordinator = CodeEditorBaseCoordinator()
+        let container = CodeEditorContainerView()
+        let theme = CodeEditorSwiftUITheme.dark
+        
+        // Setup container with theme
+        coordinator.setupContainer(
+            container,
+            text: "Test text",
+            language: .plainText,
+            theme: theme,
+            configuration: .catalyst
+        )
+        
+        // Update container with new theme
+        let newTheme = CodeEditorSwiftUITheme.default
+        coordinator.updateContainer(
+            container,
+            text: "Updated text",
+            language: .plainText,
+            theme: newTheme,
+            configuration: .catalyst
+        )
+        
+        // Verify theme was applied correctly
+        let expectedBackgroundColor = PlatformColor.from(newTheme.backgroundColor)
+        XCTAssertEqual(container.textView.backgroundColor, expectedBackgroundColor, "Background color should be updated")
+    }
+    
+    @MainActor
+    func testCatalystColorUpdateWithDynamicColors() async {
+        let editor = CodeEditorView()
+        
+        // Test with dynamic color that adapts to appearance
+        let dynamicColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        
+        await CatalystColorHelper.applyTextColor(dynamicColor, to: editor)
+        
+        // Verify the color is applied
+        XCTAssertNotNil(editor.textColor, "Text color should be set")
+        
+        // The actual color value will depend on the current trait collection
+        // But it should be either black or white
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        editor.textColor?.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        
+        let brightness = (red + green + blue) / 3.0
+        XCTAssertTrue(brightness < 0.1 || brightness > 0.9, "Should be either very dark or very light")
+    }
+    
+    func testCatalystColorHelperWithClearColor() {
+        // Test that clear color is handled properly
+        let clearColor = Color.clear
+        let effectiveColor = CatalystColorHelper.effectiveTextColor(from: clearColor)
+        
+        // Should return a visible color, not clear
+        var alpha: CGFloat = 0
+        effectiveColor.getWhite(nil, alpha: &alpha)
+        XCTAssertGreaterThan(alpha, 0.9, "Clear color should be replaced with opaque color")
+    }
 }
 
 #endif

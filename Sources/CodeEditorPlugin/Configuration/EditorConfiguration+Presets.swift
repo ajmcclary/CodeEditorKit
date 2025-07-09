@@ -102,12 +102,14 @@ extension EditorConfiguration {
     /// For runtime-optimized configuration, use PlatformCapabilities.shared.recommendedConfiguration()
     /// on the main actor.
     public static var platformOptimized: EditorConfiguration {
-        #if os(iOS)
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return iOS
         #elseif targetEnvironment(macCatalyst)
         return catalyst
-        #else
+        #elseif canImport(AppKit)
         return macOS
+        #else
+        return `default`
         #endif
     }
 }

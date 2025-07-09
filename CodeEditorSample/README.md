@@ -341,7 +341,7 @@ The sample app maintains the same exacting quality standards as the core plugin,
 - **`BasicFunctionalityTests`** (4 tests): Core editor operations and platform behavior
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
-The test suite has been streamlined to focus on sample app specific functionality while leveraging the comprehensive testing in the main CodeEditorPlugin package (357 tests).
+The test suite has been streamlined to focus on sample app specific functionality while leveraging the comprehensive testing in the main CodeEditorPlugin package (390 tests).
 
 ### Quality Metrics That Matter
 

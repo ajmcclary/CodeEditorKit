@@ -15,8 +15,28 @@ CodeEditorPlugin provides world-class performance, extensive customization, and 
 - 🚀 **Modern Swift 6 Concurrency** - Actor-based architecture for thread safety and performance
 - 💻 **True Cross-Platform** - Sophisticated abstraction layer for native performance everywhere
 - 🎨 **17+ Programming Languages** - SwiftSyntax for Swift, optimized regex for other languages
-- ✅ **Production-Grade Quality** - 319 tests (284 core + 35 sample) with zero linting violations across 253 files
+- ✅ **Production-Grade Quality** - 425 tests (390 core + 35 sample) with zero linting violations
 - 🔧 **Extensible Architecture** - Plugin system and LSP integration ready
+
+### Quick Start
+
+Get started in seconds with SwiftUI:
+
+```swift
+import SwiftUI
+import CodeEditorPlugin
+
+struct ContentView: View {
+    @State private var code = "print(\"Hello, World!\")"
+    
+    var body: some View {
+        CodeEditor(text: $code, language: .swift, theme: .dark)
+            .frame(minHeight: 300)
+    }
+}
+```
+
+See <doc:QuickStart> for more examples and advanced usage.
 
 ## Topics
 

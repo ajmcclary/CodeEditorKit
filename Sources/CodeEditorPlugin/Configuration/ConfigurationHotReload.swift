@@ -65,7 +65,9 @@ public final class ConfigurationHotReload: ObservableObject {
         
         // Apply animated transitions if needed
         if shouldAnimate && !changes.isEmpty {
-            applyAnimatedTransitions(for: changes)
+            // Animation support is not yet implemented
+            // Future versions will add cross-platform animation support
+            Self.logger.debug("Animation requested for \(changes.count) changes, but animations are not yet supported")
         }
     }
     
@@ -290,6 +292,7 @@ public final class ConfigurationHotReload: ObservableObject {
     ///         - NSAnimationContext on macOS
     ///         - UIView.animate on iOS
     ///         - Coordinated animations for complex changes
+    @available(*, deprecated, message: "Animation support is not yet implemented. This method currently applies changes immediately without animation.")
     private func applyAnimatedTransitions(for changes: [HotReloadConfigurationChange]) {
         // Log that animations were requested but not supported
         Self.logger.debug("Animation requested for \(changes.count) changes, but animations are not yet supported")
