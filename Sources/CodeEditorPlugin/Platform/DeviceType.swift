@@ -48,8 +48,9 @@ public enum DeviceType: String, CaseIterable, Sendable {
             
         case .unspecified:
             self = .unspecified
-            
+        
         #if swift(>=5.9)
+
         case .vision:
             self = .visionPro
         #endif

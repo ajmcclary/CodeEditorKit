@@ -118,8 +118,24 @@ extension CodeEditorView {
             return
         }
         
+        // Ensure the view is properly set up before accessing geometry
+        guard window != nil, superview != nil else {
+            // If view is not in a window, just set the range without scroll management
+            setSelectedRange(range)
+            return
+        }
+        
         // Save current visible rect
         let savedVisibleRect = visibleRect
+        
+        // Validate the visible rect to avoid invalid geometry
+        guard savedVisibleRect.width > 0 && savedVisibleRect.height > 0 &&
+              !savedVisibleRect.origin.x.isNaN && !savedVisibleRect.origin.y.isNaN &&
+              !savedVisibleRect.origin.x.isInfinite && !savedVisibleRect.origin.y.isInfinite else {
+            // If visible rect is invalid, just set the range
+            setSelectedRange(range)
+            return
+        }
         
         // Set the selected range
         setSelectedRange(range)

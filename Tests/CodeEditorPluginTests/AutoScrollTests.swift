@@ -64,6 +64,18 @@ final class AutoScrollTests: XCTestCase {
         // Test that the method exists on CodeEditorView
         let editorView = CodeEditorView()
         
+        // Set up the view with proper bounds on macOS to avoid geometry warnings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
+        if let scrollView = editorView.enclosingScrollView {
+            scrollView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        }
+        #else
+        editorView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = CGRect(x: 0, y: 0, width: 400, height: 300)
+        #endif
+        
         // Set some text
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         editorView.string = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
@@ -83,6 +95,18 @@ final class AutoScrollTests: XCTestCase {
     func testOverriddenSelectedRangeProperty() async {
         let editorView = CodeEditorView()
         var config = EditorConfiguration()
+        
+        // Set up the view with proper bounds on macOS to avoid geometry warnings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
+        if let scrollView = editorView.enclosingScrollView {
+            scrollView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        }
+        #else
+        editorView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = CGRect(x: 0, y: 0, width: 400, height: 300)
+        #endif
         
         // Test with autoScrollToCursor = false
         config.behavior.autoScrollToCursor = false
@@ -126,6 +150,18 @@ final class AutoScrollTests: XCTestCase {
     func testAutoScrollBehaviorIntegration() async {
         let editorView = CodeEditorView()
         var config = EditorConfiguration()
+        
+        // Set up the view with proper bounds on macOS to avoid geometry warnings
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
+        if let scrollView = editorView.enclosingScrollView {
+            scrollView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        }
+        #else
+        editorView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+        editorView.bounds = CGRect(x: 0, y: 0, width: 400, height: 300)
+        #endif
         
         // Test enabling auto-scroll
         config.behavior.autoScrollToCursor = true
