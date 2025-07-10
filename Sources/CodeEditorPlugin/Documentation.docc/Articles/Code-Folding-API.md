@@ -300,4 +300,3 @@ for region in regions {
 - ``CodeEditorView/fold(at:)``
 - ``CodeEditorView/unfold(at:)``
 - ``CodeEditorView/isFoldable(at:)``
-- ``CodeFoldingEngine``
