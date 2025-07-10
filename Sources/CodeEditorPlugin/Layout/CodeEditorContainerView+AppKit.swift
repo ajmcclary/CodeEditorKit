@@ -29,6 +29,38 @@ class LineNumberRulerView: NSRulerView {
         self.clientView = scrollView?.documentView
         self.ruleThickness = 50.0 // Increased width to accommodate folding controls
         self.clipsToBounds = true // Prevent drawing outside bounds
+        
+        // Observe scroll view changes to ensure line numbers update
+        if let scrollView = scrollView {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollViewDidScroll(_:)),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+            
+            // Also observe frame changes
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollViewDidScroll(_:)),
+                name: NSView.frameDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func scrollViewDidScroll(_ notification: Notification) {
+        // Force redraw when scrolling
+        setNeedsDisplay(bounds)
+        
+        // Also update the scroll view to ensure proper drawing
+        if let scrollView = self.scrollView {
+            scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
     }
     
     required init(coder: NSCoder) {
@@ -43,15 +75,16 @@ class LineNumberRulerView: NSRulerView {
         rect.fill()
         
         guard let textView = self.clientView as? NSTextView,
+              let scrollView = self.scrollView,
               let textContainer = textView.textContainer,
               let layoutManager = textView.layoutManager,
               let textStorage = textView.textStorage else {
             return
         }
         
-        // Get the visible rect in the text view's coordinate system
-        let visibleRect = textView.visibleRect
-        let textVisibleRect = textView.convert(visibleRect, from: textView.superview)
+        // Get the visible rect of the scroll view's content
+        let visibleRect = scrollView.contentView.visibleRect
+        let textVisibleRect = textView.visibleRect
         
         // Get the range of characters that are visible
         let glyphRange = layoutManager.glyphRange(forBoundingRect: textVisibleRect, in: textContainer)
@@ -118,20 +151,18 @@ class LineNumberRulerView: NSRulerView {
                 }
             }
             
-            // Draw if visible
-            if lineRect.minY < textVisibleRect.maxY && lineRect.maxY > textVisibleRect.minY {
-                let drawingRect = NSRect(
-                    x: 0,
-                    y: lineRect.minY,
-                    width: ruleThickness - rightPadding,
-                    height: lineRect.height
-                )
-                
+            // The ruler view needs to align with the text view's coordinate system
+            // Adjust the Y position based on the scroll offset
+            let scrollOffset = visibleRect.origin.y
+            let adjustedY = lineRect.minY - scrollOffset
+            
+            // Draw if visible in the current rect
+            if adjustedY < rect.maxY && adjustedY + lineRect.height > rect.minY {
                 // Draw with right alignment
                 let size = lineString.size(withAttributes: attributes)
                 let drawingPoint = NSPoint(
                     x: ruleThickness - rightPadding - size.width,
-                    y: drawingRect.minY + (drawingRect.height - size.height) / 2
+                    y: adjustedY + (lineRect.height - size.height) / 2
                 )
                 
                 lineString.draw(at: drawingPoint, withAttributes: attributes)
@@ -206,6 +237,19 @@ extension CodeEditorContainerView {
             rulerView.textView = textView
             rulerView.ruleThickness = configuration.layout.gutterWidth
             scrollView.verticalRulerView = rulerView
+            
+            // Ensure ruler view is displayed
+            scrollView.hasVerticalRuler = true
+            scrollView.rulersVisible = true
+            rulerView.needsDisplay = true
+            
+            // Observe text changes to update line numbers
+            NotificationCenter.default.addObserver(
+                rulerView,
+                selector: #selector(LineNumberRulerView.scrollViewDidScroll(_:)),
+                name: NSText.didChangeNotification,
+                object: textView
+            )
         }
         
         // Apply configuration
@@ -230,6 +274,9 @@ extension CodeEditorContainerView {
             
             scrollView.hasVerticalRuler = true
             scrollView.rulersVisible = true
+            
+            // Force ruler view update to ensure line numbers are visible
+            scrollView.verticalRulerView?.needsDisplay = true
         } else {
             scrollView.hasVerticalRuler = false
             scrollView.rulersVisible = false
@@ -273,10 +320,6 @@ extension CodeEditorContainerView {
             
             // Bring to front with higher z-position
             minimapView.layer?.zPosition = 1_000
-            
-            // Explicitly order the view above the scroll view
-            minimapView.removeFromSuperview()
-            addSubview(minimapView, positioned: .above, relativeTo: scrollView)
             
             // When minimap is shown, we need to constrain the text view
             if !configuration.layout.wrapLines {
@@ -333,6 +376,17 @@ extension CodeEditorContainerView {
         
         // Update minimap after layout changes
         updateMinimap()
+        
+        // Force ruler view to update after layout changes
+        if configuration.display.showLineNumbers {
+            scrollView.verticalRulerView?.needsDisplay = true
+            // Also mark the scroll view itself for display update
+            scrollView.needsDisplay = true
+            // Force immediate display update to prevent line numbers from disappearing
+            scrollView.window?.displayIfNeeded()
+            // Ensure the ruler view is visible
+            scrollView.rulersVisible = true
+        }
     }
 }
 
