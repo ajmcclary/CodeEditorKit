@@ -127,6 +127,8 @@ public final class CodeEditorContainerView: PlatformView {
         // macOS uses layer background
         wantsLayer = true
         layer?.backgroundColor = PlatformColors.systemBackground.cgColor
+        // Ensure we don't clip subviews on macOS - minimap might extend beyond bounds
+        clipsToBounds = false
         #else
         backgroundColor = PlatformColors.systemBackground
         #endif
@@ -149,6 +151,11 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Initially hidden based on configuration
         minimapView.isHidden = !configuration.display.showMinimap
+        
+        // Generate initial minimap data
+        if configuration.display.showMinimap {
+            updateMinimap()
+        }
         
         // Set up text change observer to update minimap
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -309,12 +316,24 @@ public final class CodeEditorContainerView: PlatformView {
     
     func updateMinimap() {
         guard configuration.display.showMinimap,
-              let dataProvider = minimapDataProvider,
-              let data = dataProvider.generateData() else {
+              let dataProvider = minimapDataProvider else {
             return
         }
         
-        minimapView.updateData(data)
+        // Always try to generate data, even for empty text
+        if let data = dataProvider.generateData() {
+            minimapView.updateData(data)
+        } else {
+            // Clear data to show empty state
+            minimapView.updateData(nil)
+        }
+        
+        // Force redraw
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        minimapView.needsDisplay = true
+        #else
+        minimapView.setNeedsDisplay()
+        #endif
     }
     
     // MARK: - Layout
@@ -438,6 +457,15 @@ public final class CodeEditorContainerView: PlatformView {
         
         // Update minimap visibility
         minimapView.isHidden = !configuration.display.showMinimap
+        
+        // Force minimap to redraw when shown
+        if configuration.display.showMinimap {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            minimapView.needsDisplay = true
+            #else
+            minimapView.setNeedsDisplay()
+            #endif
+        }
         
         // Update platform-specific UI elements
         #if canImport(UIKit)

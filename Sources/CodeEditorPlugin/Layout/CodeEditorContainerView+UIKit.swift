@@ -1,4 +1,5 @@
 import Foundation
+import ObjectiveC
 import os.log
 #if canImport(UIKit)
 import UIKit
@@ -6,37 +7,62 @@ import UIKit
 // MARK: - UIKit-specific extensions for CodeEditorContainerView
 
 extension CodeEditorContainerView {
+    // Properties to track constraints - using addresses instead of strings
+    private enum AssociatedKeys {
+        nonisolated(unsafe) static var textViewConstraints = 0
+        nonisolated(unsafe) static var gutterConstraints = 1
+        nonisolated(unsafe) static var minimapConstraints = 2
+    }
+    
+    private var textViewConstraints: [NSLayoutConstraint] {
+        get {
+            objc_getAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.textViewConstraints) { $0 }) as? [NSLayoutConstraint] ?? []
+        }
+        set {
+            objc_setAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.textViewConstraints) { $0 }, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    private var gutterConstraints: [NSLayoutConstraint] {
+        get {
+            objc_getAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.gutterConstraints) { $0 }) as? [NSLayoutConstraint] ?? []
+        }
+        set {
+            objc_setAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.gutterConstraints) { $0 }, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    private var minimapConstraints: [NSLayoutConstraint] {
+        get {
+            objc_getAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.minimapConstraints) { $0 }) as? [NSLayoutConstraint] ?? []
+        }
+        set {
+            objc_setAssociatedObject(self, withUnsafePointer(to: &AssociatedKeys.minimapConstraints) { $0 }, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
     /// Sets up the iOS-specific views and constraints
     func setupIOSViews() {
-        // Add gutter view first (fixed position, doesn't scroll)
-        if configuration.display.showLineNumbers {
+        // Clear any existing constraints
+        removeExistingConstraints()
+        
+        // Add all subviews first
+        if !gutterView.isDescendant(of: self) {
             addSubview(gutterView)
-            gutterView.translatesAutoresizingMaskIntoConstraints = false
-            
-            // Position gutter view to the left of content
-            NSLayoutConstraint.activate([
-                gutterView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                gutterView.topAnchor.constraint(equalTo: topAnchor),
-                gutterView.bottomAnchor.constraint(equalTo: bottomAnchor),
-                gutterView.widthAnchor.constraint(equalToConstant: configuration.layout.gutterWidth)
-            ])
+        }
+        if !textView.isDescendant(of: self) {
+            addSubview(textView)
+        }
+        if !minimapView.isDescendant(of: self) {
+            addSubview(minimapView)
         }
         
-        // Add text view after gutter
-        addSubview(textView)
+        // Set up autoresizing mask translation
+        gutterView.translatesAutoresizingMaskIntoConstraints = false
         textView.translatesAutoresizingMaskIntoConstraints = false
+        minimapView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Configure text view constraints
-        let leadingConstraint = configuration.display.showLineNumbers ?
-            textView.leadingAnchor.constraint(equalTo: gutterView.trailingAnchor) :
-            textView.leadingAnchor.constraint(equalTo: leadingAnchor)
-        
-        NSLayoutConstraint.activate([
-            leadingConstraint,
-            textView.topAnchor.constraint(equalTo: topAnchor),
-            textView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textView.bottomAnchor.constraint(equalTo: bottomAnchor)
-        ])
+        // Set up constraints based on configuration
+        rebuildConstraints()
         
         // Set the text view's delegate
         textView.delegate = self
@@ -46,92 +72,133 @@ extension CodeEditorContainerView {
         
         // Configure gutter
         gutterView.textView = textView
-        // GutterView configuration is handled through the parent container
+    }
+    
+    private func removeExistingConstraints() {
+        // Deactivate and remove all tracked constraints
+        NSLayoutConstraint.deactivate(textViewConstraints)
+        NSLayoutConstraint.deactivate(gutterConstraints)
+        NSLayoutConstraint.deactivate(minimapConstraints)
+        
+        textViewConstraints = []
+        gutterConstraints = []
+        minimapConstraints = []
+    }
+    
+    func rebuildConstraints() {
+        // Remove existing constraints
+        removeExistingConstraints()
+        
+        var newGutterConstraints: [NSLayoutConstraint] = []
+        var newTextViewConstraints: [NSLayoutConstraint] = []
+        var newMinimapConstraints: [NSLayoutConstraint] = []
+        
+        // Configure gutter constraints if line numbers are shown
+        if configuration.display.showLineNumbers {
+            newGutterConstraints = [
+                gutterView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                gutterView.topAnchor.constraint(equalTo: topAnchor),
+                gutterView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                gutterView.widthAnchor.constraint(equalToConstant: configuration.layout.gutterWidth)
+            ]
+            gutterView.isHidden = false
+        } else {
+            gutterView.isHidden = true
+        }
+        
+        // Configure text view constraints
+        let textViewLeading = configuration.display.showLineNumbers ?
+            textView.leadingAnchor.constraint(equalTo: gutterView.trailingAnchor) :
+            textView.leadingAnchor.constraint(equalTo: leadingAnchor)
+        
+        let textViewTrailing = configuration.display.showMinimap ?
+            textView.trailingAnchor.constraint(equalTo: minimapView.leadingAnchor) :
+            textView.trailingAnchor.constraint(equalTo: trailingAnchor)
+        
+        newTextViewConstraints = [
+            textViewLeading,
+            textView.topAnchor.constraint(equalTo: topAnchor),
+            textViewTrailing,
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ]
+        
+        // Configure minimap constraints if minimap is shown
+        if configuration.display.showMinimap {
+            newMinimapConstraints = [
+                minimapView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                minimapView.topAnchor.constraint(equalTo: topAnchor),
+                minimapView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                minimapView.widthAnchor.constraint(equalToConstant: configuration.layout.minimapWidth)
+            ]
+            minimapView.isHidden = false
+            
+            // Ensure minimap is on top for event handling
+            minimapView.layer.zPosition = 100
+            bringSubviewToFront(minimapView)
+        } else {
+            minimapView.isHidden = true
+        }
+        
+        // Activate and store constraints
+        NSLayoutConstraint.activate(newGutterConstraints)
+        NSLayoutConstraint.activate(newTextViewConstraints)
+        NSLayoutConstraint.activate(newMinimapConstraints)
+        
+        gutterConstraints = newGutterConstraints
+        textViewConstraints = newTextViewConstraints
+        minimapConstraints = newMinimapConstraints
     }
     
     /// Updates the iOS-specific gutter view with new configuration
     func updateIOSGutter() {
         kUIKitContainerLogger
             .debug(
-                "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers)"
+                "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers), showMinimap: \(self.configuration.display.showMinimap)"
             )
         
-        gutterView.isHidden = !configuration.display.showLineNumbers
+        // Rebuild constraints to handle visibility changes
+        rebuildConstraints()
         
+        // Update gutter display if visible
         if configuration.display.showLineNumbers {
-            // Update gutter width constraint
-            var foundWidthConstraint = false
-            for constraint in gutterView.constraints where constraint.firstAttribute == .width {
-                constraint.constant = configuration.layout.gutterWidth
-                foundWidthConstraint = true
-                kUIKitContainerLogger
-                    .debug(
-                        "🔧 Updated gutter width constraint to: \(self.configuration.layout.gutterWidth)"
-                    )
-            }
-            
-            if !foundWidthConstraint {
-                kUIKitContainerLogger.debug("⚠️ No width constraint found for gutter view")
-            }
-            
-            // GutterView configuration is handled through the parent container
             gutterView.setNeedsDisplay()
         }
         
-        // Update text view leading constraint
-        var foundLeadingConstraint = false
-        for constraint in textView.constraints where constraint.firstAttribute == .leading {
-            constraint.constant = configuration.display.showLineNumbers ? 0 : -configuration.layout.gutterWidth
-            foundLeadingConstraint = true
-            kUIKitContainerLogger.debug("🔧 Updated text view leading constraint to: \(constraint.constant)")
+        // Update minimap if visible
+        if configuration.display.showMinimap {
+            updateMinimap()
+            // Force minimap to redraw
+            minimapView.setNeedsDisplay()
         }
         
-        if !foundLeadingConstraint {
-            kUIKitContainerLogger.debug("⚠️ No leading constraint found for text view")
-        }
+        // Force layout update
+        setNeedsLayout()
+        layoutIfNeeded()
     }
     
     /// Layout views using UIKit-specific logic  
     func layoutViewsUIKit() {
-        // Calculate layout dimensions
-        let gutterWidth = configuration.layout.gutterWidth
-        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        // Since we're using Auto Layout constraints, we don't need to manually set frames
+        // Just ensure visibility and display updates
         
-        // Position content view to fill the container
-        contentView.frame = bounds
-        
-        // Position gutter view (fixed, doesn't scroll)
+        // Update gutter visibility
+        gutterView.isHidden = !configuration.display.showLineNumbers
         if configuration.display.showLineNumbers {
-            gutterView.frame = CGRect(
-                x: 0,
-                y: 0,
-                width: gutterWidth,
-                height: bounds.height
-            )
+            gutterView.setNeedsDisplay()
         }
         
-        // Position minimap on the right - fixed position
+        // Update minimap visibility
+        minimapView.isHidden = !configuration.display.showMinimap
         if configuration.display.showMinimap {
-            minimapView.frame = CGRect(
-                x: bounds.width - minimapWidth,
-                y: 0,
-                width: minimapWidth,
-                height: bounds.height
-            )
-            minimapView.isHidden = false
-        } else {
-            minimapView.isHidden = true
+            // Force minimap to display
+            minimapView.setNeedsDisplay()
+            // Ensure it's on top for event handling
+            minimapView.layer.zPosition = 100
+            bringSubviewToFront(minimapView)
         }
         
-        // Position text view after gutter
-        let textViewX = configuration.display.showLineNumbers ? gutterWidth : 0
-        let textViewWidth = bounds.width - textViewX - minimapWidth
-        textView.frame = CGRect(
-            x: textViewX,
-            y: 0,
-            width: textViewWidth,
-            height: bounds.height
-        )
+        // Let Auto Layout handle the actual positioning
+        setNeedsLayout()
     }
 }
 

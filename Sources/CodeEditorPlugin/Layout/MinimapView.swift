@@ -104,7 +104,7 @@ public struct MinimapData: Sendable {
     var onNavigate: ((Int) -> Void)? { get set }
     
     /// Update the minimap with new data
-    func updateData(_ data: MinimapData)
+    func updateData(_ data: MinimapData?)
     
     /// Get the line number at a given point
     func lineNumber(at point: MinimapPlatformPoint) -> Int?
@@ -197,6 +197,19 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     private func setupView() {
         wantsLayer = true
         layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
+        layer?.borderWidth = 1.0
+        layer?.borderColor = PlatformColors.separator.cgColor
+        
+        // Set view properties
+        alphaValue = 1.0
+        autoresizingMask = [.minXMargin, .height]
+        
+        // Ensure the view is opaque and draws its background
+        layer?.isOpaque = true
+        layer?.needsDisplayOnBoundsChange = true
+        
+        // Don't clip - allow drawing outside bounds if needed
+        clipsToBounds = false
         
         // Enable mouse tracking
         updateTrackingAreas()
@@ -224,10 +237,31 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        // Always fill the entire background, even if there's no data
-        UnifiedDrawingCoordinator.fillRect(bounds, with: MinimapConfiguration.defaultBackgroundColor)
+        // Always fill the entire background first
+        MinimapConfiguration.defaultBackgroundColor.setFill()
+        bounds.fill()
         
-        guard let data else { return }
+        // Draw a subtle border to make the minimap visible even without content
+        PlatformColors.separator.setStroke()
+        let borderPath = NSBezierPath(rect: bounds.insetBy(dx: 0.5, dy: 0.5))
+        borderPath.lineWidth = 1.0
+        borderPath.stroke()
+        
+        guard let data else {
+            // Draw placeholder text when no data
+            let placeholderText = "No content"
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: PlatformFonts.systemFont(ofSize: 10),
+                .foregroundColor: PlatformColors.tertiaryLabel
+            ]
+            let textSize = placeholderText.size(withAttributes: attributes)
+            let textPoint = NSPoint(
+                x: (bounds.width - textSize.width) / 2,
+                y: (bounds.height - textSize.height) / 2
+            )
+            placeholderText.draw(at: textPoint, withAttributes: attributes)
+            return
+        }
         
         // Draw text lines
         drawTextLines(data: data)
@@ -285,7 +319,7 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
         }
     }
     
-    public func updateData(_ data: MinimapData) {
+    public func updateData(_ data: MinimapData?) {
         self.data = data
     }
     
@@ -345,10 +379,32 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
         
-        guard let data else { return }
+        guard let context = UIGraphicsGetCurrentContext() else { return }
         
-        // Clear background using UnifiedDrawingCoordinator
-        UnifiedDrawingCoordinator.fillRect(rect, with: MinimapConfiguration.defaultBackgroundColor)
+        // Always fill the entire background first
+        context.setFillColor(MinimapConfiguration.defaultBackgroundColor.cgColor)
+        context.fill(bounds)
+        
+        // Draw a subtle border to make the minimap visible even without content
+        context.setStrokeColor(PlatformColors.separator.cgColor)
+        context.setLineWidth(1.0)
+        context.stroke(bounds.insetBy(dx: 0.5, dy: 0.5))
+        
+        guard let data else {
+            // Draw placeholder text when no data
+            let placeholderText = "No content"
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: PlatformFonts.systemFont(ofSize: 10),
+                .foregroundColor: PlatformColors.tertiaryLabel
+            ]
+            let textSize = placeholderText.size(withAttributes: attributes)
+            let textPoint = CGPoint(
+                x: (bounds.width - textSize.width) / 2,
+                y: (bounds.height - textSize.height) / 2
+            )
+            placeholderText.draw(at: textPoint, withAttributes: attributes)
+            return
+        }
         
         // Draw text lines
         drawTextLines(data: data)
@@ -399,7 +455,7 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
         )
     }
     
-    public func updateData(_ data: MinimapData) {
+    public func updateData(_ data: MinimapData?) {
         self.data = data
     }
     

@@ -466,7 +466,32 @@ public class EditorContentView: UIView {
     // MARK: - Hit Testing
     
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        // Allow touches to pass through to text view if needed
+        // Check if we should forward to minimap or gutter first
+        if let textView = self.textView,
+           let containerView = textView.superview as? CodeEditorContainerView {
+            // Convert point to container coordinate space
+            let containerPoint = textView.convert(point, to: containerView)
+            
+            // Check if minimap is visible and contains the point
+            if !containerView.minimapView.isHidden {
+                let minimapPoint = containerView.convert(containerPoint, to: containerView.minimapView)
+                if containerView.minimapView.bounds.contains(minimapPoint) {
+                    // Let the minimap handle this touch
+                    return containerView.minimapView.hitTest(minimapPoint, with: event)
+                }
+            }
+            
+            // Check if gutter is visible and contains the point
+            if !containerView.gutterView.isHidden {
+                let gutterPoint = containerView.convert(containerPoint, to: containerView.gutterView)
+                if containerView.gutterView.bounds.contains(gutterPoint) {
+                    // Let the gutter handle this touch
+                    return containerView.gutterView.hitTest(gutterPoint, with: event)
+                }
+            }
+        }
+        
+        // Default behavior
         let hitView = super.hitTest(point, with: event)
         
         // If the hit view is self, forward to text view

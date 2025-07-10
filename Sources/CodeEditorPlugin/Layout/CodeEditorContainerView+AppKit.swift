@@ -186,9 +186,17 @@ extension CodeEditorContainerView {
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
         
-        // Add scroll view and minimap to container
+        // Add scroll view first
         addSubview(scrollView)
-        addSubview(minimapView)
+        
+        // Add minimap on top of scroll view
+        addSubview(minimapView, positioned: .above, relativeTo: scrollView)
+        
+        // Ensure minimap is properly configured
+        minimapView.wantsLayer = true
+        minimapView.layer?.zPosition = 1_000
+        minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
+        
         
         // Configure scroll view for line numbers
         scrollView.hasVerticalRuler = configuration.display.showLineNumbers
@@ -245,13 +253,32 @@ extension CodeEditorContainerView {
         
         // Position minimap on the right
         if configuration.display.showMinimap {
+            // Position minimap on the right edge of the container
+            let minimapX = bounds.width - minimapWidth
             minimapView.frame = CGRect(
-                x: bounds.width - minimapWidth,
+                x: minimapX,
                 y: 0,
                 width: minimapWidth,
                 height: bounds.height
             )
+            
             minimapView.isHidden = false
+            
+            // Force minimap to display
+            minimapView.needsDisplay = true
+            
+            // Ensure minimap is in the view hierarchy and above scroll view
+            if minimapView.superview == nil {
+                addSubview(minimapView, positioned: .above, relativeTo: scrollView)
+            }
+            
+            // Bring to front with higher z-position
+            minimapView.layer?.zPosition = 1_000
+            
+            // Explicitly order the view above the scroll view
+            minimapView.removeFromSuperview()
+            addSubview(minimapView, positioned: .above, relativeTo: scrollView)
+            
             
             // When minimap is shown, we need to constrain the text view
             if !configuration.layout.wrapLines {
@@ -305,6 +332,9 @@ extension CodeEditorContainerView {
                 textView.textContainer?.widthTracksTextView = false
             }
         }
+        
+        // Update minimap after layout changes
+        updateMinimap()
     }
 }
 

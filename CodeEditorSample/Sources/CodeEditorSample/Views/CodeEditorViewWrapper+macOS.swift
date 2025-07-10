@@ -67,37 +67,19 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
     let language: String
     let onTextViewReady: ((CodeEditorView) -> Void)?
     
-    typealias NSViewType = NSScrollView
+    typealias NSViewType = CodeEditorContainerView
 
-    func makeNSView(context: Context) -> NSScrollView {
-        // Create scroll view first
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
-        scrollView.autohidesScrollers = false
-        scrollView.borderType = .noBorder
-        scrollView.autoresizingMask = [.width, .height]
+    func makeNSView(context: Context) -> CodeEditorContainerView {
+        // Create the container view which includes minimap support
+        let containerView = CodeEditorContainerView()
         
-        // Create text view with a reasonable initial size
-        let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 300, height: 300))
+        // Apply configuration to the container
+        containerView.configuration = configuration
         
-        // Configure text view for scrolling
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = !configuration.layout.wrapLines
-        textView.autoresizingMask = .width
-        
-        // Configure text container
-        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
-        textView.textContainer?.containerSize = NSSize(
-            width: configuration.layout.wrapLines ? 300 : CGFloat.greatestFiniteMagnitude,
-            height: CGFloat.greatestFiniteMagnitude
-        )
-        
-        // Set up scroll view
-        scrollView.documentView = textView
+        // Get the text view from the container
+        let textView = containerView.textView
         
         // Configure the text view
-        configuration.apply(to: textView)
         textView.setLanguage(fileExtension: language)
         textView.text = text
         
@@ -116,10 +98,10 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
         // Call ready callback if provided
         onTextViewReady?(textView)
         
-        return scrollView
+        return containerView
     }
 
-    func updateNSView(_ nsView: NSScrollView, context: Context) {
+    func updateNSView(_ containerView: CodeEditorContainerView, context: Context) {
         guard let textView = context.coordinator.textView else { return }
         
         // Only update text if it's different to avoid cursor jumps
@@ -127,16 +109,11 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             textView.text = text
         }
         
-        // Update configuration
-        configuration.apply(to: textView)
+        // Update container configuration (this handles minimap settings)
+        containerView.configuration = configuration
         
         // Update language if needed
         textView.setLanguage(fileExtension: language)
-        
-        // Update scroll view settings
-        nsView.hasHorizontalScroller = !configuration.layout.wrapLines
-        textView.isHorizontallyResizable = !configuration.layout.wrapLines
-        textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
         
         // Update annotation scanning based on configuration
         if configuration.display.enableAnnotations {
