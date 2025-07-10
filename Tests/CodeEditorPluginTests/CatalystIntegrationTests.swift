@@ -249,7 +249,8 @@ final class CatalystIntegrationTests: XCTestCase {
             text: "Test text",
             language: .plainText,
             theme: theme,
-            configuration: .catalyst
+            configuration: .catalyst,
+            memoryMonitor: MemoryMonitor()
         )
         
         // Update container with new theme

@@ -84,7 +84,7 @@ import UIKit
 /// - Hardware acceleration is enabled by default when available
 /// - Adjust `textChangeDebounceInterval` for responsive vs. efficient highlighting
 /// - Use read-only presets for display scenarios to optimize performance
-public struct EditorConfiguration: Equatable, Codable, Sendable {
+public struct EditorConfiguration: Codable, Sendable {
     // MARK: - Nested Configuration Structures
     // See separate files:
     // - EditorConfiguration+Display.swift
@@ -106,37 +106,47 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
     /// Performance configuration
     public var performance = Performance()
     
+    /// Event system for publishing and subscribing to editor events
+    /// If nil, the deprecated UnifiedEventSystem.shared will be used
+    public var eventSystem: UnifiedEventSystem?
+    
     // MARK: - Initialization
     
     public init() {}
     
-    public init(layout: Layout = Layout(), display: Display = Display(), behavior: Behavior = Behavior(), performance: Performance = Performance()) {
+    public init(layout: Layout = Layout(), display: Display = Display(), behavior: Behavior = Behavior(), performance: Performance = Performance(), eventSystem: UnifiedEventSystem? = nil) {
         self.layout = layout
         self.display = display
         self.behavior = behavior
         self.performance = performance
+        self.eventSystem = eventSystem
     }
     
     // MARK: - Convenience Methods
     
     /// Create a new configuration with updated layout
     public func with(layout: Layout) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
     
     /// Create a new configuration with updated display
     public func with(display: Display) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
     
     /// Create a new configuration with updated behavior
     public func with(behavior: Behavior) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
     
     /// Create a new configuration with updated performance
     public func with(performance: Performance) -> Self {
-        Self(layout: layout, display: display, behavior: behavior, performance: performance)
+        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
+    }
+    
+    /// Create a new configuration with updated event system
+    public func with(eventSystem: UnifiedEventSystem?) -> Self {
+        Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
     
     // MARK: - Validation
@@ -249,5 +259,48 @@ public struct EditorConfiguration: Equatable, Codable, Sendable {
         config.minimumLineCount = display.minimumFoldableLines
         config.animatesFolding = performance.animateCodeFolding
         return config
+    }
+}
+
+// MARK: - Equatable
+
+extension EditorConfiguration: Equatable {
+    public static func == (lhs: EditorConfiguration, rhs: EditorConfiguration) -> Bool {
+        // Compare all properties except eventSystem
+        lhs.layout == rhs.layout &&
+        lhs.display == rhs.display &&
+        lhs.behavior == rhs.behavior &&
+        lhs.performance == rhs.performance
+        // eventSystem is intentionally excluded from equality comparison
+    }
+}
+
+// MARK: - Codable
+
+extension EditorConfiguration {
+    enum CodingKeys: String, CodingKey {
+        case layout
+        case display
+        case behavior
+        case performance
+        // eventSystem is intentionally excluded from serialization
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.layout = try container.decode(Layout.self, forKey: .layout)
+        self.display = try container.decode(Display.self, forKey: .display)
+        self.behavior = try container.decode(Behavior.self, forKey: .behavior)
+        self.performance = try container.decode(Performance.self, forKey: .performance)
+        self.eventSystem = nil // Always nil when decoding
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(layout, forKey: .layout)
+        try container.encode(display, forKey: .display)
+        try container.encode(behavior, forKey: .behavior)
+        try container.encode(performance, forKey: .performance)
+        // eventSystem is not encoded
     }
 }

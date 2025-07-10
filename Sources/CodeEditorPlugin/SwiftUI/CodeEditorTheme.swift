@@ -89,6 +89,13 @@ public struct CodeEditorMemoryMonitorKey: EnvironmentKey {
 }
 
 @available(macOS 12.0, iOS 16.0, *)
+public struct CodeEditorEventSystemKey: EnvironmentKey {
+    public static let defaultValue: UnifiedEventSystem? = nil
+    
+    public typealias Value = UnifiedEventSystem?
+}
+
+@available(macOS 12.0, iOS 16.0, *)
 extension EnvironmentValues {
     public var codeEditorTheme: CodeEditorSwiftUITheme {
         get { self[CodeEditorThemeKey.self] }
@@ -113,6 +120,11 @@ extension EnvironmentValues {
     public var codeEditorMemoryMonitor: MemoryMonitor? {
         get { self[CodeEditorMemoryMonitorKey.self] }
         set { self[CodeEditorMemoryMonitorKey.self] = newValue }
+    }
+    
+    public var codeEditorEventSystem: UnifiedEventSystem? {
+        get { self[CodeEditorEventSystemKey.self] }
+        set { self[CodeEditorEventSystemKey.self] = newValue }
     }
 }
 

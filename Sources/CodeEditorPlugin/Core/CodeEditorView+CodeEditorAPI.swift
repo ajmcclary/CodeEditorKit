@@ -97,6 +97,13 @@ extension CodeEditorView {
         selectAll(nil)
     }
     
+    /// Deselect all text (clear selection)
+    public func deselectAll() {
+        // Move cursor to current position with zero length selection
+        let currentPosition = selectedRange.location
+        selectedRange = NSRange(location: currentPosition, length: 0)
+    }
+    
     /// Move cursor to position
     public func moveCursor(to position: String.Index) {
         let location = content.distance(from: content.startIndex, to: position)

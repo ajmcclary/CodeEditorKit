@@ -26,6 +26,8 @@ struct MyApp: App {
 **Type**: `EditorConfiguration`  
 **Default**: `EditorConfiguration.default`
 
+> **Related Modifier**: Use the ``CodeEditor/environment(_:_:)`` method directly on the view for convenience.
+
 ### `codeEditorLanguage`
 
 Sets the programming language for syntax highlighting and code completion.
@@ -45,6 +47,8 @@ struct CodeView: View {
 **Type**: `Language`  
 **Default**: `.plainText`
 
+> **Related Modifier**: Use ``CodeEditor/codeLanguage(_:)`` for setting the language on individual editors.
+
 ### `codeEditorTheme`
 
 Controls the visual theme of the editor, including syntax highlighting colors.
@@ -62,6 +66,8 @@ struct ThemedEditor: View {
 
 **Type**: `Theme`  
 **Default**: `.default`
+
+> **Related Modifier**: Use ``CodeEditor/theme(_:)`` for setting the theme on individual editors.
 
 ### `codeEditorMemoryMonitor`
 
@@ -84,6 +90,8 @@ struct MultiEditorView: View {
 **Type**: `MemoryMonitor?`  
 **Default**: `nil` (each editor creates its own monitor)
 
+> **Related Modifier**: Use ``CodeEditor/memoryMonitor(_:)`` for setting a custom memory monitor.
+
 ### `codeEditorBecomeFirstResponder`
 
 Controls whether the editor should automatically become the first responder when it appears.
@@ -99,6 +107,37 @@ struct FocusedEditor: View {
 
 **Type**: `Bool`  
 **Default**: `false`
+
+> **Related Modifier**: Use ``CodeEditor/focused(_:)`` for more advanced focus management with FocusState.
+
+### `codeEditorEventSystem`
+
+Provides a custom event system for publishing and subscribing to editor events. By default, editors use the deprecated `UnifiedEventSystem.shared` singleton. Use this key to inject a custom instance for better testability and isolation.
+
+```swift
+struct MultiEditorView: View {
+    let eventSystem = UnifiedEventSystem()
+    
+    var body: some View {
+        VStack {
+            CodeEditor(text: .constant(""))
+            CodeEditor(text: .constant(""))
+        }
+        .environment(\.codeEditorEventSystem, eventSystem)
+        .onAppear {
+            // Subscribe to events from both editors
+            eventSystem.subscribe(to: TextChangeEvent.self) { event in
+                // Handle text change in one of the editors
+            }
+        }
+    }
+}
+```
+
+**Type**: `UnifiedEventSystem?`  
+**Default**: `nil` (uses `UnifiedEventSystem.shared`)
+
+> **Related Modifier**: Use ``CodeEditor/eventSystem(_:)`` for setting a custom event system on individual editors.
 
 ## Usage Patterns
 

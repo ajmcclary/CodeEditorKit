@@ -158,6 +158,7 @@ public struct CodeEditor: View {
     @Environment(\.codeEditorTheme) private var theme
     @Environment(\.codeEditorConfiguration) private var configuration
     @Environment(\.codeEditorMemoryMonitor) private var environmentMemoryMonitor
+    @Environment(\.codeEditorEventSystem) private var environmentEventSystem
     
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
@@ -247,16 +248,22 @@ public struct CodeEditor: View {
         let effectiveTheme = initialTheme ?? theme
         let effectiveMemoryMonitor = environmentMemoryMonitor ?? defaultMemoryMonitor
         
+        // Update configuration with event system if provided
+        var effectiveConfiguration = configuration
+        if let eventSystem = environmentEventSystem {
+            effectiveConfiguration.eventSystem = eventSystem
+        }
+        
         // Use configuration's debounce interval if not overridden
         let effectiveDebounceInterval = textDebounceInterval == .milliseconds(100) 
-            ? configuration.performance.textChangeDebounceInterval 
+            ? effectiveConfiguration.performance.textChangeDebounceInterval 
             : textDebounceInterval
         
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
             theme: effectiveTheme,
-            configuration: configuration,
+            configuration: effectiveConfiguration,
             memoryMonitor: effectiveMemoryMonitor,
             isFocused: Binding(
                 get: { isFocused },

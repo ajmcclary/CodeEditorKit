@@ -137,11 +137,7 @@ extension CodeEditorView {
             return
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let selectedRange = selectedRange
-        #else
-        let selectedRange = selectedRange
-        #endif
         guard selectedRange.location != NSNotFound else {
             return
         }

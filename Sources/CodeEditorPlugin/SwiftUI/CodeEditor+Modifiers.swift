@@ -448,6 +448,36 @@ extension CodeEditor {
     public func memoryMonitor(_ monitor: MemoryMonitor) -> some View {
         environment(\.codeEditorMemoryMonitor, monitor)
     }
+    
+    /// Sets a custom event system for publishing and subscribing to editor events.
+    ///
+    /// By default, CodeEditor uses the deprecated `UnifiedEventSystem.shared` singleton.
+    /// Use this modifier to inject a custom event system instance for better testability
+    /// and isolation between multiple editors.
+    ///
+    /// - Parameter eventSystem: The event system to use for this editor
+    /// - Returns: A new view with the event system set
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let customEventSystem = UnifiedEventSystem()
+    /// 
+    /// CodeEditor(text: $code)
+    ///     .eventSystem(customEventSystem)
+    ///     .onAppear {
+    ///         // Subscribe to events from this specific editor
+    ///         customEventSystem.subscribe(to: TextChangeEvent.self) { event in
+    ///             // Handle text change: event.newText
+    ///         }
+    ///     }
+    /// ```
+    public func eventSystem(_ eventSystem: UnifiedEventSystem) -> some View {
+        environment(\.codeEditorEventSystem, eventSystem)
+            .transformEnvironment(\.codeEditorConfiguration) { config in
+                config.eventSystem = eventSystem
+            }
+    }
 }
 
 #endif

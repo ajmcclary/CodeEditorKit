@@ -9,6 +9,7 @@ public final class UnifiedEventSystem: ObservableObject {
     // MARK: - Singleton
     
     /// Shared instance for backward compatibility
+    @available(*, deprecated, message: "Use dependency injection instead of the shared singleton")
     public static let shared = UnifiedEventSystem()
     
     // MARK: - Properties
@@ -373,8 +374,13 @@ extension CircularBuffer: Sequence {
 extension CodeEditorView {
     /// Publish events through the unified event system
     public func publishEvent(_ event: EditorEvent) {
-        // Publish to both the local event publisher and the unified system
+        // Publish to the local event publisher
         eventPublisher.publish(event)
-        UnifiedEventSystem.shared.publish(event)
+        
+        // Publish to the unified system if available
+        // Only use the injected event system from configuration
+        if let eventSystem = configuration.eventSystem {
+            eventSystem.publish(event)
+        }
     }
 }

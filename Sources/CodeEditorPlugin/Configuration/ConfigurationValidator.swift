@@ -278,6 +278,9 @@ public struct ConfigurationMigrator {
             migrated = migrateFrom1_2To2_0(migrated)
         }
         
+        // Ensure all required sections exist
+        migrated = ensureRequiredSections(migrated)
+        
         // Decode the migrated configuration
         do {
             let data = try JSONSerialization.data(withJSONObject: migrated)
@@ -296,6 +299,28 @@ public struct ConfigurationMigrator {
         } catch {
             return .failure(.decodingFailed(error))
         }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func ensureRequiredSections(_ config: [String: Any]) -> [String: Any] {
+        var migrated = config
+        
+        // Ensure all required top-level sections exist
+        if migrated["display"] == nil {
+            migrated["display"] = [:]
+        }
+        if migrated["layout"] == nil {
+            migrated["layout"] = [:]
+        }
+        if migrated["behavior"] == nil {
+            migrated["behavior"] = [:]
+        }
+        if migrated["performance"] == nil {
+            migrated["performance"] = [:]
+        }
+        
+        return migrated
     }
     
     // MARK: - Version Migrations
@@ -514,11 +539,29 @@ public struct ConfigurationValidationError: Error, Sendable {
 }
 
 /// Migration error types
-public enum MigrationError: Error {
+public enum MigrationError: Error, Equatable {
     case unsupportedVersion(String)
     case decodingFailed(Error)
     case validationFailed([ValidationIssue])
     case migrationFailed(String)
+    
+    public static func == (lhs: MigrationError, rhs: MigrationError) -> Bool {
+        switch (lhs, rhs) {
+        case let (.unsupportedVersion(v1), .unsupportedVersion(v2)):
+            return v1 == v2
+            
+        case let (.migrationFailed(m1), .migrationFailed(m2)):
+            return m1 == m2
+            
+        case (.decodingFailed, .decodingFailed):
+            return true
+            
+        case let (.validationFailed(i1), .validationFailed(i2)):
+            return i1.count == i2.count // Simple comparison
+        default:
+            return false
+        }
+    }
 }
 
 // MARK: - Configuration Diff

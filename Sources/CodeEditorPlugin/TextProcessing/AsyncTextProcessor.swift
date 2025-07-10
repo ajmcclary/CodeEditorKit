@@ -5,6 +5,42 @@ import os.log
 // MARK: - AsyncTextProcessor
 
 /// Advanced async text processing with priority queues and adaptive performance
+///
+/// `AsyncTextProcessor` is an actor that provides thread-safe, concurrent text processing
+/// with adaptive performance and priority-based scheduling. All public methods are
+/// isolated to this actor, ensuring thread safety for all operations.
+///
+/// ## Actor Isolation
+///
+/// This type uses Swift's actor model for thread safety. All properties and methods
+/// are actor-isolated, meaning:
+/// - All calls must be made with `await` from outside the actor
+/// - The actor guarantees serial execution of its methods
+/// - No data races are possible when accessing actor state
+///
+/// ## Usage Pattern
+///
+/// ```swift
+/// let processor = AsyncTextProcessor(memoryMonitor: monitor)
+/// 
+/// // All calls require await due to actor isolation
+/// let result = await processor.process(text, type: .syntaxHighlight)
+/// await processor.cleanup()
+/// ```
+///
+/// ## Task Management
+///
+/// The processor manages a queue of tasks with the following characteristics:
+/// - Tasks are processed based on priority (high priority first)
+/// - Maximum concurrent operations are limited to prevent oversubscription
+/// - Tasks can be cancelled individually or all at once
+/// - Memory pressure automatically triggers cache clearing and task reduction
+///
+/// ## Lifecycle
+///
+/// Important: Call `cleanup()` before releasing the processor to ensure
+/// all active tasks are properly cancelled. The deinit cannot perform
+/// async cleanup due to Swift limitations.
 actor AsyncTextProcessor {
     // MARK: - Properties
     
@@ -66,7 +102,20 @@ actor AsyncTextProcessor {
     
     // MARK: - Public Methods
     
-    /// Submit a text processing task
+    /// Submit a text processing task to the queue
+    ///
+    /// This method is actor-isolated and must be called with `await`.
+    /// Tasks are processed based on priority and available resources.
+    ///
+    /// - Parameters:
+    ///   - text: The text to process
+    ///   - range: The range within the text to process
+    ///   - operation: The type of processing operation
+    ///   - priority: Task priority (default: .normal)
+    ///   - completion: Completion handler called with the result
+    /// - Returns: A handle that can be used to cancel the task
+    ///
+    /// - Note: Results may be returned from cache if available
     @discardableResult
     func submit(
         text: String,
@@ -108,7 +157,12 @@ actor AsyncTextProcessor {
         return ProcessingTaskHandle(id: taskId, processor: self)
     }
     
-    /// Cancel a processing task
+    /// Cancel a specific processing task
+    ///
+    /// This method is actor-isolated and must be called with `await`.
+    /// Cancels the task if it's queued or actively processing.
+    ///
+    /// - Parameter taskId: The ID of the task to cancel
     func cancel(taskId: UUID) async {
         // Remove from queue if not started
         processingQueue.remove { $0.id == taskId }
@@ -144,7 +198,14 @@ actor AsyncTextProcessor {
         updateProcessingLoad()
     }
     
-    /// Cleanup method to be called before deallocation
+    /// Cleanup all resources before releasing the processor
+    ///
+    /// This method is actor-isolated and must be called with `await`.
+    /// Call this method before the processor goes out of scope to ensure
+    /// all active tasks are properly cancelled and resources are freed.
+    ///
+    /// - Important: The deinit cannot perform async cleanup, so this
+    ///   method must be called explicitly before releasing the actor.
     func cleanup() async {
         clearQueue()
         

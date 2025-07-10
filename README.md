@@ -1,6 +1,6 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/tests-532%20passing-brightgreen)](#testing--quality)
+[![Tests](https://img.shields.io/badge/tests-533%20passing-brightgreen)](#testing--quality)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#code-quality-standards)
 [![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
@@ -21,7 +21,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - 🔧 **Extensible & Future-Proof:** Features a forward-thinking plugin architecture and Language Server Protocol (LSP) integration for advanced language intelligence. Build on a foundation designed to grow with your needs, supporting custom language extensions, tool integrations, and advanced IDE features.
 
-- ✅ **Production-Grade Quality:** Verified with **532 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 43 files and comprehensive test coverage.
+- ✅ **Production-Grade Quality:** Verified with **533 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 43 files and comprehensive test coverage.
 
 - ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
 
@@ -440,7 +440,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 ### Comprehensive Test Coverage
 
-**532 Total Tests** across the entire project, ensuring reliability at every level:
+**533 Total Tests** across the entire project, ensuring reliability at every level:
 
 #### Core Plugin Tests (497 tests)
 - **`CodeEditorViewTests`** (33 tests): Validates core text view functionality, editing operations, and platform behavior
@@ -464,7 +464,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 532 tests passing in continuous integration
+- **100% Test Pass Rate**: All 533 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -491,7 +491,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 532 tests
+swift test                   # Run all 533 tests
 swift test --parallel        # Run tests in parallel for speed
 ```
 
