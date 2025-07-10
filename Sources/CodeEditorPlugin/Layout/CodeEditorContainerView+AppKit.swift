@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 /// A ruler view that displays line numbers for macOS
@@ -31,7 +30,7 @@ class LineNumberRulerView: NSRulerView {
         self.clipsToBounds = true // Prevent drawing outside bounds
         
         // Observe scroll view changes to ensure line numbers update
-        if let scrollView = scrollView {
+        if let scrollView {
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(scrollViewDidScroll(_:)),
@@ -53,7 +52,7 @@ class LineNumberRulerView: NSRulerView {
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc func scrollViewDidScroll(_ notification: Notification) {
+    @objc func scrollViewDidScroll(_: Notification) {
         // Force redraw when scrolling
         setNeedsDisplay(bounds)
         
@@ -109,17 +108,6 @@ class LineNumberRulerView: NSRulerView {
         
         // Calculate line numbers for the visible range
         let text = textStorage.string
-        
-        // Debug info
-        #if DEBUG
-        if characterRange.location == 0 {
-            kAppKitContainerLogger.debug("📍 At top: range=\(characterRange)")
-        }
-        if characterRange.location + characterRange.length >= textLength && textLength > 0 {
-            kAppKitContainerLogger.debug("📍 At bottom: range=\(characterRange), textLength=\(textLength)")
-        }
-        #endif
-        
         let lineRanges = getLineRanges(for: text, in: characterRange)
         
         // Set up text attributes
@@ -504,6 +492,5 @@ extension LineNumberRulerView {
         return lineNumber
     }
 }
-// Private logger instance
-private let kAppKitContainerLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.AppKit")
+
 #endif
