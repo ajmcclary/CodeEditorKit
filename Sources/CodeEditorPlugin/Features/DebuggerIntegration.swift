@@ -3,16 +3,17 @@ import Foundation
 import os.log
 
 /// Main debugger integration system for CodeEditorPlugin
+/// - Note: This is currently a preview feature with internal visibility
 @MainActor
-public class DebuggerIntegration: ObservableObject {
+internal class DebuggerIntegration: ObservableObject {
     // MARK: - Properties
     
-    @Published public private(set) var debugSessions: [String: DebugSession] = [:]
-    @Published public private(set) var activeSession: DebugSession?
-    @Published public private(set) var breakpoints: [Breakpoint] = []
-    @Published public private(set) var currentFrame: StackFrame?
-    @Published public private(set) var variables: [Variable] = []
-    @Published public private(set) var isDebugging = false
+    @Published internal private(set) var debugSessions: [String: DebugSession] = [:]
+    @Published internal private(set) var activeSession: DebugSession?
+    @Published internal private(set) var breakpoints: [Breakpoint] = []
+    @Published internal private(set) var currentFrame: StackFrame?
+    @Published internal private(set) var variables: [Variable] = []
+    @Published internal private(set) var isDebugging = false
     
     private let logger = Logger(subsystem: "CodeEditorPlugin", category: "DebuggerIntegration")
     private var debugAdapters: [String: DebugAdapter] = [:]
@@ -20,43 +21,43 @@ public class DebuggerIntegration: ObservableObject {
     
     // MARK: - Configuration
     
-    public struct Configuration: Sendable {
-        public var enableInlineValues = true
-        public var enableHoverEvaluation = true
-        public var enableConditionalBreakpoints = true
-        public var enableLogpoints = true
-        public var maxInlineValueLength = 50
-        public var maxVariableDepth = 3
-        public var autoExpandVariables = true
+    internal struct Configuration: Sendable {
+        internal var enableInlineValues = true
+        internal var enableHoverEvaluation = true
+        internal var enableConditionalBreakpoints = true
+        internal var enableLogpoints = true
+        internal var maxInlineValueLength = 50
+        internal var maxVariableDepth = 3
+        internal var autoExpandVariables = true
         
-        public static let `default` = Self()
+        internal static let `default` = Self()
     }
     
-    public var configuration = Configuration.default
+    internal var configuration = Configuration.default
     
     // MARK: - Initialization
     
-    public init() {
+    internal init() {
         setupDefaultAdapters()
     }
     
     // MARK: - Debug Adapter Management
     
     /// Register a debug adapter for a language
-    public func registerAdapter(_ adapter: DebugAdapter, for language: String) {
+    internal func registerAdapter(_ adapter: DebugAdapter, for language: String) {
         debugAdapters[language] = adapter
         logger.info("Registered debug adapter for \(language)")
     }
     
     /// Get debug adapter for a language
-    public func adapter(for language: String) -> DebugAdapter? {
+    internal func adapter(for language: String) -> DebugAdapter? {
         debugAdapters[language]
     }
     
     // MARK: - Session Management
     
     /// Start a debug session
-    public func startSession(
+    internal func startSession(
         configuration: LaunchConfiguration,
         in _: CodeEditorView
     ) async throws -> DebugSession {
@@ -99,7 +100,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Stop a debug session
-    public func stopSession(_ sessionId: String) async throws {
+    func stopSession(_ sessionId: String) async throws {
         guard let session = debugSessions[sessionId] else {
             throw DebugError.sessionNotFound(sessionId)
         }
@@ -122,7 +123,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Stop all debug sessions
-    public func stopAllSessions() async {
+    func stopAllSessions() async {
         for sessionId in debugSessions.keys {
             try? await stopSession(sessionId)
         }
@@ -131,7 +132,7 @@ public class DebuggerIntegration: ObservableObject {
     // MARK: - Breakpoint Management
     
     /// Add a breakpoint
-    public func addBreakpoint(_ breakpoint: Breakpoint) async {
+    func addBreakpoint(_ breakpoint: Breakpoint) async {
         breakpoints.append(breakpoint)
         
         // Sync with active sessions
@@ -143,7 +144,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Remove a breakpoint
-    public func removeBreakpoint(_ breakpoint: Breakpoint) async {
+    func removeBreakpoint(_ breakpoint: Breakpoint) async {
         breakpoints.removeAll { $0.id == breakpoint.id }
         
         // Sync with active sessions
@@ -155,7 +156,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Toggle breakpoint at line
-    public func toggleBreakpoint(at line: Int, in file: String) async {
+    func toggleBreakpoint(at line: Int, in file: String) async {
         if let existing = breakpoints.first(where: { $0.source.path == file && $0.line == line }) {
             await removeBreakpoint(existing)
         } else {
@@ -168,7 +169,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Update breakpoint condition
-    public func updateBreakpointCondition(
+    func updateBreakpointCondition(
         _ breakpoint: Breakpoint,
         condition: String?
     ) async {
@@ -185,7 +186,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Update breakpoint hit condition
-    public func updateBreakpointHitCondition(
+    func updateBreakpointHitCondition(
         _ breakpoint: Breakpoint,
         hitCondition: String?
     ) async {
@@ -202,7 +203,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Convert breakpoint to logpoint
-    public func convertToLogpoint(
+    func convertToLogpoint(
         _ breakpoint: Breakpoint,
         logMessage: String
     ) async {
@@ -221,7 +222,7 @@ public class DebuggerIntegration: ObservableObject {
     // MARK: - Execution Control
     
     /// Continue execution
-    public func continueExecution() async throws {
+    func continueExecution() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -230,7 +231,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Step over
-    public func stepOver() async throws {
+    func stepOver() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -239,7 +240,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Step into
-    public func stepInto() async throws {
+    func stepInto() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -248,7 +249,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Step out
-    public func stepOut() async throws {
+    func stepOut() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -257,7 +258,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Pause execution
-    public func pause() async throws {
+    func pause() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -266,7 +267,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Restart debugging
-    public func restart() async throws {
+    func restart() async throws {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -277,7 +278,7 @@ public class DebuggerIntegration: ObservableObject {
     // MARK: - Stack and Variables
     
     /// Get stack trace for current thread
-    public func getStackTrace() async throws -> [StackFrame] {
+    func getStackTrace() async throws -> [StackFrame] {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -286,7 +287,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Select stack frame
-    public func selectFrame(_ frame: StackFrame) async throws {
+    func selectFrame(_ frame: StackFrame) async throws {
         currentFrame = frame
         
         // Load variables for frame
@@ -306,7 +307,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Evaluate expression
-    public func evaluate(
+    func evaluate(
         expression: String,
         context: EvaluateContext = .repl
     ) async throws -> Variable {
@@ -323,7 +324,7 @@ public class DebuggerIntegration: ObservableObject {
     }
     
     /// Get variable children
-    public func getVariableChildren(_ variable: Variable) async throws -> [Variable] {
+    func getVariableChildren(_ variable: Variable) async throws -> [Variable] {
         guard let session = activeSession else {
             throw DebugError.noActiveSession
         }
@@ -340,7 +341,7 @@ public class DebuggerIntegration: ObservableObject {
     // MARK: - Inline Values
     
     /// Get inline values for current frame
-    public func getInlineValues(for range: NSRange) async throws -> [InlineValue] {
+    func getInlineValues(for range: NSRange) async throws -> [InlineValue] {
         guard configuration.enableInlineValues,
               activeSession != nil,
               currentFrame != nil else {
@@ -372,7 +373,7 @@ public class DebuggerIntegration: ObservableObject {
     // MARK: - Hover Evaluation
     
     /// Evaluate expression on hover
-    public func evaluateOnHover(
+    func evaluateOnHover(
         expression: String,
         at location: Int
     ) async throws -> HoverEvaluation? {

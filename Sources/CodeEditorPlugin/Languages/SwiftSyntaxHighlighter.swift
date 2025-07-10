@@ -505,7 +505,7 @@ public final class SwiftSyntaxHighlighter: Sendable {
         if range.location > 0 {
             let beforeIndex = utf16.index(utf16.startIndex, offsetBy: range.location - 1)
             let beforeChar = utf16[beforeIndex]
-            if chars.contains(UnicodeScalar(beforeChar)!) {
+            if let scalar = UnicodeScalar(beforeChar), chars.contains(scalar) {
                 return false
             }
         }
@@ -515,7 +515,7 @@ public final class SwiftSyntaxHighlighter: Sendable {
         if endLocation < utf16.count {
             let afterIndex = utf16.index(utf16.startIndex, offsetBy: endLocation)
             let afterChar = utf16[afterIndex]
-            if chars.contains(UnicodeScalar(afterChar)!) {
+            if let scalar = UnicodeScalar(afterChar), chars.contains(scalar) {
                 return false
             }
         }

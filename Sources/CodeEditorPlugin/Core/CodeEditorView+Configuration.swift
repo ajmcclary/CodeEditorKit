@@ -42,13 +42,8 @@ extension CodeEditorView {
         updateLayoutManagerSettings()
         
         // Apply font settings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         textColor = PlatformColors.label
-        #else
-        font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        textColor = PlatformColors.label
-        #endif
         
         // Apply layout settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -65,13 +60,8 @@ extension CodeEditorView {
         applyParagraphStyle()
         
         // Apply behavior settings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
-        #else
-        isEditable = configuration.behavior.isEditable
-        isSelectable = configuration.behavior.isSelectable
-        #endif
         
         // Update code folding configuration
         updateCodeFoldingConfiguration()

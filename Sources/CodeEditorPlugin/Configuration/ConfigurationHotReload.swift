@@ -27,7 +27,6 @@ public final class ConfigurationHotReload: ObservableObject {
     
     /// Animation settings for configuration changes
     public var animateChanges: Bool = true
-    public var animationDuration: Duration = .seconds(PlatformConstants.defaultAnimationDuration)
     
     /// Validation rules
     private var validationRules: [ConfigurationValidationRule] = []
@@ -281,24 +280,6 @@ public final class ConfigurationHotReload: ObservableObject {
         for observer in observers.values {
             observer.configurationDidChange(event)
         }
-    }
-    
-    /// Applies configuration changes with animations.
-    ///
-    /// - Parameter changes: The configuration changes to animate
-    ///
-    /// - Note: Animation support is not yet implemented. Changes are applied immediately.
-    ///         Future versions may add cross-platform animation support using:
-    ///         - NSAnimationContext on macOS
-    ///         - UIView.animate on iOS
-    ///         - Coordinated animations for complex changes
-    @available(*, deprecated, message: "Animation support is not yet implemented. This method currently applies changes immediately without animation.")
-    private func applyAnimatedTransitions(for changes: [HotReloadConfigurationChange]) {
-        // Log that animations were requested but not supported
-        Self.logger.debug("Animation requested for \(changes.count) changes, but animations are not yet supported")
-        
-        // Apply changes immediately without animation
-        // In the future, this could coordinate animations across different UI elements
     }
     
     private func setupDefaultValidationRules() {

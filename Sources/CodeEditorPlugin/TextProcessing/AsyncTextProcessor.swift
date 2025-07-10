@@ -241,7 +241,22 @@ actor AsyncTextProcessor {
     private func taskCompleted(_ taskId: UUID) async {
         activeTasks.removeValue(forKey: taskId)
         updateProcessingLoad()
+        
+        // Automatic cache cleanup when queue is empty and no active tasks
+        if processingQueue.isEmpty && activeTasks.isEmpty {
+            await performCacheCleanupIfNeeded()
+        }
+        
         await processNextTaskIfPossible()
+    }
+    
+    private func performCacheCleanupIfNeeded() async {
+        // Clear cache when idle to free memory
+        // This helps prevent long-lived tasks from keeping stale cache entries
+        if processingQueue.isEmpty && activeTasks.isEmpty {
+            logger.debug("Clearing cache - queue is empty")
+            resultCache = nil
+        }
     }
     
     private func performProcessing(_ task: ProcessingTask) async throws -> ProcessingResult {

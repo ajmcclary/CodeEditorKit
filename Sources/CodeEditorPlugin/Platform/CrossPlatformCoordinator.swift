@@ -33,7 +33,7 @@ import os.log
 /// - SeeAlso: ``ToolbarCoordinator`` for toolbar management
 /// - SeeAlso: ``ContextMenuCoordinator`` for context menu handling
 @MainActor
-public class CrossPlatformCoordinator: ObservableObject {
+public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Properties
     
     internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")

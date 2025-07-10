@@ -151,7 +151,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
-            applyConfiguration()
+            // Apply configuration if it changed OR if the memory monitor changed
+            // (memoryMonitor is excluded from EditorConfiguration equality)
+            if configuration != oldValue || 
+               configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor {
+                applyConfiguration()
+            }
         }
     }
     
@@ -187,7 +192,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
     
-    /// The current programming language used for syntax highlighting and code completion
+    /// The current programming language used for syntax highlighting and code completion.
+    /// 
+    /// When the language is changed:
+    /// - Syntax highlighting is automatically reapplied with the new language rules
+    /// - Code completion trigger characters are updated for the new language
+    /// - Any existing highlighting is cleared and regenerated
+    /// 
+    /// - Note: Changing the language may cause a brief visual update as highlighting is reprocessed
     public var language: Language = .plainText {
         didSet {
             if language != oldValue {
@@ -271,6 +283,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         super.init(frame: frameRect)
         setupTextView()
     }
+    
+    /// Initializes CodeEditorView with a custom memory monitor
+    /// - Parameters:
+    ///   - frame: The frame rectangle for the view
+    ///   - memoryMonitor: Custom memory monitor for resource management
+    public convenience init(frame frameRect: NSRect, memoryMonitor: MemoryMonitor) {
+        self.init(frame: frameRect)
+        self.memoryMonitor = memoryMonitor
+    }
     #else
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
@@ -281,6 +302,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Use default UITextView initialization
         Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
         self.init(frame: frameRect, textContainer: nil)
+    }
+    
+    /// Initializes CodeEditorView with a custom memory monitor
+    /// - Parameters:
+    ///   - frame: The frame rectangle for the view
+    ///   - memoryMonitor: Custom memory monitor for resource management
+    public convenience init(frame frameRect: CGRect, memoryMonitor: MemoryMonitor) {
+        self.init(frame: frameRect)
+        self.memoryMonitor = memoryMonitor
     }
     #endif
     

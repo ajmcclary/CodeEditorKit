@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		006D8CB2F511D1B5F9DBDB0E /* ParagraphStyleCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E00191C267B6EC21C3AE02E /* ParagraphStyleCacheTests.swift */; };
 		00DC0D0E1FBF93206D54A7A0 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BD5C75C15F27CB56089F8E /* ErrorHandlingTests.swift */; };
+		0471C26956B190BC334FC7B8 /* InputCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D57C74A3FA9DAEA0B34FD3 /* InputCoordinatorTests.swift */; };
 		04E189F1B06CA30315A18268 /* TextKit2OptimizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F751595C102F980ADA2E057 /* TextKit2OptimizationTests.swift */; };
 		07E0BD75A0401A5CC753A57E /* ConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA02F2B469B5079F7467E38E /* ConfigurationTests.swift */; };
 		094F249A2153D84F84223F3C /* PlatformAbstractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40F094A016D1C6B5248BE9DE /* PlatformAbstractionTests.swift */; };
@@ -22,6 +23,7 @@
 		133539ADD3BC9F79224DF4CC /* ConfigurationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD6DDC0888E3B256631752E /* ConfigurationUITests.swift */; };
 		13B7C82F1AAB5E2C8CA7EDF3 /* ContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5F54F9BC1C77D523B7BD4F /* ContextMenuTests.swift */; };
 		14449F99A45D0C849820E918 /* SwiftUIDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9666FD0B7876F1F0295FA94 /* SwiftUIDemoView.swift */; };
+		15A5FEF991317C0C1972FC3C /* InputCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D57C74A3FA9DAEA0B34FD3 /* InputCoordinatorTests.swift */; };
 		164AF702E45CC781FD7C8900 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A2A4F0BBCBCE884CBF6FB1 /* AppState.swift */; };
 		17029DF400798B40065A4919 /* DisplayConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22655AD40895839604BA193 /* DisplayConfigurationSection.swift */; };
 		18712EE26FB8902DAD04D3F6 /* ComprehensivePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EBA6E023490F6BBE4A5AF8B /* ComprehensivePerformanceTests.swift */; };
@@ -275,6 +277,7 @@
 		B20D562A0ACF7008CCC626DC /* ThemeConfigurationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeConfigurationSection.swift; sourceTree = "<group>"; };
 		B2F0655B5DA5A8C726D42CF4 /* SampleCodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeEditorView.swift; sourceTree = "<group>"; };
 		B47E21FE34A8E73A548CCC15 /* ConfigurationSectionComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSectionComponents.swift; sourceTree = "<group>"; };
+		B4D57C74A3FA9DAEA0B34FD3 /* InputCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputCoordinatorTests.swift; sourceTree = "<group>"; };
 		B81DD393BBE74FFF0852332F /* EditorConfigurationBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorConfigurationBuilderTests.swift; sourceTree = "<group>"; };
 		BAB79933788941603576D264 /* EditorToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolbar.swift; sourceTree = "<group>"; };
 		BB75AEABBF786DCDE6398DB1 /* TestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
@@ -435,6 +438,7 @@
 				E58B64DEDCC6CA07F022988D /* EdgeInsetsTests.swift */,
 				B81DD393BBE74FFF0852332F /* EditorConfigurationBuilderTests.swift */,
 				95BD5C75C15F27CB56089F8E /* ErrorHandlingTests.swift */,
+				B4D57C74A3FA9DAEA0B34FD3 /* InputCoordinatorTests.swift */,
 				56E81F83A7EAC689CB6E2643 /* IOSAnnotationTests.swift */,
 				1A5D2A0B6B164D266895D896 /* LanguageDetectionTests.swift */,
 				C1C87CE64A02AA945F350436 /* LargeFilePerformanceTests.swift */,
@@ -779,6 +783,7 @@
 				6E4FCCD0C25EEE873D12B9E3 /* EditorConfigurationBuilderTests.swift in Sources */,
 				00DC0D0E1FBF93206D54A7A0 /* ErrorHandlingTests.swift in Sources */,
 				F38A42A3B9935AEC2D553897 /* IOSAnnotationTests.swift in Sources */,
+				15A5FEF991317C0C1972FC3C /* InputCoordinatorTests.swift in Sources */,
 				41D1B785B33B6824B5F4E5A7 /* LSPIntegrationTests.swift in Sources */,
 				8D18A952314D3611B222410C /* LSPTestHelpers.swift in Sources */,
 				BFEE17D4A5B3E0C603275AAC /* LanguageDetectionTests.swift in Sources */,
@@ -952,6 +957,7 @@
 				1FB6F51F409A3EFAB07203CD /* EditorConfigurationBuilderTests.swift in Sources */,
 				862EF0415BAEFEFEE01D1C33 /* ErrorHandlingTests.swift in Sources */,
 				F06752DC36E6EBEC3DE4398C /* IOSAnnotationTests.swift in Sources */,
+				0471C26956B190BC334FC7B8 /* InputCoordinatorTests.swift in Sources */,
 				B1B40D3430E9FBEEBE37711B /* LSPIntegrationTests.swift in Sources */,
 				777F16927808B76150C8E59B /* LSPTestHelpers.swift in Sources */,
 				102C15499CBF24A16115A410 /* LanguageDetectionTests.swift in Sources */,

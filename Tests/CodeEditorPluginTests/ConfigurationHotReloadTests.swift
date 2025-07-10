@@ -168,16 +168,11 @@ final class ConfigurationHotReloadTests: XCTestCase {
         
         // Test default values
         XCTAssertTrue(hotReload.animateChanges)
-        XCTAssertEqual(hotReload.animationDuration.components.seconds, 0)
-        XCTAssertEqual(hotReload.animationDuration.components.attoseconds / 1_000_000_000_000_000, 300) // 300ms
         
         // Test setting values
         hotReload.animateChanges = false
-        hotReload.animationDuration = .milliseconds(500)
         
         XCTAssertFalse(hotReload.animateChanges)
-        XCTAssertEqual(hotReload.animationDuration.components.seconds, 0)
-        XCTAssertEqual(hotReload.animationDuration.components.attoseconds / 1_000_000_000_000_000, 500) // 500ms
     }
     
     // MARK: - Validation Tests

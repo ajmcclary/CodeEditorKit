@@ -277,4 +277,132 @@ final class PlatformCapabilitiesTests: XCTestCase {
             }
         }
     }
+    
+    // MARK: - Additional Tests for Review Feedback
+    
+    @MainActor
+    func testRecommendedConfigurationMemoryAdjustments() {
+        let capabilities = PlatformCapabilities.shared
+        let config = capabilities.recommendedConfiguration()
+        
+        // Check that memory-based adjustments are applied
+        let memoryInGB = ProcessInfo.processInfo.physicalMemory / (1_024 * 1_024 * 1_024)
+        
+        if memoryInGB < 4 {
+            // Low memory devices should have reduced syntax highlighting length
+            XCTAssertLessThanOrEqual(
+                config.performance.maxSyntaxHighlightingLength,
+                100_000,
+                "Low memory devices should have reduced syntax highlighting limit"
+            )
+        } else if memoryInGB >= 16 {
+            // High memory devices can handle larger files
+            XCTAssertGreaterThanOrEqual(
+                config.performance.maxSyntaxHighlightingLength,
+                500_000,
+                "High memory devices should support larger files"
+            )
+        }
+    }
+    
+    @MainActor
+    func testRecommendedConfigurationDeviceSpecific() {
+        let capabilities = PlatformCapabilities.shared
+        let config = capabilities.recommendedConfiguration()
+        let deviceType = capabilities.deviceType
+        
+        // Verify device-specific settings are applied
+        switch deviceType {
+        case .mac:
+            // On Mac (including Catalyst), check platform-specific adjustments
+            if capabilities.currentPlatform == .catalyst {
+                XCTAssertEqual(config.display.fontSize, 14.0, "Catalyst should use 14pt font")
+                XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst should use 45pt gutter")
+            } else {
+                XCTAssertEqual(config.display.fontSize, 14.0, "Mac should use 14pt font")
+                XCTAssertEqual(config.layout.gutterWidth, 50.0, "Mac should use 50pt gutter")
+            }
+            
+        case .iPhone:
+            XCTAssertEqual(config.display.fontSize, 16.0, "iPhone should use 16pt font")
+            XCTAssertEqual(config.layout.gutterWidth, 50.0, "iPhone should use 50pt gutter")
+            XCTAssertFalse(config.display.showMinimap, "iPhone should not show minimap")
+            
+        case .iPad:
+            XCTAssertEqual(config.display.fontSize, 15.0, "iPad should use 15pt font")
+            XCTAssertEqual(config.layout.gutterWidth, 45.0, "iPad should use 45pt gutter")
+            // Note: iPad's recommendedConfiguration() sets showMinimap to false
+            XCTAssertFalse(config.display.showMinimap, "iPad should not show minimap")
+            
+        default:
+            // Other device types use their default configurations
+            break
+        }
+    }
+    
+    @MainActor
+    func testRecommendedConfigurationPerformanceCapabilities() {
+        let capabilities = PlatformCapabilities.shared
+        let config = capabilities.recommendedConfiguration()
+        let perfCaps = capabilities.performanceCapabilities
+        
+        // Verify performance capabilities are respected
+        if !perfCaps.supportsHardwareAcceleration {
+            XCTAssertFalse(config.performance.useHardwareAcceleration,
+                         "Hardware acceleration should be disabled when not supported")
+        }
+        
+        // Performance config should always exist
+        XCTAssertNotNil(config.performance, "Performance config should exist")
+        XCTAssertGreaterThan(
+            config.performance.maxSyntaxHighlightingLength,
+            0,
+            "Max syntax highlighting length should be positive"
+        )
+    }
+    
+    @MainActor
+    func testAllFeaturesHaveAvailabilityLevel() {
+        let capabilities = PlatformCapabilities.shared
+        
+        // Test all known features
+        let features: [PlatformCapabilities.EditorFeature] = [
+            .syntaxHighlighting, .lineNumbers, .codeFolding, .minimap,
+            .multipleCursors, .languageServerProtocol, .goToDefinition,
+            .findReplace, .codeCompletion, .symbolNavigation,
+            .hardwareAcceleration, .autoIndent
+        ]
+        
+        for feature in features {
+            let availability = capabilities.getFeatureAvailability(feature)
+            // Every feature should have a defined availability level
+            XCTAssertTrue([.full, .partial, .unavailable].contains(availability),
+                        "Feature \(feature) should have valid availability level")
+        }
+    }
+    
+    @MainActor
+    func testInputCapabilities() {
+        let capabilities = PlatformCapabilities.shared
+        let inputCaps = capabilities.inputCapabilities
+        
+        // Basic validation of input capabilities
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard), "All platforms should support keyboard")
+        XCTAssertTrue(inputCaps.supportsKeyboardShortcuts || capabilities.currentPlatform == .iOS, 
+                     "Platform should have appropriate keyboard shortcut support")
+        
+        #if canImport(UIKit)
+        let supportsTouch = inputCaps.preferredInputMethods.contains(.touch)
+        XCTAssertTrue(supportsTouch, "iOS/Catalyst should support touch")
+        #else
+        let supportsTouch = inputCaps.preferredInputMethods.contains(.touch)
+        XCTAssertFalse(supportsTouch, "macOS should not support touch")
+        #endif
+        
+        #if targetEnvironment(macCatalyst)
+        // Catalyst supports both keyboard and potentially touch
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard))
+        XCTAssertTrue(inputCaps.supportsTrackpad)
+        #endif
+    }
 }

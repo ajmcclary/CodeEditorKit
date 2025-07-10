@@ -523,7 +523,7 @@ public struct MonitoringConfiguration {
 }
 
 /// Performance history tracking
-public class PerformanceHistory {
+public final class PerformanceHistory {
     private var dataPoints: [PerformanceDataPoint] = []
     private let maxDataPoints = 300 // 5 minutes at 1 second intervals
     

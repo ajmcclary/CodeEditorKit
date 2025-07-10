@@ -121,6 +121,7 @@ public struct EditorConfigurationBuilder {
   /// - Note: The configuration is automatically validated when applied to an editor
   ///
   /// - SeeAlso: `EditorConfiguration.validate()`, `EditorConfiguration.apply(to:)`
+  @discardableResult
   public func build() -> EditorConfiguration {
     // Validate and auto-fix any issues
     var finalConfig = configuration
