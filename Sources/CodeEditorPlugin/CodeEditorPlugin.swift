@@ -5,7 +5,9 @@ import AppKit
 import UIKit
 #endif
 import Foundation
+#if canImport(SwiftUI)
 import SwiftUI
+#endif
 
 // MARK: - Main Module Exports
 

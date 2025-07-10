@@ -49,6 +49,21 @@ When Catalyst needs different behavior from iOS:
 Write your code once using platform-agnostic types:
 
 ```swift
+// Platform-agnostic type aliases
+let color: PlatformColor = .systemBlue
+let font: PlatformFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
+let view: PlatformView = myCustomView
+
+// Cross-platform font helpers
+let systemFont = PlatformFonts.systemFont(ofSize: 16, weight: .medium)
+let systemSize = PlatformFonts.systemFontSize
+```
+
+### Modular Font System
+
+Fonts are now organized in a dedicated `PlatformFonts` helper for better maintainability:
+
+```swift
 // These types work identically on all platforms
 let backgroundColor = PlatformColors.systemBackground
 let textColor = PlatformColors.label

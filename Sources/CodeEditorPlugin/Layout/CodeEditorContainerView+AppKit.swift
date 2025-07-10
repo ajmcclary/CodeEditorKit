@@ -197,7 +197,6 @@ extension CodeEditorContainerView {
         minimapView.layer?.zPosition = 1_000
         minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
         
-        
         // Configure scroll view for line numbers
         scrollView.hasVerticalRuler = configuration.display.showLineNumbers
         scrollView.rulersVisible = configuration.display.showLineNumbers
@@ -278,7 +277,6 @@ extension CodeEditorContainerView {
             // Explicitly order the view above the scroll view
             minimapView.removeFromSuperview()
             addSubview(minimapView, positioned: .above, relativeTo: scrollView)
-            
             
             // When minimap is shown, we need to constrain the text view
             if !configuration.layout.wrapLines {

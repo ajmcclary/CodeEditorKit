@@ -30,6 +30,50 @@ struct ContentView: View {
 
 ## Configuration
 
+### Using Builder Pattern
+
+Create configurations easily with the fluent builder API:
+
+```swift
+struct MyEditor: View {
+    @State private var code = ""
+    
+    var body: some View {
+        let config = EditorConfigurationBuilder()
+            .fontSize(16)
+            .showLineNumbers(true)
+            .theme(.xcodeDark)
+            .language(.swift)
+            .enableSyntaxHighlighting(true)
+            .build()
+        
+        CodeEditor(text: $code)
+            .environment(\.codeEditorConfiguration, config)
+    }
+}
+```
+
+### Using Presets
+
+Start from intelligent presets:
+
+```swift
+// Minimal editor for simple use cases
+let minimalConfig = EditorConfigurationBuilder(preset: .minimal)
+    .fontSize(14)
+    .build()
+
+// Read-only editor for code display
+let readOnlyConfig = EditorConfigurationBuilder(preset: .readOnly)
+    .theme(.github)
+    .build()
+
+// Platform-optimized configuration
+let platformConfig = EditorConfigurationBuilder(preset: .platformOptimized)
+    .enableCodeCompletion(true)
+    .build()
+```
+
 ### Using Environment
 
 Apply configuration through SwiftUI's environment:

@@ -79,6 +79,52 @@ public struct EditorConfigurationBuilder {
   public init(base: EditorConfiguration) {
     self.configuration = base
   }
+  
+  /// Creates a configuration builder starting from a preset configuration.
+  ///
+  /// This is a convenience initializer that uses shared base configurations
+  /// to reduce duplication and ensure consistency.
+  ///
+  /// - Parameter preset: The preset configuration to start with
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// let config = EditorConfigurationBuilder(preset: .minimal)
+  ///     .fontSize(16)
+  ///     .enableSyntaxHighlighting(true)
+  ///     .build()
+  /// ```
+  public init(preset: PresetConfiguration) {
+    switch preset {
+    case .default:
+      self.configuration = .default
+
+    case .minimal:
+      self.configuration = .minimal
+
+    case .readOnly:
+      self.configuration = .readOnly
+
+    case .markdown:
+      self.configuration = .markdown
+
+    case .presentation:
+      self.configuration = .presentation
+
+    case .iOS:
+      self.configuration = .iOS
+
+    case .catalyst:
+      self.configuration = .catalyst
+
+    case .macOS:
+      self.configuration = .macOS
+
+    case .platformOptimized:
+      self.configuration = .platformOptimized
+    }
+  }
 
   // MARK: - Internal Helper
 

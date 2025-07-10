@@ -23,7 +23,7 @@ Built from the ground up with true cross-platform support in mind, it delivers a
 
 - ✅ **Production-Grade Quality:** Verified with **533 automated tests** (100% passing), ensuring reliability for professional applications. Every commit maintains strict quality standards with **zero linting violations** across 43 files and comprehensive test coverage.
 
-- ⚙️ **Unified Configuration System:** A flexible, nested configuration system with builder patterns and intelligent presets makes customization both simple and powerful. Configure once, apply everywhere.
+- ⚙️ **Unified Configuration System:** A flexible, nested configuration system with fluent builder patterns and intelligent presets makes customization both simple and powerful. Start from presets like `.minimal`, `.readOnly`, or `.platformOptimized` and customize with method chaining.
 
 - 📝 **Rich Editing Experience:** Professional-grade features including line numbers with gutter display, inline `TODO`/`FIXME` annotations with badges, selected line highlighting, invisible character rendering, smart indentation that understands your code, and advanced code folding with visual indicators.
 

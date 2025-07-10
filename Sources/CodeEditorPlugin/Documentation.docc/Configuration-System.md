@@ -11,6 +11,27 @@ Master CodeEditorPlugin's powerful and flexible configuration system.
 
 The EditorConfiguration system provides fine-grained control over every aspect of the editor through a clean, nested structure. Configuration changes apply instantly without recreating views.
 
+## Quick Start with Builder Pattern
+
+Use the fluent `EditorConfigurationBuilder` for easy configuration:
+
+```swift
+// Basic configuration
+let config = EditorConfigurationBuilder()
+    .fontSize(16)
+    .showLineNumbers(true)
+    .tabWidth(4)
+    .theme(.dark)
+    .language(.swift)
+    .build()
+
+// Start from presets
+let config = EditorConfigurationBuilder(preset: .minimal)
+    .fontSize(14)
+    .enableSyntaxHighlighting(true)
+    .build()
+```
+
 ## Configuration Structure
 
 EditorConfiguration is organized into four logical groups:
