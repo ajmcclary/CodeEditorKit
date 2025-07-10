@@ -286,7 +286,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Initializes CodeEditorView with a custom memory monitor
     /// - Parameters:
-    ///   - frame: The frame rectangle for the view
+    ///   - frameRect: The frame rectangle for the view
     ///   - memoryMonitor: Custom memory monitor for resource management
     public convenience init(frame frameRect: NSRect, memoryMonitor: MemoryMonitor) {
         self.init(frame: frameRect)

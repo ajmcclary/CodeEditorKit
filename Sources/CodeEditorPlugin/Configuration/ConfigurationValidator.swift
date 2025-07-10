@@ -545,7 +545,7 @@ public enum MigrationError: Error, Equatable {
     case validationFailed([ValidationIssue])
     case migrationFailed(String)
     
-    public static func == (lhs: MigrationError, rhs: MigrationError) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case let (.unsupportedVersion(v1), .unsupportedVersion(v2)):
             return v1 == v2

@@ -67,7 +67,7 @@ struct ThemedEditor: View {
 **Type**: `Theme`  
 **Default**: `.default`
 
-> **Related Modifier**: Use ``CodeEditor/theme(_:)`` for setting the theme on individual editors.
+> **Related Modifier**: Use ``CodeEditor/codeTheme(_:)`` for setting the theme on individual editors.
 
 ### `codeEditorMemoryMonitor`
 
@@ -209,6 +209,5 @@ CodeEditor(text: $code)
 
 ## See Also
 
-- <doc:Configuration-System>: Learn about the EditorConfiguration structure
-- <doc:SwiftUI-Integration>: Complete guide to SwiftUI integration
-- <doc:Memory-Management>: Understanding memory monitoring and optimization
+- <doc:Configuration-System>
+- <doc:SwiftUI-Integration>

@@ -297,7 +297,7 @@ for region in regions {
 
 - <doc:Configuration-System>
 - <doc:SwiftUI-Integration>
-- ``CodeEditorView/toggleFold(at:)``
+- ``CodeEditorView/fold(at:)``
+- ``CodeEditorView/unfold(at:)``
 - ``CodeEditorView/isFoldable(at:)``
-- ``CodeEditorView/foldAll(minimumLineCount:)``
-- ``FoldableRegion``
+- ``CodeFoldingEngine``
