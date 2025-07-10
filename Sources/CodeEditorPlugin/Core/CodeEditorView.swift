@@ -348,8 +348,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Update completion manager
         completionManager = CompletionManager(memoryMonitor: memoryMonitor)
         
-        // Update other components that use memoryMonitor
-        // Note: Most components already receive memoryMonitor through their initializers
-        // This method is called when memoryMonitor is changed after initialization
+        // Update async highlighter
+        asyncHighlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
+        
+        // Update rendering optimizer
+        renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
+        
+        // Update LSP manager
+        lspManager = LSPManager(memoryMonitor: memoryMonitor)
+        
+        // Note: codeFoldingEngine and other components don't use memoryMonitor
     }
 }

@@ -8,6 +8,7 @@ import Foundation
 public final class UnifiedEventSystem: ObservableObject {
     // MARK: - Singleton
     
+    /// Shared instance for backward compatibility
     public static let shared = UnifiedEventSystem()
     
     // MARK: - Properties
@@ -41,8 +42,12 @@ public final class UnifiedEventSystem: ObservableObject {
     
     // MARK: - Initialization
     
-    private init() {
-        setupDefaultFilters()
+    /// Creates a new UnifiedEventSystem with optional configuration
+    /// - Parameter enableDefaultFilters: Whether to setup default filters (default: true)
+    public init(enableDefaultFilters: Bool = true) {
+        if enableDefaultFilters {
+            setupDefaultFilters()
+        }
     }
     
     // MARK: - Event Publishing

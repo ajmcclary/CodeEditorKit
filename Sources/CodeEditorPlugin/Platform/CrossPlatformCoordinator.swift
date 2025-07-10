@@ -50,6 +50,9 @@ public final class CrossPlatformCoordinator: ObservableObject {
     /// Thread-safe observer storage
     private let observerStore = ObserverStore()
     
+    /// Weak reference to associated text view for toolbar actions
+    internal weak var associatedTextView: CodeEditorView?
+    
     // MARK: - Types
     
     /// Platform-specific adjustments

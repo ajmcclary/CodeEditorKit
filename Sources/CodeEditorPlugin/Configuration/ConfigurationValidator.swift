@@ -48,13 +48,13 @@ public struct ConfigurationValidator {
     private func validateDisplay(_ display: EditorConfiguration.Display) -> [ValidationIssue] {
         var issues: [ValidationIssue] = []
         
-        // Font size validation
-        if display.fontSize < 8.0 || display.fontSize > 72.0 {
+        // Font size validation - more permissive range
+        if display.fontSize < 6.0 || display.fontSize > 120.0 {
             issues.append(ValidationIssue(
                 severity: .warning,
                 path: "display.fontSize",
-                message: "Font size \(display.fontSize) is outside recommended range (8-72)",
-                suggestedValue: max(8.0, min(72.0, display.fontSize))
+                message: "Font size \(display.fontSize) is outside recommended range (6-120)",
+                suggestedValue: max(6.0, min(120.0, display.fontSize))
             ))
         }
         
@@ -66,13 +66,13 @@ public struct ConfigurationValidator {
     private func validateLayout(_ layout: EditorConfiguration.Layout) -> [ValidationIssue] {
         var issues: [ValidationIssue] = []
         
-        // Tab width validation
-        if layout.tabWidth < 1 || layout.tabWidth > 16 {
+        // Tab width validation - more permissive range
+        if layout.tabWidth < 1 || layout.tabWidth > 32 {
             issues.append(ValidationIssue(
                 severity: .warning,
                 path: "layout.tabWidth",
-                message: "Tab width \(layout.tabWidth) is outside recommended range (1-16)",
-                suggestedValue: max(1, min(16, layout.tabWidth))
+                message: "Tab width \(layout.tabWidth) is outside recommended range (1-32)",
+                suggestedValue: max(1, min(32, layout.tabWidth))
             ))
         }
         

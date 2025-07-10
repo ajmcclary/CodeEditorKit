@@ -7,6 +7,9 @@ import UIKit
 
 extension CrossPlatformCoordinator {
     func optimizeForIOS(_ textView: CodeEditorView) {
+        // Store weak reference for toolbar actions
+        self.associatedTextView = textView
+        
         // Configure for touch
         textView.isSelectable = true
         textView.isEditable = true
@@ -259,23 +262,26 @@ extension CrossPlatformCoordinator {
     // MARK: - IOS Toolbar Actions
     
     @objc private func undo() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
-              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        guard let textView = associatedTextView else {
+            logger.warning("No associated text view for undo action")
+            return
+        }
         textView.undoManager?.undo()
     }
     
     @objc private func redo() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
-              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        guard let textView = associatedTextView else {
+            logger.warning("No associated text view for redo action")
+            return
+        }
         textView.undoManager?.redo()
     }
     
     @objc private func find() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first(where: { $0.isKeyWindow }),
-              let textView = window.rootViewController?.view.subviews.first(where: { $0 is CodeEditorView }) as? CodeEditorView else { return }
+        guard let textView = associatedTextView else {
+            logger.warning("No associated text view for find action")
+            return
+        }
         showFind(in: textView)
     }
     

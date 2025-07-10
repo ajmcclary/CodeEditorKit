@@ -247,6 +247,11 @@ public struct CodeEditor: View {
         let effectiveTheme = initialTheme ?? theme
         let effectiveMemoryMonitor = environmentMemoryMonitor ?? defaultMemoryMonitor
         
+        // Use configuration's debounce interval if not overridden
+        let effectiveDebounceInterval = textDebounceInterval == .milliseconds(100) 
+            ? configuration.performance.textChangeDebounceInterval 
+            : textDebounceInterval
+        
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
@@ -257,7 +262,7 @@ public struct CodeEditor: View {
                 get: { isFocused },
                 set: { isFocused = $0 }
             ),
-            textDebounceInterval: textDebounceInterval,
+            textDebounceInterval: effectiveDebounceInterval,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )
