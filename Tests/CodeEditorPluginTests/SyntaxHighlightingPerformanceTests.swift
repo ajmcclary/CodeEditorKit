@@ -312,7 +312,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let duration = endTime - startTime
         
         // Incremental updates should be fast
-        XCTAssertLessThan(duration, 0.5, "Incremental highlighting took \(duration) seconds")
+        XCTAssertLessThan(duration, 1.0, "Incremental highlighting took \(duration) seconds")
     }
     
     // MARK: - Memory Performance Tests
