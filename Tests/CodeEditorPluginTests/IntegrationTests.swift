@@ -207,7 +207,7 @@ final class IntegrationTests: XCTestCase {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(adjustments.defaultFontSize, 12)
         #else
-        XCTAssertEqual(adjustments.defaultFontSize, 16)
+        XCTAssertEqual(adjustments.defaultFontSize, 14)
         #endif
     }
     

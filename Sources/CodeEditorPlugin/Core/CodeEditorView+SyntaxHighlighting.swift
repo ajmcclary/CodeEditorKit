@@ -110,7 +110,12 @@ extension CodeEditorView {
             var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
             if currentColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
                alpha > 0.1, (red + green + blue) > 0.1 {
-                effectiveTextColor = currentColor
+                // Ensure full opacity for Mac Catalyst
+                if alpha < 0.95 {
+                    effectiveTextColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+                } else {
+                    effectiveTextColor = currentColor
+                }
             } else {
                 // Current color is invisible, use fallback
                 effectiveTextColor = PlatformColors.label

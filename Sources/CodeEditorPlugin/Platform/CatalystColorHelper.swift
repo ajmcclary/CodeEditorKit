@@ -42,8 +42,11 @@ enum CatalystColorHelper {
         // Try to get RGB components using getRed first
         let testColor = converted.resolvedColor(with: UITraitCollection.current)
         if testColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
-            // Check if color is visible
-            if alpha > 0.1 && (red + green + blue) > 0.1 {
+            // Check if color is visible but has reduced opacity
+            if alpha > 0.1 && alpha < 0.95 && (red + green + blue) > 0.1 {
+                // Create a new color with full opacity
+                return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+            } else if alpha > 0.1 && (red + green + blue) > 0.1 {
                 return converted
             }
         } else {
@@ -55,8 +58,11 @@ enum CatalystColorHelper {
                 blue = components[2]
                 alpha = components.count > 3 ? components[3] : 1.0
                 
-                // Check if color is visible
-                if alpha > 0.1 && (red + green + blue) > 0.1 {
+                // Check if color is visible but has reduced opacity
+                if alpha > 0.1 && alpha < 0.95 && (red + green + blue) > 0.1 {
+                    // Create a new color with full opacity
+                    return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+                } else if alpha > 0.1 && (red + green + blue) > 0.1 {
                     return converted
                 }
             }
@@ -76,14 +82,28 @@ enum CatalystColorHelper {
     ///   - textView: The text view to apply the color to
     @MainActor
     static func applyTextColor(_ color: UIColor, to textView: CodeEditorView) async {
-        // Apply color to the text view
-        textView.textColor = color
+        // Ensure the color has full opacity for Mac Catalyst
+        let effectiveColor: UIColor
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        if color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            // If color has reduced opacity, make it fully opaque
+            if alpha < 0.95 && alpha > 0.1 {
+                effectiveColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+            } else {
+                effectiveColor = color
+            }
+        } else {
+            effectiveColor = color
+        }
+        
+        // Apply effective color to the text view
+        textView.textColor = effectiveColor
         
         // Apply color to text storage immediately
         let textStorage = textView.textStorage
         if textStorage.length > 0 {
             textStorage.beginEditing()
-            textStorage.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.addAttribute(.foregroundColor, value: effectiveColor, range: NSRange(location: 0, length: textStorage.length))
             textStorage.endEditing()
         }
         
