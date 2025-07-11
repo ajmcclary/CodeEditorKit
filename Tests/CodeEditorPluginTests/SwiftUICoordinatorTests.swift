@@ -24,7 +24,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
         
         XCTAssertNotNil(coordinator)
-        XCTAssertEqual(coordinator.textDebounceInterval, 0.3) // Default
+        XCTAssertEqual(coordinator.textDebounceInterval, 0.1) // Default is 0.1
         XCTAssertEqual(textChangeCount, 0)
         XCTAssertEqual(selectionChangeCount, 0)
     }
@@ -83,7 +83,10 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertEqual(container.textView.text, "initial text")
         #endif
         XCTAssertEqual(container.textView.language, .swift)
-        XCTAssertEqual(container.textView.configuration, .default)
+        // The container modifies the configuration to disable internal line numbers
+        var expectedConfig = EditorConfiguration.default
+        expectedConfig.display.showLineNumbers = false
+        XCTAssertEqual(container.textView.configuration, expectedConfig)
         XCTAssertIdentical(container.textView.memoryMonitor, memoryMonitor)
     }
     
@@ -167,13 +170,10 @@ final class SwiftUICoordinatorTests: XCTestCase {
             set: { capturedText = $0 }
         )
         
-        let expectation = XCTestExpectation(description: "Text updated")
-        
         let coordinator = CodeEditorCoordinator(
             text: textBinding,
             onTextChange: { newText in
                 capturedText = newText
-                expectation.fulfill()
             },
             onSelectionChange: nil
         )
@@ -181,7 +181,10 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Simulate text change from editor
         coordinator.handleTextChange("new text from editor")
         
-        await fulfillment(of: [expectation], timeout: 1.0)
+        // Wait for debounce interval (0.1 seconds by default) plus a small buffer
+        try await Task.sleep(nanoseconds: 150_000_000) // 0.15 seconds
+        
+        // The callback should have been called after the debounce
         XCTAssertEqual(capturedText, "new text from editor")
     }
     
