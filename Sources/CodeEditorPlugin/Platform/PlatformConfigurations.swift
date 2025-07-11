@@ -202,16 +202,23 @@ public enum PlatformConfigurations {
         // Apply device-specific adjustments
         let deviceType = capabilities.deviceType
         
-        // Don't override platform-specific configs with device configs
-        // Only apply device adjustments for iOS platform
-        if capabilities.currentPlatform == .iOS {
+        // Apply device-specific adjustments for iOS and Catalyst
+        if capabilities.currentPlatform == .iOS || capabilities.currentPlatform == .catalyst {
             switch deviceType {
             case .iPhone:
                 config = iPhone
                 
             case .iPad:
-                // Check if it's an iPad Pro based on screen size or other characteristics
-                config = iPad
+                // For Catalyst on iPad, use iPad config but keep Catalyst-specific overrides
+                if capabilities.currentPlatform == .catalyst {
+                    config = iPad
+                    // Keep some Catalyst-specific settings
+                    config.layout.gutterWidth = 45.0  // Catalyst prefers this
+                    config.display.fontSize = 15.0     // Use iPad font size
+                    config.display.showMinimap = false // Don't show minimap on Catalyst
+                } else {
+                    config = iPad
+                }
                 
             case .appleTV, .appleWatch, .visionPro, .carPlay:
                 // Use minimal config for unsupported devices
