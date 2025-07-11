@@ -1,55 +1,51 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude and other AI assistants when working with the CodeEditorPlugin repository.
 
-## Project Overview
+## Quick Reference
 
-CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Mac Catalyst:
-- **Swift 6 concurrency** with actor-based architecture
-- **Enhanced cross-platform abstraction** using `#if canImport()` patterns
-- **17+ programming languages** with syntax highlighting
-- **657 comprehensive tests** (622 main + 35 sample app) - All passing
-- **Zero SwiftLint violations** across all 43 files
-- **Production-grade reliability** with comprehensive error handling
-- **Feature-based architecture** (74% directory reduction)
-
-## Essential Commands
-
-### Build and Test
+### Essential Commands
 ```bash
-# Standard workflow
+# Standard workflow - build, lint, and test
 swift build && swiftlint && swift test
 
-# Fix linting issues
+# Fix linting issues automatically
 swiftlint --fix
 
 # Run sample app
 swift run
+
+# Generate documentation
+swift package generate-documentation --target CodeEditorPlugin
 ```
 
-### Development Quality
-```bash
-# Full quality check
-swift build && swiftlint && swift test
-
-# Clean rebuild
-swift package clean && swift build
-```
+### Project Statistics
+- **252 Source Files** in main plugin
+- **53 Test Files** with comprehensive coverage
+- **22 Feature Directories** (well-organized architecture)
+- **17+ Languages Supported** with syntax highlighting
+- **Zero SwiftLint Violations** maintained across codebase
 
 ## Architecture Overview
 
 ### Directory Structure
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Text editing (CodeEditorView)
+├── Core/                    # Text editing engine (CodeEditorView)
 ├── Configuration/           # EditorConfiguration system
-├── SyntaxHighlighting/      # Language support
-├── Layout/                  # UI components (GutterView)
+├── SyntaxHighlighting/      # Language highlighting support
+├── Layout/                  # UI components (GutterView, MinimapView)
 ├── SwiftUI/                 # SwiftUI integration (CodeEditor)
 ├── Platform/                # Cross-platform abstractions
 ├── Extensions/              # Type extensions (+Extensions naming)
-├── TextProcessing/          # Actor-based processing
+├── TextProcessing/          # Actor-based text processing
+├── Performance/             # Memory/performance monitoring
+├── Completion/              # Code completion system
+├── Features/                # Additional features (folding, search)
+├── Languages/               # Language-specific providers
 ├── LSP/                     # Language Server Protocol
+├── TextKit/                 # TextKit helpers
+├── Utilities/               # Shared utilities
 └── Documentation.docc/      # DocC documentation
 ```
 
@@ -58,6 +54,7 @@ Sources/CodeEditorPlugin/
 **CodeEditorView** (`Core/CodeEditorView.swift`)
 - Main TextKit2-based text view
 - Cross-platform with iOS container support
+- Unified event system for consistent behavior
 
 **EditorConfiguration** (`Configuration/EditorConfiguration.swift`)
 - Nested structure: `display`, `layout`, `behavior`, `performance`
@@ -66,12 +63,13 @@ Sources/CodeEditorPlugin/
 
 **Platform Abstraction** (`Platform/`)
 - Unified types: `PlatformColor`, `PlatformFont`, `PlatformView`
-- Capability detection: `PlatformCapabilities.shared`
-- Cross-platform coordinator for input handling
+- Uses `#if canImport()` patterns (NOT `#if os()`)
+- Runtime capability detection via `PlatformCapabilities.shared`
+- `CrossPlatformCoordinator` for unified input handling
 
-## Key Patterns
+## Key Usage Patterns
 
-### Configuration Usage
+### Configuration
 ```swift
 // Basic configuration
 var config = EditorConfiguration()
@@ -136,18 +134,10 @@ textView.language = .python
 
 ### Code Quality Standards
 - **Swift 6 Concurrency**: Use actors for background work
-- **Zero SwiftLint Violations**: Required across all files
-- **Cross-Platform**: Test on macOS, iOS, and Mac Catalyst
-- **Extension Naming**: Use `+Extensions` suffix
-
-### Finding Components
-- Core editing → `Core/`
-- Configuration → `Configuration/`
-- Syntax highlighting → `SyntaxHighlighting/`
-- UI components → `Layout/`
-- SwiftUI integration → `SwiftUI/`
-- Platform code → `Platform/`
-- Extensions → `Extensions/`
+- **Zero SwiftLint Violations**: Run `swiftlint --fix` before committing
+- **Cross-Platform Testing**: Test on macOS, iOS, and Mac Catalyst
+- **Extension Naming**: Use `+Extensions` suffix for extension files
+- **Logging**: Use `CrossPlatformLogger.logger()` not `print()`
 
 ### Common Tasks
 
@@ -155,62 +145,77 @@ textView.language = .python
 1. Add property to appropriate config section
 2. Update presets if needed
 3. Add SwiftUI modifier if applicable
+4. Update documentation
 
-**Platform-Specific Features**
+**Adding Platform-Specific Features**
 1. Use `#if canImport()` not `#if os()`
-2. Add abstraction in `Platform/` if needed
-3. Test on all platforms
+2. Add abstraction in `Platform/` directory
+3. Update `PlatformCapabilities` if needed
+4. Test on all platforms
 
-## Recent Major Refactoring (2025)
+**Debugging & Testing**
+```bash
+# Run specific test
+swift test --filter TestName
 
-### Enhanced Platform Abstraction
-- **Replaced all `#if os()` with `#if canImport()`** for proper Catalyst support
-- **Unified type system**: `PlatformColor`, `PlatformFont`, `PlatformView` throughout
-- **Runtime capability detection**: `PlatformCapabilities.shared` for feature availability
-- **Cross-platform coordinator**: Manages input handling across all platforms
+# Test with verbose output
+swift test --verbose
 
-### CodeEditorSample Improvements
-- **Unified wrapper protocol**: `CodeEditorViewWrapperProtocol` with platform implementations
-- **Direct SwiftUI integration**: iOS/Catalyst now use `CodeEditor` component directly
-- **Fixed configuration flow**: All settings apply correctly across platforms
-- **Resolved double line numbers**: Proper gutter view management on macOS
+# Platform-specific testing
+xcodebuild -scheme CodeEditorPlugin -destination 'platform=iOS Simulator,name=iPhone 15'
+```
 
-### Architecture Achievements
-- **74% directory reduction**: From 39 to 10 core feature directories
-- **43 total Swift files**: Well organized with feature-based architecture
-- **657 comprehensive tests**: 622 plugin + 35 sample app (100% passing)
-- **Zero SwiftLint violations**: Maintained across entire codebase
-- **Swift 6 concurrency compliance**: Full actor isolation and `@preconcurrency` usage
-- **Mac Catalyst compatibility**: Resolved all platform-specific build issues
-- **Dependency injection**: Replaced singleton patterns for better testability
+## Recent Improvements (2024-2025)
 
-### Latest Improvements (December 2025)
-- **Fixed AsyncSyntaxHighlighter**: Eliminated nested Task anti-pattern for cleaner async flow
-- **Removed unsafe force unwraps**: RegexSyntaxHighlighter now safely handles optional ranges
-- **Proper cleanup patterns**: CodeEditorView cleanup moved from deinit to removeFromSuperview
-- **API refinement**: Made codeFoldingEngine internal to hide implementation details
-- **Eliminated code duplication**: EditorConfigurationBuilder now uses shared base configurations
-- **Modern concurrency**: Replaced DispatchQueue.main.asyncAfter with Task.sleep
-- **Dependency injection**: MemoryMonitor singleton deprecated in favor of injected instances
-- **Simplified switch statements**: PlatformCapabilities now uses cleaner pattern matching
-- **Added Duration extension**: New timeInterval property for Swift 6 Duration conversion
-- **Enhanced type safety**: LRUCache now properly constrains Key and Value to Sendable
-- **Comprehensive DI migration**: All components now accept memoryMonitor as parameter
+### Architecture & Performance
+- **Unified Event System**: Consistent event handling across platforms
+- **AsyncSyntaxHighlighter Cache**: LRU cache with memory limits
+- **SwiftSyntaxHighlighter+Shared**: Refactored shared highlighting logic
+- **Dependency Injection**: Replaced singletons (e.g., MemoryMonitor)
+- **Swift 6 Concurrency**: Full actor isolation, eliminated Task anti-patterns
 
+### Platform Enhancements
+- **Enhanced Abstraction**: All `#if os()` replaced with `#if canImport()`
+- **Cross-Platform Coordinator**: Unified input handling system
+- **Runtime Capabilities**: Dynamic feature detection
+- **Native Performance**: Zero-compromise on each platform
+
+### Quality Improvements
+- **Force Unwrap Removal**: All unsafe unwraps eliminated
+- **Proper Cleanup**: Resources cleaned up in `removeFromSuperview`
+- **API Refinement**: Internal implementation details hidden
+- **Code Duplication**: Shared configurations in builders
+- **Modern Patterns**: `Task.sleep` instead of `DispatchQueue.asyncAfter`
+
+## Advanced Features
+
+### Performance Monitoring
+- Frame rate analysis (60fps target)
+- Memory usage tracking with configurable limits
+- Syntax highlighting performance metrics
+- Large file optimization (500KB+ files)
+
+### Language Server Protocol (Preview)
+- Intelligent code completion
+- Real-time diagnostics
+- Go-to-definition support
+- Hover documentation
 
 ## Important Reminders
 
-- **Production-Ready**: Maintain high quality standards
-- **Swift 6 First**: Use modern concurrency patterns
-- **Test Coverage**: Currently 657 tests - maintain this standard
-- **Documentation**: Reference DocC docs in `Documentation.docc/`
-- **Cross-Platform**: Always test on all platforms
+- **Production Quality**: This is used in real applications - maintain standards
+- **Swift 6 First**: Use modern concurrency patterns throughout
+- **Test Everything**: Add tests for new features and bug fixes
+- **Cross-Platform**: Always test on macOS, iOS, and Mac Catalyst
+- **Documentation**: Update DocC documentation for API changes
 
-## Documentation System
+## Documentation
 
-Generate documentation:
-```bash
-swift package generate-documentation --target CodeEditorPlugin
-```
-
-Key docs: `GettingStarted.md`, `Configuration-System.md`, `SwiftUI-Integration.md`, `Platform-Abstraction.md`
+Key documentation files in `Documentation.docc/`:
+- `CodeEditorPlugin.md` - Main documentation hub
+- `GettingStarted.md` - Quick setup guide
+- `Configuration-System.md` - Configuration details
+- `SwiftUI-Integration.md` - SwiftUI usage guide
+- `Platform-Abstraction.md` - Cross-platform development
+- `Unified-Event-System.md` - Event handling system
+- `Deprecation-Timeline.md` - API deprecation schedule
