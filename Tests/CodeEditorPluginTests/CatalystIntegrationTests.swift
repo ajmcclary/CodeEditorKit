@@ -206,7 +206,7 @@ final class CatalystIntegrationTests: XCTestCase {
         // Use a color that should resolve to full opacity
         let baseColor = UIColor { traitCollection in
             // Return a color that should have full opacity
-            return traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+            traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
         }
         
         // Enable syntax highlighting

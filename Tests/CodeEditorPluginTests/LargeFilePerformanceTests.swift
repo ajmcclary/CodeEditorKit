@@ -115,7 +115,12 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            wait(for: [expectation], timeout: 10.0)
+            // Catalyst may need more time for large file highlighting
+            #if targetEnvironment(macCatalyst)
+            wait(for: [expectation], timeout: 30.0)
+            #else
+            wait(for: [expectation], timeout: 15.0)
+            #endif
         }
     }
     

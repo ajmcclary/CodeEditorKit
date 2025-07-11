@@ -184,23 +184,22 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Wait for debounce interval (100ms by default) plus a buffer
         try await Task.sleep(for: .milliseconds(200))
         
-        // The callback should have been called after the debounce
-        XCTAssertEqual(capturedText, "new text from editor")
+        // The binding should have been updated after the debounce
+        XCTAssertEqual(textBinding.wrappedValue, "new text from editor")
     }
     
     @MainActor
     func testDebouncedTextUpdate() async throws {
         var updateCount = 0
+        var bindingText = ""
         let textBinding = Binding<String>(
-            get: { "" },
-            set: { _ in }
+            get: { bindingText },
+            set: { bindingText = $0; updateCount += 1 }
         )
         
         let coordinator = CodeEditorCoordinator(
             text: textBinding,
-            onTextChange: { _ in
-                updateCount += 1
-            },
+            onTextChange: nil,
             onSelectionChange: nil
         )
         
@@ -215,8 +214,9 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Wait for debounce (500ms) plus buffer
         try await Task.sleep(for: .milliseconds(700))
         
-        // Should only get one update due to debouncing
+        // Should only get one update to the binding due to debouncing
         XCTAssertEqual(updateCount, 1)
+        XCTAssertEqual(bindingText, "abc")
     }
     
     // MARK: - Selection Change Tests

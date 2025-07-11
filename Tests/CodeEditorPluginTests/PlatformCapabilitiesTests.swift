@@ -206,7 +206,8 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
 
         case .catalyst:
-            XCTAssertEqual(config.display.fontSize, 14.0)
+            // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)
+            XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0)
             XCTAssertEqual(config.layout.gutterWidth, 45.0)
         }
     }
@@ -316,7 +317,8 @@ final class PlatformCapabilitiesTests: XCTestCase {
         case .mac:
             // On Mac (including Catalyst), check platform-specific adjustments
             if capabilities.currentPlatform == .catalyst {
-                XCTAssertEqual(config.display.fontSize, 14.0, "Catalyst should use 14pt font")
+                // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)
+                XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0, "Catalyst should use 14pt or 15pt font")
                 XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst should use 45pt gutter")
             } else {
                 XCTAssertEqual(config.display.fontSize, 14.0, "Mac should use 14pt font")

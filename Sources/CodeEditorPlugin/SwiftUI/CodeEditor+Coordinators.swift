@@ -154,8 +154,10 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
                     // Call the debounced callback
                     self.onTextChangeCallback?(newText)
                 }
-            } catch {
+            } catch is CancellationError {
                 // Task was cancelled, which is expected behavior
+            } catch {
+                // Unexpected error - still continue
             }
         }
     }
