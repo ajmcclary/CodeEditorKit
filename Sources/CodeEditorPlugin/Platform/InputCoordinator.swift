@@ -5,7 +5,6 @@ import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
-import os.log
 
 /// Coordinator responsible for handling cross-platform input events
 ///
@@ -49,7 +48,7 @@ public final class InputCoordinator: ObservableObject {
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = InputCoordinator()
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "InputCoordinator")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "InputCoordinator")
     private let capabilities: PlatformCapabilities
     
     // MARK: - Initialization

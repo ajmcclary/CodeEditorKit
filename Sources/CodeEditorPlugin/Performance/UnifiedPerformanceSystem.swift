@@ -1,10 +1,9 @@
 import Foundation
-import os.log
 
 /// Unified performance monitoring and insights system
 @MainActor
 public final class UnifiedPerformanceSystem {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "UnifiedPerformanceSystem")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "UnifiedPerformanceSystem")
     
     // MARK: - Singleton
     

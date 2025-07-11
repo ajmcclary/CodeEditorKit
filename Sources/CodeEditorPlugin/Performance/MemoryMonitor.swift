@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// Monitors memory usage and provides automatic cleanup capabilities
 ///
@@ -76,7 +75,7 @@ public final class MemoryMonitor: ObservableObject {
     private var cleanupTask: Task<Void, Never>?
     
     /// Logger
-    private let logger = Logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
     
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []

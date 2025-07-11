@@ -226,11 +226,11 @@ public struct FindOptions: OptionSet, Sendable {
 @MainActor
 extension CodeEditorAPI {
     public func subscribe(_ handler: EditorEventHandler) {
-        eventPublisher.subscribe(handler)
+        eventPublisher.subscribeSync(handler)
     }
     
     public func unsubscribe(_ handler: EditorEventHandler) {
-        eventPublisher.unsubscribe(handler)
+        eventPublisher.unsubscribeSync(handler)
     }
     
     func moveCursor(by offset: Int) {

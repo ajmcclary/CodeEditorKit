@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// LSP-based completion provider that integrates with the CodeEditorView completion system
 @MainActor
@@ -18,7 +17,7 @@ public final class LSPCompletionProvider: CompletionProvider {
     private var currentFilePath: String?
     
     /// Logger for debugging
-    private let logger = Logger(subsystem: "com.codeeditor.lsp", category: "LSPCompletionProvider")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPCompletionProvider")
     
     // MARK: - Initialization
     

@@ -4,7 +4,6 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
-import os.log
 
 /// Smart editing engine for auto-brackets, multi-cursor, and other intelligent features
 @MainActor
@@ -15,7 +14,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     public typealias PlatformTextViewDelegate = UITextViewDelegate
     #endif
 
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "SmartEditingEngine")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "SmartEditingEngine")
     
     // MARK: - Published Properties
     

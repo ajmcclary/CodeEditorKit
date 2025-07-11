@@ -5,17 +5,16 @@ import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
-import os.log
 
 /// Helper for managing cross-platform coordinate system differences
 @MainActor
-public class CoordinateSystemHelper {
+class CoordinateSystemHelper {
     // MARK: - Properties
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "CoordinateSystemHelper")
+    private let logger = CrossPlatformLogger.logger()
     
     /// Current coordinate system type
-    public var coordinateSystem: CoordinateSystemType {
+    var coordinateSystem: CoordinateSystemType {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return .macOS
         #else
@@ -26,11 +25,11 @@ public class CoordinateSystemHelper {
     // MARK: - Types
     
     /// Coordinate system types
-    public enum CoordinateSystemType {
+    enum CoordinateSystemType {
         case macOS  // Origin at bottom-left, y increases upward
         case iOS    // Origin at top-left, y increases downward
         
-        public var isFlipped: Bool {
+        var isFlipped: Bool {
             switch self {
             case .macOS: return false
             case .iOS: return true
@@ -39,19 +38,19 @@ public class CoordinateSystemHelper {
     }
     
     /// Unified point representation
-    public struct UnifiedPoint {
-        public let x: CGFloat
-        public let y: CGFloat
-        public let coordinateSystem: CoordinateSystemType
+    struct UnifiedPoint {
+        let x: CGFloat
+        let y: CGFloat
+        let coordinateSystem: CoordinateSystemType
         
-        public init(x: CGFloat, y: CGFloat, in system: CoordinateSystemType) {
+        init(x: CGFloat, y: CGFloat, in system: CoordinateSystemType) {
             self.x = x
             self.y = y
             self.coordinateSystem = system
         }
         
         /// Convert to CGPoint in specified coordinate system
-        public func cgPoint(in targetSystem: CoordinateSystemType, containerHeight: CGFloat) -> CGPoint {
+        func cgPoint(in targetSystem: CoordinateSystemType, containerHeight: CGFloat) -> CGPoint {
             if coordinateSystem == targetSystem {
                 return CGPoint(x: x, y: y)
             }
@@ -62,33 +61,33 @@ public class CoordinateSystemHelper {
         }
         
         /// Convert to platform-native point
-        public var platformPoint: CGPoint {
+        var platformPoint: CGPoint {
             CGPoint(x: x, y: y)
         }
     }
     
     /// Unified rect representation
-    public struct UnifiedRect {
-        public let origin: UnifiedPoint
-        public let size: CGSize
+    struct UnifiedRect {
+        let origin: UnifiedPoint
+        let size: CGSize
         
-        public var minX: CGFloat { origin.x }
-        public var minY: CGFloat { origin.y }
-        public var maxX: CGFloat { origin.x + size.width }
-        public var maxY: CGFloat { origin.y + size.height }
+        var minX: CGFloat { origin.x }
+        var minY: CGFloat { origin.y }
+        var maxX: CGFloat { origin.x + size.width }
+        var maxY: CGFloat { origin.y + size.height }
         
-        public init(origin: UnifiedPoint, size: CGSize) {
+        init(origin: UnifiedPoint, size: CGSize) {
             self.origin = origin
             self.size = size
         }
         
-        public init(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, in system: CoordinateSystemType) {
+        init(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, in system: CoordinateSystemType) {
             self.origin = UnifiedPoint(x: x, y: y, in: system)
             self.size = CGSize(width: width, height: height)
         }
         
         /// Convert to CGRect in specified coordinate system
-        public func cgRect(in targetSystem: CoordinateSystemType, containerHeight: CGFloat) -> CGRect {
+        func cgRect(in targetSystem: CoordinateSystemType, containerHeight: CGFloat) -> CGRect {
             let convertedOrigin = origin.cgPoint(in: targetSystem, containerHeight: containerHeight)
             
             // When flipping coordinate systems, we need to adjust the origin
@@ -102,7 +101,7 @@ public class CoordinateSystemHelper {
         }
         
         /// Convert to platform-native rect
-        public var platformRect: CGRect {
+        var platformRect: CGRect {
             CGRect(origin: origin.platformPoint, size: size)
         }
     }
@@ -110,7 +109,7 @@ public class CoordinateSystemHelper {
     // MARK: - Public Methods
     
     /// Convert point from one coordinate system to another
-    public func convertPoint(
+    func convertPoint(
         _ point: CGPoint,
         from sourceSystem: CoordinateSystemType,
         to targetSystem: CoordinateSystemType,
@@ -125,7 +124,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert rect from one coordinate system to another
-    public func convertRect(
+    func convertRect(
         _ rect: CGRect,
         from sourceSystem: CoordinateSystemType,
         to targetSystem: CoordinateSystemType,
@@ -141,7 +140,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert text range to visual rect
-    public func textRangeToRect(
+    func textRangeToRect(
         range: NSRange,
         in textView: CodeEditorView
     ) -> UnifiedRect? {
@@ -177,7 +176,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert point to text position
-    public func pointToTextPosition(
+    func pointToTextPosition(
         _ point: UnifiedPoint,
         in textView: CodeEditorView
     ) -> Int? {
@@ -225,7 +224,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Calculate visible rect in text coordinates
-    public func visibleTextRect(for scrollView: PlatformScrollView) -> UnifiedRect {
+    func visibleTextRect(for scrollView: PlatformScrollView) -> UnifiedRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let visibleRect = scrollView.visibleRect
         #else
@@ -245,7 +244,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert between view and window coordinates
-    public func convertToWindow(
+    func convertToWindow(
         _ point: UnifiedPoint,
         from view: PlatformView
     ) -> UnifiedPoint? {
@@ -260,7 +259,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert between window and screen coordinates
-    public func convertToScreen(
+    func convertToScreen(
         _ point: UnifiedPoint,
         from window: PlatformWindow
     ) -> UnifiedPoint? {
@@ -274,7 +273,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Calculate scroll offset to make rect visible
-    public func scrollOffsetToMakeVisible(
+    func scrollOffsetToMakeVisible(
         _ rect: UnifiedRect,
         in scrollView: PlatformScrollView,
         withInsets insets: EdgeInsets = EdgeInsets()
@@ -319,7 +318,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Convert mouse/touch event location
-    public func eventLocationInView(
+    func eventLocationInView(
         _ event: PlatformEvent,
         view: PlatformView
     ) -> UnifiedPoint {
@@ -340,7 +339,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Hit test for UI elements
-    public func hitTest(
+    func hitTest(
         point: UnifiedPoint,
         in rects: [(id: String, rect: UnifiedRect)]
     ) -> String? {
@@ -359,7 +358,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Calculate layout metrics
-    public func calculateLayoutMetrics(
+    func calculateLayoutMetrics(
         for textView: CodeEditorView,
         lineHeight: CGFloat
     ) -> LayoutMetrics {
@@ -404,7 +403,7 @@ public class CoordinateSystemHelper {
     }
     
     /// Create drawing context with correct coordinate system
-    public func createDrawingContext(
+    func createDrawingContext(
         for view: PlatformView,
         in context: CGContext
     ) -> DrawingContext {
@@ -450,22 +449,22 @@ public struct EdgeInsets: Sendable, Equatable {
 }
 
 /// Layout metrics
-public struct LayoutMetrics {
-    public let textAreaRect: CoordinateSystemHelper.UnifiedRect
-    public let lineHeight: CGFloat
-    public let visibleLines: Int
-    public let firstVisibleLine: Int
-    public let contentHeight: CGFloat
+struct LayoutMetrics {
+    let textAreaRect: CoordinateSystemHelper.UnifiedRect
+    let lineHeight: CGFloat
+    let visibleLines: Int
+    let firstVisibleLine: Int
+    let contentHeight: CGFloat
 }
 
 /// Drawing context wrapper
-public struct DrawingContext {
-    public let cgContext: CGContext
-    public let coordinateSystem: CoordinateSystemHelper.CoordinateSystemType
-    public let bounds: CGRect
+struct DrawingContext {
+    let cgContext: CGContext
+    let coordinateSystem: CoordinateSystemHelper.CoordinateSystemType
+    let bounds: CGRect
     
     /// Draw line between two points
-    public func drawLine(from: CoordinateSystemHelper.UnifiedPoint, to: CoordinateSystemHelper.UnifiedPoint) {
+    func drawLine(from: CoordinateSystemHelper.UnifiedPoint, to: CoordinateSystemHelper.UnifiedPoint) {
         let fromPoint = from.cgPoint(in: coordinateSystem, containerHeight: bounds.height)
         let toPoint = to.cgPoint(in: coordinateSystem, containerHeight: bounds.height)
         
@@ -475,20 +474,20 @@ public struct DrawingContext {
     }
     
     /// Draw rect
-    public func drawRect(_ rect: CoordinateSystemHelper.UnifiedRect) {
+    func drawRect(_ rect: CoordinateSystemHelper.UnifiedRect) {
         let cgRect = rect.cgRect(in: coordinateSystem, containerHeight: bounds.height)
         cgContext.addRect(cgRect)
         cgContext.strokePath()
     }
     
     /// Fill rect
-    public func fillRect(_ rect: CoordinateSystemHelper.UnifiedRect) {
+    func fillRect(_ rect: CoordinateSystemHelper.UnifiedRect) {
         let cgRect = rect.cgRect(in: coordinateSystem, containerHeight: bounds.height)
         cgContext.fill(cgRect)
     }
     
     /// Draw text at point
-    public func drawText(
+    func drawText(
         _ text: String,
         at point: CoordinateSystemHelper.UnifiedPoint,
         attributes: [NSAttributedString.Key: Any]

@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import os.log
 import SwiftUI
 
 // MARK: - PerformanceInsights
@@ -10,7 +9,7 @@ import SwiftUI
 public final class PerformanceInsights: ObservableObject {
     // MARK: - Properties
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceInsights")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PerformanceInsights")
     
     /// Current performance status
     @Published public private(set) var status: InsightsPerformanceStatus = .optimal
@@ -636,7 +635,7 @@ public struct DetailedPerformanceReport {
 /// Performance alert manager
 @MainActor
 private class PerformanceAlertManager {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceAlertManager")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PerformanceAlertManager")
     var isEnabled = true
     var alertThreshold: IssueSeverity = .warning
     private var sentAlerts: Set<String> = []

@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// Performs syntax highlighting in background threads to improve UI responsiveness
 @MainActor
@@ -45,7 +44,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     private var debounceTask: Task<Void, Never>?
     
     /// Logger for debugging
-    private let logger = Logger(subsystem: "com.codeeditor.highlighting", category: "BackgroundSyntaxHighlighter")
+    private let logger = CrossPlatformLogger.logger()
     
     /// Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor

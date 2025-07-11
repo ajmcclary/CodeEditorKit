@@ -26,8 +26,8 @@ final class SwiftUITests: XCTestCase {
         let mirror = Mirror(reflecting: view)
         XCTAssertNotNil(mirror.descendant("modifier"))
         
-        // Test default value
-        XCTAssertEqual(CodeEditorLanguageKey.defaultValue, .plainText)
+        // Test default value through environment
+        XCTAssertEqual(CodeEditorEnvironment.default.language, .plainText)
     }
     
     @MainActor
@@ -49,8 +49,8 @@ final class SwiftUITests: XCTestCase {
         let mirror = Mirror(reflecting: view)
         XCTAssertNotNil(mirror.descendant("modifier"))
         
-        // Test default value
-        XCTAssertEqual(CodeEditorThemeKey.defaultValue, .default)
+        // Test default value through environment
+        XCTAssertEqual(CodeEditorEnvironment.default.theme, .default)
     }
     
     @MainActor
@@ -74,8 +74,8 @@ final class SwiftUITests: XCTestCase {
         let mirror = Mirror(reflecting: view)
         XCTAssertNotNil(mirror.descendant("modifier"))
         
-        // Test default value
-        XCTAssertEqual(CodeEditorConfigurationKey.defaultValue, EditorConfiguration())
+        // Test default value through environment
+        XCTAssertEqual(CodeEditorEnvironment.default.configuration, EditorConfiguration())
     }
     
     // MARK: - Modifier Tests
@@ -309,22 +309,22 @@ final class SwiftUITests: XCTestCase {
     // MARK: - Environment Value Default Tests
     
     func testDefaultLanguageValue() {
-        let defaultLanguage = CodeEditorLanguageKey.defaultValue
-        XCTAssertEqual(defaultLanguage, .plainText)
+        let defaultEnvironment = CodeEditorEnvironment.default
+        XCTAssertEqual(defaultEnvironment.language, .plainText)
     }
     
     func testDefaultThemeValue() {
-        let defaultTheme = CodeEditorThemeKey.defaultValue
-        XCTAssertEqual(defaultTheme, .default)
+        let defaultEnvironment = CodeEditorEnvironment.default
+        XCTAssertEqual(defaultEnvironment.theme, .default)
     }
     
     func testDefaultConfigurationValue() {
-        let defaultConfig = CodeEditorConfigurationKey.defaultValue
-        XCTAssertEqual(defaultConfig, EditorConfiguration())
+        let defaultEnvironment = CodeEditorEnvironment.default
+        XCTAssertEqual(defaultEnvironment.configuration, EditorConfiguration())
     }
     
     func testDefaultBecomeFirstResponderValue() {
-        let defaultValue = CodeEditorBecomeFirstResponderKey.defaultValue
-        XCTAssertFalse(defaultValue)
+        let defaultEnvironment = CodeEditorEnvironment.default
+        XCTAssertFalse(defaultEnvironment.becomeFirstResponder)
     }
 }

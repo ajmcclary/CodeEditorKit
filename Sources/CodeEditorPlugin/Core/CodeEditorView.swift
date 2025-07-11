@@ -1,6 +1,5 @@
 import Foundation
 import ObjectiveC
-import os.log
 
 #if canImport(UIKit)
 import UIKit
@@ -119,7 +118,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Static Properties
     
     /// Logger instance for CodeEditorView
-    internal static let logger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
+    internal static let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
     
     // This file contains the core class definition with all stored properties.
     // All methods have been moved to focused extension files:
@@ -322,12 +321,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func removeFromSuperview() {
         // Perform cleanup before removing from superview
+        asyncHighlighter.cleanup()
         unregisterFromMemoryMonitor()
         super.removeFromSuperview()
     }
     #else
     override public func removeFromSuperview() {
         // Perform cleanup before removing from superview
+        asyncHighlighter.cleanup()
         unregisterFromMemoryMonitor()
         super.removeFromSuperview()
     }

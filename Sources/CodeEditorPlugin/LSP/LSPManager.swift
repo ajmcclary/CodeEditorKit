@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// Manages Language Server Protocol (LSP) clients for different programming languages.
 ///
@@ -134,7 +133,7 @@ public final class LSPManager: ObservableObject {
     }
     
     /// Logger for debugging
-    private let logger = Logger(subsystem: "com.codeeditor.lsp", category: "LSPManager")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPManager")
     
     // MARK: - Types
     

@@ -1,6 +1,5 @@
 import Foundation
 import ObjectiveC
-import os.log
 
 #if canImport(UIKit)
 import UIKit

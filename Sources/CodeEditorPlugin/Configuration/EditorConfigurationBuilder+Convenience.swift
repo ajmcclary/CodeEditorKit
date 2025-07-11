@@ -8,8 +8,64 @@ import Foundation
 
 extension EditorConfigurationBuilder {
   /// Configures the editor with a predefined theme
+  ///
+  /// This method sets up the editor configuration to match a SwiftUI theme style.
+  /// The theme affects various visual aspects of the editor:
+  ///
+  /// ## Theme Behavior
+  ///
+  /// The `theme()` method configures:
+  /// - **Syntax Highlighting**: Automatically enabled for both default and dark themes
+  /// - **Line Highlighting**: Selected line highlighting is enabled
+  /// - **Editor Settings**: Optimized for the theme's visual style
+  ///
+  /// ## Important Notes
+  ///
+  /// 1. **Color Application**: This method doesn't directly set colors. Actual colors
+  ///    are applied through:
+  ///    - The syntax highlighting system for code tokens
+  ///    - Platform-specific views for background/text colors
+  ///    - SwiftUI environment values for UI components
+  ///
+  /// 2. **Theme Types**:
+  ///    - `.default`: Light theme optimized for standard displays
+  ///    - `.dark`: Dark theme optimized for low-light environments
+  ///    - Custom themes: Apply the same settings as default theme
+  ///
+  /// 3. **Integration**: Works in conjunction with:
+  ///    - `CodeEditorSwiftUITheme` for SwiftUI color definitions
+  ///    - Syntax highlighters for token coloring
+  ///    - Platform appearance (respects system dark/light mode)
+  ///
+  /// ## Example Usage
+  ///
+  /// ```swift
+  /// // Apply dark theme
+  /// let config = EditorConfigurationBuilder()
+  ///     .theme(.dark)
+  ///     .fontSize(14)
+  ///     .build()
+  ///
+  /// // Use with SwiftUI
+  /// CodeEditor(text: $code)
+  ///     .codeEditorTheme(.dark)  // SwiftUI modifier
+  ///     .environment(\.codeEditorConfiguration, config)
+  /// ```
+  ///
+  /// ## Theme Customization
+  ///
+  /// To create a custom theme:
+  /// 1. Define a custom `CodeEditorSwiftUITheme`
+  /// 2. Implement custom syntax highlighting colors
+  /// 3. Apply through this method for consistent settings
+  ///
   /// - Parameter theme: The theme to apply (.default, .dark, or custom)
   /// - Returns: The builder for chaining
+  ///
+  /// - Note: Theme colors are resolved at runtime based on the current
+  ///   system appearance and syntax highlighting configuration
+  ///
+  /// - SeeAlso: `CodeEditorSwiftUITheme`, `Theme`, `enableSyntaxHighlighting(_:)`
   @discardableResult
   public func theme(_ theme: CodeEditorSwiftUITheme) -> Self {
     // Note: CodeEditorSwiftUITheme provides colors for SwiftUI environment
@@ -18,12 +74,15 @@ extension EditorConfigurationBuilder {
 
     var builder = self
 
-    // Apply dark theme specific settings
-    if theme.name == "dark" {
+    // Apply theme-specific settings
+    // Both default and dark themes enable syntax highlighting and line highlighting
+    // for better code readability
+    if theme.name == "dark" || theme.name == "default" {
       builder = builder
         .highlightSelectedLine(true)
         .enableSyntaxHighlighting(true)
-    } else if theme.name == "default" {
+    } else {
+      // Custom themes also get these enhancements by default
       builder = builder
         .highlightSelectedLine(true)
         .enableSyntaxHighlighting(true)

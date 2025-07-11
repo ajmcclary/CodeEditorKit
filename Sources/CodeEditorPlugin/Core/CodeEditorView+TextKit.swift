@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 #if canImport(UIKit)
 import UIKit
@@ -149,24 +148,83 @@ extension CodeEditorView {
     
     // MARK: - Text Range Operations
     
-    public func shouldChangeText(in _: NSTextRange, replacementString _: String?) -> Bool {
-        // Convert NSTextRange to NSRange for NSTextView compatibility
-        // This is a simplified implementation
-        true
+    public func shouldChangeText(in textRange: NSTextRange, replacementString: String?) -> Bool {
+        // Check if editing is allowed
+        guard configuration.behavior.isEditable else { return false }
+        
+        // Convert NSTextRange to NSRange for compatibility
+        let textKitBridge = TextKitBridge(textView: self)
+        if textKitBridge.version == .textKit2 {
+            // Use TextKit2 conversion
+            if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
+                // Call delegate method with proper range
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
+                #else
+                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
+                #endif
+            }
+        } else {
+            // Use fallback conversion for TextKit1
+            if let textContentManager = textLayoutManager?.textContentManager {
+                let nsRange = NSRange(textRange, in: textContentManager)
+                // Delegate is called with NSRange
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
+                #else
+                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
+                #endif
+            }
+        }
+        
+        return true
     }
 
-    public func replaceCharacters(in _: NSTextRange, with string: String) {
-        // Convert NSTextRange to NSRange for NSTextView compatibility
-        // This is a simplified implementation
+    public func replaceCharacters(in textRange: NSTextRange, with string: String) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // For now, replace at current selection
-        let selectedRange = selectedRange
         guard let textStorage else { return }
-        textStorage.replaceCharacters(in: selectedRange, with: string)
         #else
-        // For now, replace at current selection
-        let selectedRange = selectedRange
-        textStorage.replaceCharacters(in: selectedRange, with: string)
+        let textStorage = self.textStorage
+        #endif
+        
+        // Convert NSTextRange to NSRange
+        let textKitBridge = TextKitBridge(textView: self)
+        let nsRange: NSRange
+        
+        if textKitBridge.version == .textKit2 {
+            // Use TextKit2 conversion
+            if let convertedRange = textKitBridge.nsRangeFromTextRange(textRange) {
+                nsRange = convertedRange
+            } else {
+                // Fallback to current selection if conversion fails
+                nsRange = selectedRange
+            }
+        } else {
+            // Use fallback conversion for TextKit1
+            if let textContentManager = textLayoutManager?.textContentManager {
+                nsRange = NSRange(textRange, in: textContentManager)
+            } else {
+                // Last resort: try direct conversion with UTF16TextLocation
+                nsRange = NSRange(textRange) ?? selectedRange
+            }
+        }
+        
+        // Perform the replacement
+        textStorage.beginEditing()
+        textStorage.replaceCharacters(in: nsRange, with: string)
+        textStorage.endEditing()
+        
+        // Update syntax highlighting for the affected area if enabled
+        if isSyntaxHighlightingEnabled {
+            let affectedRange = NSRange(location: nsRange.location, length: string.count)
+            applySyntaxHighlighting(in: affectedRange)
+        }
+        
+        // Notify delegate
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        delegate?.textDidChange?(Notification(name: NSText.didChangeNotification, object: self))
+        #else
+        // UITextView will send its own notification
         #endif
     }
     

@@ -34,18 +34,20 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     func updateNSView(_ nsView: CodeEditorContainerView, context: Context) {
         context.coordinator.updateContainer(nsView, text: text, language: language, theme: theme, configuration: configuration)
         
-        // Handle focus request from environment
-        if context.environment.codeEditorBecomeFirstResponder {
-            Task { @MainActor in
-                nsView.window?.makeFirstResponder(nsView.textView)
-            }
+        // Handle focus request from environment using coordinator's tracking
+        context.coordinator.requestFocusIfNeeded(
+            for: nsView,
+            shouldBecomeFirstResponder: context.environment.codeEditorBecomeFirstResponder
+        )
+        
+        // Reset tracking if focus is no longer requested
+        if !context.environment.codeEditorBecomeFirstResponder {
+            context.coordinator.resetFocusTracking()
         }
     }
     
     static func dismantleNSView(_: CodeEditorContainerView, coordinator: CodeEditorCoordinator) {
-        // Clean up resources when view is being removed
-        coordinator.removeNotificationObservers()
-        coordinator.textUpdateTask?.cancel()
+        CodeEditorRepresentableHelper.dismantle(coordinator: coordinator)
     }
     
     @available(macOS 13.0, *)
@@ -82,26 +84,17 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         size.width += containerInset.width * 2
         size.height += containerInset.height * 2
         
-        // Respect proposal constraints
-        if let proposedWidth = proposal.width {
-            size.width = min(size.width, proposedWidth)
-        }
-        
-        if let proposedHeight = proposal.height {
-            size.height = min(size.height, proposedHeight)
-        }
-        
-        // Ensure minimum size
-        size.width = max(size.width, 100)
-        size.height = max(size.height, 50)
-        
-        return size
+        // Apply common size constraints
+        return CodeEditorRepresentableHelper.applyCommonSizeConstraints(size, proposal: proposal)
     }
     
     func makeCoordinator() -> CodeEditorCoordinator {
-        let coordinator = CodeEditorCoordinator(text: $text, onTextChange: onTextChange, onSelectionChange: onSelectionChange)
-        coordinator.textDebounceInterval = textDebounceInterval.timeInterval
-        return coordinator
+        CodeEditorRepresentableHelper.makeCoordinator(
+            text: $text,
+            onTextChange: onTextChange,
+            onSelectionChange: onSelectionChange,
+            textDebounceInterval: textDebounceInterval
+        )
     }
     
     typealias Coordinator = CodeEditorCoordinator

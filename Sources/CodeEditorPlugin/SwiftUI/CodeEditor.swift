@@ -153,12 +153,8 @@ public struct CodeEditor: View {
     @State private var searchText = ""
     @State private var isSearching = false
     
-    // Environment
-    @Environment(\.codeEditorLanguage) private var language
-    @Environment(\.codeEditorTheme) private var theme
-    @Environment(\.codeEditorConfiguration) private var configuration
-    @Environment(\.codeEditorMemoryMonitor) private var environmentMemoryMonitor
-    @Environment(\.codeEditorEventSystem) private var environmentEventSystem
+    // Environment - Using consolidated environment
+    @Environment(\.codeEditorEnvironment) private var environment
     
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
@@ -244,13 +240,13 @@ public struct CodeEditor: View {
     // MARK: - Body
     
     public var body: some View {
-        let effectiveLanguage = initialLanguage ?? language
-        let effectiveTheme = initialTheme ?? theme
-        let effectiveMemoryMonitor = environmentMemoryMonitor ?? defaultMemoryMonitor
+        let effectiveLanguage = initialLanguage ?? environment.language
+        let effectiveTheme = initialTheme ?? environment.theme
+        let effectiveMemoryMonitor = environment.memoryMonitor ?? defaultMemoryMonitor
         
         // Update configuration with event system if provided
-        var effectiveConfiguration = configuration
-        if let eventSystem = environmentEventSystem {
+        var effectiveConfiguration = environment.configuration
+        if let eventSystem = environment.eventSystem {
             effectiveConfiguration.eventSystem = eventSystem
         }
         
@@ -278,7 +274,7 @@ public struct CodeEditor: View {
         .focused($isFocused)
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
-        .environment(\.codeEditorConfiguration, configuration)
+        .environment(\.codeEditorConfiguration, environment.configuration)
     }
     
     // MARK: - Private Methods

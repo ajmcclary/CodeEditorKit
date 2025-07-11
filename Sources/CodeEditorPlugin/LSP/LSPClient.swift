@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 // Process is only available on macOS
@@ -87,7 +86,7 @@ public final class LSPClient: ObservableObject {
     private var nextRequestId: Int = 1
     
     /// Logger for debugging
-    private let logger = Logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
     
     // MARK: - Types
     

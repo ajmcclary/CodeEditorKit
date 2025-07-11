@@ -39,6 +39,35 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Debounce interval for text changes
     var textDebounceInterval: TimeInterval = 0.1
     
+    /// Track if focus has been requested to avoid duplicate requests
+    private var hasFocusBeenRequested = false
+    
+    /// Request focus for the text view
+    func requestFocusIfNeeded(for view: PlatformView, shouldBecomeFirstResponder: Bool) {
+        guard shouldBecomeFirstResponder, !hasFocusBeenRequested else { return }
+        
+        hasFocusBeenRequested = true
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let containerView = view as? CodeEditorContainerView {
+            DispatchQueue.main.async {
+                containerView.window?.makeFirstResponder(containerView.textView)
+            }
+        }
+        #else
+        if let containerView = view as? CodeEditorContainerView {
+            DispatchQueue.main.async {
+                _ = containerView.textView.becomeFirstResponder()
+            }
+        }
+        #endif
+    }
+    
+    /// Reset focus tracking when environment changes
+    func resetFocusTracking() {
+        hasFocusBeenRequested = false
+    }
+    
     // MARK: - Update Management
     
     /// Tracks the last update to prevent unnecessary updates

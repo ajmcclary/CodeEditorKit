@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 #if canImport(UIKit)
 import UIKit
@@ -42,9 +41,9 @@ extension CodeEditorView {
         let editedRange = textStorage.editedRange
         if editedRange.location != NSNotFound {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            eventPublisher.publish(.textDidChange(string))
+            eventPublisher.publishSync(.textDidChange(string))
             #else
-            eventPublisher.publish(.textDidChange(text ?? ""))
+            eventPublisher.publishSync(.textDidChange(text ?? ""))
             #endif
             
             // Check for completion triggering
@@ -60,7 +59,7 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled, privacy: .public), language: \(self.language.name, privacy: .public)")
+        Self.logger.debug("🎨 applySyntaxHighlighting called - enabled: \(self.isSyntaxHighlightingEnabled), language: \(self.language.name)")
         
         guard isSyntaxHighlightingEnabled else {
             Self.logger.debug("❌ Syntax highlighting disabled, cancelling")
@@ -68,7 +67,7 @@ extension CodeEditorView {
             return
         }
         
-        Self.logger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name, privacy: .public)")
+        Self.logger.debug("✅ Scheduling syntax highlighting for language: \(self.language.name)")
         
         // Use async highlighting with debouncing
         asyncHighlighter.scheduleHighlighting(
@@ -114,22 +113,18 @@ extension CodeEditorView {
                 effectiveTextColor = currentColor
             } else {
                 // Current color is invisible, use fallback
-                effectiveTextColor = UIColor { traitCollection in
-                    traitCollection.userInterfaceStyle == .dark ? .white : .black
-                }
+                effectiveTextColor = PlatformColors.label
             }
         } else {
             // No color set, use guaranteed visible fallback
-            effectiveTextColor = UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? .white : .black
-            }
+            effectiveTextColor = PlatformColors.label
         }
         
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         
-        Self.logger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor), privacy: .public) of type \(String(describing: type(of: effectiveTextColor)), privacy: .public)")
-        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length, privacy: .public)")
-        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)), privacy: .public)")
+        Self.logger.debug("Mac Catalyst: Setting text color \(String(describing: effectiveTextColor)) of type \(String(describing: type(of: effectiveTextColor)))")
+        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
+        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
         
         // Apply to existing text with aggressive attribute application
         if textStorage.length > 0 {

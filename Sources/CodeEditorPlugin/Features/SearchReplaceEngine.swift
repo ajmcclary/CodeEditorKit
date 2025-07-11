@@ -4,12 +4,11 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
-import os.log
 
 /// Search and replace engine for the code editor
 @MainActor
 public class SearchReplaceEngine: ObservableObject {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "SearchReplaceEngine")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "SearchReplaceEngine")
     
     // MARK: - Published Properties
     

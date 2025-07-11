@@ -7,14 +7,14 @@ import os
 
 /// Helper for managing TextKit2 and modern macOS features
 @MainActor
-public enum ModernTextKitHelper {
+enum ModernTextKitHelper {
     /// Check if TextKit2 should be used
-    public static var shouldUseTextKit2: Bool {
+    static var shouldUseTextKit2: Bool {
         PlatformCapabilities.shared.preferTextKit2
     }
     
     /// Check if we can opt into TextKit2 for a specific text view
-    public static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
+    static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
         // Basic requirement checks
         guard textView.textContainer != nil else { return false }
         
@@ -28,7 +28,7 @@ public enum ModernTextKitHelper {
     }
     
     /// Force TextKit2 initialization if possible and beneficial
-    public static func ensureTextKit2(for textView: NSTextView) -> Bool {
+    static func ensureTextKit2(for textView: NSTextView) -> Bool {
         // Check if TextKit2 is already active
         if textView.textLayoutManager != nil {
             return true
@@ -53,7 +53,7 @@ public enum ModernTextKitHelper {
     // MARK: - NSTextView Configuration
 
     /// Configure NSTextView with optimal settings for the current macOS version
-    public static func configureTextView(_ textView: NSTextView) {
+    static func configureTextView(_ textView: NSTextView) {
         // Basic configuration that works across all versions
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
@@ -136,7 +136,7 @@ public enum ModernTextKitHelper {
     // MARK: - Control Size Support
 
     /// Get the recommended control size based on platform capabilities
-    public static func recommendedControlSize() -> NSControl.ControlSize {
+    static func recommendedControlSize() -> NSControl.ControlSize {
         // Use platform capabilities to determine appropriate size
         let capabilities = PlatformCapabilities.shared
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
@@ -149,7 +149,7 @@ public enum ModernTextKitHelper {
     // MARK: - Performance Optimizations
 
     /// Apply performance optimizations based on system capabilities
-    public static func applyPerformanceOptimizations(to textView: NSTextView) {
+    static func applyPerformanceOptimizations(to textView: NSTextView) {
         // Disable expensive features during editing
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.isGrammarCheckingEnabled = false
@@ -172,7 +172,7 @@ public enum ModernTextKitHelper {
     // MARK: - Color System Integration
 
     /// Configure text view with adaptive colors
-    public static func applyAdaptiveColors(to textView: NSTextView) {
+    static func applyAdaptiveColors(to textView: NSTextView) {
         textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
         textView.insertionPointColor = PlatformColors.controlAccentColor
         
@@ -195,12 +195,12 @@ public enum ModernTextKitHelper {
 // MARK: - IOS Stub
 
 /// iOS stub for ModernTextKitHelper
-public enum ModernTextKitHelper {
-    public static var shouldUseTextKit2: Bool { false }
+enum ModernTextKitHelper {
+    static var shouldUseTextKit2: Bool { false }
     
-    public static func canOptIntoTextKit2(for _: Any) -> Bool { false }
+    static func canOptIntoTextKit2(for _: Any) -> Bool { false }
     
-    public static func ensureTextKit2(for _: Any) -> Bool { false }
+    static func ensureTextKit2(for _: Any) -> Bool { false }
 }
 
 #endif

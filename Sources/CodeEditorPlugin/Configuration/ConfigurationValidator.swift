@@ -1,9 +1,8 @@
 import Foundation
-import os.log
 
 /// Validator for editor configuration with migration support
 public struct ConfigurationValidator {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "ConfigurationValidator")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ConfigurationValidator")
     
     // MARK: - Validation
     
@@ -251,7 +250,7 @@ public struct ConfigurationValidator {
 
 /// Migrator for updating configurations between versions
 public struct ConfigurationMigrator {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "ConfigurationMigrator")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ConfigurationMigrator")
     
     /// Current configuration version
     public static let currentVersion = "2.0"

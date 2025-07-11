@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import os.log
 
 // MARK: - Completion Errors
 
@@ -17,7 +16,7 @@ public enum CompletionError: Error {
 public final class SmartCompletionEngine: ObservableObject {
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "SmartCompletion")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "SmartCompletion")
     
     /// Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor

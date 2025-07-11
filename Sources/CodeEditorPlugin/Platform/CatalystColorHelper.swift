@@ -10,7 +10,7 @@ import UIKit
 ///
 /// Mac Catalyst has unique challenges with color conversion from SwiftUI to UIKit.
 /// This helper centralizes the logic for reliable color handling on Catalyst.
-public enum CatalystColorHelper {
+enum CatalystColorHelper {
     /// Converts a SwiftUI color to a guaranteed visible UIColor for Mac Catalyst
     ///
     /// Handles problematic SwiftUI colors that don't convert well on Catalyst,
@@ -19,7 +19,7 @@ public enum CatalystColorHelper {
     /// - Parameter color: The SwiftUI color to convert
     /// - Returns: A UIColor that is guaranteed to be visible
     @available(iOS 14.0, macCatalyst 14.0, *)
-    public static func effectiveTextColor(from color: Color) -> UIColor {
+    static func effectiveTextColor(from color: Color) -> UIColor {
         // Handle special SwiftUI colors first
         if color == Color.primary {
             // Use UIColor.label which is a dynamic color that works with getRed
@@ -75,7 +75,7 @@ public enum CatalystColorHelper {
     ///   - color: The color to apply
     ///   - textView: The text view to apply the color to
     @MainActor
-    public static func applyTextColor(_ color: UIColor, to textView: CodeEditorView) async {
+    static func applyTextColor(_ color: UIColor, to textView: CodeEditorView) async {
         // Apply color to the text view
         textView.textColor = color
         

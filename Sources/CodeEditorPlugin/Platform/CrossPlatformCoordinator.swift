@@ -5,7 +5,6 @@ import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
-import os.log
 
 /// Main coordinator for ensuring cross-platform feature parity and smooth operation
 ///
@@ -36,7 +35,7 @@ import os.log
 public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Properties
     
-    internal let logger = Logger(subsystem: "CodeEditorPlugin", category: "CrossPlatformCoordinator")
+    internal let logger = CrossPlatformLogger.logger()
     internal let capabilities: PlatformCapabilities
     
     /// Specialized coordinators for focused responsibilities
@@ -45,7 +44,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     public let contextMenuCoordinator: ContextMenuCoordinator
     
     /// Platform-specific adjustments
-    @Published public private(set) var platformAdjustments = PlatformAdjustments()
+    @Published internal private(set) var platformAdjustments = PlatformAdjustments()
     
     /// Thread-safe observer storage
     private let observerStore = ObserverStore()
@@ -56,9 +55,9 @@ public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Types
     
     /// Platform-specific adjustments
-    public struct PlatformAdjustments {
+    internal struct PlatformAdjustments {
         // Font adjustments
-        public var defaultFontSize: CGFloat = {
+        internal var defaultFontSize: CGFloat = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 12.0
             #else
@@ -67,7 +66,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }()
         
         // Spacing adjustments
-        public var lineSpacing: CGFloat = {
+        internal var lineSpacing: CGFloat = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 1.2
             #else
@@ -75,7 +74,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
             #endif
         }()
         
-        public var gutterWidth: CGFloat = {
+        internal var gutterWidth: CGFloat = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 40.0
             #else
@@ -84,7 +83,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }()
         
         // Touch adjustments
-        public var minimumTouchTargetSize: CGFloat = {
+        internal var minimumTouchTargetSize: CGFloat = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 24.0
             #else
@@ -93,7 +92,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }()
         
         // Performance adjustments
-        public var maxFileSize: Int = {
+        internal var maxFileSize: Int = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 10_000_000 // 10MB
             #else
@@ -101,7 +100,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
             #endif
         }()
         
-        public var maxHighlightingLength: Int = {
+        internal var maxHighlightingLength: Int = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return 1_000_000
             #else
@@ -110,7 +109,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }()
         
         // UI adjustments
-        public var showMinimap: Bool = {
+        var showMinimap: Bool = {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return true
             #else
@@ -118,7 +117,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
             #endif
         }()
         
-        public var enableMultiCursor: Bool {
+        var enableMultiCursor: Bool {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return true
             #else

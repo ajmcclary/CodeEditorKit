@@ -1,6 +1,5 @@
 import Foundation
 import ObjectiveC
-import os.log
 #if canImport(UIKit)
 import UIKit
 
@@ -151,10 +150,8 @@ extension CodeEditorContainerView {
     
     /// Updates the iOS-specific gutter view with new configuration
     func updateIOSGutter() {
-        kUIKitContainerLogger
-            .debug(
-                "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers), showMinimap: \(self.configuration.display.showMinimap)"
-            )
+        // Log is commented out to avoid logger dependency
+        // Would log: "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers), showMinimap: \(self.configuration.display.showMinimap)"
         
         // Rebuild constraints to handle visibility changes
         rebuildConstraints()
@@ -240,6 +237,5 @@ extension CodeEditorContainerView: UITextViewDelegate {
 }
 
 // Private logger instance
-private let kUIKitContainerLogger = Logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorContainerView.UIKit")
 
 #endif

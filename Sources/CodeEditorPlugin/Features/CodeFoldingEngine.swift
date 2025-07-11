@@ -4,12 +4,11 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
-import os.log
 
 /// Engine for managing code folding in the editor
 @MainActor
 internal class CodeFoldingEngine: ObservableObject {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "CodeFoldingEngine")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "CodeFoldingEngine")
 
     // MARK: - Published Properties
 

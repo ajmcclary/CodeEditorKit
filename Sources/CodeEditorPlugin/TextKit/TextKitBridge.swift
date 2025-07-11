@@ -10,14 +10,14 @@ import UIKit
 
 /// Unified interface for TextKit1 and TextKit2 operations
 @MainActor
-public final class TextKitBridge {
+final class TextKitBridge {
     // MARK: - Properties
     
     private weak var textView: PlatformTextView?
     private let isUsingTextKit2: Bool
     
     /// Current TextKit version being used
-    public enum Version {
+    enum Version {
         case textKit1
         case textKit2
         
@@ -29,13 +29,13 @@ public final class TextKitBridge {
         }
     }
     
-    public var version: Version {
+    var version: Version {
         isUsingTextKit2 ? .textKit2 : .textKit1
     }
     
     // MARK: - Initialization
     
-    public init(textView: PlatformTextView) {
+    init(textView: PlatformTextView) {
         self.textView = textView
         
         // Check platform capabilities and force TextKit2 if supported
@@ -51,12 +51,12 @@ public final class TextKitBridge {
     // MARK: - Text Storage Access
     
     /// Get the text storage regardless of TextKit version
-    public var textStorage: NSTextStorage? {
+    var textStorage: NSTextStorage? {
         textView?.textStorage
     }
     
     /// Get the text content storage for TextKit2
-    public var textContentStorage: NSTextContentStorage? {
+    var textContentStorage: NSTextContentStorage? {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return textView?.textContentStorage
         #else
@@ -71,7 +71,7 @@ public final class TextKitBridge {
     // MARK: - Layout Management
     
     /// Perform layout for a specific range
-    public func ensureLayout(for range: NSRange) {
+    func ensureLayout(for range: NSRange) {
         guard textView != nil else { return }
         
         if isUsingTextKit2 {
@@ -108,7 +108,7 @@ public final class TextKitBridge {
     // MARK: - Range Conversion
     
     /// Convert NSRange to NSTextRange for TextKit2
-    public func textRangeFromNSRange(_ nsRange: NSRange) -> NSTextRange? {
+    func textRangeFromNSRange(_ nsRange: NSRange) -> NSTextRange? {
         guard isUsingTextKit2,
               let textLayoutManager = textView?.textLayoutManager,
               let textContentManager = textLayoutManager.textContentManager else {
@@ -125,7 +125,7 @@ public final class TextKitBridge {
     }
     
     /// Convert NSTextRange to NSRange for TextKit1 compatibility
-    public func nsRangeFromTextRange(_ textRange: NSTextRange) -> NSRange? {
+    func nsRangeFromTextRange(_ textRange: NSTextRange) -> NSRange? {
         guard isUsingTextKit2,
               let textLayoutManager = textView?.textLayoutManager,
               let textContentManager = textLayoutManager.textContentManager else {
@@ -141,7 +141,7 @@ public final class TextKitBridge {
     // MARK: - Text Attributes
     
     /// Apply attributes to a range (works with both TextKit versions)
-    public func addAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
+    func addAttributes(_ attributes: [NSAttributedString.Key: Any], range: NSRange) {
         guard let textStorage else { return }
         
         textStorage.beginEditing()
@@ -153,7 +153,7 @@ public final class TextKitBridge {
     }
     
     /// Remove attributes from a range
-    public func removeAttributes(_ attributeKeys: [NSAttributedString.Key], range: NSRange) {
+    func removeAttributes(_ attributeKeys: [NSAttributedString.Key], range: NSRange) {
         guard let textStorage else { return }
         
         textStorage.beginEditing()
@@ -169,7 +169,7 @@ public final class TextKitBridge {
     // MARK: - Layout Information
     
     /// Get line fragments for a range
-    public func enumerateLineFragments(in range: NSRange, using block: @escaping (CGRect, NSRange) -> Void) {
+    func enumerateLineFragments(in range: NSRange, using block: @escaping (CGRect, NSRange) -> Void) {
         if isUsingTextKit2 {
             enumerateLineFragmentsTextKit2(in: range, using: block)
         } else {
@@ -218,7 +218,7 @@ public final class TextKitBridge {
     // MARK: - Viewport Management
     
     /// Get the visible range of text
-    public var visibleRange: NSRange? {
+    var visibleRange: NSRange? {
         if isUsingTextKit2 {
             return visibleRangeTextKit2()
         } else {
@@ -309,7 +309,7 @@ public final class TextKitBridge {
     // MARK: - Cursor and Layout Calculations
     
     /// Get the cursor rect for a given character index
-    public func cursorRect(at characterIndex: Int) -> CGRect? {
+    func cursorRect(at characterIndex: Int) -> CGRect? {
         guard textView != nil else { return nil }
         
         if isUsingTextKit2 {
@@ -376,7 +376,7 @@ public final class TextKitBridge {
     }
     
     /// Get the bounding rect for a character range
-    public func boundingRect(for range: NSRange) -> CGRect? {
+    func boundingRect(for range: NSRange) -> CGRect? {
         guard textView != nil else { return nil }
         
         if isUsingTextKit2 {
@@ -435,7 +435,7 @@ public final class TextKitBridge {
     // MARK: - Attributes Management
     
     /// Set temporary attributes for a range (TextKit1) or rendering attributes (TextKit2)
-    public func setTemporaryAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
+    func setTemporaryAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
         guard textView != nil else { return }
         
         if isUsingTextKit2 {
@@ -480,14 +480,14 @@ public final class TextKitBridge {
     }
     
     /// Remove temporary/rendering attributes for a range
-    public func removeTemporaryAttributes(for range: NSRange) {
+    func removeTemporaryAttributes(for range: NSRange) {
         setTemporaryAttributes([:], for: range)
     }
     
     // MARK: - Line Height Calculation
     
     /// Calculate line height for a given font
-    public func calculateLineHeight(for font: PlatformFont) -> CGFloat {
+    func calculateLineHeight(for font: PlatformFont) -> CGFloat {
         // This doesn't need TextKit version checking as it's font-based
         TextMetricsCalculator.calculateLineHeight(for: font)
     }
@@ -495,7 +495,7 @@ public final class TextKitBridge {
     // MARK: - Text Container Properties
     
     /// Get or set the text container size
-    public var textContainerSize: CGSize {
+    var textContainerSize: CGSize {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return textView?.textContainer?.containerSize ?? .zero
@@ -513,7 +513,7 @@ public final class TextKitBridge {
     }
     
     /// Get or set whether width tracks the text view
-    public var widthTracksTextView: Bool {
+    var widthTracksTextView: Bool {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return textView?.textContainer?.widthTracksTextView ?? false
@@ -532,7 +532,7 @@ public final class TextKitBridge {
     // MARK: - Performance Optimization
     
     /// Optimize for a specific file size
-    public func optimizeForFileSize(_ characterCount: Int) {
+    func optimizeForFileSize(_ characterCount: Int) {
         let capabilities = PlatformCapabilities.shared
         
         if characterCount > 50_000 { // Use a reasonable threshold
@@ -583,7 +583,7 @@ public final class TextKitBridge {
     // MARK: - Debug Information
     
     /// Get debug information about the current TextKit configuration
-    public var debugInfo: String {
+    var debugInfo: String {
         var info = "TextKit Configuration:\n"
         info += "  Version: \(version.description)\n"
         info += "  Text Length: \(textStorage?.length ?? 0) characters\n"
@@ -612,7 +612,7 @@ public final class TextKitBridge {
 
 extension PlatformTextView {
     /// Create a TextKitBridge for this text view
-    public func createTextKitBridge() -> TextKitBridge {
+    func createTextKitBridge() -> TextKitBridge {
         TextKitBridge(textView: self)
     }
 }

@@ -1,10 +1,9 @@
 import Foundation
-import os.log
 
 /// Symbol navigation system for code outline and breadcrumbs
 @MainActor
 public class SymbolNavigator: ObservableObject {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "SymbolNavigator")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "SymbolNavigator")
     
     // MARK: - Published Properties
     

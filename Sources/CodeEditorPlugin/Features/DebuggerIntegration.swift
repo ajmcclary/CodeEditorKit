@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import os.log
 
 /// Main debugger integration system for CodeEditorPlugin
 /// - Note: This is currently a preview feature with internal visibility
@@ -15,7 +14,7 @@ internal class DebuggerIntegration: ObservableObject {
     @Published internal private(set) var variables: [Variable] = []
     @Published internal private(set) var isDebugging = false
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "DebuggerIntegration")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "DebuggerIntegration")
     private var debugAdapters: [String: DebugAdapter] = [:]
     private var cancellables = Set<AnyCancellable>()
     

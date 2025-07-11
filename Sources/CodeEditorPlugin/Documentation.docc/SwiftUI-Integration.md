@@ -95,6 +95,51 @@ struct MyEditor: View {
 }
 ```
 
+### Using Consolidated Environment (Recommended)
+
+For better ergonomics, use the consolidated environment configuration:
+
+```swift
+struct MyEditor: View {
+    @State private var code = ""
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .codeEditorEnvironment(
+                language: .swift,
+                theme: .dark,
+                configuration: EditorConfiguration.default,
+                becomeFirstResponder: true
+            )
+    }
+}
+```
+
+Or create a complete environment configuration:
+
+```swift
+struct MyEditor: View {
+    @State private var code = ""
+    
+    var body: some View {
+        let environment = CodeEditorEnvironment(
+            language: .swift,
+            theme: .dark,
+            configuration: EditorConfigurationBuilder()
+                .fontSize(16)
+                .showLineNumbers(true)
+                .build(),
+            becomeFirstResponder: true,
+            memoryMonitor: MemoryMonitor(),
+            eventSystem: UnifiedEventSystem()
+        )
+        
+        CodeEditor(text: $code)
+            .codeEditorEnvironment(environment)
+    }
+}
+```
+
 ### Configuration Interface
 
 The sample app provides a comprehensive configuration interface:

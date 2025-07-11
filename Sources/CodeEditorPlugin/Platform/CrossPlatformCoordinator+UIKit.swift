@@ -1,6 +1,5 @@
 #if canImport(UIKit)
 import Foundation
-import os.log
 import UIKit
 
 // MARK: - IOS Specific Implementation

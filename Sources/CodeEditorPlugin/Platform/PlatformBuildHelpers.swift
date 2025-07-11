@@ -29,7 +29,7 @@ import Foundation
 
 /// Returns true if running on native macOS (AppKit, not Catalyst)
 @inlinable
-public func isNativeAppKit() -> Bool {
+internal func isNativeAppKit() -> Bool {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     return true
     #else
@@ -39,7 +39,7 @@ public func isNativeAppKit() -> Bool {
 
 /// Returns true if running on UIKit (iOS or Catalyst)
 @inlinable
-public func isUIKit() -> Bool {
+internal func isUIKit() -> Bool {
     #if canImport(UIKit)
     return true
     #else
@@ -49,7 +49,7 @@ public func isUIKit() -> Bool {
 
 /// Returns true if running on Mac Catalyst
 @inlinable
-public func isCatalyst() -> Bool {
+internal func isCatalyst() -> Bool {
     #if targetEnvironment(macCatalyst)
     return true
     #else

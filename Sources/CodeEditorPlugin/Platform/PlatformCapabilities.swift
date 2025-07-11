@@ -164,39 +164,8 @@ public final class PlatformCapabilities {
     // MARK: - Feature Recommendations
     
     public func recommendedConfiguration() -> EditorConfiguration {
-        // Start with device-specific configuration
-        var config = deviceType.recommendedConfiguration()
-        
-        // Further adjust based on platform specifics
-        switch currentPlatform {
-        case .iOS:
-            // iOS-specific adjustments already handled by deviceType
-            break
-            
-        case .catalyst:
-            // Catalyst apps run on Mac but may support touch
-            config.display.fontSize = 14.0 // Between macOS and iOS
-            config.layout.gutterWidth = 45.0 // Slightly wider for potential touch
-            config.performance.useHardwareAcceleration = true
-            
-        case .macOS:
-            // macOS-specific adjustments already handled by deviceType
-            break
-        }
-        
-        // Adjust based on performance
-        let perf = performanceCapabilities
-        if !perf.supportsHardwareAcceleration {
-            config.performance.useHardwareAcceleration = false
-            config.performance.maxSyntaxHighlightingLength = 50_000
-        }
-        
-        // Adjust based on memory
-        if ProcessInfo.processInfo.physicalMemory < 4 * 1_024 * 1_024 * 1_024 {
-            config.performance.maxSyntaxHighlightingLength = 100_000
-        }
-        
-        return config
+        // Delegate to the new PlatformConfigurations system
+        PlatformConfigurations.recommended()
     }
     
     // MARK: - Debug Information

@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// Errors that can occur during async operation management.
 ///
@@ -98,7 +97,7 @@ public enum AsyncOperationError: LocalizedError {
 /// - SeeAlso: ``OperationStatus``
 /// - SeeAlso: ``Priority``
 public actor AsyncOperationManager {
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "AsyncOperationManager")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "AsyncOperationManager")
     
     // MARK: - Types
     

@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import os.log
 
 // MARK: - AsyncTextProcessor
 
@@ -44,7 +43,7 @@ import os.log
 actor AsyncTextProcessor {
     // MARK: - Properties
     
-    private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "AsyncTextProcessor")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "AsyncTextProcessor")
     
     /// Processing queue with priority support
     private var processingQueue = PriorityQueue<ProcessingTask>()

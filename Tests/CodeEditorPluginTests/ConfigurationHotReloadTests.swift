@@ -163,18 +163,6 @@ final class ConfigurationHotReloadTests: XCTestCase {
     
     // MARK: - Animation Settings Tests
     
-    func testAnimationSettings() async {
-        let hotReload = ConfigurationHotReload()
-        
-        // Test default values
-        XCTAssertTrue(hotReload.animateChanges)
-        
-        // Test setting values
-        hotReload.animateChanges = false
-        
-        XCTAssertFalse(hotReload.animateChanges)
-    }
-    
     // MARK: - Validation Tests
     
     func testValidationRules() async {

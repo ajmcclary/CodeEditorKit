@@ -1,7 +1,7 @@
 import Foundation
 
 /// Cache for line indices to optimize line number calculations
-public final class LineIndexCache {
+final class LineIndexCache {
     // MARK: - Types
     
     private struct CacheEntry {
@@ -19,7 +19,7 @@ public final class LineIndexCache {
     // MARK: - Public Methods
     
     /// Get line number for a character position
-    public func lineNumber(at position: Int, in text: String) -> Int {
+    func lineNumber(at position: Int, in text: String) -> Int {
         let entry = ensureCacheValid(for: text)
         
         // Binary search for the line containing this position
@@ -39,13 +39,13 @@ public final class LineIndexCache {
     }
     
     /// Get line number for a String.Index position
-    public func lineNumber(at position: String.Index, in text: String) -> Int {
+    func lineNumber(at position: String.Index, in text: String) -> Int {
         let offset = text.distance(from: text.startIndex, to: position)
         return lineNumber(at: offset, in: text)
     }
     
     /// Get the character range for a line number (1-based)
-    public func lineRangeNSRange(for lineNumber: Int, in text: String) -> NSRange? {
+    func lineRangeNSRange(for lineNumber: Int, in text: String) -> NSRange? {
         guard lineNumber > 0 else { return nil }
         
         let entry = ensureCacheValid(for: text)
@@ -67,26 +67,26 @@ public final class LineIndexCache {
     }
     
     /// Get the String.Index range for a line number (1-based)
-    public func lineRange(for lineNumber: Int, in text: String) -> Range<String.Index>? {
+    func lineRange(for lineNumber: Int, in text: String) -> Range<String.Index>? {
         guard let nsRange = lineRangeNSRange(for: lineNumber, in: text),
               let range = Range(nsRange, in: text) else { return nil }
         return range
     }
     
     /// Get total number of lines in the text
-    public func lineCount(in text: String) -> Int {
+    func lineCount(in text: String) -> Int {
         let entry = ensureCacheValid(for: text)
         return entry.lineCount
     }
     
     /// Get all line offsets (for batch operations)
-    public func lineOffsets(in text: String) -> [Int] {
+    func lineOffsets(in text: String) -> [Int] {
         let entry = ensureCacheValid(for: text)
         return entry.lineOffsets
     }
     
     /// Clear the cache
-    public func invalidate() {
+    func invalidate() {
         cacheLock.lock()
         cache = nil
         cacheLock.unlock()
@@ -138,7 +138,7 @@ public final class LineIndexCache {
 /// Optimized line calculations for visible ranges
 extension LineIndexCache {
     /// Get line numbers and ranges for a visible character range
-    public func visibleLineInfo(
+    func visibleLineInfo(
         in text: String,
         visibleRange: NSRange
     ) -> [(lineNumber: Int, range: NSRange)] {

@@ -72,7 +72,7 @@ public enum CompletionCellConfigurator {
     // MARK: - Cell Protocol
 
     /// Protocol for completion cells to conform to
-    public protocol CompletionCellProtocol {
+    protocol CompletionCellProtocol {
         func configure(with configuration: CellConfiguration)
     }
 
@@ -128,7 +128,7 @@ open class CompletionCellBaseView: PlatformView {
 
     // MARK: - Common Setup
 
-    public func commonSetup() {
+    func commonSetup() {
         // Ensure the view is properly configured for its platform
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS specific setup

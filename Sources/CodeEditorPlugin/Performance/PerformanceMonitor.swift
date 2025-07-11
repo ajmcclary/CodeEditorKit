@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 // MARK: - PerformanceMonitor
 
@@ -59,7 +58,7 @@ public actor PerformanceMonitor {
     
     // MARK: - Properties
     
-    private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "Performance")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "Performance")
     private var metrics: [String: MonitoringPerformanceMetric] = [:]
     private var cleanupTask: Task<Void, Never>?
     

@@ -9,7 +9,7 @@ import os
 public final class ConfigurationHotReload: ObservableObject {
     // MARK: - Properties
     
-    private static let logger = Logger(subsystem: "com.CodeEditorPlugin", category: "ConfigurationHotReload")
+    private static let logger = CrossPlatformLogger.logger(subsystem: "com.CodeEditorPlugin", category: "ConfigurationHotReload")
     
     /// Current configuration
     @Published public private(set) var configuration: EditorConfiguration
@@ -25,9 +25,6 @@ public final class ConfigurationHotReload: ObservableObject {
     /// Pending changes that will be applied
     private var pendingChanges: [HotReloadConfigurationChange] = []
     
-    /// Animation settings for configuration changes
-    public var animateChanges: Bool = true
-    
     /// Validation rules
     private var validationRules: [ConfigurationValidationRule] = []
     
@@ -41,10 +38,8 @@ public final class ConfigurationHotReload: ObservableObject {
     
     // MARK: - Configuration Updates
     
-    /// Update configuration with animated transition
-    public func update(_ configuration: EditorConfiguration, animated: Bool = true) {
-        let shouldAnimate = animated && animateChanges
-        
+    /// Update configuration
+    public func update(_ configuration: EditorConfiguration) {
         // Validate configuration
         if let error = validate(configuration) {
             notifyObservers(of: .validationFailed(error))
@@ -61,13 +56,6 @@ public final class ConfigurationHotReload: ObservableObject {
         
         // Notify observers
         notifyObservers(of: .configurationChanged(old: oldConfig, new: configuration, changes: changes))
-        
-        // Apply animated transitions if needed
-        if shouldAnimate && !changes.isEmpty {
-            // Animation support is not yet implemented
-            // Future versions will add cross-platform animation support
-            Self.logger.debug("Animation requested for \(changes.count) changes, but animations are not yet supported")
-        }
     }
     
     /// Update specific configuration properties
@@ -204,8 +192,8 @@ public final class ConfigurationHotReload: ObservableObject {
     
     // MARK: - Presets
     
-    /// Apply a configuration preset with animation
-    public func applyPreset(_ preset: ConfigurationPreset, animated: Bool = true) {
+    /// Apply a configuration preset
+    public func applyPreset(_ preset: ConfigurationPreset) {
         let config: EditorConfiguration
         
         switch preset {
@@ -228,7 +216,7 @@ public final class ConfigurationHotReload: ObservableObject {
             config = customConfig
         }
         
-        update(config, animated: animated)
+        update(config)
     }
     
     // MARK: - Private Methods
@@ -370,7 +358,6 @@ public enum ConfigurationEvent {
     case configurationChanged(old: EditorConfiguration, new: EditorConfiguration, changes: [HotReloadConfigurationChange])
     case historyNavigated(configuration: EditorConfiguration, isUndo: Bool)
     case validationFailed(ConfigurationError)
-    case animationRequested(changes: [HotReloadConfigurationChange], duration: Duration)
 }
 
 /// Observer token for removing observers

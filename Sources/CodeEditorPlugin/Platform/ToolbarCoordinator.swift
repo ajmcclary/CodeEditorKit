@@ -5,7 +5,6 @@ import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
-import os.log
 
 /// Coordinator responsible for creating and managing cross-platform toolbar items
 ///
@@ -52,7 +51,7 @@ public final class ToolbarCoordinator: ObservableObject {
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = ToolbarCoordinator()
     
-    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "ToolbarCoordinator")
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ToolbarCoordinator")
     private let capabilities: PlatformCapabilities
     
     // MARK: - Initialization

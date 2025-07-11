@@ -294,13 +294,12 @@ public final class ClosureEventHandler: EditorEventHandler {
 ///
 /// ## Thread Safety
 ///
-/// The publisher is thread-safe and can be accessed from any thread. Events
+/// The publisher uses Swift's actor model for thread-safe access. Events
 /// are always delivered on the main actor to ensure UI safety.
 ///
 /// - SeeAlso: ``EditorEvent``, ``EditorEventHandler``, ``EditorEventType``
 @available(macOS 10.15, iOS 13.0, *)
-public final class EditorEventPublisher: @unchecked Sendable {
-    private let lock = NSLock()
+public actor EditorEventPublisher {
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
     
     public init() {}
@@ -315,9 +314,10 @@ public final class EditorEventPublisher: @unchecked Sendable {
     /// - Note: Handlers must be retained elsewhere or they will be deallocated
     public func subscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
-        lock.lock()
-        defer { lock.unlock() }
         handlers[id] = WeakHandler(handler)
+        
+        // Clean up any deallocated handlers
+        cleanupDeallocatedHandlers()
     }
     
     /// Unsubscribe from editor events.
@@ -327,8 +327,6 @@ public final class EditorEventPublisher: @unchecked Sendable {
     /// - Parameter handler: The event handler to remove
     public func unsubscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
-        lock.lock()
-        defer { lock.unlock() }
         handlers.removeValue(forKey: id)
     }
     
@@ -341,11 +339,13 @@ public final class EditorEventPublisher: @unchecked Sendable {
     ///
     /// - Note: Handlers that have been deallocated are automatically removed
     public func publish(_ event: EditorEvent) {
-        lock.lock()
+        // Get active handlers
         let activeHandlers = handlers.values.compactMap { $0.value }
-        lock.unlock()
         
-        // Publish to all active handlers
+        // Clean up deallocated handlers
+        cleanupDeallocatedHandlers()
+        
+        // Publish to all active handlers on MainActor
         for handler in activeHandlers {
             Task { @MainActor in
                 handler.handle(event)
@@ -357,9 +357,50 @@ public final class EditorEventPublisher: @unchecked Sendable {
     ///
     /// Clears all event subscriptions. Useful for cleanup or reset scenarios.
     public func removeAll() {
-        lock.lock()
-        defer { lock.unlock() }
         handlers.removeAll()
+    }
+    
+    /// Clean up handlers that have been deallocated
+    private func cleanupDeallocatedHandlers() {
+        handlers = handlers.filter { _, weakHandler in
+            weakHandler.value != nil
+        }
+    }
+    
+    // MARK: - Convenience Methods for Non-async Contexts
+    
+    /// Publish an event from a non-async context.
+    ///
+    /// This is a convenience method that creates a Task to call the async publish method.
+    /// Use this when you need to publish from a synchronous context.
+    ///
+    /// - Parameter event: The event to publish
+    public nonisolated func publishSync(_ event: EditorEvent) {
+        Task {
+            await publish(event)
+        }
+    }
+    
+    /// Subscribe from a non-async context.
+    ///
+    /// This is a convenience method that creates a Task to call the async subscribe method.
+    ///
+    /// - Parameter handler: The event handler to add
+    public nonisolated func subscribeSync(_ handler: any EditorEventHandler) {
+        Task {
+            await subscribe(handler)
+        }
+    }
+    
+    /// Unsubscribe from a non-async context.
+    ///
+    /// This is a convenience method that creates a Task to call the async unsubscribe method.
+    ///
+    /// - Parameter handler: The event handler to remove
+    public nonisolated func unsubscribeSync(_ handler: any EditorEventHandler) {
+        Task {
+            await unsubscribe(handler)
+        }
     }
 }
 
@@ -572,7 +613,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
             wrapper.handlerBox = box
             
             // Subscribe the wrapper to the publisher
-            publisher.subscribe(wrapper)
+            publisher.subscribeSync(wrapper)
             storage.set(wrapper)
         }
     }
@@ -605,9 +646,7 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
         
         // Extract publisher before Task to avoid capturing self
         let publisher = eventPublisher
-        Task { @MainActor in
-            publisher.unsubscribe(wrappedValue)
-        }
+        publisher.unsubscribeSync(wrappedValue)
     }
 }
 #endif

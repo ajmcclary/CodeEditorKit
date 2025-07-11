@@ -1,7 +1,6 @@
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 import Foundation
-import os.log
 
 // MARK: - MacOS Specific Implementation
 

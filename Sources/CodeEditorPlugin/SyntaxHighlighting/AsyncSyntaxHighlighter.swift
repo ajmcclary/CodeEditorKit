@@ -1,12 +1,9 @@
 import Foundation
-import os.log
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
-
-private let kAsyncHighlightLogger = Logger(subsystem: "com.codeeditor.syntaxhighlighting", category: "AsyncSyntaxHighlighter")
 
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
@@ -272,7 +269,7 @@ public final class AsyncSyntaxHighlighter {
         // Validate range
         guard rangeToHighlight.location >= 0,
               rangeToHighlight.location + rangeToHighlight.length <= textStorage.length else {
-            kAsyncHighlightLogger.warning("Invalid range for highlighting: \(rangeToHighlight, privacy: .public) with text length: \(textStorage.length, privacy: .public)")
+            CrossPlatformLogger.logger().warning("Invalid range for highlighting: \(rangeToHighlight) with text length: \(textStorage.length)")
             return
         }
         
@@ -737,7 +734,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         
         // Log slow operations
         if duration > .milliseconds(100) {
-            kAsyncHighlightLogger.debug("⚠️ Slow \(category.rawValue, privacy: .public): \(String(format: "%.3f", duration.timeInterval), privacy: .public)s")
+            CrossPlatformLogger.logger().debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration.timeInterval))s")
         }
     }
     

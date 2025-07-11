@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 #if canImport(UIKit)
 import UIKit
@@ -91,7 +90,7 @@ extension CodeEditorView {
         NotificationCenter.default.post(selectionNotification)
         
         // Publish selection changed event
-        eventPublisher.publish(.textSelectionDidChange(selectedRange))
+        eventPublisher.publishSync(.textSelectionDidChange(selectedRange))
     }
 
     internal func updateSelectedLineHighlight() {
@@ -192,11 +191,44 @@ extension CodeEditorView {
         let textStorage = self.textStorage
         #endif
 
-        let fullRange = NSRange(location: 0, length: textStorage.length)
-        textStorage.removeAttribute(.foregroundColor, range: fullRange)
-
-        // Restore default text color
-        textStorage.addAttribute(.foregroundColor, value: textColor ?? PlatformColors.label, range: fullRange)
+        // Cancel any in-progress highlighting first
+        asyncHighlighter.cancelAllHighlighting()
+        
+        // For large files, batch the attribute changes
+        let textLength = textStorage.length
+        guard textLength > 0 else { return }
+        
+        textStorage.beginEditing()
+        defer { textStorage.endEditing() }
+        
+        // Process in chunks for better performance on large files
+        let chunkSize = configuration.performance.maxSyntaxHighlightingLength > 0 
+            ? min(configuration.performance.maxSyntaxHighlightingLength, 50_000)
+            : 50_000
+        
+        let defaultColor = textColor ?? PlatformColors.label
+        
+        if textLength <= chunkSize {
+            // Small file - process in one go
+            let fullRange = NSRange(location: 0, length: textLength)
+            textStorage.removeAttribute(.foregroundColor, range: fullRange)
+            textStorage.addAttribute(.foregroundColor, value: defaultColor, range: fullRange)
+        } else {
+            // Large file - process in chunks to avoid blocking
+            var location = 0
+            while location < textLength {
+                autoreleasepool {
+                    let remainingLength = textLength - location
+                    let currentChunkSize = min(chunkSize, remainingLength)
+                    let range = NSRange(location: location, length: currentChunkSize)
+                    
+                    textStorage.removeAttribute(.foregroundColor, range: range)
+                    textStorage.addAttribute(.foregroundColor, value: defaultColor, range: range)
+                    
+                    location += currentChunkSize
+                }
+            }
+        }
     }
     
     // MARK: - Code Folding Configuration

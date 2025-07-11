@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// LSP error response structure
 struct ResponseError: Codable {
@@ -22,7 +21,7 @@ actor LSPMessageHandler {
     private var messageBuffer = Data()
     
     /// Logger for debugging
-    private let logger = Logger(subsystem: "com.codeeditor.lsp", category: "LSPMessageHandler")
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPMessageHandler")
     
     // MARK: - Configuration
     

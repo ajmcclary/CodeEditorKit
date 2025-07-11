@@ -44,89 +44,16 @@ public struct CodeEditorSwiftUITheme: Sendable, Hashable {
         Self(
             name: "dark",
             backgroundColor: Color(PlatformColors.controlBackground),
-            textColor: .white,
-            lineNumberColor: .gray,
-            selectedLineColor: .blue.opacity(0.2)
+            textColor: Color(PlatformColors.label),
+            lineNumberColor: Color(PlatformColors.secondaryLabel),
+            selectedLineColor: Color(PlatformColors.tintColor).opacity(0.2)
         )
     }()
 }
 
 // MARK: - SwiftUI Environment Support
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorThemeKey: EnvironmentKey {
-    public static let defaultValue: CodeEditorSwiftUITheme = .default
-    
-    public typealias Value = CodeEditorSwiftUITheme
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorBecomeFirstResponderKey: EnvironmentKey {
-    public static let defaultValue: Bool = false
-    
-    public typealias Value = Bool
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorConfigurationKey: EnvironmentKey {
-    public static let defaultValue = EditorConfiguration()
-    
-    public typealias Value = EditorConfiguration
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorLanguageKey: EnvironmentKey {
-    public static let defaultValue = Language.plainText
-    
-    public typealias Value = Language
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorMemoryMonitorKey: EnvironmentKey {
-    public static let defaultValue: MemoryMonitor? = nil
-    
-    public typealias Value = MemoryMonitor?
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-public struct CodeEditorEventSystemKey: EnvironmentKey {
-    public static let defaultValue: UnifiedEventSystem? = nil
-    
-    public typealias Value = UnifiedEventSystem?
-}
-
-@available(macOS 12.0, iOS 16.0, *)
-extension EnvironmentValues {
-    public var codeEditorTheme: CodeEditorSwiftUITheme {
-        get { self[CodeEditorThemeKey.self] }
-        set { self[CodeEditorThemeKey.self] = newValue }
-    }
-    
-    public var codeEditorBecomeFirstResponder: Bool {
-        get { self[CodeEditorBecomeFirstResponderKey.self] }
-        set { self[CodeEditorBecomeFirstResponderKey.self] = newValue }
-    }
-    
-    public var codeEditorConfiguration: EditorConfiguration {
-        get { self[CodeEditorConfigurationKey.self] }
-        set { self[CodeEditorConfigurationKey.self] = newValue }
-    }
-    
-    public var codeEditorLanguage: Language {
-        get { self[CodeEditorLanguageKey.self] }
-        set { self[CodeEditorLanguageKey.self] = newValue }
-    }
-    
-    public var codeEditorMemoryMonitor: MemoryMonitor? {
-        get { self[CodeEditorMemoryMonitorKey.self] }
-        set { self[CodeEditorMemoryMonitorKey.self] = newValue }
-    }
-    
-    public var codeEditorEventSystem: UnifiedEventSystem? {
-        get { self[CodeEditorEventSystemKey.self] }
-        set { self[CodeEditorEventSystemKey.self] = newValue }
-    }
-}
+// Note: Individual environment keys have been deprecated in favor of CodeEditorEnvironment
+// The extensions in CodeEditorEnvironment.swift provide backward compatibility
 
 // MARK: - Convenience View Modifier
 
@@ -138,6 +65,7 @@ extension View {
     }
     
     /// Control whether the code editor should become first responder
+    @available(*, deprecated, renamed: "becomeFirstResponder(_:)", message: "Use becomeFirstResponder(_:) instead")
     public func codeEditorBecomeFirstResponder(_ become: Bool) -> some View {
         environment(\.codeEditorBecomeFirstResponder, become)
     }

@@ -7,10 +7,10 @@ import UIKit
 
 /// Helper for optimizing TextKit2 performance across different scenarios
 @MainActor
-public enum TextKit2PerformanceHelper {
+enum TextKit2PerformanceHelper {
     // MARK: - File Size Categories
     
-    public enum FileSize {
+    enum FileSize {
         case small      // < 10KB
         case medium     // 10KB - 100KB  
         case large      // 100KB - 1MB
@@ -35,15 +35,15 @@ public enum TextKit2PerformanceHelper {
     
     // MARK: - Performance Configuration
     
-    public struct PerformanceConfiguration {
-        public var enableViewportOptimization: Bool
-        public var enableFragmentRecycling: Bool
-        public var enableAsyncLayout: Bool
-        public var maxCachedFragments: Int
-        public var layoutChunkSize: Int
-        public var prefetchDistance: Int
+    struct PerformanceConfiguration {
+        var enableViewportOptimization: Bool
+        var enableFragmentRecycling: Bool
+        var enableAsyncLayout: Bool
+        var maxCachedFragments: Int
+        var layoutChunkSize: Int
+        var prefetchDistance: Int
         
-        public static func optimal(for fileSize: FileSize) -> Self {
+        static func optimal(for fileSize: FileSize) -> Self {
             switch fileSize {
             case .small:
                 return Self(
@@ -96,7 +96,7 @@ public enum TextKit2PerformanceHelper {
     ///   - characterCount: Number of characters in the document
     /// - Returns: The applied performance configuration
     @discardableResult
-    public static func configureForOptimalPerformance(
+    static func configureForOptimalPerformance(
         textView: PlatformTextView,
         characterCount: Int
     ) -> PerformanceConfiguration {
@@ -111,7 +111,7 @@ public enum TextKit2PerformanceHelper {
     /// - Parameters:
     ///   - config: Performance configuration to apply
     ///   - textView: Target text view
-    public static func applyConfiguration(
+    static func applyConfiguration(
         _ config: PerformanceConfiguration,
         to textView: PlatformTextView
     ) {
@@ -134,7 +134,7 @@ public enum TextKit2PerformanceHelper {
     
     /// Optimize text view for real-time editing performance
     /// - Parameter textView: Text view to optimize
-    public static func optimizeForRealTimeEditing(_ textView: PlatformTextView) {
+    static func optimizeForRealTimeEditing(_ textView: PlatformTextView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = textView.textContainer else { return }
         
@@ -169,7 +169,7 @@ public enum TextKit2PerformanceHelper {
     
     /// Optimize text view for read-only viewing performance
     /// - Parameter textView: Text view to optimize
-    public static func optimizeForReadOnlyViewing(_ textView: PlatformTextView) {
+    static func optimizeForReadOnlyViewing(_ textView: PlatformTextView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         
         // Disable editing features
@@ -202,7 +202,7 @@ public enum TextKit2PerformanceHelper {
     ///   - characterCount: Number of characters in document
     /// - Returns: Whether TextKit2 was enabled
     @discardableResult
-    public static func enableTextKit2IfBeneficial(
+    static func enableTextKit2IfBeneficial(
         _ textView: PlatformTextView,
         characterCount: Int
     ) -> Bool {
@@ -222,7 +222,7 @@ public enum TextKit2PerformanceHelper {
     /// - Parameters:
     ///   - textView: Text view to configure
     ///   - enable: Whether to enable async layout
-    public static func configureAsyncLayout(_ textView: PlatformTextView, enable: Bool) {
+    static func configureAsyncLayout(_ textView: PlatformTextView, enable: Bool) {
         guard let textLayoutManager = textView.textLayoutManager else { return }
         
         if enable {

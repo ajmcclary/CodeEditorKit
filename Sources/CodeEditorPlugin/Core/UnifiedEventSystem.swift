@@ -375,7 +375,7 @@ extension CodeEditorView {
     /// Publish events through the unified event system
     public func publishEvent(_ event: EditorEvent) {
         // Publish to the local event publisher
-        eventPublisher.publish(event)
+        eventPublisher.publishSync(event)
         
         // Publish to the unified system if available
         // Only use the injected event system from configuration

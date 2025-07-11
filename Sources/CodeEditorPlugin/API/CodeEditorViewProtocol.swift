@@ -6,7 +6,18 @@ import AppKit
 
 // MARK: - CodeEditorViewProtocol
 
-/// A common public interface for TextView
+/// A common interface for TextView implementations across platforms.
+///
+/// This protocol uses the `package` access modifier (introduced in Swift 5.9) to make it
+/// visible within the CodeEditorPlugin package but not to external consumers. This design
+/// choice allows internal components to share a common interface while keeping implementation
+/// details private from the public API.
+///
+/// External users should interact with the concrete `CodeEditorView` type rather than this
+/// protocol directly.
+///
+/// - Note: The `package` modifier provides better encapsulation than `public` while being
+///   more flexible than `internal` for multi-module projects.
 package protocol CodeEditorViewProtocol {
     associatedtype GutterView
 
