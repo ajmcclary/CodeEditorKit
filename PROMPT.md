@@ -1,42 +1,112 @@
 **Project:** CodeEditorPlugin - A Swift 6, cross-platform code editor component for macOS, iOS, and Mac Catalyst.
 
-**Persona:** You are a senior Swift engineer and an expert in API design, specializing in building and maintaining high-quality, reusable software components. You have a keen eye for modern Swift practices, including actor-based concurrency, platform abstraction, and API ergonomics. You value clean architecture, comprehensive testing, and clear documentation.
+**Persona:** You are a visionary Swift architect and product strategist, specializing in evolving successful components into industry-leading frameworks. You have deep expertise in Swift 6 concurrency, emerging Apple technologies, and creating developer tools that delight. You balance innovation with stability, always considering both cutting-edge features and real-world developer needs.
 
-**Context:** I have developed a production-ready code editor component called `CodeEditorPlugin`. It's built with Swift 6 and supports macOS, iOS, and Mac Catalyst. The project prioritizes a clean, feature-based architecture, extensive test coverage (425 tests), and zero SwiftLint violations. It uses `SwiftSyntax` for AST-based Swift highlighting and performant regex for 16 other languages. A key feature is its sophisticated platform abstraction layer that uses `#if canImport()` for true cross-platform support, avoiding simple `#if os()` checks.
+**Context:** I have developed a mature, production-ready code editor component called `CodeEditorPlugin`. Built with Swift 6, it supports macOS, iOS, and Mac Catalyst through a sophisticated platform abstraction layer. The project has achieved significant milestones:
 
-**Request:** Please conduct a thorough code review of the `CodeEditorPlugin` project. I am looking for actionable feedback to elevate it from a great component to an exceptional one.
+- **53 comprehensive tests** with 100% pass rate
+- **252 source files** with zero SwiftLint violations
+- **17+ programming languages** supported (SwiftSyntax for Swift AST, optimized regex for others)
+- **Clean architecture** with feature-based organization
+- **Modern patterns** including actor-based concurrency and `#if canImport()` abstractions
 
-**Areas of Focus:**
+The codebase is stable and well-tested. I'm now looking to enhance and expand its capabilities.
 
-1.  **API Design & Ergonomics:**
-    *   Review the main `CodeEditor` (SwiftUI) and `CodeEditorView` (AppKit/UIKit) APIs. Are they intuitive and easy to use?
-    *   Examine the `EditorConfiguration` system. Is the builder pattern (`with()` methods) effective? Are the presets logical? Is it flexible enough for advanced use cases?
-    *   Assess the public API surface. Is it minimal yet complete? Are there any internal details that are unnecessarily exposed?
+**Request:** Please analyze the `CodeEditorPlugin` project for enhancement opportunities and growth potential. I'm seeking creative, forward-thinking suggestions to evolve this component into something extraordinary.
 
-2.  **Architecture & Scalability:**
-    *   Evaluate the feature-based directory structure. Does it promote modularity and maintainability?
-    *   Analyze the Swift 6 actor implementation. Are there opportunities to improve concurrency patterns or data flow? Are there any potential race conditions or deadlocks?
-    *   Inspect the platform abstraction layer (`Platform/`). Is it robust? Does it effectively isolate platform-specific code? Are there any abstractions that feel leaky or incomplete?
+**What's Working Well:**
 
-3.  **Code Quality & Best Practices:**
-    *   While the project adheres to SwiftLint, are there any "code smells" or anti-patterns that could be improved?
-    *   Review the use of `SwiftSyntax`. Is it being used efficiently for highlighting?
-    *   Check for potential performance bottlenecks, especially in the rendering pipeline (`Core/`), text processing (`TextProcessing/`), and syntax highlighting (`SyntaxHighlighting/`).
+- Robust test coverage ensuring reliability
+- Clean, maintainable architecture
+- Excellent cross-platform abstractions
+- Strong performance characteristics
+- Comprehensive language support
 
-4.  **Testing & Reliability:**
-    *   Given the existing 425 tests, what critical areas might be under-tested?
-    *   Suggest specific scenarios for new integration, performance, or UI tests that would increase confidence in the component's reliability.
+**Enhancement Opportunities:**
 
-5.  **Documentation & Clarity:**
-    *   Review the inline code comments and the DocC documentation. Is it clear, concise, and helpful for developers who want to integrate or contribute to the plugin?
-    *   Do the `CLAUDE.md`, `GEMINI.md`, and `AGENTS.md` files provide enough context for an AI assistant to work effectively with the codebase?
+1. **API Evolution & Developer Experience:**
+
+   - How could we leverage Swift 6/SwiftUI 6 features (Observation, async sequences, new macros)?
+   - What convenience APIs would make integration even more delightful?
+   - Could we add visual configuration tools or live preview capabilities?
+   - Opportunities for better IDE integration or Xcode extensions?
+
+2. **Architecture & Future-Proofing:**
+
+   - How might we prepare for macOS 26 beta, iOS 26 beta, and Catalyst 26 beta?
+   - Opportunities for modularization using Swift Package plugins?
+   - Could we implement a proper plugin architecture for third-party extensions?
+   - Performance optimizations through GPU acceleration or virtual scrolling?
+
+3. **Innovation & Differentiation:**
+
+   - AI-powered features (code completion, refactoring suggestions, documentation)?
+   - Real-time collaborative editing capabilities?
+   - Visual diff/merge tools or git integration?
+   - Accessibility enhancements beyond standard support?
+
+4. **Ecosystem & Community:**
+
+   - Theme marketplace or visual theme editor?
+   - Code snippet management system?
+   - Performance benchmarking suite?
+
+5. **Performance & Scalability:**
+   - Incremental parsing for massive files?
+   - Streaming syntax highlighting?
+   - Memory-mapped file support?
+   - Background indexing for instant search?
+   - WebAssembly support for web deployment?
+
+**Technical Explorations:**
+
+- Could we use `@Observable` for configuration management?
+- Opportunities for Swift Macros to simplify language definitions?
+- How might Swift Package plugins enhance the build process?
+- Could we leverage Metal for syntax highlighting performance?
+- Opportunities for SwiftUI's new animation APIs?
+
+**Strategic Questions:**
+
+- What would make this THE go-to code editor component for Swift developers?
+- Which features would create the most developer delight?
+- How can we build a sustainable community around this project?
+- What partnerships or integrations would amplify its impact?
+
+**Secondary: Bug Prevention & Refinement:**
+While the codebase is stable, please also note any:
+
+- Potential edge cases in platform abstractions
+- Opportunities to simplify complex code paths
+- Areas where additional defensive programming could help
+- Performance bottlenecks that could emerge at scale
 
 **How to Present Your Feedback:**
 
-Please structure your review with clear, actionable recommendations. For each point, please:
-*   **Identify** the specific file and line number(s) where relevant.
-*   **Explain** the issue or opportunity for improvement.
-*   **Provide** a concrete code example or suggestion for the change.
-*   **Categorize** the feedback (e.g., Critical, Suggestion, Question).
+Structure your review as a roadmap for evolution:
 
-My goal is to ensure this component is not only powerful and feature-rich but also a pleasure for other developers to use and build upon. Thank you for your expertise!
+- **Vision**: Describe the enhancement opportunity
+- **Impact**: Explain the value for developers
+- **Implementation**: Suggest a high-level approach
+- **Priority**: (🚀 Game-changer, 💡 Great addition, 🔧 Nice improvement)
+- **Effort**: (S/M/L/XL)
+- **Code References**: Specific files/areas to modify if relevant
+
+Focus on possibilities rather than problems. Think "what if we could..." rather than "this is wrong because...". Your insights will help shape the future of this component.
+
+**Example Format:**
+
+```
+### 🚀 AI-Powered Code Completion
+**Vision**: Integrate local LLM for context-aware code suggestions
+**Impact**: Transform from syntax highlighter to intelligent coding assistant
+**Implementation**:
+- Add LLMService actor in Features/AI/
+- Extend CodeEditorView with completion overlay
+- Use swift-transformers for on-device inference
+**Priority**: 🚀 Game-changer
+**Effort**: L
+**References**: CodeEditorView+Completion.swift would be the integration point
+```
+
+Thank you for helping envision the future of CodeEditorPlugin!
