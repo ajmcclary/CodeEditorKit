@@ -4,7 +4,24 @@
 // MARK: - View Modifiers
 
 @available(macOS 13.0, iOS 16.0, *)
-extension CodeEditor {
+extension View {
+    /// Sets the color theme for the editor.
+    ///
+    /// - Parameter theme: The theme to apply to the editor
+    /// - Returns: A view with the specified theme environment value
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .codeTheme(.default)
+    ///     .codeTheme(.monokai)
+    ///     .codeTheme(customTheme)
+    /// ```
+    public func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
+        environment(\.codeEditorTheme, theme)
+    }
+    
     /// Sets the programming language for syntax highlighting.
     ///
     /// - Parameter language: The programming language to use for syntax highlighting
@@ -48,6 +65,64 @@ extension CodeEditor {
         }
     }
     
+    /// Requests that the code editor become the first responder (keyboard focus).
+    ///
+    /// This is a more intuitive API than using the environment key directly.
+    /// When called, the editor will attempt to become the first responder on the
+    /// next view update cycle.
+    ///
+    /// - Returns: A view that will request focus when displayed
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .becomeFirstResponder()
+    ///     .onAppear {
+    ///         // Editor will automatically gain focus when view appears
+    ///     }
+    /// ```
+    ///
+    /// - Note: On iOS, the keyboard will appear when the editor gains focus.
+    ///         On macOS, the editor will receive keyboard input.
+    public func becomeFirstResponder() -> some View {
+        environment(\.codeEditorBecomeFirstResponder, true)
+    }
+    
+    /// Requests the code editor to become (or resign) first responder with an explicit state.
+    ///
+    /// Use this modifier to programmatically control when the editor gains or loses focus
+    /// based on the boolean parameter.
+    ///
+    /// - Parameter shouldBecomeFirstResponder: Whether the editor should become first responder
+    /// - Returns: A view with the first responder state set
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// struct ContentView: View {
+    ///     @State private var code = ""
+    ///     @State private var isEditing = false
+    ///     
+    ///     var body: some View {
+    ///         VStack {
+    ///             Button("Toggle Focus") {
+    ///                 isEditing.toggle()
+    ///             }
+    ///             
+    ///             CodeEditor(text: $code)
+    ///                 .becomeFirstResponder(isEditing)
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    public func becomeFirstResponder(_ shouldBecomeFirstResponder: Bool) -> some View {
+        environment(\.codeEditorBecomeFirstResponder, shouldBecomeFirstResponder)
+    }
+}
+
+@available(macOS 13.0, iOS 16.0, *)
+extension CodeEditor {
     /// Configures highlighting of the currently selected line.
     ///
     /// - Parameter highlight: Whether to highlight the selected line (default: true)
@@ -64,23 +139,6 @@ extension CodeEditor {
         transformEnvironment(\.codeEditorConfiguration) { config in
             config.display.highlightSelectedLine = highlight
         }
-    }
-    
-    /// Sets the color theme for the editor.
-    ///
-    /// - Parameter theme: The theme to apply to the editor
-    /// - Returns: A view with the specified theme environment value
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// CodeEditor(text: $code)
-    ///     .codeTheme(.default)
-    ///     .codeTheme(.monokai)
-    ///     .codeTheme(customTheme)
-    /// ```
-    public func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
-        environment(\.codeEditorTheme, theme)
     }
     
     /// Configures whether the editor text is editable.
@@ -410,6 +468,37 @@ extension CodeEditor {
     ///         On macOS, the editor will receive keyboard input.
     public func becomeFirstResponder() -> some View {
         environment(\.codeEditorBecomeFirstResponder, true)
+    }
+    
+    /// Requests the code editor to become (or resign) first responder with an explicit state.
+    ///
+    /// Use this modifier to programmatically control when the editor gains or loses focus
+    /// based on the boolean parameter.
+    ///
+    /// - Parameter shouldBecomeFirstResponder: Whether the editor should become first responder
+    /// - Returns: A view with the first responder state set
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// struct ContentView: View {
+    ///     @State private var code = ""
+    ///     @State private var isEditing = false
+    ///     
+    ///     var body: some View {
+    ///         VStack {
+    ///             Button("Toggle Focus") {
+    ///                 isEditing.toggle()
+    ///             }
+    ///             
+    ///             CodeEditor(text: $code)
+    ///                 .becomeFirstResponder(isEditing)
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    public func becomeFirstResponder(_ shouldBecomeFirstResponder: Bool) -> some View {
+        environment(\.codeEditorBecomeFirstResponder, shouldBecomeFirstResponder)
     }
     
     /// Configures a custom memory monitor for the editor.
