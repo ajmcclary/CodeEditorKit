@@ -108,7 +108,7 @@ extension EditorConfigurationBuilder {
   @discardableResult
   public func presentationMode() -> Self {
     fontSize(18)
-      .showLineNumbers(false)
+      .isLineNumbersEnabled(false)
       .enableAnnotations(false)
       .highlightSelectedLine(false)
       .wrapLines(true)
@@ -128,7 +128,7 @@ extension EditorConfigurationBuilder {
   @discardableResult
   public func codeReviewMode() -> Self {
     isEditable(false)
-      .showLineNumbers(true)
+      .isLineNumbersEnabled(true)
       .enableAnnotations(true)
       .highlightSelectedLine(true)
       .enableSyntaxHighlighting(true)

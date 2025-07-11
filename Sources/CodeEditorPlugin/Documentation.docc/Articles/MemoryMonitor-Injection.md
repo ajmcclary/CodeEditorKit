@@ -46,6 +46,7 @@ For a fluent API, use the configuration builder:
 
 ```swift
 let monitor = MemoryMonitor()
+monitor.startMonitoring()
 
 let config = EditorConfigurationBuilder()
     .memoryMonitor(monitor)
@@ -341,6 +342,7 @@ editor.memoryMonitor = MemoryMonitor.shared  // ⚠️ Deprecated
 
 // New way (recommended)
 let monitor = MemoryMonitor()
+monitor.startMonitoring()
 var config = EditorConfiguration()
 config.performance.memoryMonitor = monitor
 config.apply(to: editor)
@@ -378,9 +380,400 @@ func testCleanup() async {
 }
 ```
 
+## Advanced Injection Patterns
+
+### Factory Pattern for MemoryMonitor
+
+Create a factory for consistent MemoryMonitor configuration:
+
+```swift
+enum MemoryMonitorFactory {
+    static func createDefault() -> MemoryMonitor {
+        let monitor = MemoryMonitor()
+        monitor.memoryThresholdMB = 150.0
+        monitor.enableAutomaticCleanup = true
+        return monitor
+    }
+    
+    static func createForTesting() -> MemoryMonitor {
+        let monitor = MemoryMonitor()
+        monitor.memoryThresholdMB = 50.0 // Lower threshold for testing
+        monitor.enableAutomaticCleanup = false // Manual control in tests
+        return monitor
+    }
+    
+    static func createForProduction() -> MemoryMonitor {
+        let monitor = MemoryMonitor()
+        monitor.memoryThresholdMB = 300.0
+        monitor.enableAutomaticCleanup = true
+        monitor.enablePeriodicCleanup = true
+        monitor.periodicCleanupInterval = 300.0 // 5 minutes
+        return monitor
+    }
+}
+
+// Usage
+let editor = CodeEditorView(frame: .zero, memoryMonitor: MemoryMonitorFactory.createDefault())
+```
+
+### Dependency Container Pattern
+
+Use a dependency container for complex applications:
+
+```swift
+@MainActor
+class DependencyContainer {
+    private(set) lazy var memoryMonitor: MemoryMonitor = {
+        let monitor = MemoryMonitor()
+        configureMemoryMonitor(monitor)
+        return monitor
+    }()
+    
+    private(set) lazy var eventSystem = UnifiedEventSystem()
+    
+    private func configureMemoryMonitor(_ monitor: MemoryMonitor) {
+        // Configure based on environment
+        #if DEBUG
+        monitor.memoryThresholdMB = 100.0
+        monitor.enableDebugLogging = true
+        #else
+        monitor.memoryThresholdMB = 300.0
+        monitor.enableDebugLogging = false
+        #endif
+        
+        // Register app-wide cleanup handlers
+        registerGlobalCleanupHandlers(monitor)
+    }
+    
+    private func registerGlobalCleanupHandlers(_ monitor: MemoryMonitor) {
+        monitor.registerCleanupHandler(
+            identifier: "image-cache",
+            priority: .high
+        ) { @MainActor in
+            // Clear image caches
+            return CleanupResult(memoryFreedMB: 20.0, description: "Cleared image cache")
+        }
+    }
+    
+    func createEditorConfiguration() -> EditorConfiguration {
+        EditorConfigurationBuilder()
+            .memoryMonitor(memoryMonitor)
+            .eventSystem(eventSystem)
+            .build()
+    }
+}
+
+// Usage in app
+@main
+struct MyApp: App {
+    @StateObject private var dependencies = DependencyContainer()
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(dependencies)
+        }
+    }
+}
+```
+
+### Hierarchical Injection
+
+Create parent-child relationships for memory monitoring:
+
+```swift
+class DocumentWindowController {
+    let rootMemoryMonitor = MemoryMonitor()
+    var documentMonitors: [String: MemoryMonitor] = [:]
+    
+    func createDocumentEditor(for documentID: String) -> CodeEditorView {
+        // Create a child monitor that reports to the parent
+        let documentMonitor = MemoryMonitor()
+        documentMonitor.memoryThresholdMB = 50.0 // Per-document limit
+        
+        // Register cleanup that considers document priority
+        documentMonitor.registerCleanupHandler(
+            identifier: "document-\(documentID)",
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else { return CleanupResult(memoryFreedMB: 0, description: "Controller deallocated") }
+            
+            // Clean up based on document importance
+            let freed = self.cleanupDocument(documentID)
+            return CleanupResult(memoryFreedMB: freed, description: "Cleaned document \(documentID)")
+        }
+        
+        documentMonitors[documentID] = documentMonitor
+        
+        // Create editor with document-specific monitor
+        let editor = CodeEditorView(frame: .zero, memoryMonitor: documentMonitor)
+        return editor
+    }
+    
+    private func cleanupDocument(_ documentID: String) -> Double {
+        // Implement document-specific cleanup logic
+        return 10.0
+    }
+}
+```
+
+### Protocol-Based Injection
+
+Define protocols for flexible memory monitoring:
+
+```swift
+protocol MemoryManageable {
+    var memoryMonitor: MemoryMonitor { get }
+    func configureMemoryManagement()
+}
+
+extension MemoryManageable {
+    func configureMemoryManagement() {
+        memoryMonitor.registerCleanupHandler(
+            identifier: "\(type(of: self))",
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else { 
+                return CleanupResult(memoryFreedMB: 0, description: "Object deallocated")
+            }
+            
+            let freed = self.performCleanup()
+            return CleanupResult(memoryFreedMB: freed, description: "Cleanup completed")
+        }
+    }
+    
+    func performCleanup() -> Double {
+        // Default implementation
+        return 0.0
+    }
+}
+
+// Adopt in your classes
+class SyntaxHighlightingManager: MemoryManageable {
+    let memoryMonitor: MemoryMonitor
+    
+    init(memoryMonitor: MemoryMonitor) {
+        self.memoryMonitor = memoryMonitor
+        configureMemoryManagement()
+    }
+    
+    func performCleanup() -> Double {
+        // Clear syntax caches
+        return 15.0
+    }
+}
+```
+
+### SwiftUI Environment Propagation
+
+Propagate MemoryMonitor through SwiftUI environment:
+
+```swift
+// Define environment key
+private struct MemoryMonitorEnvironmentKey: EnvironmentKey {
+    static let defaultValue: MemoryMonitor? = nil
+}
+
+extension EnvironmentValues {
+    var appMemoryMonitor: MemoryMonitor? {
+        get { self[MemoryMonitorEnvironmentKey.self] }
+        set { self[MemoryMonitorEnvironmentKey.self] = newValue }
+    }
+}
+
+// Root view
+struct AppRootView: View {
+    @StateObject private var memoryMonitor = MemoryMonitor()
+    
+    var body: some View {
+        NavigationView {
+            DocumentListView()
+        }
+        .environment(\.appMemoryMonitor, memoryMonitor)
+    }
+}
+
+// Child views can access it
+struct DocumentEditView: View {
+    @Environment(\.appMemoryMonitor) var appMemoryMonitor
+    @State private var code = ""
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .memoryMonitor(appMemoryMonitor ?? MemoryMonitor())
+    }
+}
+```
+
+### Combine Integration
+
+Monitor memory changes reactively:
+
+```swift
+import Combine
+
+extension MemoryMonitor {
+    var memoryUsagePublisher: AnyPublisher<Double, Never> {
+        Timer.publish(every: monitoringInterval, on: .main, in: .common)
+            .autoconnect()
+            .map { _ in self.getCurrentMemoryUsage() }
+            .removeDuplicates()
+            .eraseToAnyPublisher()
+    }
+}
+
+// Use in SwiftUI
+struct MemoryStatusView: View {
+    @ObservedObject var memoryMonitor: MemoryMonitor
+    @State private var currentUsage: Double = 0
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "memorychip")
+            Text("\(Int(currentUsage))MB")
+                .foregroundColor(currentUsage > memoryMonitor.memoryThresholdMB ? .red : .primary)
+        }
+        .onReceive(memoryMonitor.memoryUsagePublisher) { usage in
+            currentUsage = usage
+        }
+    }
+}
+```
+
+## Real-World Examples
+
+### Multi-Tab Editor
+
+```swift
+class MultiTabEditorController {
+    private let sharedMemoryMonitor = MemoryMonitor()
+    private var tabMonitors: [UUID: MemoryMonitor] = [:]
+    
+    init() {
+        configureSharedMonitor()
+    }
+    
+    private func configureSharedMonitor() {
+        sharedMemoryMonitor.memoryThresholdMB = 500.0
+        
+        // Global cleanup affects all tabs
+        sharedMemoryMonitor.registerCleanupHandler(
+            identifier: "all-tabs",
+            priority: .high
+        ) { @MainActor [weak self] in
+            guard let self else { return CleanupResult(memoryFreedMB: 0, description: "Controller deallocated") }
+            
+            var totalFreed = 0.0
+            
+            // Clean up inactive tabs first
+            for (tabID, monitor) in self.tabMonitors {
+                if !self.isTabActive(tabID) {
+                    totalFreed += await monitor.performCleanup()
+                }
+            }
+            
+            return CleanupResult(
+                memoryFreedMB: totalFreed,
+                description: "Cleaned \(self.tabMonitors.count) tabs"
+            )
+        }
+    }
+    
+    func createTab() -> (UUID, CodeEditorView) {
+        let tabID = UUID()
+        let tabMonitor = MemoryMonitor()
+        
+        // Configure per-tab limits
+        tabMonitor.memoryThresholdMB = 100.0
+        tabMonitors[tabID] = tabMonitor
+        
+        let config = EditorConfigurationBuilder()
+            .memoryMonitor(tabMonitor)
+            .build()
+        
+        let editor = CodeEditorView()
+        config.apply(to: editor)
+        
+        return (tabID, editor)
+    }
+    
+    private func isTabActive(_ tabID: UUID) -> Bool {
+        // Implementation depends on your UI
+        return true
+    }
+}
+```
+
+### Plugin System with Memory Management
+
+```swift
+protocol EditorPlugin {
+    var identifier: String { get }
+    var memoryMonitor: MemoryMonitor { get }
+    func activate()
+    func deactivate()
+}
+
+class PluginManager {
+    private let mainMemoryMonitor: MemoryMonitor
+    private var plugins: [String: EditorPlugin] = [:]
+    
+    init(memoryMonitor: MemoryMonitor) {
+        self.mainMemoryMonitor = memoryMonitor
+        setupPluginMemoryManagement()
+    }
+    
+    private func setupPluginMemoryManagement() {
+        mainMemoryMonitor.registerCleanupHandler(
+            identifier: "plugin-manager",
+            priority: .normal
+        ) { @MainActor [weak self] in
+            guard let self else { return CleanupResult(memoryFreedMB: 0, description: "Manager deallocated") }
+            
+            var totalFreed = 0.0
+            
+            // Ask each plugin to clean up
+            for plugin in self.plugins.values {
+                totalFreed += await plugin.memoryMonitor.performCleanup()
+            }
+            
+            return CleanupResult(
+                memoryFreedMB: totalFreed,
+                description: "Cleaned \(self.plugins.count) plugins"
+            )
+        }
+    }
+    
+    func loadPlugin(_ plugin: EditorPlugin) {
+        plugins[plugin.identifier] = plugin
+        
+        // Register plugin-specific cleanup
+        plugin.memoryMonitor.registerCleanupHandler(
+            identifier: "plugin-\(plugin.identifier)",
+            priority: .normal
+        ) { @MainActor [weak plugin] in
+            guard let plugin else { 
+                return CleanupResult(memoryFreedMB: 0, description: "Plugin deallocated")
+            }
+            
+            // Plugin-specific cleanup
+            plugin.deactivate()
+            plugin.activate() // Restart with clean state
+            
+            return CleanupResult(memoryFreedMB: 5.0, description: "Plugin restarted")
+        }
+        
+        plugin.activate()
+    }
+}
+```
+
 ## See Also
 
 - <doc:Configuration-System>
 - <doc:Performance-Monitoring>
+- <doc:Unified-Event-System>
 - ``MemoryMonitor``
 - ``EditorConfiguration/Performance``
+- ``CleanupResult``
+- ``CleanupPriority``

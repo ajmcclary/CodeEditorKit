@@ -294,13 +294,6 @@ actor AsyncTextProcessor {
         
         // Handle completion with guaranteed cleanup
         Task { [weak self] in
-            defer {
-                // Ensure cleanup happens even on cancellation
-                Task { [weak self] in
-                    await self?.taskCompleted(taskId)
-                }
-            }
-            
             do {
                 let result = try await processingTask.value
                 taskCompletion(.success(result))
@@ -309,6 +302,9 @@ actor AsyncTextProcessor {
                     taskCompletion(.failure(error))
                 }
             }
+            
+            // Directly await cleanup after task completes
+            await self?.taskCompleted(taskId)
         }
         
         updateProcessingLoad()

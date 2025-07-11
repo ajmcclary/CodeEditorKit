@@ -133,6 +133,7 @@ class ViewController: PlatformViewController {
         
         // Optional: Inject a shared memory monitor
         let sharedMonitor = MemoryMonitor()
+        sharedMonitor.startMonitoring()
         textView.memoryMonitor = sharedMonitor
         
         // Apply configuration using builder pattern
@@ -440,9 +441,9 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 
 ### Comprehensive Test Coverage
 
-**533 Total Tests** across the entire project, ensuring reliability at every level:
+**657 Total Tests** across the entire project, ensuring reliability at every level:
 
-#### Core Plugin Tests (497 tests)
+#### Core Plugin Tests (622 tests)
 - **`CodeEditorViewTests`** (33 tests): Validates core text view functionality, editing operations, and platform behavior
 - **`ConfigurationIntegrationTests`** (24 tests): Ensures configuration system works flawlessly across all settings
 - **`AnnotationTests`** (19 tests): Verifies TODO/FIXME detection and rendering
@@ -454,7 +455,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`CrossPlatformCoordinatorTests`** (10 tests): Platform abstraction layer validation
 - **`PlatformAbstractionTests`** (16 tests): Platform capability detection and abstraction
 - **`CompletionSystemTests`** (14 tests): Code completion and LSP integration
-- **Plus 115+ additional specialized tests** covering memory management, edge cases, and platform-specific behavior
+- **Plus 440+ additional specialized tests** covering memory management, edge cases, and platform-specific behavior
 
 #### Sample App Tests (35 tests)
 - **`ConfigurationUITests`** (12 tests): UI-level configuration testing across platforms
@@ -464,7 +465,7 @@ CodeEditorPlugin is built to the exacting standards required for production soft
 - **`QuickIsFlippedTest`** (1 test): Platform-specific view hierarchy validation
 
 #### Quality Metrics That Matter
-- **100% Test Pass Rate**: All 533 tests passing in continuous integration
+- **100% Test Pass Rate**: All 657 tests passing in continuous integration
 - **3-Platform Coverage**: Every test runs on macOS, iOS, and Mac Catalyst
 - **Swift 6 Concurrency Compliance**: Full actor-based isolation with zero data race possibilities
 - **Memory Leak Detection**: Automated memory profiling catches leaks before release
@@ -491,7 +492,7 @@ swift build && swiftlint && swift test
 
 # Individual quality checks
 swiftlint                    # Check for style violations (should show 0)
-swift test                   # Run all 533 tests
+swift test                   # Run all 657 tests
 swift test --parallel        # Run tests in parallel for speed
 ```
 
@@ -508,6 +509,7 @@ CodeEditorPlugin now supports dependency injection for memory monitoring, allowi
 ```swift
 // SwiftUI: Inject via environment
 let sharedMonitor = MemoryMonitor()
+sharedMonitor.startMonitoring()
 
 var body: some View {
     VStack {

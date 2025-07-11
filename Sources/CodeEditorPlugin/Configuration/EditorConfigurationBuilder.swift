@@ -22,7 +22,7 @@ import Foundation
 /// ```swift
 /// let config = EditorConfigurationBuilder()
 ///     .fontSize(16)
-///     .showLineNumbers(true)
+///     .isLineNumbersEnabled(true)
 ///     .tabWidth(4)
 ///     .theme(.dark)
 ///     .language(.swift)
@@ -31,7 +31,7 @@ import Foundation
 ///
 /// editor.configuration = config
 /// ```
-public struct EditorConfigurationBuilder {
+public struct EditorConfigurationBuilder: Sendable {
   // MARK: - Properties
 
   private var configuration: EditorConfiguration
@@ -48,7 +48,7 @@ public struct EditorConfigurationBuilder {
   /// ```swift
   /// let config = EditorConfigurationBuilder()
   ///     .fontSize(14)
-  ///     .showLineNumbers(true)
+  ///     .isLineNumbersEnabled(true)
   ///     .build()
   /// ```
   public init() {
@@ -151,7 +151,7 @@ public struct EditorConfigurationBuilder {
   /// ```swift
   /// let config = EditorConfigurationBuilder()
   ///     .fontSize(14)
-  ///     .showLineNumbers(true)
+  ///     .isLineNumbersEnabled(true)
   ///     .tabWidth(4)
   ///     .theme(.monokai)
   ///     .language(.python)

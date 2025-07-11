@@ -127,7 +127,7 @@ struct DocumentEditor: View {
                 EditorConfigurationBuilder()
                     .memoryMonitor(memoryMonitor)
                     .language(document.language)
-                    .showLineNumbers(true)
+                    .isLineNumbersEnabled(true)
                     .build()
             )
     }

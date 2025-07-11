@@ -150,6 +150,15 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
+            // Validate configuration before applying
+            do {
+                try configuration.validateAndThrow()
+            } catch {
+                // Log validation error but continue with application
+                // This ensures backward compatibility while alerting developers
+                Self.logger.warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
+            }
+            
             // Apply configuration if it changed OR if the memory monitor changed
             // (memoryMonitor is excluded from EditorConfiguration equality)
             if configuration != oldValue || 
@@ -340,7 +349,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         setupTextView()
     }
     
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func removeFromSuperview() {
         // Perform synchronous cleanup before removing from superview
         // The async highlighter will handle its own cleanup in deinit if needed
@@ -352,19 +360,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         
         super.removeFromSuperview()
     }
-    #else
-    override public func removeFromSuperview() {
-        // Perform synchronous cleanup before removing from superview
-        // The async highlighter will handle its own cleanup in deinit if needed
-        asyncHighlighter.cleanup()
-        unregisterFromMemoryMonitor()
-        
-        // Cancel any pending layout operations
-        layoutCoordinator.cancelPendingLayout()
-        
-        super.removeFromSuperview()
-    }
-    #endif
     
     deinit {
         // Remove notification observers

@@ -168,13 +168,13 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **iOS**: Available on all versions
     /// - **macOS**: Available on 14.0+
-    /// - **Catalyst**: Follows macOS availability
+    /// - **Catalyst**: Follows macOS availability (14.0+)
     ///
     /// - Returns: True if CADisplayLink is available
     public var supportsCADisplayLink: Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return true
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit) || targetEnvironment(macCatalyst)
         return systemVersionComponents.major >= 14
         #else
         return false

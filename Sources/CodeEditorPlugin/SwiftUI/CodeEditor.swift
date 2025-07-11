@@ -275,6 +275,12 @@ public struct CodeEditor: View {
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, environment.configuration)
+        .onAppear {
+            // Start monitoring if using default memory monitor
+            if environment.memoryMonitor == nil {
+                defaultMemoryMonitor.startMonitoring()
+            }
+        }
     }
     
     // MARK: - Private Methods

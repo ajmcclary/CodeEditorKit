@@ -18,6 +18,9 @@ import Foundation
 /// monitor.memoryThresholdMB = 150.0
 /// monitor.enableAutomaticCleanup = true
 ///
+/// // Start monitoring explicitly (since v1.1.0)
+/// monitor.startMonitoring()
+///
 /// // Inject via configuration
 /// var config = EditorConfiguration()
 /// config.performance.memoryMonitor = monitor
@@ -94,13 +97,14 @@ public final class MemoryMonitor: ObservableObject {
     
     /// Initialize with optional memory provider
     /// - Parameter memoryProvider: Platform memory provider (defaults to system provider)
+    /// 
+    /// - Note: As of v1.1.0, monitoring no longer starts automatically. Call `startMonitoring()` explicitly
+    ///   to begin memory monitoring. This change provides better control over resource usage.
     public init(memoryProvider: PlatformMemoryProvider? = nil) {
         self.memoryProvider = memoryProvider ?? SystemMemoryProvider()
         
-        // Skip monitoring in test environment
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            startMonitoring()
-        }
+        // Note: No longer auto-starts monitoring.
+        // Call startMonitoring() explicitly when ready.
     }
     
     deinit {
@@ -199,6 +203,9 @@ public final class MemoryMonitor: ObservableObject {
     }
     
     /// Start memory monitoring
+    /// 
+    /// - Note: Since v1.1.0, monitoring must be started explicitly. This provides better control
+    ///   over when resource-intensive monitoring begins.
     public func startMonitoring() {
         stopMonitoring()
         

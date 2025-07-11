@@ -125,6 +125,11 @@ public final class AsyncSyntaxHighlighter {
         )
     }
     
+    /// Clear all cached tokens
+    public func clearCache() async {
+        await tokenCache.clearCache()
+    }
+    
     // MARK: - Private Methods
     
     private func performHighlighting(

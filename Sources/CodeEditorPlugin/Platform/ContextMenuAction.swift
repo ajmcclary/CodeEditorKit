@@ -190,7 +190,7 @@ private class ContextMenuActionTarget: NSObject {
 #endif
 
 /// Protocol for types that can provide context menus
-public protocol ContextMenuProvider: Sendable {
+internal protocol ContextMenuProvider: Sendable {
     /// Create a context menu for the given context
     func createContextMenu(for range: NSRange, in textView: CodeEditorView) -> ContextMenuBuilder
 }

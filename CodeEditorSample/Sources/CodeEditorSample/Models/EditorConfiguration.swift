@@ -124,7 +124,7 @@ enum ConfigurationPreset: String, CaseIterable {
         switch self {
         case .fullFeatured:
             return EditorConfigurationBuilder()
-                .showLineNumbers(true)
+                .isLineNumbersEnabled(true)
                 .showInvisibleCharacters(false)
                 .highlightSelectedLine(true)
                 .wrapLines(false)
@@ -150,7 +150,7 @@ enum ConfigurationPreset: String, CaseIterable {
 
         case .readOnly:
             return EditorConfigurationBuilder(base: .readOnly)
-                .showLineNumbers(true)
+                .isLineNumbersEnabled(true)
                 .fontSize(13)
                 .lineSpacing(1.2)
                 .enableAnnotations(true)
@@ -161,7 +161,7 @@ enum ConfigurationPreset: String, CaseIterable {
                 .fontSize(16)
                 .lineSpacing(1.6)
                 .tabWidth(2)
-                .showLineNumbers(false)
+                .isLineNumbersEnabled(false)
                 .enableSpellCheck(true)
                 .build()
 
@@ -169,7 +169,7 @@ enum ConfigurationPreset: String, CaseIterable {
             return EditorConfigurationBuilder(base: .presentation)
                 .fontSize(20)
                 .lineSpacing(1.4)
-                .showLineNumbers(true)
+                .isLineNumbersEnabled(true)
                 .highlightSelectedLine(true)
                 .wrapLines(false)
                 .build()

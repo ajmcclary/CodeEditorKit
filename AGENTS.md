@@ -144,7 +144,7 @@ textView.language = .python
 
 ## Testing Requirements
 
-- **Main Package**: 498 tests in `Tests/CodeEditorPluginTests/`
+- **Main Package**: 622 tests in `Tests/CodeEditorPluginTests/`
 - **Sample App**: 35 tests in `CodeEditorSample/Tests/`
 - **Performance**: Include benchmarks for new features
 - **Platforms**: Test macOS, iOS, and Mac Catalyst

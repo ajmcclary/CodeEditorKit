@@ -345,9 +345,11 @@ public actor EditorEventPublisher {
         // Clean up deallocated handlers
         cleanupDeallocatedHandlers()
         
-        // Publish to all active handlers on MainActor
-        for handler in activeHandlers {
-            Task { @MainActor in
+        // Publish to all active handlers in a single task to avoid excessive task creation
+        guard !activeHandlers.isEmpty else { return }
+        
+        Task { @MainActor in
+            for handler in activeHandlers {
                 handler.handle(event)
             }
         }

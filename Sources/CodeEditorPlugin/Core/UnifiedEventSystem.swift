@@ -6,12 +6,6 @@ import Foundation
 /// Centralized event system for all editor events across platforms
 @MainActor
 public final class UnifiedEventSystem: ObservableObject {
-    // MARK: - Singleton
-    
-    /// Shared instance for backward compatibility
-    @available(*, deprecated, message: "Use dependency injection instead of the shared singleton")
-    public static let shared = UnifiedEventSystem()
-    
     // MARK: - Properties
     
     /// Main event publisher
@@ -319,7 +313,7 @@ public struct EventMetrics {
 // MARK: - Circular Buffer
 
 /// Simple circular buffer for event history
-private struct CircularBuffer<T> {
+private struct CircularBuffer<T: Sendable>: Sendable {
     private var buffer: [T?]
     private var writeIndex = 0
     private var count = 0

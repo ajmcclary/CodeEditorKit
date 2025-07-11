@@ -33,6 +33,7 @@ extension CodeEditorView {
     /// ```
     ///
     /// - SeeAlso: `removeAnnotation(withId:)`, `removeAllAnnotations()`, `AnnotationsDataSource`
+    @MainActor
     public func addAnnotation(_ annotation: Annotation) {
         appendAnnotation(annotation)
         updateAnnotationView(for: annotation)
@@ -54,6 +55,7 @@ extension CodeEditorView {
     /// ```
     ///
     /// - SeeAlso: `addAnnotation(_:)`, `removeAllAnnotations()`
+    @MainActor
     public func removeAnnotation(withId id: String) {
         removeAnnotation { $0.id == id }
         annotationViews[id]?.removeFromSuperview()
@@ -65,6 +67,7 @@ extension CodeEditorView {
     /// Convenience method for removing an annotation by its instance.
     ///
     /// - Parameter annotation: The annotation to remove
+    @MainActor
     public func removeAnnotation(_ annotation: Annotation) {
         removeAnnotation(withId: annotation.id)
     }
@@ -87,6 +90,7 @@ extension CodeEditorView {
     /// ```
     ///
     /// - SeeAlso: `addAnnotation(_:)`, `removeAnnotation(withId:)`
+    @MainActor
     public func removeAllAnnotations() {
         // Call the internal method to clear the array
         clearAnnotations() 
@@ -121,12 +125,14 @@ extension CodeEditorView {
     ///
     /// This method refreshes the annotation views based on the current annotations or data source.
     /// It should be called after external changes to annotations that require UI updates.
+    @MainActor
     public func reloadAnnotations() {
         updateAnnotationViews()
     }
 
     // MARK: - Private Methods
     
+    @MainActor
     private func updateAnnotationView(for annotation: Annotation) {
         // Remove existing view if any
         if let existingView = annotationViews[annotation.id] {
@@ -210,6 +216,7 @@ extension CodeEditorView {
     }
     
     /// Update all annotation views (called during layout)
+    @MainActor
     internal func updateAnnotationViews() {
         for annotation in annotations {
             updateAnnotationView(for: annotation)

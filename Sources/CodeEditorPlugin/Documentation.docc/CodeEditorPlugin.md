@@ -66,6 +66,7 @@ See <doc:QuickStart> for more examples and advanced usage.
 - <doc:Annotation-System>
 - <doc:Performance-Monitoring>
 - <doc:MemoryMonitor-Injection>
+- <doc:Unified-Event-System>
 - <doc:Code-Folding-API>
 - <doc:Production-Reliability>
 - <doc:Plugin-Architecture>
@@ -87,6 +88,7 @@ See <doc:QuickStart> for more examples and advanced usage.
 
 - <doc:DocC-Documentation-Guide>
 - <doc:Troubleshooting>
+- <doc:Deprecation-Timeline>
 
 ### API Reference
 
@@ -95,6 +97,7 @@ See <doc:QuickStart> for more examples and advanced usage.
 - ``CodeEditor``
 - ``SyntaxHighlightingCoordinator``
 - ``Theme``
+- ``UnifiedEventSystem``
 
 ## See Also
 

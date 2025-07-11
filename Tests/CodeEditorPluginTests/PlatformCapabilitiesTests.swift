@@ -408,4 +408,134 @@ final class PlatformCapabilitiesTests: XCTestCase {
         XCTAssertFalse(inputCaps.preferredInputMethods.contains(.keyboard), "iOS should not prefer keyboard")
         #endif
     }
+    
+    // MARK: - Mac Catalyst-specific Tests
+    
+    @MainActor
+    func testCADisplayLinkSupportOnCatalyst() {
+        let capabilities = PlatformCapabilities.shared
+        let perfCaps = capabilities.performanceCapabilities
+        
+        #if targetEnvironment(macCatalyst)
+        // Mac Catalyst should follow macOS availability for CADisplayLink (14.0+)
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        if systemVersion.majorVersion >= 14 {
+            XCTAssertTrue(perfCaps.supportsCADisplayLink, 
+                         "Mac Catalyst on macOS 14+ should support CADisplayLink")
+        } else {
+            XCTAssertFalse(perfCaps.supportsCADisplayLink,
+                          "Mac Catalyst on macOS <14 should not support CADisplayLink")
+        }
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS should support CADisplayLink on 14.0+
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        if systemVersion.majorVersion >= 14 {
+            XCTAssertTrue(perfCaps.supportsCADisplayLink,
+                         "macOS 14+ should support CADisplayLink")
+        } else {
+            XCTAssertFalse(perfCaps.supportsCADisplayLink,
+                          "macOS <14 should not support CADisplayLink")
+        }
+        #elseif canImport(UIKit)
+        // iOS always supports CADisplayLink
+        XCTAssertTrue(perfCaps.supportsCADisplayLink,
+                     "iOS should always support CADisplayLink")
+        #endif
+    }
+    
+    @MainActor
+    func testCatalystPerformanceCapabilities() {
+        let capabilities = PlatformCapabilities.shared
+        let perfCaps = capabilities.performanceCapabilities
+        
+        #if targetEnvironment(macCatalyst)
+        // Catalyst-specific performance capability checks
+        XCTAssertTrue(perfCaps.supportsHardwareAcceleration,
+                     "Mac Catalyst should support hardware acceleration")
+        XCTAssertTrue(perfCaps.supportsBackgroundProcessing,
+                     "Mac Catalyst should support background processing")
+        XCTAssertTrue(perfCaps.supportsSmoothScrolling,
+                     "Mac Catalyst should support smooth scrolling")
+        
+        // Catalyst should be treated as desktop-class for memory
+        let memoryProfile = perfCaps.memoryProfile
+        XCTAssertNotEqual(
+            memoryProfile,
+            .low,
+            "Mac Catalyst on desktop should not have low memory profile"
+        )
+        #endif
+    }
+    
+    @MainActor
+    func testCatalystFeatureAvailability() {
+        let capabilities = PlatformCapabilities.shared
+        
+        #if targetEnvironment(macCatalyst)
+        // Test Catalyst-specific feature availability
+        
+        // Features that should be available on Catalyst
+        XCTAssertTrue(capabilities.isFeatureAvailable(.syntaxHighlighting),
+                     "Catalyst should support syntax highlighting")
+        XCTAssertTrue(capabilities.isFeatureAvailable(.lineNumbers),
+                     "Catalyst should support line numbers")
+        XCTAssertTrue(capabilities.isFeatureAvailable(.codeFolding),
+                     "Catalyst should support code folding")
+        XCTAssertTrue(capabilities.isFeatureAvailable(.findReplace),
+                     "Catalyst should support find/replace")
+        XCTAssertTrue(capabilities.isFeatureAvailable(.hardwareAcceleration),
+                     "Catalyst should support hardware acceleration")
+        
+        // Features with partial availability on Catalyst
+        XCTAssertEqual(
+            capabilities.getFeatureAvailability(.goToDefinition),
+            .partial,
+            "Catalyst should have partial goToDefinition support"
+        )
+        XCTAssertEqual(
+            capabilities.getFeatureAvailability(.symbolNavigation),
+            .partial,
+            "Catalyst should have partial symbol navigation support"
+        )
+        
+        // Features that should NOT be available on Catalyst
+        XCTAssertFalse(capabilities.isFeatureAvailable(.languageServerProtocol),
+                      "Catalyst should not support LSP (no process spawning)")
+        XCTAssertFalse(capabilities.isFeatureAvailable(.multipleCursors),
+                      "Catalyst should not support multiple cursors")
+        
+        // Minimap support (should be available on Catalyst)
+        XCTAssertTrue(capabilities.isFeatureAvailable(.minimap),
+                     "Catalyst should support minimap")
+        #endif
+    }
+    
+    @MainActor
+    func testCatalystRecommendedConfiguration() {
+        let capabilities = PlatformCapabilities.shared
+        
+        #if targetEnvironment(macCatalyst)
+        let config = capabilities.recommendedConfiguration()
+        
+        // Catalyst should use desktop-optimized settings
+        XCTAssertTrue(config.display.isLineNumbersEnabled,
+                     "Catalyst should show line numbers by default")
+        XCTAssertTrue(config.display.highlightSelectedLine,
+                     "Catalyst should highlight selected line")
+        XCTAssertTrue(config.performance.useHardwareAcceleration,
+                     "Catalyst should use hardware acceleration")
+        
+        // Font size varies based on device type in Catalyst
+        // Base Catalyst uses 14.0, iPad Catalyst uses 15.0
+        XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0,
+                     "Catalyst should use 14pt or 15pt font size")
+        
+        // Gutter width should be optimized for Catalyst
+        XCTAssertEqual(
+            config.layout.gutterWidth,
+            45.0,
+            "Catalyst should use 45pt gutter width"
+        )
+        #endif
+    }
 }
