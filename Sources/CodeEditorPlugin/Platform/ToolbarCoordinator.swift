@@ -6,44 +6,41 @@ import UIKit
 import AppKit
 #endif
 
-/// Coordinator responsible for creating and managing cross-platform toolbar items
+/// Coordinator responsible for creating and managing platform-specific toolbar items
 ///
 /// `ToolbarCoordinator` provides unified toolbar management across different platforms,
-/// ensuring appropriate toolbar items are available based on platform capabilities
-/// and user interface idioms.
+/// creating appropriate toolbar items and handling their configuration based on
+/// platform capabilities and conventions.
 ///
 /// ## Overview
 ///
-/// This coordinator abstracts the differences between:
-/// - macOS: Full-featured toolbar with extensive options
-/// - iOS iPad: Rich toolbar with most desktop features
-/// - iOS iPhone: Simplified toolbar with essential features only
-/// - Mac Catalyst: Desktop-style toolbar with touch considerations
+/// This coordinator abstracts toolbar differences between:
+/// - macOS: Full desktop toolbar with rich customization
+/// - iOS: Compact toolbar with essential actions
+/// - Mac Catalyst: Hybrid approach supporting both paradigms
 ///
 /// ## Features
 ///
-/// - **Platform-Adaptive**: Automatically adjusts toolbar based on platform
-/// - **Capability-Aware**: Only shows items for supported features
-/// - **Accessibility**: Ensures all toolbar items are properly accessible
-/// - **Customizable**: Allows for custom toolbar configurations
+/// - **Smart Item Selection**: Automatically selects appropriate items per platform
+/// - **Keyboard Shortcuts**: Configures shortcuts where supported
+/// - **Adaptive Layouts**: Adjusts for device size and orientation
+/// - **Custom Actions**: Supports both built-in and custom toolbar actions
 ///
 /// ## Example Usage
 ///
 /// ```swift
-/// let coordinator = ToolbarCoordinator.shared
+/// let coordinator = ToolbarCoordinator()
 /// 
 /// // Get platform-appropriate toolbar items
 /// let items = coordinator.createToolbarItems()
 /// 
-/// // Create custom toolbar for specific context
-/// let editingItems = coordinator.createEditingToolbar()
-/// 
-/// // Check if toolbar should be shown
-/// let shouldShow = coordinator.shouldShowToolbar()
+/// // Create specific toolbar types
+/// let editingTools = coordinator.createEditingToolbar()
+/// let navigationTools = coordinator.createNavigationToolbar()
 /// ```
 ///
 /// - SeeAlso: ``CrossPlatformCoordinator`` for overall coordination
-/// - SeeAlso: ``PlatformCapabilities`` for feature detection
+/// - SeeAlso: ``ToolbarItem`` for toolbar item structure
 @MainActor
 public final class ToolbarCoordinator: ObservableObject {
     /// Shared instance for backward compatibility
@@ -67,26 +64,43 @@ public final class ToolbarCoordinator: ObservableObject {
     
     /// Create platform-appropriate toolbar items
     ///
-    /// This method generates a set of toolbar items based on the current platform
-    /// and available capabilities.
+    /// This method returns a default set of toolbar items optimized for the current platform.
+    /// The selection and ordering of items is based on platform conventions and available space.
     ///
     /// - Returns: Array of toolbar items appropriate for the current platform
     public func createToolbarItems() -> [ToolbarItem] {
-        var items: [ToolbarItem] = []
-        
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        items = createMacOSToolbar()
+        return createMacOSToolbar()
+        #elseif targetEnvironment(macCatalyst)
+        return createCatalystToolbar()
         #else
-        items = createIOSToolbar()
+        return createIOSToolbar()
+        #endif
+    }
+    
+    /// Configure a toolbar item with platform-specific attributes
+    ///
+    /// - Parameters:
+    ///   - item: The toolbar item to configure
+    ///   - view: Optional view for context-specific configuration
+    /// - Returns: Configured toolbar item
+    public func configureToolbarItem(_ item: ToolbarItem, for view: PlatformView? = nil) -> ToolbarItem {
+        let configuredItem = item
+        
+        // Platform-specific configuration
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS supports full keyboard shortcuts
+        #elseif canImport(UIKit)
+        // iOS may need different icons or actions
+        if view != nil && UIDevice.current.userInterfaceIdiom == .phone {
+            // Adjust for compact space on iPhone
+        }
         #endif
         
-        logger.debug("Created \(items.count) toolbar items for current platform")
-        return items
+        return configuredItem
     }
     
     /// Create editing-focused toolbar items
-    ///
-    /// Returns a minimal set of toolbar items focused on text editing operations.
     ///
     /// - Returns: Array of essential editing toolbar items
     public func createEditingToolbar() -> [ToolbarItem] {
@@ -94,269 +108,263 @@ public final class ToolbarCoordinator: ObservableObject {
         
         // Universal editing actions
         items.append(ToolbarItem(
-            id: "undo",
             title: "Undo",
             icon: "arrow.uturn.backward",
-            action: .custom { }
+            action: .custom(id: "undo"),
+            id: "undo"
         ))
         
         items.append(ToolbarItem(
-            id: "redo",
             title: "Redo", 
             icon: "arrow.uturn.forward",
-            action: .custom { }
+            action: .custom(id: "redo"),
+            id: "redo"
         ))
         
         items.append(ToolbarItem(
-            id: "find",
             title: "Find",
             icon: "magnifyingglass",
-            action: .find
+            action: .find,
+            id: "find"
         ))
         
         // Platform-specific additions
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         items.append(ToolbarItem(
-            id: "replace",
             title: "Replace",
             icon: "arrow.left.arrow.right",
-            action: .replace
+            action: .replace,
+            id: "replace"
         ))
-        #else
-        // On iOS, only add replace on iPad
-        #if canImport(UIKit)
+        #elseif canImport(UIKit)
+        // Add replace only on iPad
         if UIDevice.current.userInterfaceIdiom == .pad {
             items.append(ToolbarItem(
-                id: "replace",
                 title: "Replace",
                 icon: "arrow.left.arrow.right",
-                action: .replace
+                action: .replace,
+                id: "replace"
             ))
         }
-        #endif
         #endif
         
         return items
     }
     
-    /// Create debugging/development toolbar items
+    /// Create navigation-focused toolbar items
     ///
-    /// Returns toolbar items useful for debugging and development tasks.
-    ///
-    /// - Returns: Array of development-focused toolbar items
-    public func createDevelopmentToolbar() -> [ToolbarItem] {
-        // Development toolbar is available on all platforms
-        // Individual items check their own capabilities
-        
+    /// - Returns: Array of navigation toolbar items
+    public func createNavigationToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
         
         items.append(ToolbarItem(
-            id: "symbols",
             title: "Symbols",
             icon: "list.bullet.indent",
-            action: .showSymbols
+            action: .showSymbols,
+            id: "symbols"
         ))
         
         items.append(ToolbarItem(
-            id: "format",
             title: "Format",
             icon: "text.alignleft",
-            action: .format
+            action: .format,
+            id: "format"
         ))
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS gets additional development tools
         items.append(ToolbarItem(
-            id: "console",
             title: "Console",
             icon: "terminal",
-            action: .custom { }
+            action: .custom(id: "console"),
+            id: "console"
         ))
         
         items.append(ToolbarItem(
-            id: "debugger",
             title: "Debugger",
             icon: "ladybug",
-            action: .custom { }
+            action: .custom(id: "debugger"),
+            id: "debugger"
         ))
         #endif
         
         return items
     }
     
-    /// Check if toolbar should be shown on current platform
+    /// Create view customization toolbar items
     ///
-    /// - Returns: True if toolbar is appropriate for the current platform
-    public func shouldShowToolbar() -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return true // Always show toolbar on macOS
-        #else
-        // On iOS, show toolbar based on device and available space
-        #if canImport(UIKit)
-        return UIDevice.current.userInterfaceIdiom == .pad
-        #else
-        return false
-        #endif
-        #endif
+    /// - Returns: Array of view customization toolbar items
+    public func createViewToolbar() -> [ToolbarItem] {
+        var items: [ToolbarItem] = []
+        
+        items.append(ToolbarItem(
+            title: "Toggle Line Numbers",
+            icon: "number",
+            action: .toggleLineNumbers,
+            id: "toggle-line-numbers"
+        ))
+        
+        if capabilities.isFeatureAvailable(.minimap) {
+            items.append(ToolbarItem(
+                title: "Toggle Minimap",
+                icon: "map",
+                action: .toggleMinimap,
+                id: "toggle-minimap"
+            ))
+        }
+        
+        return items
     }
     
-    /// Get recommended toolbar style for current platform
+    /// Validate if a toolbar action is available on the current platform
     ///
-    /// - Returns: Platform-appropriate toolbar style identifier
-    public func recommendedToolbarStyle() -> String {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        return "unified"
-        #else
-        #if canImport(UIKit)
-        return UIDevice.current.userInterfaceIdiom == .pad ? "prominent" : "compact"
-        #else
-        return "compact"
-        #endif
-        #endif
-    }
-    
-    /// Check if specific toolbar item should be enabled
-    ///
-    /// - Parameter itemId: The identifier of the toolbar item
-    /// - Returns: True if the item should be enabled
-    public func isToolbarItemEnabled(_ itemId: String) -> Bool {
-        switch itemId {
-        case "find", "undo", "redo":
-            return true // Always available
-        case "replace":
-            return capabilities.isFeatureAvailable(.findReplace)
-
-        case "symbols":
+    /// - Parameter action: The toolbar action to validate
+    /// - Returns: True if the action is available
+    public func isActionAvailable(_ action: ToolbarItem.ToolbarAction) -> Bool {
+        switch action {
+        case .find:
+            return true // Available on all platforms
+            
+        case .replace:
+            #if canImport(UIKit)
+            // Replace is available on iPad and Mac Catalyst
+            return UIDevice.current.userInterfaceIdiom == .pad || capabilities.platform == .catalyst
+            #else
+            return true
+            #endif
+            
+        case .showSymbols:
             return capabilities.isFeatureAvailable(.symbolNavigation)
-
-        case "format":
-            return true // Code formatting is always available
-        case "console", "debugger":
-            return capabilities.currentPlatform == .macOS // Development tools only on macOS
-        default:
+            
+        case .format:
+            return capabilities.isFeatureAvailable(.autoIndent)
+            
+        case .toggleLineNumbers:
+            return true
+            
+        case .toggleMinimap:
+            return capabilities.isFeatureAvailable(.minimap)
+            
+        case .custom:
             return true
         }
     }
     
-    // MARK: - Platform-Specific Implementation
+    // MARK: - Private Methods
     
     private func createMacOSToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
         
         // Full toolbar on macOS
         items.append(ToolbarItem(
-            id: "find",
             title: "Find",
             icon: "magnifyingglass",
-            action: .find
+            action: .find,
+            id: "find"
         ))
         
         items.append(ToolbarItem(
-            id: "replace",
             title: "Replace",
             icon: "arrow.left.arrow.right",
-            action: .replace
+            action: .replace,
+            id: "replace"
         ))
         
         items.append(ToolbarItem(
-            id: "symbol",
             title: "Symbols",
             icon: "list.bullet.indent",
-            action: .showSymbols
+            action: .showSymbols,
+            id: "symbol"
         ))
         
         items.append(ToolbarItem(
-            id: "format",
             title: "Format",
             icon: "text.alignleft",
-            action: .format
+            action: .format,
+            id: "format"
         ))
         
         // Additional macOS-specific items
         items.append(ToolbarItem(
-            id: "minimap",
             title: "Minimap",
             icon: "map",
-            action: .custom { }
+            action: .custom(id: "minimap"),
+            id: "minimap"
         ))
         
         items.append(ToolbarItem(
-            id: "navigator",
             title: "Navigator",
             icon: "sidebar.left",
-            action: .custom { }
+            action: .custom(id: "navigator"),
+            id: "navigator"
         ))
         
-        logger.debug("Created macOS toolbar with \(items.count) items")
         return items
     }
     
+    #if canImport(UIKit)
     private func createIOSToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
         
         // Essential items for all iOS devices
         items.append(ToolbarItem(
-            id: "find",
             title: "Find",
             icon: "magnifyingglass",
-            action: .find
+            action: .find,
+            id: "find"
         ))
         
-        // iPad gets additional features
-        #if canImport(UIKit)
+        // iPad gets more items
         if UIDevice.current.userInterfaceIdiom == .pad {
             items.append(ToolbarItem(
-                id: "replace",
                 title: "Replace",
                 icon: "arrow.left.arrow.right",
-                action: .replace
+                action: .replace,
+                id: "replace"
             ))
             
             items.append(ToolbarItem(
-                id: "symbol",
                 title: "Symbols",
                 icon: "list.bullet.indent",
-                action: .showSymbols
+                action: .showSymbols,
+                id: "symbol"
             ))
             
             items.append(ToolbarItem(
-                id: "format",
                 title: "Format",
                 icon: "text.alignleft",
-                action: .format
+                action: .format,
+                id: "format"
             ))
         }
-        #endif
         
-        // iPhone gets minimal toolbar
-        #if canImport(UIKit)
+        // iPhone gets compact toolbar
         if UIDevice.current.userInterfaceIdiom == .phone {
             items.append(ToolbarItem(
-                id: "share",
                 title: "Share",
                 icon: "square.and.arrow.up",
-                action: .custom { }
+                action: .custom(id: "share"),
+                id: "share"
             ))
         }
-        #endif
         
-        #if canImport(UIKit)
-        logger.debug("Created iOS toolbar with \(items.count) items for \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
-        #else
-        logger.debug("Created iOS toolbar with \(items.count) items")
-        #endif
         return items
     }
     
-    // MARK: - Toolbar Item Factories
+    private func createCatalystToolbar() -> [ToolbarItem] {
+        // Mac Catalyst gets a hybrid approach
+        // Similar to macOS but respects iOS constraints
+        createMacOSToolbar()
+    }
+    #endif
     
-    /// Create a custom toolbar item with specific configuration
+    /// Create a custom toolbar item
     ///
     /// - Parameters:
     ///   - id: Unique identifier for the item
     ///   - title: Display title
-    ///   - icon: System icon name
-    ///   - action: Action to perform when activated
+    ///   - icon: SF Symbol name
+    ///   - action: Closure to execute when tapped
     /// - Returns: Configured toolbar item
     public func createCustomToolbarItem(
         id: String,
@@ -364,109 +372,110 @@ public final class ToolbarCoordinator: ObservableObject {
         icon: String,
         action: @escaping () -> Void
     ) -> ToolbarItem {
-        ToolbarItem(
-            id: id,
+        // Note: The action closure parameter is not used since ToolbarItem.ToolbarAction
+        // uses an id-based system. The actual action handling is done in executeAction.
+        _ = action
+        
+        return ToolbarItem(
             title: title,
             icon: icon,
-            action: .custom(action: action)
+            action: .custom(id: id),
+            id: id
         )
     }
     
-    /// Create a spacer toolbar item for layout purposes
-    ///
-    /// - Returns: Spacer toolbar item
+    /// Create a spacer toolbar item
+    /// - Returns: Fixed space toolbar item
     public func createSpacerItem() -> ToolbarItem {
         ToolbarItem(
-            id: "spacer",
             title: "",
             icon: "",
-            action: .custom { }
+            action: .custom(id: "spacer"),
+            id: "spacer"
         )
     }
     
     /// Create a flexible space toolbar item
-    ///
     /// - Returns: Flexible space toolbar item
     public func createFlexibleSpaceItem() -> ToolbarItem {
         ToolbarItem(
-            id: "flexible-space",
             title: "",
             icon: "",
-            action: .custom { }
+            action: .custom(id: "flexible-space"),
+            id: "flexible-space"
         )
     }
 }
 
-// MARK: - Toolbar Configuration
+// MARK: - Toolbar Actions Extension
 
 extension ToolbarCoordinator {
-    /// Configuration options for toolbar appearance and behavior
-    public struct ToolbarConfiguration {
-        public var showTitles: Bool = true
-        public var allowCustomization: Bool = true
-        public var compactMode: Bool = false
-        public var primaryItems: [String] = []
-        public var secondaryItems: [String] = []
-        
-        public init() {}
-    }
-    
-    /// Get default toolbar configuration for current platform
-    ///
-    /// - Returns: Platform-appropriate toolbar configuration
-    public func defaultConfiguration() -> ToolbarConfiguration {
-        var config = ToolbarConfiguration()
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS defaults
-        config.showTitles = true
-        config.allowCustomization = true
-        config.compactMode = false
-        config.primaryItems = ["find", "replace", "symbol", "format"]
-        #else
-        // iOS defaults
-        #if canImport(UIKit)
-        config.showTitles = UIDevice.current.userInterfaceIdiom == .pad
-        config.allowCustomization = false
-        config.compactMode = UIDevice.current.userInterfaceIdiom == .phone
-        config.primaryItems = UIDevice.current.userInterfaceIdiom == .pad ? 
-            ["find", "replace", "symbol"] : ["find", "share"]
-        #else
-        config.showTitles = false
-        config.allowCustomization = false
-        config.compactMode = true
-        config.primaryItems = ["find"]
-        #endif
-        #endif
-        
-        return config
-    }
-    
-    /// Apply configuration to toolbar items
+    /// Execute a toolbar action with the associated text view
     ///
     /// - Parameters:
-    ///   - items: Toolbar items to configure
-    ///   - configuration: Configuration to apply
-    /// - Returns: Configured toolbar items
-    public func applyConfiguration(
-        to items: [ToolbarItem],
-        with configuration: ToolbarConfiguration
-    ) -> [ToolbarItem] {
-        var configuredItems = items
-        
-        // Filter based on primary/secondary items if specified
-        if !configuration.primaryItems.isEmpty {
-            configuredItems = configuredItems.filter { item in
-                configuration.primaryItems.contains(item.id)
-            }
+    ///   - action: The toolbar action to execute
+    ///   - textView: The text view to perform the action on
+    public func executeAction(_ action: ToolbarItem.ToolbarAction, on textView: CodeEditorView) {
+        switch action {
+        case .find:
+            // Trigger find UI
+            logger.debug("Find action triggered")
+            
+        case .replace:
+            // Trigger replace UI
+            logger.debug("Replace action triggered")
+            
+        case .showSymbols:
+            // Show symbol navigator
+            logger.debug("Show symbols action triggered")
+            
+        case .format:
+            // Format code
+            logger.debug("Format action triggered")
+            
+        case .toggleLineNumbers:
+            // Toggle line numbers
+            var config = textView.configuration
+            config.display.showLineNumbers.toggle()
+            textView.configuration = config
+            logger.debug("Toggle line numbers action triggered")
+            
+        case .toggleMinimap:
+            // Toggle minimap
+            var config = textView.configuration
+            config.display.showMinimap.toggle()
+            textView.configuration = config
+            logger.debug("Toggle minimap action triggered")
+            
+        case let .custom(id):
+            // Handle custom action
+            logger.debug("Custom action triggered: \(id)")
         }
-        
-        // Apply compact mode adjustments
-        if configuration.compactMode {
-            // In compact mode, limit to essential items
-            configuredItems = Array(configuredItems.prefix(3))
-        }
-        
-        return configuredItems
     }
 }
+
+// MARK: - SwiftUI Integration
+
+#if canImport(SwiftUI)
+extension ToolbarCoordinator {
+    /// Create SwiftUI toolbar content
+    ///
+    /// - Parameter textView: The associated text view for actions
+    /// - Returns: SwiftUI toolbar content
+    @ViewBuilder
+    public func toolbarContent(for textView: CodeEditorView) -> some View {
+        ForEach(createToolbarItems()) { item in
+            Button(action: {
+                self.executeAction(item.action, on: textView)
+            }) {
+                Label(item.title, systemImage: item.icon)
+            }
+            .keyboardShortcut(
+                item.keyboardShortcut.flatMap { shortcut in
+                    shortcut.key.first.map { KeyboardShortcut(KeyEquivalent($0)) }
+                }
+            )
+        }
+    }
+}
+#endif

@@ -115,13 +115,15 @@ final class TextKitBridge {
             return nil
         }
         
-        let startLocation = textContentManager.location(textContentManager.documentRange.location, offsetBy: nsRange.location)
-        let endLocation = textContentManager.location(startLocation!, offsetBy: nsRange.length)
-        
-        if let start = startLocation, let end = endLocation {
-            return NSTextRange(location: start, end: end)
+        guard let startLocation = textContentManager.location(textContentManager.documentRange.location, offsetBy: nsRange.location) else {
+            return nil
         }
-        return nil
+        
+        guard let endLocation = textContentManager.location(startLocation, offsetBy: nsRange.length) else {
+            return nil
+        }
+        
+        return NSTextRange(location: startLocation, end: endLocation)
     }
     
     /// Convert NSTextRange to NSRange for TextKit1 compatibility

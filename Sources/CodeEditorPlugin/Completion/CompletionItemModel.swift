@@ -5,6 +5,13 @@ import AppKit
 import UIKit
 #endif
 
+// MARK: - Errors
+
+/// Errors that can occur during completion request operations
+public enum CompletionRequestError: Error {
+    case noActiveRequest
+}
+
 // MARK: - Completion Item Model
 
 /// Represents a code completion item with comprehensive metadata.
@@ -581,7 +588,10 @@ public final class CompletionManager {
             return result
         }
 
-        return try await currentRequest!.value
+        guard let request = currentRequest else {
+            throw CompletionRequestError.noActiveRequest
+        }
+        return try await request.value
     }
 
     /// Request completions with debouncing and throttling

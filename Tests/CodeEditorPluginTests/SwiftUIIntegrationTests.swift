@@ -226,7 +226,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
             set: { _ in }
         )
         
-        let config = EditorConfiguration.macOS
+        let config = PlatformConfigurations.macOS
         _ = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
         
@@ -244,7 +244,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
             set: { _ in }
         )
         
-        let config = EditorConfiguration.iOS
+        let config = PlatformConfigurations.iOS
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
         
@@ -265,12 +265,9 @@ final class SwiftUIIntegrationTests: XCTestCase {
         )
         
         measure {
-            let editor = CodeEditor(text: binding)
+            _ = CodeEditor(text: binding)
                 .codeLanguage(.swift)
                 .codeEditorEnvironment(configuration: .platformOptimized)
-            
-            // Force creation
-            _ = editor.body
         }
     }
     

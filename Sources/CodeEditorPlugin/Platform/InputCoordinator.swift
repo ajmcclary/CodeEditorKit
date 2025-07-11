@@ -123,7 +123,7 @@ public final class InputCoordinator: ObservableObject {
         #endif
     }
     
-    private func handleTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
+    private func handleTouchInput(touches: Set<TouchInfo>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
         #if canImport(UIKit)
         return handleIOSTouchInput(touches: touches, phase: phase, in: textView)
         #else
@@ -269,7 +269,7 @@ public final class InputCoordinator: ObservableObject {
         return false
     }
     
-    private func handleIOSTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in _: CodeEditorView) -> Bool {
+    private func handleIOSTouchInput(touches: Set<TouchInfo>, phase: PlatformTouchPhase, in _: CodeEditorView) -> Bool {
         logger.debug("Handling iOS touch input: \(touches.count) touches, phase: \(String(describing: phase))")
         
         switch phase {
@@ -470,7 +470,7 @@ extension InputCoordinator {
     }
     
     /// Create a touch input event
-    public static func touchEvent(touches: Set<AnyHashable>, phase: PlatformTouchPhase) -> PlatformInputEvent {
+    public static func touchEvent(touches: Set<TouchInfo>, phase: PlatformTouchPhase) -> PlatformInputEvent {
         .touch(touches: touches, phase: phase)
     }
     

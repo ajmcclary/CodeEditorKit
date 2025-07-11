@@ -377,8 +377,7 @@ private struct CachedViewportData {
 extension CodeEditorView {
     /// Create or get the viewport manager for this text view
     public func getViewportManager() -> ViewportManager {
-        // This would need to be stored as a property in CodeEditorView
-        // For now, return a new instance with a new memory monitor
-        ViewportManager(textView: self, memoryMonitor: MemoryMonitor())
+        // Use the text view's existing memory monitor for proper dependency injection
+        ViewportManager(textView: self, memoryMonitor: memoryMonitor)
     }
 }

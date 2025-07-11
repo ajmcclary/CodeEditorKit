@@ -466,40 +466,6 @@ extension CodeEditor {
     ///
     /// - Note: On iOS, the keyboard will appear when the editor gains focus.
     ///         On macOS, the editor will receive keyboard input.
-    public func becomeFirstResponder() -> some View {
-        environment(\.codeEditorBecomeFirstResponder, true)
-    }
-    
-    /// Requests the code editor to become (or resign) first responder with an explicit state.
-    ///
-    /// Use this modifier to programmatically control when the editor gains or loses focus
-    /// based on the boolean parameter.
-    ///
-    /// - Parameter shouldBecomeFirstResponder: Whether the editor should become first responder
-    /// - Returns: A view with the first responder state set
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// struct ContentView: View {
-    ///     @State private var code = ""
-    ///     @State private var isEditing = false
-    ///     
-    ///     var body: some View {
-    ///         VStack {
-    ///             Button("Toggle Focus") {
-    ///                 isEditing.toggle()
-    ///             }
-    ///             
-    ///             CodeEditor(text: $code)
-    ///                 .becomeFirstResponder(isEditing)
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    public func becomeFirstResponder(_ shouldBecomeFirstResponder: Bool) -> some View {
-        environment(\.codeEditorBecomeFirstResponder, shouldBecomeFirstResponder)
-    }
     
     /// Configures a custom memory monitor for the editor.
     ///
@@ -540,7 +506,7 @@ extension CodeEditor {
     
     /// Sets a custom event system for publishing and subscribing to editor events.
     ///
-    /// By default, CodeEditor uses the deprecated `UnifiedEventSystem.shared` singleton.
+    /// By default, CodeEditor does not publish events unless an event system is provided.
     /// Use this modifier to inject a custom event system instance for better testability
     /// and isolation between multiple editors.
     ///

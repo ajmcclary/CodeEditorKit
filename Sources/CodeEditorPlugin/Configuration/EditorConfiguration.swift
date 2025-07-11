@@ -107,7 +107,7 @@ public struct EditorConfiguration: Codable, Sendable {
     public var performance = Performance()
     
     /// Event system for publishing and subscribing to editor events
-    /// If nil, the deprecated UnifiedEventSystem.shared will be used
+    /// If nil, no events will be published
     public var eventSystem: UnifiedEventSystem?
     
     // MARK: - Initialization

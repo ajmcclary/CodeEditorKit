@@ -111,10 +111,10 @@ public enum DebugEvent: Sendable {
 
 /// Base implementation of debug adapter with common functionality
 @MainActor
-open class BaseDebugAdapter: @preconcurrency DebugAdapter {
+internal class BaseDebugAdapter: @preconcurrency DebugAdapter {
     // Event subject
     private let eventSubject = PassthroughSubject<DebugEvent, Never>()
-    public var eventPublisher: AnyPublisher<DebugEvent, Never> {
+    var eventPublisher: AnyPublisher<DebugEvent, Never> {
         eventSubject.eraseToAnyPublisher()
     }
     
@@ -131,11 +131,11 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
     internal var nextSequence = 1
     internal var pendingRequests: [Int: CheckedContinuation<Any, Error>] = [:]
     
-    public init() {}
+    init() {}
     
     // MARK: - Protocol Implementation
     
-    open func initialize(capabilities _: DebugCapabilities) async throws {
+    internal func initialize(capabilities _: DebugCapabilities) async throws {
         // Send initialize request
         _ = try await sendRequest("initialize", arguments: [
             "clientID": "CodeEditorPlugin",
@@ -157,7 +157,7 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         _ = try await sendRequest("configurationDone", arguments: [:])
     }
     
-    open func launch(_ configuration: LaunchConfiguration) async throws {
+    internal func launch(_ configuration: LaunchConfiguration) async throws {
         var args: [String: Any] = [
             "name": configuration.name,
             "type": configuration.type,
@@ -185,12 +185,12 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         _ = try await sendRequest("launch", arguments: args)
     }
     
-    open func attach(_: LaunchConfiguration) async throws {
+    internal func attach(_: LaunchConfiguration) async throws {
         // Override in subclasses
         throw DebugError.adapterError("Attach not implemented")
     }
     
-    open func setBreakpoints(source: Source, breakpoints: [SourceBreakpoint]) async throws -> [Breakpoint] {
+    internal func setBreakpoints(source: Source, breakpoints: [SourceBreakpoint]) async throws -> [Breakpoint] {
         let response = try await sendRequest("setBreakpoints", arguments: [
             "source": [
                 "path": source.path,
@@ -215,27 +215,27 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         return breakpointsData.compactMap { parseBreakpoint($0) }
     }
     
-    open func `continue`(threadId: Int) async throws {
+    internal func `continue`(threadId: Int) async throws {
         _ = try await sendRequest("continue", arguments: ["threadId": threadId])
     }
     
-    open func next(threadId: Int) async throws {
+    internal func next(threadId: Int) async throws {
         _ = try await sendRequest("next", arguments: ["threadId": threadId])
     }
     
-    open func stepIn(threadId: Int) async throws {
+    internal func stepIn(threadId: Int) async throws {
         _ = try await sendRequest("stepIn", arguments: ["threadId": threadId])
     }
     
-    open func stepOut(threadId: Int) async throws {
+    internal func stepOut(threadId: Int) async throws {
         _ = try await sendRequest("stepOut", arguments: ["threadId": threadId])
     }
     
-    open func pause(threadId: Int) async throws {
+    internal func pause(threadId: Int) async throws {
         _ = try await sendRequest("pause", arguments: ["threadId": threadId])
     }
     
-    open func stackTrace(threadId: Int) async throws -> [StackFrame] {
+    internal func stackTrace(threadId: Int) async throws -> [StackFrame] {
         let response = try await sendRequest("stackTrace", arguments: [
             "threadId": threadId,
             "startFrame": 0,
@@ -250,7 +250,7 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         return stackFramesData.compactMap { parseStackFrame($0) }
     }
     
-    open func scopes(frameId: Int) async throws -> [Scope] {
+    internal func scopes(frameId: Int) async throws -> [Scope] {
         let response = try await sendRequest("scopes", arguments: ["frameId": frameId])
         
         guard let body = response["body"] as? [String: Any],
@@ -261,7 +261,7 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         return scopesData.compactMap { parseScope($0) }
     }
     
-    open func variables(variablesReference: Int) async throws -> [Variable] {
+    internal func variables(variablesReference: Int) async throws -> [Variable] {
         let response = try await sendRequest("variables", arguments: [
             "variablesReference": variablesReference
         ])
@@ -274,7 +274,7 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         return variablesData.compactMap { parseVariable($0) }
     }
     
-    open func evaluate(expression: String, frameId: Int?, context: EvaluateContext) async throws -> Variable {
+    internal func evaluate(expression: String, frameId: Int?, context: EvaluateContext) async throws -> Variable {
         var args: [String: Any] = [
             "expression": expression,
             "context": context.rawValue
@@ -301,11 +301,11 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
         )
     }
     
-    open func restart() async throws {
+    internal func restart() async throws {
         _ = try await sendRequest("restart", arguments: [:])
     }
     
-    open func disconnect() async throws {
+    internal func disconnect() async throws {
         _ = try await sendRequest("disconnect", arguments: ["restart": false])
         
         // Clean up process
@@ -320,11 +320,11 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
     
     // MARK: - Subclass Requirements
     
-    open var adapterID: String {
+    internal var adapterID: String {
         fatalError("Subclasses must override adapterID")
     }
     
-    open var adapterPath: String {
+    internal var adapterPath: String {
         fatalError("Subclasses must override adapterPath")
     }
     
@@ -464,9 +464,9 @@ open class BaseDebugAdapter: @preconcurrency DebugAdapter {
 
 /// LLDB debug adapter for Swift, C, C++, Objective-C
 @MainActor
-public class LLDBAdapter: BaseDebugAdapter {
-    override public var adapterID: String { "lldb" }
-    override public var adapterPath: String { "/usr/bin/lldb-vscode" }
+internal class LLDBAdapter: BaseDebugAdapter {
+    override internal var adapterID: String { "lldb" }
+    override internal var adapterPath: String { "/usr/bin/lldb-vscode" }
     
     deinit {
         // Cleanup is handled automatically by ARC
@@ -475,9 +475,9 @@ public class LLDBAdapter: BaseDebugAdapter {
 
 /// Node.js debug adapter for JavaScript/TypeScript
 @MainActor
-public class NodeDebugAdapter: BaseDebugAdapter {
-    override public var adapterID: String { "node" }
-    override public var adapterPath: String { "/usr/local/bin/node-debug2" }
+internal class NodeDebugAdapter: BaseDebugAdapter {
+    override internal var adapterID: String { "node" }
+    override internal var adapterPath: String { "/usr/local/bin/node-debug2" }
     
     deinit {
         // Cleanup is handled automatically by ARC
@@ -486,9 +486,9 @@ public class NodeDebugAdapter: BaseDebugAdapter {
 
 /// Python debug adapter
 @MainActor
-public class PythonDebugAdapter: BaseDebugAdapter {
-    override public var adapterID: String { "debugpy" }
-    override public var adapterPath: String { "/usr/local/bin/debugpy" }
+internal class PythonDebugAdapter: BaseDebugAdapter {
+    override internal var adapterID: String { "debugpy" }
+    override internal var adapterPath: String { "/usr/local/bin/debugpy" }
     
     deinit {
         // Cleanup is handled automatically by ARC

@@ -24,7 +24,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
         
         XCTAssertNotNil(coordinator)
-        XCTAssertEqual(coordinator.textDebounceInterval, 0.1) // Default is 0.1
+        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(100)) // Default is 100ms
         XCTAssertEqual(textChangeCount, 0)
         XCTAssertEqual(selectionChangeCount, 0)
     }
@@ -43,8 +43,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
         
         // Set custom debounce interval
-        coordinator.textDebounceInterval = 0.5
-        XCTAssertEqual(coordinator.textDebounceInterval, 0.5)
+        coordinator.textDebounceInterval = .milliseconds(500)
+        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(500))
     }
     
     // MARK: - Container Setup Tests
@@ -181,8 +181,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Simulate text change from editor
         coordinator.handleTextChange("new text from editor")
         
-        // Wait for debounce interval (0.1 seconds by default) plus a buffer
-        try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+        // Wait for debounce interval (100ms by default) plus a buffer
+        try await Task.sleep(for: .milliseconds(200))
         
         // The callback should have been called after the debounce
         XCTAssertEqual(capturedText, "new text from editor")
@@ -205,15 +205,15 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
         
         // Set a longer debounce interval
-        coordinator.textDebounceInterval = 0.5
+        coordinator.textDebounceInterval = .milliseconds(500)
         
         // Send multiple rapid updates
         coordinator.handleTextChange("a")
         coordinator.handleTextChange("ab")
         coordinator.handleTextChange("abc")
         
-        // Wait for debounce (0.5 seconds) plus buffer
-        try await Task.sleep(nanoseconds: 700_000_000) // 0.7 seconds
+        // Wait for debounce (500ms) plus buffer
+        try await Task.sleep(for: .milliseconds(700))
         
         // Should only get one update due to debouncing
         XCTAssertEqual(updateCount, 1)
@@ -336,7 +336,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
             textDebounceInterval: .seconds(0.5)
         )
         
-        XCTAssertEqual(coordinator.textDebounceInterval, 0.5)
+        XCTAssertEqual(coordinator.textDebounceInterval, .milliseconds(500))
         
         // Test helper cleanup
         CodeEditorRepresentableHelper.dismantle(coordinator: coordinator)

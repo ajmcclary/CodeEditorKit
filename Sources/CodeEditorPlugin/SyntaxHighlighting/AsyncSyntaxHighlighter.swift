@@ -216,19 +216,19 @@ public final class AsyncSyntaxHighlighter {
         language: Language,
         visibleRange: NSRange?
     ) async -> [HighlightedToken] {
-        // Use async/await pattern to avoid continuation management issues
-        await withTaskCancellationHandler {
-            await withUnsafeContinuation { continuation in
-                let requestId = UUID().uuidString
-                
-                // Update visible range for priority highlighting
-                if let visibleRange {
-                    backgroundHighlighter.updateVisibleRange(visibleRange)
-                }
-                
-                // Request background highlighting with high priority for visible content
-                let priority: HighlightingPriority = visibleRange != nil ? .high : .normal
-                
+        let requestId = UUID().uuidString
+        
+        // Update visible range for priority highlighting
+        if let visibleRange {
+            backgroundHighlighter.updateVisibleRange(visibleRange)
+        }
+        
+        // Request background highlighting with high priority for visible content
+        let priority: HighlightingPriority = visibleRange != nil ? .high : .normal
+        
+        // Use withTaskCancellationHandler and withCheckedContinuation together properly
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
                 backgroundHighlighter.requestHighlighting(
                     text: text,
                     language: language,
@@ -246,8 +246,10 @@ public final class AsyncSyntaxHighlighter {
                 }
             }
         } onCancel: {
-            // If the task is cancelled, we rely on the backgroundHighlighter's
-            // cleanup mechanisms to handle the request appropriately
+            // Cancel the background highlighting request if the task is cancelled
+            Task { @MainActor in
+                backgroundHighlighter.cancelRequest(requestId)
+            }
         }
     }
     

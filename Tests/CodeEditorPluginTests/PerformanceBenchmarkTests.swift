@@ -145,4 +145,100 @@ final class PerformanceBenchmarkTests: XCTestCase {
             }
         }
     }
+    
+    // MARK: - Large File Performance Benchmarks
+    
+    @MainActor
+    func testLargeFileLoadingPerformance() throws {
+        let editor = CodeEditorView()
+        
+        // Generate a moderately large file (100KB)
+        let lineContent = String(repeating: "a", count: 80) + "\n"
+        let largeContent = String(repeating: lineContent, count: 1_250) // ~100KB
+        
+        measure {
+            autoreleasepool {
+                editor.text = largeContent
+            }
+        }
+    }
+    
+    @MainActor
+    func testLargeFileLineNumberPerformance() throws {
+        let editor = CodeEditorView()
+        editor.isLineNumbersEnabled = true
+        
+        // Generate file with many lines
+        let content = String(repeating: "Line\n", count: 5_000)
+        
+        measure {
+            autoreleasepool {
+                editor.text = content
+                // Force line number calculation
+                _ = editor.lineIndexCache.lineCount
+            }
+        }
+    }
+    
+    @MainActor
+    func testLargeFileScrollingPerformance() throws {
+        let editor = CodeEditorView()
+        
+        // Generate a large file
+        let lineContent = String(repeating: "Line of code ", count: 10) + "\n"
+        let largeContent = String(repeating: lineContent, count: 1_000) // 1K lines
+        editor.text = largeContent
+        
+        // Simulate scrolling by updating visible range
+        let textLength = largeContent.count
+        let ranges = (0..<5).map { index in
+            NSRange(location: (textLength / 5) * index, length: min(500, textLength / 5))
+        }
+        
+        measure {
+            autoreleasepool {
+                for range in ranges {
+                    editor.scrollRangeToVisible(range)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Configuration Change Performance
+    
+    @MainActor
+    func testConfigurationChangePerformance() throws {
+        let editor = CodeEditorView()
+        editor.text = String(repeating: "Test line\n", count: 100)
+        
+        var config = EditorConfiguration()
+        
+        measure {
+            autoreleasepool {
+                // Toggle configuration options
+                for index in 0..<10 {
+                    config.display.showLineNumbers = index.isMultiple(of: 2)
+                    config.layout.tabWidth = index.isMultiple(of: 2) ? 4 : 2
+                    editor.configuration = config
+                }
+            }
+        }
+    }
+    
+    // MARK: - Platform Capabilities Performance
+    
+    @MainActor
+    func testPlatformCapabilitiesQueryPerformance() throws {
+        let capabilities = PlatformCapabilities.shared
+        
+        measure {
+            // Query various capabilities
+            for _ in 0..<1_000 {
+                _ = capabilities.textKitCapabilities.supportsTextKit2
+                _ = capabilities.performanceCapabilities.supportsHardwareAcceleration
+                _ = capabilities.isFeatureAvailable(.syntaxHighlighting)
+                _ = capabilities.recommendedConfiguration()
+            }
+        }
+    }
 }

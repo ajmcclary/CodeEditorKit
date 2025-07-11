@@ -43,6 +43,10 @@ import Foundation
 ///
 @MainActor
 public final class MemoryMonitor: ObservableObject {
+    // MARK: - Dependencies
+    
+    /// Memory provider for platform-specific memory information
+    private let memoryProvider: PlatformMemoryProvider
     // MARK: - Configuration
     
     /// Memory threshold for triggering cleanup (in MB)
@@ -77,6 +81,9 @@ public final class MemoryMonitor: ObservableObject {
     /// Logger
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
     
+    /// Whether we're under memory pressure
+    @Published public private(set) var isUnderPressure: Bool = false
+    
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
     
@@ -85,7 +92,11 @@ public final class MemoryMonitor: ObservableObject {
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with MemoryMonitor() and pass it to components that need it.")
     public static let shared = MemoryMonitor()
     
-    public init() {
+    /// Initialize with optional memory provider
+    /// - Parameter memoryProvider: Platform memory provider (defaults to system provider)
+    public init(memoryProvider: PlatformMemoryProvider? = nil) {
+        self.memoryProvider = memoryProvider ?? SystemMemoryProvider()
+        
         // Skip monitoring in test environment
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             startMonitoring()
@@ -179,26 +190,12 @@ public final class MemoryMonitor: ObservableObject {
     
     /// Get current memory usage in MB
     public func getCurrentMemoryUsage() -> Double {
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-        
-        let kerr: kern_return_t = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
-                task_info(
-                    mach_task_self_,
-                    task_flavor_t(MACH_TASK_BASIC_INFO),
-                    $0,
-                    &count
-                )
-            }
-        }
-        
-        if kerr == KERN_SUCCESS {
-            return Double(info.resident_size) / (1_024 * 1_024) // Convert to MB
-        } else {
-            logger.warning("Failed to get memory usage: \(kerr)")
-            return 0
-        }
+        memoryProvider.getCurrentMemoryUsage()
+    }
+    
+    /// Get memory pressure status
+    public func getMemoryPressure() -> MemoryPressure {
+        memoryProvider.getMemoryPressure()
     }
     
     /// Start memory monitoring
@@ -272,6 +269,15 @@ public final class MemoryMonitor: ObservableObject {
     private func checkMemoryUsage() async {
         let currentUsage = getCurrentMemoryUsage()
         updateMemoryStats(currentUsage: currentUsage)
+        
+        // Update pressure status
+        let wasUnderPressure = isUnderPressure
+        isUnderPressure = memoryProvider.isUnderMemoryPressure()
+        
+        // Notify if pressure status changed
+        if isUnderPressure != wasUnderPressure {
+            logger.info("Memory pressure changed: \(wasUnderPressure ? "normal" : "pressure") -> \(isUnderPressure ? "pressure" : "normal")")
+        }
         
         if enableAutomaticCleanup && currentUsage > memoryThresholdMB {
             logger.warning("Memory usage (\(currentUsage)MB) exceeded threshold (\(self.memoryThresholdMB)MB)")
@@ -414,14 +420,18 @@ public struct MemoryStatistics {
     }
 }
 
-private func mach_task_basic_info() -> mach_task_basic_info_data_t {
-    mach_task_basic_info_data_t(
-        virtual_size: 0,
-        resident_size: 0,
-        resident_size_max: 0,
-        user_time: time_value_t(),
-        system_time: time_value_t(),
-        policy: 0,
-        suspend_count: 0
-    )
+// MARK: - Extensions
+
+extension MemoryMonitor {
+    /// Convenience initializer for testing with mock provider
+    public static func mock(
+        memoryUsage: Double = 100.0,
+        memoryPressure: MemoryPressure = .normal
+    ) -> MemoryMonitor {
+        let mockProvider = MockMemoryProvider(
+            memoryUsage: memoryUsage,
+            memoryPressure: memoryPressure
+        )
+        return MemoryMonitor(memoryProvider: mockProvider)
+    }
 }

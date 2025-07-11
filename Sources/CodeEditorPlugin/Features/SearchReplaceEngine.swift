@@ -111,10 +111,11 @@ public class SearchReplaceEngine: ObservableObject {
         }
         
         // Wrap around to end if enabled
-        if searchOptions.wrapAround && !currentSearchResults.isEmpty {
+        if searchOptions.wrapAround,
+           let lastResult = currentSearchResults.last {
             currentSearchIndex = currentSearchResults.count - 1
-            scrollToResult(currentSearchResults.last!)
-            return currentSearchResults.last!
+            scrollToResult(lastResult)
+            return lastResult
         }
         
         return nil
@@ -169,7 +170,7 @@ public class SearchReplaceEngine: ObservableObject {
         var replacementCount = 0
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let textStorage = textView.textStorage!
+        guard let textStorage = textView.textStorage else { return 0 }
         
         // Begin grouped undo
         textStorage.beginEditing()

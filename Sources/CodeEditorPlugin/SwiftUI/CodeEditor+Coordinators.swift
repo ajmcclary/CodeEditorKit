@@ -37,7 +37,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     var textUpdateTask: Task<Void, Never>?
     
     /// Debounce interval for text changes
-    var textDebounceInterval: TimeInterval = 0.1
+    @available(macOS 13.0, iOS 16.0, *)
+    var textDebounceInterval: Duration = .milliseconds(100)
+    
+    /// Legacy debounce interval for older OS versions
+    var legacyTextDebounceInterval: TimeInterval = 0.1
     
     /// Track if focus has been requested to avoid duplicate requests
     private var hasFocusBeenRequested = false
@@ -50,13 +54,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let containerView = view as? CodeEditorContainerView {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 containerView.window?.makeFirstResponder(containerView.textView)
             }
         }
         #else
         if let containerView = view as? CodeEditorContainerView {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 _ = containerView.textView.becomeFirstResponder()
             }
         }
@@ -133,7 +137,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             
             do {
                 guard let self else { return }
-                try await Task.sleep(for: .seconds(self.textDebounceInterval))
+                if #available(macOS 13.0, iOS 16.0, *) {
+                    try await Task.sleep(for: self.textDebounceInterval)
+                } else {
+                    try await Task.sleep(for: .seconds(self.legacyTextDebounceInterval))
+                }
                 
                 await MainActor.run { [weak self] in
                     guard let self else { return }

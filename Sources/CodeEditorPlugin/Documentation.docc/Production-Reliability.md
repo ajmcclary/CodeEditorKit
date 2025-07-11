@@ -84,8 +84,13 @@ if !errors.isEmpty {
 
 ### Memory Management
 ```swift
+// Configure memory monitor through configuration
+var config = EditorConfiguration()
+let memoryMonitor = MemoryMonitor()
+config.performance.memoryMonitor = memoryMonitor
+
 // Automatic memory cleanup under pressure
-await MemoryMonitor.shared.performCleanup()
+await memoryMonitor.performCleanup()
 
 // Editor remains functional after cleanup
 editor.text = "New content continues to work"
@@ -106,8 +111,8 @@ editor.text = "New content continues to work"
 
 ## Testing Coverage
 
-### Comprehensive Test Suite (425 total tests)
-- **Core Plugin**: 390 tests covering all functionality
+### Comprehensive Test Suite (657 total tests)
+- **Core Plugin**: 622 tests covering all functionality
 - **Sample App**: 35 tests for integration scenarios
 - **100% Pass Rate**: All tests passing on macOS, iOS, and Mac Catalyst
 - **Zero Linting Violations**: Maintained across all source files
@@ -173,8 +178,11 @@ func applyConfiguration(_ config: EditorConfiguration) {
 
 ### Memory Management
 ```swift
+// Create a memory monitor instance
+let memoryMonitor = MemoryMonitor()
+
 // Register for memory warnings
-MemoryMonitor.shared.registerCleanupHandler(
+memoryMonitor.registerCleanupHandler(
     identifier: "my-editor",
     priority: .normal
 ) { @MainActor in

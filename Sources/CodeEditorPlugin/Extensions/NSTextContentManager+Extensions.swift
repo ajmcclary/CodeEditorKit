@@ -36,17 +36,21 @@ extension NSTextContentManager {
 
         let lineIdx: Int? = if location == documentRange.endLocation {
             max(0, linesElements.count - 1)
-        } else if let foundLineIdx = linesElements.firstIndex(where: { $0.elementRange!.contains(location) }) {
+        } else if let foundLineIdx = linesElements.firstIndex(where: { element in
+            guard let elementRange = element.elementRange else { return false }
+            return elementRange.contains(location)
+        }) {
             foundLineIdx
         } else {
             nil
         }
 
-        guard let lineIdx else {
+        guard let lineIdx,
+              let elementRange = linesElements[lineIdx].elementRange else {
             return nil
         }
 
-        let column = offset(from: linesElements[lineIdx].elementRange!.location, to: location)
+        let column = offset(from: elementRange.location, to: location)
         return (row: lineIdx, column: column)
     }
 

@@ -54,7 +54,7 @@ extension CodeEditorView {
         syntaxHighlighter.supportedFileExtensions
     }
     
-    public var gutterView: GutterView? {
+    internal var gutterView: GutterView? {
         gutterViewStorage
     }
     

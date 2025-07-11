@@ -183,9 +183,10 @@ final class InputCoordinatorTests: XCTestCase {
         }
         
         // Test touch event creation
-        let touchEvent = InputCoordinator.touchEvent(touches: Set<AnyHashable>(), phase: .began)
+        let touchInfo = TouchInfo(location: CGPoint(x: 50, y: 50), previousLocation: CGPoint(x: 40, y: 40), timestamp: Date().timeIntervalSinceReferenceDate)
+        let touchEvent = InputCoordinator.touchEvent(touches: Set([touchInfo]), phase: .began)
         if case let .touch(_, phase) = touchEvent {
-            XCTAssertEqual(phase, .began)
+            XCTAssertEqual(phase, PlatformTouchPhase.began)
         } else {
             XCTFail("Should create touch event")
         }
