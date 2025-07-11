@@ -478,14 +478,14 @@ struct UnifiedContentView: View {
         PlatformSafeButton(
             action: {
                 appState.coordinator.update { config in
-                    config.display.showLineNumbers.toggle()
+                    config.display.isLineNumbersEnabled.toggle()
                 }
             },
             label: {
                 Image(systemName: "number")
                     .imageScale(dynamicImageScale())
                     .foregroundColor(
-                        appState.coordinator.configuration.display.showLineNumbers
+                        appState.coordinator.configuration.display.isLineNumbersEnabled
                             ? .accentColor : .secondary
                     )
                     .help("Toggle Line Numbers")

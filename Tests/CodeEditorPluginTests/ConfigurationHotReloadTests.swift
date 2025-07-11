@@ -23,12 +23,12 @@ final class ConfigurationHotReloadTests: XCTestCase {
         
         var newConfig = EditorConfiguration()
         newConfig.display.fontSize = 16
-        newConfig.display.showLineNumbers = false
+        newConfig.display.isLineNumbersEnabled = false
         
         hotReload.update(newConfig)
         
         XCTAssertEqual(hotReload.configuration.display.fontSize, 16)
-        XCTAssertFalse(hotReload.configuration.display.showLineNumbers)
+        XCTAssertFalse(hotReload.configuration.display.isLineNumbersEnabled)
         XCTAssertNotEqual(hotReload.configuration, initialConfig)
     }
     

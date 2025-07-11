@@ -217,7 +217,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
             autoreleasepool {
                 // Toggle configuration options
                 for index in 0..<10 {
-                    config.display.showLineNumbers = index.isMultiple(of: 2)
+                    config.display.isLineNumbersEnabled = index.isMultiple(of: 2)
                     config.layout.tabWidth = index.isMultiple(of: 2) ? 4 : 2
                     editor.configuration = config
                 }

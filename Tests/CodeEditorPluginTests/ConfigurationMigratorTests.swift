@@ -31,7 +31,7 @@ final class ConfigurationMigratorTests: XCTestCase {
         switch result {
         case .success(let config):
             XCTAssertEqual(config.display.fontSize, 14.0)
-            XCTAssertTrue(config.display.showLineNumbers)
+            XCTAssertTrue(config.display.isLineNumbersEnabled)
             // Theme was not migrated in the actual implementation
         case .failure(let error):
             XCTFail("Migration failed with error: \(error)")
@@ -60,7 +60,7 @@ final class ConfigurationMigratorTests: XCTestCase {
         case .success(let config):
             // Original properties preserved
             XCTAssertEqual(config.display.fontSize, 16.0)
-            XCTAssertFalse(config.display.showLineNumbers)
+            XCTAssertFalse(config.display.isLineNumbersEnabled)
             XCTAssertEqual(config.layout.tabWidth, 2)
             
             // Performance section added with defaults
@@ -154,7 +154,7 @@ final class ConfigurationMigratorTests: XCTestCase {
         case .success(let config):
             // Invalid values should be replaced with defaults
             XCTAssertEqual(config.display.fontSize, 14.0) // Default value, not "not a number"
-            XCTAssertTrue(config.display.showLineNumbers) // Default value, not 123
+            XCTAssertTrue(config.display.isLineNumbersEnabled) // Default value, not 123
 
         case .failure(let error):
             XCTFail("Migration failed with error: \(error)")

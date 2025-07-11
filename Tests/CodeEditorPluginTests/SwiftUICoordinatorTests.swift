@@ -85,7 +85,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertEqual(container.textView.language, .swift)
         // The container modifies the configuration to disable internal line numbers
         var expectedConfig = EditorConfiguration.default
-        expectedConfig.display.showLineNumbers = false
+        expectedConfig.display.isLineNumbersEnabled = false
         XCTAssertEqual(container.textView.configuration, expectedConfig)
         XCTAssertIdentical(container.textView.memoryMonitor, memoryMonitor)
     }

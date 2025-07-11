@@ -156,42 +156,54 @@ public struct EditorConfiguration: Codable, Sendable {
         var errors: [ValidationError] = []
         
         // Validate display settings
-        if display.fontSize <= 0 {
-            errors.append(ValidationError(field: "display.fontSize", value: display.fontSize, constraint: "must be greater than 0"))
-        }
-        if display.fontSize > 100 {
-            errors.append(ValidationError(field: "display.fontSize", value: display.fontSize, constraint: "must be 100 or less"))
+        if !PlatformConstants.validFontSizeRange.contains(display.fontSize) {
+            errors.append(ValidationError(
+                field: "display.fontSize", 
+                value: display.fontSize, 
+                constraint: "must be between \(PlatformConstants.validFontSizeRange.lowerBound) and \(PlatformConstants.validFontSizeRange.upperBound)"
+            ))
         }
         
         // Validate layout settings
-        if layout.tabWidth <= 0 {
-            errors.append(ValidationError(field: "layout.tabWidth", value: layout.tabWidth, constraint: "must be greater than 0"))
-        }
-        if layout.tabWidth > 32 {
-            errors.append(ValidationError(field: "layout.tabWidth", value: layout.tabWidth, constraint: "must be 32 or less"))
-        }
-        
-        if layout.lineHeightMultiple < 0 {
-            errors.append(ValidationError(field: "layout.lineSpacing", value: layout.lineHeightMultiple, constraint: "must be 0 or greater"))
-        }
-        if layout.lineHeightMultiple > 50 {
-            errors.append(ValidationError(field: "layout.lineSpacing", value: layout.lineHeightMultiple, constraint: "must be 50 or less"))
+        if !PlatformConstants.validTabWidthRange.contains(layout.tabWidth) {
+            errors.append(ValidationError(
+                field: "layout.tabWidth", 
+                value: layout.tabWidth, 
+                constraint: "must be between \(PlatformConstants.validTabWidthRange.lowerBound) and \(PlatformConstants.validTabWidthRange.upperBound)"
+            ))
         }
         
-        if layout.gutterWidth < 0 {
-            errors.append(ValidationError(field: "layout.gutterWidth", value: layout.gutterWidth, constraint: "must be 0 or greater"))
+        if !PlatformConstants.validLineHeightMultipleRange.contains(layout.lineHeightMultiple) {
+            errors.append(ValidationError(
+                field: "layout.lineHeightMultiple", 
+                value: layout.lineHeightMultiple, 
+                constraint: "must be between \(PlatformConstants.validLineHeightMultipleRange.lowerBound) and \(PlatformConstants.validLineHeightMultipleRange.upperBound)"
+            ))
+        }
+        
+        if !PlatformConstants.validGutterWidthRange.contains(layout.gutterWidth) {
+            errors.append(ValidationError(
+                field: "layout.gutterWidth", 
+                value: layout.gutterWidth, 
+                constraint: "must be \(PlatformConstants.validGutterWidthRange.lowerBound) or greater"
+            ))
         }
         
         // Validate performance settings
-        if performance.maxSyntaxHighlightingLength < 0 {
-            errors.append(ValidationError(field: "performance.maxSyntaxHighlightingLength", value: performance.maxSyntaxHighlightingLength, constraint: "must be 0 or greater"))
+        if !PlatformConstants.validHighlightingLengthRange.contains(performance.maxSyntaxHighlightingLength) {
+            errors.append(ValidationError(
+                field: "performance.maxSyntaxHighlightingLength", 
+                value: performance.maxSyntaxHighlightingLength, 
+                constraint: "must be \(PlatformConstants.validHighlightingLengthRange.lowerBound) or greater"
+            ))
         }
         
-        if performance.textChangeDebounceInterval < Duration.zero {
-            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval.timeInterval, constraint: "must be 0 or greater"))
-        }
-        if performance.textChangeDebounceInterval > Duration.seconds(5) {
-            errors.append(ValidationError(field: "performance.textChangeDebounceInterval", value: performance.textChangeDebounceInterval.timeInterval, constraint: "must be 5 seconds or less"))
+        if !PlatformConstants.validDebounceIntervalRange.contains(performance.textChangeDebounceInterval.timeInterval) {
+            errors.append(ValidationError(
+                field: "performance.textChangeDebounceInterval", 
+                value: performance.textChangeDebounceInterval.timeInterval, 
+                constraint: "must be between \(PlatformConstants.validDebounceIntervalRange.lowerBound) and \(PlatformConstants.validDebounceIntervalRange.upperBound) seconds"
+            ))
         }
         
         return errors

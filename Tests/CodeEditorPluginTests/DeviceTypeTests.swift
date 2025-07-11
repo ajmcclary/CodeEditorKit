@@ -143,7 +143,7 @@ final class DeviceTypeTests: XCTestCase {
         // Apple TV should use presentation config with modifications
         let tvConfig = DeviceType.appleTV.recommendedConfiguration()
         XCTAssertEqual(tvConfig.display.fontSize, 24)
-        XCTAssertFalse(tvConfig.display.showLineNumbers)
+        XCTAssertFalse(tvConfig.display.isLineNumbersEnabled)
         
         // CarPlay should use read-only config
         let carConfig = DeviceType.carPlay.recommendedConfiguration()
@@ -151,7 +151,7 @@ final class DeviceTypeTests: XCTestCase {
         
         // iPad should have custom config
         let iPadConfig = DeviceType.iPad.recommendedConfiguration()
-        XCTAssertTrue(iPadConfig.display.showLineNumbers)
+        XCTAssertTrue(iPadConfig.display.isLineNumbersEnabled)
         XCTAssertFalse(iPadConfig.display.showMinimap)
         XCTAssertEqual(iPadConfig.display.fontSize, 14)
         

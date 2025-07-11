@@ -20,7 +20,7 @@ final class BasicFunctionalityTests: XCTestCase {
     func testEditorConfiguration() {
         // Test configuration creation
         let config = EditorConfiguration()
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.behavior.isEditable)
         XCTAssertEqual(config.display.fontSize, 14)
         XCTAssertEqual(config.layout.tabWidth, 4)
@@ -33,11 +33,11 @@ final class BasicFunctionalityTests: XCTestCase {
 
             switch preset {
             case .fullFeatured:
-                XCTAssertTrue(config.display.showLineNumbers)
+                XCTAssertTrue(config.display.isLineNumbersEnabled)
                 XCTAssertTrue(config.behavior.isEditable)
 
             case .minimal:
-                XCTAssertFalse(config.display.showLineNumbers)
+                XCTAssertFalse(config.display.isLineNumbersEnabled)
                 XCTAssertTrue(config.behavior.isEditable)
 
             case .readOnly:

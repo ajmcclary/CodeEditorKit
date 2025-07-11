@@ -37,16 +37,29 @@ final class IntegrationTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(200))
         
         // Verify highlighting was applied
-        let textStorage = editor.textStorage
         var hasHighlighting = false
-        textStorage?.enumerateAttributes(
-            in: NSRange(location: 0, length: textStorage?.length ?? 0),
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textStorage = editor.textStorage {
+            textStorage.enumerateAttributes(
+                in: NSRange(location: 0, length: textStorage.length),
+                options: []
+            ) { attributes, _, _ in
+                if attributes[.foregroundColor] != nil {
+                    hasHighlighting = true
+                }
+            }
+        }
+        #else
+        let textStorage = editor.textStorage
+        textStorage.enumerateAttributes(
+            in: NSRange(location: 0, length: textStorage.length),
             options: []
         ) { attributes, _, _ in
             if attributes[.foregroundColor] != nil {
                 hasHighlighting = true
             }
         }
+        #endif
         
         XCTAssertTrue(hasHighlighting, "Syntax highlighting should be applied")
         expectation.fulfill()
@@ -68,16 +81,29 @@ final class IntegrationTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(500))
         
         // Verify final text is highlighted
-        let textStorage = editor.textStorage
         var hasHighlighting = false
-        textStorage?.enumerateAttributes(
-            in: NSRange(location: 0, length: textStorage?.length ?? 0),
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textStorage = editor.textStorage {
+            textStorage.enumerateAttributes(
+                in: NSRange(location: 0, length: textStorage.length),
+                options: []
+            ) { attributes, _, _ in
+                if attributes[.foregroundColor] != nil {
+                    hasHighlighting = true
+                }
+            }
+        }
+        #else
+        let textStorage = editor.textStorage
+        textStorage.enumerateAttributes(
+            in: NSRange(location: 0, length: textStorage.length),
             options: []
         ) { attributes, _, _ in
             if attributes[.foregroundColor] != nil {
                 hasHighlighting = true
             }
         }
+        #endif
         
         XCTAssertTrue(hasHighlighting, "Final text should be highlighted")
     }
@@ -225,7 +251,7 @@ final class IntegrationTests: XCTestCase {
         // Initial configuration
         var config = EditorConfiguration()
         config.display.fontSize = 14
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         editor.configuration = config
         
         // Verify initial state
@@ -234,7 +260,7 @@ final class IntegrationTests: XCTestCase {
         
         // Hot reload configuration change
         config.display.fontSize = 16
-        config.display.showLineNumbers = false
+        config.display.isLineNumbersEnabled = false
         editor.configuration = config
         
         // Wait for configuration to apply
@@ -279,7 +305,7 @@ final class IntegrationTests: XCTestCase {
         editor.configuration = config
         
         // Verify configuration applied
-        XCTAssertEqual(editor.configuration.display.showLineNumbers, config.display.showLineNumbers)
+        XCTAssertEqual(editor.configuration.display.isLineNumbersEnabled, config.display.isLineNumbersEnabled)
         XCTAssertEqual(editor.configuration.layout.tabWidth, config.layout.tabWidth)
     }
 }

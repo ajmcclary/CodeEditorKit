@@ -366,6 +366,12 @@ public final class AsyncSyntaxHighlighter {
     }
     
     /// Clean up resources before deinitialization
+    ///
+    /// This method cancels all active highlighting tasks and periodic operations.
+    /// It's safe to call multiple times and is automatically called from deinit.
+    ///
+    /// - Important: While this method is synchronous for API compatibility,
+    ///   cleanup is also performed automatically in deinit to prevent leaks.
     public func cleanup() {
         debounceTask?.cancel()
         debounceTask = nil
@@ -376,8 +382,23 @@ public final class AsyncSyntaxHighlighter {
     }
     
     deinit {
-        // Timer cleanup is handled in the cleanup() method which should be called before deallocation
-        // The @MainActor isolated properties can't be accessed directly in deinit
+        // Ensure all tasks are cancelled even if cleanup() wasn't called
+        // Use MainActor.assumeIsolated since we know deinit runs on MainActor for @MainActor types
+        MainActor.assumeIsolated {
+            // Cancel all tasks to prevent memory leaks
+            if let task = debounceTask {
+                task.cancel()
+            }
+            if let task = periodicOptimizationTask {
+                task.cancel()
+            }
+            if let task = highlightingTask {
+                task.cancel()
+            }
+            
+            // Also ensure background highlighter is cleaned up
+            backgroundHighlighter.cancelAllRequests()
+        }
     }
     
     // MARK: - Cache Management

@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP tests are only available on macOS
+
 import XCTest
 
 @testable import CodeEditorPlugin
@@ -406,3 +409,5 @@ extension LSPManager {
         // Implementation depends on internal structure
     }
 }
+
+#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)

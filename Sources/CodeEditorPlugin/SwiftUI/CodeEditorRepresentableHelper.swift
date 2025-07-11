@@ -48,11 +48,7 @@ enum CodeEditorRepresentableHelper {
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange
         )
-        if #available(macOS 13.0, iOS 16.0, *) {
-            coordinator.textDebounceInterval = textDebounceInterval
-        } else {
-            coordinator.legacyTextDebounceInterval = textDebounceInterval.timeInterval
-        }
+        coordinator.textDebounceInterval = textDebounceInterval
         return coordinator
     }
 }

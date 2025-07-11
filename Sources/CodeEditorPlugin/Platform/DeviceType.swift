@@ -146,7 +146,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
         case .iPad:
             // Medium screen space with touch
             var config = EditorConfiguration.default
-            config.display.showLineNumbers = true
+            config.display.isLineNumbersEnabled = true
             config.display.showMinimap = false // Save horizontal space
             config.display.fontSize = 14
             return config
@@ -159,7 +159,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
             // TV interface - larger fonts, simplified UI
             var config = EditorConfiguration.presentation
             config.display.fontSize = 24
-            config.display.showLineNumbers = false
+            config.display.isLineNumbersEnabled = false
             return config
             
         case .carPlay:

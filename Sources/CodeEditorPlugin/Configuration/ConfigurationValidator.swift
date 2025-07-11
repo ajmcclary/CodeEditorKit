@@ -48,12 +48,12 @@ public struct ConfigurationValidator {
         var issues: [ValidationIssue] = []
         
         // Font size validation - more permissive range
-        if display.fontSize < 6.0 || display.fontSize > 120.0 {
+        if !PlatformConstants.validFontSizeRange.contains(display.fontSize) {
             issues.append(ValidationIssue(
                 severity: .warning,
                 path: "display.fontSize",
-                message: "Font size \(display.fontSize) is outside recommended range (6-120)",
-                suggestedValue: max(6.0, min(120.0, display.fontSize))
+                message: "Font size \(display.fontSize) is outside recommended range (\(PlatformConstants.validFontSizeRange.lowerBound)-\(PlatformConstants.validFontSizeRange.upperBound))",
+                suggestedValue: max(PlatformConstants.validFontSizeRange.lowerBound, min(PlatformConstants.validFontSizeRange.upperBound, display.fontSize))
             ))
         }
         
@@ -66,12 +66,12 @@ public struct ConfigurationValidator {
         var issues: [ValidationIssue] = []
         
         // Tab width validation - more permissive range
-        if layout.tabWidth < 1 || layout.tabWidth > 32 {
+        if !PlatformConstants.validTabWidthRange.contains(layout.tabWidth) {
             issues.append(ValidationIssue(
                 severity: .warning,
                 path: "layout.tabWidth",
-                message: "Tab width \(layout.tabWidth) is outside recommended range (1-32)",
-                suggestedValue: max(1, min(32, layout.tabWidth))
+                message: "Tab width \(layout.tabWidth) is outside recommended range (\(PlatformConstants.validTabWidthRange.lowerBound)-\(PlatformConstants.validTabWidthRange.upperBound))",
+                suggestedValue: max(PlatformConstants.validTabWidthRange.lowerBound, min(PlatformConstants.validTabWidthRange.upperBound, layout.tabWidth))
             ))
         }
         
@@ -583,11 +583,11 @@ public enum ConfigurationDiff {
             ))
         }
         
-        if config1.display.showLineNumbers != config2.display.showLineNumbers {
+        if config1.display.isLineNumbersEnabled != config2.display.isLineNumbersEnabled {
             changes.append(ConfigurationChange(
-                path: "display.showLineNumbers",
-                oldValue: config1.display.showLineNumbers,
-                newValue: config2.display.showLineNumbers
+                path: "display.isLineNumbersEnabled",
+                oldValue: config1.display.isLineNumbersEnabled,
+                newValue: config2.display.isLineNumbersEnabled
             ))
         }
         

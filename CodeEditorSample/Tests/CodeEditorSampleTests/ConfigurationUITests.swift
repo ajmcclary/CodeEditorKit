@@ -13,7 +13,7 @@ final class ConfigurationUITests: XCTestCase {
     func testFullConfigurationApplication() {
         // Create a comprehensive configuration
         var config = EditorConfiguration()
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.showInvisibleCharacters = true
         config.display.highlightSelectedLine = true
         config.layout.wrapLines = false
@@ -31,7 +31,7 @@ final class ConfigurationUITests: XCTestCase {
         config.performance.smoothScrolling = true
         
         // Verify all properties are set correctly
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.showInvisibleCharacters)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertFalse(config.layout.wrapLines)
@@ -51,7 +51,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationPresetFullFeatured() {
         let config = ConfigurationPreset.fullFeatured.configuration
         
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertFalse(config.display.showInvisibleCharacters)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertFalse(config.layout.wrapLines)
@@ -71,7 +71,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationPresetMinimal() {
         let config = ConfigurationPreset.minimal.configuration
         
-        XCTAssertFalse(config.display.showLineNumbers)
+        XCTAssertFalse(config.display.isLineNumbersEnabled)
         XCTAssertFalse(config.display.showInvisibleCharacters)
         XCTAssertFalse(config.display.highlightSelectedLine)
         XCTAssertTrue(config.layout.wrapLines)
@@ -89,7 +89,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationPresetReadOnly() {
         let config = ConfigurationPreset.readOnly.configuration
         
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertFalse(config.display.showInvisibleCharacters)
         XCTAssertTrue(config.display.highlightSelectedLine)  // Default value, not modified by readOnly preset
         XCTAssertFalse(config.layout.wrapLines)
@@ -103,7 +103,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationPresetMarkdown() {
         let config = ConfigurationPreset.markdown.configuration
         
-        XCTAssertFalse(config.display.showLineNumbers)
+        XCTAssertFalse(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertTrue(config.layout.wrapLines)
         XCTAssertTrue(config.behavior.isEditable)
@@ -118,7 +118,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationPresetPresentation() {
         let config = ConfigurationPreset.presentation.configuration
         
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertFalse(config.layout.wrapLines)
         XCTAssertFalse(config.behavior.isEditable)
@@ -223,7 +223,7 @@ final class ConfigurationUITests: XCTestCase {
     func testConfigurationExportImport() {
         // Create a custom configuration
         var config = EditorConfiguration()
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.fontSize = 16
         // theme is handled separately in the color system
         config.layout.tabWidth = 8
@@ -240,7 +240,7 @@ final class ConfigurationUITests: XCTestCase {
             let decodedConfig = try decoder.decode(EditorConfiguration.self, from: data)
             
             // Verify configuration was preserved
-            XCTAssertEqual(decodedConfig.display.showLineNumbers, config.display.showLineNumbers)
+            XCTAssertEqual(decodedConfig.display.isLineNumbersEnabled, config.display.isLineNumbersEnabled)
             XCTAssertEqual(decodedConfig.display.fontSize, config.display.fontSize)
             // theme verification handled separately
             XCTAssertEqual(decodedConfig.layout.tabWidth, config.layout.tabWidth)

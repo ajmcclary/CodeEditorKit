@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP functionality is only available on macOS
+
 import Foundation
 
 // MARK: - Core LSP Types
@@ -602,3 +605,5 @@ public struct WorkspaceFolder: Codable, Sendable {
         self.name = name
     }
 }
+
+#endif

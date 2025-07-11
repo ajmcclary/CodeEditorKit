@@ -69,10 +69,10 @@ extension CodeEditorView {
 
     /// Controls whether line numbers are shown (convenience property)
     public var isLineNumbersEnabled: Bool {
-        get { configuration.display.showLineNumbers }
+        get { configuration.display.isLineNumbersEnabled }
         set {
             var display = configuration.display
-            display.showLineNumbers = newValue
+            display.isLineNumbersEnabled = newValue
             configuration = configuration.with(display: display)
         }
     }

@@ -111,7 +111,7 @@ final class ErrorHandlingTests: XCTestCase {
         // Test invalid line spacing
         config.layout.lineHeightMultiple = -1.0
         let errors3 = config.validate()
-        XCTAssertTrue(errors3.contains { $0.field == "layout.lineSpacing" })
+        XCTAssertTrue(errors3.contains { $0.field == "layout.lineHeightMultiple" })
         
         // Test throwing validation
         XCTAssertThrowsError(try config.validateAndThrow()) { error in

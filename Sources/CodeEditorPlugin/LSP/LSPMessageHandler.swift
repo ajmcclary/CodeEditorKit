@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP functionality is only available on macOS
+
 import Foundation
 
 /// LSP error response structure
@@ -224,3 +227,5 @@ public struct LSPResponse: Sendable {
         return dict["result"]
     }
 }
+
+#endif

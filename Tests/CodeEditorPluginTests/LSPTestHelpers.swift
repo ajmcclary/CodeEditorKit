@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP test helpers are only available on macOS
+
 @testable import CodeEditorPlugin
 import Foundation
 
@@ -189,3 +192,5 @@ extension LSPCompletionProvider {
         triggerCharacters
     }
 }
+
+#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)

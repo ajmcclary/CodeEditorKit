@@ -93,7 +93,7 @@ extension CodeEditorContainerView {
         var newMinimapConstraints: [NSLayoutConstraint] = []
         
         // Configure gutter constraints if line numbers are shown
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             newGutterConstraints = [
                 gutterView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 gutterView.topAnchor.constraint(equalTo: topAnchor),
@@ -106,7 +106,7 @@ extension CodeEditorContainerView {
         }
         
         // Configure text view constraints
-        let textViewLeading = configuration.display.showLineNumbers ?
+        let textViewLeading = configuration.display.isLineNumbersEnabled ?
             textView.leadingAnchor.constraint(equalTo: gutterView.trailingAnchor) :
             textView.leadingAnchor.constraint(equalTo: leadingAnchor)
         
@@ -157,7 +157,7 @@ extension CodeEditorContainerView {
         rebuildConstraints()
         
         // Update gutter display if visible
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             gutterView.setNeedsDisplay()
         }
         
@@ -179,8 +179,8 @@ extension CodeEditorContainerView {
         // Just ensure visibility and display updates
         
         // Update gutter visibility
-        gutterView.isHidden = !configuration.display.showLineNumbers
-        if configuration.display.showLineNumbers {
+        gutterView.isHidden = !configuration.display.isLineNumbersEnabled
+        if configuration.display.isLineNumbersEnabled {
             gutterView.setNeedsDisplay()
         }
         

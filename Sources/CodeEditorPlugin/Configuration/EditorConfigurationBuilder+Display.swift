@@ -53,7 +53,31 @@ extension EditorConfigurationBuilder {
   /// - SeeAlso: `gutterWidth(_:)` for customizing gutter size
   @discardableResult
   public func showLineNumbers(_ show: Bool) -> Self {
-    with { $0.display.showLineNumbers = show }
+    with { $0.display.isLineNumbersEnabled = show }
+  }
+
+  /// Controls whether line numbers are shown in the gutter.
+  ///
+  /// Line numbers help with navigation, debugging, and code discussion.
+  /// They appear in a separate gutter area that doesn't scroll horizontally.
+  ///
+  /// - Parameter enabled: `true` to show line numbers, `false` to hide them
+  /// - Returns: The builder instance for method chaining
+  ///
+  /// ## Example
+  ///
+  /// ```swift
+  /// let config = EditorConfigurationBuilder()
+  ///     .isLineNumbersEnabled(true)   // Default for most code editing
+  ///     .isLineNumbersEnabled(false)  // Clean view for markdown or notes
+  ///     .build()
+  /// ```
+  ///
+  /// - Note: This is the preferred method name for consistency with other boolean properties
+  /// - SeeAlso: `gutterWidth(_:)` for customizing gutter size
+  @discardableResult
+  public func isLineNumbersEnabled(_ enabled: Bool) -> Self {
+    with { $0.display.isLineNumbersEnabled = enabled }
   }
 
   /// Controls whether syntax highlighting is enabled

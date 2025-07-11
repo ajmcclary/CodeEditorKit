@@ -132,7 +132,7 @@ struct SampleCodeEditorView: View {
     private func updateConfigurationHash() {
         // Create a hash from configuration properties to force view updates
         var hasher = Hasher()
-        hasher.combine(appState.coordinator.configuration.display.showLineNumbers)
+        hasher.combine(appState.coordinator.configuration.display.isLineNumbersEnabled)
         hasher.combine(appState.coordinator.configuration.display.fontSize)
         hasher.combine(appState.coordinator.configuration.display.enableSyntaxHighlighting)
         hasher.combine(appState.coordinator.configuration.display.enableAnnotations)

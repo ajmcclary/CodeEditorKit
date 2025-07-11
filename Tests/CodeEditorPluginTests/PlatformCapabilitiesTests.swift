@@ -192,7 +192,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         
         // Common expectations
         XCTAssertNotNil(config)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.highlightSelectedLine)
         
         // Platform-specific expectations
@@ -386,23 +386,24 @@ final class PlatformCapabilitiesTests: XCTestCase {
         let capabilities = PlatformCapabilities.shared
         let inputCaps = capabilities.inputCapabilities
         
-        // Basic validation of input capabilities
-        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard), "All platforms should support keyboard")
-        XCTAssertTrue(inputCaps.supportsKeyboardShortcuts || capabilities.currentPlatform == .iOS, 
-                     "Platform should have appropriate keyboard shortcut support")
-        
-        #if canImport(UIKit)
-        let supportsTouch = inputCaps.preferredInputMethods.contains(.touch)
-        XCTAssertTrue(supportsTouch, "iOS/Catalyst should support touch")
-        #else
-        let supportsTouch = inputCaps.preferredInputMethods.contains(.touch)
-        XCTAssertFalse(supportsTouch, "macOS should not support touch")
-        #endif
-        
+        // Basic validation of input capabilities based on platform
         #if targetEnvironment(macCatalyst)
-        // Catalyst supports both keyboard and potentially touch
-        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard))
-        XCTAssertTrue(inputCaps.supportsTrackpad)
+        // Catalyst supports keyboard, mouse, and touch
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard), "Catalyst should support keyboard")
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.mouse), "Catalyst should support mouse")
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.touch), "Catalyst should support touch")
+        XCTAssertTrue(inputCaps.supportsKeyboardShortcuts, "Catalyst should support keyboard shortcuts")
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // macOS supports keyboard, mouse, and trackpad
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.keyboard), "macOS should support keyboard")
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.mouse), "macOS should support mouse")
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.trackpad), "macOS should support trackpad")
+        XCTAssertFalse(inputCaps.preferredInputMethods.contains(.touch), "macOS should not support touch")
+        XCTAssertTrue(inputCaps.supportsKeyboardShortcuts, "macOS should support keyboard shortcuts")
+        #else
+        // iOS supports touch
+        XCTAssertTrue(inputCaps.preferredInputMethods.contains(.touch), "iOS should support touch")
+        XCTAssertFalse(inputCaps.preferredInputMethods.contains(.keyboard), "iOS should not prefer keyboard")
         #endif
     }
 }

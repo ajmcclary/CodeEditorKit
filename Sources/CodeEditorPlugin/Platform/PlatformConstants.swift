@@ -108,12 +108,21 @@ public enum PlatformConstants {
     
     // MARK: - Validation Constants
     
-    /// Valid font size range
-    public static let validFontSizeRange: ClosedRange<CGFloat> = minimumFontSize...maximumFontSize
+    /// Valid font size range (6-100 as per EditorConfiguration validation)
+    public static let validFontSizeRange: ClosedRange<CGFloat> = 6...100
     
     /// Valid tab width range
-    public static let validTabWidthRange: ClosedRange<Int> = 1...16
+    public static let validTabWidthRange: ClosedRange<Int> = 1...32
     
     /// Valid line height multiple range
-    public static let validLineHeightMultipleRange: ClosedRange<CGFloat> = 0.5...3.0
+    public static let validLineHeightMultipleRange: ClosedRange<CGFloat> = 0.0...50.0
+    
+    /// Valid gutter width range
+    public static let validGutterWidthRange: ClosedRange<CGFloat> = 0.0...CGFloat.greatestFiniteMagnitude
+    
+    /// Valid syntax highlighting length range
+    public static let validHighlightingLengthRange: ClosedRange<Int> = 0...Int.max
+    
+    /// Valid text change debounce interval range (in seconds)
+    public static let validDebounceIntervalRange: ClosedRange<TimeInterval> = 0.0...5.0
 }

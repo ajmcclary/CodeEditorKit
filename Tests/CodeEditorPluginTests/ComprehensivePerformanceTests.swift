@@ -280,7 +280,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
         
         // Create complex configuration
         configuration.display.fontSize = 16
-        configuration.display.showLineNumbers = true
+        configuration.display.isLineNumbersEnabled = true
         configuration.display.highlightSelectedLine = true
         configuration.layout.tabWidth = 4
         configuration.behavior.autoIndent = true
@@ -457,6 +457,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     
     // MARK: - LSP Performance
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @MainActor
     func testLSPManagerPerformance() throws {
         let lspManager = LSPManager(memoryMonitor: MemoryMonitor())
@@ -568,6 +569,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
             wait(for: [expectation], timeout: 5.0)
         }
     }
+    #endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
     
     @MainActor
     func testAsyncOperationManagerPerformance() throws {

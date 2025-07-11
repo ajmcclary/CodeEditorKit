@@ -26,8 +26,15 @@ extension EditorConfiguration {
         /// Font size for the editor text
         public var fontSize: CGFloat = PlatformConstants.defaultFontSize
         
-        /// Whether to show line numbers in the gutter
-        public var showLineNumbers: Bool = true
+        /// Whether to enable line numbers in the gutter
+        public var isLineNumbersEnabled: Bool = true
+        
+        /// Alias for isLineNumbersEnabled for backward compatibility
+        @available(*, deprecated, renamed: "isLineNumbersEnabled", message: "Use isLineNumbersEnabled instead for consistency with CodeEditorView API")
+        public var showLineNumbers: Bool {
+            get { isLineNumbersEnabled }
+            set { isLineNumbersEnabled = newValue }
+        }
         
         /// Whether to enable annotations support
         public var enableAnnotations: Bool = true
@@ -88,7 +95,8 @@ extension EditorConfiguration.Display: Codable {
     private enum CodingKeys: String, CodingKey {
         case enableSyntaxHighlighting
         case fontSize
-        case showLineNumbers
+        case showLineNumbers // Keep for backward compatibility in decoding
+        case isLineNumbersEnabled
         case enableAnnotations
         case highlightSelectedLine
         case selectedLineHighlightColor
@@ -106,7 +114,12 @@ extension EditorConfiguration.Display: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         enableSyntaxHighlighting = try container.decodeIfPresent(Bool.self, forKey: .enableSyntaxHighlighting) ?? true
         fontSize = try container.decodeIfPresent(CGFloat.self, forKey: .fontSize) ?? 14
-        showLineNumbers = try container.decodeIfPresent(Bool.self, forKey: .showLineNumbers) ?? true
+        // Try new key first, fall back to old key for backward compatibility
+        if let value = try container.decodeIfPresent(Bool.self, forKey: .isLineNumbersEnabled) {
+            isLineNumbersEnabled = value
+        } else {
+            isLineNumbersEnabled = try container.decodeIfPresent(Bool.self, forKey: .showLineNumbers) ?? true
+        }
         enableAnnotations = try container.decodeIfPresent(Bool.self, forKey: .enableAnnotations) ?? true
         highlightSelectedLine = try container.decodeIfPresent(Bool.self, forKey: .highlightSelectedLine) ?? true
         if let colorData = try container.decodeIfPresent(CodableColor.self, forKey: .selectedLineHighlightColor) {
@@ -128,7 +141,7 @@ extension EditorConfiguration.Display: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(enableSyntaxHighlighting, forKey: .enableSyntaxHighlighting)
         try container.encode(fontSize, forKey: .fontSize)
-        try container.encode(showLineNumbers, forKey: .showLineNumbers)
+        try container.encode(isLineNumbersEnabled, forKey: .isLineNumbersEnabled)
         try container.encode(enableAnnotations, forKey: .enableAnnotations)
         try container.encode(highlightSelectedLine, forKey: .highlightSelectedLine)
         try container.encode(CodableColor(color: selectedLineHighlightColor), forKey: .selectedLineHighlightColor)

@@ -18,7 +18,7 @@ extension CodeEditorView {
         }
         
         // Apply display settings
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             updateGutterVisibility()
             #endif

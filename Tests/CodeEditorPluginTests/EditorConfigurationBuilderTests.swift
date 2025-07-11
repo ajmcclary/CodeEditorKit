@@ -33,9 +33,9 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     
     func testShowLineNumbers() {
         let config = EditorConfigurationBuilder()
-            .showLineNumbers(false)
+            .isLineNumbersEnabled(false)
             .build()
-        XCTAssertFalse(config.display.showLineNumbers)
+        XCTAssertFalse(config.display.isLineNumbersEnabled)
     }
     
     func testEnableSyntaxHighlighting() {
@@ -212,7 +212,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
             .presentationMode()
             .build()
         XCTAssertEqual(config.display.fontSize, 18)
-        XCTAssertFalse(config.display.showLineNumbers)
+        XCTAssertFalse(config.display.isLineNumbersEnabled)
         XCTAssertFalse(config.display.enableAnnotations)
         XCTAssertFalse(config.display.highlightSelectedLine)
         XCTAssertTrue(config.layout.wrapLines)
@@ -223,7 +223,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
             .codeReviewMode()
             .build()
         XCTAssertFalse(config.behavior.isEditable)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.enableAnnotations)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertTrue(config.display.enableSyntaxHighlighting)
@@ -234,7 +234,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     func testMethodChaining() {
         let config = EditorConfigurationBuilder()
             .fontSize(14)
-            .showLineNumbers(true)
+            .isLineNumbersEnabled(true)
             .tabWidth(4)
             .wrapLines(false)
             .enableSyntaxHighlighting(true)
@@ -242,7 +242,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
             .build()
         
         XCTAssertEqual(config.display.fontSize, 14)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertEqual(config.layout.tabWidth, 4)
         XCTAssertFalse(config.layout.wrapLines)
         XCTAssertTrue(config.display.enableSyntaxHighlighting)
@@ -252,7 +252,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     func testComplexConfiguration() {
         let config = EditorConfigurationBuilder()
             .fontSize(16)
-            .showLineNumbers(true)
+            .isLineNumbersEnabled(true)
             .highlightSelectedLine(true)
             .selectedLineHighlightColor(PlatformColors.systemYellow)
             .enableAnnotations(true)
@@ -271,7 +271,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
         
         // Display assertions
         XCTAssertEqual(config.display.fontSize, 16)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertEqual(config.display.selectedLineHighlightColor, PlatformColors.systemYellow)
         XCTAssertTrue(config.display.enableAnnotations)
@@ -348,7 +348,7 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     func testQuickReadOnlyConfiguration() {
         let config = EditorConfigurationBuilder.readOnly()
         XCTAssertFalse(config.behavior.isEditable)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.enableAnnotations)
         XCTAssertTrue(config.display.highlightSelectedLine)
         XCTAssertTrue(config.display.enableSyntaxHighlighting)
@@ -360,13 +360,13 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     func testBuildWithValidation_ValidConfiguration() {
         let result = EditorConfigurationBuilder()
             .fontSize(14)
-            .showLineNumbers(true)
+            .isLineNumbersEnabled(true)
             .buildWithValidation()
         
         switch result {
         case .success(let config):
             XCTAssertEqual(config.display.fontSize, 14)
-            XCTAssertTrue(config.display.showLineNumbers)
+            XCTAssertTrue(config.display.isLineNumbersEnabled)
             
         case .failure(let error):
             XCTFail("Expected success but got validation error: \(error.localizedDescription)")
@@ -392,11 +392,11 @@ final class EditorConfigurationBuilderTests: XCTestCase {
     func testBuildWithReport_ValidConfiguration() {
         let (config, report) = EditorConfigurationBuilder()
             .fontSize(14)
-            .showLineNumbers(true)
+            .isLineNumbersEnabled(true)
             .buildWithReport()
         
         XCTAssertEqual(config.display.fontSize, 14)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertFalse(report.hasIssues)
         XCTAssertTrue(report.summary.contains("✅"))
     }

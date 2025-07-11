@@ -61,7 +61,7 @@ extension View {
     /// ```
     public func lineNumbers(_ visible: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.showLineNumbers = visible
+            config.display.isLineNumbersEnabled = visible
         }
     }
     

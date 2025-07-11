@@ -228,7 +228,7 @@ public final class ToolbarCoordinator: ObservableObject {
         case .replace:
             #if canImport(UIKit)
             // Replace is available on iPad and Mac Catalyst
-            return UIDevice.current.userInterfaceIdiom == .pad || capabilities.platform == .catalyst
+            return UIDevice.current.userInterfaceIdiom == .pad || capabilities.currentPlatform == .catalyst
             #else
             return true
             #endif
@@ -436,7 +436,7 @@ extension ToolbarCoordinator {
         case .toggleLineNumbers:
             // Toggle line numbers
             var config = textView.configuration
-            config.display.showLineNumbers.toggle()
+            config.display.isLineNumbersEnabled.toggle()
             textView.configuration = config
             logger.debug("Toggle line numbers action triggered")
             

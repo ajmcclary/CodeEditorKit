@@ -95,7 +95,16 @@ extension EditorConfigurationBuilder {
   }
 
   /// Configures the editor for presentation mode
+  /// 
+  /// Derives from the default preset and applies:
+  /// - Larger font size (18pt) for visibility
+  /// - No line numbers for cleaner appearance
+  /// - No annotations to reduce distractions
+  /// - No line highlighting for simplicity
+  /// - Line wrapping enabled for better readability
+  /// 
   /// - Returns: The builder for chaining
+  /// - Note: This builder starts from the default preset configuration
   @discardableResult
   public func presentationMode() -> Self {
     fontSize(18)
@@ -106,7 +115,16 @@ extension EditorConfigurationBuilder {
   }
 
   /// Configures the editor for code review
+  /// 
+  /// Derives from the default preset and applies:
+  /// - Read-only mode (not editable)
+  /// - Line numbers visible for easy reference
+  /// - Annotations enabled for review comments
+  /// - Line highlighting for navigation
+  /// - Syntax highlighting for code clarity
+  /// 
   /// - Returns: The builder for chaining
+  /// - Note: This builder starts from the default preset configuration
   @discardableResult
   public func codeReviewMode() -> Self {
     isEditable(false)
@@ -121,7 +139,14 @@ extension EditorConfigurationBuilder {
 
 extension EditorConfigurationBuilder {
   /// Quick configuration for Swift development
+  /// 
+  /// Creates a new configuration based on the default preset with:
+  /// - Language set to Swift
+  /// - Font size 14pt
+  /// - All other settings from default preset
+  /// 
   /// - Returns: A configuration optimized for Swift development
+  /// - Note: Internally calls `build()` which returns a complete configuration
   public static func swift() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.swift)
@@ -130,7 +155,15 @@ extension EditorConfigurationBuilder {
   }
 
   /// Quick configuration for web development
+  /// 
+  /// Creates a new configuration based on the default preset with:
+  /// - Language set to JavaScript
+  /// - Font size 14pt
+  /// - Tab width 2 (common for web development)
+  /// - All other settings from default preset
+  /// 
   /// - Returns: A configuration optimized for web development
+  /// - Note: Internally calls `build()` which returns a complete configuration
   public static func web() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.javascript)
@@ -140,7 +173,14 @@ extension EditorConfigurationBuilder {
   }
 
   /// Quick configuration for Python development
+  /// 
+  /// Creates a new configuration based on the default preset with:
+  /// - Language set to Python
+  /// - Font size 14pt
+  /// - All other settings from default preset
+  /// 
   /// - Returns: A configuration optimized for Python development
+  /// - Note: Internally calls `build()` which returns a complete configuration
   public static func python() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.python)

@@ -44,7 +44,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     public let contextMenuCoordinator: ContextMenuCoordinator
     
     /// Platform-specific adjustments
-    @Published internal private(set) var platformAdjustments = PlatformAdjustments()
+    @Published internal var platformAdjustments = PlatformAdjustments()
     
     /// Thread-safe observer storage
     private let observerStore = ObserverStore()
@@ -163,8 +163,8 @@ public final class CrossPlatformCoordinator: ObservableObject {
         #if canImport(UIKit)
         // Update platform adjustments based on runtime checks
         if UIDevice.current.userInterfaceIdiom == .pad {
-            // iPad gets larger touch targets
-            platformAdjustments.minimumTouchTargetSize = 44.0
+            // iPad gets platform-optimized adjustments
+            platformAdjustments = PlatformAdjustments.forCurrentDevice()
         }
         #endif
     }

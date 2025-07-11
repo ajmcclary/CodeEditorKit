@@ -71,7 +71,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
         var size = usedRect.size
         
         // Add padding for line numbers and minimap if enabled
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             size.width += configuration.layout.gutterWidth
         }
         

@@ -10,10 +10,10 @@ struct DisplayConfigurationSection: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: adaptiveSectionSpacing()) {
             Toggle("Show Line Numbers", isOn: Binding(
-                get: { appState.coordinator.configuration.display.showLineNumbers },
+                get: { appState.coordinator.configuration.display.isLineNumbersEnabled },
                 set: { newValue in
                     appState.coordinator.update { config in
-                        config.display.showLineNumbers = newValue
+                        config.display.isLineNumbersEnabled = newValue
                     }
                     appState.objectWillChange.send()
                 }

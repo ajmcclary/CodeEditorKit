@@ -102,7 +102,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
 
         // 1. Start with full featured config
         let config = ConfigurationPreset.fullFeatured.configuration
-        textView.isLineNumbersEnabled = config.display.showLineNumbers
+        textView.isLineNumbersEnabled = config.display.isLineNumbersEnabled
         textView.isEditable = config.behavior.isEditable
         textView.text = "Initial code"
 

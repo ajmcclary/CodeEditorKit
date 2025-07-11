@@ -142,7 +142,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let config = coordinator.recommendedConfiguration()
         
         XCTAssertNotNil(config)
-        XCTAssertTrue(config.display.showLineNumbers)
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.performance.useHardwareAcceleration)
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

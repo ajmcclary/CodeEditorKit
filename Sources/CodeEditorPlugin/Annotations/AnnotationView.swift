@@ -115,33 +115,15 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     
     // MARK: - Annotation Properties
     
-    private var annotationType: String {
+    private var annotationKind: AnnotationKind {
         if let messageAnnotation = annotation as? MessageLineAnnotation {
-            switch messageAnnotation.kind {
-            case .info:
-                return "NOTE"
-
-            case .warning:
-                return "WARNING"
-
-            case .error:
-                return "ERROR"
-            }
+            return AnnotationKind(from: messageAnnotation.kind)
         }
-        
-        // Check message content for annotation type
-        let message = annotationMessage.lowercased()
-        if message.contains("todo") {
-            return "TODO"
-        } else if message.contains("fixme") {
-            return "FIXME"
-        } else if message.contains("warning") {
-            return "WARNING"
-        } else if message.contains("error") {
-            return "ERROR"
-        } else {
-            return "NOTE"
-        }
+        return AnnotationKind.infer(from: annotationMessage)
+    }
+    
+    private var annotationType: String {
+        annotationKind.rawValue
     }
     
     private var annotationMessage: String {
@@ -152,57 +134,11 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     }
     
     private var annotationColor: PlatformColor {
-        if let messageAnnotation = annotation as? MessageLineAnnotation {
-            switch messageAnnotation.kind {
-            case .info:
-                return PlatformColors.systemBlue
-
-            case .warning:
-                return PlatformColors.systemYellow
-
-            case .error:
-                return PlatformColors.systemRed
-            }
-        }
-        
-        // Color based on annotation type
-        let type = annotationType
-        switch type {
-        case "TODO":
-            return PlatformColors.systemBlue
-
-        case "FIXME":
-            return PlatformColors.systemOrange
-
-        case "WARNING":
-            return PlatformColors.systemYellow
-
-        case "ERROR":
-            return PlatformColors.systemRed
-
-        default:
-            return PlatformColors.secondaryLabel
-        }
+        annotationKind.color
     }
     
     private var iconName: String {
-        let type = annotationType
-        switch type {
-        case "TODO":
-            return "checkmark.circle"
-
-        case "FIXME":
-            return "wrench"
-
-        case "WARNING":
-            return "exclamationmark.triangle"
-
-        case "ERROR":
-            return "xmark.circle"
-
-        default:
-            return "info.circle"
-        }
+        annotationKind.iconName
     }
     
     // MARK: - Popup Management

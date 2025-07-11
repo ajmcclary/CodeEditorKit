@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP functionality is only available on macOS
+
 import Foundation
 
 /// Manages Language Server Protocol (LSP) clients for different programming languages.
@@ -622,4 +625,6 @@ public final class LSPManager: ObservableObject {
             }
         }
     }
+
+#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
     

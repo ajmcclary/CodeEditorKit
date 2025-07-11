@@ -71,7 +71,13 @@ final class InputCoordinatorTests: XCTestCase {
         let coordinator = InputCoordinator()
         let mockView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         
-        let touchEvent = PlatformInputEvent.touch(touches: Set<AnyHashable>(), phase: .began)
+        let touchInfo = TouchInfo(
+            location: CGPoint(x: 100, y: 100),
+            previousLocation: CGPoint(x: 100, y: 100),
+            timestamp: Date().timeIntervalSince1970,
+            identifier: 1
+        )
+        let touchEvent = PlatformInputEvent.touch(touches: Set([touchInfo]), phase: .began)
         let handled = coordinator.handleInput(touchEvent, in: mockView)
         XCTAssertTrue(handled, "Touch events should be handled on iOS")
         #endif

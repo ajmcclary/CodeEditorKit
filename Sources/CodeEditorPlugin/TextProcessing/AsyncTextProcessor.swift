@@ -185,6 +185,9 @@ actor AsyncTextProcessor {
     }
     
     /// Clear all pending tasks
+    ///
+    /// Immediately cancels all active and pending tasks without waiting for completion.
+    /// Use `cleanup()` if you need to wait for tasks to finish.
     func clearQueue() {
         processingQueue.clear()
         
@@ -206,15 +209,28 @@ actor AsyncTextProcessor {
     /// - Important: The deinit cannot perform async cleanup, so this
     ///   method must be called explicitly before releasing the actor.
     func cleanup() async {
-        clearQueue()
+        // Capture active tasks before clearing to avoid reentrancy
+        let tasksToAwait = Array(activeTasks.values)
         
-        // Wait for all active tasks to complete
-        for (_, task) in activeTasks {
-            _ = try? await task.value
-        }
+        // Clear all queues and cancel tasks
+        processingQueue.clear()
+        activeTasks.removeAll()
         
         // Clear the cache
         resultCache = nil
+        
+        // Update load after clearing
+        updateProcessingLoad()
+        
+        // Wait for cancelled tasks to complete outside of actor isolation
+        // This avoids potential reentrancy issues
+        await withTaskGroup(of: Void.self) { group in
+            for task in tasksToAwait {
+                group.addTask {
+                    _ = try? await task.value
+                }
+            }
+        }
     }
     
     // MARK: - Private Methods

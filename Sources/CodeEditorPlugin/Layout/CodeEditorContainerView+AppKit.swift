@@ -217,10 +217,10 @@ extension CodeEditorContainerView {
         minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
         
         // Configure scroll view for line numbers
-        scrollView.hasVerticalRuler = configuration.display.showLineNumbers
-        scrollView.rulersVisible = configuration.display.showLineNumbers
+        scrollView.hasVerticalRuler = configuration.display.isLineNumbersEnabled
+        scrollView.rulersVisible = configuration.display.isLineNumbersEnabled
         
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
             rulerView.textView = textView
             rulerView.ruleThickness = configuration.layout.gutterWidth
@@ -248,7 +248,7 @@ extension CodeEditorContainerView {
     func updateMacOSRuler() {
         guard let scrollView = textView.enclosingScrollView else { return }
         
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             if scrollView.verticalRulerView == nil {
                 let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
                 rulerView.textView = textView
@@ -366,7 +366,7 @@ extension CodeEditorContainerView {
         updateMinimap()
         
         // Force ruler view to update after layout changes
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             scrollView.verticalRulerView?.needsDisplay = true
             // Also mark the scroll view itself for display update
             scrollView.needsDisplay = true

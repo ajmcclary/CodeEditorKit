@@ -245,7 +245,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
         )
         
         let config = PlatformConfigurations.iOS
-        let editor = CodeEditor(text: binding)
+        _ = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
         
         // Verify iOS-specific configuration

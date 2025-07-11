@@ -1,3 +1,6 @@
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// LSP functionality is only available on macOS
+
 import Foundation
 
 // MARK: - Initialize Request/Response
@@ -524,3 +527,5 @@ public enum LSPError: Error, LocalizedError, Sendable {
         }
     }
 }
+
+#endif

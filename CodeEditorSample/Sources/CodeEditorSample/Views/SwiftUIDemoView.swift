@@ -65,7 +65,7 @@ struct SwiftUIDemoView: View {
             
             // Configuration toggles - using SafeToggle to avoid MainActor crashes
             VStack(spacing: 8) {
-                SafeToggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.showLineNumbers)
+                SafeToggle("Show Line Numbers", isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
                 SafeToggle(
                     "Highlight Selected Line",
                     isOn: $appState.currentConfiguration.display.highlightSelectedLine
@@ -169,7 +169,7 @@ extension SwiftUIDemoView {
             "macCatalyst": "16.0+"
           },
           "configuration": {
-            "showLineNumbers": true,
+            "isLineNumbersEnabled": true,
             "highlightSelectedLine": true,
             "isEditable": true,
             "theme": "default"

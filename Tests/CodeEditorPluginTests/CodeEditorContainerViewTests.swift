@@ -42,7 +42,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         #endif
         
         // Check initial configuration
-        XCTAssertEqual(containerView.configuration.display.showLineNumbers, EditorConfiguration.default.display.showLineNumbers)
+        XCTAssertEqual(containerView.configuration.display.isLineNumbersEnabled, EditorConfiguration.default.display.isLineNumbersEnabled)
     }
     
     @MainActor
@@ -56,7 +56,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         XCTAssertTrue(containerView.subviews.contains(textView))
         
         // Gutter view is only added if showLineNumbers is true
-        if containerView.configuration.display.showLineNumbers {
+        if containerView.configuration.display.isLineNumbersEnabled {
             let gutterView = containerView.gutterView
             XCTAssertTrue(containerView.subviews.contains(gutterView))
         }
@@ -89,13 +89,13 @@ final class CodeEditorContainerViewTests: XCTestCase {
         }
         
         var config = EditorConfiguration()
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.showMinimap = true
         config.behavior.isEditable = false
         
         containerView.configuration = config
         
-        XCTAssertTrue(containerView.showsLineNumbers)
+        XCTAssertTrue(containerView.configuration.display.isLineNumbersEnabled)
         XCTAssertFalse(containerView.textView.configuration.behavior.isEditable)
         XCTAssertFalse(containerView.minimapView.isHidden)
     }
@@ -135,7 +135,11 @@ final class CodeEditorContainerViewTests: XCTestCase {
             throw XCTSkip("UI tests not supported in this environment")
         }
         containerView.showsLineNumbers = true
+        
+        // Force layout update
         #if canImport(UIKit)
+        containerView.setNeedsLayout()
+        containerView.layoutIfNeeded()
         containerView.layoutSubviews()
         #else
         containerView.layout()
@@ -146,7 +150,8 @@ final class CodeEditorContainerViewTests: XCTestCase {
         #if canImport(UIKit)
         // iOS/Catalyst: Check gutter view positioning
         XCTAssertEqual(containerView.gutterView.frame.origin.x, 0)
-        XCTAssertEqual(containerView.gutterView.frame.width, gutterWidth)
+        // The actual frame width should match the configuration
+        XCTAssertEqual(containerView.gutterView.frame.width, gutterWidth, "Gutter view width should match configuration")
         
         // On iOS/Catalyst with Auto Layout, text view is positioned after gutter,
         // so it only needs padding in its insets, not the full gutter width
@@ -338,7 +343,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         
         measure {
             for index in 0..<100 {
-                config.display.showLineNumbers = index.isMultiple(of: 2)
+                config.display.isLineNumbersEnabled = index.isMultiple(of: 2)
                 config.display.showMinimap = index.isMultiple(of: 3)
                 containerView.configuration = config
             }

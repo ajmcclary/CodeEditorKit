@@ -243,15 +243,29 @@ extension CrossPlatformCoordinator {
         
         // Update platform adjustments based on orientation
         if orientation.isLandscape {
-            // In landscape, we can use slightly smaller touch targets
-            updatePlatformAdjustments { adjustments in
-                adjustments.minimumTouchTargetSize = 40
-            }
+            // In landscape, recreate adjustments with appropriate touch target size
+            platformAdjustments = PlatformAdjustments(
+                defaultFontSize: platformAdjustments.defaultFontSize,
+                lineSpacing: platformAdjustments.lineSpacing,
+                gutterWidth: platformAdjustments.gutterWidth,
+                minimumTouchTargetSize: 40,
+                maxFileSize: platformAdjustments.maxFileSize,
+                maxHighlightingLength: platformAdjustments.maxHighlightingLength,
+                showMinimap: platformAdjustments.showMinimap,
+                enableMultiCursor: platformAdjustments.enableMultiCursor
+            )
         } else {
             // Portrait uses standard iOS touch target size
-            updatePlatformAdjustments { adjustments in
-                adjustments.minimumTouchTargetSize = 44
-            }
+            platformAdjustments = PlatformAdjustments(
+                defaultFontSize: platformAdjustments.defaultFontSize,
+                lineSpacing: platformAdjustments.lineSpacing,
+                gutterWidth: platformAdjustments.gutterWidth,
+                minimumTouchTargetSize: 44,
+                maxFileSize: platformAdjustments.maxFileSize,
+                maxHighlightingLength: platformAdjustments.maxHighlightingLength,
+                showMinimap: platformAdjustments.showMinimap,
+                enableMultiCursor: platformAdjustments.enableMultiCursor
+            )
         }
         
         // Notify observers of the change

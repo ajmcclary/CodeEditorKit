@@ -52,7 +52,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         
         // Apply complex display configuration
         var config = EditorConfiguration()
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.showInvisibleCharacters = true
         config.display.highlightSelectedLine = true
         config.display.enableSyntaxHighlighting = true
@@ -272,7 +272,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         
         // Apply initial configuration
         var config = EditorConfiguration()
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Configure behavior with actual properties
@@ -287,7 +287,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         
         // Apply new configuration
         var newConfig = EditorConfiguration()
-        newConfig.display.showLineNumbers = true
+        newConfig.display.isLineNumbersEnabled = true
         
         // Note: defaultParagraphStyle is not directly configurable in EditorConfiguration
         

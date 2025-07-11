@@ -16,7 +16,7 @@ struct EditorToolbar: View {
     var body: some View {
         HStack {
             // Quick toggles - using SafeToggle to avoid MainActor crashes
-            SafeToggle("Line Numbers", isOn: $configuration.display.showLineNumbers)
+            SafeToggle("Line Numbers", isOn: $configuration.display.isLineNumbersEnabled)
             SafeToggle("Invisible Characters", isOn: $configuration.display.showInvisibleCharacters)
             SafeToggle("Highlight Line", isOn: $configuration.display.highlightSelectedLine)
 

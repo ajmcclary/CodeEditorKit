@@ -208,7 +208,7 @@ final class SwiftUIEnvironmentTests: XCTestCase {
             theme: .dark,
             configuration: EditorConfiguration.builder()
                 .fontSize(18)
-                .showLineNumbers(false)
+                .isLineNumbersEnabled(false)
                 .build()
         )
         

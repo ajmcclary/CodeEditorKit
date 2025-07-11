@@ -1,8 +1,7 @@
-import Foundation
-
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// Process is only available on macOS
-#endif
+// LSP functionality is only available on macOS
+
+import Foundation
 
 /// Language Server Protocol client implementation
 ///
@@ -579,3 +578,5 @@ public final class LSPClient: ObservableObject {
 // MARK: - Empty Parameters
 
 private struct EmptyParams: Codable {}
+
+#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)

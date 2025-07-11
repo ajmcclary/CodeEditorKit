@@ -8,7 +8,7 @@ CodeEditorPlugin is a Swift 6-based code editor component for macOS, iOS, and Ma
 - **Swift 6 concurrency** with actor-based architecture
 - **Enhanced cross-platform abstraction** using `#if canImport()` patterns
 - **17+ programming languages** with syntax highlighting
-- **657 comprehensive tests** (622 main + 35 sample app) - All passing
+- **655 comprehensive tests** (620 main + 35 sample app) - All passing
 - **Zero SwiftLint violations** across all 43 files
 - **Production-grade reliability** with comprehensive error handling
 - **Feature-based architecture** (74% directory reduction)
@@ -178,7 +178,7 @@ textView.language = .python
 ### Architecture Achievements
 - **74% directory reduction**: From 39 to 10 core feature directories
 - **43 total Swift files**: Well organized with feature-based architecture
-- **604 comprehensive tests**: 569 plugin + 35 sample app (100% passing)
+- **655 comprehensive tests**: 620 plugin + 35 sample app (100% passing)
 - **Zero SwiftLint violations**: Maintained across entire codebase
 - **Swift 6 concurrency compliance**: Full actor isolation and `@preconcurrency` usage
 - **Mac Catalyst compatibility**: Resolved all platform-specific build issues
@@ -202,7 +202,7 @@ textView.language = .python
 
 - **Production-Ready**: Maintain high quality standards
 - **Swift 6 First**: Use modern concurrency patterns
-- **Test Coverage**: Currently 604 tests - maintain this standard
+- **Test Coverage**: Currently 655 tests - maintain this standard
 - **Documentation**: Reference DocC docs in `Documentation.docc/`
 - **Cross-Platform**: Always test on all platforms
 

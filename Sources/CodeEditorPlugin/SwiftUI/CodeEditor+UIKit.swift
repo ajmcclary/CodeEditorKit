@@ -72,7 +72,7 @@ struct CodeEditorRepresentable: UIViewRepresentable {
         var size = sizeThatFits
         
         // Add padding for line numbers if enabled
-        if configuration.display.showLineNumbers {
+        if configuration.display.isLineNumbersEnabled {
             size.width += configuration.layout.gutterWidth
         }
         

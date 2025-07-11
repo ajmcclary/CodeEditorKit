@@ -96,8 +96,9 @@ public struct PlatformAdjustments: Sendable {
     // MARK: - Device-Specific Adjustments
     
     /// Create adjustments optimized for the current device
+    @MainActor
     public static func forCurrentDevice() -> Self {
-        var adjustments = Self()
+        let adjustments = Self()
         
         #if canImport(UIKit)
         // Further customize for specific iOS devices

@@ -78,6 +78,7 @@ public struct TouchInfo: Hashable, Sendable {
     
     #if canImport(UIKit)
     /// Create from UITouch
+    @MainActor
     public init(from touch: UITouch, in view: UIView) {
         self.location = touch.location(in: view)
         self.previousLocation = touch.previousLocation(in: view)
@@ -106,6 +107,9 @@ public enum PlatformTouchPhase: Sendable {
         case .stationary: self = .stationary
         case .ended: self = .ended
         case .cancelled: self = .cancelled
+        case .regionEntered: self = .moved
+        case .regionMoved: self = .moved
+        case .regionExited: self = .ended
         @unknown default: self = .cancelled
         }
     }

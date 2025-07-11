@@ -12,7 +12,7 @@ public enum PlatformConfigurations {
         
         // Display optimizations for macOS
         config.display.fontSize = 14.0
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.highlightSelectedLine = true
         config.display.enableSyntaxHighlighting = true
         config.display.enableCodeFolding = true
@@ -44,7 +44,7 @@ public enum PlatformConfigurations {
         
         // Display optimizations for iOS
         config.display.fontSize = 16.0  // Larger for touch
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.highlightSelectedLine = true
         config.display.enableSyntaxHighlighting = true
         config.display.enableCodeFolding = false  // Less useful on touch
@@ -76,7 +76,7 @@ public enum PlatformConfigurations {
         
         // Display optimizations for Catalyst (hybrid approach)
         config.display.fontSize = 14.0  // Between macOS and iOS
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.highlightSelectedLine = true
         config.display.enableSyntaxHighlighting = true
         config.display.enableCodeFolding = true
@@ -110,7 +110,7 @@ public enum PlatformConfigurations {
         
         // iPhone-specific adjustments
         config.display.fontSize = 15.0
-        config.display.showLineNumbers = false  // Save horizontal space
+        config.display.isLineNumbersEnabled = false  // Save horizontal space
         config.layout.gutterWidth = 30.0
         config.layout.wrapLines = true  // Essential on small screens
         config.performance.maxSyntaxHighlightingLength = 50_000
@@ -201,26 +201,26 @@ public enum PlatformConfigurations {
         
         // Apply device-specific adjustments
         let deviceType = capabilities.deviceType
-        switch deviceType {
-        case .mac:
-            // Already using macOS config
-            // Could check for laptop vs desktop if needed
-            break
-            
-        case .iPhone:
-            config = iPhone
-            
-        case .iPad:
-            // Check if it's an iPad Pro based on screen size or other characteristics
-            config = iPad
-            
-        case .appleTV, .appleWatch, .visionPro, .carPlay:
-            // Use minimal config for unsupported devices
-            config = EditorConfiguration.minimal
-            
-        case .unspecified, .unknown:
-            // Keep platform default
-            break
+        
+        // Don't override platform-specific configs with device configs
+        // Only apply device adjustments for iOS platform
+        if capabilities.currentPlatform == .iOS {
+            switch deviceType {
+            case .iPhone:
+                config = iPhone
+                
+            case .iPad:
+                // Check if it's an iPad Pro based on screen size or other characteristics
+                config = iPad
+                
+            case .appleTV, .appleWatch, .visionPro, .carPlay:
+                // Use minimal config for unsupported devices
+                config = EditorConfiguration.minimal
+                
+            default:
+                // Keep platform default
+                break
+            }
         }
         
         // Apply performance adjustments

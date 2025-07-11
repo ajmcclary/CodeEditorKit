@@ -440,7 +440,7 @@ public final class CodeEditorContainerView: PlatformView {
         // Apply configuration to text view, but disable its internal line numbers
         // since we manage the gutter externally
         var textViewConfig = configuration
-        textViewConfig.display.showLineNumbers = false
+        textViewConfig.display.isLineNumbersEnabled = false
         
         // First remove any existing internal gutter from text view
         textView.removeGutter()
@@ -449,7 +449,7 @@ public final class CodeEditorContainerView: PlatformView {
         textView.configuration = textViewConfig
         
         // Update our own properties based on configuration
-        showsLineNumbers = configuration.display.showLineNumbers
+        showsLineNumbers = configuration.display.isLineNumbersEnabled
         
         // Update minimap visibility
         minimapView.isHidden = !configuration.display.showMinimap
@@ -473,8 +473,8 @@ public final class CodeEditorContainerView: PlatformView {
         scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
         
         // Update ruler visibility and settings
-        scrollView.hasVerticalRuler = configuration.display.showLineNumbers
-        scrollView.rulersVisible = configuration.display.showLineNumbers
+        scrollView.hasVerticalRuler = configuration.display.isLineNumbersEnabled
+        scrollView.rulersVisible = configuration.display.isLineNumbersEnabled
         if let rulerView = scrollView.verticalRulerView as? LineNumberRulerView {
             rulerView.ruleThickness = configuration.layout.gutterWidth
             rulerView.clipsToBounds = true

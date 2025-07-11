@@ -29,7 +29,7 @@ final class SimpleMemoryTest: XCTestCase {
             
             // Apply configuration
             var config = EditorConfiguration()
-            config.display.showLineNumbers = true
+            config.display.isLineNumbersEnabled = true
             config.apply(to: editor)
             
             // Explicit cleanup to break any configuration-related retain cycles

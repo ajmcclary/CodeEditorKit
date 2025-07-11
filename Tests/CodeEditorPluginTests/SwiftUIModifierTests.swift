@@ -110,7 +110,7 @@ final class SwiftUIModifierTests: XCTestCase {
         // Test with custom configuration
         let customConfig = EditorConfigurationBuilder()
             .fontSize(20)
-            .showLineNumbers(false)
+            .isLineNumbersEnabled(false)
             .enableSyntaxHighlighting(false)
             .build()
         
@@ -226,7 +226,7 @@ final class SwiftUIModifierTests: XCTestCase {
             .codeTheme(isDarkMode ? .dark : .default)
             .codeEditorEnvironment(
                 configuration: EditorConfigurationBuilder()
-                    .showLineNumbers(showLineNumbers)
+                    .isLineNumbersEnabled(showLineNumbers)
                     .build()
             )
         

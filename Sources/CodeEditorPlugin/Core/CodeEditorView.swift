@@ -172,7 +172,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal let performanceMonitor = TextKit2PerformanceMonitor()
     
     /// LSP manager for language server integration
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     internal lazy var lspManager = LSPManager(memoryMonitor: memoryMonitor)
+    #endif
     
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
@@ -182,10 +184,30 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Memory monitor for tracking and managing memory usage
     /// 
-    /// This is now managed through EditorConfiguration.performance.memoryMonitor
-    /// for better encapsulation and dependency injection.
-    internal var memoryMonitor = MemoryMonitor() {
+    /// Set this property to provide a custom memory monitor instance or to share
+    /// a single monitor across multiple editor views. If not set, the editor creates
+    /// its own instance.
+    /// 
+    /// When changed, all subsystems that use the memory monitor are automatically updated.
+    /// 
+    /// ## Example
+    /// 
+    /// ```swift
+    /// // Share a monitor across multiple editors
+    /// let sharedMonitor = MemoryMonitor()
+    /// sharedMonitor.memoryThresholdMB = 200.0
+    /// 
+    /// let editor1 = CodeEditorView()
+    /// editor1.memoryMonitor = sharedMonitor
+    /// 
+    /// let editor2 = CodeEditorView() 
+    /// editor2.memoryMonitor = sharedMonitor
+    /// ```
+    public var memoryMonitor = MemoryMonitor() {
         didSet {
+            // Only update if the monitor actually changed
+            guard memoryMonitor !== oldValue else { return }
+            
             // Update all components that use memoryMonitor
             updateMemoryMonitorReferences()
         }
@@ -320,16 +342,26 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func removeFromSuperview() {
-        // Perform cleanup before removing from superview
+        // Perform synchronous cleanup before removing from superview
+        // The async highlighter will handle its own cleanup in deinit if needed
         asyncHighlighter.cleanup()
         unregisterFromMemoryMonitor()
+        
+        // Cancel any pending layout operations
+        layoutCoordinator.cancelPendingLayout()
+        
         super.removeFromSuperview()
     }
     #else
     override public func removeFromSuperview() {
-        // Perform cleanup before removing from superview
+        // Perform synchronous cleanup before removing from superview
+        // The async highlighter will handle its own cleanup in deinit if needed
         asyncHighlighter.cleanup()
         unregisterFromMemoryMonitor()
+        
+        // Cancel any pending layout operations
+        layoutCoordinator.cancelPendingLayout()
+        
         super.removeFromSuperview()
     }
     #endif
@@ -356,7 +388,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
         
         // Update LSP manager
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         lspManager = LSPManager(memoryMonitor: memoryMonitor)
+        #endif
         
         // Note: codeFoldingEngine and other components don't use memoryMonitor
     }
