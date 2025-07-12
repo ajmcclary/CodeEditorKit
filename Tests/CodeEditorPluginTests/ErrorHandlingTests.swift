@@ -162,7 +162,8 @@ final class ErrorHandlingTests: XCTestCase {
             let availability = capabilities.getFeatureAvailability(feature)
             
             // Should not crash and return consistent results
-            XCTAssertEqual(isAvailable, availability.isAvailable)
+            XCTAssertEqual(isAvailable, availability.isAvailable,
+                          "Feature \(feature) has inconsistent availability: isFeatureAvailable=\(isAvailable), getFeatureAvailability=\(availability)")
         }
     }
     

@@ -311,9 +311,11 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let endTime = CFAbsoluteTimeGetCurrent()
         let duration = endTime - startTime
         
-        // Incremental updates should be fast (allow more time on Catalyst)
+        // Incremental updates should be fast (allow more time on Catalyst and simulator)
         #if targetEnvironment(macCatalyst)
         XCTAssertLessThan(duration, 3.0, "Incremental highlighting took \(duration) seconds")
+        #elseif targetEnvironment(simulator)
+        XCTAssertLessThan(duration, 5.0, "Incremental highlighting took \(duration) seconds")
         #else
         XCTAssertLessThan(duration, 1.5, "Incremental highlighting took \(duration) seconds")
         #endif

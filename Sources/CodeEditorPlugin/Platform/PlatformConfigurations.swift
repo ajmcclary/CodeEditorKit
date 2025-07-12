@@ -56,7 +56,7 @@ public enum PlatformConfigurations {
         config.display.showMinimap = false  // Save screen space
         
         // Layout optimizations for iOS
-        config.layout.gutterWidth = 40.0  // Narrower for mobile
+        config.layout.gutterWidth = 50.0  // Standard width for iOS
         config.layout.minimapWidth = 0.0
         config.layout.lineHeightMultiple = 1.3  // More spacing for touch
         config.layout.wrapLines = true  // Avoid horizontal scrolling
@@ -114,9 +114,9 @@ public enum PlatformConfigurations {
         var config = iOS
         
         // iPhone-specific adjustments
-        config.display.fontSize = 15.0
-        config.display.isLineNumbersEnabled = false  // Save horizontal space
-        config.layout.gutterWidth = 30.0
+        config.display.fontSize = 16.0  // Keep iOS default
+        config.display.isLineNumbersEnabled = true  // Keep iOS default
+        config.layout.gutterWidth = 50.0  // Keep iOS default
         config.layout.wrapLines = true  // Essential on small screens
         config.performance.maxSyntaxHighlightingLength = 50_000
         

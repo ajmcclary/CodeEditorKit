@@ -251,8 +251,17 @@ extension PlatformCapabilities {
             return currentPlatform == .macOS
             
         // Navigation features
-        case .symbolNavigation, .breadcrumbs, .goToDefinition:
+        case .symbolNavigation, .breadcrumbs:
             return true // Software features with platform-specific UI
+        case .goToDefinition:
+            // Check platform-specific availability
+            if currentPlatform == .macOS {
+                return true
+            } else if currentPlatform == .catalyst || isIPad {
+                return true // Partial support
+            } else {
+                return false // Unavailable on iPhone
+            }
         case .quickOpen:
             return currentPlatform == .macOS || currentPlatform == .catalyst
             
@@ -371,8 +380,17 @@ extension PlatformCapabilities {
     /// Get availability for UI-related features
     private func getUIFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
-        case .findReplace, .symbolNavigation, .breadcrumbs, .goToDefinition, .toolbars:
+        case .findReplace, .symbolNavigation, .breadcrumbs, .toolbars:
             return currentPlatform == .macOS ? .full : .partial
+            
+        case .goToDefinition:
+            if currentPlatform == .macOS {
+                return .full
+            } else if currentPlatform == .catalyst || isIPad {
+                return .partial
+            } else {
+                return .unavailable // iPhone doesn't support go to definition
+            }
             
         default:
             return nil

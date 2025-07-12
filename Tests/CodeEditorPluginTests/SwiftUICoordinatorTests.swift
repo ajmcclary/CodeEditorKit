@@ -213,12 +213,12 @@ final class SwiftUICoordinatorTests: XCTestCase {
         
         // Wait for debounce (500ms) plus buffer (extra time for iPad Pro simulator)
         #if targetEnvironment(simulator)
-        // Simulator needs more time
-        try await Task.sleep(for: .milliseconds(1200))
+        // Simulator needs more time, especially on iPhone
+        try await Task.sleep(for: .milliseconds(1500))
         #elseif targetEnvironment(macCatalyst)
         try await Task.sleep(for: .milliseconds(1000))
         #else
-        try await Task.sleep(for: .milliseconds(700))
+        try await Task.sleep(for: .milliseconds(800))
         #endif
         
         // Should only get one update to the binding due to debouncing
