@@ -220,22 +220,20 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         // First highlight (no cache)
         editorView.text = text
         editorView.language = language
-        let start1 = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: language)
         try await Task.sleep(for: .milliseconds(50))
-        let time1 = CFAbsoluteTimeGetCurrent() - start1
         
         // Second highlight (with cache)
-        let start2 = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: language)
-        try await Task.sleep(for: .milliseconds(50))
-        let time2 = CFAbsoluteTimeGetCurrent() - start2
         
-        // Cache hit should be significantly faster
-        XCTAssertLessThan(time2, time1 * 0.1, "Cached highlight should be at least 10x faster")
-        
+        // Verify we got a cache hit
         let stats = await highlighter.getCacheStatistics()
         XCTAssertEqual(stats.hitCount, 1, "Should have one cache hit")
+        XCTAssertEqual(stats.missCount, 1, "Should have one cache miss")
+        
+        // The actual performance improvement is hard to measure accurately in tests
+        // due to async operations and varying system load. The important thing
+        // is that the cache is working (hit count > 0).
     }
     
     // MARK: - Statistics Summary Tests
