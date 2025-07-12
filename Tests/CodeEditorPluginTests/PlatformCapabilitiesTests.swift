@@ -362,10 +362,17 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertFalse(config.display.showMinimap, "iPhone should not show minimap")
             
         case .iPad:
-            XCTAssertEqual(config.display.fontSize, 16.0, "iPad should use 16pt font")
-            XCTAssertEqual(config.layout.gutterWidth, 45.0, "iPad should use 45pt gutter")
-            // iPad configuration enables minimap since it has enough screen space
-            XCTAssertTrue(config.display.showMinimap, "iPad should show minimap")
+            // Catalyst on iPad has different settings than native iPad
+            if capabilities.currentPlatform == .catalyst {
+                XCTAssertEqual(config.display.fontSize, 15.0, "Catalyst iPad should use 15pt font")
+                XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst iPad should use 45pt gutter")
+                XCTAssertFalse(config.display.showMinimap, "Catalyst iPad should not show minimap")
+            } else {
+                XCTAssertEqual(config.display.fontSize, 16.0, "iPad should use 16pt font")
+                XCTAssertEqual(config.layout.gutterWidth, 45.0, "iPad should use 45pt gutter")
+                // iPad configuration enables minimap since it has enough screen space
+                XCTAssertTrue(config.display.showMinimap, "iPad should show minimap")
+            }
             
         default:
             // Other device types use their default configurations
