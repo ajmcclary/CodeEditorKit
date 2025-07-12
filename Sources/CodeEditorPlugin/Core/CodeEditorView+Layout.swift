@@ -120,7 +120,6 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = self.textContainer else { return }
         
-        
         if configuration.layout.wrapLines {
             // For word wrap mode, set container width to match view width
             textContainer.containerSize = NSSize(
