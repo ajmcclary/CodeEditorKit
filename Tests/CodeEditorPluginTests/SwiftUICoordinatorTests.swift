@@ -211,8 +211,12 @@ final class SwiftUICoordinatorTests: XCTestCase {
         coordinator.handleTextChange("ab")
         coordinator.handleTextChange("abc")
         
-        // Wait for debounce (500ms) plus buffer
+        // Wait for debounce (500ms) plus buffer (extra time for Catalyst)
+        #if targetEnvironment(macCatalyst)
+        try await Task.sleep(for: .milliseconds(1000))
+        #else
         try await Task.sleep(for: .milliseconds(700))
+        #endif
         
         // Should only get one update to the binding due to debouncing
         XCTAssertEqual(updateCount, 1)

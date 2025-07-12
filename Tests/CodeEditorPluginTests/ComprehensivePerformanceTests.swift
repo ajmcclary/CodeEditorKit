@@ -161,11 +161,18 @@ final class ComprehensivePerformanceTests: XCTestCase {
             let expectation = self.expectation(description: "Symbol detection")
             navigator.updateSymbols()
             
-            // Wait a bit for async processing
+            // Wait a bit for async processing (longer for Catalyst)
+            #if targetEnvironment(macCatalyst)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 5.0)
+            #else
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 expectation.fulfill()
             }
             wait(for: [expectation], timeout: 2.0)
+            #endif
         }
     }
     
