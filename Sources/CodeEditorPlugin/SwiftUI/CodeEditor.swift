@@ -281,6 +281,12 @@ public struct CodeEditor: View {
                 defaultMemoryMonitor.startMonitoring()
             }
         }
+        .onDisappear {
+            // Stop monitoring if using default memory monitor
+            if environment.memoryMonitor == nil {
+                defaultMemoryMonitor.stopMonitoring()
+            }
+        }
     }
     
     // MARK: - Private Methods

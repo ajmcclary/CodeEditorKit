@@ -221,8 +221,8 @@ public final class GoCompletionProvider: CompletionProvider {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil

@@ -287,8 +287,8 @@ public final class HTMLCompletionProvider: CompletionProvider {
         // Find the most recent unclosed tag
         let pattern = #"<(\w+)(?:\s+[^>]*)?$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil
@@ -298,8 +298,8 @@ public final class HTMLCompletionProvider: CompletionProvider {
         // Find the current attribute being edited
         let pattern = #"(\w+)\s*=\s*[\"']?[^\"']*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil
@@ -324,9 +324,11 @@ public final class HTMLCompletionProvider: CompletionProvider {
                         }
                     } else {
                         // Opening tag - check if it's not self-closing
-                        let fullMatch = String(text[Range(match.range, in: text)!])
-                        if !fullMatch.hasSuffix("/>") && !["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"].contains(tag) {
-                            tagStack.append(tag)
+                        if let fullRange = Range(match.range, in: text) {
+                            let fullMatch = String(text[fullRange])
+                            if !fullMatch.hasSuffix("/>") && !["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"].contains(tag) {
+                                tagStack.append(tag)
+                            }
                         }
                     }
                 }

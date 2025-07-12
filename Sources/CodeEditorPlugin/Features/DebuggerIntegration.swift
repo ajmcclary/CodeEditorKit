@@ -415,11 +415,12 @@ internal class DebuggerIntegration: ObservableObject {
     }
     
     private func setupEventHandling(for session: DebugSession) {
-        // Handle adapter events
+        // Handle adapter events using MainActor
         session.adapter.eventPublisher
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] event in
-                self?.handleDebugEvent(event, session: session)
+                Task { @MainActor [weak self] in
+                    self?.handleDebugEvent(event, session: session)
+                }
             }
             .store(in: &cancellables)
     }

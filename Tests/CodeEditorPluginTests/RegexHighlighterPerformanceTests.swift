@@ -140,7 +140,7 @@ final class RegexHighlighterPerformanceTests: XCTestCase {
         
         // Find the tokens for the two "const" occurrences
         let constTokens = tokens.filter { token in
-            let range = Range(token.range, in: testCode)!
+            guard let range = Range(token.range, in: testCode) else { return false }
             return testCode[range] == "const"
         }
         
@@ -152,8 +152,8 @@ final class RegexHighlighterPerformanceTests: XCTestCase {
         XCTAssertFalse(stringTokens.isEmpty, "Should have string tokens")
         
         // Verify the string contains the second "const"
-        if let stringToken = stringTokens.first {
-            let stringRange = Range(stringToken.range, in: testCode)!
+        if let stringToken = stringTokens.first,
+           let stringRange = Range(stringToken.range, in: testCode) {
             let stringContent = String(testCode[stringRange])
             XCTAssertTrue(stringContent.contains("const inside string"), "String should contain the text with 'const'")
         }

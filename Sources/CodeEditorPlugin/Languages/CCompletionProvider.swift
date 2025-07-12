@@ -271,8 +271,8 @@ public final class CCompletionProvider: CompletionProvider {
         // Extract the object before . or ->
         let pattern = #"(\w+)\s*(?:\.|->)\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil
@@ -282,8 +282,8 @@ public final class CCompletionProvider: CompletionProvider {
         // Extract the namespace before ::
         let pattern = #"([\w:]+)::\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil

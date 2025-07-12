@@ -343,7 +343,10 @@ internal class BaseDebugAdapter: @preconcurrency DebugAdapter {
         
         // Convert to JSON and send
         let data = try JSONSerialization.data(withJSONObject: request)
-        _ = "Content-Length: \(data.count)\r\n\r\n" + String(data: data, encoding: .utf8)!
+        guard let jsonString = String(data: data, encoding: .utf8) else {
+            throw AdapterError.invalidResponse("Failed to encode JSON as UTF-8")
+        }
+        _ = "Content-Length: \(data.count)\r\n\r\n" + jsonString
         
         // Send message
         // This is simplified - in reality you'd write to the process stdin

@@ -57,7 +57,7 @@ extension CodeEditorView {
     /// Register cleanup handler with the memory monitor
     internal func registerWithMemoryMonitor() {
         // Skip memory monitoring in test environment to avoid cleanup issues
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+        if TestEnvironmentDetector.isRunningInTests {
             return
         }
         
@@ -113,7 +113,7 @@ extension CodeEditorView {
             }
             
             // In test environments, return a minimal result without description to reduce output
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            if TestEnvironmentDetector.isRunningInTests {
                 return CleanupResult(memoryFreedMB: 0, description: nil)
             }
             
@@ -125,7 +125,7 @@ extension CodeEditorView {
     /// Unregister from memory monitor  
     internal func unregisterFromMemoryMonitor() {
         // Skip memory monitoring in test environment to avoid cleanup issues
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+        if TestEnvironmentDetector.isRunningInTests {
             return
         }
         

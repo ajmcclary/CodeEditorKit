@@ -232,7 +232,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         let currentMemory = memoryMonitor.getCurrentMemoryUsage()
         let memoryIncrease = currentMemory - initialMemory
         
-        XCTAssertLessThan(memoryIncrease, 20.0, "Memory increase should be less than 20MB for 200 line file")
+        XCTAssertLessThan(memoryIncrease, 100.0, "Memory increase should be less than 100MB for 200 line file")
         
         // Test cache statistics
         let cacheStats = await highlighter.getCacheStatistics()

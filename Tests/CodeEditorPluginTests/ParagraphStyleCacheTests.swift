@@ -124,30 +124,24 @@ final class ParagraphStyleCacheTests: XCTestCase {
         XCTAssertEqual(hiddenStyle.paragraphSpacingBefore, 0)
     }
     
-    // MARK: - Thread Safety Tests
+    // MARK: - MainActor Safety Tests
     
-    func testThreadSafety() {
-        let expectation = self.expectation(description: "Thread safety test")
-        expectation.expectedFulfillmentCount = 100
-        
-        let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+    func testMainActorSafety() {
+        // Test multiple sequential accesses on MainActor
         let testCache = cache
         
         for index in 0..<100 {
-            queue.async {
-                let font = PlatformFonts.monospacedSystemFont(ofSize: CGFloat(12 + (index % 5)), weight: .regular)
-                
-                _ = testCache?.paragraphStyle(
-                    tabWidth: 4 + (index % 3),
-                    lineHeightMultiple: 1.0 + CGFloat(index % 5) * 0.1,
-                    font: font
-                )
-                
-                expectation.fulfill()
-            }
+            let font = PlatformFonts.monospacedSystemFont(ofSize: CGFloat(12 + (index % 5)), weight: .regular)
+            
+            _ = testCache?.paragraphStyle(
+                tabWidth: 4 + (index % 3),
+                lineHeightMultiple: 1.0 + CGFloat(index % 5) * 0.1,
+                font: font
+            )
         }
         
-        wait(for: [expectation], timeout: 5.0)
+        // Test passed if no crashes occurred
+        XCTAssertNotNil(testCache, "Cache should remain valid after multiple accesses")
     }
     
     // MARK: - Performance Tests

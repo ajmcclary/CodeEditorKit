@@ -6,7 +6,7 @@ import AppKit
 #endif
 
 /// Cache for paragraph styles to avoid recomputation
-public final class ParagraphStyleCache: @unchecked Sendable {
+public final class ParagraphStyleCache {
     // MARK: - Types
     
     /// Key for caching paragraph styles
@@ -28,7 +28,6 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Properties
     
     private var cache: [CacheKey: NSParagraphStyle] = [:]
-    private let cacheLock = NSLock()
     private let capacity: Int
     
     // MARK: - Initialization
@@ -57,12 +56,9 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         )
         
         // Check cache
-        cacheLock.lock()
         if let cached = cache[key] {
-            cacheLock.unlock()
             return cached
         }
-        cacheLock.unlock()
         
         // Create new paragraph style
         let paragraphStyle = createParagraphStyle(
@@ -72,7 +68,6 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         )
         
         // Cache it
-        cacheLock.lock()
         cache[key] = paragraphStyle
         // Remove oldest if over capacity
         if cache.count > capacity {
@@ -80,16 +75,13 @@ public final class ParagraphStyleCache: @unchecked Sendable {
                 cache.removeValue(forKey: oldestKey)
             }
         }
-        cacheLock.unlock()
         
         return paragraphStyle
     }
     
     /// Clear the cache
     public func clear() {
-        cacheLock.lock()
         cache.removeAll()
-        cacheLock.unlock()
     }
     
     // MARK: - Private Methods
@@ -145,10 +137,10 @@ public final class ParagraphStyleCache: @unchecked Sendable {
 
 extension ParagraphStyleCache {
     /// Shared instance for global paragraph style caching
-    public static let shared = ParagraphStyleCache()
+    nonisolated(unsafe) public static let shared = ParagraphStyleCache()
     
     /// Cached hidden paragraph style for code folding
-    public nonisolated(unsafe) static let hiddenParagraphStyle: NSParagraphStyle = {
+    nonisolated(unsafe) public static let hiddenParagraphStyle: NSParagraphStyle = {
         let style = NSMutableParagraphStyle()
         style.minimumLineHeight = 0
         style.maximumLineHeight = 0

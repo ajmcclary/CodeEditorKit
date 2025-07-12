@@ -14,7 +14,6 @@ final class LineIndexCache {
     // MARK: - Properties
     
     private var cache: CacheEntry?
-    private let cacheLock = NSLock()
     
     // MARK: - Public Methods
     
@@ -87,17 +86,12 @@ final class LineIndexCache {
     
     /// Clear the cache
     func invalidate() {
-        cacheLock.lock()
         cache = nil
-        cacheLock.unlock()
     }
     
     // MARK: - Private Methods
     
     private func ensureCacheValid(for text: String) -> CacheEntry {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        
         // Check if cache is valid
         if let existingCache = cache,
            existingCache.text.hashValue == text.hashValue,

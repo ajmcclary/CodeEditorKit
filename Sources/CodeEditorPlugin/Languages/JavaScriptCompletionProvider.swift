@@ -228,14 +228,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
     }
     
     private func extractTargetType(from text: String) -> String? {
-        // Extract the object before the dot
-        let pattern = #"([\w$]+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
     
     // MARK: - Completion Creation Methods

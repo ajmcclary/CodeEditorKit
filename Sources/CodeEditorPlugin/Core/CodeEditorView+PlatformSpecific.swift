@@ -127,7 +127,11 @@ extension CodeEditorView {
             let maxCheck = min(tabWidth, currentRange.location)
             let checkRange = NSRange(location: currentRange.location - maxCheck, length: maxCheck)
             let text = textStorage.string
-            let substring = String(text[Range(checkRange, in: text)!])
+            guard let range = Range(checkRange, in: text) else {
+                super.insertBacktab(sender)
+                return
+            }
+            let substring = String(text[range])
             
             // Count trailing spaces
             var spacesToRemove = 0

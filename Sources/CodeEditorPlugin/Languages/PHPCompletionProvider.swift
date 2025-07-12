@@ -405,8 +405,8 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         // Extract the object/class before -> or ::
         let pattern = separator == "->" ? #"(\$\w+)\s*->$"# : #"(\w+)\s*::$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) {
-            let range = Range(match.range(at: 1), in: text)!
+           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+           let range = Range(match.range(at: 1), in: text) {
             return String(text[range])
         }
         return nil
