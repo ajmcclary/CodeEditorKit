@@ -262,6 +262,7 @@ extension PlatformCapabilities {
             } else {
                 return false // Unavailable on iPhone
             }
+
         case .quickOpen:
             return currentPlatform == .macOS || currentPlatform == .catalyst
             

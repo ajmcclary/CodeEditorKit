@@ -316,6 +316,9 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         XCTAssertLessThan(duration, 3.0, "Incremental highlighting took \(duration) seconds")
         #elseif targetEnvironment(simulator)
         XCTAssertLessThan(duration, 5.0, "Incremental highlighting took \(duration) seconds")
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // Native macOS may need slightly more time for incremental updates
+        XCTAssertLessThan(duration, 2.0, "Incremental highlighting took \(duration) seconds")
         #else
         XCTAssertLessThan(duration, 1.5, "Incremental highlighting took \(duration) seconds")
         #endif

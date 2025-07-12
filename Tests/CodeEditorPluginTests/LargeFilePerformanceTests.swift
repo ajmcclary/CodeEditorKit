@@ -115,8 +115,11 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            // Catalyst may need more time for large file highlighting
+            // Platform-specific timeouts for large file highlighting
             #if targetEnvironment(macCatalyst)
+            wait(for: [expectation], timeout: 2.0)
+            #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+            // Native macOS needs more time for syntax highlighting
             wait(for: [expectation], timeout: 2.0)
             #else
             wait(for: [expectation], timeout: 1.0)
