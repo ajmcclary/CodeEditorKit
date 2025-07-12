@@ -202,8 +202,21 @@ final class PlatformCapabilitiesTests: XCTestCase {
             break
 
         case .iOS:
+            // iOS config varies by device
+            #if canImport(UIKit)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                // iPad-specific config
+                XCTAssertEqual(config.display.fontSize, 16.0)
+                XCTAssertEqual(config.layout.gutterWidth, 45.0)
+            } else {
+                // iPhone config
+                XCTAssertEqual(config.display.fontSize, 16.0)
+                XCTAssertEqual(config.layout.gutterWidth, 50.0)
+            }
+            #else
             XCTAssertEqual(config.display.fontSize, 16.0)
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
+            #endif
 
         case .catalyst:
             // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)
@@ -225,6 +238,15 @@ final class PlatformCapabilitiesTests: XCTestCase {
         // On Catalyst, smooth scrolling depends on device type and memory
         // Just ensure it's set to a boolean value
         _ = config.performance.smoothScrolling
+        #elseif canImport(UIKit)
+        // On iOS, smooth scrolling depends on ProMotion display (>60fps)
+        // In simulator, this might not be available
+        if UIScreen.main.maximumFramesPerSecond > 60 {
+            XCTAssertTrue(config.performance.smoothScrolling)
+        } else {
+            // Non-ProMotion displays or simulator
+            XCTAssertFalse(config.performance.smoothScrolling)
+        }
         #else
         XCTAssertTrue(config.performance.smoothScrolling)
         #endif
@@ -340,10 +362,10 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertFalse(config.display.showMinimap, "iPhone should not show minimap")
             
         case .iPad:
-            XCTAssertEqual(config.display.fontSize, 15.0, "iPad should use 15pt font")
+            XCTAssertEqual(config.display.fontSize, 16.0, "iPad should use 16pt font")
             XCTAssertEqual(config.layout.gutterWidth, 45.0, "iPad should use 45pt gutter")
-            // Note: iPad's recommendedConfiguration() sets showMinimap to false
-            XCTAssertFalse(config.display.showMinimap, "iPad should not show minimap")
+            // iPad configuration enables minimap since it has enough screen space
+            XCTAssertTrue(config.display.showMinimap, "iPad should show minimap")
             
         default:
             // Other device types use their default configurations

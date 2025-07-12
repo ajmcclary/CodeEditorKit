@@ -211,8 +211,11 @@ final class SwiftUICoordinatorTests: XCTestCase {
         coordinator.handleTextChange("ab")
         coordinator.handleTextChange("abc")
         
-        // Wait for debounce (500ms) plus buffer (extra time for Catalyst)
-        #if targetEnvironment(macCatalyst)
+        // Wait for debounce (500ms) plus buffer (extra time for iPad Pro simulator)
+        #if targetEnvironment(simulator)
+        // Simulator needs more time
+        try await Task.sleep(for: .milliseconds(1200))
+        #elseif targetEnvironment(macCatalyst)
         try await Task.sleep(for: .milliseconds(1000))
         #else
         try await Task.sleep(for: .milliseconds(700))

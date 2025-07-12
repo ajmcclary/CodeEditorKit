@@ -72,8 +72,18 @@ public enum DeviceType: String, CaseIterable, Sendable {
         switch self {
         case .iPhone:
             #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-            guard let window = UIApplication.shared.windows.first else { return false }
-            return window.safeAreaInsets.bottom > 0
+            if #available(iOS 15.0, *) {
+                // Use the new window scene API
+                guard let windowScene = UIApplication.shared.connectedScenes
+                    .compactMap({ $0 as? UIWindowScene })
+                    .first,
+                    let window = windowScene.windows.first else { return false }
+                return window.safeAreaInsets.bottom > 0
+            } else {
+                // Fallback for iOS 14 and earlier
+                guard let window = UIApplication.shared.windows.first else { return false }
+                return window.safeAreaInsets.bottom > 0
+            }
             #else
             return false
             #endif

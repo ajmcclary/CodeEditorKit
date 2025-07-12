@@ -1,4 +1,9 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 // MARK: - Platform Configuration Provider
 
@@ -246,6 +251,17 @@ public enum PlatformConfigurations {
         #if arch(arm64)
         // Apple Silicon optimizations
         config.performance.useHardwareAcceleration = true
+        #endif
+        
+        // Apply display-specific adjustments
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        // Enable smooth scrolling for ProMotion displays
+        if UIScreen.main.maximumFramesPerSecond > 60 {
+            config.performance.smoothScrolling = true
+        }
+        #elseif targetEnvironment(macCatalyst)
+        // Catalyst always supports smooth scrolling
+        config.performance.smoothScrolling = true
         #endif
         
         return config

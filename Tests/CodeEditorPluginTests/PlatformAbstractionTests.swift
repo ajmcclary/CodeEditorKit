@@ -167,8 +167,21 @@ final class PlatformAbstractionTests: XCTestCase {
         
         switch capabilities.currentPlatform {
         case .iOS:
+            // iOS config varies by device
+            #if canImport(UIKit)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                // iPad-specific config
+                XCTAssertEqual(config.display.fontSize, 16.0)
+                XCTAssertEqual(config.layout.gutterWidth, 45.0)
+            } else {
+                // iPhone config
+                XCTAssertEqual(config.display.fontSize, 16.0)
+                XCTAssertEqual(config.layout.gutterWidth, 50.0)
+            }
+            #else
             XCTAssertEqual(config.display.fontSize, 16.0)
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
+            #endif
             
         case .catalyst:
             // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)

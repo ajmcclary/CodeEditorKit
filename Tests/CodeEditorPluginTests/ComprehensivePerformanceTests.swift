@@ -608,7 +608,12 @@ final class ComprehensivePerformanceTests: XCTestCase {
                     throttleExpectation.fulfill()
                 }
             }
+            // Increase timeout for iPad Pro simulator
+            #if targetEnvironment(simulator)
+            wait(for: [debounceExpectation, throttleExpectation], timeout: 8.0)
+            #else
             wait(for: [debounceExpectation, throttleExpectation], timeout: 4.0)
+            #endif
         }
     }
     

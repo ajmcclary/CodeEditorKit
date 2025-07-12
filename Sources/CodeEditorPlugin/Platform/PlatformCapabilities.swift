@@ -297,6 +297,10 @@ extension PlatformCapabilities {
             
         // Input features
         case .keyboardShortcuts:
+            // Check for partial support on iPad
+            if currentPlatform == .iOS && isIPad {
+                return true // iPad has partial keyboard shortcut support
+            }
             return supportsKeyboardShortcuts
 
         case .mouseSupport:
