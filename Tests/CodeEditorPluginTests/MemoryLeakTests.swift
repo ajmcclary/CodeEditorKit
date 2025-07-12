@@ -132,8 +132,8 @@ final class MemoryLeakTests: XCTestCase {
     // MARK: - Performance Monitor Memory Tests
     
     func testPerformanceMonitorCleansUpOldMetrics() async {
-        // Use the shared instance
-        let monitor = PerformanceMonitor.shared
+        // Create a test instance instead of using deprecated singleton
+        let monitor = PerformanceMonitor()
         
         // Clear existing metrics first
         await monitor.clearMetrics()
@@ -150,8 +150,8 @@ final class MemoryLeakTests: XCTestCase {
     }
     
     func testPerformanceMonitorPeriodicCleanup() async throws {
-        // Use the shared instance
-        let monitor = PerformanceMonitor.shared
+        // Create a test instance instead of using deprecated singleton
+        let monitor = PerformanceMonitor()
         
         // Clear existing metrics first
         await monitor.clearMetrics()

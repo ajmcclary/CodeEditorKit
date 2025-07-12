@@ -27,7 +27,7 @@ public final class PerformanceInsights: ObservableObject {
     private var history = PerformanceHistory()
     
     /// Monitoring components
-    private let performanceMonitor = PerformanceMonitor.shared
+    private let performanceMonitor: PerformanceMonitor
     private let textKit2Monitor = TextKit2PerformanceMonitor()
     private let memoryMonitor: MemoryMonitor
     
@@ -42,13 +42,22 @@ public final class PerformanceInsights: ObservableObject {
     
     // MARK: - Initialization
     
-    public init(memoryMonitor: MemoryMonitor) {
+    public init(memoryMonitor: MemoryMonitor, performanceMonitor: PerformanceMonitor? = nil) {
         self.memoryMonitor = memoryMonitor
+        self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
         startMonitoring()
     }
     
     deinit {
-        // Timer cleanup is handled by the system when deallocated
+        // Use MainActor.assumeIsolated to safely clean up @MainActor resources
+        // This is safe because PerformanceInsights instances are created and destroyed on the main actor
+        MainActor.assumeIsolated {
+            // Properly invalidate timer to prevent memory leaks
+            updateTimer?.invalidate()
+            updateTimer = nil
+            
+            logger.debug("PerformanceInsights deallocated and cleaned up")
+        }
     }
     
     // MARK: - Public Methods

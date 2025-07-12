@@ -76,27 +76,9 @@ extension CrossPlatformCoordinator {
     
     // MARK: - MacOS Context Menu
     
-    func createMacOSContextMenu(for _: CodeEditorView, at _: CGPoint) -> NSMenu {
-        let menu = NSMenu()
-        
-        // Standard editing
-        menu.addItem(NSMenuItem(title: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
-        menu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
-        menu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
-        menu.addItem(NSMenuItem.separator())
-        
-        // Code-specific actions
-        let codeMenu = NSMenuItem(title: "Code", action: nil, keyEquivalent: "")
-        let codeSubmenu = NSMenu()
-        codeSubmenu.addItem(NSMenuItem(title: "Toggle Comment", action: #selector(toggleCommentAction), keyEquivalent: "/"))
-        codeSubmenu.addItem(NSMenuItem(title: "Format Selection", action: #selector(formatSelection), keyEquivalent: ""))
-        codeSubmenu.addItem(NSMenuItem.separator())
-        codeSubmenu.addItem(NSMenuItem(title: "Go to Definition", action: #selector(goToDefinition), keyEquivalent: ""))
-        codeSubmenu.addItem(NSMenuItem(title: "Find References", action: #selector(findReferences), keyEquivalent: ""))
-        codeMenu.submenu = codeSubmenu
-        menu.addItem(codeMenu)
-        
-        return menu
+    func createMacOSContextMenu(for textView: CodeEditorView, at _: CGPoint) -> NSMenu {
+        let descriptor = SharedContextMenuBuilder.createStandardCodeEditorMenu(for: textView, coordinator: self)
+        return SharedContextMenuBuilder.buildNSMenu(from: descriptor, target: self)
     }
     
     // MARK: - MacOS Specific Actions
@@ -145,7 +127,7 @@ extension CrossPlatformCoordinator {
         textView.scrollRangeToVisible(lineRange)
     }
     
-    private func toggleComment(in textView: CodeEditorView) {
+    func toggleComment(in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         let language = textView.language
         

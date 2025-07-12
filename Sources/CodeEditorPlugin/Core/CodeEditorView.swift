@@ -84,7 +84,7 @@ import AppKit
 /// // Configure LSP for Swift
 /// try await editor.languageServerManager.configureLanguageServer(
 ///     for: .swift,
-///     serverPath: "/usr/bin/sourcekit-lsp"
+///     serverPath: "sourcekit-lsp"  // Will be resolved automatically
 /// )
 /// 
 /// // Request hover information

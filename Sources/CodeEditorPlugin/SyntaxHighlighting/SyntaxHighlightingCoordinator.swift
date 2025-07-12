@@ -38,16 +38,17 @@ public final class SyntaxHighlightingCoordinator {
 
     private let swiftHighlighter: SwiftSyntaxHighlighter
     private let regexHighlighter: RegexSyntaxHighlighter
-    private let performanceMonitor = PerformanceMonitor.shared
+    private let performanceMonitor: PerformanceMonitor
     
     // Use an actor for managing mutable state
     private let taskManager = HighlightingTaskManager()
 
     // MARK: - Initialization
 
-    public init() {
+    public init(performanceMonitor: PerformanceMonitor? = nil) {
         swiftHighlighter = SwiftSyntaxHighlighter()
         regexHighlighter = RegexSyntaxHighlighter()
+        self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
     }
 
     // MARK: - Public Methods

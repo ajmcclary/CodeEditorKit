@@ -1,6 +1,10 @@
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Performs syntax highlighting in background threads to improve UI responsiveness
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class BackgroundSyntaxHighlighter: ObservableObject {
     // MARK: - Configuration
@@ -575,6 +579,7 @@ actor HighlightingActor {
 
 /// Background highlighting statistics
 @MainActor
+@available(macOS 10.15, iOS 13.0, *)
 public final class BackgroundHighlightingStatistics: ObservableObject {
     @Published public private(set) var totalRequests: Int = 0
     @Published public private(set) var completedRequests: Int = 0

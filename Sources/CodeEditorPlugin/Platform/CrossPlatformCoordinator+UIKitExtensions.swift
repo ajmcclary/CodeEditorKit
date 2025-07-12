@@ -136,32 +136,8 @@ extension CrossPlatformCoordinator {
     // MARK: - IOS Context Menu
     
     func createIOSContextMenu(for textView: CodeEditorView, at _: CGPoint) -> UIMenu {
-        var actions: [UIMenuElement] = []
-        
-        // Standard editing
-        actions.append(UIAction(title: "Cut", image: UIImage(systemName: "scissors")) { _ in
-            textView.cut(nil)
-        })
-        actions.append(UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { _ in
-            textView.copy(nil)
-        })
-        actions.append(UIAction(title: "Paste", image: UIImage(systemName: "doc.on.clipboard")) { _ in
-            textView.paste(nil)
-        })
-        
-        // Code-specific actions
-        let codeActions = UIMenu(title: "Code", children: [
-            UIAction(title: "Toggle Comment", image: UIImage(systemName: "text.bubble")) { [weak self] _ in
-                self?.toggleComment(in: textView)
-            },
-            UIAction(title: "Format Selection", image: UIImage(systemName: "text.alignleft")) { [weak self] _ in
-                self?.logger.debug("Format selection requested")
-                // Implementation tracked in GitHub issue #4
-            }
-        ])
-        actions.append(codeActions)
-        
-        return UIMenu(children: actions)
+        let descriptor = SharedContextMenuBuilder.createStandardCodeEditorMenu(for: textView, coordinator: self)
+        return SharedContextMenuBuilder.buildUIMenu(from: descriptor)
     }
     
     // MARK: - IOS Keyboard Management
@@ -347,7 +323,7 @@ extension CrossPlatformCoordinator {
         }
     }
     
-    private func toggleComment(in textView: CodeEditorView) {
+    func toggleComment(in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         let language = textView.language
         

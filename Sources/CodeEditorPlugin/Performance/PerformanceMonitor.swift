@@ -52,8 +52,9 @@ public actor PerformanceMonitor {
     /// Maximum age of metrics before automatic cleanup (in seconds)
     private static let maxMetricAge: TimeInterval = 3_600 // 1 hour
     
-    // MARK: - Singleton
+    // MARK: - Singleton (Deprecated)
     
+    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with PerformanceMonitor() and pass it to components that need it.")
     public static let shared = PerformanceMonitor()
     
     // MARK: - Properties
@@ -64,7 +65,7 @@ public actor PerformanceMonitor {
     
     // MARK: - Initialization
     
-    private init() {
+    public init() {
         // Start periodic cleanup task
         Task {
             await startPeriodicCleanup()

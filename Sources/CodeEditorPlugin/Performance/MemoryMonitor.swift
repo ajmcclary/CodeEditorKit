@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Monitors memory usage and provides automatic cleanup capabilities
 ///
@@ -44,6 +47,7 @@ import Foundation
 /// For comprehensive examples and patterns, see:
 /// - <doc:MemoryMonitor-Injection>
 ///
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class MemoryMonitor: ObservableObject {
     // MARK: - Dependencies
@@ -90,10 +94,7 @@ public final class MemoryMonitor: ObservableObject {
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
     
-    // MARK: - Singleton
-    
-    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with MemoryMonitor() and pass it to components that need it.")
-    public static let shared = MemoryMonitor()
+    // MARK: - Initialization
     
     /// Initialize with optional memory provider
     /// - Parameter memoryProvider: Platform memory provider (defaults to system provider)
@@ -108,8 +109,19 @@ public final class MemoryMonitor: ObservableObject {
     }
     
     deinit {
-        // Note: Cannot call stopMonitoring() in deinit as it's @MainActor isolated
-        // Task cancellation will happen automatically when the monitor is deallocated
+        // Use MainActor.assumeIsolated to safely clean up @MainActor resources
+        // This is safe because MemoryMonitor instances are created and destroyed on the main actor
+        MainActor.assumeIsolated {
+            // Cancel monitoring tasks to prevent memory leaks
+            monitoringTask?.cancel()
+            cleanupTask?.cancel()
+            
+            // Clear handlers and history to free memory
+            cleanupHandlers.removeAll()
+            cleanupHistory.removeAll()
+            
+            logger.debug("MemoryMonitor deallocated and cleaned up")
+        }
     }
     
     // MARK: - Public Methods

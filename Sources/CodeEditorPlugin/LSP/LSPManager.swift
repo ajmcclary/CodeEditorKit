@@ -2,6 +2,9 @@
 // LSP functionality is only available on macOS
 
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Manages Language Server Protocol (LSP) clients for different programming languages.
 ///
@@ -66,6 +69,7 @@ import Foundation
 /// - Graceful degradation when servers are unavailable
 ///
 /// - SeeAlso: `LSPClient`, `LanguageServerConfig`, `LSPProtocol`
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class LSPManager: ObservableObject {
     // MARK: - Configuration
@@ -94,6 +98,7 @@ public final class LSPManager: ObservableObject {
         public let fileExtensions: [String]
         public let capabilities: ClientCapabilities
         public let autoStart: Bool
+        public let enablePathResolution: Bool
         
         public init(
             languageId: String,
@@ -101,7 +106,8 @@ public final class LSPManager: ObservableObject {
             fileExtensions: [String],
             serverArguments: [String] = [],
             capabilities: ClientCapabilities = .default,
-            autoStart: Bool = true
+            autoStart: Bool = true,
+            enablePathResolution: Bool = true
         ) {
             self.languageId = languageId
             self.serverPath = serverPath
@@ -109,6 +115,7 @@ public final class LSPManager: ObservableObject {
             self.fileExtensions = fileExtensions
             self.capabilities = capabilities
             self.autoStart = autoStart
+            self.enablePathResolution = enablePathResolution
         }
     }
     
@@ -122,6 +129,9 @@ public final class LSPManager: ObservableObject {
     
     /// Open documents by URI
     private var openDocuments: [String: OpenDocument] = [:]
+    
+    /// Cached extension to language ID mappings for performance
+    private var extensionToLanguageIdCache: [String: String] = [:]
     
     /// Current workspace root
     public var workspaceRoot: URL? {
@@ -137,6 +147,9 @@ public final class LSPManager: ObservableObject {
     
     /// Logger for debugging
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPManager")
+    
+    /// Path resolver for finding language server executables
+    private let pathResolver = LSPPathResolver()
     
     // MARK: - Types
     
@@ -179,6 +192,7 @@ public final class LSPManager: ObservableObject {
         self.workspaceRoot = workspaceRoot
         self.memoryMonitor = memoryMonitor
         setupDefaultConfigurations()
+        rebuildExtensionCache() // Build initial cache with default configurations
         
         // Register with memory monitor after initialization
         Task { @MainActor [weak self] in
@@ -203,12 +217,16 @@ public final class LSPManager: ObservableObject {
                 // Clear open documents
                 self.openDocuments.removeAll()
                 
+                // Clear extension cache
+                let cacheSize = self.extensionToLanguageIdCache.count
+                self.extensionToLanguageIdCache.removeAll()
+                
                 // Estimate memory freed (rough estimate)
-                let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
+                let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1 + Double(cacheSize) * 0.001
                 
                 return CleanupResult(
                     memoryFreedMB: estimatedMemoryMB,
-                    description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
+                    description: "Disconnected \(beforeClientCount) LSP clients, cleared \(beforeDocumentCount) documents, and \(cacheSize) extension mappings"
                 )
             }
         }
@@ -225,6 +243,7 @@ public final class LSPManager: ObservableObject {
     /// - Parameter config: Server configuration
     public func registerLanguageServer(_ config: LanguageServerConfig) {
         serverConfigurations[config.languageId] = config
+        rebuildExtensionCache() // Update cache after adding new configuration
         logger.info("Registered LSP server for \(config.languageId)")
         
         // Auto-start if configured and we have a workspace
@@ -244,6 +263,7 @@ public final class LSPManager: ObservableObject {
         }
         
         serverConfigurations.removeValue(forKey: languageId)
+        rebuildExtensionCache() // Update cache after removing configuration
         logger.info("Unregistered LSP server for \(languageId)")
     }
     
@@ -253,11 +273,8 @@ public final class LSPManager: ObservableObject {
     public func languageId(for fileExtension: String) -> String? {
         let ext = fileExtension.hasPrefix(".") ? fileExtension : ".\(fileExtension)"
         
-        for (languageId, config) in serverConfigurations where config.fileExtensions.contains(ext) {
-            return languageId
-        }
-        
-        return nil
+        // Use cached lookup for O(1) performance
+        return extensionToLanguageIdCache[ext]
     }
     
     // MARK: - Client Management
@@ -280,10 +297,22 @@ public final class LSPManager: ObservableObject {
         
         logger.info("Starting LSP server for \(languageId)")
         
+        // Resolve the server path if path resolution is enabled
+        let resolvedServerPath: String
+        if config.enablePathResolution {
+            guard let resolved = pathResolver.resolvePath(config.serverPath) else {
+                throw LSPError.invalidResponse("Language server executable not found: \(config.serverPath)")
+            }
+            resolvedServerPath = resolved
+            logger.debug("Resolved server path for \(languageId): \(config.serverPath) -> \(resolvedServerPath)")
+        } else {
+            resolvedServerPath = config.serverPath
+        }
+        
         let client = LSPClient()
         let serverConfig = LSPClient.ServerConfiguration(
             languageId: languageId,
-            serverPath: config.serverPath,
+            serverPath: resolvedServerPath,
             workspaceRoot: workspaceRoot,
             serverArguments: config.serverArguments,
             capabilities: config.capabilities
@@ -307,6 +336,14 @@ public final class LSPManager: ObservableObject {
         
         logger.info("Stopping LSP server for \(languageId)")
         client.disconnect()
+    }
+    
+    /// Stop all running language servers
+    public func stopAllServers() {
+        let clientsToStop = Array(activeClients.keys)
+        for languageId in clientsToStop {
+            stopLanguageServer(for: languageId)
+        }
     }
     
     /// Get LSP client for a language
@@ -544,42 +581,121 @@ public final class LSPManager: ObservableObject {
         return client.diagnostics[uri] ?? []
     }
     
+    // MARK: - Language Server Availability
+    
+    /// Check if a language server is available for the given configuration
+    /// - Parameter config: Language server configuration to check
+    /// - Returns: True if the server executable can be found
+    public func isLanguageServerAvailable(_ config: LanguageServerConfig) -> Bool {
+        if config.enablePathResolution {
+            return pathResolver.isAvailable(config.serverPath)
+        } else {
+            return FileManager.default.fileExists(atPath: config.serverPath)
+        }
+    }
+    
+    /// Get all available paths for a language server executable
+    /// - Parameter executableName: Name of the executable (e.g., "typescript-language-server")
+    /// - Returns: Array of absolute paths where the executable was found
+    public func findLanguageServerPaths(for executableName: String) -> [String] {
+        pathResolver.findAllPaths(for: executableName)
+    }
+    
+    /// Get availability status for all configured language servers
+    /// - Returns: Dictionary mapping language IDs to availability status
+    public func getLanguageServerAvailability() -> [String: Bool] {
+        var availability: [String: Bool] = [:]
+        
+        for (languageId, config) in serverConfigurations {
+            availability[languageId] = isLanguageServerAvailable(config)
+        }
+        
+        return availability
+    }
+    
+    /// Resolve the actual path that would be used for a language server
+    /// - Parameter config: Language server configuration
+    /// - Returns: The resolved absolute path, or nil if not found
+    public func resolveLanguageServerPath(_ config: LanguageServerConfig) -> String? {
+        if config.enablePathResolution {
+            return pathResolver.resolvePath(config.serverPath)
+        } else {
+            return FileManager.default.fileExists(atPath: config.serverPath) ? config.serverPath : nil
+        }
+    }
+    
     // MARK: - Private Methods
     
+    /// Rebuild the extension to language ID cache for fast lookups
+    private func rebuildExtensionCache() {
+        extensionToLanguageIdCache.removeAll()
+        
+        for (languageId, config) in serverConfigurations {
+            for fileExtension in config.fileExtensions {
+                let normalizedExt = fileExtension.hasPrefix(".") ? fileExtension : ".\(fileExtension)"
+                // If there's a conflict, the first registered language wins
+                if extensionToLanguageIdCache[normalizedExt] == nil {
+                    extensionToLanguageIdCache[normalizedExt] = languageId
+                }
+            }
+        }
+        
+        logger.debug("Rebuilt extension cache with \(extensionToLanguageIdCache.count) mappings")
+    }
+    
     private func setupDefaultConfigurations() {
-        // Add common language server configurations
-        // These can be overridden by users or plugins
+        // Add common language server configurations with executable names
+        // These will be resolved automatically using PATH and common install locations
+        // Override with environment variables: LSP_<EXECUTABLE>_PATH
         
         // TypeScript/JavaScript (requires typescript-language-server)
+        // Install: npm install -g typescript-language-server
         registerLanguageServer(LanguageServerConfig(
             languageId: "typescript",
-            serverPath: "/usr/local/bin/typescript-language-server",
+            serverPath: "typescript-language-server",
             fileExtensions: [".ts", ".tsx", ".js", ".jsx"],
-            serverArguments: ["--stdio"]
+            serverArguments: ["--stdio"],
+            enablePathResolution: true
         ))
         
-        // Python (requires pylsp)
+        // Python (requires pylsp - Python LSP Server)
+        // Install: pip install python-lsp-server
         registerLanguageServer(LanguageServerConfig(
             languageId: "python",
-            serverPath: "/usr/local/bin/pylsp",
+            serverPath: "pylsp",
             fileExtensions: [".py"],
-            serverArguments: []
+            serverArguments: [],
+            enablePathResolution: true
         ))
         
         // Rust (requires rust-analyzer)
+        // Install: rustup component add rust-analyzer
         registerLanguageServer(LanguageServerConfig(
             languageId: "rust",
-            serverPath: "/usr/local/bin/rust-analyzer",
+            serverPath: "rust-analyzer",
             fileExtensions: [".rs"],
-            serverArguments: []
+            serverArguments: [],
+            enablePathResolution: true
         ))
         
         // Go (requires gopls)
+        // Install: go install golang.org/x/tools/gopls@latest
         registerLanguageServer(LanguageServerConfig(
             languageId: "go",
-            serverPath: "/usr/local/bin/gopls",
+            serverPath: "gopls",
             fileExtensions: [".go"],
-            serverArguments: []
+            serverArguments: [],
+            enablePathResolution: true
+        ))
+        
+        // Swift (requires sourcekit-lsp, typically bundled with Xcode)
+        // Available at: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp
+        registerLanguageServer(LanguageServerConfig(
+            languageId: "swift",
+            serverPath: "sourcekit-lsp",
+            fileExtensions: [".swift"],
+            serverArguments: [],
+            enablePathResolution: true
         ))
     }
     

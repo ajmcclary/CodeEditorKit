@@ -1,8 +1,11 @@
+#if canImport(Combine)
 import Combine
+#endif
 import Foundation
 
 /// Main debugger integration system for CodeEditorPlugin
 /// - Note: This is currently a preview feature with internal visibility
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 internal class DebuggerIntegration: ObservableObject {
     // MARK: - Properties

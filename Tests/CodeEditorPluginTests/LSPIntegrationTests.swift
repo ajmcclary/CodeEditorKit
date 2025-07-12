@@ -398,15 +398,82 @@ final class LSPIntegrationTests: XCTestCase {
         
         XCTAssertTrue(true, "Multi-language document handling completed")
     }
-}
-
-// MARK: - Test Helpers
-
-extension LSPManager {
-    /// Stop all language servers for cleanup
-    func stopAllServers() async {
-        // This would stop all running servers
-        // Implementation depends on internal structure
+    
+    // MARK: - Performance Tests
+    
+    @MainActor
+    func testLanguageIdLookupPerformance() async throws {
+        guard let manager = lspManager else {
+            XCTFail("LSP Manager not initialized")
+            return
+        }
+        
+        // Test language ID lookup for common extensions
+        let testExtensions = ["swift", "py", "js", "ts", "rs", "go", "cpp", "java"]
+        
+        // Warm up the cache
+        for ext in testExtensions {
+            _ = manager.languageId(for: ext)
+        }
+        
+        // Test performance with cache
+        measure {
+            for _ in 0..<1_000 {
+                for ext in testExtensions {
+                    _ = manager.languageId(for: ext)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    func testLanguageIdLookupAccuracy() async throws {
+        guard let manager = lspManager else {
+            XCTFail("LSP Manager not initialized")
+            return
+        }
+        
+        // Test specific mappings that should exist from default configurations
+        XCTAssertEqual(manager.languageId(for: "swift"), "swift", "Swift extension should map to swift language")
+        XCTAssertEqual(manager.languageId(for: ".swift"), "swift", "Swift extension with dot should map to swift language")
+        XCTAssertEqual(manager.languageId(for: "py"), "python", "Python extension should map to python language")
+        XCTAssertEqual(manager.languageId(for: ".py"), "python", "Python extension with dot should map to python language")
+        XCTAssertEqual(manager.languageId(for: "ts"), "typescript", "TypeScript extension should map to typescript language")
+        XCTAssertEqual(manager.languageId(for: ".ts"), "typescript", "TypeScript extension with dot should map to typescript language")
+        
+        // Test unknown extension
+        XCTAssertNil(manager.languageId(for: "unknown"), "Unknown extension should return nil")
+        XCTAssertNil(manager.languageId(for: ".unknown"), "Unknown extension with dot should return nil")
+    }
+    
+    @MainActor
+    func testExtensionCacheConsistency() async throws {
+        guard let manager = lspManager else {
+            XCTFail("LSP Manager not initialized")
+            return
+        }
+        
+        // Register a custom language server
+        let customConfig = LSPManager.LanguageServerConfig(
+            languageId: "test-lang",
+            serverPath: "/usr/bin/test-server",
+            fileExtensions: [".test", ".tst"],
+            autoStart: false
+        )
+        
+        manager.registerLanguageServer(customConfig)
+        
+        // Verify the cache is updated
+        XCTAssertEqual(manager.languageId(for: "test"), "test-lang", "Custom extension should be in cache")
+        XCTAssertEqual(manager.languageId(for: ".test"), "test-lang", "Custom extension with dot should be in cache")
+        XCTAssertEqual(manager.languageId(for: "tst"), "test-lang", "Second custom extension should be in cache")
+        
+        // Unregister and verify cache is updated
+        manager.unregisterLanguageServer(for: "test-lang")
+        
+        XCTAssertNil(manager.languageId(for: "test"), "Custom extension should be removed from cache")
+        XCTAssertNil(manager.languageId(for: ".test"), "Custom extension with dot should be removed from cache")
+        XCTAssertNil(manager.languageId(for: "tst"), "Second custom extension should be removed from cache")
     }
 }
 

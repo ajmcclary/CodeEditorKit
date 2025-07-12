@@ -39,51 +39,41 @@ public final class CodeEditorContainerView: PlatformView {
     // MARK: - Initialization
     
     override public init(frame: CGRect) {
-        // Use the provided frame or a reasonable default size
-        let initialFrame = frame == .zero ? CGRect(x: 0, y: 0, width: 600, height: 400) : frame
+        // Create initialization parameters and views using unified logic
+        let parameters = ContainerViewInitializer.InitializationParameters(frame: frame)
+        let components = ContainerViewInitializer.createViews(with: parameters)
         
-        // Create the text view with reasonable initial frame
-        textView = CodeEditorView(frame: initialFrame)
-        
-        // Create the gutter view with initial width
-        gutterView = GutterView(frame: CGRect(x: 0, y: 0, width: 40, height: initialFrame.height))
-        
-        // Create the minimap view with initial width
-        minimapView = MinimapView(frame: CGRect(x: initialFrame.width - 100, y: 0, width: 100, height: initialFrame.height))
+        // Initialize view properties
+        textView = components.textView
+        gutterView = components.gutterView
+        minimapView = components.minimapView
         
         #if canImport(UIKit)
-        // Create the content view for iOS
-        contentView = EditorContentView(frame: initialFrame)
+        contentView = components.contentView!
         #else
-        // Create scroll view for macOS
-        scrollView = NSScrollView(frame: initialFrame)
+        scrollView = components.scrollView!
         #endif
         
-        super.init(frame: initialFrame)
+        super.init(frame: parameters.initialFrame)
         
         setupViews()
         setupObservers()
     }
     
     public required init?(coder: NSCoder) {
-        // Use reasonable default size for coder init
-        let initialFrame = CGRect(x: 0, y: 0, width: 600, height: 400)
+        // Create initialization parameters and views using unified logic
+        let parameters = ContainerViewInitializer.InitializationParameters(frame: .zero)
+        let components = ContainerViewInitializer.createViews(with: parameters)
         
-        // Create the text view with reasonable initial frame
-        textView = CodeEditorView(frame: initialFrame)
-        
-        // Create the gutter view with initial width
-        gutterView = GutterView(frame: CGRect(x: 0, y: 0, width: 40, height: initialFrame.height))
-        
-        // Create the minimap view with initial width
-        minimapView = MinimapView(frame: CGRect(x: initialFrame.width - 100, y: 0, width: 100, height: initialFrame.height))
+        // Initialize view properties
+        textView = components.textView
+        gutterView = components.gutterView
+        minimapView = components.minimapView
         
         #if canImport(UIKit)
-        // Create the content view for iOS
-        contentView = EditorContentView(frame: initialFrame)
+        contentView = components.contentView!
         #else
-        // Create scroll view for macOS
-        scrollView = NSScrollView(frame: initialFrame)
+        scrollView = components.scrollView!
         #endif
         
         super.init(coder: coder)
@@ -95,38 +85,33 @@ public final class CodeEditorContainerView: PlatformView {
     // MARK: - Setup
     
     private func setupViews() {
-        // Set the container reference in the text view
-        textView.containerView = self
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        setupMacOSViews()
-        #else
-        setupIOSViews()
-        #endif
-        
-        // Common setup for iOS only (macOS uses ruler view)
+        // Use unified container view setup
         #if canImport(UIKit)
-        gutterView.textView = textView
-        gutterView.observeTextView()          // start listening for changes
+        let components = ViewComponents(
+            textView: textView,
+            gutterView: gutterView,
+            minimapView: minimapView,
+            contentView: contentView
+        )
+        #else
+        let components = ViewComponents(
+            textView: textView,
+            gutterView: gutterView,
+            minimapView: minimapView,
+            scrollView: scrollView
+        )
         #endif
         
-        setupMinimap()
+        // Perform common setup using unified logic
+        ContainerViewInitializer.performCommonSetup(for: self, with: components)
         
-        // IMPORTANT: Remove any internal gutter from text view before setting up
-        textView.removeGutter()
+        // Setup platform-specific views using unified patterns
+        ContainerViewInitializer.setupPlatformViews(for: self, with: components)
         
-        // Apply initial text container insets
-        updateTextContainerInsets()
-        
-        // Set container background using platform colors
+        // Platform-specific additional setup
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS uses layer background
-        wantsLayer = true
-        layer?.backgroundColor = PlatformColors.systemBackground.cgColor
         // Ensure we don't clip subviews on macOS - minimap might extend beyond bounds
         clipsToBounds = false
-        #else
-        backgroundColor = PlatformColors.systemBackground
         #endif
     }
     
@@ -136,7 +121,7 @@ public final class CodeEditorContainerView: PlatformView {
         #endif
     }
     
-    private func setupMinimap() {
+    internal func setupMinimap() {
         // Create data provider
         minimapDataProvider = MinimapDataProvider(textView: textView)
         
@@ -373,7 +358,7 @@ public final class CodeEditorContainerView: PlatformView {
     
     // MARK: - Text Container Insets
     
-    private func updateTextContainerInsets() {
+    internal func updateTextContainerInsets() {
         let padding = configuration.layout.lineNumberPadding
         let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
         let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0

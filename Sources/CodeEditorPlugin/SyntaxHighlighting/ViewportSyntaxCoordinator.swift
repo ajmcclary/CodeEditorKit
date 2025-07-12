@@ -4,8 +4,12 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Coordinates syntax highlighting with viewport-based optimization for better performance with large files
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class ViewportSyntaxCoordinator: ObservableObject {
     private let baseCoordinator: SyntaxHighlightingCoordinator
@@ -281,6 +285,7 @@ public struct ViewportHighlightResult: Sendable {
 
 /// Statistics for viewport-based highlighting
 @MainActor
+@available(macOS 10.15, iOS 13.0, *)
 public final class ViewportStatistics: ObservableObject {
     @Published public private(set) var totalHighlights: Int = 0
     @Published public private(set) var cacheHits: Int = 0

@@ -1,10 +1,13 @@
+#if canImport(Combine)
 import Combine
+#endif
 import Foundation
 import os
 
 // MARK: - ConfigurationHotReload
 
 /// Enables hot reloading of configuration without recreating views
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class ConfigurationHotReload: ObservableObject {
     // MARK: - Properties

@@ -5,6 +5,9 @@ import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Main coordinator for ensuring cross-platform feature parity and smooth operation
 ///
@@ -31,6 +34,7 @@ import AppKit
 /// - SeeAlso: ``InputCoordinator`` for input handling
 /// - SeeAlso: ``ToolbarCoordinator`` for toolbar management
 /// - SeeAlso: ``ContextMenuCoordinator`` for context menu handling
+@available(macOS 10.15, iOS 13.0, *)
 @MainActor
 public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Properties
@@ -246,6 +250,16 @@ public final class CrossPlatformCoordinator: ObservableObject {
     private func configureInputHandling(for textView: CodeEditorView) {
         inputCoordinator.configureGestures(for: textView)
     }
+    
+    // MARK: - Shared Context Menu Actions
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    @objc func handleSharedMenuAction(_ menuItem: NSMenuItem) {
+        if let action = menuItem.representedObject as? () -> Void {
+            action()
+        }
+    }
+    #endif
 }
 
 // MARK: - Supporting Types
