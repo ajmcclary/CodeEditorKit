@@ -112,4 +112,61 @@ extension CodeEditorView {
         return origin
     }
     #endif
+    
+    // MARK: - Text Container Management
+    
+    /// Updates the text container size based on current configuration and bounds
+    internal func updateTextContainerSize() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        guard let textContainer = self.textContainer else { return }
+        
+        
+        if configuration.layout.wrapLines {
+            // For word wrap mode, set container width to match view width
+            textContainer.containerSize = NSSize(
+                width: bounds.width - textContainerInset.width * 2,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+            
+            // Ensure proper tracking settings
+            textContainer.widthTracksTextView = true
+            isHorizontallyResizable = false
+            
+            // Invalidate layout to force text reflow
+            if let textStorage {
+                textContainer.layoutManager?.invalidateLayout(
+                    forCharacterRange: NSRange(location: 0, length: textStorage.length),
+                    actualCharacterRange: nil
+                )
+            }
+        } else {
+            // For non-wrapping mode, allow unlimited width
+            textContainer.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+            
+            // Ensure proper tracking settings
+            textContainer.widthTracksTextView = false
+            isHorizontallyResizable = true
+        }
+        
+        #else
+        // iOS/Catalyst handles container sizing differently
+        let textContainer = self.textContainer
+        
+        if configuration.layout.wrapLines {
+            // Update container size for proper wrapping
+            textContainer.size = CGSize(
+                width: bounds.width - textContainerInset.left - textContainerInset.right,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        } else {
+            textContainer.size = CGSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
+        #endif
+    }
 }

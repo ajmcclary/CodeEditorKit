@@ -86,6 +86,8 @@ public enum PlatformConfigurations {
         config.display.enableSyntaxHighlighting = true
         config.display.enableCodeFolding = true
         config.display.showMinimap = false  // Catalyst apps often run on smaller screens
+        // Note: showInvisibleCharacters not supported on Catalyst (TextKit limitation)
+        // Note: showIndentGuides not yet implemented on any platform
         
         // Layout optimizations for Catalyst
         config.layout.gutterWidth = 45.0  // Slightly wider for potential touch

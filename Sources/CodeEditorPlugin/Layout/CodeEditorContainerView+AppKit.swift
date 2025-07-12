@@ -154,6 +154,18 @@ class LineNumberRulerView: NSRulerView {
                 )
                 
                 lineString.draw(at: drawingPoint, withAttributes: attributes)
+                
+                // Draw folding control if enabled
+                if let codeEditor = textView as? CodeEditorView,
+                   codeEditor.configuration.display.enableCodeFolding &&
+                   codeEditor.configuration.display.showFoldingControls {
+                    drawFoldingControl(at: lineNumber, in: NSRect(
+                        x: 0,
+                        y: adjustedY,
+                        width: ruleThickness,
+                        height: lineRect.height
+                    ))
+                }
             }
         }
         
@@ -310,13 +322,33 @@ extension CodeEditorContainerView {
             minimapView.layer?.zPosition = 1_000
             
             // When minimap is shown, we need to constrain the text view
-            if !configuration.layout.wrapLines {
-                // Force the scroll view to update its content view
-                scrollView.contentView.frame = scrollView.bounds
+            // Force the scroll view to update its content view
+            scrollView.contentView.frame = scrollView.bounds
+            
+            // Get the actual content width (scroll view width minus ruler if present)
+            let contentWidth = scrollView.contentView.bounds.width
+            
+            if configuration.layout.wrapLines {
+                // When word wrap is enabled with minimap
+                // Text view should fill the scroll view width and wrap text
+                textView.autoresizingMask = [.width, .height]
+                textView.isHorizontallyResizable = false
                 
-                // Get the actual content width (scroll view width minus ruler if present)
-                let contentWidth = scrollView.contentView.bounds.width
+                // Set frame to match scroll view content
+                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
                 
+                // Configure text container for word wrap
+                textView.textContainer?.containerSize = NSSize(
+                    width: contentWidth - textView.textContainerInset.width * 2,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+                textView.textContainer?.widthTracksTextView = true
+                
+                // Force layout update
+                textView.needsDisplay = true
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+            } else {
+                // When word wrap is disabled with minimap
                 // Remove width from autoresizing mask so text view doesn't expand beyond scroll view
                 textView.autoresizingMask = [.height]
                 
@@ -344,7 +376,18 @@ extension CodeEditorContainerView {
             minimapView.isHidden = true
             
             // Restore normal behavior when minimap is hidden
-            if !configuration.layout.wrapLines {
+            if configuration.layout.wrapLines {
+                // When word wrap is enabled without minimap
+                textView.autoresizingMask = [.width, .height]
+                textView.isHorizontallyResizable = false
+                
+                // Configure text container for word wrap
+                textView.textContainer?.widthTracksTextView = true
+                
+                // The text container size will be managed by the text view itself
+                // since widthTracksTextView is true
+            } else {
+                // When word wrap is disabled without minimap
                 // Restore autoresizing mask
                 textView.autoresizingMask = [.width, .height]
                 

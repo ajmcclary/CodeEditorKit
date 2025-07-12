@@ -56,9 +56,11 @@ extension EditorConfiguration {
         public var visibleLines: Int = PlatformConstants.defaultVisibleLines
         
         /// Whether to show invisible characters (spaces, tabs)
+        /// - Note: Only supported on macOS. Not available on iOS or Mac Catalyst due to TextKit limitations.
         public var showInvisibleCharacters: Bool = false
         
         /// Whether to show indent guides (vertical lines at indentation levels)
+        /// - Note: Not yet implemented on any platform. This is a placeholder for future development.
         public var showIndentGuides: Bool = false
         
         /// Whether to enable code folding functionality

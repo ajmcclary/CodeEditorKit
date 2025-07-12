@@ -46,13 +46,7 @@ extension CodeEditorView {
         
         // Apply layout settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if configuration.layout.wrapLines {
-            textContainer?.widthTracksTextView = true
-            isHorizontallyResizable = false
-        } else {
-            textContainer?.widthTracksTextView = false
-            isHorizontallyResizable = true
-        }
+        updateTextContainerSize()
         #endif
         
         // Apply paragraph style for tab width and line spacing
@@ -108,13 +102,8 @@ extension CodeEditorView {
             return
         }
 
-        let highlight = PlatformView()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        highlight.wantsLayer = true
-        highlight.layer?.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
-        #else
-        highlight.layer.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
-        #endif
+        let highlight = LineHighlightView()
+        highlight.highlightColor = configuration.display.selectedLineHighlightColor
 
         // Add as background overlay
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -165,11 +154,9 @@ extension CodeEditorView {
         // Don't add textContainerInset here - calculateLineRect already accounts for it
 
         highlightView.frame = frame
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        highlightView.layer?.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
-        #else
-        highlightView.layer.backgroundColor = configuration.display.selectedLineHighlightColor.cgColor
-        #endif
+        if let lineHighlight = highlightView as? LineHighlightView {
+            lineHighlight.highlightColor = configuration.display.selectedLineHighlightColor
+        }
     }
 
     // MARK: - Layout Manager Settings
@@ -178,7 +165,9 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         layoutManager?.showsInvisibleCharacters = isInvisibleCharactersEnabled
         #else
-        // UITextView's layout manager doesn't support showsInvisibleCharacters
+        // UITextView's layout manager doesn't support showsInvisibleCharacters directly
+        // For Mac Catalyst, we need to implement custom rendering
+        // This is a known limitation - invisible characters require custom drawing on iOS/Catalyst
         #endif
     }
     
