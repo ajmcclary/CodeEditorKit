@@ -34,12 +34,12 @@
 
 import PackageDescription
 
-let settings: [SwiftSetting] = [
+let ksettings: [SwiftSetting] = [
     // Enable strict concurrency checking for Swift 6 compatibility
     .enableExperimentalFeature("StrictConcurrency")
 ]
 
-let package = Package(
+let kpackage = Package(
     name: "CodeEditorPlugin",
     platforms: [.macOS(.v14), .iOS(.v16), .macCatalyst(.v16)],
     products: [
@@ -61,12 +61,12 @@ let package = Package(
             exclude: [
                 "Info.plist"
             ],
-            swiftSettings: settings
+            swiftSettings: ksettings
         ),
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: ["CodeEditorPlugin"],
-            swiftSettings: settings
+            swiftSettings: ksettings
         )
     ]
 )
