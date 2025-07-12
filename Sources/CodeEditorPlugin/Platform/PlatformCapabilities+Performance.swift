@@ -145,12 +145,16 @@ extension PlatformCapabilities {
     /// ## Support Details
     /// - **macOS**: Always supported
     /// - **iOS**: ProMotion displays (120Hz)
+    /// - **Catalyst**: Always supported (inherits macOS behavior)
     /// - **Standard displays**: 60Hz scrolling
     ///
     /// - Returns: True if smooth scrolling is available
     public var supportsSmoothScrolling: Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // ProMotion displays and smooth scrolling
+        return true
+        #elseif targetEnvironment(macCatalyst)
+        // Catalyst should support smooth scrolling like macOS
         return true
         #elseif canImport(UIKit)
         // iOS devices with ProMotion
