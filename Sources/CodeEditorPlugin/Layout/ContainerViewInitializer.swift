@@ -114,13 +114,22 @@ enum ContainerViewInitializer {
         for container: CodeEditorContainerView,
         with components: ViewComponents
     ) {
-        // Common text change observers
+        // Text change observers
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         NotificationCenter.default.addObserver(
             container,
             selector: #selector(container.textDidChange(_:)),
             name: NSText.didChangeNotification,
             object: components.textView
         )
+        #elseif canImport(UIKit)
+        NotificationCenter.default.addObserver(
+            container,
+            selector: #selector(container.textDidChange(_:)),
+            name: UITextView.textDidChangeNotification,
+            object: components.textView
+        )
+        #endif
     }
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -219,14 +228,15 @@ struct ViewComponents {
     
     #if canImport(UIKit)
     let contentView: EditorContentView?
-    let scrollView: NSScrollView? = nil
+    #if !targetEnvironment(macCatalyst)
+    let scrollView: UIScrollView? = nil
+    #endif
     
     init(textView: CodeEditorView, gutterView: GutterView, minimapView: MinimapView, contentView: EditorContentView) {
         self.textView = textView
         self.gutterView = gutterView
         self.minimapView = minimapView
         self.contentView = contentView
-        self.scrollView = nil
     }
     #else
     let scrollView: NSScrollView?

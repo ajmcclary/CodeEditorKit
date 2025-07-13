@@ -164,8 +164,8 @@ public final class GutterInteractionHandler {
         
         #else
         // iOS: Use text container to get line rectangle
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return nil }
+        let layoutManager = textView.layoutManager
+        let textContainer = textView.textContainer
         
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         var lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil, withoutAdditionalLayout: true)
