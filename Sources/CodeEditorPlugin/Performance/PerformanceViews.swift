@@ -229,7 +229,7 @@ public struct DetailedPerformanceReportView: View {
                 .padding()
             }
             .navigationTitle("Performance Report")
-            #if os(iOS)
+            #if canImport(UIKit)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

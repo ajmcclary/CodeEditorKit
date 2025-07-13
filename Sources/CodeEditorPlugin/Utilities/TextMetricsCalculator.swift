@@ -355,7 +355,8 @@ public enum TextMetricsCalculator {
                 var wrapPoint = index
                 for innerIndex in stride(from: index, to: currentLineStart, by: -1) {
                     let character = text.utf16[text.utf16.index(text.utf16.startIndex, offsetBy: innerIndex)]
-                    if CharacterSet.whitespacesAndNewlines.contains(UnicodeScalar(character)!) {
+                    guard let scalar = UnicodeScalar(character) else { continue }
+                    if CharacterSet.whitespacesAndNewlines.contains(scalar) {
                         wrapPoint = innerIndex + 1
                         break
                     }

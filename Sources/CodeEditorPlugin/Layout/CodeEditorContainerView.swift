@@ -15,13 +15,13 @@ public final class CodeEditorContainerView: PlatformView {
     public let textView: CodeEditorView
     public let gutterView: GutterView
     public let minimapView: MinimapView
-    private var minimapDataProvider: MinimapDataProvider?
-    private var isApplyingConfiguration = false
+    internal var minimapDataProvider: MinimapDataProvider?
+    internal var isApplyingConfiguration = false
     
     #if canImport(UIKit)
     public let contentView: EditorContentView
-    private var keyboardObservers: [NSObjectProtocol] = []
-    private var keyboardHeight: CGFloat = 0
+    internal var keyboardObservers: [NSObjectProtocol] = []
+    internal var keyboardHeight: CGFloat = 0
     #else
     public let scrollView: NSScrollView
     #endif
@@ -49,15 +49,21 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView = components.minimapView
         
         #if canImport(UIKit)
-        guard let contentView = components.contentView else {
-            fatalError("Failed to create content view for iOS platform")
+        if let contentView = components.contentView {
+            self.contentView = contentView
+        } else {
+            let logger = CrossPlatformLogger.logger()
+            logger.error("Failed to create content view for iOS platform, using fallback")
+            self.contentView = EditorContentView()
         }
-        self.contentView = contentView
         #else
-        guard let scrollView = components.scrollView else {
-            fatalError("Failed to create scroll view for macOS platform")
+        if let scrollView = components.scrollView {
+            self.scrollView = scrollView
+        } else {
+            let logger = CrossPlatformLogger.logger()
+            logger.error("Failed to create scroll view for macOS platform, using fallback")
+            self.scrollView = NSScrollView(frame: parameters.initialFrame)
         }
-        self.scrollView = scrollView
         #endif
         
         super.init(frame: parameters.initialFrame)
@@ -77,15 +83,21 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView = components.minimapView
         
         #if canImport(UIKit)
-        guard let contentView = components.contentView else {
-            fatalError("Failed to create content view for iOS platform")
+        if let contentView = components.contentView {
+            self.contentView = contentView
+        } else {
+            let logger = CrossPlatformLogger.logger()
+            logger.error("Failed to create content view for iOS platform, using fallback")
+            self.contentView = EditorContentView()
         }
-        self.contentView = contentView
         #else
-        guard let scrollView = components.scrollView else {
-            fatalError("Failed to create scroll view for macOS platform")
+        if let scrollView = components.scrollView {
+            self.scrollView = scrollView
+        } else {
+            let logger = CrossPlatformLogger.logger()
+            logger.error("Failed to create scroll view for macOS platform, using fallback")
+            self.scrollView = NSScrollView(frame: .zero)
         }
-        self.scrollView = scrollView
         #endif
         
         super.init(coder: coder)
@@ -133,201 +145,9 @@ public final class CodeEditorContainerView: PlatformView {
         #endif
     }
     
-    internal func setupMinimap() {
-        // Create data provider
-        minimapDataProvider = MinimapDataProvider(textView: textView)
-        
-        // Set up navigation callback
-        minimapView.onNavigate = { [weak self] lineNumber in
-            self?.navigateToLine(lineNumber)
-        }
-        
-        // Initially hidden based on configuration
-        minimapView.isHidden = !configuration.display.showMinimap
-        
-        // Generate initial minimap data
-        if configuration.display.showMinimap {
-            updateMinimap()
-        }
-        
-        // Set up text change observer to update minimap
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
-            forName: NSText.didChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-            }
-        }
-        #else
-        NotificationCenter.default.addObserver(
-            forName: UITextView.textDidChangeNotification,
-            object: textView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-            }
-        }
-        #endif
-        
-        // Set up scroll observer to update minimap and handle cursor tracking
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
-            forName: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateMinimap()
-                self?.handleScrollCursorTracking()
-            }
-        }
-        #else
-        // On iOS, set up scroll delegate for minimap updates
-        // The textView (UITextView) handles scrolling internally
-        // We'll monitor scroll changes through the delegate pattern in setupIOSViews
-        #endif
-    }
+    // Minimap setup moved to CodeEditorContainerView+Minimap.swift
     
-    // MARK: - Navigation
-    
-    private func navigateToLine(_ lineNumber: Int) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS navigation
-        let text = textView.string
-        let lines = text.components(separatedBy: .newlines)
-        
-        guard lineNumber < lines.count else { return }
-        
-        // Calculate character position for the line
-        let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-        let targetPosition = lineNumber > 0 ? lineStart + 1 : 0
-        let targetRange = NSRange(location: targetPosition, length: 0)
-        
-        if configuration.behavior.autoScrollToCursor {
-            // When auto-scroll is enabled, set selection and explicitly scroll
-            textView.setSelectedRange(targetRange)
-            
-            // Use the proper macOS scrolling method
-            if let layoutManager = textView.layoutManager,
-               let textContainer = textView.textContainer {
-                let glyphRange = layoutManager.glyphRange(forCharacterRange: targetRange, actualCharacterRange: nil)
-                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-                let adjustedRect = CGRect(
-                    x: rect.origin.x + textView.textContainerOrigin.x,
-                    y: rect.origin.y + textView.textContainerOrigin.y,
-                    width: max(rect.width, 1),
-                    height: max(rect.height, 20)
-                )
-                textView.scrollToVisible(adjustedRect)
-            }
-        } else {
-            // When auto-scroll is disabled, use the method that prevents scrolling
-            textView.setSelectedRangeWithoutScrolling(targetRange)
-        }
-        #else
-        // iOS navigation
-        let text = textView.text ?? ""
-        let lines = text.components(separatedBy: .newlines)
-        
-        guard lineNumber < lines.count else { return }
-        
-        // Calculate character position for the line
-        let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-        if lineNumber > 0 {
-            // Add 1 for the newline character
-            let targetPosition = lineStart + 1
-            if let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) {
-                let textRange = textView.textRange(from: position, to: position)
-                
-                // Use the new method that respects autoScrollToCursor configuration
-                textView.setSelectedTextRangeWithoutScrolling(textRange)
-                
-                // Only scroll if autoScrollToCursor is enabled
-                if configuration.behavior.autoScrollToCursor {
-                    let rect = textView.caretRect(for: position)
-                    textView.scrollRectToVisible(rect, animated: true)
-                }
-            }
-        } else {
-            // First line
-            let textRange = textView.textRange(from: textView.beginningOfDocument, to: textView.beginningOfDocument)
-            
-            // Use the new method that respects autoScrollToCursor configuration
-            textView.setSelectedTextRangeWithoutScrolling(textRange)
-            
-            // Only scroll if autoScrollToCursor is enabled
-            if configuration.behavior.autoScrollToCursor {
-                textView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: true)
-            }
-        }
-        #endif
-    }
-    
-    // MARK: - Cursor Tracking During Scroll
-    
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    private func handleScrollCursorTracking() {
-        // Only auto-scroll to cursor if autoScrollToCursor is enabled
-        guard configuration.behavior.autoScrollToCursor else { return }
-        
-        // Get current cursor position
-        let currentSelection = textView.selectedRange
-        guard currentSelection.length == 0 else { return } // Only work with cursor, not selections
-        
-        // Get cursor position information
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return }
-        
-        let cursorPosition = currentSelection.location
-        let textLength = textView.string.count
-        guard cursorPosition < textLength else { return }
-        
-        // Calculate cursor rect
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: currentSelection, actualCharacterRange: nil)
-        let cursorRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        let adjustedCursorRect = CGRect(
-            x: cursorRect.origin.x + textView.textContainerOrigin.x,
-            y: cursorRect.origin.y + textView.textContainerOrigin.y,
-            width: max(cursorRect.width, 1),
-            height: max(cursorRect.height, 20)
-        )
-        
-        // Check if cursor is visible in current view
-        let visibleRect = textView.visibleRect
-        let isVisible = visibleRect.intersects(adjustedCursorRect)
-        
-        // If cursor is not visible, scroll to make it visible
-        if !isVisible {
-            textView.scrollToVisible(adjustedCursorRect)
-        }
-    }
-    #endif
-    
-    func updateMinimap() {
-        guard configuration.display.showMinimap,
-              let dataProvider = minimapDataProvider else {
-            return
-        }
-        
-        // Always try to generate data, even for empty text
-        if let data = dataProvider.generateData() {
-            minimapView.updateData(data)
-        } else {
-            // Clear data to show empty state
-            minimapView.updateData(nil)
-        }
-        
-        // Force redraw
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        minimapView.needsDisplay = true
-        #else
-        minimapView.setNeedsDisplay()
-        #endif
-    }
+    // Navigation and minimap update methods moved to CodeEditorContainerView+Minimap.swift
     
     // MARK: - Layout
     
@@ -368,49 +188,7 @@ public final class CodeEditorContainerView: PlatformView {
         }
     }
     
-    // MARK: - Text Container Insets
-    
-    internal func updateTextContainerInsets() {
-        let padding = configuration.layout.lineNumberPadding
-        let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
-        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // On macOS, we use ruler view for line numbers, so text container insets work differently
-        // When line numbers are shown: ruler view handles the spacing, minimal text inset needed
-        // When line numbers are hidden: no ruler view, so minimal padding only
-        let currentInsets = textView.textContainerInset
-        let leftInset = showsLineNumbers ? padding : padding / 2  // Reduced when hidden
-        textView.textContainerInset = NSSize(
-            width: leftInset,
-            height: currentInsets.height
-        )
-        #else
-        // On iOS/Catalyst, update edge insets
-        let currentInsets = textView.textContainerEdgeInsets
-        
-        #if targetEnvironment(macCatalyst)
-        // For Mac Catalyst, the text view is positioned after the gutter
-        // so we only need padding, not gutterWidth + padding
-        let newInsets = EdgeInsets(
-            top: currentInsets.top,
-            left: padding,  // Only padding since text view is positioned after gutter
-            bottom: currentInsets.bottom,
-            right: minimapWidth + padding
-        )
-        #else
-        // For iOS, include gutter width in insets since gutter might be overlaid
-        let newInsets = EdgeInsets(
-            top: currentInsets.top,
-            left: gutterWidth + padding,
-            bottom: currentInsets.bottom,
-            right: minimapWidth + padding
-        )
-        #endif
-        
-        textView.setTextContainerEdgeInsets(newInsets)
-        #endif
-    }
+    // Text container insets method moved to CodeEditorContainerView+Configuration.swift
     
     // MARK: - Configuration
     
@@ -428,218 +206,11 @@ public final class CodeEditorContainerView: PlatformView {
         }
     }
     
-    public func applyConfiguration() {
-        // Prevent re-entrant calls
-        guard !isApplyingConfiguration else { return }
-        isApplyingConfiguration = true
-        defer { isApplyingConfiguration = false }
-        
-        // Apply configuration to text view, but disable its internal line numbers
-        // since we manage the gutter externally
-        var textViewConfig = configuration
-        textViewConfig.display.isLineNumbersEnabled = false
-        
-        // First remove any existing internal gutter from text view
-        textView.removeGutter()
-        
-        // Then apply the configuration with line numbers disabled
-        textView.configuration = textViewConfig
-        
-        // Update our own properties based on configuration
-        showsLineNumbers = configuration.display.isLineNumbersEnabled
-        
-        // Update minimap visibility
-        minimapView.isHidden = !configuration.display.showMinimap
-        
-        // Force minimap to redraw when shown
-        if configuration.display.showMinimap {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            minimapView.needsDisplay = true
-            #else
-            minimapView.setNeedsDisplay()
-            #endif
-        }
-        
-        // Update platform-specific UI elements
-        #if canImport(UIKit)
-        updateIOSGutter()
-        #endif
-        
-        // Update scroll view settings on macOS
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
-        
-        // Update ruler visibility and settings
-        scrollView.hasVerticalRuler = configuration.display.isLineNumbersEnabled
-        scrollView.rulersVisible = configuration.display.isLineNumbersEnabled
-        if let rulerView = scrollView.verticalRulerView as? LineNumberRulerView {
-            rulerView.ruleThickness = configuration.layout.gutterWidth
-            rulerView.clipsToBounds = true
-            rulerView.needsDisplay = true
-        }
-        // Don't set horizontal resizability here - it will be handled in layoutViews
-        // based on minimap visibility
-        if !configuration.display.showMinimap {
-            textView.isHorizontallyResizable = !configuration.layout.wrapLines
-            textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
-        }
-        
-        if !configuration.layout.wrapLines && !configuration.display.showMinimap {
-            // Only set infinite width if minimap is not shown
-            // When minimap is shown, layoutViews will handle the sizing
-            textView.textContainer?.containerSize = NSSize(
-                width: CGFloat.greatestFiniteMagnitude,
-                height: CGFloat.greatestFiniteMagnitude
-            )
-        }
-        
-        #endif
-        
-        // Update text container insets when configuration changes (for all platforms)
-        updateTextContainerInsets()
-        
-        // Force layout update
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        needsLayout = true
-        layout() // Force immediate layout on macOS
-        #else
-        setNeedsLayout()
-        layoutIfNeeded()
-        #endif
-        
-        // Update minimap if it's now visible
-        if configuration.display.showMinimap {
-            updateMinimap()
-        }
-        
-        // Force redraw of all subviews
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        needsDisplay = true
-        scrollView.needsDisplay = true
-        textView.needsDisplay = true
-        #else
-        setNeedsDisplay()
-        #endif
-    }
+    // Configuration application method moved to CodeEditorContainerView+Configuration.swift
     
     // MARK: - Platform-Specific Extensions
     
-    #if canImport(UIKit)
-    // iOS-specific keyboard handling and content insets
-    private func setupKeyboardObservers() {
-        // Listen for keyboard notifications
-        let willShow = NotificationCenter.default.addObserver(
-            forName: UIResponder.keyboardWillShowNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self else { return }
-            // Extract data from notification before entering Task
-            let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
-            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double
-            
-            Task { @MainActor in
-                self.handleKeyboardWillShow(keyboardFrame: keyboardFrame, duration: duration)
-            }
-        }
-        
-        let willHide = NotificationCenter.default.addObserver(
-            forName: UIResponder.keyboardWillHideNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self else { return }
-            // Extract data from notification before entering Task
-            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double
-            
-            Task { @MainActor in
-                self.handleKeyboardWillHide(duration: duration)
-            }
-        }
-        
-        keyboardObservers = [willShow, willHide]
-    }
-    
-    private func handleKeyboardWillShow(keyboardFrame: CGRect?, duration: Double?) {
-        guard let keyboardFrame,
-              let duration else {
-            return
-        }
-        
-        // Convert keyboard frame to our coordinate system
-        let convertedFrame = convert(keyboardFrame, from: nil)
-        keyboardHeight = bounds.maxY - convertedFrame.minY
-        
-        // Adjust text view content inset instead of resizing
-        UIView.animate(withDuration: duration) {
-            self.updateContentInsets()
-        }
-    }
-    
-    private func handleKeyboardWillHide(duration: Double?) {
-        guard let duration else {
-            return
-        }
-        
-        keyboardHeight = 0
-        
-        UIView.animate(withDuration: duration) {
-            self.updateContentInsets()
-        }
-    }
-    
-    internal func updateContentInsets() {
-        // Adjust the text view's content inset to account for keyboard
-        // This keeps the content scrollable without compressing the view
-        let bottomInset = keyboardHeight > 0 ? keyboardHeight : 0
-        
-        let contentInsets = EdgeInsets(
-            top: 0,
-            left: 0,
-            bottom: bottomInset,
-            right: 0
-        )
-        
-        // Only update if insets have actually changed to prevent unnecessary scroll jumps
-        let newInsets = contentInsets.uiEdgeInsets
-        if textView.contentInset != newInsets {
-            // Save current scroll position
-            let savedContentOffset = textView.contentOffset
-            
-            textView.contentInset = newInsets
-            
-            // Also adjust the scroll indicator insets
-            textView.scrollIndicatorInsets = textView.contentInset
-            
-            // Restore scroll position if it changed
-            if textView.contentOffset != savedContentOffset {
-                textView.setContentOffset(savedContentOffset, animated: false)
-            }
-        }
-        
-        // Make sure the gutter redraws with proper positioning
-        gutterView.setNeedsDisplay()
-        
-        // For iOS/Mac Catalyst, also update gutter frame to match text view content insets
-        #if canImport(UIKit)
-        layoutViews()  // Force layout update to sync gutter with text view
-        #endif
-        
-        // If keyboard is showing, ensure we can still scroll to see all content
-        if keyboardHeight > 0 {
-            // Adjust content size if needed to ensure full scrolling
-            let minContentHeight = bounds.height - keyboardHeight + textView.contentSize.height
-            if textView.contentSize.height < minContentHeight {
-                textView.contentSize = CGSize(width: textView.contentSize.width, height: minContentHeight)
-            }
-        }
-    }
-    
-    private func cleanupKeyboardObservers() {
-        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        keyboardObservers.removeAll()
-    }
-    #endif
+    // iOS-specific keyboard handling moved to CodeEditorContainerView+Keyboard.swift
     
     deinit {
         // Remove any selector-based observers

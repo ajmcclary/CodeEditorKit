@@ -24,6 +24,7 @@ public enum AdapterError: LocalizedError {
 }
 
 /// Protocol for debug adapters following the Debug Adapter Protocol (DAP)
+@MainActor
 public protocol DebugAdapter: AnyObject {
     /// Event publisher for debug events
     var eventPublisher: AnyPublisher<DebugEvent, Never> { get }
@@ -113,7 +114,7 @@ public enum DebugEvent: Sendable {
 
 /// Base implementation of debug adapter with common functionality
 @MainActor
-internal class BaseDebugAdapter: @preconcurrency DebugAdapter {
+internal class BaseDebugAdapter: DebugAdapter {
     // Event subject
     private let eventSubject = PassthroughSubject<DebugEvent, Never>()
     var eventPublisher: AnyPublisher<DebugEvent, Never> {
