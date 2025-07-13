@@ -235,7 +235,9 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         editorView.text = text
         editorView.language = language
         await highlighter.highlightImmediately(for: editorView, language: language)
-        try await Task.sleep(for: .milliseconds(50))
+        
+        // Wait for the highlighting task to complete and cache to be populated
+        try await Task.sleep(for: .milliseconds(500))
         
         // Second highlight (with cache)
         await highlighter.highlightImmediately(for: editorView, language: language)

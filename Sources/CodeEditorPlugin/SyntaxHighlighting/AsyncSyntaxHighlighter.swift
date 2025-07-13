@@ -211,11 +211,11 @@ public final class AsyncSyntaxHighlighter {
         }
     }
     
-    private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {
-        // Create a new coordinator for background processing to avoid main actor isolation issues
-        await Task.detached(priority: .userInitiated) {
-            let backgroundCoordinator = SyntaxHighlightingCoordinator()
-            return await backgroundCoordinator.highlightAsync(source: text, language: language)
+    nonisolated private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {
+        // Run the highlighting computation off the main thread for better performance
+        await Task.detached(priority: .userInitiated) { [coordinator] in
+            // Use the synchronous highlight method which is thread-safe
+            coordinator.highlight(source: text, language: language)
         }.value
     }
     

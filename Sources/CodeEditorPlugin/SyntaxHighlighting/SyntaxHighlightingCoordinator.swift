@@ -33,7 +33,7 @@ private actor HighlightingTaskManager {
 
 /// Coordinates between SwiftSyntax and regex-based highlighting for different languages
 /// Thread-safe implementation with proper cancellation support
-public final class SyntaxHighlightingCoordinator {
+public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     // MARK: - Properties
 
     private let swiftHighlighter: SwiftSyntaxHighlighter
