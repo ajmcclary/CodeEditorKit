@@ -12,11 +12,11 @@ A comprehensive sample application demonstrating all features of CodeEditorPlugi
 # Run the sample app
 swift run
 
-# Run tests
-swift test
+# Run tests in parallel
+swift test --parallel
 
 # Full quality check
-swiftlint && swift build && swift test
+swiftlint && swift build && swift test --parallel
 ```
 
 ## ✨ What's Demonstrated
@@ -46,12 +46,14 @@ swiftlint && swift build && swift test
 ```
 CodeEditorSample/
 ├── Sources/
-│   ├── Models/           # Configuration and data models
-│   ├── Views/            # SwiftUI views and UI components
-│   ├── Services/         # Business logic and coordinators
-│   ├── Platform/         # Platform-specific implementations
-│   └── Resources/        # Sample code files
-└── Tests/               # Sample-specific tests
+│   └── CodeEditorSample/
+│       ├── Models/           # Configuration and data models
+│       ├── Views/            # SwiftUI views and UI components
+│       │   └── ConfigurationSections/  # Configuration UI sections
+│       ├── Services/         # Business logic and coordinators
+│       └── Themes/           # Theme providers
+└── Tests/
+    └── CodeEditorSampleTests/  # Sample-specific tests
 ```
 
 ## 💻 Key Integration Patterns
@@ -115,8 +117,8 @@ enum ColorTheme: String, CaseIterable {
 The sample includes focused tests validating integration patterns:
 
 ```bash
-# Run all tests
-swift test
+# Run all tests in parallel
+swift test --parallel
 
 # Run specific test
 swift test --filter ConfigurationUITests

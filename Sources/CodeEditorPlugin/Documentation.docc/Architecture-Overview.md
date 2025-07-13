@@ -14,35 +14,39 @@ CodeEditorPlugin uses a clean, modern architecture optimized for performance, ma
 
 The codebase is organized by feature rather than by type, providing several benefits:
 
-- **74% Directory Reduction**: Simplified from 39 to 10 directories
+- **Streamlined Organization**: 18 directories (down from 22) for better discoverability
 - **Self-Contained Features**: Each feature includes its own models, views, and logic
 - **Faster Development**: No jumping between directories to understand a feature
 - **Better Testability**: Feature isolation makes testing straightforward
 
-### Directory Structure
+### Directory Structure (Reorganized 2025)
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Text editing engine (CodeEditorView)
-├── Configuration/           # EditorConfiguration system
-├── SyntaxHighlighting/      # Language support (17 languages)
-├── Layout/                  # UI components (GutterView)
-├── SwiftUI/                 # SwiftUI integration (CodeEditor)
-├── Platform/                # Enhanced cross-platform abstractions
-├── Extensions/              # Type extensions (+Extensions naming)
-├── TextProcessing/          # Actor-based processing
-├── LSP/                     # Language Server Protocol
-├── Features/                # Additional features (folding, search)
+├── Core/                    # Core functionality, APIs, business logic (40+ files)
+├── Text/                    # Unified text handling (TextKit, layout, processing)
+├── Layout/                  # UI components, view models (GutterView, MinimapView)
+├── Configuration/           # Settings and validation system
+├── SyntaxHighlighting/      # Language highlighting (17+ languages)
 ├── Languages/               # Language-specific providers
-├── Completion/              # Code completion system
-├── Performance/             # Performance monitoring
-├── TextKit/                 # TextKit helpers and bridges
-├── Models/                  # Core data models
-├── Utilities/               # Helper utilities
-├── Annotations/             # Annotation system
-├── TextLayout/              # Text layout management
+├── Completion/              # Code completion with view model
+├── Features/                # Optional features (flat structure)
+├── SwiftUI/                 # SwiftUI integration (CodeEditor)
+├── Platform/                # Cross-platform abstractions
+├── Extensions/              # Type extensions (+Extensions naming)
+├── Performance/             # Monitoring and optimization
+├── LSP/                     # Language Server Protocol
+├── Annotations/             # Code annotation system
+├── Models/                  # Data models
+├── Utilities/               # Shared utilities
 └── Documentation.docc/      # DocC documentation
 ```
+
+**Key Changes (January 2025)**:
+- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing merged into unified `Text/` directory
+- **Merged Small Directories**: API → Core, UIComponents → Layout, BusinessLogic → Core
+- **Distributed ViewModels**: Moved to their respective feature directories
+- **Flattened Nested Structures**: Removed DebuggerIntegration subdirectory
 
 ## Core Components
 
@@ -155,10 +159,10 @@ let config = EditorConfigurationBuilder()
 - Added CrossPlatformCoordinator for unified input handling
 
 ### Quality Achievements
-- **319 comprehensive tests** with 100% pass rate (284 core + 35 sample)
-- **Zero SwiftLint violations** across 270 files (229 plugin + 41 sample)
+- **53 comprehensive tests** with 100% pass rate
+- **Zero SwiftLint violations** across 333 source files
 - **Enhanced cross-platform consistency**
-- **74% directory reduction** while maintaining functionality
+- **Directory streamlining** from 22 to 18 directories for better discoverability
 
 ## See Also
 

@@ -7,7 +7,7 @@ This file provides guidance to Claude and other AI assistants when working with 
 ### Essential Commands
 ```bash
 # Standard workflow - build, lint, and test
-swift build && swiftlint && swift test
+swift build && swiftlint && swift test --parallel
 
 # Fix linting issues automatically
 swiftlint --fix
@@ -17,34 +17,49 @@ swift run
 
 # Generate documentation
 swift package generate-documentation --target CodeEditorPlugin
+
+# Run tests in parallel (faster)
+swift test --parallel
 ```
 
 ### Project Statistics
-- **252 Source Files** in main plugin
+- **333 Source Files** in main plugin
 - **53 Test Files** with comprehensive coverage
-- **22 Feature Directories** (well-organized architecture)
+- **18 Feature Directories** (streamlined from 22)
 - **17+ Languages Supported** with syntax highlighting
 - **Zero SwiftLint Violations** maintained across codebase
 
 ## Architecture Overview
 
-### Directory Structure
+### Directory Structure (Reorganized 2025)
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Text editing engine (CodeEditorView)
-├── Configuration/           # EditorConfiguration system
-├── SyntaxHighlighting/      # Language highlighting support
-├── Layout/                  # UI components (GutterView, MinimapView)
-├── SwiftUI/                 # SwiftUI integration (CodeEditor)
-├── Platform/                # Cross-platform abstractions
-├── Extensions/              # Type extensions (+Extensions naming)
-├── TextProcessing/          # Actor-based text processing
-├── Performance/             # Memory/performance monitoring
-├── Completion/              # Code completion system
-├── Features/                # Additional features (folding, search)
+├── Core/                    # Core functionality + APIs + Business Logic
+│   ├── CodeEditorView.swift             # Main text view
+│   ├── CodeEditorAPI.swift              # Public API surface
+│   ├── TextEditingService.swift         # Text manipulation logic
+│   └── EditorLayoutService.swift        # Layout calculations
+├── Text/                    # All text handling (consolidated)
+│   ├── TextKit helpers                  # NSTextView extensions
+│   ├── Text layout                      # Layout fragments
+│   └── Text processing                  # Async processing
+├── Layout/                  # UI layout + Components + ViewModels
+│   ├── GutterView.swift                 # Line numbers
+│   ├── MinimapView.swift                # Code minimap
+│   ├── GutterViewModel.swift            # Gutter state
+│   └── MinimapViewModel.swift           # Minimap state
+├── Configuration/           # Settings & validation
+├── SyntaxHighlighting/      # Language highlighting
 ├── Languages/               # Language-specific providers
+├── Completion/              # Code completion + ViewModel
+├── Features/                # Optional features (flat structure)
+├── SwiftUI/                 # SwiftUI integration
+├── Platform/                # Cross-platform abstractions
+├── Extensions/              # Type extensions
+├── Performance/             # Monitoring & optimization
 ├── LSP/                     # Language Server Protocol
-├── TextKit/                 # TextKit helpers
+├── Annotations/             # Code annotations
+├── Models/                  # Data models
 ├── Utilities/               # Shared utilities
 └── Documentation.docc/      # DocC documentation
 ```
@@ -66,6 +81,37 @@ Sources/CodeEditorPlugin/
 - Uses `#if canImport()` patterns (NOT `#if os()`)
 - Runtime capability detection via `PlatformCapabilities.shared`
 - `CrossPlatformCoordinator` for unified input handling
+
+### Key Files by Directory
+
+**Core/** (40+ files)
+- `CodeEditorView.swift` - Main text editor view
+- `CodeEditorAPI.swift` - Public API interface
+- `TextEditingService.swift` - Text manipulation logic
+- `LanguageDetectionService.swift` - Auto-detect file types
+- `SyntaxHighlightingService.swift` - Highlighting coordination
+- `UnifiedEventSystem.swift` - Cross-platform event handling
+
+**Text/** (34 files)
+- `TextKitBridge.swift` - TextKit1/2 compatibility
+- `TextLayoutManager.swift` - Custom layout management
+- `AsyncTextProcessor.swift` - Background text processing
+- `TextProcessingPipeline.swift` - Processing coordination
+- `RangeValidator.swift` - Text range validation
+
+**Layout/** (20+ files)
+- `GutterView.swift` - Line number display
+- `MinimapView.swift` - Code overview widget
+- `CodeEditorContainerView.swift` - iOS container
+- `GutterViewModel.swift` - Gutter state management
+- `BaseUIComponents.swift` - Shared UI components
+
+**Configuration/** (29 files)
+- `EditorConfiguration.swift` - Main config structure
+- `EditorConfigurationBuilder.swift` - Fluent builder API
+- `ConfigurationValidator.swift` - Config validation
+- `PresetConfiguration.swift` - Built-in presets
+- `ConfigurationMigrator.swift` - Version migration
 
 ## Key Usage Patterns
 
@@ -216,12 +262,21 @@ xcodebuild -scheme CodeEditorPlugin -destination 'platform=iOS Simulator,name=iP
 
 ## Recent Improvements (2024-2025)
 
+### Directory Reorganization (January 2025)
+- **Reduced from 22 to 18 directories** for better discoverability
+- **Consolidated text handling**: Created unified `Text/` directory combining TextKit, TextLayout, and TextProcessing
+- **Merged small directories**: API → Core, UIComponents → Layout, BusinessLogic → Core
+- **Distributed ViewModels**: Moved to their respective feature directories
+- **Flattened nested structures**: Removed DebuggerIntegration subdirectory
+- **Improved code organization**: Related functionality now grouped together
+
 ### Architecture & Performance
 - **Unified Event System**: Consistent event handling across platforms
 - **AsyncSyntaxHighlighter Cache**: LRU cache with memory limits
 - **SwiftSyntaxHighlighter+Shared**: Refactored shared highlighting logic
 - **Dependency Injection**: Replaced singletons (e.g., MemoryMonitor)
 - **Swift 6 Concurrency**: Full actor isolation, eliminated Task anti-patterns
+- **Business Logic Services**: Introduced service layer for language detection, syntax highlighting, and text editing
 
 ### Platform Enhancements
 - **Enhanced Abstraction**: All `#if os()` replaced with `#if canImport()`
