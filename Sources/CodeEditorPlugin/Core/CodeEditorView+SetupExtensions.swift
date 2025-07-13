@@ -80,31 +80,7 @@ extension CodeEditorView {
     }
     
     internal func updateCompletionTriggerCharacters() {
-        // Update trigger characters based on language
-        switch language {
-        case .swift, .rust, .go, .c, .cpp, .java:
-            completionTriggerCharacters = [".", "(", "[", "<", " ", ":"]
-
-        case .python, .ruby:
-            completionTriggerCharacters = [".", "(", "[", " ", ":"]
-
-        case .javascript, .typescript:
-            completionTriggerCharacters = [".", "(", "[", "{", " ", ":"]
-
-        case .html:
-            completionTriggerCharacters = ["<", " ", "\"", "'", "/"]
-
-        case .css:
-            completionTriggerCharacters = [":", " ", "-", "("]
-
-        case .json, .yaml:
-            completionTriggerCharacters = ["\"", ":", " ", "[", "{"]
-
-        case .sql:
-            completionTriggerCharacters = [" ", ".", "("]
-
-        default:
-            completionTriggerCharacters = [".", "(", "[", "<", " "]
-        }
+        let syntaxService = BusinessLogic.syntaxHighlighting
+        completionTriggerCharacters = syntaxService.getCompletionTriggerCharacters(for: language)
     }
 }

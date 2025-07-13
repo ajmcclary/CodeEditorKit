@@ -33,7 +33,22 @@ extension CodeEditorView {
             string
         }
         set {
-            string = newValue ?? ""
+            let textEditingService = BusinessLogic.textEditing
+            // Use a large limit for text validation - maxSyntaxHighlightingLength is for highlighting only
+            let validationResult = textEditingService.validateTextChange(
+                newText: newValue, 
+                maxLength: 100_000_000 // 100MB limit for text
+            )
+            
+            switch validationResult {
+            case .valid(let sanitizedText):
+                string = sanitizedText
+
+            case .invalid(let reason):
+                Self.logger.warning("Text change rejected: \(String(describing: reason))")
+                // Keep the original text if validation fails
+                // This is safer than clearing the text
+            }
         }
     }
     #endif

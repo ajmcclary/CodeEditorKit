@@ -93,7 +93,7 @@ public final class EditorContainerViewModel {
     
     // Update debouncing
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var updateWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var updateTask: Task<Void, Never>?
     private let updateDebounceInterval: TimeInterval = 0.1
     
     // MARK: - Initialization
@@ -344,26 +344,42 @@ extension EditorContainerViewModel {
     }
     
     func scheduleLayoutUpdate() {
-        updateWorkItem?.cancel()
+        updateTask?.cancel()
         
-        updateWorkItem = DispatchWorkItem { [weak self] in
-            guard let self,
-                  let layoutFrames = self.layoutFrames else { return }
-            
-            self.updateLayout(containerBounds: layoutFrames.containerFrame, animated: true)
+        updateTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.updateDebounceInterval ?? 0.1))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    guard let self,
+                          let layoutFrames = self.layoutFrames else { return }
+                    
+                    self.updateLayout(containerBounds: layoutFrames.containerFrame, animated: true)
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + updateDebounceInterval, execute: updateWorkItem!)
     }
     
     func debouncedUpdate(_ action: @escaping () -> Void) {
-        updateWorkItem?.cancel()
+        updateTask?.cancel()
         
-        updateWorkItem = DispatchWorkItem {
-            action()
+        updateTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.updateDebounceInterval ?? 0.1))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    action()
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + updateDebounceInterval, execute: updateWorkItem!)
     }
     
     func getLineNumber(for characterIndex: Int) -> Int {

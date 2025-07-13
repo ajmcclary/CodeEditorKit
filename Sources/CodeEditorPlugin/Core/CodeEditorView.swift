@@ -232,7 +232,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - Note: Changing the language may cause a brief visual update as highlighting is reprocessed
     public var language: Language = .plainText {
         didSet {
-            if language != oldValue {
+            let languageService = BusinessLogic.languageDetection
+            let validation = languageService.validateLanguageChange(from: oldValue, to: language)
+            
+            if validation != .noChange {
                 applySyntaxHighlighting()
                 updateCompletionTriggerCharacters()
             }

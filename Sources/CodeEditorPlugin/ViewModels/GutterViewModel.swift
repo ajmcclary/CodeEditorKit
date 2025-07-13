@@ -120,7 +120,7 @@ public final class GutterViewModel {
     
     // Update throttling
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var updateWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var updateTask: Task<Void, Never>?
     private let updateThrottleInterval: TimeInterval = 0.05
     
     deinit {
@@ -437,13 +437,21 @@ extension GutterViewModel {
     }
     
     func scheduleVisibleLineNumbersUpdate() {
-        updateWorkItem?.cancel()
+        updateTask?.cancel()
         
-        updateWorkItem = DispatchWorkItem { [weak self] in
-            self?.updateVisibleLineNumbers()
+        updateTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.updateThrottleInterval ?? 0.05))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self?.updateVisibleLineNumbers()
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + updateThrottleInterval, execute: updateWorkItem!)
     }
     
     func findLineNumber(at location: CGPoint) -> Int? {

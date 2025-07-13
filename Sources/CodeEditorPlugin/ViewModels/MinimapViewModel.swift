@@ -133,9 +133,9 @@ public final class MinimapViewModel {
     
     // Update throttling
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var renderWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var renderTask: Task<Void, Never>?
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var scrollWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var scrollTask: Task<Void, Never>?
     private let renderThrottleInterval: TimeInterval = 0.1
     private let scrollThrottleInterval: TimeInterval = 0.05
     
@@ -369,24 +369,40 @@ extension MinimapViewModel {
     }
     
     func scheduleRenderUpdate() {
-        renderWorkItem?.cancel()
+        renderTask?.cancel()
         
-        renderWorkItem = DispatchWorkItem { [weak self] in
-            self?.updateRenderInfo()
+        renderTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.renderThrottleInterval ?? 0.1))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self?.updateRenderInfo()
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + renderThrottleInterval, execute: renderWorkItem!)
     }
     
     func scheduleScrollUpdate() {
-        scrollWorkItem?.cancel()
+        scrollTask?.cancel()
         
-        scrollWorkItem = DispatchWorkItem { [weak self] in
-            self?.updateViewportIndicator()
-            self?.minimapState.needsRedraw = true
+        scrollTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.scrollThrottleInterval ?? 0.05))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self?.updateViewportIndicator()
+                    self?.minimapState.needsRedraw = true
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + scrollThrottleInterval, execute: scrollWorkItem!)
     }
     
     func updateRenderInfo() {

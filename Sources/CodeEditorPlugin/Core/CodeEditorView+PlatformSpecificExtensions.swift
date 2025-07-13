@@ -46,12 +46,14 @@ extension CodeEditorView {
     ///
     /// - SeeAlso: `language`, `Language`
     public func setLanguage(fileExtension: String) {
-        language = syntaxHighlighter.detectLanguage(from: fileExtension)
+        let languageService = BusinessLogic.languageDetection
+        language = languageService.detectLanguage(fromExtension: fileExtension)
     }
 
     /// Get all supported file extensions for syntax highlighting
     public var supportedFileExtensions: [String] {
-        syntaxHighlighter.supportedFileExtensions
+        let languageService = BusinessLogic.languageDetection
+        return Array(languageService.getAllSupportedExtensions())
     }
     
     internal var gutterView: GutterView? {

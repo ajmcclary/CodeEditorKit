@@ -16,6 +16,9 @@ public final class BusinessLogicServiceRegistry {
     private var _gutterSizingService: GutterSizingService?
     private var _codeFoldingCoordinatorService: CodeFoldingCoordinatorService?
     private var _editorLayoutService: EditorLayoutService?
+    private var _syntaxHighlightingService: SyntaxHighlightingService?
+    private var _languageDetectionService: LanguageDetectionService?
+    private var _textEditingService: TextEditingService?
     
     // Service dependencies
     private weak var codeFoldingEngine: CodeFoldingEngine?
@@ -80,6 +83,39 @@ public final class BusinessLogicServiceRegistry {
         return service
     }
     
+    /// Gets or creates the syntax highlighting service
+    public var syntaxHighlightingService: SyntaxHighlightingService {
+        if let service = _syntaxHighlightingService {
+            return service
+        }
+        
+        let service = SyntaxHighlightingService()
+        _syntaxHighlightingService = service
+        return service
+    }
+    
+    /// Gets or creates the language detection service
+    public var languageDetectionService: LanguageDetectionService {
+        if let service = _languageDetectionService {
+            return service
+        }
+        
+        let service = LanguageDetectionService()
+        _languageDetectionService = service
+        return service
+    }
+    
+    /// Gets or creates the text editing service
+    public var textEditingService: TextEditingService {
+        if let service = _textEditingService {
+            return service
+        }
+        
+        let service = TextEditingService()
+        _textEditingService = service
+        return service
+    }
+    
     // MARK: - Service Registration
     
     /// Registers the code folding engine dependency
@@ -98,6 +134,9 @@ public final class BusinessLogicServiceRegistry {
         _gutterSizingService?.clearCache()
         _codeFoldingCoordinatorService?.clearAllFolds()
         _editorLayoutService?.clearCache()
+        _syntaxHighlightingService?.clearCache()
+        _languageDetectionService?.clearCache()
+        // TextEditingService doesn't have caches to clear
     }
     
     /// Resets all services (useful for testing)
@@ -106,6 +145,9 @@ public final class BusinessLogicServiceRegistry {
         _gutterSizingService = nil
         _codeFoldingCoordinatorService = nil
         _editorLayoutService = nil
+        _syntaxHighlightingService = nil
+        _languageDetectionService = nil
+        _textEditingService = nil
         codeFoldingEngine = nil
     }
     
@@ -116,6 +158,9 @@ public final class BusinessLogicServiceRegistry {
             "gutterSizingService": _gutterSizingService != nil,
             "codeFoldingCoordinatorService": _codeFoldingCoordinatorService != nil,
             "editorLayoutService": _editorLayoutService != nil,
+            "syntaxHighlightingService": _syntaxHighlightingService != nil,
+            "languageDetectionService": _languageDetectionService != nil,
+            "textEditingService": _textEditingService != nil,
             "codeFoldingEngine": codeFoldingEngine != nil
         ]
     }
@@ -244,5 +289,17 @@ public enum BusinessLogic {
     
     public static var layout: EditorLayoutService {
         services.editorLayoutService
+    }
+    
+    public static var syntaxHighlighting: SyntaxHighlightingService {
+        services.syntaxHighlightingService
+    }
+    
+    public static var languageDetection: LanguageDetectionService {
+        services.languageDetectionService
+    }
+    
+    public static var textEditing: TextEditingService {
+        services.textEditingService
     }
 }

@@ -172,9 +172,9 @@ public final class CompletionViewModel {
     
     // Debouncing and throttling
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var completionWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var completionTask: Task<Void, Never>?
     @available(iOS 17.0, macOS 14.0, *)
-    @ObservationIgnored private var filterWorkItem: DispatchWorkItem?
+    @ObservationIgnored private var filterTask: Task<Void, Never>?
     private let completionDebounceInterval: TimeInterval = 0.3
     private let filterDebounceInterval: TimeInterval = 0.1
     
@@ -257,8 +257,8 @@ public final class CompletionViewModel {
         currentContext = nil
         
         // Cancel any pending operations
-        completionWorkItem?.cancel()
-        filterWorkItem?.cancel()
+        completionTask?.cancel()
+        filterTask?.cancel()
         
         logger.debug("Completion popup hidden")
     }
@@ -384,14 +384,23 @@ extension CompletionViewModel {
     }
     
     func triggerCompletion(at location: Int, in text: String) {
-        completionWorkItem?.cancel()
-        
-        completionWorkItem = DispatchWorkItem { [weak self] in
-            self?.performCompletion(at: location, in: text)
-        }
+        completionTask?.cancel()
         
         popupState.isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + completionDebounceInterval, execute: completionWorkItem!)
+        
+        completionTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.completionDebounceInterval ?? 0.3))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self?.performCompletion(at: location, in: text)
+                }
+            } catch {
+                // Task was cancelled
+            }
+        }
     }
     
     func performCompletion(at location: Int, in text: String) {
@@ -565,13 +574,21 @@ extension CompletionViewModel {
     }
     
     func scheduleFilterUpdate() {
-        filterWorkItem?.cancel()
+        filterTask?.cancel()
         
-        filterWorkItem = DispatchWorkItem { [weak self] in
-            self?.updateFilteredItems()
+        filterTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: .seconds(self?.filterDebounceInterval ?? 0.1))
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self?.updateFilteredItems()
+                }
+            } catch {
+                // Task was cancelled
+            }
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + filterDebounceInterval, execute: filterWorkItem!)
     }
     
     func updateFilteredItems() {
