@@ -28,13 +28,25 @@ public protocol GutterViewProtocol: AnyObject {
 public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Properties
     
-    public weak var textView: CodeEditorView?
+    public weak var textView: CodeEditorView? {
+        didSet {
+            // Set up interaction handler when text view is assigned
+            if let textView = textView {
+                interactionHandler = GutterInteractionHandler(gutterView: self, textView: textView)
+            } else {
+                interactionHandler = nil
+            }
+        }
+    }
     
     /// Array to store notification observer tokens for proper cleanup
     internal var observers: [NSObjectProtocol] = []
     
     /// The renderer responsible for drawing line numbers
     private let renderer = GutterViewRenderer()
+    
+    /// The interaction handler for clicks/taps
+    private var interactionHandler: GutterInteractionHandler?
     
     #if canImport(UIKit)
     private nonisolated(unsafe) var displayLink: CADisplayLink?
@@ -72,15 +84,8 @@ public class GutterView: PlatformView, GutterViewProtocol {
     
     /// Set up click/tap handling for folding controls
     private func setupClickHandling() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // macOS: Enable mouse events
-        // Note: NSView handles mouse events by default
-        #else
-        // iOS/Catalyst: Add tap gesture recognizer
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        addGestureRecognizer(tapGesture)
-        isUserInteractionEnabled = true
-        #endif
+        // Interaction handling is set up when textView is assigned
+        // See the textView property didSet
     }
     
     // MARK: - Display Updates
@@ -199,31 +204,19 @@ extension GutterView {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Handle mouse clicks on macOS
     override public func mouseDown(with event: NSEvent) {
-        guard let textView else {
-            super.mouseDown(with: event)
-            return
-        }
-        
-        let localPoint = convert(event.locationInWindow, from: nil)
-        if handleClickAt(point: localPoint, in: textView) {
-            // Click was handled by folding control
+        // Delegate to interaction handler
+        if let handled = interactionHandler?.handleMouseDown(with: event), handled {
             return
         }
         
         // Pass through to default handling
         super.mouseDown(with: event)
     }
-    #else
-    /// Handle tap gestures on iOS/Catalyst
-    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        guard let textView else { return }
-        
-        let localPoint = gesture.location(in: self)
-        _ = handleClickAt(point: localPoint, in: textView)
-    }
     #endif
     
-    /// Common click handling logic for both platforms
+    // Click handling logic has been moved to GutterInteractionHandler
+    // The following method is kept for backward compatibility but will be removed
+    @available(*, deprecated, message: "Use GutterInteractionHandler instead")
     private func handleClickAt(point: CGPoint, in textView: CodeEditorView) -> Bool {
         // Only handle clicks if folding is enabled
         guard textView.configuration.display.enableCodeFolding &&

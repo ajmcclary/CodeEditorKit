@@ -7,94 +7,36 @@ extension EditorConfiguration {
     public static let `default` = EditorConfiguration()
     
     /// Minimal configuration for lightweight editing
-    public static let minimal: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.display.isLineNumbersEnabled = false
-        config.display.enableSyntaxHighlighting = false
-        config.display.enableAnnotations = false
-        config.display.enableCodeFolding = false
-        config.display.showMinimap = false
-        config.behavior.enableCodeCompletion = false
-        return config
-    }()
+    public static let minimal = ConfigurationComposer.createMinimalPreset()
     
     /// Read-only configuration for viewing code
-    public static let readOnly: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.behavior.isEditable = false
-        config.behavior.enableCodeCompletion = false
-        config.behavior.autoIndent = false  // No need for auto-indent in read-only mode
-        config.behavior.isAutomaticQuoteSubstitutionEnabled = false
-        config.behavior.isAutomaticDashSubstitutionEnabled = false
-        return config
-    }()
+    public static let readOnly = ConfigurationComposer.createReadOnlyPreset()
     
     /// Configuration optimized for Markdown editing
-    public static let markdown: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.layout.wrapLines = true
-        config.behavior.isAutomaticLinkDetectionEnabled = true
-        config.behavior.isAutomaticQuoteSubstitutionEnabled = true
-        config.behavior.isAutomaticDashSubstitutionEnabled = true
-        config.display.enableCodeFolding = false
-        return config
-    }()
+    public static let markdown = ConfigurationComposer.createMarkdownPreset()
     
     /// Configuration for presentation/demo mode
-    public static let presentation: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.display.fontSize = 18
-        config.display.isLineNumbersEnabled = false
-        config.display.enableAnnotations = false
-        config.display.highlightSelectedLine = false
-        config.layout.wrapLines = true
-        config.behavior.isEditable = false
-        config.behavior.enableCodeCompletion = false
-        return config
-    }()
+    public static let presentation = ConfigurationComposer.createPresentationPreset()
     
     // MARK: - Platform-Specific Presets
     
     /// Configuration optimized for iOS devices
-    public static let iOS: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.display.fontSize = 16.0 // Larger for touch
-        config.layout.gutterWidth = 50.0 // Wider for touch targets
-        config.behavior.enableCodeCompletion = true
-        config.behavior.isAutomaticTextReplacementEnabled = false // Better performance on mobile
-        config.performance.maxSyntaxHighlightingLength = 100_000 // Smaller limit for mobile
-        config.performance.smoothScrolling = true
-        return config
-    }()
+    public static let iOS = ConfigurationComposer.platformOptimized(
+        from: .default,
+        for: .iOS
+    )
     
     /// Configuration optimized for Mac Catalyst
-    public static let catalyst: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.display.fontSize = 14.0 // Between macOS and iOS
-        config.layout.gutterWidth = 45.0 // Slightly wider for potential touch
-        config.behavior.enableCodeCompletion = true
-        config.performance.useHardwareAcceleration = true
-        config.performance.maxSyntaxHighlightingLength = 250_000
-        // Catalyst-specific optimizations
-        config.behavior.isAutomaticQuoteSubstitutionEnabled = false
-        config.behavior.isAutomaticDashSubstitutionEnabled = false
-        return config
-    }()
+    public static let catalyst = ConfigurationComposer.platformOptimized(
+        from: .default,
+        for: .catalyst
+    )
     
     /// Configuration optimized for macOS
-    public static let macOS: EditorConfiguration = {
-        var config = EditorConfiguration()
-        // Default configuration is already optimized for macOS
-        // This preset makes it explicit and allows customization
-        config.display.fontSize = 13.0
-        config.layout.gutterWidth = 40.0
-        config.behavior.enableCodeCompletion = true
-        config.behavior.isAutomaticTextReplacementEnabled = true
-        config.behavior.isAutomaticQuoteSubstitutionEnabled = true
-        config.performance.useHardwareAcceleration = true
-        config.performance.maxSyntaxHighlightingLength = 500_000
-        return config
-    }()
+    public static let macOS = ConfigurationComposer.platformOptimized(
+        from: .default,
+        for: .macOS
+    )
     
     /// Automatically selects the best configuration for the current platform
     /// 

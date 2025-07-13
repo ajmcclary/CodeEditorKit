@@ -1,0 +1,275 @@
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#endif
+
+/// Coordinates memory management across all subsystems of a CodeEditorView
+///
+/// This coordinator centralizes memory management logic, handling:
+/// - Component initialization with proper memory monitoring
+/// - Memory pressure response coordination
+/// - Resource cleanup on view deallocation
+/// - Dynamic memory monitor updates
+@MainActor
+public final class MemoryManagementCoordinator {
+    
+    // MARK: - Properties
+    
+    /// The memory monitor instance
+    private(set) var memoryMonitor: MemoryMonitor
+    
+    /// Weak reference to the editor view
+    private weak var editorView: CodeEditorView?
+    
+    /// Managed components that use memory monitoring
+    private struct ManagedComponents {
+        var asyncHighlighter: AsyncSyntaxHighlighter?
+        var renderingOptimizer: TextKit2RenderingOptimizer?
+        var completionManager: CompletionManager?
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        var lspManager: LSPManager?
+        #endif
+    }
+    
+    private var components = ManagedComponents()
+    
+    /// Cleanup handler identifier
+    private var cleanupIdentifier: String?
+    
+    // MARK: - Initialization
+    
+    /// Creates a new memory management coordinator
+    /// - Parameters:
+    ///   - memoryMonitor: The memory monitor to use
+    ///   - editorView: The editor view to manage
+    public init(memoryMonitor: MemoryMonitor, editorView: CodeEditorView) {
+        self.memoryMonitor = memoryMonitor
+        self.editorView = editorView
+        setupMemoryMonitoring()
+    }
+    
+    deinit {
+        // Cleanup is handled when the view is removed
+        // The cleanup handler will be unregistered by the memory monitor
+        // when it detects the weak reference is nil
+    }
+    
+    // MARK: - Component Creation
+    
+    /// Creates and returns an AsyncSyntaxHighlighter with proper memory monitoring
+    public func createAsyncHighlighter() -> AsyncSyntaxHighlighter {
+        let highlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
+        components.asyncHighlighter = highlighter
+        return highlighter
+    }
+    
+    /// Creates and returns a TextKit2RenderingOptimizer with proper memory monitoring
+    public func createRenderingOptimizer() -> TextKit2RenderingOptimizer {
+        let optimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
+        components.renderingOptimizer = optimizer
+        return optimizer
+    }
+    
+    /// Creates and returns a CompletionManager with proper memory monitoring
+    public func createCompletionManager() -> CompletionManager {
+        let manager = CompletionManager(memoryMonitor: memoryMonitor)
+        components.completionManager = manager
+        return manager
+    }
+    
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Creates and returns an LSPManager with proper memory monitoring
+    public func createLSPManager() -> LSPManager {
+        let manager = LSPManager(memoryMonitor: memoryMonitor)
+        components.lspManager = manager
+        return manager
+    }
+    #endif
+    
+    // MARK: - Memory Monitor Updates
+    
+    /// Updates the memory monitor and all managed components
+    /// - Parameter newMonitor: The new memory monitor to use
+    public func updateMemoryMonitor(_ newMonitor: MemoryMonitor) {
+        guard newMonitor !== memoryMonitor else { return }
+        
+        // Unregister from old monitor
+        if let identifier = cleanupIdentifier {
+            memoryMonitor.unregisterCleanupHandler(identifier: identifier)
+        }
+        
+        // Update monitor
+        memoryMonitor = newMonitor
+        
+        // Re-register with new monitor
+        setupMemoryMonitoring()
+        
+        // Update all components
+        updateComponentsMemoryMonitor()
+    }
+    
+    // MARK: - Private Methods
+    
+    /// Sets up memory monitoring and cleanup handlers
+    private func setupMemoryMonitoring() {
+        // Skip in test environment
+        if TestEnvironmentDetector.isRunningInTests {
+            return
+        }
+        
+        // Generate unique identifier
+        var hasher = Hasher()
+        if let editorView = editorView {
+            hasher.combine(ObjectIdentifier(editorView))
+        }
+        cleanupIdentifier = "MemoryManagementCoordinator_\(hasher.finalize())"
+        
+        // Register cleanup handler
+        memoryMonitor.registerCleanupHandler(
+            identifier: cleanupIdentifier!,
+            priority: .normal
+        ) { [weak self] in
+            self?.performMemoryCleanup() ?? CleanupResult(memoryFreedMB: 0, description: "Coordinator deallocated")
+        }
+    }
+    
+    /// Updates memory monitor for all managed components
+    private func updateComponentsMemoryMonitor() {
+        // AsyncSyntaxHighlighter
+        if components.asyncHighlighter != nil {
+            // Note: AsyncSyntaxHighlighter would need a method to update its memory monitor
+            // For now, we'd need to recreate it
+            if let editorView = editorView {
+                editorView.asyncHighlighter = createAsyncHighlighter()
+            }
+        }
+        
+        // TextKit2RenderingOptimizer
+        if components.renderingOptimizer != nil {
+            // Similar pattern for other components
+            if let editorView = editorView {
+                editorView.renderingOptimizer = createRenderingOptimizer()
+            }
+        }
+        
+        // CompletionManager
+        if components.completionManager != nil {
+            if let editorView = editorView {
+                editorView.completionManager = createCompletionManager()
+            }
+        }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // LSPManager
+        if components.lspManager != nil {
+            if let editorView = editorView {
+                editorView.lspManager = createLSPManager()
+            }
+        }
+        #endif
+    }
+    
+    /// Performs memory cleanup when under pressure
+    private func performMemoryCleanup() -> CleanupResult {
+        guard let editorView = editorView else {
+            return CleanupResult(memoryFreedMB: 0, description: "Editor view deallocated")
+        }
+        
+        var memoryFreed: Double = 0
+        var operations: [String] = []
+        
+        // Clear undo manager history
+        if let undoManager = editorView.undoManager,
+           undoManager.canUndo || undoManager.canRedo {
+            undoManager.removeAllActions()
+            memoryFreed += 0.5 // Estimate
+            operations.append("undo history")
+        }
+        
+        // Clear large text storage if read-only
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let textStorage = editorView.textStorage,
+           textStorage.length > 100_000,
+           !editorView.isEditable {
+            let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1
+            memoryFreed += sizeReduction
+            operations.append("large text storage")
+        }
+        #elseif targetEnvironment(macCatalyst)
+        let textStorage = editorView.textStorage
+        if textStorage.length > 100_000,
+           !editorView.isEditable {
+            let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1
+            memoryFreed += sizeReduction
+            operations.append("large text storage")
+        }
+        #else
+        if let text = editorView.text,
+           text.count > 100_000,
+           !editorView.isEditable {
+            let sizeReduction = Double(text.count) / (1_024 * 1_024) * 0.1
+            memoryFreed += sizeReduction
+            operations.append("large text content")
+        }
+        #endif
+        
+        // Clear syntax highlighting cache
+        // Note: The syntax highlighter will automatically cancel tasks when needed
+        memoryFreed += 2.0 // Estimate
+        operations.append("syntax highlighting cache")
+        
+        // Clear text processing cache
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // Force layout manager to clear cached layout information
+        if let layoutManager = editorView.layoutManager,
+           let textContainer = editorView.textContainer {
+            layoutManager.ensureLayout(for: textContainer)
+            memoryFreed += 1.0 // Estimate
+            operations.append("layout cache")
+        }
+        #endif
+        
+        // Clear line index cache
+        editorView.lineIndexCache.invalidate()
+        memoryFreed += 0.5 // Estimate
+        operations.append("line index cache")
+        
+        // Clear folding state for large documents
+        if !editorView.codeFoldingEngine.foldedRegions.isEmpty {
+            editorView.codeFoldingEngine.unfoldAll()
+            memoryFreed += 0.25 // Estimate
+            operations.append("code folding state")
+        }
+        
+        let description = operations.isEmpty ? "No operations performed" : "Cleared: \(operations.joined(separator: ", "))"
+        return CleanupResult(memoryFreedMB: memoryFreed, description: description)
+    }
+}
+
+// MARK: - Integration Extension
+
+extension CodeEditorView {
+    /// Sets up memory management coordination
+    internal func setupMemoryManagement() {
+        // This method would be called from CodeEditorView's initialization
+        // to set up the memory management coordinator
+        let coordinator = MemoryManagementCoordinator(
+            memoryMonitor: memoryMonitor,
+            editorView: self
+        )
+        
+        // Use coordinator to create managed components
+        self.asyncHighlighter = coordinator.createAsyncHighlighter()
+        self.renderingOptimizer = coordinator.createRenderingOptimizer()
+        self.completionManager = coordinator.createCompletionManager()
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        self.lspManager = coordinator.createLSPManager()
+        #endif
+        
+        // Store coordinator reference if needed
+        // Note: In practice, you might want to store this as a property
+    }
+}

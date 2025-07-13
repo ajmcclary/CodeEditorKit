@@ -172,17 +172,17 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
     
     /// Async syntax highlighter with debouncing
-    internal lazy var asyncHighlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
+    internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
     
     /// TextKit2 rendering optimizer for large files
-    internal lazy var renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
+    internal lazy var renderingOptimizer = memoryCoordinator.createRenderingOptimizer()
     
     /// TextKit2 performance monitor
     internal let performanceMonitor = TextKit2PerformanceMonitor()
     
     /// LSP manager for language server integration
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    internal lazy var lspManager = LSPManager(memoryMonitor: memoryMonitor)
+    internal lazy var lspManager = memoryCoordinator.createLSPManager()
     #endif
     
     /// Code folding engine for managing foldable regions and fold states
@@ -217,8 +217,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             // Only update if the monitor actually changed
             guard memoryMonitor !== oldValue else { return }
             
-            // Update all components that use memoryMonitor
-            updateMemoryMonitorReferences()
+            // Update memory coordinator with new monitor
+            memoryCoordinator.updateMemoryMonitor(memoryMonitor)
         }
     }
     
@@ -277,7 +277,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Completion System
     
     /// Completion manager for handling multiple completion providers
-    internal lazy var completionManager = CompletionManager(memoryMonitor: memoryMonitor)
+    internal lazy var completionManager = memoryCoordinator.createCompletionManager()
     
     /// Current completion view controller
     internal var completionViewController: (any CompletionViewControllerRepresentable)?
@@ -294,6 +294,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// Completion trigger characters for the current language
     internal var completionTriggerCharacters: Set<Character> = [".", "(", "[", "<", " "]
+    
+    /// Memory management coordinator
+    internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
     
     // MARK: - Initialization
     
@@ -372,21 +375,4 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // MARK: - Private Methods
     
     /// Updates memory monitor references in all dependent components
-    private func updateMemoryMonitorReferences() {
-        // Update completion manager
-        completionManager = CompletionManager(memoryMonitor: memoryMonitor)
-        
-        // Update async highlighter
-        asyncHighlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
-        
-        // Update rendering optimizer
-        renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: memoryMonitor)
-        
-        // Update LSP manager
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        lspManager = LSPManager(memoryMonitor: memoryMonitor)
-        #endif
-        
-        // Note: codeFoldingEngine and other components don't use memoryMonitor
-    }
 }

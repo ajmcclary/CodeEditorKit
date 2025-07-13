@@ -12,113 +12,18 @@ extension CodeEditorView {
     // MARK: - Setup Methods
     
     internal func setupTextView() {
+        // Use TextKitSetupHelper for centralized setup
+        let setupResult = TextKitSetupHelper.setupTextKit(for: self)
+        
         #if DEBUG
-        Self.logger.debug("Setting up CodeEditorView with TextKit\(self.textLayoutManager != nil ? "2" : "1")")
-        #endif
-        
-        // Check which TextKit version we're using
-        
-        // Try to ensure we're using TextKit2 if possible
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if textLayoutManager == nil && ModernTextKitHelper.shouldUseTextKit2 {
-            // Force TextKit2 initialization if needed
-            // This is a fallback - normally NSTextView should auto-initialize with TextKit2
+        Self.logger.debug("Setting up CodeEditorView with TextKit\(setupResult.isUsingTextKit2 ? "2" : "1")")
+        setupResult.notes.forEach { note in
+            Self.logger.debug("TextKit Setup: \(note)")
         }
-        #else
-        // For iOS/Mac Catalyst, textLayoutManager is always nil since UITextView doesn't expose TextKit2
-        #endif
-        
-        // Set up the text view
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        isAutomaticQuoteSubstitutionEnabled = false
-        isAutomaticDashSubstitutionEnabled = false
-        isAutomaticTextReplacementEnabled = false
-        isAutomaticSpellingCorrectionEnabled = false
-        isContinuousSpellCheckingEnabled = false
-        
-        // Enable undo
-        allowsUndo = true
-        
-        // Set up delegate
-        delegate = delegateProxy
-        #else
-        // UITextView configuration
-        autocorrectionType = .no
-        autocapitalizationType = .none
-        spellCheckingType = .no
-        
-        // Disable automatic content inset adjustments to prevent scroll jumping
-        contentInsetAdjustmentBehavior = .never
-        
-        // Set up delegate
-        delegate = delegateProxy
-        #endif
-        
-        // Set up text storage observation for syntax highlighting
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTextStorageDidProcessEditing(_:)),
-            name: NSTextStorage.didProcessEditingNotification,
-            object: textStorage
-        )
-        #else
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTextStorageDidProcessEditing(_:)),
-            name: NSTextStorage.didProcessEditingNotification,
-            object: textStorage
-        )
-        #endif
-        
-        // Set up selection change observation
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTextViewDidChangeSelection(_:)),
-            name: NSTextView.didChangeSelectionNotification,
-            object: self
-        )
-        #else
-        // UITextView doesn't have a direct selection change notification
-        // We'll handle this through the delegate instead
         #endif
         
         // Setup theme
         setupDefaultTheme()
-        
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        ModernTextKitHelper.configureTextView(self)
-        ModernTextKitHelper.applyPerformanceOptimizations(to: self)
-        
-        // Ensure TextKit2 is used if available and beneficial
-        _ = ModernTextKitHelper.ensureTextKit2(for: self)
-        #else
-        // ModernTextKitHelper is not available for iOS/Mac Catalyst
-        #endif
-        
-        // Ensure proper sizing and layout
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        isVerticallyResizable = true
-        // Don't set isHorizontallyResizable here - it will be set by configuration
-        if let textContainer = self.textContainer {
-            textContainer.widthTracksTextView = true
-            textContainer.heightTracksTextView = false
-        }
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst - textContainer is non-optional
-        let textContainer = self.textContainer
-        textContainer.widthTracksTextView = true
-        textContainer.heightTracksTextView = false
-        #else
-        // UITextView doesn't have these properties - it handles scrolling differently
-        #endif
-        
-        // Make sure we have reasonable size constraints
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        minSize = NSSize(width: 0, height: 0)
-        maxSize = NSSize(width: 10_000, height: 10_000)
-        #endif
         
         // Initial syntax highlighting
         applySyntaxHighlighting()

@@ -64,7 +64,7 @@ final class PerformanceStressTests: XCTestCase {
     // MARK: - Concurrent Access Tests
     
     func testConcurrentPerformanceMonitorAccess() async throws {
-        let monitor = PerformanceMonitor.shared
+        let monitor = PerformanceMonitor()
         
         // Clear existing metrics
         await monitor.clearMetrics()

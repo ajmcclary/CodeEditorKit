@@ -56,83 +56,15 @@ extension CodeEditorView {
     
     /// Register cleanup handler with the memory monitor
     internal func registerWithMemoryMonitor() {
-        // Skip memory monitoring in test environment to avoid cleanup issues
-        if TestEnvironmentDetector.isRunningInTests {
-            return
-        }
-        
-        var hasher = Hasher()
-        hasher.combine(ObjectIdentifier(self))
-        let identifier = "CodeEditorView_\(hasher.finalize())"
-        
-        self.memoryMonitor.registerCleanupHandler(
-            identifier: identifier,
-            priority: .normal
-        ) { [weak self] in
-            guard let self else {
-                return CleanupResult(memoryFreedMB: 0, description: "CodeEditorView deallocated")
-            }
-            
-            var memoryFreed: Double = 0
-            var operations: [String] = []
-            
-            // Clear undo manager history
-            if let undoManager = self.undoManager, undoManager.canUndo || undoManager.canRedo {
-                undoManager.removeAllActions()
-                memoryFreed += 0.5 // Estimate
-                operations.append("undo history")
-            }
-            
-            // Clear text storage if very large
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let textStorage = self.textStorage, textStorage.length > 100_000 {
-                // Only clear if this is a read-only view or backup exists
-                if !self.isEditable {
-                    let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1 // Rough estimate
-                    memoryFreed += sizeReduction
-                    operations.append("large text storage")
-                }
-            }
-            #elseif targetEnvironment(macCatalyst)
-            let textStorage = self.textStorage
-            if textStorage.length > 100_000 {
-                // Only clear if this is a read-only view or backup exists
-                if !self.isEditable {
-                    let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1 // Rough estimate
-                    memoryFreed += sizeReduction
-                    operations.append("large text storage")
-                }
-            }
-            #endif
-            
-            // Clear layout manager caches
-            if self.textLayoutManager != nil {
-                // TextKit2 doesn't have direct cache clearing, but we can estimate cleanup
-                memoryFreed += 0.2
-                operations.append("layout caches")
-            }
-            
-            // In test environments, return a minimal result without description to reduce output
-            if TestEnvironmentDetector.isRunningInTests {
-                return CleanupResult(memoryFreedMB: 0, description: nil)
-            }
-            
-            let description = operations.isEmpty ? "no cleanup needed" : "cleared: \(operations.joined(separator: ", "))"
-            return CleanupResult(memoryFreedMB: memoryFreed, description: description)
-        }
+        // Memory monitoring is now handled by MemoryManagementCoordinator
+        // This method is kept for backward compatibility but delegates to the coordinator
+        // The coordinator is automatically created as a lazy property and handles all memory management
     }
     
     /// Unregister from memory monitor  
     internal func unregisterFromMemoryMonitor() {
-        // Skip memory monitoring in test environment to avoid cleanup issues
-        if TestEnvironmentDetector.isRunningInTests {
-            return
-        }
-        
-        var hasher = Hasher()
-        hasher.combine(ObjectIdentifier(self))
-        let identifier = "CodeEditorView_\(hasher.finalize())"
-        self.memoryMonitor.unregisterCleanupHandler(identifier: identifier)
+        // Memory monitoring cleanup is now handled by MemoryManagementCoordinator's deinit
+        // This method is kept for backward compatibility
     }
     
     // MARK: - Visible Range

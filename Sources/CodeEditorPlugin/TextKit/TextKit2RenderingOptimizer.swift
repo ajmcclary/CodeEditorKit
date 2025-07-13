@@ -84,6 +84,8 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
     public func updateVisibleRange(_ range: NSRange) {
         guard enableViewportOptimization else { return }
         
+        renderingStats.recordVisibleRangeCalculation()
+        
         let oldVisibleRange = visibleRange
         visibleRange = range
         
@@ -372,6 +374,43 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
             }
         }
     }
+    
+    /// Get a performance report with detailed metrics
+    /// - Returns: A formatted performance report
+    public func performanceReport() -> String {
+        let stats = renderingStats
+        
+        return """
+        TextKit2 Rendering Performance Report
+        ====================================
+        
+        Basic Metrics:
+        - Total Optimizations: \(stats.totalOptimizations)
+        - Average Optimization Time: \(String(format: "%.2f", stats.averageOptimizationTime * 1000))ms
+        - Fragments Cached: \(stats.fragmentsCached)
+        - Cache Hit Rate: \(String(format: "%.1f", stats.cacheHitRate * 100))%
+        
+        Performance Timing:
+        - Fragment Creation: \(String(format: "%.2f", stats.fragmentCreationTime))ms avg
+        - Layout Calculation: \(String(format: "%.2f", stats.layoutCalculationTime))ms avg
+        - Drawing Time: \(String(format: "%.2f", stats.drawingTime))ms avg
+        
+        Memory Usage:
+        - Current: \(String(format: "%.1f", stats.currentMemoryUsageMB))MB
+        - Peak: \(String(format: "%.1f", stats.peakMemoryUsageMB))MB
+        - Memory Pressure Events: \(stats.memoryPressureEvents)
+        
+        Performance Budgets:
+        - Layout Budget Exceeded: \(stats.layoutBudgetExceeded) times
+        - Rendering Budget Exceeded: \(stats.renderingBudgetExceeded) times
+        - Memory Budget Exceeded: \(stats.memoryBudgetExceeded) times
+        
+        Optimization Features:
+        - Viewport Optimizations: \(stats.viewportOptimizationsEnabled)
+        - Large File Optimizations: \(stats.largeFileOptimizationsEnabled)
+        - Fragment Recycling: \(stats.fragmentRecyclingEnabled)
+        """
+    }
 }
 
 /// Cached text layout fragment
@@ -385,9 +424,10 @@ private struct CachedFragment {
     }
 }
 
-/// Rendering performance statistics
+/// Rendering performance statistics with detailed metrics
 @MainActor
 public final class RenderingStatistics: ObservableObject {
+    // MARK: - Basic Statistics
     @Published public private(set) var totalOptimizations: Int = 0
     @Published public private(set) var averageOptimizationTime: TimeInterval = 0
     @Published public private(set) var fragmentsCached: Int = 0
@@ -399,6 +439,27 @@ public final class RenderingStatistics: ObservableObject {
     @Published public private(set) var fragmentRecyclingEnabled: Int = 0
     @Published public private(set) var containerOptimizations: Int = 0
     @Published public private(set) var lastOptimizationTime: Date?
+    
+    // MARK: - Detailed Performance Metrics
+    @Published public private(set) var fragmentCreationTime: TimeInterval = 0
+    @Published public private(set) var layoutCalculationTime: TimeInterval = 0
+    @Published public private(set) var drawingTime: TimeInterval = 0
+    @Published public private(set) var cacheHitRate: Double = 0
+    @Published public private(set) var memoryPressureEvents: Int = 0
+    @Published public private(set) var layoutInvalidations: Int = 0
+    @Published public private(set) var visibleRangeCalculations: Int = 0
+    @Published public private(set) var peakMemoryUsageMB: Double = 0
+    @Published public private(set) var currentMemoryUsageMB: Double = 0
+    
+    // MARK: - Performance Budgets
+    @Published public private(set) var layoutBudgetExceeded: Int = 0
+    @Published public private(set) var renderingBudgetExceeded: Int = 0
+    @Published public private(set) var memoryBudgetExceeded: Int = 0
+    
+    // Performance thresholds
+    private let layoutBudgetMs: TimeInterval = 16.67 // 60fps target
+    private let renderingBudgetMs: TimeInterval = 16.67 // 60fps target
+    private let memoryBudgetMB: Double = 100.0 // 100MB budget
     
     private var optimizationTimes: [TimeInterval] = []
     private var prefetchTimes: [TimeInterval] = []
@@ -451,7 +512,59 @@ public final class RenderingStatistics: ObservableObject {
         containerOptimizations += 1
     }
     
+    // MARK: - Detailed Metric Recording
+    
+    internal func recordFragmentCreation(duration: TimeInterval) {
+        fragmentCreationTime = (fragmentCreationTime * Double(fragmentsCached) + duration) / Double(fragmentsCached + 1)
+    }
+    
+    internal func recordLayoutCalculation(duration: TimeInterval) {
+        layoutCalculationTime = (layoutCalculationTime * Double(totalOptimizations) + duration) / Double(totalOptimizations + 1)
+        
+        if duration > layoutBudgetMs {
+            layoutBudgetExceeded += 1
+        }
+    }
+    
+    internal func recordDrawing(duration: TimeInterval) {
+        drawingTime = (drawingTime * Double(totalOptimizations) + duration) / Double(totalOptimizations + 1)
+        
+        if duration > renderingBudgetMs {
+            renderingBudgetExceeded += 1
+        }
+    }
+    
+    internal func recordCacheHit(hit: Bool) {
+        let totalRequests = Double(fragmentsCached + 1)
+        let hits = cacheHitRate * Double(fragmentsCached) + (hit ? 1.0 : 0.0)
+        cacheHitRate = hits / totalRequests
+    }
+    
+    internal func recordMemoryPressure() {
+        memoryPressureEvents += 1
+    }
+    
+    internal func recordLayoutInvalidation() {
+        layoutInvalidations += 1
+    }
+    
+    internal func recordVisibleRangeCalculation() {
+        visibleRangeCalculations += 1
+    }
+    
+    internal func updateMemoryUsage(currentMB: Double) {
+        currentMemoryUsageMB = currentMB
+        if currentMB > peakMemoryUsageMB {
+            peakMemoryUsageMB = currentMB
+        }
+        
+        if currentMB > memoryBudgetMB {
+            memoryBudgetExceeded += 1
+        }
+    }
+    
     public func reset() {
+        // Basic statistics
         totalOptimizations = 0
         averageOptimizationTime = 0
         fragmentsCached = 0
@@ -465,6 +578,22 @@ public final class RenderingStatistics: ObservableObject {
         lastOptimizationTime = nil
         optimizationTimes.removeAll()
         prefetchTimes.removeAll()
+        
+        // Detailed metrics
+        fragmentCreationTime = 0
+        layoutCalculationTime = 0
+        drawingTime = 0
+        cacheHitRate = 0
+        memoryPressureEvents = 0
+        layoutInvalidations = 0
+        visibleRangeCalculations = 0
+        peakMemoryUsageMB = 0
+        currentMemoryUsageMB = 0
+        
+        // Budget tracking
+        layoutBudgetExceeded = 0
+        renderingBudgetExceeded = 0
+        memoryBudgetExceeded = 0
     }
 }
 
