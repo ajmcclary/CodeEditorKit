@@ -14,7 +14,6 @@ import AppKit
 /// - Dynamic memory monitor updates
 @MainActor
 public final class MemoryManagementCoordinator {
-    
     // MARK: - Properties
     
     /// The memory monitor instance
@@ -28,6 +27,7 @@ public final class MemoryManagementCoordinator {
         var asyncHighlighter: AsyncSyntaxHighlighter?
         var renderingOptimizer: TextKit2RenderingOptimizer?
         var completionManager: CompletionManager?
+        
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         var lspManager: LSPManager?
         #endif
@@ -121,7 +121,7 @@ public final class MemoryManagementCoordinator {
         
         // Generate unique identifier
         var hasher = Hasher()
-        if let editorView = editorView {
+        if let editorView {
             hasher.combine(ObjectIdentifier(editorView))
         }
         cleanupIdentifier = "MemoryManagementCoordinator_\(hasher.finalize())"
@@ -141,7 +141,7 @@ public final class MemoryManagementCoordinator {
         if components.asyncHighlighter != nil {
             // Note: AsyncSyntaxHighlighter would need a method to update its memory monitor
             // For now, we'd need to recreate it
-            if let editorView = editorView {
+            if let editorView {
                 editorView.asyncHighlighter = createAsyncHighlighter()
             }
         }
@@ -149,14 +149,14 @@ public final class MemoryManagementCoordinator {
         // TextKit2RenderingOptimizer
         if components.renderingOptimizer != nil {
             // Similar pattern for other components
-            if let editorView = editorView {
+            if let editorView {
                 editorView.renderingOptimizer = createRenderingOptimizer()
             }
         }
         
         // CompletionManager
         if components.completionManager != nil {
-            if let editorView = editorView {
+            if let editorView {
                 editorView.completionManager = createCompletionManager()
             }
         }
@@ -164,7 +164,7 @@ public final class MemoryManagementCoordinator {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // LSPManager
         if components.lspManager != nil {
-            if let editorView = editorView {
+            if let editorView {
                 editorView.lspManager = createLSPManager()
             }
         }
@@ -173,7 +173,7 @@ public final class MemoryManagementCoordinator {
     
     /// Performs memory cleanup when under pressure
     private func performMemoryCleanup() -> CleanupResult {
-        guard let editorView = editorView else {
+        guard let editorView else {
             return CleanupResult(memoryFreedMB: 0, description: "Editor view deallocated")
         }
         

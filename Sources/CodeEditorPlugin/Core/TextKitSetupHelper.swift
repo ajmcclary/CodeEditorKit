@@ -14,8 +14,7 @@ import AppKit
 /// - Performance optimizations
 /// - Container configuration
 @MainActor
-public final class TextKitSetupHelper {
-    
+public enum TextKitSetupHelper {
     // MARK: - Configuration Structures
     
     /// Configuration options for TextKit setup
@@ -36,10 +35,10 @@ public final class TextKitSetupHelper {
         public var preferTextKit2: Bool = true
         
         /// Default configuration for code editing
-        public static let codeEditing = SetupOptions()
+        public static let codeEditing = Self()
         
         /// Configuration for plain text editing
-        public static let plainText = SetupOptions(
+        public static let plainText = Self(
             enableAutomaticReplacements: true,
             enableSpellChecking: true
         )
@@ -163,7 +162,7 @@ public final class TextKitSetupHelper {
     /// Configures the text container for optimal performance
     private static func configureTextContainer(
         for textView: CodeEditorView,
-        options: SetupOptions
+        options _: SetupOptions
     ) -> NSTextContainer? {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = textView.textContainer else { return nil }

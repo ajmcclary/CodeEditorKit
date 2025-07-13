@@ -31,7 +31,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     public weak var textView: CodeEditorView? {
         didSet {
             // Set up interaction handler when text view is assigned
-            if let textView = textView {
+            if let textView {
                 interactionHandler = GutterInteractionHandler(gutterView: self, textView: textView)
             } else {
                 interactionHandler = nil

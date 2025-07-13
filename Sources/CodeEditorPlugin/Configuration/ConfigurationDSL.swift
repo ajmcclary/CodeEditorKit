@@ -35,7 +35,7 @@ import SwiftUI
 /// }
 /// ```
 @resultBuilder
-public struct ConfigurationBuilder {
+public enum ConfigurationBuilder {
     public static func buildBlock(_ components: ConfigurationComponent...) -> EditorConfiguration {
         var config = EditorConfiguration()
         
@@ -57,7 +57,7 @@ public protocol ConfigurationComponent {
 // MARK: - Display Components
 
 @resultBuilder
-public struct DisplayBuilder {
+public enum DisplayBuilder {
     public static func buildBlock(_ components: DisplayComponent...) -> [DisplayComponent] {
         components
     }
@@ -135,7 +135,7 @@ public struct ShowMinimap: DisplayComponent {
 // MARK: - Layout Components
 
 @resultBuilder
-public struct LayoutBuilder {
+public enum LayoutBuilder {
     public static func buildBlock(_ components: LayoutComponent...) -> [LayoutComponent] {
         components
     }
@@ -210,7 +210,7 @@ public struct GutterWidth: LayoutComponent {
 // MARK: - Behavior Components
 
 @resultBuilder
-public struct BehaviorBuilder {
+public enum BehaviorBuilder {
     public static func buildBlock(_ components: BehaviorComponent...) -> [BehaviorComponent] {
         components
     }
@@ -273,7 +273,7 @@ public struct CodeCompletion: BehaviorComponent {
 // MARK: - Performance Components
 
 @resultBuilder
-public struct PerformanceBuilder {
+public enum PerformanceBuilder {
     public static func buildBlock(_ components: PerformanceComponent...) -> [PerformanceComponent] {
         components
     }
@@ -360,20 +360,28 @@ public struct Preset: ConfigurationComponent {
         switch preset {
         case .default:
             configuration = .default
+
         case .minimal:
             configuration = .minimal
+
         case .readOnly:
             configuration = .readOnly
+
         case .markdown:
             configuration = .markdown
+
         case .presentation:
             configuration = .presentation
+
         case .iOS:
             configuration = .iOS
+
         case .catalyst:
             configuration = .catalyst
+
         case .macOS:
             configuration = .macOS
+
         case .platformOptimized:
             configuration = .platformOptimized
         }

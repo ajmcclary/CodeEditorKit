@@ -1,5 +1,5 @@
-import Foundation
 import CoreGraphics
+import Foundation
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -15,7 +15,6 @@ import AppKit
 /// - Breakpoint toggling (future)
 @MainActor
 public final class GutterInteractionHandler {
-    
     // MARK: - Properties
     
     /// Weak reference to the gutter view
@@ -51,7 +50,7 @@ public final class GutterInteractionHandler {
         // No additional setup needed here
         #else
         // iOS/Catalyst: Add tap gesture recognizer
-        guard let gutterView = gutterView else { return }
+        guard let gutterView else { return }
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         gutterView.addGestureRecognizer(tapGesture)
@@ -66,7 +65,7 @@ public final class GutterInteractionHandler {
     /// - Parameter event: The mouse event
     /// - Returns: Whether the event was handled
     public func handleMouseDown(with event: NSEvent) -> Bool {
-        guard let gutterView = gutterView,
+        guard let gutterView,
               textView != nil else { return false }
         
         let locationInGutter = gutterView.convert(event.locationInWindow, from: nil)
@@ -78,7 +77,7 @@ public final class GutterInteractionHandler {
     /// Handles tap gestures on iOS/Catalyst
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard gesture.state == .ended,
-              let gutterView = gutterView else { return }
+              let gutterView else { return }
         
         let location = gesture.location(in: gutterView)
         _ = handleInteraction(at: location)
@@ -91,7 +90,7 @@ public final class GutterInteractionHandler {
     /// - Parameter point: The point in gutter coordinates
     /// - Returns: Whether the interaction was handled
     private func handleInteraction(at point: CGPoint) -> Bool {
-        guard let textView = textView,
+        guard let textView,
               gutterView != nil else { return false }
         
         // Check if code folding is enabled
@@ -126,7 +125,7 @@ public final class GutterInteractionHandler {
     /// - Parameter point: The point in gutter coordinates
     /// - Returns: Line information if a line was found
     private func findLine(at point: CGPoint) -> LineInfo? {
-        guard let textView = textView else { return nil }
+        guard let textView else { return nil }
         
         // Use TextKitLineNumberHelper to get visible line information
         let helper = TextKitLineNumberHelper(textView: textView)
@@ -148,8 +147,8 @@ public final class GutterInteractionHandler {
     /// - Parameter range: The text range of the line
     /// - Returns: The rectangle in gutter coordinates
     private func getLineRect(for range: NSRange) -> CGRect? {
-        guard let textView = textView,
-              let gutterView = gutterView else { return nil }
+        guard let textView,
+              let gutterView else { return nil }
         
         // Get the rectangle from the text view
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -189,8 +188,8 @@ public final class GutterInteractionHandler {
     ///   - lineInfo: Information about the line
     /// - Returns: Whether the folding control was hit
     private func isFoldingControlHit(at point: CGPoint, for lineInfo: LineInfo) -> Bool {
-        guard let textView = textView,
-              let gutterView = gutterView else { return false }
+        guard let textView,
+              let gutterView else { return false }
         
         // Check if this line is foldable
         guard textView.isFoldable(at: lineInfo.lineNumber) else {
@@ -217,7 +216,7 @@ public final class GutterInteractionHandler {
     /// Toggles folding for the specified line
     /// - Parameter lineNumber: The line number to toggle folding for
     private func toggleFolding(for lineNumber: Int) {
-        guard let textView = textView else { return }
+        guard let textView else { return }
         
         // Use the CodeEditorView's folding methods
         _ = textView.toggleFold(at: lineNumber)
@@ -239,7 +238,7 @@ public final class GutterInteractionHandler {
 extension GutterView {
     /// Sets up the interaction handler
     internal func setupInteractionHandler() {
-        guard let textView = textView else { return }
+        guard let textView else { return }
         _ = GutterInteractionHandler(gutterView: self, textView: textView)
     }
 }

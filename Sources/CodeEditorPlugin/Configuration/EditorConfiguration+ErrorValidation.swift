@@ -3,7 +3,6 @@ import Foundation
 // MARK: - Error-based Validation
 
 extension EditorConfiguration {
-    
     /// Validates the configuration and throws domain-specific errors if invalid
     /// - Throws: `DomainError.configuration` with detailed error information
     public func validateWithDomainError() throws {
@@ -107,7 +106,6 @@ extension EditorConfiguration {
 // MARK: - Error Recovery
 
 extension EditorConfiguration {
-    
     /// Attempts to fix validation errors automatically
     /// - Returns: A new configuration with fixes applied
     /// - Throws: `ConfigurationError` if fixes cannot be applied

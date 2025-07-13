@@ -2,8 +2,7 @@ import Foundation
 
 /// A composable configuration builder that reduces duplication in preset definitions
 /// by providing base configurations and functional composition methods.
-public struct ConfigurationComposer {
-    
+public enum ConfigurationComposer {
     // MARK: - Base Configuration Builders
     
     /// Creates a base configuration with common settings
@@ -140,7 +139,7 @@ public struct ConfigurationComposer {
     ///   - platform: The target platform
     /// - Returns: A platform-optimized configuration
     public static func platformOptimized(
-        from base: EditorConfiguration,
+        from _: EditorConfiguration,
         for platform: Platform
     ) -> EditorConfiguration {
         switch platform {

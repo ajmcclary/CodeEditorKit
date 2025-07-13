@@ -386,7 +386,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
         
         Basic Metrics:
         - Total Optimizations: \(stats.totalOptimizations)
-        - Average Optimization Time: \(String(format: "%.2f", stats.averageOptimizationTime * 1000))ms
+        - Average Optimization Time: \(String(format: "%.2f", stats.averageOptimizationTime * 1_000))ms
         - Fragments Cached: \(stats.fragmentsCached)
         - Cache Hit Rate: \(String(format: "%.1f", stats.cacheHitRate * 100))%
         
