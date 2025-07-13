@@ -1,90 +1,39 @@
 # Review 4
 
-## Summary
+## Key Issues
 
-### 1. Force-Unwrapping in `MemoryManagementCoordinator`
+### 1. `#if os(iOS)` Usage
 
-File `Sources/CodeEditorPlugin/Core/MemoryManagementCoordinator.swift` force-unwraps `cleanupIdentifier` when registering cleanup handlers:
+- `PerformanceViews.swift` uses `#if os(iOS)` instead of the project-wide `#if canImport(UIKit)` pattern, which can break Catalyst builds.
+- Replace `#if os(iOS)` with `#if canImport(UIKit)`.
 
-```swift
-memoryMonitor.registerCleanupHandler(
-    identifier: cleanupIdentifier!,
-    priority: .normal
-) { [weak self] in
-    // Cleanup logic
-}
-```
+### 2. Large Monolithic Files
 
-This can crash if `cleanupIdentifier` is unexpectedly nil.
+- Several files exceed 700 lines, making them difficult to maintain:
+  - `DebuggerIntegration.swift` – 837 lines
+  - `CompletionItemModel.swift` – 781 lines
+  - `RangeUtilities.swift` – 610 lines
+- Refactor large files into focused components.
 
-**Recommendation:** Avoid force unwrap in MemoryManagementCoordinator.
+### 3. Force-Unwrapping in `CodeEditorContainerView`
 
----
+- Initializers use `fatalError` when required platform views fail to initialize:
+  ```swift
+  guard let contentView = components.contentView else {
+      fatalError("Failed to create content view for iOS platform")
+  }
+  ...
+  guard let scrollView = components.scrollView else {
+      fatalError("Failed to create scroll view for macOS platform")
+  }
+  ```
+- Eliminate `fatalError` in `CodeEditorContainerView` initializers.
 
-### 2. Force-Unwrapping in CodeEditorContainerView
+### 4. Extension File Naming
 
-`CodeEditorContainerView` assumes platform-specific views exist and force-unwraps them:
-
-```swift
-#if canImport(UIKit)
-contentView = components.contentView!
-#else
-scrollView = components.scrollView!
-#endif
-```
-
-If initialization ever fails to supply the expected view, this will crash.
-
-**Recommendation:** Remove forced unwraps in CodeEditorContainerView initializers.
+- `RangeUtilities.swift` includes several extension blocks but doesn’t use the `+Extensions` suffix, violating discoverability guidelines.
+- Conform RangeUtilities extensions to `+Extensions` naming.
 
 ---
 
-### 3. DispatchQueue Usage Instead of Modern Concurrency
-
-The notification handler in `ContainerViewInitializer` still uses `DispatchQueue.main.async`:
-
-```swift
-DispatchQueue.main.async { [weak self] in
-    // Notification logic
-}
-```
-
-Guidelines recommend using `Task { @MainActor in … }`.
-
-**Recommendation:** Replace `DispatchQueue.main.async` with `Task` in `textDidChange`.
-
----
-
-### 4. Duplicate Comment-Toggling Logic
-
-Both platform extensions implement nearly identical `toggleComment(in:)` logic:
-
-- `CrossPlatformCoordinator+AppKitExtensions.swift`
-- `CrossPlatformCoordinator+UIKitExtensions.swift`
-
-Duplicated code makes maintenance harder.
-
-**Recommendation:** Extract shared `toggleComment` implementation.
-
----
-
-### 5. Extension File Naming Inconsistencies
-
-Several extension files do not end with `+Extensions.swift`, contrary to repository guidelines:
-
-- Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+Debouncing.swift
-- Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+Retry.swift
-- Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+Batch.swift
-- Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+Scheduling.swift
-- Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+Throttling.swift
-- Sources/CodeEditorPlugin/Configuration/ConfigurationValidator+Display.swift
-- Sources/CodeEditorPlugin/Configuration/ConfigurationValidator+Layout.swift
-- Sources/CodeEditorPlugin/Configuration/ConfigurationValidator+Performance.swift
-- Sources/CodeEditorPlugin/Configuration/ConfigurationValidator+Behavior.swift
-- Sources/CodeEditorPlugin/Configuration/EditorConfiguration+ErrorValidation.swift
-
-**Recommendation:** Rename extension files to use `+Extensions` suffix.
-
----
-
-These changes will strengthen safety, maintainability, and adherence to the project’s coding standards.
+These changes will improve cross-platform compatibility, maintainability, and adherence to the project’s architectural standards.

@@ -1,86 +1,27 @@
 # Review 1
 
+## Summary
+
+The repository follows the conventions described in `CLAUDE.md`. Directories are well structured (`Core/`, `Configuration/`, `Platform/`, etc.), extensions use `+Extensions` naming, and cross-platform abstractions rely on `#if canImport()` checks. Test coverage appears thorough. A few areas need refinement:
+
 ## Issues & Recommendations
 
-### 1. Force-Unwrapped Optionals in Text Range Extensions
+### 1. Unsafe Force Unwrap in `TextMetricsCalculator`
 
-The helper for text range adjustments force-unwraps results from `NSTextRange(...)`, risking crashes on failure:
+- The line wrapping logic force-unwraps a `UnicodeScalar`, risking a crash for invalid UTF-16 data:
+  ```swift
+  if CharacterSet.whitespacesAndNewlines.contains(UnicodeScalar(character)!) {
+  ```
+- Use safe optional binding instead.
 
-```swift
-constrainedElementRange = NSTextRange(
-    location: range.location,
-    end: constrainedElementRange.endLocation
-)!
-```
+### 2. Monolithic `CodeEditorContainerView`
 
-Similarly, `NSTextLineFragment+Extensions` force-unwraps `textContentManager.location(...)` results:
+- `CodeEditorContainerView.swift` contains over 650 lines of mixed responsibilities (initialization, minimap handling, keyboard management, layout, etc.).
+- Split this file into focused extensions to improve maintainability.
 
-```swift
-return NSTextRange(
-    location: textContentManager.location(
-        textLayoutFragment.rangeInElement.location,
-        offsetBy: characterRange.location
-    )!,
-    end: textContentManager.location(
-        textLayoutFragment.rangeInElement.location,
-        offsetBy: characterRange.location + characterRange.length
-    )
-)
-```
+### 3. Oversized `CompletionItemModel`
 
-Other force unwraps occur when converting UTF‑16 units to `UnicodeScalar` in `CodeFoldingEngine`, `SmartEditingEngine`, and `TextMetricsCalculator`:
+- `CompletionItemModel.swift` spans 781 lines, containing models, parsing logic, and view code.
+- Decompose this file into smaller components.
 
-```swift
-let unicodeChar = Character(UnicodeScalar(char)!)
-let unicodeChar = Character(UnicodeScalar(char)!)
-if CharacterSet.whitespacesAndNewlines.contains(UnicodeScalar(character)!)
-```
-
-Force unwraps violate the repository guidelines (safe unwrapping is required).
-
-**Suggested Task:** Remove force unwraps in text range and character conversion helpers.
-
----
-
-### 2. Legacy `DispatchQueue.main.async` Usage
-
-The container view still dispatches UI updates using `DispatchQueue.main.async`:
-
-```swift
-DispatchQueue.main.async { [weak self] in
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    self?.gutterView.setNeedsDisplay(self?.gutterView.bounds ?? .zero)
-    self?.minimapView.setNeedsDisplay(self?.minimapView.bounds ?? .zero)
-    #else
-    self?.gutterView.setNeedsDisplay()
-    self?.minimapView.setNeedsDisplay()
-    #endif
-}
-```
-
-Guidelines specify using Swift concurrency APIs instead of `DispatchQueue`.
-
-**Suggested Task:** Replace `DispatchQueue` usage with Task-based approach.
-
----
-
-### 3. Large Monolithic Container View File
-
-`CodeEditorContainerView.swift` is 639 lines long, containing initialization, keyboard handling, minimap logic, and more:
-
-```
-639 Sources/CodeEditorPlugin/Layout/CodeEditorContainerView.swift
-```
-
-Splitting this into focused files improves maintainability and discoverability.
-
-**Suggested Task:** Refactor `CodeEditorContainerView` into smaller extensions.
-
----
-
-These changes will remove potential crashes, modernize concurrency usage, and enhance code organization while aligning with the repository’s standards.
-
-## Testing
-
-- Run `swift build && swiftlint && swift test` after implementing changes to ensure compilation, style compliance, and test coverage.
-- Add new tests for the unwrapped optional handling and refactored logic.
+These changes will remove unsafe code, improve maintainability, and align the project with architectural standards.

@@ -1,37 +1,29 @@
 # Review 3
 
-## Summary
+## Key Issues
 
-### Force Unwraps Risk Runtime Crashes
+### 1. Unsafe Optional Handling
 
-Force unwraps remain in the codebase. `UnicodeScalar(char)!` appears in several features, which risks runtime crashes if conversion fails.  
-Examples:
+- `UnicodeScalar(character)!` force unwraps in `TextMetricsCalculator`, risking crashes on invalid UTF-16 sequences.
+- Use safe UnicodeScalar conversion.
 
-- In `SmartEditingEngine` at line 376 and line 395
-- Similar uses in `CodeFoldingEngine` and `TextMetricsCalculator`
+### 2. Platform Detection Inconsistency
 
-```swift
-let unicodeChar = Character(UnicodeScalar(char)!)
-```
+- `PerformanceViews.swift` uses `#if os(iOS)` instead of the project-standard `#if canImport(UIKit)`.
+- Switch to `canImport` for iOS checks.
 
----
+### 3. Large Monolithic View File
 
-### MemoryManagementCoordinator Crash Risk
+- `CodeEditorContainerView.swift` contains 651 lines of mixed responsibilities (initialization, minimap, keyboard handling, layout).
+- Refactor `CodeEditorContainerView` into extensions.
 
-`MemoryManagementCoordinator` registers cleanup handlers using `cleanupIdentifier!`, which is force-unwrapped before assignment completion. This exposes a crash risk if initialization fails.
+### 4. Duplicated Layout Logic
 
-```swift
-cleanupIdentifier!
-```
+- Layout code in `CodeEditorContainerView+UIKitExtensions.swift` and `CodeEditorContainerView+AppKitExtensions.swift` performs nearly identical minimap and gutter setup in separate implementations.
+- Extract shared layout helper for container views.
 
----
+## Testing
 
-### Legacy Concurrency Usage
-
-`DispatchQueue.main.async` is used in `ContainerViewInitializer.textDidChange` instead of modern concurrency primitives recommended by the project guidelines.
-
-```swift
-DispatchQueue.main.async {
-    // UI update logic
-}
-```
+- Run `swift build && swiftlint && swift test` to ensure compilation and style compliance.
+- Run `swift test --filter PerformanceViewsTests` after modifying conditional logic.
+- Run `swiftlint --fix` before committing.

@@ -1,37 +1,63 @@
 # Review 2
 
-## Summary
+## Key Observations
 
-The codebase is well-structured with clearly separated modules and extension files using the `+Extensions` suffix. Cross‑platform abstractions are present, and TextKit2 integration follows best practices. However, some areas could be improved.
+### 1. Unsafe Force Unwrap in `TextMetricsCalculator`
 
-## Issues & Suggestions
+- `TextMetricsCalculator.calculateLineBreaks` force-unwraps `UnicodeScalar` when parsing UTF-16 units, risking crashes with invalid characters.
+  ```swift
+  let character = text.utf16[text.utf16.index(text.utf16.startIndex, offsetBy: innerIndex)]
+  if CharacterSet.whitespacesAndNewlines.contains(UnicodeScalar(character)!) {
+      wrapPoint = innerIndex + 1
+      break
+  }
+  ```
 
-### 1. Unconditional Combine Imports Prevent Linux Builds
+### 2. Platform Check Using `#if os(iOS)`
 
-Files such as `AsyncTextProcessor.swift`, `SmartCompletionEngine.swift`, `BackgroundSyntaxHighlighter.swift`, and others import Combine without availability checks. This causes build failures on platforms where Combine is unavailable (e.g., Linux) as seen in the failed build logs.
+- `PerformanceViews.swift` uses `#if os(iOS)` for platform detection. Project documentation specifies using `#if canImport(UIKit)` for proper Mac Catalyst support.
+  ```swift
+  .navigationTitle("Performance Report")
+  #if os(iOS)
+  .navigationBarTitleDisplayMode(.inline)
+  .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+          Button("Done") { ... }
+      }
+  }
+  #endif
+  ```
 
-**Recommendation:** Wrap Combine imports and related code in `#if canImport(Combine)` blocks like `EditorEventPublisher` already does.
+### 3. Large Monolithic Files
+
+- Several files exceed recommended size, making them harder to maintain:
+  - `CodeEditorContainerView.swift` – 651 lines
+  - `DebuggerIntegration.swift` – 837 lines
+- Splitting these files into focused components will improve readability and testability.
+
+### 4. `fatalError` in Container View Initializers
+
+- `CodeEditorContainerView` uses `fatalError` if platform-specific subviews fail to initialize, which can crash in production.
+  ```swift
+  #if canImport(UIKit)
+  guard let contentView = components.contentView else {
+      fatalError("Failed to create content view for iOS platform")
+  }
+  ...
+  #else
+  guard let scrollView = components.scrollView else {
+      fatalError("Failed to create scroll view for macOS platform")
+  }
+  #endif
+  ```
+
+## Recommendations
+
+- Replace forced unwrap in `TextMetricsCalculator` with safe optional binding or early exit.
+- Change platform check in `PerformanceViews.swift` to `#if canImport(UIKit)` for Catalyst compatibility.
+- Refactor large files like `CodeEditorContainerView.swift` and `DebuggerIntegration.swift` into smaller extensions or helper types.
+- Replace `fatalError` in container view initializers with non-crashing assertions or error propagation.
 
 ---
 
-### 2. Excessively Large Files Reduce Maintainability
-
-Several files exceed 700 lines, such as `SmartCompletionEngine.swift` (729 lines), `PerformanceInsights.swift` (826 lines), and `DebuggerIntegration.swift` (837 lines).
-
-**Recommendation:** Refactor these files into smaller, focused components to improve readability and unit testability.
-
----
-
-### 3. Platform-Specific Container Extensions Show Duplication
-
-The UIKit and AppKit extensions for `CodeEditorContainerView` duplicate similar layout logic and constraints handling (e.g., `rebuildConstraints()` implementation).
-
-**Recommendation:** Extract shared logic into a common helper or base class and keep only platform-specific adjustments in each extension.
-
----
-
-### 4. MemoryManagementCoordinator.swift Is Monolithic
-
-The coordinator centralizes memory handling but mixes component creation, cleanup logic, and memory pressure handling in a single 275‑line file.
-
-**Recommendation:** Separate responsibilities (component factory, memory cleanup strategies) into smaller types.
+These improvements will strengthen safety, maintainability, and cross-platform compatibility while adhering to project standards.
