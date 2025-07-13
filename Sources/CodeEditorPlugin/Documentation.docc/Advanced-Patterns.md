@@ -408,9 +408,10 @@ enum CodeEditorError: LocalizedError {
 ### Read-Only Code Viewer
 
 ```swift
-let config = EditorConfigurationBuilder()
-    .codeReviewMode()
+let config = EditorConfigurationBuilder(preset: .readOnly)
     .fontSize(14)
+    .theme(.github)
+    .language(.swift)
     .build()
 
 editor.configuration = config
@@ -430,8 +431,14 @@ let config = EditorConfigurationBuilder()
 ### Presentation Mode
 
 ```swift
-let config = EditorConfigurationBuilder()
-    .presentationMode()  // Large font, minimal UI
+let config = EditorConfigurationBuilder(preset: .presentation)
+    .language(.swift)  // Or your preferred language
+    .build()
+
+// Or customize further
+let customPresentation = EditorConfigurationBuilder(preset: .presentation)
+    .fontSize(24)  // Even larger
+    .theme(.dark)
     .build()
 ```
 
@@ -565,4 +572,4 @@ let memoryOptimizedConfig = EditorConfigurationBuilder()
 - <doc:Performance-Monitoring>
 - <doc:Plugin-Architecture>
 - <doc:Troubleshooting>
-- <doc:Troubleshooting>
+- <doc:Configuration-System>

@@ -43,10 +43,32 @@ Sources/CodeEditorPlugin/
 ```
 
 **Key Changes (January 2025)**:
-- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing merged into unified `Text/` directory
-- **Merged Small Directories**: API → Core, UIComponents → Layout, BusinessLogic → Core
+- **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing merged into unified `Text/` directory (34 files)
+  - Combines all text manipulation, layout fragments, and async processing
+  - Improves code discoverability by grouping related functionality
+- **Merged Small Directories**: 
+  - API → Core (public API surface now in Core/CodeEditorAPI.swift)
+  - UIComponents → Layout (UI components with their ViewModels)
+  - BusinessLogic → Core (services like TextEditingService, LanguageDetectionService)
 - **Distributed ViewModels**: Moved to their respective feature directories
-- **Flattened Nested Structures**: Removed DebuggerIntegration subdirectory
+  - GutterViewModel now in Layout/ alongside GutterView
+  - MinimapViewModel now in Layout/ alongside MinimapView
+  - CompletionViewModel remains in Completion/ directory
+- **Flattened Nested Structures**: 
+  - Removed DebuggerIntegration subdirectory
+  - Debugger features now directly in Features/ directory
+- **New Service Layer**: Introduced business logic services in Core/
+  - TextEditingService: Centralized text manipulation logic
+  - EditorLayoutService: Layout calculations and management
+  - LanguageDetectionService: Auto-detection of file types
+  - SyntaxHighlightingService: Coordination of highlighting
+
+**Benefits of Reorganization**:
+- **Better Discoverability**: Related code now lives together (e.g., all text handling in one place)
+- **Reduced Navigation**: 18 directories instead of 22 means less hunting for files
+- **Clearer Ownership**: ViewModels next to their Views makes relationships obvious
+- **Service-Oriented**: New service layer provides clear API boundaries
+- **Simplified Imports**: Fewer directories means cleaner import statements
 
 ## Core Components
 

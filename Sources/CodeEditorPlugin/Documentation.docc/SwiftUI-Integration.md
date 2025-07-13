@@ -95,6 +95,8 @@ struct MyEditor: View {
 }
 ```
 
+> **Important**: The `ConfigurationBindingBuilder` pattern has been deprecated in favor of direct property binding, which provides better Swift 6 concurrency support and eliminates Sendable warnings. See the "Direct Binding Pattern" section below for the recommended approach.
+
 ### Using Consolidated Environment (Recommended)
 
 For better ergonomics, use the consolidated environment configuration:
@@ -188,6 +190,53 @@ struct ThemeConfigurationSection: View {
     }
 }
 ```
+
+### Direct Binding Pattern (Recommended)
+
+The recommended approach for configuration in SwiftUI is to use direct property binding, which provides better Swift 6 concurrency support:
+
+```swift
+struct ConfigurationView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        Form {
+            // ✅ RECOMMENDED: Direct binding pattern
+            Toggle("Show Line Numbers", 
+                   isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+            
+            Slider(value: $appState.currentConfiguration.display.fontSize, 
+                   in: 10...20,
+                   step: 1) {
+                Text("Font Size")
+            }
+            
+            Picker("Theme", selection: $appState.currentConfiguration.display.theme) {
+                ForEach(Theme.allCases, id: \.self) { theme in
+                    Text(theme.displayName).tag(theme)
+                }
+            }
+        }
+    }
+}
+
+// For batch updates
+Button("Apply Preset") {
+    appState.updateConfiguration { config in
+        config.display.showLineNumbers = true
+        config.display.fontSize = 16
+        config.behavior.isEditable = true
+        config.layout.tabWidth = 4
+    }
+}
+```
+
+**Benefits of Direct Binding:**
+- **Zero Sendable warnings**: Works seamlessly with Swift 6 concurrency
+- **Type safety**: Compiler-verified property access
+- **Performance**: No additional binding overhead
+- **Simplicity**: Clear, readable code
+- **SwiftUI integration**: Natural SwiftUI patterns
 
 ## Modifiers
 

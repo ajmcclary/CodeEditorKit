@@ -454,7 +454,7 @@ class EditorEventTests: XCTestCase {
 ## See Also
 
 - <doc:Configuration-System>
-- <doc:Memory-Monitor-Injection>
+- <doc:MemoryMonitor-Injection>
 - <doc:Swift6-Concurrency>
 - ``UnifiedEventSystem``
 - ``EditorEvent``

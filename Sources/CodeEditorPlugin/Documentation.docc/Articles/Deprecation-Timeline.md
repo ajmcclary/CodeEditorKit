@@ -172,6 +172,37 @@ The following properties were renamed for consistency with Swift naming conventi
   - **Removal**: v2.0.0 (Q2 2025)
   - **Reason**: Simpler, more direct naming
 
+#### Configuration Binding
+
+##### ConfigurationBindingBuilder
+- **Deprecated**: v1.0.0
+- **Removal**: v2.0.0 (Q2 2025)
+- **Replacement**: Use direct property binding
+- **Reason**: Swift 6 Sendable compliance and better performance
+- **Migration**:
+```swift
+// Old (deprecated) - causes Sendable warnings
+struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        ConfigurationBindingBuilder(appState: appState)
+            .buildToggle(keyPath: \.display.showLineNumbers, 
+                        title: "Show Line Numbers")
+    }
+}
+
+// New (recommended) - zero Sendable warnings
+struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        Toggle("Show Line Numbers", 
+               isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+    }
+}
+```
+
 #### Platform Capabilities
 
 ##### PlatformCapabilities
@@ -277,7 +308,7 @@ monitor.startMonitoring() // Must call explicitly
 
 ## See Also
 
-- <doc:Migration-Guide>
-- <doc:API-Stability>
-- <doc:Versioning-Policy>
-- <doc:Release-Notes>
+- <doc:Configuration-System>
+- <doc:SwiftUI-Integration>
+- <doc:MemoryMonitor-Injection>
+- <doc:Unified-Event-System>

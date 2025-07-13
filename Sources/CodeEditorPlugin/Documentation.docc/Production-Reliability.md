@@ -21,7 +21,7 @@ The plugin leverages Swift 6's strict concurrency model with full actor isolatio
 - **Thread Safety**: Compile-time guarantees prevent data races and concurrency bugs
 - **Task Cancellation**: Proper cancellation handling for responsive user interfaces
 
-### Concurrency Testing (9 comprehensive tests)
+### Concurrency Testing
 - **Main Actor Isolation Boundaries**: Verifies UI operations remain on main thread
 - **Memory Monitor Actor Safety**: Tests concurrent memory management operations
 - **Configuration Thread Safety**: Validates concurrent configuration updates
@@ -32,7 +32,7 @@ The plugin leverages Swift 6's strict concurrency model with full actor isolatio
 
 ## Error Handling & Edge Cases
 
-### Production Reliability Testing (15 comprehensive tests)
+### Production Reliability Testing
 The plugin handles real-world edge cases that can crash other text editors:
 
 #### Malformed Content Handling
@@ -111,11 +111,11 @@ editor.text = "New content continues to work"
 
 ## Testing Coverage
 
-### Comprehensive Test Suite (657 total tests)
-- **Core Plugin**: 622 tests covering all functionality
-- **Sample App**: 35 tests for integration scenarios
+### Comprehensive Test Suite
+- **53 Test Files**: Comprehensive coverage across all functionality
 - **100% Pass Rate**: All tests passing on macOS, iOS, and Mac Catalyst
-- **Zero Linting Violations**: Maintained across all source files
+- **Zero Linting Violations**: Maintained across 333 source files
+- **Swift 6 Compliant**: Full actor isolation and concurrency safety
 
 ### Test Categories
 - **Concurrency Tests**: Swift 6 actor isolation and thread safety

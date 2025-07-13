@@ -321,6 +321,56 @@ func shareConfiguration() {
 }
 ```
 
+## Direct Binding Pattern (Recommended)
+
+For SwiftUI applications, use direct property binding instead of the deprecated ConfigurationBindingBuilder:
+
+```swift
+struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+    
+    var body: some View {
+        Form {
+            Section("Display") {
+                // ✅ Direct binding - no Sendable warnings
+                Toggle("Show Line Numbers", 
+                       isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+                
+                Slider(value: $appState.currentConfiguration.display.fontSize,
+                       in: 10...30,
+                       step: 1) {
+                    Text("Font Size: \(appState.currentConfiguration.display.fontSize, specifier: "%.0f")")
+                }
+            }
+            
+            Section("Layout") {
+                Stepper("Tab Width: \(appState.currentConfiguration.layout.tabWidth)",
+                        value: $appState.currentConfiguration.layout.tabWidth,
+                        in: 1...8)
+                
+                Toggle("Wrap Lines",
+                       isOn: $appState.currentConfiguration.layout.wrapLines)
+            }
+            
+            Section("Behavior") {
+                Toggle("Auto Indent",
+                       isOn: $appState.currentConfiguration.behavior.autoIndent)
+                
+                Toggle("Code Completion",
+                       isOn: $appState.currentConfiguration.behavior.enableCodeCompletion)
+            }
+        }
+    }
+}
+```
+
+**Why Direct Binding?**
+- Works seamlessly with Swift 6 concurrency
+- No complex binding builders needed
+- Natural SwiftUI patterns
+- Better performance
+- Type-safe property access
+
 ## Best Practices
 
 1. **Start with Presets**: Use built-in presets as a starting point
@@ -328,6 +378,7 @@ func shareConfiguration() {
 3. **Use Environment**: Leverage SwiftUI's environment for clean propagation
 4. **Test Configurations**: Verify settings work across all platforms
 5. **Document Custom Configs**: Explain specialized configurations
+6. **Prefer Direct Binding**: Use direct property binding in SwiftUI for better concurrency support
 
 ## See Also
 

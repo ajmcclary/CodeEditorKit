@@ -17,6 +17,7 @@ CodeEditorPlugin provides world-class performance, extensive customization, and 
 - 🎨 **17+ Programming Languages** - SwiftSyntax for Swift, optimized regex for other languages
 - ✅ **Production-Grade Quality** - 53 comprehensive tests with zero linting violations
 - 🔧 **Extensible Architecture** - Plugin system and LSP integration ready
+- 📁 **Streamlined Organization** - 18 feature directories (reduced from 22) for better discoverability
 
 ### Quick Start
 
