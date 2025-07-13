@@ -78,6 +78,7 @@ struct CodeEditorApp: App {
     }
 }
 
+@MainActor
 class AppState: ObservableObject {
     let memoryMonitor = MemoryMonitor()
     

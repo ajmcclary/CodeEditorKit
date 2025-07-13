@@ -130,6 +130,55 @@ textView.language = .python
 // HTML, CSS, JSON, YAML, Markdown, Go, Java, Ruby, PHP, SQL, XML, Shell
 ```
 
+### SwiftUI Configuration Binding Patterns
+
+```swift
+// ✅ RECOMMENDED: Direct binding pattern (Thread-safe, no Sendable warnings)
+Toggle("Show Line Numbers", 
+       isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+
+Slider(value: $appState.currentConfiguration.display.fontSize, 
+       in: 10...20)
+
+Picker("Theme", selection: $appState.currentConfiguration.display.theme) {
+    ForEach(themes, id: \.self) { theme in
+        Text(theme.name).tag(theme)
+    }
+}
+
+// ✅ RECOMMENDED: Batch updates for multiple properties
+appState.updateConfiguration { config in
+    config.display.showLineNumbers = true
+    config.display.fontSize = 16
+    config.behavior.isEditable = true
+}
+
+// ❌ AVOID: Complex binding builders (causes Sendable warnings)
+// ConfigurationBindingBuilder patterns have been deprecated
+```
+
+**Key Benefits of Direct Binding:**
+- **Zero Sendable warnings**: Works seamlessly with Swift 6 concurrency
+- **Type safety**: Compiler-verified property access
+- **Performance**: No additional binding overhead
+- **Simplicity**: Clear, readable code
+- **SwiftUI integration**: Natural SwiftUI patterns
+
+**Configuration Update Patterns:**
+```swift
+// Single property update
+appState.currentConfiguration.display.showLineNumbers = true
+
+// Multiple property update (preferred for batches)
+appState.updateConfiguration { config in
+    config.display.showLineNumbers = true
+    config.layout.tabWidth = 4
+}
+
+// Preset application
+appState.applyPreset(.minimal)
+```
+
 ## Development Guidelines
 
 ### Code Quality Standards
@@ -186,6 +235,8 @@ xcodebuild -scheme CodeEditorPlugin -destination 'platform=iOS Simulator,name=iP
 - **API Refinement**: Internal implementation details hidden
 - **Code Duplication**: Shared configurations in builders
 - **Modern Patterns**: `Task.sleep` instead of `DispatchQueue.asyncAfter`
+- **Sendable Compliance**: AppState made Sendable, removed unused ConfigurationBindingBuilder
+- **Direct Bindings**: Standardized on SwiftUI-native binding patterns without warnings
 
 ## Advanced Features
 

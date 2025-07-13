@@ -240,7 +240,7 @@ public enum CompletionContextType {
 }
 
 /// Template for code snippets
-public struct SnippetTemplate {
+public struct SnippetTemplate: Sendable {
     public let label: String
     public let insertText: String
     public let description: String

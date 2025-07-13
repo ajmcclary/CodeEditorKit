@@ -171,7 +171,7 @@ public final class CodeEditorContainerView: PlatformView {
     }
     #endif
     
-    private func layoutViews() {
+    func layoutViews() {
         // Delegate to platform-specific implementations
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         layoutViewsAppKit()

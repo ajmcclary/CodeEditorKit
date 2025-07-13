@@ -231,13 +231,9 @@ public struct DetailedPerformanceReportView: View {
             .navigationTitle("Performance Report")
             #if canImport(UIKit)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             #endif
         }
     }
