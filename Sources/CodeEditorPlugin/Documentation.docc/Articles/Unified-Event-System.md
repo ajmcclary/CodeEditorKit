@@ -458,4 +458,3 @@ class EditorEventTests: XCTestCase {
 - <doc:Swift6-Concurrency>
 - ``UnifiedEventSystem``
 - ``EditorEvent``
-- ``EventPriority``
