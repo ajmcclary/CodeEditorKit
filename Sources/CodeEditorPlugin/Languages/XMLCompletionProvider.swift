@@ -224,7 +224,7 @@ public final class XMLCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> XMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
         
@@ -233,28 +233,28 @@ public final class XMLCompletionProvider: CompletionProvider {
         
         // Check for declaration context (<?xml or <!)
         if beforeCursor.hasSuffix("<?") || beforeCursor.hasSuffix("<!") {
-            return ContextAnalysisResult(type: .declaration, filter: filter, fileType: fileType)
+            return XMLContextAnalysisResult(type: .declaration, filter: filter, fileType: fileType)
         }
         
         // Check for entity context
         if beforeCursor.hasSuffix("&") || (filter.hasPrefix("&") && !filter.hasSuffix(";")) {
-            return ContextAnalysisResult(type: .entity, filter: filter, fileType: fileType)
+            return XMLContextAnalysisResult(type: .entity, filter: filter, fileType: fileType)
         }
         
         // Check for namespace context
         if beforeCursor.hasSuffix("xmlns:") || beforeCursor.hasSuffix("xmlns=") {
-            return ContextAnalysisResult(type: .namespace, filter: filter, fileType: fileType)
+            return XMLContextAnalysisResult(type: .namespace, filter: filter, fileType: fileType)
         }
         
         // Check for closing tag
         if beforeCursor.hasSuffix("</") {
             let openTag = findUnclosedTag(in: beforeCursor)
-            return ContextAnalysisResult(type: .closeTag, filter: filter, fileType: fileType, targetTag: openTag)
+            return XMLContextAnalysisResult(type: .closeTag, filter: filter, fileType: fileType, targetTag: openTag)
         }
         
         // Check for opening tag
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">") && isInTag(beforeCursor)) {
-            return ContextAnalysisResult(type: .tag, filter: filter, fileType: fileType)
+            return XMLContextAnalysisResult(type: .tag, filter: filter, fileType: fileType)
         }
         
         // Check for attribute context
@@ -262,14 +262,14 @@ public final class XMLCompletionProvider: CompletionProvider {
             // Check if we're in attribute value
             if let attrContext = getCurrentAttributeContext(from: beforeCursor) {
                 if beforeCursor.hasSuffix("=\"") || beforeCursor.hasSuffix("='") {
-                    return ContextAnalysisResult(type: .attributeValue, filter: "", fileType: fileType, targetTag: tagContext, targetAttribute: attrContext)
+                    return XMLContextAnalysisResult(type: .attributeValue, filter: "", fileType: fileType, targetTag: tagContext, targetAttribute: attrContext)
                 }
             } else if beforeCursor.hasSuffix(" ") || isInAttributePosition(beforeCursor) {
-                return ContextAnalysisResult(type: .attribute, filter: filter, fileType: fileType, targetTag: tagContext)
+                return XMLContextAnalysisResult(type: .attribute, filter: filter, fileType: fileType, targetTag: tagContext)
             }
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
+        return XMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -606,7 +606,7 @@ public final class XMLCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct XMLContextAnalysisResult {
     enum CompletionType {
         case tag
         case attribute
@@ -640,10 +640,4 @@ private enum XMLFileType {
     case soap
     case feed
     case generic
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

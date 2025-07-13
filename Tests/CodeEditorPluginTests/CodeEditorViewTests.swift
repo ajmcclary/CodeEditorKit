@@ -366,10 +366,15 @@ final class CodeEditorViewTests: XCTestCase {
             defer: false
         )
         window.contentView?.addSubview(textView)
+        textView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
         #elseif canImport(UIKit) && !targetEnvironment(macCatalyst)
         // On iOS only, create UIWindow (skip on Mac Catalyst to avoid NSApplication issues)
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         window.addSubview(textView)
+        textView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+        #else
+        // Mac Catalyst - just set the frame
+        textView.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
         #endif
         
         // Force layout

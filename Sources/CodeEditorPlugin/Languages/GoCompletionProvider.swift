@@ -176,7 +176,7 @@ public final class GoCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> GoContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -185,31 +185,31 @@ public final class GoCompletionProvider: CompletionProvider {
         
         // Check for import statements
         if lineText.hasPrefix("import ") {
-            return ContextAnalysisResult(type: .import, filter: filter)
+            return GoContextAnalysisResult(type: .import, filter: filter)
         }
         
         // Check for type context
         if lineText.contains("var ") && lineText.contains(" ") && !lineText.contains("=") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return GoContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return GoContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("func ") && lineText.contains("(") && !lineText.contains(")") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return GoContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         // Check for function call context
         if beforeCursor.hasSuffix("(") {
-            return ContextAnalysisResult(type: .function, filter: filter)
+            return GoContextAnalysisResult(type: .function, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return GoContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -493,7 +493,7 @@ public final class GoCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct GoContextAnalysisResult {
     enum CompletionType {
         case keyword
         case type
@@ -513,10 +513,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

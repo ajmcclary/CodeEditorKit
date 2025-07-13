@@ -186,7 +186,7 @@ public final class PythonCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> PythonContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -195,26 +195,26 @@ public final class PythonCompletionProvider: CompletionProvider {
         
         // Check for import statements
         if lineText.hasPrefix("import ") || lineText.hasPrefix("from ") {
-            return ContextAnalysisResult(type: .import, filter: filter)
+            return PythonContextAnalysisResult(type: .import, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return PythonContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("def ") && lineText.contains("(") && !lineText.contains("):") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return PythonContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         // Check for type hints
         if lineText.contains(": ") && !lineText.contains("=") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return PythonContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return PythonContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -528,7 +528,7 @@ public final class PythonCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct PythonContextAnalysisResult {
     enum CompletionType {
         case keyword    // Keywords like def, class, etc.
         case type      // Type names
@@ -547,10 +547,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

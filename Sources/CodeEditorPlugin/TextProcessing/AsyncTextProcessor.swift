@@ -92,8 +92,9 @@ actor AsyncTextProcessor {
         }
         
         // Initialize cache on MainActor
+        let monitor = memoryMonitor
         let cache = await MainActor.run {
-            LRUCache<ProcessingCacheKey, ProcessingResult>(capacity: 100, memoryMonitor: self.memoryMonitor)
+            LRUCache<ProcessingCacheKey, ProcessingResult>(capacity: 100, memoryMonitor: monitor)
         }
         resultCache = cache
         return cache

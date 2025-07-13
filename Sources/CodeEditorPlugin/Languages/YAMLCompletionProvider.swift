@@ -260,7 +260,7 @@ ${1:key}:
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> YAMLContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
@@ -270,26 +270,26 @@ ${1:key}:
         
         // Check if we're at the start of a list item
         if lineText.hasPrefix("-") && lineText.count > 1 {
-            return ContextAnalysisResult(type: .listItem, filter: filter, fileType: fileType)
+            return YAMLContextAnalysisResult(type: .listItem, filter: filter, fileType: fileType)
         }
         
         // Check if we're in a reference context (& or *)
         if beforeCursor.hasSuffix("&") || beforeCursor.hasSuffix("*") || filter.hasPrefix("*") {
-            return ContextAnalysisResult(type: .reference, filter: filter, fileType: fileType)
+            return YAMLContextAnalysisResult(type: .reference, filter: filter, fileType: fileType)
         }
         
         // Check if we're in a key position
         if isInKeyPosition(lineText, beforeCursor) {
             let parentKey = findParentKey(in: beforeCursor)
-            return ContextAnalysisResult(type: .key, filter: filter, fileType: fileType, parentKey: parentKey)
+            return YAMLContextAnalysisResult(type: .key, filter: filter, fileType: fileType, parentKey: parentKey)
         }
         
         // Check if we're in a value position
         if let currentKey = getCurrentKey(from: lineText) {
-            return ContextAnalysisResult(type: .value, filter: filter, fileType: fileType, key: currentKey)
+            return YAMLContextAnalysisResult(type: .value, filter: filter, fileType: fileType, key: currentKey)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
+        return YAMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -667,7 +667,7 @@ ${1:key}:
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct YAMLContextAnalysisResult {
     enum CompletionType {
         case key
         case value
@@ -698,10 +698,4 @@ private enum YAMLFileType {
     case ansible
     case circleci
     case generic
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

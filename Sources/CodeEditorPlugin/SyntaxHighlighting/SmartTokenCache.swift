@@ -155,9 +155,12 @@ actor SmartTokenCache {
     
     func optimizeCache() {
         // Remove stale entries
+        let now = Date.now
         let staleKeys = cache.compactMap { key, entry in
-            let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
-            return age > staleThreshold ? key : nil
+            let elapsedTime = now.timeIntervalSince(entry.timestamp)
+            let staleThresholdSeconds = Double(staleThreshold.components.seconds) + Double(staleThreshold.components.attoseconds) / 1e18
+            // Use >= instead of > to handle edge cases where times are exactly equal
+            return elapsedTime >= staleThresholdSeconds ? key : nil
         }
         
         for key in staleKeys {

@@ -210,7 +210,7 @@ public final class JavaCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> JavaContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -219,32 +219,32 @@ public final class JavaCompletionProvider: CompletionProvider {
         
         // Check for import statements
         if lineText.hasPrefix("import ") {
-            return ContextAnalysisResult(type: .import, filter: filter)
+            return JavaContextAnalysisResult(type: .import, filter: filter)
         }
         
         // Check for annotation context
         if beforeCursor.hasSuffix("@") || filter.hasPrefix("@") {
-            return ContextAnalysisResult(type: .annotation, filter: filter)
+            return JavaContextAnalysisResult(type: .annotation, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return JavaContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for type context
         if lineText.contains(" ") && !lineText.contains("=") && !lineText.contains("(") {
             // Likely a variable declaration
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return JavaContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for method declaration
         if lineText.contains("(") && !lineText.contains(")") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return JavaContextAnalysisResult(type: .parameter, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return JavaContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -530,7 +530,7 @@ public final class JavaCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct JavaContextAnalysisResult {
     enum CompletionType {
         case keyword
         case type
@@ -550,10 +550,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

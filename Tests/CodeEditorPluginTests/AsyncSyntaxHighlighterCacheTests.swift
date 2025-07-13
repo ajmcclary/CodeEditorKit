@@ -164,20 +164,22 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         editorView.text = "let x = 1"
         editorView.language = .swift
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        try await Task.sleep(for: .milliseconds(50))
+        try await Task.sleep(for: .milliseconds(100))
         
         editorView.text = "let y = 2"
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        try await Task.sleep(for: .milliseconds(50))
+        try await Task.sleep(for: .milliseconds(100))
         
         let statsBefore = await highlighter.getCacheStatistics()
         XCTAssertEqual(statsBefore.cacheSize, 2, "Should have 2 entries before optimization")
         
         // Wait for entries to become stale (extra time for Catalyst)
+        // Note: We need to wait longer than the stale threshold (1 second)
+        // plus the time between entries (100ms) to ensure both entries are stale
         #if targetEnvironment(macCatalyst)
-        try await Task.sleep(for: .seconds(2.0))
+        try await Task.sleep(for: .seconds(2.5))
         #else
-        try await Task.sleep(for: .seconds(1.1))
+        try await Task.sleep(for: .seconds(2.0))
         #endif
         
         // Trigger optimization

@@ -340,7 +340,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> PHPContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -349,51 +349,51 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         
         // Check for PHP tag context
         if beforeCursor.hasSuffix("<?") {
-            return ContextAnalysisResult(type: .keyword, filter: "php")
+            return PHPContextAnalysisResult(type: .keyword, filter: "php")
         }
         
         // Check for variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
             // Check if it's a superglobal
             if filter.hasPrefix("$_") || filter == "$GLOBALS" {
-                return ContextAnalysisResult(type: .superglobal, filter: filter)
+                return PHPContextAnalysisResult(type: .superglobal, filter: filter)
             }
-            return ContextAnalysisResult(type: .variable, filter: filter)
+            return PHPContextAnalysisResult(type: .variable, filter: filter)
         }
         
         // Check for magic constant context
         if filter.hasPrefix("__") && filter.hasSuffix("__") {
-            return ContextAnalysisResult(type: .magicConstant, filter: filter)
+            return PHPContextAnalysisResult(type: .magicConstant, filter: filter)
         }
         
         // Check for method context (->)
         if beforeCursor.hasSuffix("->") {
             let targetType = extractTargetType(from: beforeCursor, separator: "->")
-            return ContextAnalysisResult(type: .method, filter: "", targetType: targetType)
+            return PHPContextAnalysisResult(type: .method, filter: "", targetType: targetType)
         }
         
         // Check for static method/property context (::)
         if beforeCursor.hasSuffix("::") {
             let targetType = extractTargetType(from: beforeCursor, separator: "::")
-            return ContextAnalysisResult(type: .class, filter: "", targetType: targetType)
+            return PHPContextAnalysisResult(type: .class, filter: "", targetType: targetType)
         }
         
         // Check for namespace context
         if beforeCursor.hasSuffix("\\") || lineText.hasPrefix("use ") || lineText.hasPrefix("namespace ") {
-            return ContextAnalysisResult(type: .namespace, filter: filter)
+            return PHPContextAnalysisResult(type: .namespace, filter: filter)
         }
         
         // Check for type hint context
         if isInTypeHintContext(beforeCursor) {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return PHPContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for function context
         if beforeCursor.hasSuffix("(") || isInFunctionCallContext(beforeCursor) {
-            return ContextAnalysisResult(type: .function, filter: filter)
+            return PHPContextAnalysisResult(type: .function, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return PHPContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -640,7 +640,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct PHPContextAnalysisResult {
     enum CompletionType {
         case keyword
         case variable
@@ -663,10 +663,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

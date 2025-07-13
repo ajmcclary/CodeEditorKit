@@ -279,7 +279,7 @@ SELECT * FROM ${1:cte_name};
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> SQLContextAnalysisResult {
         let lineText = context.lineText.uppercased().trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition)).uppercased()
         
@@ -288,31 +288,31 @@ SELECT * FROM ${1:cte_name};
         
         // Check for function context
         if beforeCursor.hasSuffix("(") || isInFunctionContext(beforeCursor) {
-            return ContextAnalysisResult(type: .function, filter: filter)
+            return SQLContextAnalysisResult(type: .function, filter: filter)
         }
         
         // Check for table context (after FROM, JOIN, UPDATE, INSERT INTO, etc.)
         if isInTableContext(beforeCursor) {
-            return ContextAnalysisResult(type: .table, filter: filter)
+            return SQLContextAnalysisResult(type: .table, filter: filter)
         }
         
         // Check for column context (after SELECT, WHERE, ORDER BY, etc.)
         if isInColumnContext(beforeCursor) {
             let tableName = extractTableName(from: beforeCursor)
-            return ContextAnalysisResult(type: .column, filter: filter, tableName: tableName)
+            return SQLContextAnalysisResult(type: .column, filter: filter, tableName: tableName)
         }
         
         // Check for data type context (in CREATE TABLE or ALTER TABLE)
         if isInDataTypeContext(beforeCursor) {
-            return ContextAnalysisResult(type: .dataType, filter: filter)
+            return SQLContextAnalysisResult(type: .dataType, filter: filter)
         }
         
         // Default to keyword context for SQL statements
         if lineText.isEmpty || startsNewStatement(lineText) {
-            return ContextAnalysisResult(type: .keyword, filter: filter)
+            return SQLContextAnalysisResult(type: .keyword, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return SQLContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -539,7 +539,7 @@ SELECT * FROM ${1:cte_name};
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct SQLContextAnalysisResult {
     enum CompletionType {
         case keyword
         case function
@@ -558,10 +558,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.tableName = tableName
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

@@ -236,7 +236,7 @@ public final class HTMLCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> HTMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         // let afterCursor = String(context.text.suffix(from: context.text.index(context.text.startIndex, offsetBy: context.cursorPosition)))
         
@@ -245,18 +245,18 @@ public final class HTMLCompletionProvider: CompletionProvider {
         
         // Check for entity context
         if beforeCursor.hasSuffix("&") || (filter.hasPrefix("&") && !filter.hasSuffix(";")) {
-            return ContextAnalysisResult(type: .entity, filter: filter)
+            return HTMLContextAnalysisResult(type: .entity, filter: filter)
         }
         
         // Check for closing tag
         if beforeCursor.hasSuffix("</") {
             let openTag = findUnclosedTag(in: beforeCursor)
-            return ContextAnalysisResult(type: .closeTag, filter: filter, targetTag: openTag)
+            return HTMLContextAnalysisResult(type: .closeTag, filter: filter, targetTag: openTag)
         }
         
         // Check for opening tag
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">") && isInTag(beforeCursor)) {
-            return ContextAnalysisResult(type: .tag, filter: filter)
+            return HTMLContextAnalysisResult(type: .tag, filter: filter)
         }
         
         // Check for attribute context
@@ -264,14 +264,14 @@ public final class HTMLCompletionProvider: CompletionProvider {
             // Check if we're in attribute value
             if let attrContext = getCurrentAttributeContext(from: beforeCursor) {
                 if beforeCursor.hasSuffix("=\"") || beforeCursor.hasSuffix("='") {
-                    return ContextAnalysisResult(type: .attributeValue, filter: "", targetTag: tagContext, targetAttribute: attrContext)
+                    return HTMLContextAnalysisResult(type: .attributeValue, filter: "", targetTag: tagContext, targetAttribute: attrContext)
                 }
             } else if beforeCursor.hasSuffix(" ") || isInAttributePosition(beforeCursor) {
-                return ContextAnalysisResult(type: .attribute, filter: filter, targetTag: tagContext)
+                return HTMLContextAnalysisResult(type: .attribute, filter: filter, targetTag: tagContext)
             }
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return HTMLContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -499,7 +499,7 @@ public final class HTMLCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct HTMLContextAnalysisResult {
     enum CompletionType {
         case tag
         case attribute
@@ -520,10 +520,4 @@ private struct ContextAnalysisResult {
         self.targetTag = targetTag
         self.targetAttribute = targetAttribute
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

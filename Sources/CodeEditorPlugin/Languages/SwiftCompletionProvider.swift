@@ -149,7 +149,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> SwiftContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -158,19 +158,19 @@ public final class SwiftCompletionProvider: CompletionProvider {
         
         // Determine completion type based on context
         if lineText.contains("func ") && !lineText.contains("{") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return SwiftContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return SwiftContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         if lineText.hasPrefix("import ") || lineText.contains(": ") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return SwiftContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return SwiftContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -420,7 +420,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct SwiftContextAnalysisResult {
     enum CompletionType {
         case keyword    // Keywords like func, var, etc.
         case type      // Type names and imports
@@ -438,10 +438,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

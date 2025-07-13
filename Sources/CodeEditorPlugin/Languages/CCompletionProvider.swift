@@ -226,7 +226,7 @@ public final class CCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> CContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -236,30 +236,30 @@ public final class CCompletionProvider: CompletionProvider {
         // Check for preprocessor directives
         if lineText.hasPrefix("#") {
             if lineText.hasPrefix("#include") {
-                return ContextAnalysisResult(type: .include, filter: filter)
+                return CContextAnalysisResult(type: .include, filter: filter)
             }
-            return ContextAnalysisResult(type: .preprocessor, filter: filter)
+            return CContextAnalysisResult(type: .preprocessor, filter: filter)
         }
         
         // Check for namespace context (C++ only)
         if beforeCursor.hasSuffix("::") {
             let targetNamespace = extractTargetNamespace(from: beforeCursor)
-            return ContextAnalysisResult(type: .namespace, filter: "", targetType: targetNamespace)
+            return CContextAnalysisResult(type: .namespace, filter: "", targetType: targetNamespace)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") || beforeCursor.hasSuffix("->") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return CContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for type context
         if lineText.contains(" ") && !lineText.contains("=") && !lineText.contains("(") {
             // Likely a variable declaration
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return CContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return CContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -535,8 +535,8 @@ public final class CCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
-    enum CompletionType {
+extension CCompletionProvider {
+    enum CCompletionType {
         case keyword
         case type
         case preprocessor
@@ -546,19 +546,15 @@ private struct ContextAnalysisResult {
         case general
     }
     
-    let type: CompletionType
-    let filter: String
-    let targetType: String?
-    
-    init(type: CompletionType, filter: String, targetType: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetType = targetType
+    struct CContextAnalysisResult {
+        let type: CCompletionType
+        let filter: String
+        let targetType: String?
+        
+        init(type: CCompletionType, filter: String, targetType: String? = nil) {
+            self.type = type
+            self.filter = filter
+            self.targetType = targetType
+        }
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

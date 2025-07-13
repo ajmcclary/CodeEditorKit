@@ -320,7 +320,7 @@ end
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> RubyContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -329,46 +329,46 @@ end
         
         // Check for instance variable context
         if beforeCursor.hasSuffix("@") || filter.hasPrefix("@") {
-            return ContextAnalysisResult(type: .instanceVariable, filter: filter)
+            return RubyContextAnalysisResult(type: .instanceVariable, filter: filter)
         }
         
         // Check for class variable context
         if beforeCursor.hasSuffix("@@") || filter.hasPrefix("@@") {
-            return ContextAnalysisResult(type: .classVariable, filter: filter)
+            return RubyContextAnalysisResult(type: .classVariable, filter: filter)
         }
         
         // Check for global variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
-            return ContextAnalysisResult(type: .globalVariable, filter: filter)
+            return RubyContextAnalysisResult(type: .globalVariable, filter: filter)
         }
         
         // Check for symbol context
         if beforeCursor.hasSuffix(":") && !beforeCursor.hasSuffix("::") {
-            return ContextAnalysisResult(type: .symbol, filter: filter)
+            return RubyContextAnalysisResult(type: .symbol, filter: filter)
         }
         
         // Check for method context (after .)
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .method, filter: "", targetType: targetType)
+            return RubyContextAnalysisResult(type: .method, filter: "", targetType: targetType)
         }
         
         // Check for class/module context (after ::)
         if beforeCursor.hasSuffix("::") {
-            return ContextAnalysisResult(type: .class, filter: "")
+            return RubyContextAnalysisResult(type: .class, filter: "")
         }
         
         // Check for class definition context
         if lineText.hasPrefix("class ") && !lineText.contains("end") {
-            return ContextAnalysisResult(type: .class, filter: filter)
+            return RubyContextAnalysisResult(type: .class, filter: filter)
         }
         
         // Check for module definition context
         if lineText.hasPrefix("module ") && !lineText.contains("end") {
-            return ContextAnalysisResult(type: .module, filter: filter)
+            return RubyContextAnalysisResult(type: .module, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return RubyContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -579,7 +579,7 @@ end
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct RubyContextAnalysisResult {
     enum CompletionType {
         case keyword
         case method
@@ -601,10 +601,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

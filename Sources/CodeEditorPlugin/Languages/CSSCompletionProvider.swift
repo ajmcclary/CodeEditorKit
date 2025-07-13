@@ -258,7 +258,7 @@ public final class CSSCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> CSSContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -267,19 +267,19 @@ public final class CSSCompletionProvider: CompletionProvider {
         
         // Check for @ rules
         if lineText.hasPrefix("@") || filter.hasPrefix("@") {
-            return ContextAnalysisResult(type: .atRule, filter: filter)
+            return CSSContextAnalysisResult(type: .atRule, filter: filter)
         }
         
         // Check if we're in a rule block
         if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
             // Check for pseudo-element (::)
             if beforeCursor.hasSuffix("::") {
-                return ContextAnalysisResult(type: .pseudoElement, filter: "")
+                return CSSContextAnalysisResult(type: .pseudoElement, filter: "")
             }
             
             // Check for pseudo-class (:)
             if beforeCursor.hasSuffix(":") && !beforeCursor.hasSuffix("::") && !ruleContext.inDeclaration {
-                return ContextAnalysisResult(type: .pseudoClass, filter: "")
+                return CSSContextAnalysisResult(type: .pseudoClass, filter: "")
             }
             
             // Check if we're after a property declaration
@@ -287,23 +287,23 @@ public final class CSSCompletionProvider: CompletionProvider {
                 if let property = ruleContext.currentProperty {
                     // Check for function context
                     if beforeCursor.hasSuffix("(") || isInFunction(beforeCursor) {
-                        return ContextAnalysisResult(type: .function, filter: filter)
+                        return CSSContextAnalysisResult(type: .function, filter: filter)
                     }
                     
                     // Check for unit context
                     if extractLastNumber(from: beforeCursor) != nil {
-                        return ContextAnalysisResult(type: .unit, filter: filter)
+                        return CSSContextAnalysisResult(type: .unit, filter: filter)
                     }
                     
-                    return ContextAnalysisResult(type: .value, filter: filter, targetProperty: property)
+                    return CSSContextAnalysisResult(type: .value, filter: filter, targetProperty: property)
                 }
             } else {
-                return ContextAnalysisResult(type: .property, filter: filter)
+                return CSSContextAnalysisResult(type: .property, filter: filter)
             }
         }
         
         // We're likely in selector context
-        return ContextAnalysisResult(type: .selector, filter: filter)
+        return CSSContextAnalysisResult(type: .selector, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -616,7 +616,7 @@ public final class CSSCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct CSSContextAnalysisResult {
     enum CompletionType {
         case property
         case value
@@ -644,10 +644,4 @@ private struct RuleContext {
     let inRule: Bool
     let inDeclaration: Bool
     let currentProperty: String?
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

@@ -220,7 +220,7 @@ public final class JSONCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> JSONContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
         
@@ -230,25 +230,25 @@ public final class JSONCompletionProvider: CompletionProvider {
         // Check if we're in a key position
         if isInKeyPosition(beforeCursor) {
             let parentKey = findParentKey(in: beforeCursor)
-            return ContextAnalysisResult(type: .key, filter: filter, fileType: fileType, parentKey: parentKey)
+            return JSONContextAnalysisResult(type: .key, filter: filter, fileType: fileType, parentKey: parentKey)
         }
         
         // Check if we're in a value position
         if let currentKey = getCurrentKey(from: beforeCursor) {
             // Check for schema context
             if currentKey.hasPrefix("$") || schemaProperties.contains(currentKey) {
-                return ContextAnalysisResult(type: .schema, filter: filter, fileType: fileType, key: currentKey)
+                return JSONContextAnalysisResult(type: .schema, filter: filter, fileType: fileType, key: currentKey)
             }
             
-            return ContextAnalysisResult(type: .value, filter: filter, fileType: fileType, key: currentKey)
+            return JSONContextAnalysisResult(type: .value, filter: filter, fileType: fileType, key: currentKey)
         }
         
         // Check if we're typing a keyword
         if !isInString(beforeCursor) {
-            return ContextAnalysisResult(type: .keyword, filter: filter, fileType: fileType)
+            return JSONContextAnalysisResult(type: .keyword, filter: filter, fileType: fileType)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
+        return JSONContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -644,7 +644,7 @@ public final class JSONCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct JSONContextAnalysisResult {
     enum CompletionType {
         case key
         case value
@@ -674,10 +674,4 @@ private enum JSONFileType {
     case eslint
     case schema
     case generic
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

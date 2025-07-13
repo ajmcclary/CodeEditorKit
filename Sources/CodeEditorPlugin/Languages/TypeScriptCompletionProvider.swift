@@ -190,7 +190,7 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> TypeScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -199,36 +199,36 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         
         // Check for decorator context
         if lineText.hasPrefix("@") || beforeCursor.hasSuffix("@") {
-            return ContextAnalysisResult(type: .decorator, filter: filter)
+            return TypeScriptContextAnalysisResult(type: .decorator, filter: filter)
         }
         
         // Check for type context
         if lineText.contains(": ") || lineText.contains("extends ") || lineText.contains("implements ") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return TypeScriptContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for generic context
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">")) {
-            return ContextAnalysisResult(type: .generic, filter: filter)
+            return TypeScriptContextAnalysisResult(type: .generic, filter: filter)
         }
         
         // Check for import/require statements
         if lineText.hasPrefix("import ") || lineText.contains("from '") || lineText.contains("require(") {
-            return ContextAnalysisResult(type: .import, filter: filter)
+            return TypeScriptContextAnalysisResult(type: .import, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return TypeScriptContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("function ") && lineText.contains("(") && !lineText.contains(")") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return TypeScriptContextAnalysisResult(type: .parameter, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return TypeScriptContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -566,7 +566,7 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct TypeScriptContextAnalysisResult {
     enum CompletionType {
         case keyword
         case type
@@ -587,10 +587,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

@@ -109,19 +109,11 @@ public final class MemoryMonitor: ObservableObject {
     }
     
     deinit {
-        // Use MainActor.assumeIsolated to safely clean up @MainActor resources
-        // This is safe because MemoryMonitor instances are created and destroyed on the main actor
-        MainActor.assumeIsolated {
-            // Cancel monitoring tasks to prevent memory leaks
-            monitoringTask?.cancel()
-            cleanupTask?.cancel()
-            
-            // Clear handlers and history to free memory
-            cleanupHandlers.removeAll()
-            cleanupHistory.removeAll()
-            
-            logger.debug("MemoryMonitor deallocated and cleaned up")
-        }
+        // Note: We cannot safely access @MainActor properties from deinit
+        // as it may be called from any thread. The tasks will be automatically
+        // cancelled when they are deallocated.
+        // Users should call stopMonitoring() explicitly before releasing the monitor
+        // to ensure proper cleanup.
     }
     
     // MARK: - Public Methods

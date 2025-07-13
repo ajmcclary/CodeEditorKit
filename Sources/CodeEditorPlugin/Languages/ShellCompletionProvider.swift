@@ -361,7 +361,7 @@ fi
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> ShellContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -370,36 +370,36 @@ fi
         
         // Check for variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
-            return ContextAnalysisResult(type: .variable, filter: filter)
+            return ShellContextAnalysisResult(type: .variable, filter: filter)
         }
         
         // Check for option context (starts with -)
         if filter.hasPrefix("-") {
             let command = extractCurrentCommand(from: lineText)
-            return ContextAnalysisResult(type: .option, filter: filter, command: command)
+            return ShellContextAnalysisResult(type: .option, filter: filter, command: command)
         }
         
         // Check for path context (contains / or ~)
         if filter.contains("/") || filter.hasPrefix("~") || filter.hasPrefix(".") {
-            return ContextAnalysisResult(type: .path, filter: filter)
+            return ShellContextAnalysisResult(type: .path, filter: filter)
         }
         
         // Check for operator context
         if isOperatorContext(beforeCursor) {
-            return ContextAnalysisResult(type: .shellOperator, filter: filter)
+            return ShellContextAnalysisResult(type: .shellOperator, filter: filter)
         }
         
         // Check for keyword context (control structures)
         if isKeywordContext(lineText, filter: filter) {
-            return ContextAnalysisResult(type: .keyword, filter: filter)
+            return ShellContextAnalysisResult(type: .keyword, filter: filter)
         }
         
         // Check if we're at the start of a command
         if isAtCommandPosition(lineText, beforeCursor) {
-            return ContextAnalysisResult(type: .command, filter: filter)
+            return ShellContextAnalysisResult(type: .command, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return ShellContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -656,7 +656,7 @@ fi
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct ShellContextAnalysisResult {
     enum CompletionType {
         case command
         case variable
@@ -676,10 +676,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.command = command
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

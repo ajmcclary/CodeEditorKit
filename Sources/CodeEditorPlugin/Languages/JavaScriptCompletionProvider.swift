@@ -191,7 +191,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> JavaScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -200,26 +200,26 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
         
         // Check for import/require statements
         if lineText.hasPrefix("import ") || lineText.contains("from '") || lineText.contains("require(") {
-            return ContextAnalysisResult(type: .import, filter: filter)
+            return JavaScriptContextAnalysisResult(type: .import, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return JavaScriptContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("function ") && lineText.contains("(") && !lineText.contains(")") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
+            return JavaScriptContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         // Check for object property context
         if beforeCursor.hasSuffix(":") || lineText.contains("new ") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return JavaScriptContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return JavaScriptContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -547,7 +547,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct JavaScriptContextAnalysisResult {
     enum CompletionType {
         case keyword
         case type
@@ -566,10 +566,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

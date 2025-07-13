@@ -334,7 +334,7 @@ final class LSPIntegrationTests: XCTestCase {
             try? await manager.closeDocument(filePath: "/test/temp.swift")
             
             // Stop all servers and monitoring before deallocation
-            await manager.stopAllServers()
+            manager.stopAllServers()
             monitor.stopMonitoring()
         }
         

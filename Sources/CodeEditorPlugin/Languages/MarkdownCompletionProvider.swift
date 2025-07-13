@@ -318,7 +318,7 @@ graph TD
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> MarkdownContextAnalysisResult {
         let lineText = context.lineText
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -327,60 +327,60 @@ graph TD
         
         // Check for math context
         if beforeCursor.contains("$") && !beforeCursor.hasSuffix("$") {
-            return ContextAnalysisResult(type: .math, filter: filter)
+            return MarkdownContextAnalysisResult(type: .math, filter: filter)
         }
         
         // Check for emoji context
         if beforeCursor.hasSuffix(":") || (filter.hasPrefix(":") && !filter.hasSuffix(":")) {
-            return ContextAnalysisResult(type: .emoji, filter: filter)
+            return MarkdownContextAnalysisResult(type: .emoji, filter: filter)
         }
         
         // Check for heading context
         if lineText.hasPrefix("#") {
-            return ContextAnalysisResult(type: .heading, filter: filter)
+            return MarkdownContextAnalysisResult(type: .heading, filter: filter)
         }
         
         // Check for link context
         if beforeCursor.hasSuffix("[") || isInLinkContext(beforeCursor) {
-            return ContextAnalysisResult(type: .link, filter: filter)
+            return MarkdownContextAnalysisResult(type: .link, filter: filter)
         }
         
         // Check for image context
         if beforeCursor.hasSuffix("![") || (beforeCursor.contains("![") && !beforeCursor.contains("](")) {
-            return ContextAnalysisResult(type: .image, filter: filter)
+            return MarkdownContextAnalysisResult(type: .image, filter: filter)
         }
         
         // Check for code block context
         if beforeCursor.hasSuffix("```") {
-            return ContextAnalysisResult(type: .codeBlock, filter: filter)
+            return MarkdownContextAnalysisResult(type: .codeBlock, filter: filter)
         }
         
         // Check for HTML tag context
         if beforeCursor.hasSuffix("<") || isInHtmlTag(beforeCursor) {
             let htmlTag = extractCurrentHtmlTag(from: beforeCursor)
             if isInHtmlAttribute(beforeCursor) {
-                return ContextAnalysisResult(type: .htmlAttribute, filter: filter, htmlTag: htmlTag)
+                return MarkdownContextAnalysisResult(type: .htmlAttribute, filter: filter, htmlTag: htmlTag)
             } else {
-                return ContextAnalysisResult(type: .htmlTag, filter: filter)
+                return MarkdownContextAnalysisResult(type: .htmlTag, filter: filter)
             }
         }
         
         // Check for table context
         if lineText.contains("|") || beforeCursor.hasSuffix("|") {
-            return ContextAnalysisResult(type: .table, filter: filter)
+            return MarkdownContextAnalysisResult(type: .table, filter: filter)
         }
         
         // Check for list context
         if isInListContext(lineText) {
-            return ContextAnalysisResult(type: .list, filter: filter)
+            return MarkdownContextAnalysisResult(type: .list, filter: filter)
         }
         
         // Check for emphasis context
         if isInEmphasisContext(beforeCursor) {
-            return ContextAnalysisResult(type: .emphasis, filter: filter)
+            return MarkdownContextAnalysisResult(type: .emphasis, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return MarkdownContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -729,7 +729,7 @@ graph TD
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct MarkdownContextAnalysisResult {
     enum CompletionType {
         case heading
         case link
@@ -754,10 +754,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.htmlTag = htmlTag
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

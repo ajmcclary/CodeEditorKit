@@ -31,29 +31,18 @@ final class AsyncTextProcessorTests: XCTestCase {
         let text = "Test text"
         let range = NSRange(location: 0, length: text.count)
         
-        // Use an actor to safely track completions
-        actor CompletionTracker {
-            private(set) var count = 0
-            
-            func increment() {
-                count += 1
-            }
-        }
-        
-        let completionTracker = CompletionTracker()
-        
         // Submit tasks that will take time to complete
+        var taskHandles: [ProcessingTaskHandle] = []
         for _ in 0..<taskCount {
-            await processor.submit(
+            let handle = await processor.submit(
                 text: text,
                 range: range,
                 operation: SlowOperation(delay: 0.1),
                 priority: .normal
             ) { _ in
-                Task {
-                    await completionTracker.increment()
-                }
+                // Empty completion handler for this test
             }
+            taskHandles.append(handle)
         }
         
         // Give tasks a moment to start
@@ -74,7 +63,8 @@ final class AsyncTextProcessorTests: XCTestCase {
     @MainActor func testCustomConcurrencyLimit() async throws {
         // Test that custom concurrency limit is respected
         let customLimit = 2
-        let processor = AsyncTextProcessor(memoryMonitor: MemoryMonitor(), maxConcurrentOperations: customLimit)
+        let memoryMonitor = MemoryMonitor()
+        let processor = AsyncTextProcessor(memoryMonitor: memoryMonitor, maxConcurrentOperations: customLimit)
         
         struct SlowOperation: ProcessingOperation {
             let name = "slow-operation"
@@ -89,13 +79,17 @@ final class AsyncTextProcessorTests: XCTestCase {
         let text = "Test"
         let range = NSRange(location: 0, length: text.count)
         
+        var taskHandles: [ProcessingTaskHandle] = []
         for _ in 0..<5 {
-            await processor.submit(
+            let handle = await processor.submit(
                 text: text,
                 range: range,
                 operation: SlowOperation(),
                 priority: .normal
-            ) { _ in }
+            ) { _ in
+                // Empty completion handler for this test
+            }
+            taskHandles.append(handle)
         }
         
         // Give tasks a moment to start

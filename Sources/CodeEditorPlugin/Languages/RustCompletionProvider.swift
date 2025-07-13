@@ -210,7 +210,7 @@ public final class RustCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    private func analyzeContext(_ context: CompletionContextModel) -> RustContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -219,42 +219,42 @@ public final class RustCompletionProvider: CompletionProvider {
         
         // Check for use statements
         if lineText.hasPrefix("use ") {
-            return ContextAnalysisResult(type: .use, filter: filter)
+            return RustContextAnalysisResult(type: .use, filter: filter)
         }
         
         // Check for macro context
         if beforeCursor.hasSuffix("!") || filter.hasSuffix("!") {
-            return ContextAnalysisResult(type: .macro, filter: filter)
+            return RustContextAnalysisResult(type: .macro, filter: filter)
         }
         
         // Check for trait context
         if lineText.contains("impl ") && lineText.contains(" for ") {
-            return ContextAnalysisResult(type: .trait, filter: filter)
+            return RustContextAnalysisResult(type: .trait, filter: filter)
         }
         
         // Check for type context
         if lineText.contains(": ") || lineText.contains("-> ") || lineText.contains("let ") {
-            return ContextAnalysisResult(type: .type, filter: filter)
+            return RustContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return RustContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for module access
         if beforeCursor.hasSuffix("::") {
             let targetModule = extractTargetModule(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetModule)
+            return RustContextAnalysisResult(type: .member, filter: "", targetType: targetModule)
         }
         
         // Check for lifetime context
         if beforeCursor.hasSuffix("'") || beforeCursor.hasSuffix("<'") {
-            return ContextAnalysisResult(type: .lifetime, filter: filter)
+            return RustContextAnalysisResult(type: .lifetime, filter: filter)
         }
         
-        return ContextAnalysisResult(type: .general, filter: filter)
+        return RustContextAnalysisResult(type: .general, filter: filter)
     }
     
     private func extractCurrentWord(from text: String) -> String {
@@ -572,7 +572,7 @@ public final class RustCompletionProvider: CompletionProvider {
 
 // MARK: - Supporting Types
 
-private struct ContextAnalysisResult {
+private struct RustContextAnalysisResult {
     enum CompletionType {
         case keyword
         case type
@@ -593,10 +593,4 @@ private struct ContextAnalysisResult {
         self.filter = filter
         self.targetType = targetType
     }
-}
-
-private struct SnippetTemplate {
-    let label: String
-    let insertText: String
-    let description: String
 }

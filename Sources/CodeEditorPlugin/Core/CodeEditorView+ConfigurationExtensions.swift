@@ -56,6 +56,17 @@ extension CodeEditorView {
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
         
+        // Apply text input behavior settings on macOS
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        isAutomaticTextCompletionEnabled = configuration.behavior.isAutomaticTextCompletionEnabled
+        isAutomaticQuoteSubstitutionEnabled = configuration.behavior.isAutomaticQuoteSubstitutionEnabled
+        isAutomaticDashSubstitutionEnabled = configuration.behavior.isAutomaticDashSubstitutionEnabled
+        isAutomaticTextReplacementEnabled = configuration.behavior.isAutomaticTextReplacementEnabled
+        isAutomaticSpellingCorrectionEnabled = configuration.behavior.isAutomaticSpellingCorrectionEnabled
+        isGrammarCheckingEnabled = configuration.behavior.isGrammarCheckingEnabled
+        isContinuousSpellCheckingEnabled = configuration.behavior.isContinuousSpellCheckingEnabled
+        #endif
+        
         // Update code folding configuration
         updateCodeFoldingConfiguration()
         
