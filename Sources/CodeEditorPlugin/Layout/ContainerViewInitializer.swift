@@ -228,6 +228,7 @@ struct ViewComponents {
     
     #if canImport(UIKit)
     let contentView: EditorContentView?
+    
     #if !targetEnvironment(macCatalyst)
     let scrollView: UIScrollView? = nil
     #endif

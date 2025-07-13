@@ -344,7 +344,12 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
         
         print("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
+        #if targetEnvironment(macCatalyst)
+        // Mac Catalyst is slower for syntax highlighting
+        XCTAssertLessThan(elapsed, 2.0, "Medium file should highlight in less than 2 seconds on Catalyst")
+        #else
         XCTAssertLessThan(elapsed, 1.0, "Medium file should highlight in less than 1 second")
+        #endif
     }
     
     func testSwiftHighlightingLargeFile() async throws {

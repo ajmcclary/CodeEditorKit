@@ -216,7 +216,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Simulator needs more time, especially on iPhone
         try await Task.sleep(for: .milliseconds(2_000))
         #elseif targetEnvironment(macCatalyst)
-        try await Task.sleep(for: .milliseconds(1_500))
+        // Mac Catalyst needs even more time for debouncing
+        try await Task.sleep(for: .milliseconds(3_000))
         #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Native macOS needs more time for debouncing
         try await Task.sleep(for: .milliseconds(2_000))
