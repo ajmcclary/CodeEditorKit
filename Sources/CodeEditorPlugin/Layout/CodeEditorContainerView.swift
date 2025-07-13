@@ -49,9 +49,15 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView = components.minimapView
         
         #if canImport(UIKit)
-        contentView = components.contentView!
+        guard let contentView = components.contentView else {
+            fatalError("Failed to create content view for iOS platform")
+        }
+        self.contentView = contentView
         #else
-        scrollView = components.scrollView!
+        guard let scrollView = components.scrollView else {
+            fatalError("Failed to create scroll view for macOS platform")
+        }
+        self.scrollView = scrollView
         #endif
         
         super.init(frame: parameters.initialFrame)
@@ -71,9 +77,15 @@ public final class CodeEditorContainerView: PlatformView {
         minimapView = components.minimapView
         
         #if canImport(UIKit)
-        contentView = components.contentView!
+        guard let contentView = components.contentView else {
+            fatalError("Failed to create content view for iOS platform")
+        }
+        self.contentView = contentView
         #else
-        scrollView = components.scrollView!
+        guard let scrollView = components.scrollView else {
+            fatalError("Failed to create scroll view for macOS platform")
+        }
+        self.scrollView = scrollView
         #endif
         
         super.init(coder: coder)

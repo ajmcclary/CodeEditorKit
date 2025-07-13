@@ -256,7 +256,7 @@ struct ViewComponents {
 extension CodeEditorContainerView {
     @objc func textDidChange(_: Notification) {
         // Handle text changes for both platforms
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             self?.gutterView.setNeedsDisplay(self?.gutterView.bounds ?? .zero)
             self?.minimapView.setNeedsDisplay(self?.minimapView.bounds ?? .zero)

@@ -1,5 +1,7 @@
-import Combine
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// Adapter errors
 public enum AdapterError: LocalizedError {

@@ -1,5 +1,7 @@
-import Combine
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit

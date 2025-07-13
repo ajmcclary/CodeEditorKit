@@ -373,7 +373,12 @@ public class SmartEditingEngine: NSObject, ObservableObject {
             startPos -= 1
             guard let charIndex = text.utf16.index(text.utf16.startIndex, offsetBy: startPos, limitedBy: text.utf16.endIndex) else { break }
             let char = text.utf16[charIndex]
-            let unicodeChar = Character(UnicodeScalar(char)!)
+            // Handle surrogate pairs safely
+            guard let scalar = UnicodeScalar(char),
+                  !UTF16.isLeadSurrogate(char) && !UTF16.isTrailSurrogate(char) else {
+                continue
+            }
+            let unicodeChar = Character(scalar)
             
             if [")", "]", "}"].contains(unicodeChar) {
                 bracketStack.append(unicodeChar)
@@ -392,7 +397,13 @@ public class SmartEditingEngine: NSObject, ObservableObject {
         while endPos < text.utf16.count {
             guard let charIndex = text.utf16.index(text.utf16.startIndex, offsetBy: endPos, limitedBy: text.utf16.endIndex) else { break }
             let char = text.utf16[charIndex]
-            let unicodeChar = Character(UnicodeScalar(char)!)
+            // Handle surrogate pairs safely
+            guard let scalar = UnicodeScalar(char),
+                  !UTF16.isLeadSurrogate(char) && !UTF16.isTrailSurrogate(char) else {
+                endPos += 1
+                continue
+            }
+            let unicodeChar = Character(scalar)
             
             if ["(", "[", "{"].contains(unicodeChar) {
                 bracketStack.append(unicodeChar)

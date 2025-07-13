@@ -460,7 +460,12 @@ struct BraceFoldingProvider: CodeFoldingProvider {
         for index in 0..<text.utf16.count {
             guard let charIndex = text.utf16.index(text.utf16.startIndex, offsetBy: index, limitedBy: text.utf16.endIndex) else { continue }
             let char = text.utf16[charIndex]
-            let unicodeChar = Character(UnicodeScalar(char)!)
+            // Handle surrogate pairs safely
+            guard let scalar = UnicodeScalar(char),
+                  !UTF16.isLeadSurrogate(char) && !UTF16.isTrailSurrogate(char) else {
+                continue
+            }
+            let unicodeChar = Character(scalar)
 
             switch unicodeChar {
             case "{":

@@ -124,11 +124,12 @@ public final class MemoryManagementCoordinator {
         if let editorView {
             hasher.combine(ObjectIdentifier(editorView))
         }
-        cleanupIdentifier = "MemoryManagementCoordinator_\(hasher.finalize())"
+        let identifier = "MemoryManagementCoordinator_\(hasher.finalize())"
+        cleanupIdentifier = identifier
         
         // Register cleanup handler
         memoryMonitor.registerCleanupHandler(
-            identifier: cleanupIdentifier!,
+            identifier: identifier,
             priority: .normal
         ) { [weak self] in
             self?.performMemoryCleanup() ?? CleanupResult(memoryFreedMB: 0, description: "Coordinator deallocated")

@@ -323,63 +323,6 @@ extension CrossPlatformCoordinator {
         }
     }
     
-    func toggleComment(in textView: CodeEditorView) {
-        guard let text = textView.text else { return }
-        let language = textView.language
-        
-        let selectedRange = textView.selectedRange
-        
-        // Get the comment syntax for the current language
-        let commentPrefix = getCommentPrefix(for: language)
-        
-        // Find line boundaries for the selection
-        var lineStart = 0
-        var lineEnd = 0
-        // swiftlint:disable:next legacy_objc_type
-        (text as NSString).getLineStart(&lineStart, end: &lineEnd, contentsEnd: nil, for: selectedRange)
-        
-        // Check if the line is already commented
-        // swiftlint:disable:next legacy_objc_type
-        let lineText = (text as NSString).substring(with: NSRange(location: lineStart, length: lineEnd - lineStart))
-        let trimmedLine = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if trimmedLine.hasPrefix(commentPrefix) {
-            // Remove comment
-            let uncommentedLine = lineText.replacingOccurrences(of: commentPrefix, with: "", options: .anchored)
-            if textView.responds(to: #selector(UITextView.insertText(_:))) {
-                textView.selectedRange = NSRange(location: lineStart, length: lineEnd - lineStart)
-                textView.insertText(uncommentedLine)
-            }
-        } else {
-            // Add comment
-            let commentedLine = commentPrefix + " " + lineText
-            if textView.responds(to: #selector(UITextView.insertText(_:))) {
-                textView.selectedRange = NSRange(location: lineStart, length: lineEnd - lineStart)
-                textView.insertText(commentedLine)
-            }
-        }
-    }
-    
-    private func getCommentPrefix(for language: Language) -> String {
-        switch language {
-        case .swift, .javascript, .typescript, .java, .c, .cpp, .go, .rust, .php:
-            return "//"
-
-        case .python, .ruby, .shell, .yaml:
-            return "#"
-
-        case .html, .xml:
-            return "<!--"
-
-        case .css:
-            return "/*"
-
-        case .sql:
-            return "--"
-
-        case .markdown, .json, .plainText:
-            return "//" // Default fallback
-        }
-    }
+    // toggleComment is now implemented in the main CrossPlatformCoordinator class
 }
 #endif

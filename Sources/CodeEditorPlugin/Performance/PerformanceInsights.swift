@@ -1,6 +1,8 @@
-import Combine
 import Foundation
 import SwiftUI
+#if canImport(Combine)
+import Combine
+#endif
 
 // MARK: - PerformanceInsights
 

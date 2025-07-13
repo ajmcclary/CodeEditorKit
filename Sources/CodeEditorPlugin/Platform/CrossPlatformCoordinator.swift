@@ -260,6 +260,91 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }
     }
     #endif
+    
+    // MARK: - Shared Editing Actions
+    
+    /// Toggle comment for selected lines in the text view
+    /// - Parameter textView: The text view to operate on
+    internal func toggleComment(in textView: CodeEditorView) {
+        guard let text = textView.text else { return }
+        let language = textView.language
+        
+        let selectedRange = textView.selectedRange
+        
+        // Get the comment syntax for the current language
+        let commentPrefix = getCommentPrefix(for: language)
+        
+        // Convert to String.Index for line boundary calculations
+        guard let startIndex = text.index(text.startIndex, offsetBy: selectedRange.location, limitedBy: text.endIndex) else { return }
+        
+        // Find line boundaries for the selection
+        let lineRange = text.lineRange(for: startIndex..<startIndex)
+        
+        // Extract the line text
+        let lineText = String(text[lineRange])
+        let trimmedLine = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmedLine.hasPrefix(commentPrefix) {
+            // Remove comment
+            let uncommentedLine = lineText.replacingOccurrences(of: commentPrefix + " ", with: "")
+                .replacingOccurrences(of: commentPrefix, with: "")
+            
+            // Build new text
+            let beforeLine = String(text[..<lineRange.lowerBound])
+            let afterLine = String(text[lineRange.upperBound...])
+            let newText = beforeLine + uncommentedLine + afterLine
+            textView.text = newText
+            
+            // Adjust selection
+            let adjustment = lineText.count - uncommentedLine.count
+            textView.selectedRange = NSRange(location: selectedRange.location - adjustment, length: selectedRange.length)
+        } else {
+            // Add comment
+            let leadingWhitespace = lineText.prefix { $0.isWhitespace }
+            let commentedLine = leadingWhitespace + commentPrefix + " " + lineText.dropFirst(leadingWhitespace.count)
+            
+            // Build new text
+            let beforeLine = String(text[..<lineRange.lowerBound])
+            let afterLine = String(text[lineRange.upperBound...])
+            let newText = beforeLine + commentedLine + afterLine
+            textView.text = newText
+            
+            // Adjust selection
+            let adjustment = commentedLine.count - lineText.count
+            textView.selectedRange = NSRange(location: selectedRange.location + adjustment, length: selectedRange.length)
+        }
+    }
+    
+    /// Get the comment prefix for a language
+    /// - Parameter language: The language to get comment prefix for
+    /// - Returns: The comment prefix string
+    internal func getCommentPrefix(for language: Language) -> String {
+        switch language {
+        case .swift, .javascript, .typescript, .c, .cpp, .go, .rust, .java:
+            return "//"
+
+        case .python, .ruby, .shell:
+            return "#"
+
+        case .html, .xml:
+            return "<!--"
+
+        case .css:
+            return "/*"
+
+        case .sql:
+            return "--"
+
+        case .php:
+            return "//"
+
+        case .yaml:
+            return "#"
+
+        case .markdown, .json, .plainText:
+            return "//" // Default fallback
+        }
+    }
 }
 
 // MARK: - Supporting Types

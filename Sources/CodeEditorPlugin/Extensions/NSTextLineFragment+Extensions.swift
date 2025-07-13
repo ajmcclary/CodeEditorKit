@@ -24,16 +24,19 @@ extension NSTextLineFragment {
             return nil
         }
 
-        return NSTextRange(
-            location: textContentManager.location(
-                textLayoutFragment.rangeInElement.location,
-                offsetBy: characterRange.location
-            )!,
-            end: textContentManager.location(
-                textLayoutFragment.rangeInElement.location,
-                offsetBy: characterRange.location + characterRange.length
-            )
+        guard let startLocation = textContentManager.location(
+            textLayoutFragment.rangeInElement.location,
+            offsetBy: characterRange.location
+        ) else {
+            return nil
+        }
+        
+        let endLocation = textContentManager.location(
+            textLayoutFragment.rangeInElement.location,
+            offsetBy: characterRange.location + characterRange.length
         )
+        
+        return NSTextRange(location: startLocation, end: endLocation)
     }
 }
 
