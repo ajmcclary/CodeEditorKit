@@ -180,21 +180,26 @@ final class TextKitBridge {
     }
     
     private func enumerateLineFragmentsTextKit1(in range: NSRange, using block: @escaping (CGRect, NSRange) -> Void) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let layoutManager = textView?.layoutManager else { return }
         
-        layoutManager.enumerateLineFragments(forGlyphRange: range) { rect, _, _, glyphRange, _ in
-            let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-            block(rect, characterRange)
-        }
-        #elseif canImport(UIKit)
-        guard let layoutManager = textView?.layoutManager else { return }
+        // Get the appropriate glyph range based on platform
+        let glyphRange = self.glyphRangeForCharacterRange(range, layoutManager: layoutManager)
         
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        // Shared enumeration logic
         layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { rect, _, _, glyphRange, _ in
             let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             block(rect, characterRange)
         }
+    }
+    
+    /// Get the glyph range for a character range, handling platform differences
+    private func glyphRangeForCharacterRange(_ characterRange: NSRange, layoutManager: NSLayoutManager) -> NSRange {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On AppKit, use the character range directly as glyph range for line fragment enumeration
+        return characterRange
+        #elseif canImport(UIKit)
+        // On UIKit, convert character range to glyph range
+        return layoutManager.glyphRange(forCharacterRange: characterRange, actualCharacterRange: nil)
         #endif
     }
     

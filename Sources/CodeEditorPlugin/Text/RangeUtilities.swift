@@ -176,9 +176,11 @@ public enum TextRangeUtilities {
         }
         
         // Gap after last range
-        let lastEnd = NSMaxRange(mergedRanges.last!)
-        if lastEnd < totalLength {
-            gaps.append(NSRange(location: lastEnd, length: totalLength - lastEnd))
+        if let lastRange = mergedRanges.last {
+            let lastEnd = NSMaxRange(lastRange)
+            if lastEnd < totalLength {
+                gaps.append(NSRange(location: lastEnd, length: totalLength - lastEnd))
+            }
         }
         
         return gaps

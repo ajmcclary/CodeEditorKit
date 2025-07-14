@@ -364,12 +364,21 @@ public enum SelectionDirection {
 @available(iOS 17.0, macOS 14.0, *)
 extension CompletionViewModel {
     func setupCompletionProviders() {
-        // This would integrate with the LanguageProviderFactory
-        // For now, we'll set up basic providers
-        completionProviders = []
+        // Get the current language from text view or default to Swift
+        let currentLanguage = textView?.language ?? .swift
         
-        // TODO: Integrate with LanguageProviderFactory and CompletionProviderRegistry
-        logger.debug("Completion providers configured")
+        // Integrate with CompletionProviderRegistry
+        completionProviders = CompletionProviderRegistry.shared.providers(for: currentLanguage)
+        
+        // If no providers found for the language, try to create one from the factory
+        if completionProviders.isEmpty {
+            if let provider = LanguageProviderFactory.createProvider(for: currentLanguage) {
+                CompletionProviderRegistry.shared.register(provider)
+                completionProviders = [provider]
+            }
+        }
+        
+        logger.debug("Completion providers configured for \(currentLanguage): \(completionProviders.count) providers")
     }
     
     func shouldTriggerCompletion(at location: Int, in text: String) -> Bool {
@@ -636,9 +645,9 @@ extension CompletionViewModel {
     }
     
     func cacheCompletions(cacheKey: String, items: [CompletionItem]) {
-        if cachedCompletions.count >= maxCacheSize {
+        if cachedCompletions.count >= maxCacheSize,
+           let oldestKey = cachedCompletions.keys.first {
             // Remove oldest entry
-            let oldestKey = cachedCompletions.keys.first!
             cachedCompletions.removeValue(forKey: oldestKey)
         }
         cachedCompletions[cacheKey] = items

@@ -115,8 +115,8 @@ public final class LanguageRegistry {
     }
     
     /// Get language provider by file extension
-    public func provider(forFileExtension extension: String) -> (any LanguageProvider)? {
-        guard let identifier = extensionMap[`extension`.lowercased()] else { return nil }
+    public func provider(forFileExtension fileExtension: String) -> (any LanguageProvider)? {
+        guard let identifier = extensionMap[fileExtension.lowercased()] else { return nil }
         return providers[identifier]
     }
     

@@ -380,18 +380,18 @@ extension LineNumberCalculationService {
     }
     
     func cacheLinePositions(cacheKey: String, positions: [LinePosition]) {
-        if linePositionCache.count >= maxCacheSize {
+        if linePositionCache.count >= maxCacheSize,
+           let oldestKey = linePositionCache.keys.first {
             // Remove oldest entry
-            let oldestKey = linePositionCache.keys.first!
             linePositionCache.removeValue(forKey: oldestKey)
         }
         linePositionCache[cacheKey] = positions
     }
     
     func cacheGutterMetrics(cacheKey: String, metrics: GutterMetrics) {
-        if gutterMetricsCache.count >= maxCacheSize {
+        if gutterMetricsCache.count >= maxCacheSize,
+           let oldestKey = gutterMetricsCache.keys.first {
             // Remove oldest entry
-            let oldestKey = gutterMetricsCache.keys.first!
             gutterMetricsCache.removeValue(forKey: oldestKey)
         }
         gutterMetricsCache[cacheKey] = metrics

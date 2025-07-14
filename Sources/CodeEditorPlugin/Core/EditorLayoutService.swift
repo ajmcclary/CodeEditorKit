@@ -519,9 +519,9 @@ extension EditorLayoutService {
     }
     
     func cacheLayout(cacheKey: String, frames: ComponentFrames) {
-        if layoutCache.count >= maxCacheSize {
+        if layoutCache.count >= maxCacheSize,
+           let oldestKey = layoutCache.keys.first {
             // Remove oldest entry
-            let oldestKey = layoutCache.keys.first!
             layoutCache.removeValue(forKey: oldestKey)
         }
         layoutCache[cacheKey] = frames

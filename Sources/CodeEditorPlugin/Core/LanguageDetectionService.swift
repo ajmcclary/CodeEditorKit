@@ -24,8 +24,8 @@ public final class LanguageDetectionService {
     // MARK: - Public Methods
     
     /// Detects language from file extension
-    public func detectLanguage(fromExtension extension: String) -> Language {
-        let normalizedExtension = `extension`.lowercased()
+    public func detectLanguage(fromExtension fileExtension: String) -> Language {
+        let normalizedExtension = fileExtension.lowercased()
         
         // Check cache first
         if let cached = extensionCache[normalizedExtension] {
@@ -132,8 +132,8 @@ public final class LanguageDetectionService {
     }
     
     /// Checks if a file extension is supported
-    public func isExtensionSupported(_ extension: String) -> Bool {
-        detectLanguage(fromExtension: `extension`) != .plainText
+    public func isExtensionSupported(_ fileExtension: String) -> Bool {
+        detectLanguage(fromExtension: fileExtension) != .plainText
     }
     
     /// Gets language display information

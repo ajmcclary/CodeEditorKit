@@ -349,9 +349,9 @@ extension GutterSizingService {
     }
     
     func cacheFontMetrics(cacheKey: String, characterWidth: CGFloat) {
-        if fontMetricsCache.count >= maxCacheSize {
+        if fontMetricsCache.count >= maxCacheSize,
+           let oldestKey = fontMetricsCache.keys.first {
             // Remove oldest entry
-            let oldestKey = fontMetricsCache.keys.first!
             fontMetricsCache.removeValue(forKey: oldestKey)
         }
         fontMetricsCache[cacheKey] = characterWidth

@@ -454,7 +454,7 @@ final class LSPIntegrationTests: XCTestCase {
         }
         
         // Register a custom language server
-        let customConfig = LSPManager.LanguageServerConfig(
+        let customConfig = LanguageServerConfig(
             languageId: "test-lang",
             serverPath: "/usr/bin/test-server",
             fileExtensions: [".test", ".tst"],

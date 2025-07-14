@@ -506,18 +506,19 @@ extension MinimapViewModel {
     }
     
     func scrollToPosition(_ position: CGFloat) {
-        guard textView != nil else { return }
+        guard let textView else { return }
         
         let clampedPosition = max(0, min(position, minimapState.contentSize.height))
         
         // Convert minimap position to text view scroll position
-        _ = minimapState.contentSize.height > 0 ? clampedPosition / minimapState.contentSize.height : 0
+        let scrollRatio = minimapState.contentSize.height > 0 ? clampedPosition / minimapState.contentSize.height : 0
         
-        // Note: This would integrate with actual text view scrolling
-        // For now, we'll simulate the scroll position update
+        // Calculate target line number based on scroll ratio
+        let totalLines = textView.string.components(separatedBy: .newlines).count
+        let targetLine = max(1, Int(scrollRatio * CGFloat(totalLines)))
         
-        // TODO: Integrate with actual CodeEditorView scrolling mechanism
-        // The CodeEditorView would need to expose scroll methods or properties
+        // Scroll text view to the calculated line
+        textView.scrollToLine(targetLine)
         
         minimapState.scrollPosition = clampedPosition
         updateViewportIndicator()

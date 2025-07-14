@@ -445,7 +445,7 @@ extension TextParsingUtilities {
         if text.allSatisfy({ $0.isNumber }) { return .number }
         if text.hasPrefix("\"") || text.hasPrefix("'") { return .string }
         if text.hasPrefix("//") || text.hasPrefix("#") { return .comment }
-        if text.count == 1 && text.first!.isPunctuation { return .punctuation }
+        if text.count == 1, let firstChar = text.first, firstChar.isPunctuation { return .punctuation }
         
         // Check for keywords based on language
         if let language {

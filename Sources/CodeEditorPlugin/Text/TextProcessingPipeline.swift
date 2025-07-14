@@ -568,7 +568,9 @@ extension TextProcessingPipeline {
                 throw ProcessingError.timeoutExceeded(operation: "unknown", timeout: timeout)
             }
             
-            let result = try await group.next()!
+            guard let result = try await group.next() else {
+                throw ProcessingError.operationFailed(operation: "withTimeout", reason: "No task completed successfully")
+            }
             group.cancelAll()
             return result
         }

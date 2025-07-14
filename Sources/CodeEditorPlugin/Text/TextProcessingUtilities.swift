@@ -129,7 +129,8 @@ public enum TextProcessingUtilities {
         
         // Walk backwards from the end
         for char in text.reversed() {
-            if identifierSet.contains(char.unicodeScalars.first!) {
+            guard let firstScalar = char.unicodeScalars.first else { break }
+            if identifierSet.contains(firstScalar) {
                 startIndex = text.index(before: startIndex)
             } else {
                 break
@@ -183,7 +184,9 @@ public enum TextProcessingUtilities {
     
     /// Classifies a character into its functional category
     public static func classifyCharacter(_ char: Character) -> CharacterClass {
-        let scalar = char.unicodeScalars.first!
+        guard let scalar = char.unicodeScalars.first else {
+            return .unknown
+        }
         
         if char.isNewline {
             return .newline

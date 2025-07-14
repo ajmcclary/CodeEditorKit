@@ -82,21 +82,23 @@ extension NSTextContentManager {
                 var shouldStop = false
                 var needAdjustment = false
                 var constrainedElementRange = elementRange
-                if elementRange.contains(range.location) {
+                if elementRange.contains(range.location),
+                   let adjustedRange = NSTextRange(
+                       location: range.location,
+                       end: constrainedElementRange.endLocation
+                   ) {
                     // start location
-                    constrainedElementRange = NSTextRange(
-                        location: range.location,
-                        end: constrainedElementRange.endLocation
-                    )!
+                    constrainedElementRange = adjustedRange
                     needAdjustment = true
                 }
 
-                if elementRange.contains(range.endLocation) {
+                if elementRange.contains(range.endLocation),
+                   let adjustedRange = NSTextRange(
+                       location: constrainedElementRange.location,
+                       end: range.endLocation
+                   ) {
                     // end location
-                    constrainedElementRange = NSTextRange(
-                        location: constrainedElementRange.location,
-                        end: range.endLocation
-                    )!
+                    constrainedElementRange = adjustedRange
                     needAdjustment = true
                     shouldStop = true
                 }
