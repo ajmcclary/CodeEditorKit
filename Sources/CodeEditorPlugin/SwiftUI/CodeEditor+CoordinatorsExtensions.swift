@@ -154,6 +154,18 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
                     // Call the debounced callback
                     self.onTextChangeCallback?(newText)
                 }
+                
+                #if targetEnvironment(macCatalyst)
+                // Mac Catalyst sometimes needs additional dispatch to ensure binding updates work
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    
+                    // Force another binding update for Mac Catalyst
+                    if let textBinding = self.textBinding, textBinding.wrappedValue != newText {
+                        textBinding.wrappedValue = newText
+                    }
+                }
+                #endif
             } catch is CancellationError {
                 // Task was cancelled, which is expected behavior
             } catch {

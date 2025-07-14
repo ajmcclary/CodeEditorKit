@@ -514,7 +514,7 @@ extension MinimapViewModel {
         let scrollRatio = minimapState.contentSize.height > 0 ? clampedPosition / minimapState.contentSize.height : 0
         
         // Calculate target line number based on scroll ratio
-        let totalLines = textView.string.components(separatedBy: .newlines).count
+        let totalLines = (textView.text ?? "").components(separatedBy: .newlines).count
         let targetLine = max(1, Int(scrollRatio * CGFloat(totalLines)))
         
         // Scroll text view to the calculated line

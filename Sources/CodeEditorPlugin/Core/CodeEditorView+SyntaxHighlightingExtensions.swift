@@ -60,7 +60,7 @@ extension CodeEditorView {
     
     internal func applySyntaxHighlighting() {
         let syntaxService = BusinessLogic.syntaxHighlighting
-        let textLength = textStorage?.length ?? 0
+        let textLength = textStorage.length
         
         guard syntaxService.shouldApplySyntaxHighlighting(
             isEnabled: isSyntaxHighlightingEnabled,
@@ -81,7 +81,7 @@ extension CodeEditorView {
 
     internal func applySyntaxHighlighting(in range: NSRange) {
         let syntaxService = BusinessLogic.syntaxHighlighting
-        let textLength = textStorage?.length ?? 0
+        let textLength = textStorage.length
         
         guard syntaxService.isValidHighlightingRange(range, textLength: textLength) else {
             return
