@@ -24,8 +24,8 @@ extension CodeEditorView {
         updateGutterVisibility()
         #else
         // On iOS/Catalyst, gutter is handled by the container view
-        // Text view itself doesn't manage the gutter
-        removeGutter()
+        // But when used standalone, the text view should manage its own gutter
+        updateGutterVisibility()
         #endif
         
         if configuration.display.highlightSelectedLine {

@@ -436,27 +436,20 @@ actor AsyncTextProcessor {
         
         let systemLoad = monitor.currentSystemLoad()
         
-        // For now, use a simple approach without async memory pressure check
-        // This avoids the actor isolation issue
-        let memoryPressure: MemoryPressure = .normal
-        
         // Adjust concurrency based on system conditions
-        switch (systemLoad, memoryPressure) {
-        case (.low, .normal), (.low, .warning):
+        // Note: Memory pressure check temporarily disabled to avoid actor isolation issues
+        switch systemLoad {
+        case .low:
             // System is idle, can use full concurrency
             maxConcurrentOperations = baseConcurrentOperations
             
-        case (.medium, .normal):
+        case .medium:
             // Moderate load, reduce slightly
             maxConcurrentOperations = max(2, baseConcurrentOperations - 1)
             
-        case (.high, _), (_, .critical):
-            // High load or critical memory, minimize concurrency
+        case .high:
+            // High load, minimize concurrency
             maxConcurrentOperations = 1
-            
-        default:
-            // Conservative default
-            maxConcurrentOperations = max(2, baseConcurrentOperations / 2)
         }
     }
 }

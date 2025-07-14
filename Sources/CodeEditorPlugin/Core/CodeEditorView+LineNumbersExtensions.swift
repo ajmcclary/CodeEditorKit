@@ -17,7 +17,12 @@ extension CodeEditorView {
         // We should never create a GutterView on macOS
         removeGutter()
         #else
-        // On iOS, gutter is handled by the container view
+        // On iOS/Catalyst, gutter is managed by the text view when used standalone
+        if configuration.display.isLineNumbersEnabled {
+            createGutterIfNeeded()
+        } else {
+            removeGutter()
+        }
         #endif
     }
 

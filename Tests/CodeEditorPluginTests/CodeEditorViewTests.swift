@@ -542,12 +542,14 @@ final class CodeEditorViewTests: XCTestCase {
         textView.isLineNumbersEnabled = true
         XCTAssertNil(textView.gutterView, "GutterView should remain nil even when line numbers are enabled")
         #else
-        // On iOS/Mac Catalyst, gutter is managed by the container view
-        // The text view itself doesn't have a gutter view
-        XCTAssertNil(textView.gutterView)
-        XCTAssertTrue(textView.isLineNumbersEnabled) // But the setting is there
+        // On iOS/Mac Catalyst, when used standalone, the text view manages its own gutter
+        XCTAssertNotNil(textView.gutterView, "Standalone CodeEditorView should have a GutterView when line numbers are enabled")
+        XCTAssertTrue(textView.isLineNumbersEnabled) // Default is true
         textView.isLineNumbersEnabled = false
         XCTAssertFalse(textView.isLineNumbersEnabled)
+        XCTAssertNil(textView.gutterView, "GutterView should be removed when line numbers are disabled")
+        textView.isLineNumbersEnabled = true
+        XCTAssertNotNil(textView.gutterView, "GutterView should be created when line numbers are enabled")
         #endif
     }
 

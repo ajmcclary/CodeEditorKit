@@ -89,8 +89,23 @@ extension CodeEditorView {
         
         // Update adaptive performance mode based on file size
         adaptivePerformanceMode.updateMode(for: textLength, language: language)
+        
+        // Apply adaptive performance configuration, but preserve explicit user settings
         var updatedConfig = configuration
+        
+        // Store user preferences before adaptive mode overwrites them
+        let userLineNumbersSetting = configuration.display.isLineNumbersEnabled
+        let userCodeFoldingSetting = configuration.display.enableCodeFolding
+        let userSyntaxHighlightingSetting = configuration.display.enableSyntaxHighlighting
+        
         adaptivePerformanceMode.applyConfiguration(to: &updatedConfig)
+        
+        // Restore user-specified settings - adaptive mode should not override explicit user choices
+        // Only apply adaptive performance to performance-related settings, not UI preferences
+        updatedConfig.display.isLineNumbersEnabled = userLineNumbersSetting
+        updatedConfig.display.enableCodeFolding = userCodeFoldingSetting
+        updatedConfig.display.enableSyntaxHighlighting = userSyntaxHighlightingSetting
+        
         configuration = updatedConfig
         
         guard syntaxService.shouldApplySyntaxHighlighting(
