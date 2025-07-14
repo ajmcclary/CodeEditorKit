@@ -533,16 +533,16 @@ final class CodeEditorViewTests: XCTestCase {
     func testGutterViewCreation() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has showLineNumbers = true
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // On macOS, line numbers are handled by NSRulerView in the container's scroll view
+        #if canImport(AppKit)
+        // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in the container's scroll view
         // The text view itself should never have a gutter view
-        XCTAssertNil(textView.gutterView, "On macOS, CodeEditorView should not have a GutterView")
+        XCTAssertNil(textView.gutterView, "On macOS/Mac Catalyst, CodeEditorView should not have a GutterView")
         textView.isLineNumbersEnabled = false
         XCTAssertNil(textView.gutterView, "GutterView should remain nil when line numbers are disabled")
         textView.isLineNumbersEnabled = true
         XCTAssertNil(textView.gutterView, "GutterView should remain nil even when line numbers are enabled")
         #else
-        // On iOS/Mac Catalyst, when used standalone, the text view manages its own gutter
+        // On iOS, when used standalone, the text view manages its own gutter
         XCTAssertNotNil(textView.gutterView, "Standalone CodeEditorView should have a GutterView when line numbers are enabled")
         XCTAssertTrue(textView.isLineNumbersEnabled) // Default is true
         textView.isLineNumbersEnabled = false
