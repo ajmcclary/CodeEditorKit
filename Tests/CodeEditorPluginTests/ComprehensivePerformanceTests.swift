@@ -1,8 +1,15 @@
 @testable import CodeEditorPlugin
 import XCTest
 
+#if canImport(os)
+import os
+#endif
+
 /// Comprehensive performance test suite covering all major components
 final class ComprehensivePerformanceTests: XCTestCase {
+    #if canImport(os)
+    private let logger = Logger(subsystem: "CodeEditorPlugin", category: "PerformanceTests")
+    #endif
     // MARK: - Text Processing Performance
     
     @MainActor
@@ -231,13 +238,16 @@ final class ComprehensivePerformanceTests: XCTestCase {
                     for i in 0..<10 {
                         switch i {
                         case 0:
-                            print("zero")
+                            // Removed print statement for SwiftLint compliance
+                            _ = "zero"
 
                         case 1:
-                            print("one")
+                            // Removed print statement for SwiftLint compliance
+                            _ = "one"
 
                         default:
-                            print("other")
+                            // Removed print statement for SwiftLint compliance
+                            _ = "other"
                         }
                     }
                 }
@@ -527,7 +537,9 @@ final class ComprehensivePerformanceTests: XCTestCase {
                     let currentUsage = monitor.getCurrentMemoryUsage()
                     if currentUsage > 500 { // MB threshold
                         let memoryFreed = await monitor.performCleanup()
-                        print("Cleanup freed \(memoryFreed)MB")
+                        #if canImport(os)
+                        logger.debug("Cleanup freed \(memoryFreed)MB")
+                        #endif
                         
                         // Clear some allocations
                         if largeAllocations.count > 5 {
