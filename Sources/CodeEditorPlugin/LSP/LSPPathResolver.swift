@@ -38,7 +38,7 @@ import Foundation
 /// - `LSP_RUST_ANALYZER_PATH`
 /// - `LSP_GOPLS_PATH`
 ///
-/// - SeeAlso: ``LSPManager``, ``LSPManager/LanguageServerConfig``
+/// - SeeAlso: ``LSPManager``, <doc:LSPManager/Language-Server-Configuration>
 @available(macOS 10.15, iOS 13.0, *)
 public struct LSPPathResolver: Sendable {
     // MARK: - Configuration
