@@ -17,10 +17,10 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
     private func generateSimpleSwiftFile(lines: Int) -> String {
         var code = "import Foundation\n\n"
         
-        for i in 0..<lines {
-            code += "let value\(i) = \(i) // Simple constant\n"
-            if i % 5 == 0 {
-                code += "func process\(i)() -> Int { return \(i) * 2 }\n"
+        for index in 0..<lines {
+            code += "let value\(index) = \(index) // Simple constant\n"
+            if index.isMultiple(of: 5) {
+                code += "func process\(index)() -> Int { return \(index) * 2 }\n"
             }
         }
         
@@ -29,17 +29,17 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
     
     private func generateLargeSwiftFile(lines: Int) -> String {
         // Use simplified generation for benchmark tests
-        return generateSimpleSwiftFile(lines: lines)
+        generateSimpleSwiftFile(lines: lines)
     }
     
     private func generateSimpleJSONFile(objects: Int) -> String {
         var json = "[\n"
         
-        for i in 0..<objects {
+        for index in 0..<objects {
             json += """
-              {"id": \(i), "name": "Item \(i)", "value": \(i * 2)}
+              {"id": \(index), "name": "Item \(index)", "value": \(index * 2)}
             """
-            json += i < objects - 1 ? ",\n" : "\n"
+            json += index < objects - 1 ? ",\n" : "\n"
         }
         
         json += "]"
@@ -48,7 +48,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
     
     private func generateLargeJSONFile(objects: Int) -> String {
         // Use simplified generation for benchmark tests
-        return generateSimpleJSONFile(objects: objects)
+        generateSimpleJSONFile(objects: objects)
     }
     
     // MARK: - Swift Highlighting Benchmarks

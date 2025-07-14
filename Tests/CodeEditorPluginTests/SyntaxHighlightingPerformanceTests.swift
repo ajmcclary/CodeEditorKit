@@ -20,19 +20,19 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         """
         
         // Generate simpler Swift code
-        for i in 0..<lines {
-            if i % 15 == 0 {
-                code += "\n// MARK: - Section \(i / 15)\n\n"
+        for index in 0..<lines {
+            if index.isMultiple(of: 15) {
+                code += "\n// MARK: - Section \(index / 15)\n\n"
             }
             
-            if i % 4 == 0 {
-                code += "let constant\(i) = \(i) // Simple constant\n"
-            } else if i % 4 == 1 {
-                code += "var variable\(i) = \"\(i)\" // String variable\n"
-            } else if i % 4 == 2 {
-                code += "func calculate\(i)(_ x: Int) -> Int { return x * \(i) }\n"
+            if index.isMultiple(of: 4) {
+                code += "let constant\(index) = \(index) // Simple constant\n"
+            } else if index % 4 == 1 {
+                code += "var variable\(index) = \"\(index)\" // String variable\n"
+            } else if index % 4 == 2 {
+                code += "func calculate\(index)(_ x: Int) -> Int { return x * \(index) }\n"
             } else {
-                code += "print(\"Line \(i)\")\n"
+                code += "print(\"Line \(index)\")\n"
             }
         }
         
@@ -47,17 +47,17 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         """
         
         // Generate simpler JavaScript code that's still realistic
-        for i in 0..<lines {
-            if i % 10 == 0 {
-                code += "\n// Section \(i / 10)\n"
+        for index in 0..<lines {
+            if index.isMultiple(of: 10) {
+                code += "\n// Section \(index / 10)\n"
             }
             
-            if i % 3 == 0 {
-                code += "const value\(i) = \(i) * 2; // Simple calculation\n"
-            } else if i % 3 == 1 {
-                code += "function process\(i)(data) { return data.map(x => x * \(i)); }\n"
+            if index.isMultiple(of: 3) {
+                code += "const value\(index) = \(index) * 2; // Simple calculation\n"
+            } else if index % 3 == 1 {
+                code += "function process\(index)(data) { return data.map(x => x * \(index)); }\n"
             } else {
-                code += "console.log('Processing item \(i)');\n"
+                code += "console.log('Processing item \(index)');\n"
             }
         }
         
@@ -72,17 +72,17 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         """
         
         // Generate simpler Python code
-        for i in 0..<lines {
-            if i % 10 == 0 {
-                code += "\n# Section \(i / 10)\n"
+        for index in 0..<lines {
+            if index.isMultiple(of: 10) {
+                code += "\n# Section \(index / 10)\n"
             }
             
-            if i % 3 == 0 {
-                code += "value_\(i) = \(i) * 2  # Simple calculation\n"
-            } else if i % 3 == 1 {
-                code += "def process_\(i)(x): return x * \(i)\n"
+            if index.isMultiple(of: 3) {
+                code += "value_\(index) = \(index) * 2  # Simple calculation\n"
+            } else if index % 3 == 1 {
+                code += "def process_\(index)(x): return x * \(index)\n"
             } else {
-                code += "print('Processing item \(i)')\n"
+                code += "print('Processing item \(index)')\n"
             }
         }
         
@@ -279,7 +279,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     func testMemoryUsageWithLargeFile() async {
         let editorView = CodeEditorView()
         let memoryMonitor = MemoryMonitor()
-        let code = generateSwiftCode(lines: 1000)  // Reduced from 50000
+        let code = generateSwiftCode(lines: 1_000)  // Reduced from 50000
         
         // Baseline memory
         let baselineMemory = memoryMonitor.getCurrentMemoryUsage()

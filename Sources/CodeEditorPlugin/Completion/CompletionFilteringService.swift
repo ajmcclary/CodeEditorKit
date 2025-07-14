@@ -117,10 +117,10 @@ internal final class CompletionFilteringService {
         var lastMatchIndex: String.Index?
         var consecutiveMatches = 0
         
-        for (textIndex, _) in text.enumerated() {
+        for textIndex in text.indices {
             guard patternIndex < pattern.endIndex else { break }
             
-            let textChar = text[text.index(text.startIndex, offsetBy: textIndex)]
+            let textChar = text[textIndex]
             let patternChar = pattern[patternIndex]
             
             if textChar == patternChar {

@@ -77,7 +77,7 @@ internal final class CompletionGenerationService {
     // MARK: - Private Methods
     
     private func determineTriggerKind(_ triggerCharacter: String?) -> CompletionTriggerKind {
-        guard let _ = triggerCharacter else { return .manual }
+        guard triggerCharacter != nil else { return .manual }
         
         return .character
     }
