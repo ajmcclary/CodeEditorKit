@@ -356,7 +356,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
                     for index in 0..<100 {
                         _ = try await performanceSystem.track(.syntaxHighlighting) {
                             // Minimal work to prevent hanging
-                            return index
+                            index
                         }
                     }
                     expectation.fulfill()
