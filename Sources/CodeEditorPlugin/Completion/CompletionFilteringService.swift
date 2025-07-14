@@ -117,10 +117,9 @@ internal final class CompletionFilteringService {
         var lastMatchIndex: String.Index?
         var consecutiveMatches = 0
         
-        for textIndex in text.indices {
+        for (offset, textChar) in text.enumerated() {
             guard patternIndex < pattern.endIndex else { break }
             
-            let textChar = text[textIndex]
             let patternChar = pattern[patternIndex]
             
             if textChar == patternChar {
@@ -129,7 +128,7 @@ internal final class CompletionFilteringService {
                 
                 // Bonus for consecutive matches
                 if let last = lastMatchIndex,
-                   text.index(after: last) == text.index(text.startIndex, offsetBy: textIndex) {
+                   text.index(after: last) == text.index(text.startIndex, offsetBy: offset) {
                     consecutiveMatches += 1
                     charScore += Double(consecutiveMatches) * 0.5
                 } else {
@@ -137,7 +136,7 @@ internal final class CompletionFilteringService {
                 }
                 
                 // Bonus for matching at word boundaries
-                if textIndex == 0 || isWordBoundary(at: textIndex - 1, in: text) {
+                if offset == 0 || isWordBoundary(at: offset - 1, in: text) {
                     charScore += 2.0
                 }
                 
@@ -147,7 +146,7 @@ internal final class CompletionFilteringService {
                 }
                 
                 score += charScore
-                lastMatchIndex = text.index(text.startIndex, offsetBy: textIndex)
+                lastMatchIndex = text.index(text.startIndex, offsetBy: offset)
                 patternIndex = pattern.index(after: patternIndex)
             }
         }
