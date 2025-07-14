@@ -88,6 +88,22 @@ extension CodeEditorContainerView {
         // Remove existing constraints
         removeExistingConstraints()
         
+        // Ensure all views are properly added to the hierarchy before creating constraints
+        if !textView.isDescendant(of: self) {
+            addSubview(textView)
+            textView.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        if !gutterView.isDescendant(of: self) {
+            addSubview(gutterView)
+            gutterView.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        if !minimapView.isDescendant(of: self) {
+            addSubview(minimapView)
+            minimapView.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
         var newGutterConstraints: [NSLayoutConstraint] = []
         var newTextViewConstraints: [NSLayoutConstraint] = []
         var newMinimapConstraints: [NSLayoutConstraint] = []
