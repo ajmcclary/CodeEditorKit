@@ -167,7 +167,7 @@ extension CodeEditorView {
     
     public func completionViewController(
         _: some CompletionViewControllerRepresentable,
-        complete item: any CompletionItem,
+        complete item: any CompletionItemView,
         movement _: PlatformTextMovement
     ) {
         // Get the insert text based on the item type

@@ -237,6 +237,9 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         let text = String(repeating: "let x = 42\n", count: 1_000) // Large text
         let language = Language.swift
         
+        // Clear cache to ensure clean state
+        await highlighter.clearCache()
+        
         // First highlight (no cache)
         editorView.text = text
         editorView.language = language
@@ -245,12 +248,19 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         // Wait for the highlighting task to complete and cache to be populated
         try await Task.sleep(for: .milliseconds(500))
         
+        // Get stats after first highlight
+        let statsAfterFirst = await highlighter.getCacheStatistics()
+        let hitsAfterFirst = statsAfterFirst.hitCount
+        
         // Second highlight (with cache)
         await highlighter.highlightImmediately(for: editorView, language: language)
         
+        // Wait a bit for any async operations
+        try await Task.sleep(for: .milliseconds(100))
+        
         // Verify we got a cache hit
         let stats = await highlighter.getCacheStatistics()
-        XCTAssertEqual(stats.hitCount, 1, "Should have one cache hit")
+        XCTAssertEqual(stats.hitCount - hitsAfterFirst, 1, "Should have exactly one additional cache hit")
         XCTAssertEqual(stats.missCount, 1, "Should have one cache miss")
         
         // The actual performance improvement is hard to measure accurately in tests

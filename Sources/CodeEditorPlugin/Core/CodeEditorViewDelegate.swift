@@ -217,7 +217,7 @@ public protocol CodeEditorViewDelegate: AnyObject {
     // MARK: Completion Support
 
     /// Allows customization of completion item insertion
-    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItem)
+    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItemView)
 
     /// Provides a custom completion view controller
     func textViewCompletionViewController(_ textView: CodeEditorView) -> any CompletionViewControllerRepresentable
@@ -273,7 +273,7 @@ extension CodeEditorViewDelegate {
         false
     }
 
-    func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItem) {
+    func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItemView) {
         // Default implementation
     }
 
@@ -307,7 +307,7 @@ extension CodeEditorViewDelegate {
 #if canImport(UIKit)
 @MainActor
 private class NoOpCompletionViewController: UIViewController, CompletionViewControllerRepresentable {
-    var items: [any CompletionItem] = []
+    var items: [any CompletionItemView] = []
     weak var delegate: CompletionViewControllerDelegate?
 
     override func viewDidLoad() {

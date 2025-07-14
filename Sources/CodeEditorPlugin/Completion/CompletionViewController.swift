@@ -6,7 +6,7 @@ import AppKit
 /// Modern completion view controller with table view interface for macOS
 @MainActor
 public final class CompletionViewController: CompletionViewControllerBase, CompletionViewControllerRepresentable {
-    public typealias Item = any CompletionItem
+    public typealias Item = any CompletionItemView
 
     // MARK: - Private Properties
 
@@ -244,7 +244,7 @@ import UIKit
 /// iOS completion view controller implementation
 @MainActor
 public final class CompletionViewController: CompletionViewControllerBase, CompletionViewControllerRepresentable {
-    public typealias Item = any CompletionItem
+    public typealias Item = any CompletionItemView
 
     // MARK: - Private Properties
 
@@ -444,7 +444,7 @@ private final class CompletionTableViewCell: UITableViewCell {
 
 /// Adapter to convert CompletionItemModel to CompletionItem protocol for CompletionViewController
 @MainActor
-internal struct CompletionViewControllerAdapter: CompletionItem {
+internal struct CompletionViewControllerAdapter: CompletionItemView {
     let id: String
     let model: CompletionItemModel
 

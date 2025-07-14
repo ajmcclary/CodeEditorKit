@@ -88,7 +88,7 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
     //     await source?.textView(textView, completionItemsAtLocation: location)
     // }
 
-    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItem) {
+    func textView(_ textView: CodeEditorView, insertCompletionItem item: any CompletionItemView) {
         source?.textView(textView, insertCompletionItem: item)
     }
 

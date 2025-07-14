@@ -13,7 +13,7 @@ import UIKit
 open class CompletionViewControllerBase: PlatformViewController {
     // MARK: - Public Properties
 
-    public var items: [any CompletionItem] = [] {
+    public var items: [any CompletionItemView] = [] {
         didSet {
             updateCompletionItems()
         }

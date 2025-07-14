@@ -54,7 +54,7 @@ import UIKit
 ///
 /// - SeeAlso: ``CompletionItemModel``, ``CompletionProvider``, ``CompletionManager``
 @MainActor
-public protocol CompletionItem: Identifiable, Sendable {
+public protocol CompletionItemView: Identifiable, Sendable {
     /// The platform-specific view representing this completion item.
     ///
     /// This view is displayed in the completion popup. It should be

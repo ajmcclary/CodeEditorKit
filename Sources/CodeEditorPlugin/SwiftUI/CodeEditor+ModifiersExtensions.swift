@@ -230,7 +230,7 @@ extension CodeEditor {
     /// - Returns: A new view with the completion provider attached
     ///
     /// The provider is called when the user triggers code completion and receives
-    /// a `CompletionContext` with the current text, cursor position, and language.
+    /// a `SwiftUICompletionContext` with the current text, cursor position, and language.
     ///
     /// ## Example
     ///
@@ -252,7 +252,7 @@ extension CodeEditor {
     ///     }
     /// ```
     public func codeCompletion(
-        provider: @escaping @Sendable (CompletionContext) async -> [SwiftUICompletionItem]
+        provider: @escaping @Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem]
     ) -> CodeEditor {
         var copy = self
         copy.completionProvider = provider

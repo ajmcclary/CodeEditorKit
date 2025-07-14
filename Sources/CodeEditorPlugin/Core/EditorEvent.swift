@@ -120,7 +120,7 @@ public enum EditorEvent: Sendable {
     ///
     /// Fired when the user selects an item from the completion list.
     /// The associated value contains the selected completion item.
-    case completionItemSelected(any CompletionItem)
+    case completionItemSelected(any CompletionItemView)
     
     // Annotations
     

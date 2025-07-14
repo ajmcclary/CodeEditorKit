@@ -70,8 +70,8 @@ struct OpenDocument {
 // MARK: - Completion Types
 
 @MainActor
-public struct LSPManagerCompletionItem: CompletionItem {
-    public let item: any CompletionItem
+public struct LSPManagerCompletionItem: CompletionItemView {
+    public let item: any CompletionItemView
     public let languageId: String
     public let client: LSPClient
     
@@ -82,7 +82,7 @@ public struct LSPManagerCompletionItem: CompletionItem {
     
     public var view: PlatformView { item.view }
     
-    public init(item: any CompletionItem, languageId: String, client: LSPClient) {
+    public init(item: any CompletionItemView, languageId: String, client: LSPClient) {
         self.item = item
         self.languageId = languageId
         self.client = client

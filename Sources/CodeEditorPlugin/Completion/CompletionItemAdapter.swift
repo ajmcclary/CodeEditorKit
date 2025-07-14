@@ -9,7 +9,7 @@ import UIKit
 
 /// Internal adapter for bridging CompletionItemModel to CompletionItem protocol
 @MainActor
-internal struct CompletionItemAdapter: CompletionItem {
+internal struct CompletionItemAdapter: CompletionItemView {
     let id: String
     let model: CompletionItemModel
 

@@ -21,7 +21,7 @@ public enum PlatformTextMovement: Int {
 public protocol CompletionViewControllerDelegate: AnyObject {
     func completionViewController(
         _ viewController: some CompletionViewControllerRepresentable,
-        complete item: any CompletionItem,
+        complete item: any CompletionItemView,
         movement: PlatformTextMovement
     )
 }

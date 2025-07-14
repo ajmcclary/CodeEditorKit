@@ -6,7 +6,7 @@ import UIKit
 #endif
 
 public protocol CompletionViewControllerRepresentable: PlatformViewController {
-    typealias Item = any CompletionItem
+    typealias Item = any CompletionItemView
 
     var items: [Item] { get set }
     var delegate: CompletionViewControllerDelegate? { get set }

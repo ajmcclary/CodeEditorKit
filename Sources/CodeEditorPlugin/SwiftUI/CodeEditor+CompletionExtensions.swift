@@ -7,7 +7,7 @@ import Foundation
 ///
 /// Contains the current state of the editor when code completion is triggered,
 /// allowing completion providers to generate contextually appropriate suggestions.
-public struct CompletionContext: Sendable {
+public struct SwiftUICompletionContext: Sendable {
     /// The full text content of the editor
     public let text: String
     
@@ -97,7 +97,7 @@ public struct SwiftUICompletionItem {
 /// )
 /// ```
 ///
-/// - SeeAlso: ``SwiftUICompletionItem``, ``CompletionContext``
+/// - SeeAlso: ``SwiftUICompletionItem``, ``SwiftUICompletionContext``
 public enum CompletionKind {
     /// Programming language keywords (if, for, class, etc.).
     ///

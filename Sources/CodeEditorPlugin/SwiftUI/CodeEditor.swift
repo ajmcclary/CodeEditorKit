@@ -166,7 +166,7 @@ public struct CodeEditor: View {
     // Callbacks
     internal var onTextChange: (@Sendable (String) -> Void)?
     internal var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
-    internal var completionProvider: (@Sendable (CompletionContext) async -> [SwiftUICompletionItem])?
+    internal var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
     
     // Debouncing
     private let textDebounceInterval: Duration

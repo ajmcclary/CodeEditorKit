@@ -206,7 +206,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
             false
         }
 
-        func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItem) {
+        func textView(_: CodeEditorView, insertCompletionItem _: any CompletionItemView) {
             // Default implementation
         }
 
@@ -244,7 +244,7 @@ struct UnifiedCodeEditorView: NSViewRepresentable {
 // MARK: - NoOpCompletionViewController
 
 class NoOpCompletionViewController: NSViewController, CompletionViewControllerRepresentable {
-    var items: [any CompletionItem] = []
+    var items: [any CompletionItemView] = []
     weak var delegate: CompletionViewControllerDelegate?
     
     func present(in _: PlatformView, at _: CGPoint) {
@@ -255,7 +255,7 @@ class NoOpCompletionViewController: NSViewController, CompletionViewControllerRe
         // No-op
     }
     
-    func update(with items: [any CompletionItem]) {
+    func update(with items: [any CompletionItemView]) {
         self.items = items
     }
 }

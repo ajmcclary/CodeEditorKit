@@ -370,7 +370,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         
         // Test completion provider
         if let provider = editor.completionProvider {
-            let context = CompletionContext(
+            let context = SwiftUICompletionContext(
                 text: "let x = ",
                 cursorPosition: 8,
                 language: .swift
