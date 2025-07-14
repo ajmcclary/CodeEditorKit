@@ -105,6 +105,27 @@ final class CodeEditorContainerViewTests: XCTestCase {
         guard let containerView = createContainerView() else {
             throw XCTSkip("UI tests not supported in this environment")
         }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On macOS, line numbers are handled by NSRulerView
+        // Initially show line numbers
+        containerView.showsLineNumbers = true
+        XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
+        XCTAssertTrue(containerView.scrollView.rulersVisible)
+        
+        // Hide line numbers
+        containerView.showsLineNumbers = false
+        XCTAssertFalse(containerView.scrollView.hasVerticalRuler)
+        XCTAssertFalse(containerView.scrollView.rulersVisible)
+        
+        // Verify text container inset adjusted
+        let insets = containerView.textView.textContainerInset
+        // When line numbers are hidden, inset width should be less than gutter width (60.0)
+        // Allow for some additional padding by using gutterWidth + lineNumberPadding as threshold
+        let expectedMaxWidth = containerView.configuration.layout.gutterWidth + containerView.configuration.layout.lineNumberPadding
+        XCTAssertLessThan(insets.width, expectedMaxWidth, "Text container inset width should be less than gutter width plus padding when line numbers are hidden")
+        #else
+        // On iOS/Catalyst, GutterView is used
         // Initially show line numbers
         containerView.showsLineNumbers = true
         XCTAssertFalse(containerView.gutterView.isHidden)
@@ -114,16 +135,9 @@ final class CodeEditorContainerViewTests: XCTestCase {
         XCTAssertTrue(containerView.gutterView.isHidden)
         
         // Verify text container inset adjusted
-        #if canImport(UIKit)
         let insets = containerView.textView.textContainerEdgeInsets
         // When line numbers are hidden, left inset should be minimal
         XCTAssertLessThan(insets.left, containerView.configuration.layout.gutterWidth)
-        #else
-        let insets = containerView.textView.textContainerInset
-        // When line numbers are hidden, inset width should be less than gutter width (60.0)
-        // Allow for some additional padding by using gutterWidth + lineNumberPadding as threshold
-        let expectedMaxWidth = containerView.configuration.layout.gutterWidth + containerView.configuration.layout.lineNumberPadding
-        XCTAssertLessThan(insets.width, expectedMaxWidth, "Text container inset width should be less than gutter width plus padding when line numbers are hidden")
         #endif
     }
     

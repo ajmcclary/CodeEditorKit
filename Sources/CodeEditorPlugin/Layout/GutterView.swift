@@ -103,6 +103,10 @@ public class GutterView: PlatformView, GutterViewProtocol {
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func draw(_ dirtyRect: NSRect) {
+        // On macOS, GutterView should not be used - line numbers are handled by NSRulerView
+        // Only draw if we're actually in the view hierarchy (which shouldn't happen on macOS)
+        guard superview != nil else { return }
+        
         super.draw(dirtyRect)
         // Always draw the full bounds to ensure line numbers are visible when scrolling
         drawLineNumbers(in: bounds)
@@ -286,15 +290,17 @@ extension GutterView {
     func observeTextView() {
         guard let textView else { return }
         
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On macOS, GutterView is not used - line numbers are handled by NSRulerView
+        // So we don't need to observe anything
+        return
+        #else
+        
         // Clear any existing observers first
         removeTextViewObservers()
         
         // Observe text changes
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let notificationName = NSText.didChangeNotification
-        #else
         let notificationName = UITextView.textDidChangeNotification
-        #endif
         
         let textObserver = NotificationCenter.default.addObserver(
             forName: notificationName,
@@ -307,11 +313,6 @@ extension GutterView {
         }
         observers.append(textObserver)
         
-        // Observe scrolling
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        // The scroll view will be set up separately via observeScrollView()
-        // since it might not be available when this method is called
-        #else
         // For UIKit, scrolling is handled via the container's UIScrollViewDelegate
         // The container will forward scroll events to us, so we don't set delegate here
         // This avoids conflicts with other components that need the delegate

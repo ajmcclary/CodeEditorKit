@@ -89,6 +89,26 @@ final class LineIndexCache {
         cache = nil
     }
     
+    /// Pre-warm cache for visible content on file load
+    /// This reduces first-run performance variation by building the cache proactively
+    func preWarmCache(for text: String, visibleRange: NSRange) {
+        // Build cache for visible range + buffer to handle immediate scrolling
+        let bufferSize = min(1_000, text.count / 10)
+        let warmupRange = NSRange(
+            location: max(0, visibleRange.location - bufferSize),
+            length: min(
+                text.count - visibleRange.location + bufferSize,
+                visibleRange.length + (bufferSize * 2)
+            )
+        )
+        
+        // Ensure cache is built
+        _ = ensureCacheValid(for: text)
+        
+        // Pre-calculate line info for the warmup range to populate internal caches
+        _ = visibleLineInfo(in: text, visibleRange: warmupRange)
+    }
+    
     // MARK: - Private Methods
     
     private func ensureCacheValid(for text: String) -> CacheEntry {

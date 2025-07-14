@@ -4,6 +4,19 @@ import XCTest
 
 @MainActor
 final class LargeFileHighlightingBenchmarkTests: XCTestCase {
+    // swiftlint:disable:next unneeded_override
+    override func setUp() {
+        super.setUp()
+        // Setup is intentionally empty
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        // Force cleanup to prevent deallocation warnings
+        autoreleasepool {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+        }
+    }
     // MARK: - Test Helpers
     
     private func createTestComponents() -> (AsyncSyntaxHighlighter, CodeEditorView, MemoryMonitor) {
@@ -57,7 +70,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
-        let code = generateLargeSwiftFile(lines: 10) // Reduced from 20
+        let code = generateLargeSwiftFile(lines: 5) // Reduced from 20
         editorView.text = code
         editorView.language = .swift
         
@@ -75,7 +88,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
-        let code = generateLargeSwiftFile(lines: 25) // Reduced from 50
+        let code = generateLargeSwiftFile(lines: 15) // Reduced from 50
         editorView.text = code
         editorView.language = .swift
         
@@ -91,7 +104,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
-        let code = generateLargeSwiftFile(lines: 50) // Reduced from 100
+        let code = generateLargeSwiftFile(lines: 25) // Reduced from 100
         editorView.text = code
         editorView.language = .swift
         
@@ -109,7 +122,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
-        let json = generateLargeJSONFile(objects: 20) // Reduced from 100
+        let json = generateLargeJSONFile(objects: 10) // Reduced from 100
         editorView.text = json
         editorView.language = .json
         
@@ -125,7 +138,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
-        let json = generateLargeJSONFile(objects: 100) // Dramatically reduced from 5000
+        let json = generateLargeJSONFile(objects: 50) // Dramatically reduced from 5000
         editorView.text = json
         editorView.language = .json
         

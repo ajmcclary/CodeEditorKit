@@ -21,16 +21,14 @@ final class QuickIsFlippedTest: XCTestCase {
         // Just verify the text view itself is properly flipped
         XCTAssertTrue(textView.isFlipped, "CodeEditorView handles flipped coordinates internally")
 
-        // Test 3: Enable line numbers and check gutter view
+        // Test 3: Enable line numbers and verify platform-specific behavior
         textView.isLineNumbersEnabled = true
         textView.layoutSubtreeIfNeeded()
 
-        if let gutterView = textView.subviews.first(where: { $0 is GutterView }) {
-            print("GutterView isFlipped: \(gutterView.isFlipped)")
-            XCTAssertTrue(gutterView.isFlipped, "GutterView MUST be flipped")
-        } else {
-            XCTFail("GutterView not found when line numbers are enabled")
-        }
+        // On macOS, line numbers are handled by NSRulerView in the container view,
+        // not by GutterView in the text view itself
+        let hasGutterView = textView.subviews.contains(where: { $0 is GutterView })
+        XCTAssertFalse(hasGutterView, "On macOS, GutterView should NOT be created - line numbers are handled by NSRulerView")
 
         // Test 4: Add text and check coordinate system
         textView.text = "Line 1\nLine 2\nLine 3"

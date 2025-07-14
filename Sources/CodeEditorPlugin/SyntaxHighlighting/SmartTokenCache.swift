@@ -35,6 +35,7 @@ actor SmartTokenCache {
         let accessCount: Int
         let computationTime: Duration
         let textLength: Int
+        let lastViewportRange: NSRange? // Track last visible range
         
         var score: Double {
             // Calculate cache value score based on multiple factors
@@ -45,6 +46,21 @@ actor SmartTokenCache {
             let computationFactor = computationTime.timeInterval * 10.0 // Favor expensive computations
             
             return ageFactor * 0.3 + accessFactor * 0.3 + sizeFactor * 0.2 + computationFactor * 0.2
+        }
+        
+        /// Get viewport-filtered tokens to reduce memory usage
+        func tokensInViewport(_ viewportRange: NSRange) -> [HighlightedToken] {
+            // Return only tokens that overlap with the viewport
+            let expandedRange = NSRange(
+                location: max(0, viewportRange.location - 1_000),
+                length: viewportRange.length + 2_000
+            )
+            
+            return tokens.filter { token in
+                NSLocationInRange(token.range.location, expandedRange) ||
+                NSLocationInRange(NSMaxRange(token.range) - 1, expandedRange) ||
+                NSLocationInRange(expandedRange.location, token.range)
+            }
         }
     }
     
@@ -72,7 +88,7 @@ actor SmartTokenCache {
     
     // MARK: - Public Methods
     
-    func getCachedTokens(for key: CacheKey) -> [HighlightedToken] {
+    func getCachedTokens(for key: CacheKey, viewportRange: NSRange? = nil) -> [HighlightedToken] {
         if var entry = cache[key] {
             // Check if entry is stale
             let age = Duration.seconds(Date.now.timeIntervalSince(entry.timestamp))
@@ -90,7 +106,8 @@ actor SmartTokenCache {
                 timestamp: entry.timestamp,
                 accessCount: entry.accessCount + 1,
                 computationTime: entry.computationTime,
-                textLength: entry.textLength
+                textLength: entry.textLength,
+                lastViewportRange: viewportRange ?? entry.lastViewportRange
             )
             cache[key] = entry
             
@@ -99,6 +116,11 @@ actor SmartTokenCache {
             accessOrder.append(key)
             
             hitCount += 1
+            
+            // Return viewport-filtered tokens if viewport is provided
+            if let viewportRange {
+                return entry.tokensInViewport(viewportRange)
+            }
             return entry.tokens
         }
         
@@ -109,7 +131,8 @@ actor SmartTokenCache {
     func setCachedTokens(
         _ tokens: [HighlightedToken], 
         for key: CacheKey, 
-        computationTime: Duration
+        computationTime: Duration,
+        viewportRange: NSRange? = nil
     ) {
         // Don't cache trivial computations
         guard computationTime >= minComputationTimeToCache else { return }
@@ -119,7 +142,8 @@ actor SmartTokenCache {
             timestamp: Date(),
             accessCount: 1,
             computationTime: computationTime,
-            textLength: key.textLength
+            textLength: key.textLength,
+            lastViewportRange: viewportRange
         )
         
         cache[key] = entry
@@ -135,6 +159,82 @@ actor SmartTokenCache {
         hitCount = 0
         missCount = 0
         evictionCount = 0
+    }
+    
+    /// Optimize cache memory by retaining only viewport-relevant tokens
+    func optimizeForMemory(currentViewport: NSRange?) {
+        guard let viewport = currentViewport else { return }
+        
+        // Update all cache entries to retain only viewport-relevant tokens
+        for (key, entry) in cache {
+            let viewportTokens = entry.tokensInViewport(viewport)
+            
+            // Only update if we're actually reducing token count significantly
+            if Double(viewportTokens.count) < Double(entry.tokens.count) * 0.8 {
+                let optimizedEntry = CacheEntry(
+                    tokens: viewportTokens,
+                    timestamp: entry.timestamp,
+                    accessCount: entry.accessCount,
+                    computationTime: entry.computationTime,
+                    textLength: entry.textLength,
+                    lastViewportRange: viewport
+                )
+                cache[key] = optimizedEntry
+            }
+        }
+    }
+    
+    /// Predictively prefetch tokens for anticipated viewport movement
+    func prefetchTokens(
+        for predictedRange: NSRange,
+        text: String,
+        language: Language,
+        priority _: TaskPriority = .low
+    ) async {
+        // Check if we already have tokens for this range
+        let cacheKey = CacheKey(text: text, language: language, version: 0)
+        let cachedTokens = getCachedTokens(for: cacheKey)
+        
+        // If we have tokens, check if the predicted range is covered
+        if !cachedTokens.isEmpty {
+            let coveredRange = cachedTokens.reduce(NSRange(location: Int.max, length: 0)) { result, token in
+                if result.location == Int.max {
+                    return token.range
+                }
+                return NSUnionRange(result, token.range)
+            }
+            
+            // If predicted range is already covered, no need to prefetch
+            if NSLocationInRange(predictedRange.location, coveredRange) &&
+               NSLocationInRange(NSMaxRange(predictedRange) - 1, coveredRange) {
+                return
+            }
+        }
+        
+        // Schedule background tokenization for the predicted range
+        Task(priority: .low) {
+            // This is a placeholder - actual tokenization would happen through
+            // the syntax highlighting coordinator
+            await Task.yield()
+        }
+    }
+    
+    /// Analyze scroll patterns to predict future viewport positions
+    func predictNextViewport(
+        currentViewport: NSRange,
+        scrollVelocity: Double,
+        documentLength: Int
+    ) -> NSRange? {
+        // Simple prediction based on scroll velocity
+        guard abs(scrollVelocity) > 0.1 else { return nil }
+        
+        let predictedOffset = Int(scrollVelocity * 0.5) // Predict 0.5 seconds ahead
+        let predictedLocation = max(
+            0,
+            min(documentLength - currentViewport.length, currentViewport.location + predictedOffset)
+        )
+        
+        return NSRange(location: predictedLocation, length: currentViewport.length)
     }
     
     func getStatistics() -> TokenCacheStatistics {

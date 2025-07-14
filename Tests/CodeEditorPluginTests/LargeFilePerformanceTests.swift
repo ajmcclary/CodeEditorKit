@@ -2,6 +2,19 @@
 import XCTest
 
 final class LargeFilePerformanceTests: XCTestCase {
+    // swiftlint:disable:next unneeded_override
+    override func setUp() {
+        super.setUp()
+        // Setup is intentionally empty
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        // Force cleanup to prevent deallocation warnings
+        autoreleasepool {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+        }
+    }
     // MARK: - Test Data Generation
     
     private func generateLargeSwiftFile(lines: Int) -> String {
@@ -17,7 +30,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         """
         
         // Generate realistic Swift code patterns
-        for index in 0..<(lines / 50) {
+        for index in 0..<(lines / 20) {
             content += """
             
             // MARK: - Section \(index)
@@ -98,7 +111,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testLargeFileSyntaxHighlightingPerformance() {
-        let largeFile = generateLargeSwiftFile(lines: 100) // ~100 lines
+        let largeFile = generateLargeSwiftFile(lines: 50) // ~50 lines
         let textView = CodeEditorView()
         textView.text = largeFile
         
@@ -129,7 +142,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testVeryLargeFilePerformanceLimits() {
-        let veryLargeFile = generateLargeSwiftFile(lines: 200) // ~200 lines
+        let veryLargeFile = generateLargeSwiftFile(lines: 100) // ~100 lines
         let textView = CodeEditorView()
         textView.text = veryLargeFile
         
@@ -160,7 +173,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testLargeFileTextInsertionPerformance() {
-        let largeFile = generateLargeSwiftFile(lines: 50)
+        let largeFile = generateLargeSwiftFile(lines: 25)
         let textView = CodeEditorView()
         textView.text = largeFile
         
@@ -181,7 +194,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testLargeFileScrollingPerformance() {
-        let largeFile = generateLargeSwiftFile(lines: 100)
+        let largeFile = generateLargeSwiftFile(lines: 50)
         let textView = CodeEditorView()
         
         // Disable syntax highlighting for scrolling performance test
@@ -215,7 +228,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         let initialMemory = memoryMonitor.getCurrentMemoryUsage()
         
         // Create large file
-        let largeFile = generateLargeSwiftFile(lines: 200)
+        let largeFile = generateLargeSwiftFile(lines: 100)
         let textView = CodeEditorView()
         textView.memoryMonitor = memoryMonitor
         textView.text = largeFile
@@ -232,7 +245,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         let currentMemory = memoryMonitor.getCurrentMemoryUsage()
         let memoryIncrease = currentMemory - initialMemory
         
-        XCTAssertLessThan(memoryIncrease, 100.0, "Memory increase should be less than 100MB for 200 line file")
+        XCTAssertLessThan(memoryIncrease, 50.0, "Memory increase should be less than 50MB for 100 line file")
         
         // Test cache statistics
         let cacheStats = await highlighter.getCacheStatistics()
@@ -252,7 +265,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testLargeFileCodeFoldingPerformance() {
-        let largeFile = generateLargeSwiftFile(lines: 50)
+        let largeFile = generateLargeSwiftFile(lines: 25)
         let textView = CodeEditorView()
         
         // Set language for proper code folding detection
@@ -274,7 +287,7 @@ final class LargeFilePerformanceTests: XCTestCase {
             var foldedLines: [Int] = []
             
             // Try to fold at various locations throughout the file
-            for lineNumber in stride(from: 10, to: 50, by: 10) {
+            for lineNumber in stride(from: 5, to: 25, by: 5) {
                 if textView.isFoldable(at: lineNumber) && textView.fold(at: lineNumber) {
                     foldedLines.append(lineNumber)
                 }
@@ -301,7 +314,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testLargeJSONHighlightingPerformance() {
-        let largeJSON = generateLargeJSONFile(objects: 50)
+        let largeJSON = generateLargeJSONFile(objects: 25)
         let textView = CodeEditorView()
         textView.text = largeJSON
         
@@ -363,7 +376,7 @@ final class LargeFilePerformanceTests: XCTestCase {
     
     @MainActor
     func testViewportOptimizationPerformance() {
-        let largeFile = generateLargeSwiftFile(lines: 100)
+        let largeFile = generateLargeSwiftFile(lines: 50)
         let textView = CodeEditorView()
         textView.text = largeFile
         

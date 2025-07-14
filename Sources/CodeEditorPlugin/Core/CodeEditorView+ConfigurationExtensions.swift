@@ -18,13 +18,15 @@ extension CodeEditorView {
         }
         
         // Apply display settings
-        if configuration.display.isLineNumbersEnabled {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            updateGutterVisibility()
-            #endif
-        } else {
-            removeGutter()
-        }
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        // On macOS, line numbers are handled by NSRulerView in the container
+        // Always ensure no GutterView exists on the text view itself
+        updateGutterVisibility()
+        #else
+        // On iOS/Catalyst, gutter is handled by the container view
+        // Text view itself doesn't manage the gutter
+        removeGutter()
+        #endif
         
         if configuration.display.highlightSelectedLine {
             updateSelectedLineHighlight()

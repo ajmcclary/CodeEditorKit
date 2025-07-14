@@ -21,6 +21,27 @@ extension CodeEditorView {
 
         // Invalidate line index cache when text changes
         lineIndexCache.invalidate()
+        
+        // Pre-warm cache for visible content if this is a significant text change
+        // Defer the pre-warming to avoid conflicts with text storage editing
+        if textStorage.editedMask.contains(.editedCharacters) {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                // For macOS, use visible rect to determine character range
+                if let layoutManager = self.layoutManager,
+                   let textContainer = self.textContainer,
+                   let textStorage = self.textStorage {
+                    let glyphRange = layoutManager.glyphRange(forBoundingRect: self.visibleRect, in: textContainer)
+                    let visibleNSRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+                    self.lineIndexCache.preWarmCache(for: textStorage.string, visibleRange: visibleNSRange)
+                }
+                #else
+                let visibleNSRange = NSRange(location: 0, length: min(1_000, self.textStorage.length))
+                self.lineIndexCache.preWarmCache(for: self.textStorage.string, visibleRange: visibleNSRange)
+                #endif
+            }
+        }
 
         // Update gutter when text changes
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -65,6 +86,12 @@ extension CodeEditorView {
         #else
         let textLength = textStorage.length
         #endif
+        
+        // Update adaptive performance mode based on file size
+        adaptivePerformanceMode.updateMode(for: textLength, language: language)
+        var updatedConfig = configuration
+        adaptivePerformanceMode.applyConfiguration(to: &updatedConfig)
+        configuration = updatedConfig
         
         guard syntaxService.shouldApplySyntaxHighlighting(
             isEnabled: isSyntaxHighlightingEnabled,

@@ -193,9 +193,23 @@ public final class CodeEditorContainerView: PlatformView {
     // MARK: - Configuration
     
     /// Updates whether line numbers are shown
-    public var showsLineNumbers: Bool = false {
-        didSet {
-            gutterView.isHidden = !showsLineNumbers
+    public var showsLineNumbers: Bool {
+        get { configuration.display.isLineNumbersEnabled }
+        set {
+            // Update configuration
+            var display = configuration.display
+            display.isLineNumbersEnabled = newValue
+            configuration = configuration.with(display: display)
+            
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            // On macOS, line numbers are handled by NSRulerView, not GutterView
+            // Update the ruler view instead
+            updateMacOSRuler()
+            #else
+            // On iOS/Catalyst, use the GutterView
+            gutterView.isHidden = !newValue
+            #endif
+            
             updateTextContainerInsets()
             
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)

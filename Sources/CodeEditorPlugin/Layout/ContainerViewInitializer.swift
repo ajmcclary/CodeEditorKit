@@ -258,7 +258,7 @@ extension CodeEditorContainerView {
         // Handle text changes for both platforms
         Task { @MainActor [weak self] in
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            self?.gutterView.setNeedsDisplay(self?.gutterView.bounds ?? .zero)
+            // On macOS, don't update gutterView - line numbers are handled by NSRulerView
             self?.minimapView.setNeedsDisplay(self?.minimapView.bounds ?? .zero)
             #else
             self?.gutterView.setNeedsDisplay()

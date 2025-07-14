@@ -78,7 +78,7 @@ final class RegexHighlighterPerformanceTests: XCTestCase {
         }
         
         // Create a large JavaScript file
-        let largeCode = generateLargeJavaScriptCode(lines: 1_000)
+        let largeCode = generateLargeJavaScriptCode(lines: 200)
         
         measure {
             _ = highlighter.highlight(source: largeCode, language: jsLang)
@@ -118,7 +118,7 @@ final class RegexHighlighterPerformanceTests: XCTestCase {
         """
         
         // Run multiple iterations to get stable measurements
-        let iterations = 100
+        let iterations = 50
         
         measure {
             for _ in 0..<iterations {

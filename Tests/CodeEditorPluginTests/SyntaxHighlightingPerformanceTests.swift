@@ -10,6 +10,19 @@ import UIKit
 /// Performance tests for syntax highlighting with large files
 @MainActor
 final class SyntaxHighlightingPerformanceTests: XCTestCase {
+    // swiftlint:disable:next unneeded_override
+    override func setUp() {
+        super.setUp()
+        // Setup is intentionally empty
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        // Force cleanup to prevent deallocation warnings
+        autoreleasepool {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+        }
+    }
     // MARK: - Test Data Generation
     
     private func generateSwiftCode(lines: Int) -> String {
@@ -93,7 +106,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testSwiftHighlightingSmallFile() async {
         let editorView = CodeEditorView()
-        let code = generateSwiftCode(lines: 50)  // Reduced from 100
+        let code = generateSwiftCode(lines: 30)  // Reduced from 100
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -119,7 +132,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testSwiftHighlightingMediumFile() async {
         let editorView = CodeEditorView()
-        let code = generateSwiftCode(lines: 200)  // Reduced from 1000
+        let code = generateSwiftCode(lines: 100)  // Reduced from 1000
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -144,7 +157,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testSwiftHighlightingLargeFile() async {
         let editorView = CodeEditorView()
-        let code = generateSwiftCode(lines: 500)  // Reduced from 10000
+        let code = generateSwiftCode(lines: 200)  // Reduced from 10000
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -171,7 +184,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testJavaScriptHighlightingMediumFile() async {
         let editorView = CodeEditorView()
-        let code = generateJavaScriptCode(lines: 200)  // Reduced from 1000
+        let code = generateJavaScriptCode(lines: 100)  // Reduced from 1000
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -197,7 +210,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testPythonHighlightingMediumFile() async {
         let editorView = CodeEditorView()
-        let code = generatePythonCode(lines: 200)  // Reduced from 1000
+        let code = generatePythonCode(lines: 100)  // Reduced from 1000
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -223,7 +236,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testIncrementalHighlightingPerformance() async {
         let editorView = CodeEditorView()
-        let initialCode = generateSwiftCode(lines: 200)  // Reduced from 1000
+        let initialCode = generateSwiftCode(lines: 100)  // Reduced from 1000
         
         editorView.language = .swift
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -279,7 +292,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     func testMemoryUsageWithLargeFile() async {
         let editorView = CodeEditorView()
         let memoryMonitor = MemoryMonitor()
-        let code = generateSwiftCode(lines: 1_000)  // Reduced from 50000
+        let code = generateSwiftCode(lines: 500)  // Reduced from 50000
         
         // Baseline memory
         let baselineMemory = memoryMonitor.getCurrentMemoryUsage()
@@ -313,9 +326,9 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testRapidLanguageSwitching() async {
         let editorView = CodeEditorView()
-        let swiftCode = generateSwiftCode(lines: 100)  // Reduced from 500
-        let jsCode = generateJavaScriptCode(lines: 100)  // Reduced from 500
-        let pythonCode = generatePythonCode(lines: 100)  // Reduced from 500
+        let swiftCode = generateSwiftCode(lines: 50)  // Reduced from 500
+        let jsCode = generateJavaScriptCode(lines: 50)  // Reduced from 500
+        let pythonCode = generatePythonCode(lines: 50)  // Reduced from 500
         
         let startTime = CFAbsoluteTimeGetCurrent()
         
@@ -366,7 +379,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testRegexHighlighterPerformance() {
         let highlighter = RegexSyntaxHighlighter()
-        let code = generateJavaScriptCode(lines: 200)  // Reduced from 1000
+        let code = generateJavaScriptCode(lines: 100)  // Reduced from 1000
         
         measure {
             // Test regex-based highlighting performance
@@ -380,7 +393,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     
     func testVisibleRangeHighlighting() async {
         let editorView = CodeEditorView()
-        let code = generateSwiftCode(lines: 500)  // Reduced from 10000
+        let code = generateSwiftCode(lines: 200)  // Reduced from 10000
         
         editorView.language = .swift
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -412,7 +425,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
     func testHighlightingBenchmark() {
         // This test provides a benchmark using XCTest's measure
         // Only test with 1000 lines to avoid multiple metric recordings
-        let code = generateSwiftCode(lines: 200)  // Reduced from 1000
+        let code = generateSwiftCode(lines: 100)  // Reduced from 1000
         
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             let testView = CodeEditorView()

@@ -166,6 +166,14 @@ public final class AsyncSyntaxHighlighter {
         let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey)
         if !cachedTokens.isEmpty {
             applyTokens(cachedTokens, to: textView, visibleRange: visibleRange)
+            
+            // Track cache hit
+            ProductionPerformanceMetrics.shared.trackHighlighting(
+                duration: 0.001, // Near-instant for cache hits
+                fileSize: textLength,
+                language: language,
+                cacheHit: true
+            )
             return
         }
         
@@ -203,6 +211,14 @@ public final class AsyncSyntaxHighlighter {
                 let computationTime = Duration.seconds(endTime - startTime)
                 await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
                 
+                // Track performance metrics for production monitoring
+                ProductionPerformanceMetrics.shared.trackHighlighting(
+                    duration: endTime - startTime,
+                    fileSize: textLength,
+                    language: language,
+                    cacheHit: false
+                )
+                
                 // Apply tokens on main thread
                 await MainActor.run {
                     self.applyTokens(tokens, to: textView, visibleRange: visibleRange)
@@ -213,10 +229,7 @@ public final class AsyncSyntaxHighlighter {
     
     nonisolated private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {
         // Run the highlighting computation off the main thread for better performance
-        await Task.detached(priority: .userInitiated) { [coordinator] in
-            // Use the synchronous highlight method which is thread-safe
-            coordinator.highlight(source: text, language: language)
-        }.value
+        await coordinator.highlightAsync(source: text, language: language)
     }
     
     private func highlightWithBackgroundHighlighter(

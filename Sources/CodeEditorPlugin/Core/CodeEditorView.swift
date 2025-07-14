@@ -188,6 +188,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
     
+    /// Adaptive performance mode manager
+    internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
+    
     /// Line index cache for optimized line number calculations
     internal let lineIndexCache = LineIndexCache()
     

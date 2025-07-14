@@ -54,10 +54,16 @@ actor AsyncTextProcessor {
     private var activeTasks: [UUID: Task<ProcessingResult, Error>] = [:]
     
     /// Maximum concurrent operations
-    private let maxConcurrentOperations: Int
+    private var maxConcurrentOperations: Int
+    
+    /// Base concurrent operations limit
+    private let baseConcurrentOperations: Int
     
     /// Current processing load
     private var currentLoad: ProcessingLoad = .idle
+    
+    /// System load monitor
+    private var systemLoadMonitor: SystemLoadMonitor?
     
     /// Performance monitor
     private let performanceMonitor = ProcessingPerformanceMonitor()
@@ -76,8 +82,14 @@ actor AsyncTextProcessor {
     init(memoryMonitor: MemoryMonitor, maxConcurrentOperations: Int? = nil) {
         // Cap at 4 to prevent oversubscription on highly-threaded systems
         let defaultConcurrency = min(4, ProcessInfo.processInfo.activeProcessorCount)
-        self.maxConcurrentOperations = maxConcurrentOperations ?? defaultConcurrency
+        self.baseConcurrentOperations = maxConcurrentOperations ?? defaultConcurrency
+        self.maxConcurrentOperations = self.baseConcurrentOperations
         self.memoryMonitor = memoryMonitor
+        
+        // Initialize system load monitor
+        Task {
+            await self.initializeSystemLoadMonitor()
+        }
     }
     
     deinit {
@@ -400,6 +412,52 @@ actor AsyncTextProcessor {
         
         // Update adaptive settings based on load
         adaptiveSettings.updateForLoad(currentLoad)
+        
+        // Update concurrent operations based on system load
+        updateDynamicConcurrency()
+    }
+    
+    // MARK: - Dynamic Concurrency
+    
+    private func initializeSystemLoadMonitor() async {
+        systemLoadMonitor = SystemLoadMonitor()
+        
+        // Start periodic updates
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+                await self?.updateDynamicConcurrency()
+            }
+        }
+    }
+    
+    private func updateDynamicConcurrency() {
+        guard let monitor = systemLoadMonitor else { return }
+        
+        let systemLoad = monitor.currentSystemLoad()
+        
+        // For now, use a simple approach without async memory pressure check
+        // This avoids the actor isolation issue
+        let memoryPressure: MemoryPressure = .normal
+        
+        // Adjust concurrency based on system conditions
+        switch (systemLoad, memoryPressure) {
+        case (.low, .normal), (.low, .warning):
+            // System is idle, can use full concurrency
+            maxConcurrentOperations = baseConcurrentOperations
+            
+        case (.medium, .normal):
+            // Moderate load, reduce slightly
+            maxConcurrentOperations = max(2, baseConcurrentOperations - 1)
+            
+        case (.high, _), (_, .critical):
+            // High load or critical memory, minimize concurrency
+            maxConcurrentOperations = 1
+            
+        default:
+            // Conservative default
+            maxConcurrentOperations = max(2, baseConcurrentOperations / 2)
+        }
     }
 }
 
@@ -669,6 +727,38 @@ private struct PriorityQueue<T: Comparable> {
             
             heap.swapAt(parentIndex, largestIndex)
             parentIndex = largestIndex
+        }
+    }
+}
+
+// MARK: - System Load Monitor
+
+/// Simple system load monitor
+private struct SystemLoadMonitor {
+    enum SystemLoad {
+        case low
+        case medium
+        case high
+    }
+    
+    func currentSystemLoad() -> SystemLoad {
+        let info = ProcessInfo.processInfo
+        
+        // Get actual system load average
+        var loadavg = [Double](repeating: 0, count: 3)
+        getloadavg(&loadavg, 3)
+        
+        let oneMinuteLoad = loadavg[0]
+        let processorCount = Double(info.activeProcessorCount)
+        
+        let normalizedLoad = oneMinuteLoad / processorCount
+        
+        if normalizedLoad < 0.5 {
+            return .low
+        } else if normalizedLoad < 0.8 {
+            return .medium
+        } else {
+            return .high
         }
     }
 }

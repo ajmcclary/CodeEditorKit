@@ -44,6 +44,11 @@ public final class ViewportManager: ObservableObject {
     /// Active rendering tasks
     private var renderingTasks: [UUID: Task<Void, Never>] = [:]
     
+    /// Scroll velocity for predictive prefetching
+    private var scrollVelocity: Double = 0.0
+    private var lastScrollPosition: CGFloat = 0.0
+    private var lastScrollTime: TimeInterval = 0.0
+    
     // MARK: - Initialization
     
     public init(textView: PlatformTextView, memoryMonitor: MemoryMonitor) {
@@ -111,6 +116,22 @@ public final class ViewportManager: ObservableObject {
         let visibleBounds = textView.bounds
         #endif
         
+        // Calculate scroll velocity
+        let currentTime = ProcessInfo.processInfo.systemUptime
+        let currentPosition = visibleBounds.origin.y
+        
+        if lastScrollTime > 0 {
+            let timeDelta = currentTime - lastScrollTime
+            if timeDelta > 0 && timeDelta < 1.0 { // Only update if within 1 second
+                scrollVelocity = (currentPosition - lastScrollPosition) / timeDelta
+            } else {
+                scrollVelocity = 0.0
+            }
+        }
+        
+        lastScrollPosition = currentPosition
+        lastScrollTime = currentTime
+        
         // Calculate viewport with prefetch area
         let prefetchBounds = calculatePrefetchBounds(from: visibleBounds)
         
@@ -160,6 +181,11 @@ public final class ViewportManager: ObservableObject {
             
             // Trigger viewport-based rendering
             performViewportRendering()
+            
+            // Trigger predictive prefetching if scrolling
+            if abs(scrollVelocity) > 50.0 { // Only prefetch if scrolling fast enough
+                performPredictivePrefetching()
+            }
         }
     }
     
@@ -206,6 +232,58 @@ public final class ViewportManager: ObservableObject {
         // Cancel all tasks for now (could be optimized to check ranges)
         renderingTasks.values.forEach { $0.cancel() }
         renderingTasks.removeAll()
+    }
+    
+    /// Perform predictive prefetching based on scroll velocity
+    private func performPredictivePrefetching() {
+        guard let textView else { return }
+        
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let textLength = textView.string.count
+        #else
+        let textLength = textView.text?.count ?? 0
+        #endif
+        
+        // Predict where the user will scroll to
+        let predictedOffset = Int(scrollVelocity * 0.5) // Predict 0.5 seconds ahead
+        let predictedLocation = max(
+            0,
+            min(textLength - viewport.visibleRange.length, viewport.visibleRange.location + predictedOffset)
+        )
+        
+        let predictedRange = NSRange(
+            location: predictedLocation,
+            length: viewport.visibleRange.length
+        )
+        
+        // Don't prefetch if predicted range overlaps with current prefetch range
+        if NSIntersectionRange(predictedRange, viewport.prefetchRange).length > 
+           predictedRange.length / 2 {
+            return
+        }
+        
+        // Create a prefetch task
+        let taskId = UUID()
+        let prefetchTask = Task(priority: .background) { [weak self] in
+            guard let self else { return }
+            
+            // Ensure layout for predicted range
+            let prefetchRanges = self.splitRangeForBatchProcessing(predictedRange)
+            for range in prefetchRanges {
+                if Task.isCancelled { break }
+                self.textKitBridge.ensureLayout(for: range)
+                
+                // Longer delay for predictive prefetch
+                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            }
+            
+            // Remove task when complete
+            _ = await MainActor.run {
+                self.renderingTasks.removeValue(forKey: taskId)
+            }
+        }
+        
+        renderingTasks[taskId] = prefetchTask
     }
     
     // MARK: - Range Calculations

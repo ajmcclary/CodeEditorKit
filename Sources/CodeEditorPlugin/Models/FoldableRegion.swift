@@ -47,6 +47,7 @@ internal struct CodeFoldingConfiguration {
     
     internal var animatesFolding = true
     internal var saveFoldState = true
+    internal var enableIncrementalUpdates = true
 }
 
 // MARK: - Code Folding Provider Protocol

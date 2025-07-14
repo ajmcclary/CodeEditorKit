@@ -38,6 +38,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 
     private let swiftHighlighter: SwiftSyntaxHighlighter
     private let regexHighlighter: RegexSyntaxHighlighter
+    private let fastJSONTokenizer: FastJSONTokenizer
     private let performanceMonitor: PerformanceMonitor
     
     // Use an actor for managing mutable state
@@ -48,6 +49,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     public init(performanceMonitor: PerformanceMonitor? = nil) {
         swiftHighlighter = SwiftSyntaxHighlighter()
         regexHighlighter = RegexSyntaxHighlighter()
+        fastJSONTokenizer = FastJSONTokenizer()
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
     }
 
@@ -63,6 +65,19 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         switch language {
         case .swift:
             return swiftHighlighter.highlight(source: source)
+            
+        case .json:
+            // Use specialized JSON tokenizer for better performance and stability
+            let tokens = fastJSONTokenizer.tokenize(source)
+            let colorScheme = SyntaxColorScheme.default
+            let attributes = fastJSONTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
+            
+            // Convert to HighlightedToken format
+            return attributes.map { range, attrs in
+                let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
+                let type = TokenType.fromColor(color, scheme: colorScheme)
+                return HighlightedToken(range: range, type: type, text: "")
+            }
             
         case .plainText:
             return []
@@ -84,6 +99,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         // Capture highlighters explicitly
         let swiftHL = swiftHighlighter
         let regexHL = regexHighlighter
+        let jsonTokenizer = fastJSONTokenizer
         
         // Create new task for highlighting
         let task = Task<[HighlightedToken], Never> {
@@ -91,6 +107,19 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
             switch language {
             case .swift:
                 return swiftHL.highlight(source: source)
+                
+            case .json:
+                // Use specialized JSON tokenizer for better performance and stability
+                let tokens = jsonTokenizer.tokenize(source)
+                let colorScheme = SyntaxColorScheme.default
+                let attributes = jsonTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
+                
+                // Convert to HighlightedToken format
+                return attributes.map { range, attrs in
+                    let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
+                    let type = TokenType.fromColor(color, scheme: colorScheme)
+                    return HighlightedToken(range: range, type: type, text: "")
+                }
                 
             case .plainText:
                 return []
@@ -479,6 +508,23 @@ public enum TokenType: String, CaseIterable, Sendable {
     }
     #endif
 
+    /// Convert from color to closest token type
+    static func fromColor(_ color: PlatformColor, scheme: SyntaxColorScheme) -> Self {
+        // Compare with scheme colors to find best match
+        if color == scheme.keyword { return .keyword }
+        if color == scheme.string { return .string }
+        if color == scheme.number { return .number }
+        if color == scheme.comment { return .comment }
+        if color == scheme.type { return .type }
+        if color == scheme.function { return .function }
+        if color == scheme.property { return .property }
+        if color == scheme.operator { return .operator }
+        if color == scheme.punctuation { return .punctuation }
+        if color == scheme.preprocessor { return .preprocessor }
+        if color == scheme.error { return .unknown }
+        return .identifier // Default
+    }
+    
     /// Convert from SwiftSyntax token type
     init(fromSwiftType swiftType: SwiftTokenType) {
         switch swiftType {

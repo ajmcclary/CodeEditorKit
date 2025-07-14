@@ -23,6 +23,12 @@ internal class CodeFoldingEngine: ObservableObject {
     private let providerRegistry = FoldingProviderRegistry()
     private let operationsService = FoldingOperationsService()
     private var updateTask: Task<Void, Never>?
+    
+    // MARK: - Caching
+    
+    private var foldRegionCache: [Int: [FoldableRegion]] = [:] // Hash -> Regions
+    private var lastTextHash: Int = 0
+    private var lastLanguage: Language = .plainText
 
     // MARK: - Configuration
 
@@ -99,6 +105,35 @@ internal class CodeFoldingEngine: ObservableObject {
     internal func isStartOfFoldableRegion(_ line: Int) -> Bool {
         operationsService.isStartOfFoldableRegion(line, regions: foldableRegions)
     }
+    
+    // MARK: - Cache Management
+    
+    private func combineHashes(_ hash1: Int, _ hash2: Int) -> Int {
+        // Simple hash combination
+        var hasher = Hasher()
+        hasher.combine(hash1)
+        hasher.combine(hash2)
+        return hasher.finalize()
+    }
+    
+    private func maintainCacheSize() {
+        let maxCacheSize = 10
+        if foldRegionCache.count > maxCacheSize {
+            // Remove oldest entries (simple FIFO)
+            let keysToRemove = foldRegionCache.count - maxCacheSize
+            let sortedKeys = foldRegionCache.keys.sorted()
+            for index in 0..<keysToRemove where index < sortedKeys.count {
+                foldRegionCache.removeValue(forKey: sortedKeys[index])
+            }
+        }
+    }
+    
+    /// Clear the cache when memory pressure is detected
+    internal func clearCache() {
+        foldRegionCache.removeAll()
+        lastTextHash = 0
+        lastLanguage = .plainText
+    }
 
     // MARK: - Region Detection
 
@@ -111,6 +146,56 @@ internal class CodeFoldingEngine: ObservableObject {
 
             await self.detectFoldableRegions()
         }
+    }
+    
+    /// Update foldable regions incrementally for a specific range
+    internal func updateFoldableRegions(in editedRange: NSRange, changeInLength: Int) {
+        guard configuration.enableIncrementalUpdates else {
+            // Fall back to full update
+            updateFoldableRegions()
+            return
+        }
+        
+        // For small edits, try to update incrementally
+        if changeInLength < 100 && editedRange.length < 100 {
+            updateTask?.cancel()
+            
+            updateTask = Task { [weak self] in
+                guard let self else { return }
+                
+                await self.incrementalUpdate(editedRange: editedRange, changeInLength: changeInLength)
+            }
+        } else {
+            // For large edits, do full update
+            updateFoldableRegions()
+        }
+    }
+    
+    private func incrementalUpdate(editedRange: NSRange, changeInLength: Int) async {
+        // Adjust existing regions based on the edit
+        let adjustedRegions = foldableRegions.map { region in
+            var adjustedRegion = region
+            
+            // If edit is before the region, shift it
+            if editedRange.location < region.range.location {
+                adjustedRegion.range.location += changeInLength
+            }
+            // If edit is within the region, adjust length
+            else if editedRange.location >= region.range.location && 
+                    editedRange.location < NSMaxRange(region.range) {
+                adjustedRegion.range.length += changeInLength
+            }
+            
+            return adjustedRegion
+        }
+        
+        // Filter out invalid regions
+        foldableRegions = adjustedRegions.filter { region in
+            region.range.location >= 0 && region.range.length > 0
+        }
+        
+        // Clear cache as text has changed
+        lastTextHash = 0
     }
 
     private func detectFoldableRegions() async {
@@ -133,6 +218,20 @@ internal class CodeFoldingEngine: ObservableObject {
         #else
         let text = textView.textStorage.string
         #endif
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        // Check cache first
+        let currentTextHash = text.hashValue
+        let cacheKey = combineHashes(currentTextHash, language.hashValue)
+        
+        if currentTextHash == lastTextHash && 
+           language == lastLanguage,
+           let cachedRegions = foldRegionCache[cacheKey] {
+            // Use cached regions
+            foldableRegions = cachedRegions
+            return
+        }
 
         isProcessing = true
         defer { isProcessing = false }
@@ -148,12 +247,26 @@ internal class CodeFoldingEngine: ObservableObject {
                 region.range.length >= configuration.minimumLineCount
             }
             .sorted { $0.range.location < $1.range.location }
+        
+        // Update cache
+        lastTextHash = currentTextHash
+        lastLanguage = language
+        maintainCacheSize()
+        foldRegionCache[cacheKey] = validRegions
 
         // Build hierarchy
         let hierarchicalRegions = buildHierarchy(from: validRegions)
 
         // Update regions, preserving fold state
         updateRegions(hierarchicalRegions)
+        
+        // Track performance metrics
+        let endTime = CFAbsoluteTimeGetCurrent()
+        ProductionPerformanceMetrics.shared.trackCodeFolding(
+            duration: endTime - startTime,
+            regionCount: hierarchicalRegions.count,
+            fileSize: text.count
+        )
     }
 
     private func buildHierarchy(from regions: [FoldableRegion]) -> [FoldableRegion] {

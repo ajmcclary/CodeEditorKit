@@ -13,11 +13,9 @@ extension CodeEditorView {
     
     internal func updateGutterVisibility() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if isLineNumbersEnabled {
-            createGutterIfNeeded()
-        } else {
-            removeGutter()
-        }
+        // On macOS, line numbers are handled by NSRulerView in the container's scroll view
+        // We should never create a GutterView on macOS
+        removeGutter()
         #else
         // On iOS, gutter is handled by the container view
         #endif
