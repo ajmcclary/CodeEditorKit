@@ -17,7 +17,7 @@ extension CodeEditorView {
         // We should never create a GutterView on macOS
         removeGutter()
         #else
-        // On iOS/Catalyst, gutter is managed by the text view when used standalone
+        // On iOS/Mac Catalyst, gutter is managed by the text view when used standalone
         if configuration.display.isLineNumbersEnabled {
             createGutterIfNeeded()
         } else {
@@ -89,7 +89,7 @@ extension CodeEditorView {
                 height: self.bounds.height
             )
             #else
-            // For iOS, the gutter should be positioned fixed and not scroll with content
+            // For iOS/Mac Catalyst, the gutter should be positioned fixed and not scroll with content
             // It should be tall enough to show all visible line numbers
             gutter.frame = CGRect(
                 x: 0,
