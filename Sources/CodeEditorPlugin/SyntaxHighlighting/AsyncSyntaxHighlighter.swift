@@ -32,14 +32,16 @@ public final class AsyncSyntaxHighlighter {
     
     // MARK: - Initialization
     
-    public init(memoryMonitor: MemoryMonitor, debounceInterval: Duration = .milliseconds(300)) {
+    public init(memoryMonitor: MemoryMonitor, debounceInterval: Duration = .milliseconds(300), enablePeriodicOptimization: Bool = true) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
         self.memoryMonitor = memoryMonitor
         
-        // Set up periodic cache optimization
-        setupPeriodicCacheOptimization()
+        // Set up periodic cache optimization (can be disabled for tests)
+        if enablePeriodicOptimization {
+            setupPeriodicCacheOptimization()
+        }
         
         // Register cache with memory monitor
         registerCacheWithMemoryMonitor()

@@ -295,14 +295,20 @@ actor SmartTokenCache {
     // MARK: - Private Methods
     
     private func evictIfNeeded() {
-        // Evict based on memory usage
-        while estimateMemoryUsage() > maxMemoryUsageMB && !cache.isEmpty {
+        // Evict based on memory usage with circuit breaker to prevent infinite loops
+        var iterations = 0
+        let maxIterations = cache.count + 10 // Safety limit to prevent infinite loops
+        
+        while estimateMemoryUsage() > maxMemoryUsageMB && !cache.isEmpty && iterations < maxIterations {
             evictLeastValuableEntry()
+            iterations += 1
         }
         
-        // Evict based on cache size
-        while cache.count > maxCacheSize && !cache.isEmpty {
+        // Evict based on cache size with circuit breaker
+        iterations = 0
+        while cache.count > maxCacheSize && !cache.isEmpty && iterations < maxIterations {
             evictLeastValuableEntry()
+            iterations += 1
         }
     }
     
