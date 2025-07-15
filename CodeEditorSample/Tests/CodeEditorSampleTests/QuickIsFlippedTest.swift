@@ -28,7 +28,8 @@ final class QuickIsFlippedTest: XCTestCase {
         // On macOS, line numbers are handled by NSRulerView in the container view,
         // not by GutterView in the text view itself
         let hasGutterView = textView.subviews.contains(where: { $0 is GutterView })
-        XCTAssertFalse(hasGutterView, "On macOS, GutterView should NOT be created - line numbers are handled by NSRulerView")
+        let message = "On macOS, GutterView should NOT be created - line numbers are handled by NSRulerView"
+        XCTAssertFalse(hasGutterView, message)
 
         // Test 4: Add text and check coordinate system
         textView.text = "Line 1\nLine 2\nLine 3"

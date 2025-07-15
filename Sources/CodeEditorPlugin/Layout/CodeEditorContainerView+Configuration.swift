@@ -135,10 +135,11 @@ extension CodeEditorContainerView {
             right: minimapWidth + padding
         )
         #else
-        // For iOS, include gutter width in insets since gutter might be overlaid
+        // For iOS, only include gutter width if line numbers are actually shown
+        let leftInset = showsLineNumbers ? (gutterWidth + padding) : padding
         let newInsets = EdgeInsets(
             top: currentInsets.top,
-            left: gutterWidth + padding,
+            left: leftInset,
             bottom: currentInsets.bottom,
             right: minimapWidth + padding
         )

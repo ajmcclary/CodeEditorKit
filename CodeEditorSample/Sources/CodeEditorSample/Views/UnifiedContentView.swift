@@ -130,6 +130,10 @@ struct UnifiedContentView: View {
             // Main editor view
             editorView
                 .environmentObject(appState)
+                #if canImport(UIKit)
+                // Fix for iPad: Ensure the editor fills the available width
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                #endif
         }
         .navigationTitle("CodeEditor Configuration Demo")
     }

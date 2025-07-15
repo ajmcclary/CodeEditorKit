@@ -74,7 +74,8 @@ public class GutterView: PlatformView, GutterViewProtocol {
         // Make gutter transparent so it doesn't block text
         layer?.backgroundColor = PlatformColors.clear.cgColor
         #else
-        backgroundColor = PlatformColors.controlBackground
+        // Make gutter transparent on iOS/Catalyst as well to avoid visible white space
+        backgroundColor = PlatformColors.clear
         setupDisplayLink()
         #endif
         

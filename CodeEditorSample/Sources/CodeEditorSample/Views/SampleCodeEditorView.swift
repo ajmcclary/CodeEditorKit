@@ -96,6 +96,7 @@ struct SampleCodeEditorView: View {
             CodeEditor(text: $text)
                 .codeLanguage(detectLanguage(from: language))
                 .environment(\.codeEditorConfiguration, appState.coordinator.configuration)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
                     // iOS CodeEditor appeared
                 }

@@ -60,17 +60,17 @@ extension CodeEditorContainerView {
         textView.translatesAutoresizingMaskIntoConstraints = false
         minimapView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Set up constraints based on configuration
-        rebuildConstraints()
-        
         // Set the text view's delegate
         textView.delegate = self
         
-        // Apply configuration
-        configuration.apply(to: textView)
-        
         // Configure gutter
         gutterView.textView = textView
+        
+        // Apply configuration BEFORE building constraints
+        configuration.apply(to: textView)
+        
+        // Set up constraints based on configuration
+        rebuildConstraints()
     }
     
     private func removeExistingConstraints() {
@@ -110,6 +110,12 @@ extension CodeEditorContainerView {
         
         // Configure gutter constraints if line numbers are shown
         if configuration.display.isLineNumbersEnabled {
+            // Ensure gutter is added to view hierarchy
+            if gutterView.superview == nil {
+                addSubview(gutterView)
+                gutterView.translatesAutoresizingMaskIntoConstraints = false
+            }
+            
             newGutterConstraints = [
                 gutterView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 gutterView.topAnchor.constraint(equalTo: topAnchor),
@@ -118,10 +124,16 @@ extension CodeEditorContainerView {
             ]
             gutterView.isHidden = false
         } else {
+            // When line numbers are disabled, hide gutter and set width to 0
             gutterView.isHidden = true
+            // Add a zero-width constraint to ensure gutter takes no space
+            newGutterConstraints = [
+                gutterView.widthAnchor.constraint(equalToConstant: 0)
+            ]
         }
         
         // Configure text view constraints
+        // Always connect text view directly to container when gutter is hidden
         let textViewLeading = configuration.display.isLineNumbersEnabled ?
             textView.leadingAnchor.constraint(equalTo: gutterView.trailingAnchor) :
             textView.leadingAnchor.constraint(equalTo: leadingAnchor)
@@ -129,6 +141,10 @@ extension CodeEditorContainerView {
         let textViewTrailing = configuration.display.showMinimap ?
             textView.trailingAnchor.constraint(equalTo: minimapView.leadingAnchor) :
             textView.trailingAnchor.constraint(equalTo: trailingAnchor)
+        
+        // Set high priority to ensure constraints are respected
+        textViewLeading.priority = .required
+        textViewTrailing.priority = .required
         
         newTextViewConstraints = [
             textViewLeading,

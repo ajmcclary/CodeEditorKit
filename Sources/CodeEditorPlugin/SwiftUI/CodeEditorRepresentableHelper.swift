@@ -127,6 +127,11 @@ enum CodeEditorRepresentableHelper {
         proposal: ProposedViewSize,
         configuration: EditorConfiguration
     ) -> CGSize? {
+        // If proposal has explicit dimensions, respect them
+        if let proposedWidth = proposal.width, let proposedHeight = proposal.height {
+            return CGSize(width: proposedWidth, height: proposedHeight)
+        }
+        
         // Save current frame
         let originalFrame = textView.frame
         
