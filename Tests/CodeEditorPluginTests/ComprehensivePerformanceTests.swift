@@ -110,6 +110,23 @@ final class ComprehensivePerformanceTests: XCTestCase {
     }
     
     @MainActor
+    func testOptimizedFuzzyMatcherPerformance() throws {
+        let matcher = OptimizedFuzzyMatcher()
+        
+        // Generate same candidates for fair comparison
+        let candidates = (0..<10_000).map { "function\($0)WithLongName" }
+        
+        measure {
+            // Test same patterns as original test
+            let patterns = ["func", "with", "name", "f100", "fwln"]
+            for pattern in patterns {
+                let results = matcher.match(pattern: pattern, candidates: candidates)
+                XCTAssertFalse(results.isEmpty)
+            }
+        }
+    }
+    
+    @MainActor
     func testSymbolNavigatorPerformance() throws {
         let navigator = SymbolNavigator()
         let textView = CodeEditorView(frame: .zero)
@@ -625,6 +642,30 @@ final class ComprehensivePerformanceTests: XCTestCase {
             #else
             wait(for: [debounceExpectation, throttleExpectation], timeout: 4.0)
             #endif
+        }
+    }
+    
+    @MainActor
+    func testOptimizedDebouncePerformance() throws {
+        let manager = AsyncOperationManager()
+        
+        measure {
+            let expectation = self.expectation(description: "Optimized Debouncing")
+            
+            Task {
+                // Test fire-and-forget debouncing (much faster)
+                for index in 0..<1_000 {
+                    await manager.debounceFireAndForget(key: "test-debounce", delay: 0.001) {
+                        _ = index
+                    }
+                }
+                
+                // Wait a bit for operations to complete
+                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                expectation.fulfill()
+            }
+            
+            wait(for: [expectation], timeout: 1.0)
         }
     }
     

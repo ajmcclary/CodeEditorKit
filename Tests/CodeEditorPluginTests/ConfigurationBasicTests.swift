@@ -6,11 +6,11 @@ import UIKit
 @testable import CodeEditorPlugin
 import XCTest
 
+/// Basic configuration tests separated from ConfigurationTests due to test discovery issues
 @MainActor
-final class ConfigurationTests: XCTestCase {
+final class ConfigurationBasicTests: XCTestCase {
     // MARK: - CodeEditorView Configuration Tests
 
-    @MainActor
     func testCodeEditorViewDefaults() {
         let textView = CodeEditorView(frame: .zero)
 
@@ -24,7 +24,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
     }
 
-    @MainActor
     func testCodeEditorViewConfigurationChanges() {
         let textView = CodeEditorView(frame: .zero)
 
@@ -49,7 +48,6 @@ final class ConfigurationTests: XCTestCase {
 
     // MARK: - Syntax Highlighting Configuration Tests
 
-    @MainActor
     func testSyntaxHighlightingLanguages() {
         let coordinator = SyntaxHighlightingCoordinator()
 
@@ -63,7 +61,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(supportedExtensions.contains("json"))
     }
 
-    @MainActor
     func testTokenTypeColors() {
         // Test that each token type has an adaptive color
         for tokenType in TokenType.allCases {
@@ -74,7 +71,6 @@ final class ConfigurationTests: XCTestCase {
 
     // MARK: - Text Container Configuration Tests
 
-    @MainActor
     func testTextContainerConfiguration() {
         let textView = CodeEditorView(frame: .zero)
 
@@ -99,7 +95,6 @@ final class ConfigurationTests: XCTestCase {
 
     // MARK: - Annotation Configuration Tests
 
-    @MainActor
     func testAnnotationAddition() {
         let textView = CodeEditorView(frame: .zero)
         textView.text = "Test content"
@@ -117,10 +112,4 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.count, 1)
         XCTAssertEqual(textView.allAnnotations.first?.id, "test")
     }
-
-    deinit {
-        // Cleanup if needed
-    }
 }
-
-// Note: Plugin system has been removed and functionality integrated directly into CodeEditorView

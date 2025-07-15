@@ -1,0 +1,23 @@
+Building for debugging...
+[0/2] Write sources
+[1/2] Write swift-version-39B54973F684ADAB.txt
+[3/4] Compiling CodeEditorPlugin OptimizedFuzzyMatcher.swift
+/Users/ajmcclary/Dev/CodeEditorPlugin/Sources/CodeEditorPlugin/Completion/OptimizedFuzzyMatcher.swift:135:13: warning: initialization of immutable value 'resultsQueue' was never used; consider replacing with assignment to '_' or removing it [#no-usage]
+133 |     private func matchParallel(pattern: [Character], candidates: [String]) -> [MatchResult] {
+134 |         let group = DispatchGroup()
+135 |         let resultsQueue = DispatchQueue(label: "results-queue")
+    |             `- warning: initialization of immutable value 'resultsQueue' was never used; consider replacing with assignment to '_' or removing it [#no-usage]
+136 |         let resultsLock = NSLock()
+137 |         var allResults: [(result: MatchResult, quickScore: Double)] = []
+
+/Users/ajmcclary/Dev/CodeEditorPlugin/Sources/CodeEditorPlugin/Completion/OptimizedFuzzyMatcher.swift:160:17: warning: mutation of captured var 'allResults' in concurrently-executing code [#SendableClosureCaptures]
+158 |                 
+159 |                 resultsLock.lock()
+160 |                 allResults.append(contentsOf: localResults)
+    |                 `- warning: mutation of captured var 'allResults' in concurrently-executing code [#SendableClosureCaptures]
+161 |                 resultsLock.unlock()
+162 |             }
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[4/4] Emitting module CodeEditorPlugin
+Build complete! (4.00s)
