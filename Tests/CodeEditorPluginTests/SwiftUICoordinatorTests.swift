@@ -164,16 +164,17 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     @MainActor
     func testTextUpdateFromEditor() async throws {
-        var capturedText = ""
+        var bindingText = ""
+        var onTextChangeText: String?
         let textBinding = Binding<String>(
-            get: { capturedText },
-            set: { capturedText = $0 }
+            get: { bindingText },
+            set: { bindingText = $0 }
         )
         
         let coordinator = CodeEditorCoordinator(
             text: textBinding,
             onTextChange: { newText in
-                capturedText = newText
+                onTextChangeText = newText
             },
             onSelectionChange: nil
         )
@@ -181,11 +182,14 @@ final class SwiftUICoordinatorTests: XCTestCase {
         // Simulate text change from editor
         coordinator.handleTextChange("new text from editor")
         
+        // The onTextChange callback should be called immediately
+        XCTAssertEqual(onTextChangeText, "new text from editor")
+        
         // Wait for debounce interval (100ms by default) plus a buffer
         try await Task.sleep(for: .milliseconds(200))
         
         // The binding should have been updated after the debounce
-        XCTAssertEqual(textBinding.wrappedValue, "new text from editor")
+        XCTAssertEqual(bindingText, "new text from editor")
     }
     
     @MainActor

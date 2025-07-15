@@ -452,7 +452,9 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
     init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
         super.init()
         self.textBinding = text
+        self.onTextChange = onTextChange
         self.onTextChangeCallback = onTextChange
+        self.onSelectionChange = onSelectionChange
         self.onSelectionChangeCallback = onSelectionChange
     }
 }
@@ -465,7 +467,9 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate
     init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
         super.init()
         self.textBinding = text
+        self.onTextChange = onTextChange
         self.onTextChangeCallback = onTextChange
+        self.onSelectionChange = onSelectionChange
         self.onSelectionChangeCallback = onSelectionChange
     }
     
