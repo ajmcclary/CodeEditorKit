@@ -289,3 +289,4 @@ try csv.write(to: csvURL)
 - <doc:Configuration-System>
 - <doc:Swift6-Concurrency>
 - <doc:Architecture-Overview>
+- <doc:Performance-Optimization-Integration>

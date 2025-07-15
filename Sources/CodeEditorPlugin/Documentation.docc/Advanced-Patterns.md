@@ -570,6 +570,7 @@ let memoryOptimizedConfig = EditorConfigurationBuilder()
 
 - <doc:Architecture-Overview>
 - <doc:Performance-Monitoring>
+- <doc:Performance-Optimization-Integration>
 - <doc:Plugin-Architecture>
 - <doc:Troubleshooting>
 - <doc:Configuration-System>

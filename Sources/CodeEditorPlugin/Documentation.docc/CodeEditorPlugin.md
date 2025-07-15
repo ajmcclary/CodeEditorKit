@@ -66,6 +66,7 @@ See <doc:QuickStart> for more examples and advanced usage.
 - <doc:Syntax-Highlighting>
 - <doc:Annotation-System>
 - <doc:Performance-Monitoring>
+- <doc:Performance-Optimization-Integration>
 - <doc:MemoryMonitor-Injection>
 - <doc:Unified-Event-System>
 - <doc:Code-Folding-API>
