@@ -313,7 +313,7 @@ final class SwiftUIModifierTests: XCTestCase {
             set: { _ in }
         )
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let editor = CodeEditor(text: binding)
                 .codeLanguage(.swift)
                 .codeTheme(.dark)

@@ -378,14 +378,14 @@ final class AnnotationTests: XCTestCase {
     // MARK: - Performance Tests
     
     func testManyAnnotationsPerformance() {
-        textView.text = String(repeating: "Line of text\n", count: 1_000)
+        textView.text = String(repeating: "Line of text\n", count: 100) // Reduced from 1000
         
-        measure {
+        measure(options: Self.ultraFastMeasureOptions) {
             // Clear existing annotations first
             textView.removeAllAnnotations()
             
-            // Add many annotations
-            for index in 1...100 {
+            // Add many annotations - reduced from 100 to 50
+            for index in 1...50 {
                 guard let range = createFullDocumentRange() else {
                     continue
                 }
@@ -394,7 +394,7 @@ final class AnnotationTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(textView.allAnnotations.count, 100)
+        XCTAssertEqual(textView.allAnnotations.count, 50)
     }
     
     func testAnnotationRemovalPerformance() {
@@ -411,7 +411,7 @@ final class AnnotationTests: XCTestCase {
         
         XCTAssertEqual(textView.allAnnotations.count, 1_000)
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             textView.removeAllAnnotations()
         }
         

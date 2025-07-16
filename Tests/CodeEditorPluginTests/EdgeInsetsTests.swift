@@ -179,7 +179,7 @@ final class EdgeInsetsTests: XCTestCase {
     // MARK: - Performance Tests
     
     func testEdgeInsetsCreationPerformance() {
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<10_000 {
                 _ = EdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
             }
@@ -189,7 +189,7 @@ final class EdgeInsetsTests: XCTestCase {
     func testEdgeInsetsConversionPerformance() {
         let edgeInsets = EdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<10_000 {
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 _ = edgeInsets.nsEdgeInsets
@@ -205,7 +205,7 @@ final class EdgeInsetsTests: XCTestCase {
         let rect = CGRect(x: 0, y: 0, width: 100, height: 100)
         let insets = EdgeInsets(top: 10, left: 20, bottom: 30, right: 40)
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<10_000 {
                 _ = insets.apply(to: rect)
             }

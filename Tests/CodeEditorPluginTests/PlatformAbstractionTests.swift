@@ -316,7 +316,7 @@ final class PlatformAbstractionTests: XCTestCase {
 
 extension PlatformAbstractionTests {
     func testCapabilityDetectionPerformance() {
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let capabilities = PlatformCapabilities.shared
             _ = capabilities.currentPlatform
             _ = capabilities.supportsTextKit2
@@ -326,7 +326,7 @@ extension PlatformAbstractionTests {
     }
     
     func testConfigurationCreationPerformance() {
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let capabilities = PlatformCapabilities.shared
             _ = capabilities.recommendedConfiguration()
         }

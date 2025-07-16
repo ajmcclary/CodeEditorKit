@@ -34,10 +34,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Reduced from 10,000 to 1,000 lines
         let largeText = String(repeating: "This is a line of text.\n", count: 1_000)
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
                 textView.isLineNumbersEnabled = true
@@ -56,10 +53,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Reduced from 10,000 to 1,000 lines
         let largeText = String(repeating: "This is a line of text.\n", count: 1_000)
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
                 textView.isLineNumbersEnabled = false
@@ -89,10 +83,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Reduced from 100 to 20 repetitions
         let largeCode = String(repeating: swiftCode + "\n", count: 20)
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeCode
                 textView.language = .swift
@@ -113,10 +104,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.textContainer.widthTracksTextView = true
         #endif
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Simulate scrolling by changing the visible rect
                 let visibleRect = CGRect(x: 0, y: 0, width: 400, height: 600)
@@ -142,10 +130,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         let sampleText = "Sample text for configuration testing"
         textView.text = sampleText
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 5
-        
-        measure(options: options) {
+        measure(options: Self.standardMeasureOptions) {
             autoreleasepool {
                 // Toggle multiple configurations
                 textView.isLineNumbersEnabled.toggle()
@@ -190,10 +175,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         ]
         #endif
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 5
-        
-        measure(options: options) {
+        measure(options: Self.standardMeasureOptions) {
             autoreleasepool {
                 for scheme in colorSchemes {
                     textView.backgroundColor = scheme.bg
@@ -223,10 +205,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Reduced from 100 to 20 repetitions
         let largeText = String(repeating: textWithSubstitutions + "\n", count: 20)
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -293,10 +272,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Create multiple text views with full configuration
         var textViews: [CodeEditorView] = []
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Reduced from 10 to 3 text views
                 for _ in 0..<3 {
@@ -345,10 +321,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         #endif
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Force layout using TextKit2-compatible method
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)

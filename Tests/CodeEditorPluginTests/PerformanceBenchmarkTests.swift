@@ -5,23 +5,6 @@ import XCTest
 final class PerformanceBenchmarkTests: XCTestCase {
     deinit {}
     
-    override func setUp() {
-        super.setUp()
-        // Clean environment before each test
-        autoreleasepool {
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
-        }
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        // Force cleanup to prevent memory issues between tests
-        autoreleasepool {
-            // Give the system time to clean up autorelease pools
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
-        }
-    }
-    
     // MARK: - Completion Performance Tests
     
     @MainActor
@@ -126,10 +109,9 @@ final class PerformanceBenchmarkTests: XCTestCase {
         let largeSourceCode = String(repeating: sourceCodeBlock, count: 10)
         
         // Configure measure options to reduce iteration count
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3 // Reduced from default
+        // Use ultra-fast options for quick tests // Reduced from default
         
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             // Use autoreleasepool for each iteration
             for _ in 0..<2 { // Reduced from 5 to 2 iterations
                 autoreleasepool {
@@ -144,17 +126,14 @@ final class PerformanceBenchmarkTests: XCTestCase {
     
     @MainActor
     func testLargeFileLoadingPerformance() throws {
-        let editor = CodeEditorView()
-        
         // Generate a moderately large file (50KB instead of 100KB)
         let lineContent = String(repeating: "a", count: 80) + "\n"
         let largeContent = String(repeating: lineContent, count: 625) // ~50KB
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
-        
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
+                // Create a fresh editor for each iteration to avoid cumulative effects
+                let editor = CodeEditorView()
                 editor.text = largeContent
             }
         }
@@ -168,10 +147,9 @@ final class PerformanceBenchmarkTests: XCTestCase {
         // Generate file with fewer lines to prevent hanging
         let content = String(repeating: "Line\n", count: 1_000) // Reduced from 5_000
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
+        // Use ultra-fast options for quick tests
         
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 editor.text = content
                 // Force line number calculation
@@ -195,10 +173,9 @@ final class PerformanceBenchmarkTests: XCTestCase {
             NSRange(location: (textLength / 3) * index, length: min(300, textLength / 3))
         }
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
+        // Use ultra-fast options for quick tests
         
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 for range in ranges {
                     editor.scrollRangeToVisible(range)
@@ -216,10 +193,9 @@ final class PerformanceBenchmarkTests: XCTestCase {
         
         var config = EditorConfiguration()
         
-        let options = XCTMeasureOptions()
-        options.iterationCount = 3
+        // Use ultra-fast options for quick tests
         
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Toggle configuration options
                 for index in 0..<5 { // Reduced from 10
@@ -240,7 +216,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
         let options = XCTMeasureOptions()
         options.iterationCount = 5
         
-        measure(options: options) {
+        measure(options: Self.ultraFastMeasureOptions) {
             // Query various capabilities with reduced count
             for _ in 0..<100 { // Reduced from 1_000
                 _ = capabilities.textKitCapabilities.supportsTextKit2

@@ -335,7 +335,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         // Add substantial content
         containerView.textView.text = Array(repeating: "This is a test line\n", count: 1_000).joined()
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<100 {
                 #if canImport(UIKit)
                 containerView.setNeedsLayout()
@@ -355,7 +355,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         }
         var config = containerView.configuration
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for index in 0..<100 {
                 config.display.isLineNumbersEnabled = index.isMultiple(of: 2)
                 config.display.showMinimap = index.isMultiple(of: 3)

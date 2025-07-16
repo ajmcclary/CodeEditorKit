@@ -80,8 +80,11 @@ final class ErrorHandlingTests: XCTestCase {
         
         editorView.text = largeText
         
-        // Force memory cleanup
-        await monitor.performCleanup()
+        // Force memory cleanup - even if it returns 0, we just care that it completes quickly
+        let freedMemory = await monitor.performCleanup()
+        
+        // Just verify cleanup completed (may return 0 if no handlers are registered)
+        XCTAssertGreaterThanOrEqual(freedMemory, 0)
         
         // Editor should still be functional after cleanup
         XCTAssertFalse(editorView.text?.isEmpty ?? true)

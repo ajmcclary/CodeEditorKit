@@ -99,7 +99,7 @@ final class LineIndexCacheTests: XCTestCase {
         // Create a large file with 10,000 lines
         let largeText = (1...10_000).map { "Line \($0) with some content" }.joined(separator: "\n")
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test multiple operations to ensure cache is working
             _ = cache!.lineCount(in: largeText)
             _ = cache!.lineNumber(at: largeText.count / 2, in: largeText)

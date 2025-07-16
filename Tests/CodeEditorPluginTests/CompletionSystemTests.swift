@@ -300,7 +300,7 @@ final class CompletionSystemTests: XCTestCase {
         let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Completion request")
             Task {
                 do {
@@ -358,14 +358,14 @@ private class MockSlowCompletionProvider: CompletionProvider {
     let triggerCharacters: [String] = []
     
     func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        // Simulate slow operation
-        try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        // Simulate slow operation - reduced from 2 seconds to 200ms for faster tests
+        try await Task.sleep(nanoseconds: 200_000_000) // 200ms
         
         return CompletionResult(
             items: [],
             context: context,
             isIncomplete: false,
-            processingTime: 2.0
+            processingTime: 0.2
         )
     }
 }

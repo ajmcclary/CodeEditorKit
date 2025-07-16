@@ -264,7 +264,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
             set: { _ in }
         )
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             _ = CodeEditor(text: binding)
                 .codeLanguage(.swift)
                 .codeEditorEnvironment(configuration: .platformOptimized)

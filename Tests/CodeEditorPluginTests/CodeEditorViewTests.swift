@@ -502,7 +502,7 @@ final class CodeEditorViewTests: XCTestCase {
         // Reduced size to prevent hanging - 1000 lines instead of 10,000
         let largeText = String(repeating: "Line of text\n", count: 1_000)
 
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             textView.text = largeText
         }
         

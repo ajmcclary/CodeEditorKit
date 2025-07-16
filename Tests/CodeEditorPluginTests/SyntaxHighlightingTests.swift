@@ -225,7 +225,7 @@ final class SyntaxHighlightingTests: XCTestCase {
 
         """, count: 100)
 
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             _ = highlighter.highlight(source: largeCode, language: .swift)
         }
     }

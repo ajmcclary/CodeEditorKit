@@ -312,7 +312,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = coordinator.isFeatureAvailable(.syntaxHighlighting)
             }
@@ -324,7 +324,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<100 {
                 _ = coordinator.createToolbarItems()
             }

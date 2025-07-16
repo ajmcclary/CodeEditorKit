@@ -342,7 +342,7 @@ final class TextKit2OptimizationTests: XCTestCase {
     @MainActor
     func testRenderingOptimizerPerformance() async throws {
         let renderingOptimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test performance of updating visible range multiple times
             for index in 0..<100 {
                 let range = NSRange(location: index * 100, length: 500)
@@ -354,7 +354,7 @@ final class TextKit2OptimizationTests: XCTestCase {
     @MainActor
     func testPerformanceMonitorOverhead() async throws {
         let performanceMonitor = TextKit2PerformanceMonitor()
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test overhead of recording many operations
             for _ in 0..<1_000 {
                 performanceMonitor.recordLayoutOperation(duration: 0.001)

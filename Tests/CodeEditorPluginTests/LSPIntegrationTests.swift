@@ -417,7 +417,7 @@ final class LSPIntegrationTests: XCTestCase {
         }
         
         // Test performance with cache
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 for ext in testExtensions {
                     _ = manager.languageId(for: ext)

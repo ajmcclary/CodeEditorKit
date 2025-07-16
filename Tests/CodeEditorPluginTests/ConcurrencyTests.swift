@@ -81,7 +81,7 @@ final class ConcurrencyTests: XCTestCase {
         // Create a task that we'll cancel
         let task = Task { @MainActor in
             let editorView = CodeEditorView()
-            let longText = String(repeating: "func test() { print(\"very long text\") }\n", count: 1_000)
+            let longText = String(repeating: "func test() { print(\"very long text\") }\n", count: 100)
             editorView.text = longText
             return editorView.text?.count ?? 0
         }

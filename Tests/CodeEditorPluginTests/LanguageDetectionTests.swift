@@ -234,7 +234,7 @@ final class LanguageDetectionTests: XCTestCase {
     // MARK: - Performance Tests
     
     func testLanguageDetectionPerformance() {
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test performance of language detection for common file extensions
             let extensions = [
                 "swift", "js", "py", "go", "rs", "c", "cpp", "java", 
@@ -251,7 +251,7 @@ final class LanguageDetectionTests: XCTestCase {
     }
     
     func testLanguageEnumIterationPerformance() {
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test performance of iterating through all language cases
             for _ in 0..<10_000 {
                 for language in Language.allCases {

@@ -209,6 +209,8 @@
 		F588098CEC115CB9F6EA9871 /* AsyncTextProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09A29D0F21AC330D2C33A3F3 /* AsyncTextProcessorTests.swift */; };
 		F7C7A4D1C953D9CB7724A3F0 /* PerformanceConfigurationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FA75724BB22A43930F3FDF /* PerformanceConfigurationSection.swift */; };
 		F8AC58846CB2B1AC3651880C /* LineNumbersPlatformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCE0AFB5BC72036F78B92B8 /* LineNumbersPlatformTests.swift */; };
+		F9F17E55A7B62F880BD8D575 /* XCTestCase+Performance.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8DBD569358D041B9C49C21 /* XCTestCase+Performance.swift */; };
+		FBBF748A999FD757C6B1E582 /* XCTestCase+Performance.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8DBD569358D041B9C49C21 /* XCTestCase+Performance.swift */; };
 		FCCEC4F9FD8EB9D6E95E6E12 /* PlatformToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DB85BEEA8F01C60C5D8135 /* PlatformToggleStyle.swift */; };
 		FD9864F0BFC7A8940CE5D2E5 /* CodeEditorContainerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7109E937A6A384CCE2FB003C /* CodeEditorContainerViewTests.swift */; };
 		FDE114BBA131A0DFF86481EE /* MinimapIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653BB372378464A413B52C34 /* MinimapIntegrationTests.swift */; };
@@ -324,6 +326,7 @@
 		C1C87CE64A02AA945F350436 /* LargeFilePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeFilePerformanceTests.swift; sourceTree = "<group>"; };
 		C1E3BD943B57ACE6B0B8785C /* PlatformCapabilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformCapabilitiesTests.swift; sourceTree = "<group>"; };
 		C325E004419D39E9DBB820EA /* LanguageDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageDetectionService.swift; sourceTree = "<group>"; };
+		CB8DBD569358D041B9C49C21 /* XCTestCase+Performance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Performance.swift"; sourceTree = "<group>"; };
 		CC5F54F9BC1C77D523B7BD4F /* ContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextMenuTests.swift; sourceTree = "<group>"; };
 		CE94FF0B6A2891455BC66EC4 /* BasicFunctionalityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicFunctionalityTests.swift; sourceTree = "<group>"; };
 		CFBB3A7A18BA5595A05D78E3 /* LayoutConfigurationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConfigurationSection.swift; sourceTree = "<group>"; };
@@ -515,6 +518,7 @@
 				D946D67489295D92078D17E6 /* SyntaxHighlightingTests.swift */,
 				BB75AEABBF786DCDE6398DB1 /* TestHelpers.swift */,
 				9F751595C102F980ADA2E057 /* TextKit2OptimizationTests.swift */,
+				CB8DBD569358D041B9C49C21 /* XCTestCase+Performance.swift */,
 			);
 			name = CodeEditorPluginTests;
 			path = ../Tests/CodeEditorPluginTests;
@@ -872,6 +876,7 @@
 				D26E866B8B793269B6046521 /* SyntaxHighlightingTests.swift in Sources */,
 				441A3983B9199345BAB894F4 /* TestHelpers.swift in Sources */,
 				04E189F1B06CA30315A18268 /* TextKit2OptimizationTests.swift in Sources */,
+				FBBF748A999FD757C6B1E582 /* XCTestCase+Performance.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1059,6 +1064,7 @@
 				6C9412C33ADDC92FF82C50BD /* SyntaxHighlightingTests.swift in Sources */,
 				4CD94B2A8E3395F36C1DFD60 /* TestHelpers.swift in Sources */,
 				4389EF8B23997EEA49E2E129 /* TextKit2OptimizationTests.swift in Sources */,
+				F9F17E55A7B62F880BD8D575 /* XCTestCase+Performance.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

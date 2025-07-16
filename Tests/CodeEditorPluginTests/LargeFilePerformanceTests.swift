@@ -117,7 +117,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting complete")
             
             Task {
@@ -153,7 +153,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting check complete")
             
             Task {
@@ -180,7 +180,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         let insertText = "\n    // New comment\n    let newVariable = 42\n"
         let insertionPoint = largeFile.count / 2 // Middle of file
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Insert text in the middle of the file
             if let range = Range(NSRange(location: insertionPoint, length: 0), in: largeFile) {
                 var mutableText = largeFile
@@ -207,7 +207,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         // Set up viewport manager
         _ = ViewportManager(textView: textView, memoryMonitor: MemoryMonitor())
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Simulate scrolling through the document
             for location in stride(from: 0, to: largeFile.count, by: largeFile.count / 10) {
                 if let range = Range(NSRange(location: location, length: 100), in: largeFile) {
@@ -282,7 +282,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         // The code folding engine processes regions asynchronously
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 1.0))
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test folding performance by toggling folds at various lines
             var foldedLines: [Int] = []
             
@@ -320,7 +320,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "JSON highlighting complete")
             
             Task {
@@ -388,7 +388,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         
         _ = ViewportManager(textView: textView, memoryMonitor: MemoryMonitor())
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Simulate rapid scrolling
             for _ in 0..<5 {
                 let randomLocation = Int.random(in: 0..<largeFile.count)

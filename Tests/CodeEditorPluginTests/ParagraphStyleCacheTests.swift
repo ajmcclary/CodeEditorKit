@@ -149,7 +149,7 @@ final class ParagraphStyleCacheTests: XCTestCase {
     func testCachePerformance() {
         let font = PlatformFonts.monospacedSystemFont(ofSize: 14, weight: .regular)
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for index in 0..<1_000 {
                 // Use only a few different parameter combinations to test cache hits
                 _ = cache?.paragraphStyle(

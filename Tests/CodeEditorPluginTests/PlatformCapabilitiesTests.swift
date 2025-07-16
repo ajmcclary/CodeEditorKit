@@ -282,7 +282,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     @MainActor
     func testPlatformDetectionPerformance() {
         let capabilities = PlatformCapabilities.shared
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = capabilities.currentPlatform
             }
@@ -292,7 +292,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     @MainActor
     func testFeatureAvailabilityPerformance() {
         let capabilities = PlatformCapabilities.shared
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = capabilities.isFeatureAvailable(.syntaxHighlighting)
                 _ = capabilities.getFeatureAvailability(.goToDefinition)
@@ -303,7 +303,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     @MainActor
     func testRecommendedConfigurationPerformance() {
         let capabilities = PlatformCapabilities.shared
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             for _ in 0..<100 {
                 _ = capabilities.recommendedConfiguration()
             }

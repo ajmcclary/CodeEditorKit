@@ -381,7 +381,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let highlighter = RegexSyntaxHighlighter()
         let code = generateJavaScriptCode(lines: 100)  // Reduced from 1000
         
-        measure {
+        measure(options: Self.standardMeasureOptions) {
             // Test regex-based highlighting performance
             if let languageDefinition = highlighter.languageDefinition(for: .javascript) {
                 _ = highlighter.highlight(source: code, language: languageDefinition)

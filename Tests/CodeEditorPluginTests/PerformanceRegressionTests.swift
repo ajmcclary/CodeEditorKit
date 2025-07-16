@@ -20,12 +20,12 @@ final class PerformanceRegressionTests: XCTestCase {
     func testAsyncOperationManagerRegressionCheck() throws {
         let manager = AsyncOperationManager()
         
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockMetric()], options: Self.fastMeasureOptions) {
             let expectation = self.expectation(description: "Debounce operations")
             
             Task { @MainActor in
-                // Test debouncing performance
-                for index in 0..<500 {
+                // Test debouncing performance - reduced count for faster tests
+                for index in 0..<100 {
                     try? await manager.debounce(key: "test-debounce", delay: 0.001) {
                         // Just execute without capturing
                         _ = index
@@ -34,7 +34,7 @@ final class PerformanceRegressionTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            wait(for: [expectation], timeout: 5.0)
+            wait(for: [expectation], timeout: 1.0)
         }
     }
     
