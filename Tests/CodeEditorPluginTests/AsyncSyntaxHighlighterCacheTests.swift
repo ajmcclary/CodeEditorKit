@@ -162,6 +162,9 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
         
+        // Clear cache to ensure clean state for parallel test execution
+        await highlighter.clearCache()
+        
         // Configure cache with 100ms stale threshold for testing
         await highlighter.configureCacheSettings(staleThreshold: .milliseconds(100))
         
@@ -173,12 +176,12 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
         editorView.text = text1
         editorView.language = .swift
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        try await Task.sleep(for: .milliseconds(10))
+        try await Task.sleep(for: .milliseconds(50)) // Increased wait time for parallel test stability
         
         // Second entry  
         editorView.text = text2
         await highlighter.highlightImmediately(for: editorView, language: .swift)
-        try await Task.sleep(for: .milliseconds(10))
+        try await Task.sleep(for: .milliseconds(50)) // Increased wait time for parallel test stability
         
         let statsBefore = await highlighter.getCacheStatistics()
         XCTAssertEqual(statsBefore.cacheSize, 2, "Should have 2 entries before optimization")
