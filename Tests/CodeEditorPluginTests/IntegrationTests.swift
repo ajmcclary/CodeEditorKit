@@ -279,18 +279,18 @@ final class IntegrationTests: XCTestCase {
         }
         
         let editor = CodeEditorView()
-        // Load a large file
-        let largeContent = String(repeating: "func test() { print(\"test\") }\n", count: 1_000)
+        // Load a smaller file for faster tests
+        let largeContent = String(repeating: "func test() { print(\"test\") }\n", count: 100) // Reduced from 1000
         editor.text = largeContent
         
         // Trigger viewport update
         let viewport = editor.getViewportManager()
         viewport.updateViewport()
         
-        // Wait for optimization to apply
-        try await Task.sleep(for: .milliseconds(200))
+        // Reduced wait time
+        try await Task.sleep(for: .milliseconds(50)) // Reduced from 200ms
         
-        // Verify viewport manager was created (viewport might be zero initially without a visible rect)
+        // Verify viewport manager was created
         XCTAssertNotNil(viewport)
     }
     

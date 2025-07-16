@@ -167,7 +167,8 @@ final class CompletionSystemTests: XCTestCase {
     @MainActor
     func testCompletionManagerCancellation() async throws {
         let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
-        completionManager.registerProvider(MockSlowCompletionProvider())
+        let provider = MockCancellationTrackingProvider()
+        completionManager.registerProvider(provider)
         
         let language = Language.swift
         let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
@@ -182,15 +183,15 @@ final class CompletionSystemTests: XCTestCase {
         
         // Cancel it
         completionManager.cancelCurrentRequest()
+        requestTask.cancel()
         
-        // The task should be cancelled or throw an error
-        do {
-            let result = try await requestTask.value
-            // If it completes, it should have empty items due to provider being slow
-            XCTAssertTrue(result.items.isEmpty || result.isIncomplete)
-        } catch {
-            // Expected - either cancelled or timed out
-        }
+        // Wait a bit for cancellation to propagate
+        try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+        
+        // Verify the provider detected cancellation
+        XCTAssertTrue(provider.wasCancelled, "Provider should have detected cancellation")
+        
+        // The test passes if we get here without hanging
     }
     
     // MARK: - SwiftCompletionProvider Tests
@@ -358,14 +359,50 @@ private class MockSlowCompletionProvider: CompletionProvider {
     let triggerCharacters: [String] = []
     
     func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        // Simulate slow operation - reduced from 2 seconds to 200ms for faster tests
-        try await Task.sleep(nanoseconds: 200_000_000) // 200ms
+        // Instead of sleeping, just check for cancellation frequently
+        // This makes the test fast while still verifying cancellation works
+        for _ in 0..<20 {
+            try Task.checkCancellation()
+            // Very short sleep to allow cancellation to propagate
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+        }
         
         return CompletionResult(
             items: [],
             context: context,
             isIncomplete: false,
-            processingTime: 0.2
+            processingTime: 0.02
         )
+    }
+}
+
+@MainActor
+private class MockCancellationTrackingProvider: CompletionProvider {
+    deinit {}
+    
+    let id = "cancellation-tracking-provider"
+    let supportedLanguages: [Language] = [.swift]
+    let triggerCharacters: [String] = []
+    
+    private(set) var wasCancelled = false
+    
+    func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        do {
+            // Simulate work that can be cancelled
+            for _ in 0..<50 {
+                try Task.checkCancellation()
+                try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+            }
+            
+            return CompletionResult(
+                items: [],
+                context: context,
+                isIncomplete: false,
+                processingTime: 0.05
+            )
+        } catch is CancellationError {
+            wasCancelled = true
+            throw CancellationError()
+        }
     }
 }

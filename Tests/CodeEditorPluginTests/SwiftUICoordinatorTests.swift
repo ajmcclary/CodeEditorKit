@@ -164,11 +164,16 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     @MainActor
     func testTextUpdateFromEditor() async throws {
-        var bindingText = ""
+        // Use a class to ensure reference semantics for the binding
+        class TextHolder {
+            var text = ""
+        }
+        let holder = TextHolder()
+        
         var onTextChangeText: String?
         let textBinding = Binding<String>(
-            get: { bindingText },
-            set: { bindingText = $0 }
+            get: { holder.text },
+            set: { holder.text = $0 }
         )
         
         let coordinator = CodeEditorCoordinator(
@@ -189,16 +194,24 @@ final class SwiftUICoordinatorTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(200))
         
         // The binding should have been updated after the debounce
-        XCTAssertEqual(bindingText, "new text from editor")
+        XCTAssertEqual(holder.text, "new text from editor")
     }
     
     @MainActor
     func testDebouncedTextUpdate() async throws {
-        var updateCount = 0
-        var bindingText = ""
+        // Use a class to ensure reference semantics for the binding
+        class TextHolder {
+            var text = ""
+            var updateCount = 0
+        }
+        let holder = TextHolder()
+        
         let textBinding = Binding<String>(
-            get: { bindingText },
-            set: { bindingText = $0; updateCount += 1 }
+            get: { holder.text },
+            set: { 
+                holder.text = $0
+                holder.updateCount += 1
+            }
         )
         
         let coordinator = CodeEditorCoordinator(
@@ -230,8 +243,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
         #endif
         
         // Should only get one update to the binding due to debouncing
-        XCTAssertEqual(updateCount, 1)
-        XCTAssertEqual(bindingText, "abc")
+        XCTAssertEqual(holder.updateCount, 1)
+        XCTAssertEqual(holder.text, "abc")
     }
     
     // MARK: - Selection Change Tests
