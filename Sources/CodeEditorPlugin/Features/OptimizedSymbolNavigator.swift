@@ -383,7 +383,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Symbol Search
     
     /// Search symbols by name
-    public func searchSymbols(query: String) -> [DocumentSymbol] {
+    public func searchSymbols(query: String) async -> [DocumentSymbol] {
         guard !query.isEmpty else { return flattenedSymbols }
         
         // Use the optimized fuzzy matcher
@@ -391,7 +391,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
         let allSymbols = flattenedSymbols
         let symbolNames = allSymbols.map { $0.name }
         
-        let matches = fuzzyMatcher.match(pattern: query, candidates: symbolNames)
+        let matches = await fuzzyMatcher.match(pattern: query, candidates: symbolNames)
         
         // Build result using cached symbols
         return matches.compactMap { match in

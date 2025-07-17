@@ -2,7 +2,7 @@ import Foundation
 
 /// Optimized line index cache using a balanced tree structure for O(log n) operations
 /// This is a critical performance optimization for large files with frequent edits
-public final class OptimizedLineIndexCache: @unchecked Sendable {
+public actor OptimizedLineIndexCache {
     // MARK: - Types
     
     /// Red-Black Tree node for efficient line tracking
@@ -29,7 +29,6 @@ public final class OptimizedLineIndexCache: @unchecked Sendable {
     private var root: LineNode?
     private var lineCount: Int = 0
     private var totalCharacters: Int = 0
-    private let queue = DispatchQueue(label: "line-index-cache", attributes: .concurrent)
     
     // Cache for recent lookups
     private var lookupCache: [Int: (line: Int, column: Int)] = [:]
@@ -41,103 +40,93 @@ public final class OptimizedLineIndexCache: @unchecked Sendable {
     
     /// Builds the index from text content
     public func buildIndex(from text: String) {
-        queue.async(flags: .barrier) {
-            self.root = nil
-            self.lineCount = 0
-            self.totalCharacters = text.count
-            self.lookupCache.removeAll()
-            
-            var lineStart = 0
-            var currentIndex = 0
-            
-            for char in text {
-                if char.isNewline {
-                    let lineLength = currentIndex - lineStart + 1
-                    self.insertLine(start: lineStart, length: lineLength)
-                    lineStart = currentIndex + 1
-                }
-                currentIndex += 1
+        self.root = nil
+        self.lineCount = 0
+        self.totalCharacters = text.count
+        self.lookupCache.removeAll()
+        
+        var lineStart = 0
+        var currentIndex = 0
+        
+        for char in text {
+            if char.isNewline {
+                let lineLength = currentIndex - lineStart + 1
+                self.insertLine(start: lineStart, length: lineLength)
+                lineStart = currentIndex + 1
             }
-            
-            // Handle last line if it doesn't end with newline
-            if lineStart < text.count {
-                self.insertLine(start: lineStart, length: text.count - lineStart)
-            }
+            currentIndex += 1
+        }
+        
+        // Handle last line if it doesn't end with newline
+        if lineStart < text.count {
+            self.insertLine(start: lineStart, length: text.count - lineStart)
         }
     }
     
     /// Updates the index for a text change - O(log n)
     public func updateForTextChange(at range: NSRange, replacementLength: Int) {
-        queue.async(flags: .barrier) {
-            let delta = replacementLength - range.length
-            self.totalCharacters += delta
-            
-            // Find affected lines
-            let startLine = self.lineIndexForCharacterOffset(range.location)
-            let endLine = self.lineIndexForCharacterOffset(range.location + range.length)
-            
-            // Update line information
-            if startLine == endLine {
-                // Change within single line
-                self.updateLineLength(at: startLine, delta: delta)
-            } else {
-                // Change spans multiple lines - requires more complex update
-                self.handleMultiLineChange(
-                    startLine: startLine,
-                    endLine: endLine,
-                    range: range,
-                    replacementLength: replacementLength
-                )
-            }
-            
-            // Invalidate lookup cache for affected region
-            self.invalidateLookupCache(from: range.location)
+        let delta = replacementLength - range.length
+        self.totalCharacters += delta
+        
+        // Find affected lines
+        let startLine = self.lineIndexForCharacterOffset(range.location)
+        let endLine = self.lineIndexForCharacterOffset(range.location + range.length)
+        
+        // Update line information
+        if startLine == endLine {
+            // Change within single line
+            self.updateLineLength(at: startLine, delta: delta)
+        } else {
+            // Change spans multiple lines - requires more complex update
+            self.handleMultiLineChange(
+                startLine: startLine,
+                endLine: endLine,
+                range: range,
+                replacementLength: replacementLength
+            )
         }
+        
+        // Invalidate lookup cache for affected region
+        self.invalidateLookupCache(from: range.location)
     }
     
     /// Returns line and column for character offset - O(log n)
     public func lineAndColumn(for offset: Int) -> (line: Int, column: Int) {
-        queue.sync {
-            // Check cache first
-            if let cached = lookupCache[offset] {
-                return cached
-            }
-            
-            // Calculate and cache
-            let line = lineIndexForCharacterOffset(offset)
-            let lineStart = characterOffsetForLine(line)
-            let column = offset - lineStart
-            
-            let result = (line: line, column: column)
-            
-            // Update cache
-            if lookupCache.count >= maxCacheSize {
-                lookupCache.removeAll() // Simple eviction strategy
-            }
-            lookupCache[offset] = result
-            
-            return result
+        // Check cache first
+        if let cached = lookupCache[offset] {
+            return cached
         }
+        
+        // Calculate and cache
+        let line = lineIndexForCharacterOffset(offset)
+        let lineStart = characterOffsetForLine(line)
+        let column = offset - lineStart
+        
+        let result = (line: line, column: column)
+        
+        // Update cache
+        if lookupCache.count >= maxCacheSize {
+            lookupCache.removeAll() // Simple eviction strategy
+        }
+        lookupCache[offset] = result
+        
+        return result
     }
     
     /// Returns character offset for line index - O(log n)
     public func characterOffset(for line: Int) -> Int {
-        queue.sync {
-            characterOffsetForLine(line)
-        }
+        characterOffsetForLine(line)
     }
     
     /// Returns total line count - O(1)
     public var count: Int {
-        queue.sync { lineCount }
+        lineCount
     }
     
     /// Returns line information - O(log n)
     public func lineInfo(at index: Int) -> (start: Int, length: Int)? {
-        queue.sync {
-            guard let node = findNode(for: index) else { return nil }
-            return (start: node.lineStart, length: node.lineLength)
-        }
+        guard let node = findNode(for: index) else { return nil }
+        return (start: node.lineStart, length: node.lineLength)
     }
     
     // MARK: - Private Methods
@@ -160,12 +149,12 @@ public final class OptimizedLineIndexCache: @unchecked Sendable {
         var current = root
         var parent: LineNode?
         
-        while current != nil {
-            parent = current
-            if node.lineStart < current!.lineStart {
-                current = current!.left
+        while let unwrappedCurrent = current {
+            parent = unwrappedCurrent
+            if node.lineStart < unwrappedCurrent.lineStart {
+                current = unwrappedCurrent.left
             } else {
-                current = current!.right
+                current = unwrappedCurrent.right
             }
         }
         

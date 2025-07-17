@@ -64,7 +64,6 @@ public struct OptimizedFuzzyMatcher: Sendable {
     // MARK: - Properties
     
     private let configuration: Configuration
-    private let queue = DispatchQueue(label: "fuzzy-matcher", attributes: .concurrent)
     
     // MARK: - Initialization
     
@@ -75,7 +74,7 @@ public struct OptimizedFuzzyMatcher: Sendable {
     // MARK: - Public Methods
     
     /// Match pattern against multiple candidates with optimizations
-    public func match(pattern: String, candidates: [String]) -> [MatchResult] {
+    public func match(pattern: String, candidates: [String]) async -> [MatchResult] {
         guard !pattern.isEmpty else {
             return candidates.prefix(configuration.maxResults).map { MatchResult(item: $0, score: 0, matchedRanges: []) }
         }
@@ -88,7 +87,7 @@ public struct OptimizedFuzzyMatcher: Sendable {
         
         // Use parallel processing for large candidate sets
         if configuration.enableParallelProcessing && viableCandidates.count >= configuration.parallelThreshold {
-            return matchParallel(pattern: patternLower, candidates: viableCandidates)
+            return await matchParallel(pattern: patternLower, candidates: viableCandidates)
         } else {
             return matchSequential(pattern: patternLower, candidates: viableCandidates)
         }
@@ -130,63 +129,47 @@ public struct OptimizedFuzzyMatcher: Sendable {
             .filter { $0.score >= configuration.minimumScore })
     }
     
-    private func matchParallel(pattern: [Character], candidates: [String]) -> [MatchResult] {
-        // Use a thread-safe container for results
-        final class ThreadSafeResults: @unchecked Sendable {
-            private let lock = NSLock()
-            private var results: [(result: MatchResult, quickScore: Double)] = []
-            
-            func append(contentsOf newResults: [(result: MatchResult, quickScore: Double)]) {
-                lock.lock()
-                defer { lock.unlock() }
-                results.append(contentsOf: newResults)
-            }
-            
-            func getAll() -> [(result: MatchResult, quickScore: Double)] {
-                lock.lock()
-                defer { lock.unlock() }
-                return results
-            }
-        }
-        
-        let group = DispatchGroup()
-        let allResults = ThreadSafeResults()
-        
-        // Process candidates in chunks
+    private func matchParallel(pattern: [Character], candidates: [String]) async -> [MatchResult] {
+        // Process candidates in chunks using TaskGroup
         let chunkSize = max(1, candidates.count / ProcessInfo.processInfo.activeProcessorCount)
+        let chunks = candidates.chunked(into: chunkSize)
         
-        for chunk in candidates.chunked(into: chunkSize) {
-            group.enter()
-            queue.async { [self] in
-                defer { group.leave() }
-                
-                var localResults: [(result: MatchResult, quickScore: Double)] = []
-                
-                for candidate in chunk {
-                    let candidateData = self.preprocessCandidate(candidate)
-                    if !self.quickReject(pattern: pattern, candidateData: candidateData) {
-                        if let result = self.matchSingleOptimized(pattern: pattern, candidateData: candidateData) {
-                            let quickScore = self.calculateQuickScore(result: result)
-                            localResults.append((result, quickScore))
+        // Use TaskGroup for concurrent processing
+        let allResults = await withTaskGroup(of: [(result: MatchResult, quickScore: Double)].self) { group in
+            // Create tasks for each chunk
+            for chunk in chunks {
+                group.addTask { [self] in
+                    var localResults: [(result: MatchResult, quickScore: Double)] = []
+                    
+                    for candidate in chunk {
+                        let candidateData = self.preprocessCandidate(candidate)
+                        if !self.quickReject(pattern: pattern, candidateData: candidateData) {
+                            if let result = self.matchSingleOptimized(pattern: pattern, candidateData: candidateData) {
+                                let quickScore = self.calculateQuickScore(result: result)
+                                localResults.append((result, quickScore))
+                            }
                         }
                     }
+                    
+                    return localResults
                 }
-                
-                allResults.append(contentsOf: localResults)
             }
+            
+            // Collect all results
+            var allResults: [(result: MatchResult, quickScore: Double)] = []
+            for await chunkResults in group {
+                allResults.append(contentsOf: chunkResults)
+            }
+            return allResults
         }
         
-        group.wait()
-        
-        // Get all results from thread-safe container
-        var finalResults = allResults.getAll()
-        
         // If no results found, return empty array
-        if finalResults.isEmpty {
+        if allResults.isEmpty {
             return []
         }
         
         // Sort and filter as in sequential version
+        var finalResults = allResults
         finalResults.sort { $0.quickScore > $1.quickScore }
         
         let topCount = min(configuration.maxResults * 2, finalResults.count)

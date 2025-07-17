@@ -479,6 +479,10 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate
     
     // MARK: - UITextViewDelegate
     
+    func textViewDidChange(_ textView: UITextView) {
+        handleTextChange(textView.text ?? "")
+    }
+    
     func textViewDidChangeSelection(_ textView: UITextView) {
         handleSelectionChange(textView.selectedRange)
     }

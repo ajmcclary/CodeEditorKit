@@ -4,8 +4,7 @@ import os.log
 // MARK: - Production Performance Metrics
 
 /// Central system for tracking performance metrics in production
-@MainActor
-public final class ProductionPerformanceMetrics {
+public actor ProductionPerformanceMetrics {
     // MARK: - Singleton
     
     public static let shared = ProductionPerformanceMetrics()
@@ -13,7 +12,6 @@ public final class ProductionPerformanceMetrics {
     // MARK: - Properties
     
     private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "Performance")
-    private let metricsQueue = DispatchQueue(label: "com.codeeditor.performance", qos: .utility)
     
     /// Current performance thresholds
     private var thresholds = ProductionThresholds()
@@ -129,10 +127,7 @@ public final class ProductionPerformanceMetrics {
     // MARK: - Private Methods
     
     private func processMetric(_ metric: any ProductionMetric) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.updateAggregatedMetrics(with: metric)
-        }
+        updateAggregatedMetrics(with: metric)
         
         // Log in debug builds
         #if DEBUG

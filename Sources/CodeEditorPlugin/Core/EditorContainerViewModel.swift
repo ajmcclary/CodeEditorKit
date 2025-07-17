@@ -99,8 +99,8 @@ public final class EditorContainerViewModel {
     // MARK: - Initialization
     
     public init(
-        configuration: EditorConfiguration = EditorConfiguration(),
-        businessLogicServices: BusinessLogicServiceRegistry = BusinessLogicServiceRegistry.shared
+        businessLogicServices: BusinessLogicServiceRegistry,
+        configuration: EditorConfiguration = EditorConfiguration()
     ) {
         self.configuration = configuration
         self.businessLogicServices = businessLogicServices

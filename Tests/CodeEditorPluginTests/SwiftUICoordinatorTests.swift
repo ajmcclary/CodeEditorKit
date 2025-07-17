@@ -184,14 +184,19 @@ final class SwiftUICoordinatorTests: XCTestCase {
             onSelectionChange: nil
         )
         
+        // Ensure the coordinator's currentText is initialized
+        coordinator.currentText = ""
+        
         // Simulate text change from editor
         coordinator.handleTextChange("new text from editor")
         
         // The onTextChange callback should be called immediately
         XCTAssertEqual(onTextChangeText, "new text from editor")
         
-        // Wait for debounce interval (100ms by default) plus a buffer
-        try await Task.sleep(for: .milliseconds(200))
+        // Wait for the coordinator's debounced task to complete
+        if let updateTask = coordinator.textUpdateTask {
+            _ = await updateTask.value
+        }
         
         // The binding should have been updated after the debounce
         XCTAssertEqual(holder.text, "new text from editor")

@@ -262,7 +262,7 @@ internal class CodeFoldingEngine: ObservableObject {
         
         // Track performance metrics
         let endTime = CFAbsoluteTimeGetCurrent()
-        ProductionPerformanceMetrics.shared.trackCodeFolding(
+        await ProductionPerformanceMetrics.shared.trackCodeFolding(
             duration: endTime - startTime,
             regionCount: hierarchicalRegions.count,
             fileSize: text.count

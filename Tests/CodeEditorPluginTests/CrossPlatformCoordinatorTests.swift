@@ -73,7 +73,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(adjustments.gutterWidth, 40.0)
         XCTAssertEqual(adjustments.minimumTouchTargetSize, 24.0)
         XCTAssertEqual(adjustments.maxFileSize, 10_000_000)
-        XCTAssertEqual(adjustments.maxHighlightingLength, 1_000_000)
+        XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 1_000_000)
         XCTAssertTrue(adjustments.showMinimap)
         XCTAssertTrue(adjustments.enableMultiCursor)
         #else
@@ -86,7 +86,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             XCTAssertEqual(adjustments.gutterWidth, 50.0)
             XCTAssertEqual(adjustments.minimumTouchTargetSize, 44.0)
             XCTAssertEqual(adjustments.maxFileSize, 8_000_000) // iPad: 8MB
-            XCTAssertEqual(adjustments.maxHighlightingLength, 750_000) // iPad: 750K
+            XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 750_000) // iPad: 750K
             // Minimap depends on screen width
             if UIScreen.main.bounds.width > 1_000 {
                 XCTAssertTrue(adjustments.showMinimap)
@@ -101,7 +101,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             XCTAssertEqual(adjustments.gutterWidth, 50.0)
             XCTAssertEqual(adjustments.minimumTouchTargetSize, 44.0)
             XCTAssertEqual(adjustments.maxFileSize, 5_000_000)
-            XCTAssertEqual(adjustments.maxHighlightingLength, 500_000)
+            XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 500_000)
             XCTAssertFalse(adjustments.showMinimap)
             XCTAssertFalse(adjustments.enableMultiCursor)
         }
@@ -112,7 +112,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(adjustments.gutterWidth, 50.0)
         XCTAssertEqual(adjustments.minimumTouchTargetSize, 44.0)
         XCTAssertEqual(adjustments.maxFileSize, 5_000_000)
-        XCTAssertEqual(adjustments.maxHighlightingLength, 500_000)
+        XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 500_000)
         XCTAssertFalse(adjustments.showMinimap)
         XCTAssertFalse(adjustments.enableMultiCursor)
         #endif

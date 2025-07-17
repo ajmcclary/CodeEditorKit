@@ -8,6 +8,8 @@ import Foundation
 public final class BusinessLogicServiceRegistry {
     // MARK: - Singleton
     
+    /// Shared instance for convenience. Consider using dependency injection instead.
+    @available(*, deprecated, message: "Use dependency injection by creating your own instance instead")
     public static let shared = BusinessLogicServiceRegistry()
     
     // MARK: - Services
@@ -25,8 +27,31 @@ public final class BusinessLogicServiceRegistry {
     
     // MARK: - Initialization
     
-    private init() {
-        // Private initializer for singleton
+    /// Creates a new service registry instance
+    /// - Parameters:
+    ///   - lineNumberCalculationService: Optional pre-configured line number service
+    ///   - gutterSizingService: Optional pre-configured gutter sizing service
+    ///   - codeFoldingCoordinatorService: Optional pre-configured code folding service
+    ///   - editorLayoutService: Optional pre-configured editor layout service
+    ///   - syntaxHighlightingService: Optional pre-configured syntax highlighting service
+    ///   - languageDetectionService: Optional pre-configured language detection service
+    ///   - textEditingService: Optional pre-configured text editing service
+    public init(
+        lineNumberCalculationService: LineNumberCalculationService? = nil,
+        gutterSizingService: GutterSizingService? = nil,
+        codeFoldingCoordinatorService: CodeFoldingCoordinatorService? = nil,
+        editorLayoutService: EditorLayoutService? = nil,
+        syntaxHighlightingService: SyntaxHighlightingService? = nil,
+        languageDetectionService: LanguageDetectionService? = nil,
+        textEditingService: TextEditingService? = nil
+    ) {
+        self._lineNumberCalculationService = lineNumberCalculationService
+        self._gutterSizingService = gutterSizingService
+        self._codeFoldingCoordinatorService = codeFoldingCoordinatorService
+        self._editorLayoutService = editorLayoutService
+        self._syntaxHighlightingService = syntaxHighlightingService
+        self._languageDetectionService = languageDetectionService
+        self._textEditingService = textEditingService
     }
     
     // MARK: - Service Access
@@ -269,37 +294,86 @@ extension BusinessLogicServiceRegistry {
 // MARK: - Global Service Access
 
 /// Global convenience accessor for business logic services
+/// - Note: Consider injecting services directly instead of using this global accessor
 @MainActor
 public enum BusinessLogic {
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var services: BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry.shared
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var lineNumbers: LineNumberCalculationService {
         services.lineNumberCalculationService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var gutterSizing: GutterSizingService {
         services.gutterSizingService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var codeFolding: CodeFoldingCoordinatorService {
         services.codeFoldingCoordinatorService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var layout: EditorLayoutService {
         services.editorLayoutService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var syntaxHighlighting: SyntaxHighlightingService {
         services.syntaxHighlightingService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var languageDetection: LanguageDetectionService {
         services.languageDetectionService
     }
     
+    @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var textEditing: TextEditingService {
         services.textEditingService
+    }
+}
+
+// MARK: - Dependency Injection Helper
+
+/// Helper enum for creating configured service registries
+@MainActor
+public enum ServiceRegistryBuilder {
+    /// Creates a default service registry with all services pre-configured
+    public static func makeDefault() -> BusinessLogicServiceRegistry {
+        BusinessLogicServiceRegistry()
+    }
+    
+    /// Creates a minimal service registry with only essential services
+    public static func makeMinimal() -> BusinessLogicServiceRegistry {
+        BusinessLogicServiceRegistry(
+            lineNumberCalculationService: LineNumberCalculationService(),
+            textEditingService: TextEditingService()
+        )
+    }
+    
+    /// Creates a service registry for testing with mock services
+    public static func makeForTesting(
+        lineNumberCalculationService: LineNumberCalculationService? = nil,
+        gutterSizingService: GutterSizingService? = nil,
+        codeFoldingCoordinatorService: CodeFoldingCoordinatorService? = nil,
+        editorLayoutService: EditorLayoutService? = nil,
+        syntaxHighlightingService: SyntaxHighlightingService? = nil,
+        languageDetectionService: LanguageDetectionService? = nil,
+        textEditingService: TextEditingService? = nil
+    ) -> BusinessLogicServiceRegistry {
+        BusinessLogicServiceRegistry(
+            lineNumberCalculationService: lineNumberCalculationService,
+            gutterSizingService: gutterSizingService,
+            codeFoldingCoordinatorService: codeFoldingCoordinatorService,
+            editorLayoutService: editorLayoutService,
+            syntaxHighlightingService: syntaxHighlightingService,
+            languageDetectionService: languageDetectionService,
+            textEditingService: textEditingService
+        )
     }
 }

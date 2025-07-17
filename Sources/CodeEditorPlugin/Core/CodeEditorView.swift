@@ -188,6 +188,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
     
+    /// Business logic service registry for dependency injection
+    internal lazy var businessLogicServices = BusinessLogicServiceRegistry()
+    
     /// Adaptive performance mode manager
     internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
     
@@ -235,7 +238,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// - Note: Changing the language may cause a brief visual update as highlighting is reprocessed
     public var language: Language = .plainText {
         didSet {
-            let languageService = BusinessLogic.languageDetection
+            let languageService = businessLogicServices.languageDetectionService
             let validation = languageService.validateLanguageChange(from: oldValue, to: language)
             
             if validation != .noChange {
@@ -331,6 +334,23 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
     }
+    
+    /// Initializes CodeEditorView with custom services for dependency injection
+    /// - Parameters:
+    ///   - frameRect: The frame rectangle for the view
+    ///   - businessLogicServices: Service registry for business logic dependencies
+    ///   - memoryMonitor: Optional custom memory monitor for resource management
+    public convenience init(
+        frame frameRect: NSRect,
+        businessLogicServices: BusinessLogicServiceRegistry,
+        memoryMonitor: MemoryMonitor? = nil
+    ) {
+        self.init(frame: frameRect)
+        self.businessLogicServices = businessLogicServices
+        if let memoryMonitor {
+            self.memoryMonitor = memoryMonitor
+        }
+    }
     #else
     override public init(frame frameRect: CGRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
@@ -350,6 +370,23 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     public convenience init(frame frameRect: CGRect, memoryMonitor: MemoryMonitor) {
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
+    }
+    
+    /// Initializes CodeEditorView with custom services for dependency injection
+    /// - Parameters:
+    ///   - frameRect: The frame rectangle for the view
+    ///   - businessLogicServices: Service registry for business logic dependencies
+    ///   - memoryMonitor: Optional custom memory monitor for resource management
+    public convenience init(
+        frame frameRect: CGRect,
+        businessLogicServices: BusinessLogicServiceRegistry,
+        memoryMonitor: MemoryMonitor? = nil
+    ) {
+        self.init(frame: frameRect)
+        self.businessLogicServices = businessLogicServices
+        if let memoryMonitor {
+            self.memoryMonitor = memoryMonitor
+        }
     }
     #endif
     

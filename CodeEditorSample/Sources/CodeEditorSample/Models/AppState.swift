@@ -329,7 +329,7 @@ class AppState: ObservableObject {
     ///
     /// ```swift
     /// appState.updateConfiguration { config in
-    ///     config.display.showLineNumbers = true
+    ///     config.display.isLineNumbersEnabled = true
     ///     config.display.fontSize = 16
     /// }
     /// ```

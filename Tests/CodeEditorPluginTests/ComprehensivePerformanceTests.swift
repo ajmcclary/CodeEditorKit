@@ -110,20 +110,25 @@ final class ComprehensivePerformanceTests: XCTestCase {
     }
     
     @MainActor
-    func testOptimizedFuzzyMatcherPerformance() throws {
+    func testOptimizedFuzzyMatcherPerformance() async throws {
         let matcher = OptimizedFuzzyMatcher()
         
         // Generate same candidates for fair comparison
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
         
-        measure(options: Self.standardMeasureOptions) {
-            // Test same patterns as original test
-            let patterns = ["func", "with", "name", "f100", "fwln"]
-            for pattern in patterns {
-                let results = matcher.match(pattern: pattern, candidates: candidates)
-                XCTAssertFalse(results.isEmpty)
-            }
+        // Since measure expects synchronous code, we'll measure async work differently
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Test same patterns as original test
+        let patterns = ["func", "with", "name", "f100", "fwln"]
+        for pattern in patterns {
+            let results = await matcher.match(pattern: pattern, candidates: candidates)
+            XCTAssertFalse(results.isEmpty)
         }
+        
+        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        print("Fuzzy matcher performance: \(duration)s")
+        XCTAssertLessThan(duration, 5.0, "Fuzzy matching should complete within 5 seconds")
     }
     
     @MainActor

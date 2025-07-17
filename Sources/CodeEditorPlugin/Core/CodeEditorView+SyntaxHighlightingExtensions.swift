@@ -25,7 +25,7 @@ extension CodeEditorView {
         // Pre-warm cache for visible content if this is a significant text change
         // Defer the pre-warming to avoid conflicts with text storage editing
         if textStorage.editedMask.contains(.editedCharacters) {
-            DispatchQueue.main.async { [weak self] in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 // For macOS, use visible rect to determine character range
@@ -80,7 +80,7 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
     
     internal func applySyntaxHighlighting() {
-        let syntaxService = BusinessLogic.syntaxHighlighting
+        let syntaxService = businessLogicServices.syntaxHighlightingService
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textStorage?.length ?? 0
         #else
@@ -126,7 +126,7 @@ extension CodeEditorView {
     }
 
     internal func applySyntaxHighlighting(in range: NSRange) {
-        let syntaxService = BusinessLogic.syntaxHighlighting
+        let syntaxService = businessLogicServices.syntaxHighlightingService
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textStorage?.length ?? 0
         #else
@@ -159,7 +159,7 @@ extension CodeEditorView {
     /// Apply text color specifically for Mac Catalyst
     /// This ensures text is visible by applying color attributes to all text
     public func applyTextColorForMacCatalyst() {
-        let syntaxService = BusinessLogic.syntaxHighlighting
+        let syntaxService = businessLogicServices.syntaxHighlightingService
         let textStorage = self.textStorage
         
         let attributes = syntaxService.createCatalystTextAttributes(

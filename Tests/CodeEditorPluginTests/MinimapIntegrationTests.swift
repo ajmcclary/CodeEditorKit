@@ -116,7 +116,8 @@ final class MinimapIntegrationTests: XCTestCase {
     @MainActor
     func testMinimapViewModel() async {
         let config = EditorConfiguration()
-        let viewModel = MinimapViewModel(configuration: config)
+        let services = BusinessLogicServiceRegistry()
+        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
         
         // Test initial state
         XCTAssertEqual(viewModel.minimapState.isVisible, config.display.showMinimap, "Visibility should match config")
@@ -139,7 +140,8 @@ final class MinimapIntegrationTests: XCTestCase {
     func testMinimapViewModelTextChange() async {
         var config = EditorConfiguration()
         config.display.showMinimap = true
-        let viewModel = MinimapViewModel(configuration: config)
+        let services = BusinessLogicServiceRegistry()
+        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
         
         // Test text change
         viewModel.textDidChange("Line 1\nLine 2\nLine 3")
@@ -157,7 +159,8 @@ final class MinimapIntegrationTests: XCTestCase {
     func testMinimapViewModelInteraction() async {
         var config = EditorConfiguration()
         config.display.showMinimap = true
-        let viewModel = MinimapViewModel(configuration: config)
+        let services = BusinessLogicServiceRegistry()
+        let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
         
         // Set up frame
         viewModel.updateFrame(CGRect(x: 0, y: 0, width: 60, height: 400))
@@ -175,7 +178,7 @@ final class MinimapIntegrationTests: XCTestCase {
         XCTAssertTrue(viewModel.interaction.isHovered, "Should be hovered")
         XCTAssertEqual(viewModel.interaction.hoveredPosition, 100, "Hover position should match")
         
-        viewModel.handlePointerHover(at: .none)
+        viewModel.handlePointerHover(at: nil)
         XCTAssertFalse(viewModel.interaction.isHovered, "Should not be hovered")
     }
     

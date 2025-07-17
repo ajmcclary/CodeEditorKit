@@ -170,7 +170,7 @@ public final class AsyncSyntaxHighlighter {
             applyTokens(cachedTokens, to: textView, visibleRange: visibleRange)
             
             // Track cache hit
-            ProductionPerformanceMetrics.shared.trackHighlighting(
+            await ProductionPerformanceMetrics.shared.trackHighlighting(
                 duration: 0.001, // Near-instant for cache hits
                 fileSize: textLength,
                 language: language,
@@ -214,7 +214,7 @@ public final class AsyncSyntaxHighlighter {
                 await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
                 
                 // Track performance metrics for production monitoring
-                ProductionPerformanceMetrics.shared.trackHighlighting(
+                await ProductionPerformanceMetrics.shared.trackHighlighting(
                     duration: endTime - startTime,
                     fileSize: textLength,
                     language: language,

@@ -15,7 +15,8 @@ import Foundation
 ///
 /// - Important: LSP functionality is **only available on macOS** as it requires
 ///   the `Process` API to launch and communicate with language servers.
-///   On iOS and Mac Catalyst, LSP methods will throw `LSPError.notSupported`.
+///   On iOS and Mac Catalyst, LSP functionality is completely unavailable due to
+///   conditional compilation - the LSP types and methods don't exist on these platforms.
 ///
 /// ## Platform Support
 /// - ✅ macOS: Full support

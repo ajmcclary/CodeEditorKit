@@ -226,7 +226,7 @@ extension CrossPlatformCoordinator {
                 gutterWidth: platformAdjustments.gutterWidth,
                 minimumTouchTargetSize: 40,
                 maxFileSize: platformAdjustments.maxFileSize,
-                maxHighlightingLength: platformAdjustments.maxHighlightingLength,
+                maxSyntaxHighlightingLength: platformAdjustments.maxSyntaxHighlightingLength,
                 showMinimap: platformAdjustments.showMinimap,
                 enableMultiCursor: platformAdjustments.enableMultiCursor
             )
@@ -238,7 +238,7 @@ extension CrossPlatformCoordinator {
                 gutterWidth: platformAdjustments.gutterWidth,
                 minimumTouchTargetSize: 44,
                 maxFileSize: platformAdjustments.maxFileSize,
-                maxHighlightingLength: platformAdjustments.maxHighlightingLength,
+                maxSyntaxHighlightingLength: platformAdjustments.maxSyntaxHighlightingLength,
                 showMinimap: platformAdjustments.showMinimap,
                 enableMultiCursor: platformAdjustments.enableMultiCursor
             )

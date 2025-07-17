@@ -48,6 +48,31 @@ final class FastJSONTokenizer {
     
     private let chunkSize = 4_096 // Process JSON in 4KB chunks
     private var tokenCache = [NSRange: [Token]]()
+    
+    // MARK: - UTF-16 Constants
+    
+    // Pre-computed UTF-16 values for common characters to avoid force unwraps
+    private let quoteChar: unichar = 0x0022        // "
+    private let backslashChar: unichar = 0x005C    // \
+    private let colonChar: unichar = 0x003A        // :
+    private let commaChar: unichar = 0x002C        // ,
+    private let openBraceChar: unichar = 0x007B    // {
+    private let closeBraceChar: unichar = 0x007D   // }
+    private let openBracketChar: unichar = 0x005B  // [
+    private let closeBracketChar: unichar = 0x005D // ]
+    private let plusChar: unichar = 0x002B         // +
+    private let minusChar: unichar = 0x002D        // -
+    private let dotChar: unichar = 0x002E          // .
+    private let eUpperChar: unichar = 0x0045       // E
+    private let eLowerChar: unichar = 0x0065       // e
+    private let tChar: unichar = 0x0074            // t
+    private let rChar: unichar = 0x0072            // r
+    private let uChar: unichar = 0x0075            // u
+    private let fChar: unichar = 0x0066            // f
+    private let aChar: unichar = 0x0061            // a
+    private let lChar: unichar = 0x006C            // l
+    private let sChar: unichar = 0x0073            // s
+    private let nChar: unichar = 0x006E            // n
     private let cacheLimit = 50 // Cache up to 50 chunks
     
     // MARK: - Public Methods
@@ -139,13 +164,20 @@ final class FastJSONTokenizer {
         
         while currentIndex < endIndex {
             let char = text.unicharAt( currentIndex)
-            let unicodeScalar = UnicodeScalar(char)!
+            guard let unicodeScalar = UnicodeScalar(char) else {
+                // Invalid character, skip it
+                currentIndex += 1
+                continue
+            }
             
             // Skip whitespace
             if CharacterSet.whitespacesAndNewlines.contains(unicodeScalar) {
                 let wsStart = currentIndex
                 while currentIndex < endIndex {
-                    let character = UnicodeScalar(text.unicharAt( currentIndex))!
+                    guard let character = UnicodeScalar(text.unicharAt( currentIndex)) else {
+                        currentIndex += 1
+                        continue
+                    }
                     if !CharacterSet.whitespacesAndNewlines.contains(character) {
                         break
                     }
@@ -221,7 +253,7 @@ final class FastJSONTokenizer {
     }
     
     private func parseString(_ text: String, startingAt index: Int, endIndex: Int) -> Token? {
-        guard index < endIndex && text.unicharAt( index) == Character("\"").utf16.first! else {
+        guard index < endIndex && text.unicharAt( index) == quoteChar else {
             return nil
         }
         
@@ -233,9 +265,9 @@ final class FastJSONTokenizer {
             
             if escaped {
                 escaped = false
-            } else if char == Character("\\").utf16.first! {
+            } else if char == backslashChar {
                 escaped = true
-            } else if char == Character("\"").utf16.first! {
+            } else if char == quoteChar {
                 // Found closing quote
                 let range = NSRange(location: index, length: currentIndex - index + 1)
                 let value = text.nsStringSubstring(with: NSRange(location: index + 1, length: currentIndex - index - 1))
@@ -244,12 +276,15 @@ final class FastJSONTokenizer {
                 var isKey = false
                 var checkIndex = currentIndex + 1
                 while checkIndex < endIndex {
-                    let checkChar = UnicodeScalar(text.unicharAt( checkIndex))!
+                    let unicharValue = text.unicharAt( checkIndex)
+                    guard let checkChar = UnicodeScalar(unicharValue) else {
+                        break
+                    }
                     if CharacterSet.whitespacesAndNewlines.contains(checkChar) {
                         checkIndex += 1
                         continue
                     }
-                    if checkChar == ":" {
+                    if unicharValue == colonChar {
                         isKey = true
                     }
                     break
@@ -269,30 +304,38 @@ final class FastJSONTokenizer {
         var currentIndex = index
         
         // Handle negative sign
-        if currentIndex < endIndex && text.unicharAt( currentIndex) == Character("-").utf16.first! {
+        if currentIndex < endIndex && text.unicharAt( currentIndex) == minusChar {
             currentIndex += 1
         }
         
         // Must have at least one digit
-        guard currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) else {
+        guard currentIndex < endIndex,
+              let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+              CharacterSet.decimalDigits.contains(scalar) else {
             return nil
         }
         
         // Parse integer part
-        while currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) {
+        while currentIndex < endIndex,
+              let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+              CharacterSet.decimalDigits.contains(scalar) {
             currentIndex += 1
         }
         
         // Parse decimal part
-        if currentIndex < endIndex && text.unicharAt( currentIndex) == Character(".").utf16.first! {
+        if currentIndex < endIndex && text.unicharAt( currentIndex) == dotChar {
             currentIndex += 1
             
             // Must have at least one digit after decimal
-            guard currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) else {
+            guard currentIndex < endIndex,
+                  let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+                  CharacterSet.decimalDigits.contains(scalar) else {
                 return Token(type: .invalid, range: NSRange(location: index, length: currentIndex - index), value: nil)
             }
             
-            while currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) {
+            while currentIndex < endIndex,
+                  let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+                  CharacterSet.decimalDigits.contains(scalar) {
                 currentIndex += 1
             }
         }
@@ -300,23 +343,27 @@ final class FastJSONTokenizer {
         // Parse exponent part
         if currentIndex < endIndex {
             let char = text.unicharAt( currentIndex)
-            if char == Character("e").utf16.first! || char == Character("E").utf16.first! {
+            if char == eLowerChar || char == eUpperChar {
                 currentIndex += 1
                 
                 // Handle sign
                 if currentIndex < endIndex {
                     let signChar = text.unicharAt( currentIndex)
-                    if signChar == Character("+").utf16.first! || signChar == Character("-").utf16.first! {
+                    if signChar == plusChar || signChar == minusChar {
                         currentIndex += 1
                     }
                 }
                 
                 // Must have at least one digit
-                guard currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) else {
+                guard currentIndex < endIndex,
+                      let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+                      CharacterSet.decimalDigits.contains(scalar) else {
                     return Token(type: .invalid, range: NSRange(location: index, length: currentIndex - index), value: nil)
                 }
                 
-                while currentIndex < endIndex && CharacterSet.decimalDigits.contains(UnicodeScalar(text.unicharAt( currentIndex))!) {
+                while currentIndex < endIndex,
+                      let scalar = UnicodeScalar(text.unicharAt( currentIndex)),
+                      CharacterSet.decimalDigits.contains(scalar) {
                     currentIndex += 1
                 }
             }
@@ -339,7 +386,9 @@ final class FastJSONTokenizer {
                 if substring == literal {
                     // Check that it's not part of a larger word
                     if index + literalLength < endIndex {
-                        let nextChar = UnicodeScalar(text.unicharAt( index + literalLength))!
+                        guard let nextChar = UnicodeScalar(text.unicharAt( index + literalLength)) else {
+                            return nil
+                        }
                         if CharacterSet.alphanumerics.contains(nextChar) {
                             return nil
                         }

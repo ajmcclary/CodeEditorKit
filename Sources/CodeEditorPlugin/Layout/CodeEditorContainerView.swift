@@ -72,6 +72,15 @@ public final class CodeEditorContainerView: PlatformView {
         setupObservers()
     }
     
+    /// Initializes the container view with custom services for dependency injection
+    /// - Parameters:
+    ///   - frame: The frame rectangle for the view
+    ///   - businessLogicServices: Service registry for business logic dependencies
+    public convenience init(frame: CGRect, businessLogicServices: BusinessLogicServiceRegistry) {
+        self.init(frame: frame)
+        textView.businessLogicServices = businessLogicServices
+    }
+    
     public required init?(coder: NSCoder) {
         // Create initialization parameters and views using unified logic
         let parameters = ContainerViewInitializer.InitializationParameters(frame: .zero)

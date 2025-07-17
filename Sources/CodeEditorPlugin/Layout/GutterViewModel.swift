@@ -135,7 +135,7 @@ public final class GutterViewModel {
     
     public init(
         configuration: EditorConfiguration,
-        businessLogicServices: BusinessLogicServiceRegistry = BusinessLogicServiceRegistry.shared
+        businessLogicServices: BusinessLogicServiceRegistry
     ) {
         self.configuration = configuration
         self.businessLogicServices = businessLogicServices

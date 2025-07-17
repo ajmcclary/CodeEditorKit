@@ -33,7 +33,7 @@ extension CodeEditorView {
             string
         }
         set {
-            let textEditingService = BusinessLogic.textEditing
+            let textEditingService = businessLogicServices.textEditingService
             // Use a large limit for text validation - maxSyntaxHighlightingLength is for highlighting only
             let validationResult = textEditingService.validateTextChange(
                 newText: newValue, 

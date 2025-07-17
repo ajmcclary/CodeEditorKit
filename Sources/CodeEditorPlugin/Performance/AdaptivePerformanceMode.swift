@@ -43,12 +43,12 @@ public final class AdaptivePerformanceMode: ObservableObject {
     /// Apply adaptive configuration to editor
     public func applyConfiguration(to config: inout EditorConfiguration) {
         // Display settings
-        config.display.isLineNumbersEnabled = configuration.showLineNumbers
+        config.display.isLineNumbersEnabled = configuration.isLineNumbersEnabled
         config.display.enableCodeFolding = configuration.enableCodeFolding
         config.display.enableSyntaxHighlighting = configuration.enableSyntaxHighlighting
         
         // Performance settings
-        config.performance.maxSyntaxHighlightingLength = configuration.maxHighlightingLength
+        config.performance.maxSyntaxHighlightingLength = configuration.maxSyntaxHighlightingLength
         config.performance.maxVisibleLines = configuration.maxVisibleLines
         config.performance.renderingUpdateStrategy = configuration.renderingStrategy
         
@@ -123,14 +123,14 @@ public struct PerformanceModeConfiguration: Sendable {
     public let mode: PerformanceMode
     
     // Display features
-    public let showLineNumbers: Bool
+    public let isLineNumbersEnabled: Bool
     public let enableCodeFolding: Bool
     public let enableSyntaxHighlighting: Bool
     public let enableMinimap: Bool
     
     // Performance settings
     public let highlightingDebounce: Duration
-    public let maxHighlightingLength: Int
+    public let maxSyntaxHighlightingLength: Int
     public let maxVisibleLines: Int
     public let renderingStrategy: EditorConfiguration.Performance.RenderingUpdateStrategy
     public let prefetchMultiplier: CGFloat
@@ -145,12 +145,12 @@ public struct PerformanceModeConfiguration: Sendable {
         switch mode {
         case .highQuality:
             // All features enabled, minimal debouncing
-            showLineNumbers = true
+            isLineNumbersEnabled = true
             enableCodeFolding = true
             enableSyntaxHighlighting = true
             enableMinimap = true
             highlightingDebounce = .milliseconds(100)
-            maxHighlightingLength = 1_000_000 // 1MB
+            maxSyntaxHighlightingLength = 1_000_000 // 1MB
             maxVisibleLines = 1_000
             renderingStrategy = .immediate
             prefetchMultiplier = 2.0
@@ -159,12 +159,12 @@ public struct PerformanceModeConfiguration: Sendable {
             
         case .balanced:
             // Most features enabled, moderate debouncing
-            showLineNumbers = true
+            isLineNumbersEnabled = true
             enableCodeFolding = true
             enableSyntaxHighlighting = true
             enableMinimap = false
             highlightingDebounce = .milliseconds(300)
-            maxHighlightingLength = 500_000 // 500KB
+            maxSyntaxHighlightingLength = 500_000 // 500KB
             maxVisibleLines = 500
             renderingStrategy = .batched
             prefetchMultiplier = 1.5
@@ -173,12 +173,12 @@ public struct PerformanceModeConfiguration: Sendable {
             
         case .performance:
             // Minimal features, aggressive optimization
-            showLineNumbers = true
+            isLineNumbersEnabled = true
             enableCodeFolding = false
             enableSyntaxHighlighting = true // But with limits
             enableMinimap = false
             highlightingDebounce = .milliseconds(500)
-            maxHighlightingLength = 100_000 // 100KB
+            maxSyntaxHighlightingLength = 100_000 // 100KB
             maxVisibleLines = 200
             renderingStrategy = .adaptive
             prefetchMultiplier = 1.0

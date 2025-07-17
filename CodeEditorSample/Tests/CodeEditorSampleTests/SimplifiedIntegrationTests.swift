@@ -1,11 +1,16 @@
 @testable import CodeEditorPlugin
-#if XCODE_BUILD && os(macOS)
-@testable import CodeEditorSample_macOS
-#else
-@testable import CodeEditorSample
-#endif
 import SwiftUI
 import XCTest
+
+#if XCODE_BUILD && os(macOS)
+@testable import CodeEditorSample_macOS
+// Disambiguate ConfigurationPreset since both modules define it
+typealias SampleConfigurationPreset = CodeEditorSample_macOS.ConfigurationPreset
+#else
+@testable import CodeEditorSample
+// Disambiguate ConfigurationPreset since both modules define it
+typealias SampleConfigurationPreset = CodeEditorSample.ConfigurationPreset
+#endif
 
 #if canImport(UIKit)
 import UIKit
@@ -26,7 +31,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
         #endif
 
         // Test specific presets instead of all
-        let presetsToTest: [(CodeEditorSample.ConfigurationPreset, () -> Void)] = [
+        let presetsToTest: [(SampleConfigurationPreset, () -> Void)] = [
             (.fullFeatured, {
                 XCTAssertTrue(textView.isLineNumbersEnabled)
                 XCTAssertTrue(textView.isEditable)
@@ -103,7 +108,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
         #endif
 
         // 1. Start with full featured config
-        let config = CodeEditorSample.ConfigurationPreset.fullFeatured.configuration
+        let config = SampleConfigurationPreset.fullFeatured.configuration
         textView.isLineNumbersEnabled = config.display.isLineNumbersEnabled
         textView.isEditable = config.behavior.isEditable
         textView.text = "Initial code"
@@ -113,7 +118,7 @@ final class SimplifiedIntegrationTests: XCTestCase {
         XCTAssertEqual(textView.text, "Initial code")
 
         // 2. Switch to read-only
-        let readOnlyConfig = CodeEditorSample.ConfigurationPreset.readOnly.configuration
+        let readOnlyConfig = SampleConfigurationPreset.readOnly.configuration
         textView.isEditable = readOnlyConfig.behavior.isEditable
 
         XCTAssertFalse(textView.isEditable)

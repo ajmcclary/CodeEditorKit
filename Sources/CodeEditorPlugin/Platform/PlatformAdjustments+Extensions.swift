@@ -35,7 +35,7 @@ public struct PlatformAdjustments: Sendable {
     public let maxFileSize: Int
     
     /// Maximum text length for syntax highlighting
-    public let maxHighlightingLength: Int
+    public let maxSyntaxHighlightingLength: Int
     
     // MARK: - UI Adjustments
     
@@ -56,7 +56,7 @@ public struct PlatformAdjustments: Sendable {
         self.gutterWidth = 40.0
         self.minimumTouchTargetSize = 24.0
         self.maxFileSize = 10_000_000 // 10MB
-        self.maxHighlightingLength = 1_000_000
+        self.maxSyntaxHighlightingLength = 1_000_000
         self.showMinimap = true
         self.enableMultiCursor = true
         #else
@@ -66,7 +66,7 @@ public struct PlatformAdjustments: Sendable {
         self.gutterWidth = 50.0 // Wider for touch targets
         self.minimumTouchTargetSize = 44.0 // iOS HIG recommendation
         self.maxFileSize = 5_000_000 // 5MB for iOS
-        self.maxHighlightingLength = 500_000 // Less for iOS
+        self.maxSyntaxHighlightingLength = 500_000 // Less for iOS
         self.showMinimap = false // Not supported on iOS
         self.enableMultiCursor = false // Simplified for iOS
         #endif
@@ -79,7 +79,7 @@ public struct PlatformAdjustments: Sendable {
         gutterWidth: CGFloat,
         minimumTouchTargetSize: CGFloat,
         maxFileSize: Int,
-        maxHighlightingLength: Int,
+        maxSyntaxHighlightingLength: Int,
         showMinimap: Bool,
         enableMultiCursor: Bool
     ) {
@@ -88,7 +88,7 @@ public struct PlatformAdjustments: Sendable {
         self.gutterWidth = gutterWidth
         self.minimumTouchTargetSize = minimumTouchTargetSize
         self.maxFileSize = maxFileSize
-        self.maxHighlightingLength = maxHighlightingLength
+        self.maxSyntaxHighlightingLength = maxSyntaxHighlightingLength
         self.showMinimap = showMinimap
         self.enableMultiCursor = enableMultiCursor
     }
@@ -110,7 +110,7 @@ public struct PlatformAdjustments: Sendable {
                 gutterWidth: adjustments.gutterWidth,
                 minimumTouchTargetSize: 44.0,
                 maxFileSize: 8_000_000, // 8MB for iPad
-                maxHighlightingLength: 750_000,
+                maxSyntaxHighlightingLength: 750_000,
                 showMinimap: UIDevice.current.userInterfaceIdiom == .pad && UIScreen.main.bounds.width > 1_000,
                 enableMultiCursor: false
             )
@@ -122,7 +122,7 @@ public struct PlatformAdjustments: Sendable {
                 gutterWidth: 35.0, // Narrower for phones
                 minimumTouchTargetSize: 44.0,
                 maxFileSize: 3_000_000, // 3MB for iPhone
-                maxHighlightingLength: 250_000,
+                maxSyntaxHighlightingLength: 250_000,
                 showMinimap: false,
                 enableMultiCursor: false
             )
@@ -142,6 +142,6 @@ extension PlatformAdjustments {
         configuration.layout.lineHeightMultiple = lineSpacing
         configuration.layout.gutterWidth = gutterWidth
         configuration.display.showMinimap = showMinimap
-        configuration.performance.maxSyntaxHighlightingLength = maxHighlightingLength
+        configuration.performance.maxSyntaxHighlightingLength = maxSyntaxHighlightingLength
     }
 }

@@ -270,7 +270,7 @@ public struct TextProcessingPipeline {
     /// Processes text with caching for repeated operations
     public func processWithCaching(_ text: String, cacheKey: String) async throws -> ProcessingResult {
         if configuration.enableCaching {
-            if let cachedResult = PipelineCache.shared.get(key: cacheKey) {
+            if let cachedResult = await PipelineCache.shared.get(key: cacheKey) {
                 return cachedResult
             }
         }
@@ -278,7 +278,7 @@ public struct TextProcessingPipeline {
         let result = try await process(text)
         
         if configuration.enableCaching {
-            PipelineCache.shared.set(key: cacheKey, value: result)
+            await PipelineCache.shared.set(key: cacheKey, value: result)
         }
         
         return result
@@ -351,31 +351,26 @@ public protocol TextTransformer: Sendable {
 
 // MARK: - Caching System
 
-private final class PipelineCache: @unchecked Sendable {
+private actor PipelineCache {
     static let shared = PipelineCache()
     
     private var cache: [String: TextProcessingPipeline.ProcessingResult] = [:]
     private var accessTimes: [String: Date] = [:]
     private let maxSize = 100
-    private let queue = DispatchQueue(label: "pipeline.cache", attributes: .concurrent)
     
     private init() {}
     
     func get(key: String) -> TextProcessingPipeline.ProcessingResult? {
-        queue.sync {
-            accessTimes[key] = Date()
-            return cache[key]
-        }
+        accessTimes[key] = Date()
+        return cache[key]
     }
     
     func set(key: String, value: TextProcessingPipeline.ProcessingResult) {
-        queue.async(flags: .barrier) {
-            self.cache[key] = value
-            self.accessTimes[key] = Date()
-            
-            if self.cache.count > self.maxSize {
-                self.evictOldestEntry()
-            }
+        cache[key] = value
+        accessTimes[key] = Date()
+        
+        if cache.count > maxSize {
+            evictOldestEntry()
         }
     }
     
@@ -528,7 +523,7 @@ extension TextProcessingPipeline {
     func executeOperation(_ operation: TextProcessingOperation, on text: String) async throws -> OperationExecutionResult {
         // Check cache first
         let cacheKey = "\(operation.name)_\(text.hashValue)"
-        if configuration.enableCaching, let cachedText = OperationCache.shared.get(key: cacheKey) {
+        if configuration.enableCaching, let cachedText = await OperationCache.shared.get(key: cacheKey) {
             return OperationExecutionResult(processedText: cachedText, wasFromCache: true)
         }
         
@@ -539,7 +534,7 @@ extension TextProcessingPipeline {
         
         // Cache result
         if configuration.enableCaching {
-            OperationCache.shared.set(key: cacheKey, value: processedText)
+            await OperationCache.shared.set(key: cacheKey, value: processedText)
         }
         
         return OperationExecutionResult(processedText: processedText, wasFromCache: false)
@@ -579,31 +574,26 @@ extension TextProcessingPipeline {
 
 // MARK: - Operation Cache
 
-private final class OperationCache: @unchecked Sendable {
+private actor OperationCache {
     static let shared = OperationCache()
     
     private var cache: [String: String] = [:]
     private let maxSize = 1_000
-    private let queue = DispatchQueue(label: "operation.cache", attributes: .concurrent)
     
     private init() {}
     
     func get(key: String) -> String? {
-        queue.sync {
-            cache[key]
-        }
+        cache[key]
     }
     
     func set(key: String, value: String) {
-        queue.async(flags: .barrier) {
-            self.cache[key] = value
-            
-            if self.cache.count > self.maxSize {
-                // Simple eviction: remove random entries
-                let keysToRemove = Array(self.cache.keys.prefix(self.maxSize / 4))
-                for key in keysToRemove {
-                    self.cache.removeValue(forKey: key)
-                }
+        cache[key] = value
+        
+        if cache.count > maxSize {
+            // Simple eviction: remove random entries
+            let keysToRemove = Array(cache.keys.prefix(maxSize / 4))
+            for key in keysToRemove {
+                cache.removeValue(forKey: key)
             }
         }
     }

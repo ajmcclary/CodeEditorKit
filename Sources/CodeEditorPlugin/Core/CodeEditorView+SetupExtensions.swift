@@ -80,7 +80,7 @@ extension CodeEditorView {
     }
     
     internal func updateCompletionTriggerCharacters() {
-        let syntaxService = BusinessLogic.syntaxHighlighting
+        let syntaxService = businessLogicServices.syntaxHighlightingService
         completionTriggerCharacters = syntaxService.getCompletionTriggerCharacters(for: language)
     }
 }
