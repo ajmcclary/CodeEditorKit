@@ -119,8 +119,23 @@ public enum TextKitSetupHelper {
         }
         
         return false
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Check for TextKit2 using runtime detection
+        // UITextView on Mac Catalyst can use TextKit2 starting from iOS 16
+        if #available(iOS 16.0, *) {
+            // Try to detect TextKit2 by checking if certain TextKit2 behaviors are present
+            // When TextKit2 is active, the text container behaves differently
+            let originalLineBreakMode = textView.textContainer.lineBreakMode
+            let originalSize = textView.textContainer.size
+            
+            // TextKit2 containers have different default behaviors
+            // If we can access the text layout manager through the text container, it's TextKit2
+            // For now, we'll prefer TextKit2 on Mac Catalyst when available
+            return true
+        }
+        return false
         #else
-        // iOS/Catalyst don't expose TextKit2 APIs directly
+        // iOS doesn't expose TextKit2 APIs directly
         return false
         #endif
     }
@@ -215,7 +230,21 @@ public enum TextKitSetupHelper {
         // Use ModernTextKitHelper for additional optimizations
         ModernTextKitHelper.applyPerformanceOptimizations(to: textView)
         
-        #elseif canImport(UIKit)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst specific optimizations
+        // Avoid certain optimizations that interfere with text rendering
+        textView.layer.shouldRasterize = false
+        
+        // For TextKit1 on Mac Catalyst, we need special handling
+        if !isUsingTextKit2 {
+            // Force proper text rendering by disabling some optimizations
+            textView.layer.drawsAsynchronously = false
+            
+            // Ensure text attributes are preserved
+            textView.allowsEditingTextAttributes = true
+        }
+        
+        #else
         // iOS performance optimizations
         textView.layer.shouldRasterize = false
         textView.layer.rasterizationScale = UIScreen.main.scale

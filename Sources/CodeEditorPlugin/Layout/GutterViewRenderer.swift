@@ -144,8 +144,30 @@ public class GutterViewRenderer {
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
         let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
         return lineRect.minY + (lineRect.height - fontLineHeight) / 2
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        guard let text = textView.text,
+              let stringRange = Range(lineRange, in: text) else {
+            return CGFloat(lineNumber - 1) * TextMetricsCalculator.calculateLineHeight(for: font)
+        }
+        
+        // Get the start position of the line
+        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
+        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
+        
+        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
+              let textRange = textView.textRange(from: position, to: position) else {
+            return CGFloat(lineNumber - 1) * TextMetricsCalculator.calculateLineHeight(for: font)
+        }
+        
+        // Get the rect for this position
+        let lineRect = textView.firstRect(for: textRange)
+        
+        // Return the Y position adjusted for scroll
+        return lineRect.minY - textView.contentOffset.y
+        
         #else
-        // iOS/Catalyst implementation - account for scroll position
+        // iOS implementation - account for scroll position
         let layoutManager = textView.layoutManager
         let textContainer = textView.textContainer
         

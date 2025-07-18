@@ -65,9 +65,6 @@ enum ContainerViewHelper {
     /// Configure the text view for scrolling behavior
     static func configureTextViewScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
         configurePlatformScrolling(textView, wrapLines: wrapLines)
-        
-        // Common configuration
-        textView.backgroundColor = PlatformColors.clear
     }
     
     private static func configurePlatformScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
@@ -89,6 +86,40 @@ enum ContainerViewHelper {
         // iOS configuration
         textView.alwaysBounceVertical = true
         textView.isScrollEnabled = true
+        
+        // Configure text container for word wrapping
+        let textContainer = textView.textContainer
+        textContainer.maximumNumberOfLines = 0
+        
+        if wrapLines {
+            // Enable word wrapping
+            textContainer.lineBreakMode = .byWordWrapping
+            // Use bounds width for wrapping, but ensure it's valid
+            let containerWidth = textView.bounds.width > 0 ? textView.bounds.width : textView.frame.width
+            textContainer.size = CGSize(width: containerWidth, height: CGFloat.greatestFiniteMagnitude)
+            textView.alwaysBounceHorizontal = false
+            textView.showsHorizontalScrollIndicator = false
+            
+            // Ensure width tracks text view for proper wrapping
+            textContainer.widthTracksTextView = true
+        } else {
+            // Disable word wrapping - allow horizontal scrolling
+            textContainer.lineBreakMode = .byCharWrapping
+            // Use unlimited width to prevent wrapping
+            textContainer.size = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            // Don't track text view width when horizontal scrolling is needed
+            textContainer.widthTracksTextView = false
+            textView.alwaysBounceHorizontal = true
+            textView.showsHorizontalScrollIndicator = true
+            
+            // Force UITextView to recalculate its content size for horizontal scrolling
+            textView.setNeedsLayout()
+            textView.layoutIfNeeded()
+            
+            // Force content size update without accessing layoutManager
+            // This avoids triggering TextKit1 compatibility mode
+            textView.invalidateIntrinsicContentSize()
+        }
         #endif
     }
     

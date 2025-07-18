@@ -87,4 +87,3 @@ public struct LSPManagerCompletionItem: CompletionItemView {
         self.client = client
     }
 }
-

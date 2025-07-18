@@ -72,10 +72,41 @@ extension CodeEditorView {
     }
     #else
     override public func layoutSubviews() {
+        #if targetEnvironment(macCatalyst)
+        // Preserve word wrap state before layout
+        if !hasPreservedWordWrapState {
+            preservedWordWrapState = configuration.layout.wrapLines
+            hasPreservedWordWrapState = true
+        }
+        #endif
+        
         super.layoutSubviews()
         updateGutterFrame()
         updateLineHighlightFrame()
         updateAnnotationViews()
+        
+        // Don't update text container size here to prevent configuration loops
+        // Text container size is managed by configuration updates
+        
+        #if targetEnvironment(macCatalyst)
+        // Check if word wrap state was incorrectly changed
+        if hasPreservedWordWrapState && preservedWordWrapState != configuration.layout.wrapLines {
+            Self.logger.debug("Mac Catalyst: Word wrap state changed during layout, restoring to \(preservedWordWrapState)")
+            
+            // Restore without triggering loops
+            var updatedConfig = configuration
+            updatedConfig.layout.wrapLines = preservedWordWrapState
+            
+            isApplyingConfiguration = true
+            defer { isApplyingConfiguration = false }
+            
+            configuration = updatedConfig
+            updateTextContainerSize()
+        }
+        
+        // Monitor for text container changes
+        monitorTextContainerChanges()
+        #endif
     }
     #endif
 
@@ -155,16 +186,29 @@ extension CodeEditorView {
         let textContainer = self.textContainer
         
         if configuration.layout.wrapLines {
-            // Update container size for proper wrapping
+            // Enable word wrapping
+            textContainer.lineBreakMode = .byWordWrapping
             textContainer.size = CGSize(
                 width: bounds.width - textContainerInset.left - textContainerInset.right,
                 height: CGFloat.greatestFiniteMagnitude
             )
+            textContainer.widthTracksTextView = true
+            
+            // Update scrolling behavior
+            self.alwaysBounceHorizontal = false
+            self.showsHorizontalScrollIndicator = false
         } else {
+            // Disable word wrapping - allow horizontal scrolling
+            textContainer.lineBreakMode = .byCharWrapping
             textContainer.size = CGSize(
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
             )
+            textContainer.widthTracksTextView = false
+            
+            // Enable horizontal scrolling
+            self.alwaysBounceHorizontal = true
+            self.showsHorizontalScrollIndicator = true
         }
         #endif
     }

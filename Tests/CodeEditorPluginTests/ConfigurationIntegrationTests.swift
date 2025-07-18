@@ -11,6 +11,38 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Cleanup
     }
     
+    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Helper function to compare NSColors that may have different color space representations
+    private func colorsAreEqual(_ color1: NSColor?, _ color2: NSColor?) -> Bool {
+        guard let color1, let color2 else {
+            return color1 == nil && color2 == nil
+        }
+        
+        // Convert both colors to RGB color space for comparison
+        guard let rgb1 = color1.usingColorSpace(.deviceRGB),
+              let rgb2 = color2.usingColorSpace(.deviceRGB) else {
+            // If conversion fails, try comparing in sRGB space
+            guard let srgb1 = color1.usingColorSpace(.sRGB),
+                  let srgb2 = color2.usingColorSpace(.sRGB) else {
+                // Last resort: compare descriptions
+                return color1.description == color2.description
+            }
+            
+            // Compare sRGB components
+            return abs(srgb1.redComponent - srgb2.redComponent) < 0.01 &&
+                   abs(srgb1.greenComponent - srgb2.greenComponent) < 0.01 &&
+                   abs(srgb1.blueComponent - srgb2.blueComponent) < 0.01 &&
+                   abs(srgb1.alphaComponent - srgb2.alphaComponent) < 0.01
+        }
+        
+        // Compare RGB components with small tolerance for floating point differences
+        return abs(rgb1.redComponent - rgb2.redComponent) < 0.01 &&
+               abs(rgb1.greenComponent - rgb2.greenComponent) < 0.01 &&
+               abs(rgb1.blueComponent - rgb2.blueComponent) < 0.01 &&
+               abs(rgb1.alphaComponent - rgb2.alphaComponent) < 0.01
+    }
+    #endif
+    
     @MainActor
     func testTextContainerInset() {
         let textView = CodeEditorView(frame: .zero)
@@ -140,7 +172,13 @@ final class ConfigurationIntegrationTests: XCTestCase {
         #endif
         
         // Verify settings were applied
+        // Compare colors using a custom comparison to handle different color space representations
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        XCTAssertTrue(colorsAreEqual(textView.backgroundColor, PlatformColors.systemBackground), 
+                      "Background color mismatch")
+        #else
         XCTAssertEqual(textView.backgroundColor, PlatformColors.systemBackground)
+        #endif
         XCTAssertEqual(textView.textColor, PlatformColors.label)
         XCTAssertEqual(textView.configuration.display.selectedLineHighlightColor, PlatformColors.systemGray)
         

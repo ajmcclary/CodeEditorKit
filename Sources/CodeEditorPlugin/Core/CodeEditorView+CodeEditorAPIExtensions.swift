@@ -193,16 +193,44 @@ extension CodeEditorView {
         let visibleRect = visibleRect
         guard let textContainer,
               let layoutManager else { return nil }
-        #else
-        let visibleRect = bounds
-        let textContainer = self.textContainer
-        let layoutManager = self.layoutManager
-        #endif
         
         let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
         
         return Range(characterRange, in: content)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use TextKit2-compatible approach to avoid triggering TextKit1 mode
+        // Calculate visible range based on bounds without accessing layoutManager
+        let visibleRect = bounds
+        
+        // Use text position APIs instead of layout manager
+        guard let startPosition = closestPosition(to: CGPoint(x: 0, y: visibleRect.minY)),
+              let endPosition = closestPosition(to: CGPoint(x: visibleRect.width, y: visibleRect.maxY)) else {
+            return nil
+        }
+        
+        let startOffset = offset(from: beginningOfDocument, to: startPosition)
+        let endOffset = offset(from: beginningOfDocument, to: endPosition)
+        
+        guard startOffset >= 0 && endOffset >= startOffset && endOffset <= content.count else {
+            return nil
+        }
+        
+        let startIndex = content.index(content.startIndex, offsetBy: startOffset)
+        let endIndex = content.index(content.startIndex, offsetBy: endOffset)
+        
+        return startIndex..<endIndex
+        #else
+        // iOS: Access layoutManager directly
+        let visibleRect = bounds
+        let textContainer = self.textContainer
+        let layoutManager = self.layoutManager
+        
+        let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
+        let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        
+        return Range(characterRange, in: content)
+        #endif
     }
     
     // MARK: - Annotations

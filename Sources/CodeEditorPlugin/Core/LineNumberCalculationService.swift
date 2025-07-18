@@ -258,6 +258,28 @@ extension LineNumberCalculationService {
         textView: CodeEditorView,
         configuration _: EditorConfiguration
     ) -> CGFloat? {
+        #if targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        guard let text = textView.text,
+              let range = characterRange(for: lineNumber, in: textView),
+              let stringRange = Range(range, in: text) else { return nil }
+        
+        // Get the start position of the line
+        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
+        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
+        
+        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
+              let textRange = textView.textRange(from: position, to: position) else { return nil }
+        
+        // Get the rect for this position
+        let lineRect = textView.firstRect(for: textRange)
+        
+        // Apply text container insets and adjustments
+        let textContainerInset = textView.textContainerInset
+        return lineRect.minY + (textContainerInset.top + textContainerInset.bottom) / 2
+        
+        #else
+        // iOS: Access layoutManager directly
         let textContainer = textView.textContainer
         let layoutManager = textView.layoutManager
         
@@ -274,9 +296,20 @@ extension LineNumberCalculationService {
         // Apply text container insets and adjustments
         let textContainerInset = textView.textContainerInset
         return lineRect.minY + (textContainerInset.top + textContainerInset.bottom) / 2
+        #endif
     }
     
     func findLineNumberiOS(at point: CGPoint, textView: CodeEditorView) -> Int? {
+        #if targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        guard let position = textView.closestPosition(to: point) else { return nil }
+        
+        let characterIndex = textView.offset(from: textView.beginningOfDocument, to: position)
+        
+        return lineNumber(for: characterIndex, in: textView)
+        
+        #else
+        // iOS: Access layoutManager directly
         let textContainer = textView.textContainer
         let layoutManager = textView.layoutManager
         
@@ -295,6 +328,7 @@ extension LineNumberCalculationService {
         )
         
         return lineNumber(for: characterIndex, in: textView)
+        #endif
     }
     #endif
     

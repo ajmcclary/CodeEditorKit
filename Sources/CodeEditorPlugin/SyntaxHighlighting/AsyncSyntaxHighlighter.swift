@@ -271,7 +271,20 @@ public final class AsyncSyntaxHighlighter {
         
         // First, apply base text color to the entire range
         let baseTextColor = textView.textColor ?? PlatformColors.label
+        
+        #if targetEnvironment(macCatalyst)
+        // On Mac Catalyst with TextKit1, we need to ensure the base color is visible
+        // Use a more explicit color that's guaranteed to render
+        let catalystBaseColor = baseTextColor.resolvedColor(with: textView.traitCollection)
+        textStorage.addAttribute(.foregroundColor, value: catalystBaseColor, range: rangeToHighlight)
+        
+        // Also set the font to ensure proper rendering
+        if let font = textView.font {
+            textStorage.addAttribute(.font, value: font, range: rangeToHighlight)
+        }
+        #else
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
+        #endif
         
         // Apply new highlighting - batch tokens by color for performance
         var tokensByColor: [PlatformColor: [NSRange]] = [:]
@@ -298,11 +311,29 @@ public final class AsyncSyntaxHighlighter {
             // Merge adjacent or overlapping ranges for even better performance
             let mergedRanges = mergeAdjacentRanges(ranges)
             for range in mergedRanges {
+                #if targetEnvironment(macCatalyst)
+                // On Mac Catalyst, ensure colors are properly resolved
+                let resolvedColor = color.resolvedColor(with: textView.traitCollection)
+                textStorage.addAttribute(.foregroundColor, value: resolvedColor, range: range)
+                
+                // Also ensure font is set for proper rendering
+                if let font = textView.font {
+                    textStorage.addAttribute(.font, value: font, range: range)
+                }
+                #else
                 textStorage.addAttribute(.foregroundColor, value: color, range: range)
+                #endif
             }
         }
         
         textStorage.endEditing()
+        
+        #if targetEnvironment(macCatalyst)
+        // Force text view to refresh its display on Mac Catalyst
+        textView.setNeedsDisplay()
+        // On Mac Catalyst, layoutManager is not optional
+        textView.layoutManager.invalidateDisplay(forCharacterRange: rangeToHighlight)
+        #endif
     }
     
     private func clearHighlighting(for textView: CodeEditorView) {

@@ -333,11 +333,11 @@ enum TextKit2PerformanceHelper {
         if config.enableViewportOptimization {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.textContainer?.maximumNumberOfLines = 0
-            textView.textContainer?.lineBreakMode = .byWordWrapping
+            // Don't override line break mode - let configuration handle it
             #else
             let textContainer = textView.textContainer
             textContainer.maximumNumberOfLines = 0
-            textContainer.lineBreakMode = .byWordWrapping
+            // Don't override line break mode - let configuration handle it
             #endif
         }
     }

@@ -147,6 +147,16 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Layout coordinator to prevent recursive layout
     internal lazy var layoutCoordinator = LayoutCoordinator(view: self)
     
+    /// Flag to prevent recursive configuration updates
+    internal var isApplyingConfiguration = false
+    
+    #if targetEnvironment(macCatalyst)
+    /// Track word wrap state to prevent TextKit1 compatibility mode from resetting it
+    internal var preservedWordWrapState: Bool = false
+    /// Flag to indicate if we have captured the initial word wrap state
+    internal var hasPreservedWordWrapState: Bool = false
+    #endif
+    
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
@@ -161,9 +171,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             
             // Apply configuration if it changed OR if the memory monitor changed
             // (memoryMonitor is excluded from EditorConfiguration equality)
-            if configuration != oldValue || 
-               configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor {
+            if !isApplyingConfiguration && 
+               (configuration != oldValue || 
+                configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor) {
+                isApplyingConfiguration = true
                 applyConfiguration()
+                isApplyingConfiguration = false
             }
         }
     }

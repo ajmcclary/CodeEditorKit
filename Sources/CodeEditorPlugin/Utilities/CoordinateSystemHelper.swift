@@ -155,7 +155,38 @@ class CoordinateSystemHelper {
         // Add container origin offset
         let textOrigin = textView.textContainerInset
         let adjustedRect = boundingRect.offsetBy(dx: textOrigin.width, dy: textOrigin.height)
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        guard let text = textView.text,
+              let stringRange = Range(range, in: text) else {
+            return nil
+        }
+        
+        // Get start and end positions
+        let startOffset = text.distance(from: text.startIndex, to: stringRange.lowerBound)
+        let endOffset = text.distance(from: text.startIndex, to: stringRange.upperBound)
+        
+        guard let startPosition = textView.position(from: textView.beginningOfDocument, offset: startOffset),
+              let endPosition = textView.position(from: textView.beginningOfDocument, offset: endOffset),
+              let textRange = textView.textRange(from: startPosition, to: endPosition) else {
+            return nil
+        }
+        
+        // Get the bounding rect
+        let rects = textView.selectionRects(for: textRange)
+        guard !rects.isEmpty else { return nil }
+        
+        // Combine all rects
+        var boundingRect = rects[0].rect
+        for rect in rects.dropFirst() {
+            boundingRect = boundingRect.union(rect.rect)
+        }
+        
+        // Already includes container inset
+        let adjustedRect = boundingRect
+        
         #else
+        // iOS: Access layoutManager directly
         let layoutManager = textView.layoutManager
         let textContainer = textView.textContainer
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
@@ -201,7 +232,19 @@ class CoordinateSystemHelper {
             in: textContainer,
             fractionOfDistanceBetweenInsertionPoints: nil
         )
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        let viewPoint = point.cgPoint(in: coordinateSystem, containerHeight: textView.bounds.height)
+        
+        // Use closestPosition to find character index
+        guard let position = textView.closestPosition(to: viewPoint) else {
+            return nil
+        }
+        
+        return textView.offset(from: textView.beginningOfDocument, to: position)
+        
         #else
+        // iOS: Access layoutManager directly
         let layoutManager = textView.layoutManager
         let textContainer = textView.textContainer
         // Convert to view coordinates

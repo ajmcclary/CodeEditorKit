@@ -54,6 +54,19 @@ extension CodeEditorView {
         // Apply paragraph style for tab width and line spacing
         applyParagraphStyle()
         
+        // Apply word wrap settings (especially important on iOS when font size changes)
+        ContainerViewHelper.configureTextViewScrolling(self, wrapLines: configuration.layout.wrapLines)
+        
+        // Update text container size for word wrap changes
+        #if canImport(UIKit)
+        updateTextContainerSize()
+        #endif
+        
+        // Ensure text colors are visible on Mac Catalyst
+        #if targetEnvironment(macCatalyst)
+        applyTextColorForMacCatalyst()
+        #endif
+        
         // Apply behavior settings
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable

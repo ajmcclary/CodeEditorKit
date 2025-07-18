@@ -155,11 +155,8 @@ enum ModernTextKitHelper {
         textView.isGrammarCheckingEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
         
-        // Configure layout manager if using TextKit1
-        if let layoutManager = textView.layoutManager {
-            layoutManager.allowsNonContiguousLayout = true
-            layoutManager.backgroundLayoutEnabled = true
-        }
+        // Skip layout manager configuration to avoid triggering TextKit1 compatibility mode
+        // TextKit2 handles these optimizations automatically
         
         // Configure text container
         if let textContainer = textView.textContainer {

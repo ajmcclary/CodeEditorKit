@@ -226,6 +226,13 @@ extension CodeEditorContainerView {
             bringSubviewToFront(minimapView)
         }
         
+        // Reconfigure text container for word wrapping with proper bounds
+        // This is necessary because the initial configuration might have been applied
+        // before the view had proper bounds
+        if textView.bounds.width > 0 {
+            ContainerViewHelper.configureTextViewScrolling(textView, wrapLines: configuration.layout.wrapLines)
+        }
+        
         // Let Auto Layout handle the actual positioning
         setNeedsLayout()
     }

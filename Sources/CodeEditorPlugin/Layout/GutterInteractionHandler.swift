@@ -162,6 +162,28 @@ public final class GutterInteractionHandler {
         lineRect = textView.convert(lineRect, to: gutterView)
         return lineRect
         
+        #elseif targetEnvironment(macCatalyst)
+        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
+        guard let text = textView.text,
+              let stringRange = Range(range, in: text) else { return nil }
+        
+        // Get the start position of the line
+        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
+        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
+        
+        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
+              let textRange = textView.textRange(from: position, to: position) else { return nil }
+        
+        // Get the rect for this position
+        var lineRect = textView.firstRect(for: textRange)
+        
+        // Expand to full line height
+        lineRect.size.height = textView.font?.lineHeight ?? 20
+        
+        // Convert to gutter coordinates
+        lineRect = textView.convert(lineRect, to: gutterView)
+        return lineRect
+        
         #else
         // iOS: Use text container to get line rectangle
         let layoutManager = textView.layoutManager
