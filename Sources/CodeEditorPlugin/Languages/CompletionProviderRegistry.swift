@@ -7,9 +7,10 @@ import Foundation
 public final class CompletionProviderRegistry {
     // MARK: - Singleton
     
+    @available(*, deprecated, message: "Use dependency injection instead of singleton pattern. Create your own CompletionProviderRegistry instance.")
     public static let shared = CompletionProviderRegistry()
 
-    private init() {
+    public init() {
         loadBuiltInProviders()
     }
     

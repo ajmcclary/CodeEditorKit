@@ -72,11 +72,14 @@ public final class LSPClient: ObservableObject {
     /// LSP message handler
     private let messageHandler = LSPMessageHandler()
     
+    /// Transport for communication (optional for backward compatibility)
+    internal var transport: LSPTransport?
+    
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Process for running the language server
+    /// Process for running the language server (legacy)
     private var serverProcess: Process?
     
-    /// Communication pipes
+    /// Communication pipes (legacy)
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
     #endif
@@ -156,7 +159,12 @@ public final class LSPClient: ObservableObject {
         logger.info("Connecting to LSP server: \(configuration.serverPath)")
         
         do {
-            try await startServerProcess(configuration: configuration)
+            // Use transport if available, otherwise fall back to process
+            if transport != nil {
+                try await startTransportConnection()
+            } else {
+                try await startServerProcess(configuration: configuration)
+            }
             try await initializeServer(configuration: configuration)
             
             connectionState = .initialized
@@ -179,10 +187,20 @@ public final class LSPClient: ObservableObject {
             
             Task {
                 try? await sendShutdownRequest()
-                terminateServerProcess()
+                if let transport {
+                    await transport.disconnect()
+                } else {
+                    terminateServerProcess()
+                }
             }
         } else {
-            terminateServerProcess()
+            if let transport {
+                Task {
+                    await transport.disconnect()
+                }
+            } else {
+                terminateServerProcess()
+            }
         }
         
         // Clean up state
@@ -376,6 +394,23 @@ public final class LSPClient: ObservableObject {
         }
     }
     
+    /// Start connection using transport
+    private func startTransportConnection() async throws {
+        guard let transport else {
+            throw LSPError.transportNotConfigured
+        }
+        
+        // Set up data handler before connecting
+        await transport.setDataHandler { [weak self] data in
+            await self?.messageHandler.processIncomingData(data)
+        }
+        
+        // Connect transport
+        try await transport.connect()
+        
+        logger.info("Connected via transport")
+    }
+    
     private func startServerProcess(configuration: ServerConfiguration) async throws {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let process = Process()
@@ -506,6 +541,15 @@ public final class LSPClient: ObservableObject {
     }
     
     private func sendMessage(_ message: any Codable) async throws {
+        // Use transport if available
+        if let transport {
+            let encoder = JSONEncoder()
+            let jsonData = try encoder.encode(message)
+            try await transport.send(jsonData)
+            return
+        }
+        
+        // Fall back to legacy pipe-based implementation
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let stdinPipe else {
             throw LSPError.notConnected

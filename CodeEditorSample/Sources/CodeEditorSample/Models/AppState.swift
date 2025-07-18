@@ -242,7 +242,7 @@ class AppState: ObservableObject {
             let data = try encoder.encode(currentConfiguration)
             return String(data: data, encoding: .utf8)
         } catch {
-            print("Failed to encode configuration: \(error)")
+            CrossPlatformLogger.logger().error("Failed to encode configuration: \(error)")
             return nil
         }
     }
@@ -291,7 +291,7 @@ class AppState: ObservableObject {
             selectedPreset = .fullFeatured // Reset to custom after import
             return true
         } catch {
-            print("Failed to decode configuration: \(error)")
+            CrossPlatformLogger.logger().error("Failed to decode configuration: \(error)")
             return false
         }
     }

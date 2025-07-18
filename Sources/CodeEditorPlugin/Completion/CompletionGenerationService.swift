@@ -10,7 +10,15 @@ internal final class CompletionGenerationService {
     // MARK: - Properties
     
     private var completionProviders: [CompletionProvider] = []
-    private let providerRegistry = CompletionProviderRegistry.shared
+    private let providerRegistry: CompletionProviderRegistry
+    
+    // MARK: - Initialization
+    
+    /// Initialize with a completion provider registry
+    /// - Parameter providerRegistry: The registry to use for managing completion providers
+    internal init(providerRegistry: CompletionProviderRegistry? = nil) {
+        self.providerRegistry = providerRegistry ?? CompletionProviderRegistry()
+    }
     
     // MARK: - Public Methods
     

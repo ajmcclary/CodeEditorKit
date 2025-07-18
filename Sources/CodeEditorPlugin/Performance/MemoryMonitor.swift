@@ -30,6 +30,49 @@ import Combine
 /// config.apply(to: editorView)
 /// ```
 ///
+/// ## Lifecycle Management
+///
+/// **Important**: Always stop monitoring when the associated view or component is deallocated:
+///
+/// ```swift
+/// class MyViewController {
+///     let monitor = MemoryMonitor()
+///     
+///     override func viewDidLoad() {
+///         super.viewDidLoad()
+///         monitor.startMonitoring()
+///     }
+///     
+///     override func viewWillDisappear(_ animated: Bool) {
+///         super.viewWillDisappear(animated)
+///         monitor.stopMonitoring()
+///     }
+///     
+///     deinit {
+///         // Ensure monitoring is stopped if not already done
+///         monitor.stopMonitoring()
+///     }
+/// }
+/// ```
+///
+/// For SwiftUI views:
+/// ```swift
+/// struct ContentView: View {
+///     @StateObject private var monitor = MemoryMonitor()
+///     
+///     var body: some View {
+///         CodeEditor(text: $code)
+///             .memoryMonitor(monitor)
+///             .onAppear {
+///                 monitor.startMonitoring()
+///             }
+///             .onDisappear {
+///                 monitor.stopMonitoring()
+///             }
+///     }
+/// }
+/// ```
+///
 /// ## Cleanup Handlers
 ///
 /// Register custom cleanup handlers for your resources:

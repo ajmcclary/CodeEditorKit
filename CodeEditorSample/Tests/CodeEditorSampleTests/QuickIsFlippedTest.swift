@@ -13,7 +13,7 @@ final class QuickIsFlippedTest: XCTestCase {
         let textView = CodeEditorView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
 
         // Test 1: Check if CodeEditorView reports isFlipped correctly
-        print("CodeEditorView isFlipped: \(textView.isFlipped)")
+        CrossPlatformLogger.logger().debug("CodeEditorView isFlipped: \(textView.isFlipped)")
         XCTAssertTrue(textView.isFlipped, "CodeEditorView MUST be flipped for correct text rendering")
 
         // Test 2: CodeEditorView should handle flipped coordinates internally
@@ -58,7 +58,9 @@ final class QuickIsFlippedTest: XCTestCase {
         let firstLineRect = layoutManager.boundingRect(forGlyphRange: firstLineGlyphRange, in: textContainer)
         let lastLineRect = layoutManager.boundingRect(forGlyphRange: lastLineGlyphRange, in: textContainer)
 
-        print("First line Y: \(firstLineRect.origin.y), Last line Y: \(lastLineRect.origin.y)")
+        CrossPlatformLogger.logger().debug(
+            "First line Y: \(firstLineRect.origin.y), Last line Y: \(lastLineRect.origin.y)"
+        )
 
         // In flipped coordinates, Y increases downward
         if firstLineRange.location != lastLineRange.location {

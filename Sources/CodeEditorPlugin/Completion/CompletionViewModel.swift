@@ -38,7 +38,7 @@ public final class CompletionViewModel {
     private let contextExtractor = CompletionContextExtractor()
     private let cacheManager = CompletionCacheManager()
     private let filteringService = CompletionFilteringService()
-    private let generationService = CompletionGenerationService()
+    private let generationService: CompletionGenerationService
     
     // Debouncing and throttling
     @available(iOS 17.0, macOS 14.0, *)
@@ -61,6 +61,9 @@ public final class CompletionViewModel {
         self.configuration = configuration
         self.businessLogicServices = businessLogicServices
         self.popupState = CompletionPopupState()
+        self.generationService = CompletionGenerationService(
+            providerRegistry: businessLogicServices.completionProviderRegistry
+        )
         
         logger.debug("CompletionViewModel initialized")
     }

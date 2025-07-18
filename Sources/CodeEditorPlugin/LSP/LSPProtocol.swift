@@ -496,6 +496,7 @@ public struct ShowMessageParams: Codable, Sendable {
 public enum LSPError: Error, LocalizedError, Sendable {
     case notConnected
     case alreadyConnected
+    case transportNotConfigured
     case serverError(code: Int, message: String, data: String?)
     case invalidResponse(String)
     case decodingError(String)
@@ -509,6 +510,9 @@ public enum LSPError: Error, LocalizedError, Sendable {
 
         case .alreadyConnected:
             return "Already connected to LSP server"
+
+        case .transportNotConfigured:
+            return "No transport configured for LSP connection"
 
         case let .serverError(code, message, _):
             return "LSP server error (\(code)): \(message)"

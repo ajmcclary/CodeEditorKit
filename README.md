@@ -16,7 +16,7 @@ A powerful, production-ready code editor component for macOS, iOS, and Mac Catal
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation
 - **Themeable**: Built-in themes (Xcode, VS Code Dark, GitHub, Solarized)
 - **SwiftUI Native**: First-class SwiftUI integration with environment-based configuration
-- **Extensible**: Plugin architecture and Language Server Protocol support
+- **Extensible**: Plugin architecture (Preview) and Language Server Protocol support (macOS only)
 
 ## 🚀 Quick Start
 
@@ -58,6 +58,42 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
   - iOS 16.0+
   - Mac Catalyst 16.0+
 - **Xcode**: 16.0+
+
+## 📊 Platform Feature Availability
+
+| Feature | macOS | iOS | Mac Catalyst |
+|---------|:-----:|:---:|:------------:|
+| Core Editor | ✅ | ✅ | ✅ |
+| Syntax Highlighting | ✅ | ✅ | ✅ |
+| Code Folding | ✅ | ✅ | ✅ |
+| Line Numbers | ✅ | ✅ | ✅ |
+| Themes | ✅ | ✅ | ✅ |
+| Annotations | ✅ | ✅ | ✅ |
+| Code Completion | ✅ | ✅ | ✅ |
+| Language Server Protocol (Local) | ✅ | ❌ | ❌ |
+| Language Server Protocol (Remote) | ✅ | ✅ | ✅ |
+| Plugin Architecture | ✅ | ✅ | ✅ |
+| Memory Monitoring | ✅ | ✅ | ✅ |
+| Large File Support (10MB+) | ✅ | ⚠️ | ⚠️ |
+
+⚠️ = Limited support, see performance recommendations
+
+## 🔌 Plugin Architecture (Preview)
+
+The CodeEditorPlugin supports extensibility through a plugin system that allows adding new languages, themes, and features. This system is currently in preview and the API may change.
+
+```swift
+// Example: Adding a custom language
+let customLanguage = LanguageConfiguration(
+    id: "custom",
+    displayName: "Custom Language",
+    fileExtensions: ["cst", "custom"],
+    syntaxPatterns: customPatterns
+)
+LanguageRegistry.register(customLanguage)
+```
+
+For detailed plugin development guidance, see `Documentation.docc/Plugin-Architecture.md`.
 
 ## 🏗️ Architecture
 
@@ -161,6 +197,10 @@ monitor.startMonitoring()
 
 CodeEditor(text: $code)
     .memoryMonitor(monitor)
+    
+// Important: Always stop monitoring when done
+// (e.g., in onDisappear or deinit)
+monitor.stopMonitoring()
 ```
 
 ### Language Support
@@ -175,6 +215,27 @@ textView.language = .python
 // Supported languages:
 // Swift, Python, JavaScript, TypeScript, Rust, C/C++, Go, Java, Ruby,
 // PHP, HTML, CSS, JSON, YAML, XML, SQL, Shell, Markdown
+```
+
+### Language Server Protocol (LSP)
+
+The plugin now supports LSP on all platforms through remote WebSocket connections:
+
+```swift
+// Local LSP (macOS only)
+config.lsp.servers["swift"] = LSPServerConfiguration.local(
+    LocalLSPConfiguration(
+        executablePath: "/usr/bin/sourcekit-lsp"
+    )
+)
+
+// Remote LSP (all platforms)
+config.lsp.servers["swift"] = LSPServerConfiguration.remote(
+    RemoteLSPConfiguration(
+        serverURL: URL(string: "wss://lsp.example.com/swift")!,
+        authentication: .bearerToken("your-token")
+    )
+)
 ```
 
 ## 🧪 Testing

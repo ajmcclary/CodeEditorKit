@@ -148,6 +148,19 @@ public final class UnifiedEventSystem: ObservableObject {
         eventHistory.clear()
     }
     
+    /// Configure event throttling rate
+    /// - Parameter maxEventsPerSecond: Maximum number of events per second for each event type
+    public func configureThrottling(maxEventsPerSecond: Int) {
+        // Remove existing performance filter
+        eventFilters.removeAll { $0 is PerformanceEventFilter }
+        
+        // Add new filter with updated rate
+        let performanceFilter = PerformanceEventFilter(
+            maxEventsPerSecond: maxEventsPerSecond
+        )
+        eventFilters.append(performanceFilter)
+    }
+    
     // MARK: - Metrics
     
     /// Get event system metrics
@@ -165,12 +178,10 @@ public final class UnifiedEventSystem: ObservableObject {
         eventFilters.append(platformFilter)
         
         // Add performance filter to throttle high-frequency events
-        // For now, don't throttle any events since we don't have EventType defined
-        // let performanceFilter = PerformanceEventFilter(
-        //     maxEventsPerSecond: 60,
-        //     eventTypesToThrottle: []
-        // )
-        // eventFilters.append(performanceFilter)
+        let performanceFilter = PerformanceEventFilter(
+            maxEventsPerSecond: 60  // Default throttle rate
+        )
+        eventFilters.append(performanceFilter)
     }
     
     private func updateTypedEvents(_ event: EditorEvent) {

@@ -421,7 +421,7 @@ struct UnifiedConfigurationView: View {
         alert.runModal()
         #else
         // iOS: In a real implementation, this would use UIAlertController
-        print("\(title): \(message)")
+        CrossPlatformLogger.logger().info("\(title): \(message)")
         #endif
     }
     

@@ -21,6 +21,7 @@ public final class BusinessLogicServiceRegistry {
     private var _syntaxHighlightingService: SyntaxHighlightingService?
     private var _languageDetectionService: LanguageDetectionService?
     private var _textEditingService: TextEditingService?
+    private var _completionProviderRegistry: CompletionProviderRegistry?
     
     // Service dependencies
     private weak var codeFoldingEngine: CodeFoldingEngine?
@@ -36,6 +37,7 @@ public final class BusinessLogicServiceRegistry {
     ///   - syntaxHighlightingService: Optional pre-configured syntax highlighting service
     ///   - languageDetectionService: Optional pre-configured language detection service
     ///   - textEditingService: Optional pre-configured text editing service
+    ///   - completionProviderRegistry: Optional pre-configured completion provider registry
     public init(
         lineNumberCalculationService: LineNumberCalculationService? = nil,
         gutterSizingService: GutterSizingService? = nil,
@@ -43,7 +45,8 @@ public final class BusinessLogicServiceRegistry {
         editorLayoutService: EditorLayoutService? = nil,
         syntaxHighlightingService: SyntaxHighlightingService? = nil,
         languageDetectionService: LanguageDetectionService? = nil,
-        textEditingService: TextEditingService? = nil
+        textEditingService: TextEditingService? = nil,
+        completionProviderRegistry: CompletionProviderRegistry? = nil
     ) {
         self._lineNumberCalculationService = lineNumberCalculationService
         self._gutterSizingService = gutterSizingService
@@ -52,6 +55,7 @@ public final class BusinessLogicServiceRegistry {
         self._syntaxHighlightingService = syntaxHighlightingService
         self._languageDetectionService = languageDetectionService
         self._textEditingService = textEditingService
+        self._completionProviderRegistry = completionProviderRegistry
     }
     
     // MARK: - Service Access
@@ -139,6 +143,17 @@ public final class BusinessLogicServiceRegistry {
         let service = TextEditingService()
         _textEditingService = service
         return service
+    }
+    
+    /// Gets or creates the completion provider registry
+    public var completionProviderRegistry: CompletionProviderRegistry {
+        if let registry = _completionProviderRegistry {
+            return registry
+        }
+        
+        let registry = CompletionProviderRegistry()
+        _completionProviderRegistry = registry
+        return registry
     }
     
     // MARK: - Service Registration

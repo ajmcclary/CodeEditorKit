@@ -275,7 +275,14 @@ extension PlatformCapabilities {
             
         // Integration features
         case .languageServerProtocol:
-            return currentPlatform == .macOS // Only available on macOS due to process restrictions
+            // LSP is available on all platforms when using remote servers
+            // Local LSP servers still require macOS
+            return true
+
+        case .localLSP:
+            return currentPlatform == .macOS // Process API required
+        case .remoteLSP:
+            return true // WebSocket available on all platforms
         case .pluginSystem:
             return true // Software feature
         case .externalTools:
@@ -539,6 +546,8 @@ extension PlatformCapabilities {
         
         // Integration features
         case languageServerProtocol
+        case localLSP
+        case remoteLSP
         case pluginSystem
         case externalTools
         case fileWatching

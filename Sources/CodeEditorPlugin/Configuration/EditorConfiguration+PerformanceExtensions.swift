@@ -30,6 +30,17 @@ extension EditorConfiguration {
         /// Maximum number of visible lines to render
         public var maxVisibleLines: Int = PlatformConstants.maxVisibleLines
         
+        /// Maximum file size in bytes (0 = use platform default)
+        /// 
+        /// Files larger than this limit may have degraded performance
+        /// or limited features. Default values:
+        /// - macOS: 10MB
+        /// - iOS: 5MB
+        /// - iPad: 8MB
+        /// 
+        /// Set to 0 to use platform-specific defaults from PlatformAdjustments.
+        public var maxFileSize: Int = 0
+        
         /// Delay before triggering syntax highlighting
         public var highlightingDebounceInterval: Duration = .seconds(PlatformConstants.defaultHighlightingDebounceInterval)
         
@@ -52,6 +63,14 @@ extension EditorConfiguration {
         ///
         /// - Note: Disable for better performance with very large files.
         public var animateCodeFolding: Bool = true
+        
+        /// Maximum events per second for each event type in the event system.
+        ///
+        /// Controls throttling of high-frequency events to prevent performance issues.
+        /// Events that exceed this rate will be dropped. Default is 60 events/second.
+        ///
+        /// - Note: This only affects the UnifiedEventSystem when explicitly configured.
+        public var maxEventsPerSecond: Int = 60
         
         /// Custom memory monitor instance for tracking memory usage.
         ///
@@ -115,10 +134,12 @@ extension EditorConfiguration.Performance: Codable {
         case useHardwareAcceleration
         case renderingUpdateStrategy
         case maxVisibleLines
+        case maxFileSize
         case highlightingDebounceInterval
         case textChangeDebounceInterval
         case smoothScrolling
         case animateCodeFolding
+        case maxEventsPerSecond
     }
     
     public init(from decoder: Decoder) throws {
@@ -127,6 +148,7 @@ extension EditorConfiguration.Performance: Codable {
         useHardwareAcceleration = try container.decodeIfPresent(Bool.self, forKey: .useHardwareAcceleration) ?? true
         renderingUpdateStrategy = try container.decodeIfPresent(RenderingUpdateStrategy.self, forKey: .renderingUpdateStrategy) ?? .adaptive
         maxVisibleLines = try container.decodeIfPresent(Int.self, forKey: .maxVisibleLines) ?? 1_000
+        maxFileSize = try container.decodeIfPresent(Int.self, forKey: .maxFileSize) ?? 0
         // Decode as TimeInterval for backward compatibility, then convert to Duration
         let highlightInterval = try container.decodeIfPresent(TimeInterval.self, forKey: .highlightingDebounceInterval) ?? 0.1
         highlightingDebounceInterval = .seconds(highlightInterval)
@@ -136,6 +158,7 @@ extension EditorConfiguration.Performance: Codable {
         
         smoothScrolling = try container.decodeIfPresent(Bool.self, forKey: .smoothScrolling) ?? true
         animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
+        maxEventsPerSecond = try container.decodeIfPresent(Int.self, forKey: .maxEventsPerSecond) ?? 60
         // memoryMonitor is not decoded - it's a runtime dependency
     }
     
@@ -145,11 +168,13 @@ extension EditorConfiguration.Performance: Codable {
         try container.encode(useHardwareAcceleration, forKey: .useHardwareAcceleration)
         try container.encode(renderingUpdateStrategy, forKey: .renderingUpdateStrategy)
         try container.encode(maxVisibleLines, forKey: .maxVisibleLines)
+        try container.encode(maxFileSize, forKey: .maxFileSize)
         // Encode as TimeInterval for backward compatibility
         try container.encode(highlightingDebounceInterval.timeInterval, forKey: .highlightingDebounceInterval)
         try container.encode(textChangeDebounceInterval.timeInterval, forKey: .textChangeDebounceInterval)
         try container.encode(smoothScrolling, forKey: .smoothScrolling)
         try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
+        try container.encode(maxEventsPerSecond, forKey: .maxEventsPerSecond)
         // memoryMonitor is not encoded - it's a runtime dependency
     }
 }
@@ -163,10 +188,12 @@ extension EditorConfiguration.Performance: Equatable {
         lhs.useHardwareAcceleration == rhs.useHardwareAcceleration &&
         lhs.renderingUpdateStrategy == rhs.renderingUpdateStrategy &&
         lhs.maxVisibleLines == rhs.maxVisibleLines &&
+        lhs.maxFileSize == rhs.maxFileSize &&
         lhs.highlightingDebounceInterval == rhs.highlightingDebounceInterval &&
         lhs.smoothScrolling == rhs.smoothScrolling &&
         lhs.textChangeDebounceInterval == rhs.textChangeDebounceInterval &&
-        lhs.animateCodeFolding == rhs.animateCodeFolding
+        lhs.animateCodeFolding == rhs.animateCodeFolding &&
+        lhs.maxEventsPerSecond == rhs.maxEventsPerSecond
         // memoryMonitor is intentionally excluded from equality comparison
     }
 }

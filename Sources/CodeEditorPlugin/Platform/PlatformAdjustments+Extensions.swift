@@ -143,5 +143,9 @@ extension PlatformAdjustments {
         configuration.layout.gutterWidth = gutterWidth
         configuration.display.showMinimap = showMinimap
         configuration.performance.maxSyntaxHighlightingLength = maxSyntaxHighlightingLength
+        // Only apply maxFileSize if not already configured (0 means use platform default)
+        if configuration.performance.maxFileSize == 0 {
+            configuration.performance.maxFileSize = maxFileSize
+        }
     }
 }
