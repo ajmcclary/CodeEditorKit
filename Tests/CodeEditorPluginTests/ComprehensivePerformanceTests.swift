@@ -191,8 +191,11 @@ final class ComprehensivePerformanceTests: XCTestCase {
         
         // Just verify it completes without errors
         let expectation = self.expectation(description: "Symbol detection")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Check that some symbols were detected
+        
+        // Use a longer delay to allow symbol detection to complete
+        // Symbol detection is debounced by 0.3s and needs processing time
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            // The test passes if we reach this point without errors
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5.0)

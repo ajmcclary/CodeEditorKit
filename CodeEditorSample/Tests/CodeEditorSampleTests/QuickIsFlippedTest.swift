@@ -27,7 +27,7 @@ final class QuickIsFlippedTest: XCTestCase {
 
         // On macOS, line numbers are handled by NSRulerView in the container view,
         // not by GutterView in the text view itself
-        let hasGutterView = textView.subviews.contains(where: { $0 is GutterView })
+        let hasGutterView = textView.subviews.contains { $0 is GutterView }
         let message = "On macOS, GutterView should NOT be created - line numbers are handled by NSRulerView"
         XCTAssertFalse(hasGutterView, message)
 
@@ -47,10 +47,27 @@ final class QuickIsFlippedTest: XCTestCase {
         layoutManager.ensureLayout(forCharacterRange: NSRange(location: 0, length: textView.string.count))
 
         // Check line positions
-        let string = textView.string as NSString
-        let firstLineRange = string.lineRange(for: NSRange(location: 0, length: 0))
-        let lastLineIndex = string.length > 0 ? string.length - 1 : 0
-        let lastLineRange = string.lineRange(for: NSRange(location: lastLineIndex, length: 0))
+        let string = textView.string
+        
+        // Get line ranges using String's native methods
+        let lines = string.components(separatedBy: .newlines)
+        let firstLineRange: NSRange
+        let lastLineRange: NSRange
+        
+        if lines.isEmpty || string.isEmpty {
+            firstLineRange = NSRange(location: 0, length: 0)
+            lastLineRange = NSRange(location: 0, length: 0)
+        } else {
+            // Calculate first line range
+            firstLineRange = NSRange(location: 0, length: lines[0].count)
+            
+            // Calculate last line range
+            var location = 0
+            for index in 0..<(lines.count - 1) {
+                location += lines[index].count + 1 // +1 for newline
+            }
+            lastLineRange = NSRange(location: location, length: lines.last?.count ?? 0)
+        }
 
         let firstLineGlyphRange = layoutManager.glyphRange(forCharacterRange: firstLineRange, actualCharacterRange: nil)
         let lastLineGlyphRange = layoutManager.glyphRange(forCharacterRange: lastLineRange, actualCharacterRange: nil)
