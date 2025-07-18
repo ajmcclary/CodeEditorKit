@@ -289,7 +289,14 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        let range = NSRange(location: 0, length: 10)
+        
+        // Add some text content so selection actions are available
+        textView.text = "Hello, World! This is a test."
+        
+        // Set a valid selection range within the text
+        let range = NSRange(location: 0, length: 5) // Select "Hello"
+        textView.selectedRange = range
+        
         let menu = coordinator.createContextMenu(for: range, in: textView)
         
         XCTAssertNotNil(menu)
@@ -301,6 +308,8 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertGreaterThan(nsMenu.items.count, 3)
         #else
         // iOS returns UIMenu (PlatformContextMenu is typealias for UIMenu)
+        // iOS should have at least: Cut, Copy, (separator), Select All = 4 items
+        // But separators might not count as children in UIMenu
         XCTAssertGreaterThanOrEqual(menu.children.count, 3)
         #endif
     }
