@@ -275,9 +275,9 @@ extension PlatformCapabilities {
             
         // Integration features
         case .languageServerProtocol:
-            // LSP is available on all platforms when using remote servers
-            // Local LSP servers still require macOS
-            return true
+            // For backward compatibility, this refers to local LSP support
+            // Use .localLSP or .remoteLSP for specific capabilities
+            return currentPlatform == .macOS
 
         case .localLSP:
             return currentPlatform == .macOS // Process API required
