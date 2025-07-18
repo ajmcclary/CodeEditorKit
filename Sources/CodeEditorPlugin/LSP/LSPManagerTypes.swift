@@ -1,5 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// LSP functionality is only available on macOS
+// LSP types are available on all platforms to support remote LSP connections
 
 import Foundation
 #if canImport(Combine)
@@ -89,4 +88,3 @@ public struct LSPManagerCompletionItem: CompletionItemView {
     }
 }
 
-#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)

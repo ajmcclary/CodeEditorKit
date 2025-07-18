@@ -1,5 +1,5 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// LSP functionality is only available on macOS
+// LSP client is available on all platforms to support remote LSP connections
+// On platforms without Process API, only remote LSP servers can be used
 
 import Foundation
 
@@ -13,23 +13,26 @@ import Foundation
 /// - Diagnostics
 /// - Symbol navigation
 ///
-/// - Important: LSP functionality is **only available on macOS** as it requires
-///   the `Process` API to launch and communicate with language servers.
-///   On iOS and Mac Catalyst, LSP functionality is completely unavailable due to
-///   conditional compilation - the LSP types and methods don't exist on these platforms.
+/// - Important: LSP client is available on all platforms, but functionality varies:
+///   - macOS: Full support for both local and remote LSP servers
+///   - iOS/Mac Catalyst: Remote LSP servers only (via WebSocket transport)
 ///
 /// ## Platform Support
-/// - ✅ macOS: Full support
-/// - ❌ iOS: Not supported (no Process API)
-/// - ❌ Mac Catalyst: Not supported (no Process API)
+/// - ✅ macOS: Full support (local + remote servers)
+/// - ✅ iOS: Remote servers only
+/// - ✅ Mac Catalyst: Remote servers only
 ///
 /// ## Example Usage
 /// ```swift
-/// // Check platform before using LSP
-/// if PlatformCapabilities.shared.currentPlatform == .macOS {
-///     let client = LSPClient()
-///     try await client.connect(configuration: serverConfig)
-/// }
+/// // Local server (macOS only)
+/// #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+/// let localConfig = LSPServerConfiguration.local(...)
+/// #endif
+/// 
+/// // Remote server (all platforms)
+/// let remoteConfig = LSPServerConfiguration.remote(...)
+/// let client = LSPClient()
+/// try await client.connect(configuration: remoteConfig)
 /// ```
 @MainActor
 public final class LSPClient: ObservableObject {
@@ -624,4 +627,32 @@ public final class LSPClient: ObservableObject {
 
 private struct EmptyParams: Codable {}
 
-#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
+// MARK: - Conditional Extensions for Process-based LSP
+
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+// Process-based LSP support is only available on macOS
+extension LSPClient {
+    /// Legacy process-based connection for backward compatibility
+    /// Use LSPServerConfiguration instead for new code
+    func connectLegacy(configuration: ServerConfiguration) async throws {
+        guard connectionState == .disconnected else {
+            throw LSPError.alreadyConnected
+        }
+        
+        connectionState = .connecting
+        logger.info("Connecting to LSP server (legacy): \(configuration.serverPath)")
+        
+        do {
+            try await startServerProcess(configuration: configuration)
+            try await initializeServer(configuration: configuration)
+            connectionState = .initialized
+            logger.info("Successfully connected and initialized LSP server (legacy)")
+        } catch {
+            connectionState = .error
+            logger.error("Failed to connect to LSP server: \(error.localizedDescription)")
+            disconnect()
+            throw error
+        }
+    }
+}
+#endif

@@ -1,5 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// LSP functionality is only available on macOS
+// LSP protocol types are available on all platforms to support remote LSP connections
 
 import Foundation
 
@@ -531,5 +530,3 @@ public enum LSPError: Error, LocalizedError, Sendable {
         }
     }
 }
-
-#endif
