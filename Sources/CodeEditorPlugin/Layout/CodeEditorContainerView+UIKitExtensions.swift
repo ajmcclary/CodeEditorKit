@@ -70,10 +70,6 @@ extension CodeEditorContainerView {
         // This must be done after textView.setupTextView() and configuration.apply()
         textView.delegate = self
         
-        #if targetEnvironment(macCatalyst)
-        print("📱 Mac Catalyst: Setting up container view with textView delegate: \(textView.delegate != nil)")
-        #endif
-        
         // Set up constraints based on configuration
         rebuildConstraints()
     }
@@ -247,10 +243,6 @@ extension CodeEditorContainerView {
 
 extension CodeEditorContainerView: UITextViewDelegate {
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        #if targetEnvironment(macCatalyst)
-        print("📜 scrollViewDidScroll called on Mac Catalyst - offset: \(scrollView.contentOffset.y)")
-        #endif
-        
         // Update minimap when text view scrolls
         updateMinimap()
         
