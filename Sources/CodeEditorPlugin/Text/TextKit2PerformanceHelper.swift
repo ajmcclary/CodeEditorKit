@@ -295,12 +295,12 @@ enum TextKit2PerformanceHelper {
         
         // Configure scrolling performance
         textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
+        // Don't override horizontal resizability here - let the configuration handle it
         
         // Set appropriate size constraints
         if config.enableViewportOptimization {
-            textView.maxSize = NSSize(width: 10_000, height: 10_000_000)
-            textView.minSize = NSSize(width: 100, height: 100)
+            textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            textView.minSize = NSSize(width: 0, height: 0)
         }
         
         // Configure find panel for large files

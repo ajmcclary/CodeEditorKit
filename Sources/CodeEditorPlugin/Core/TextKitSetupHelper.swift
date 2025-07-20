@@ -159,7 +159,7 @@ public enum TextKitSetupHelper {
         // Text view properties
         textView.isVerticallyResizable = true
         textView.minSize = NSSize(width: 0, height: 0)
-        textView.maxSize = NSSize(width: 10_000, height: 10_000)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         
         #else
         // iOS/Catalyst configuration

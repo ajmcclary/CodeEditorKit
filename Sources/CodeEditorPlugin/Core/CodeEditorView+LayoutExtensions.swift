@@ -59,10 +59,23 @@ extension CodeEditorView {
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {
+            // Save scroll position before layout
+            let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
+            
             super.layout()
             updateGutterFrame()
             updateLineHighlightFrame()
             updateAnnotationViews()
+            
+            // Restore scroll position if it was changed during layout
+            if let scrollView = enclosingScrollView,
+               let savedPosition = savedScrollPosition,
+               scrollView.contentView.bounds.origin != savedPosition {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                scrollView.contentView.bounds.origin = savedPosition
+                CATransaction.commit()
+            }
         } else {
             // Use Swift concurrency to dispatch to main actor
             Task { @MainActor [weak self] in
@@ -119,8 +132,21 @@ extension CodeEditorView {
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func setFrameSize(_ newSize: NSSize) {
+        // Save scroll position before frame change
+        let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
+        
         super.setFrameSize(newSize)
         updateGutterFrame()
+        
+        // Restore scroll position if needed
+        if let scrollView = enclosingScrollView,
+           let savedPosition = savedScrollPosition,
+           scrollView.contentView.bounds.origin != savedPosition {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            scrollView.contentView.bounds.origin = savedPosition
+            CATransaction.commit()
+        }
     }
     #endif
     
@@ -150,6 +176,13 @@ extension CodeEditorView {
     internal func updateTextContainerSize() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = self.textContainer else { return }
+        
+        // If we're in a container view with minimap visible, let the container handle the sizing
+        if let container = containerView, container.configuration.display.showMinimap {
+            // The container view's layoutViewsAppKit method will handle text container sizing
+            // We should not override it here
+            return
+        }
         
         if configuration.layout.wrapLines {
             // For word wrap mode, set container width to match view width

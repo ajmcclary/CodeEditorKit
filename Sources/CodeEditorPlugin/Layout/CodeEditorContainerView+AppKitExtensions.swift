@@ -21,6 +21,9 @@ class LineNumberRulerView: NSRulerView {
     /// Right padding for line numbers
     var rightPadding: CGFloat = 8.0
     
+    /// Track last vertical scroll position to avoid unnecessary redraws
+    private var lastScrollY: CGFloat = 0
+    
     // MARK: - Initialization
     
     override init(scrollView: NSScrollView?, orientation: NSRulerView.Orientation) {
@@ -53,13 +56,25 @@ class LineNumberRulerView: NSRulerView {
     }
     
     @objc func scrollViewDidScroll(_: Notification) {
-        // Force redraw when scrolling
-        setNeedsDisplay(bounds)
-        
-        // Also update the scroll view to ensure proper drawing
-        if let scrollView = self.scrollView {
-            scrollView.reflectScrolledClipView(scrollView.contentView)
+        // Only redraw if we're scrolling vertically
+        // Horizontal scrolling shouldn't require line number updates
+        guard let scrollView = self.scrollView else {
+            setNeedsDisplay(bounds)
+            return
         }
+        
+        // Check if this is a vertical scroll by comparing the previous and current Y positions
+        let currentY = scrollView.contentView.bounds.origin.y
+        if !lastScrollY.isEqual(to: currentY) {
+            lastScrollY = currentY
+            setNeedsDisplay(bounds)
+        }
+        // If only X changed (horizontal scroll), don't trigger a redraw
+    }
+    
+    @objc func textDidChange(_: Notification) {
+        // Text changed, we need to update line numbers
+        setNeedsDisplay(bounds)
     }
     
     required init(coder: NSCoder) {
@@ -246,7 +261,7 @@ extension CodeEditorContainerView {
             // Observe text changes to update line numbers
             NotificationCenter.default.addObserver(
                 rulerView,
-                selector: #selector(LineNumberRulerView.scrollViewDidScroll(_:)),
+                selector: #selector(rulerView.textDidChange(_:)),
                 name: NSText.didChangeNotification,
                 object: textView
             )
@@ -321,12 +336,13 @@ extension CodeEditorContainerView {
             // Bring to front with higher z-position
             minimapView.layer?.zPosition = 1_000
             
-            // When minimap is shown, we need to constrain the text view
-            // Force the scroll view to update its content view
-            scrollView.contentView.frame = scrollView.bounds
-            
+            // When minimap is shown, we need to handle text view layout differently
             // Get the actual content width (scroll view width minus ruler if present)
             let contentWidth = scrollView.contentView.bounds.width
+            
+            // Save current scroll position before any layout changes
+            let savedVisibleRect = scrollView.contentView.visibleRect
+            let savedScrollPosition = scrollView.contentView.bounds.origin
             
             if configuration.layout.wrapLines {
                 // When word wrap is enabled with minimap
@@ -344,33 +360,52 @@ extension CodeEditorContainerView {
                 )
                 textView.textContainer?.widthTracksTextView = true
                 
-                // Force layout update
-                textView.needsDisplay = true
-                scrollView.reflectScrolledClipView(scrollView.contentView)
+                // Layout has already been updated by setting the frame and container size
             } else {
                 // When word wrap is disabled with minimap
-                // Remove width from autoresizing mask so text view doesn't expand beyond scroll view
+                // We need to allow horizontal scrolling, so the text view must be horizontally resizable
                 textView.autoresizingMask = [.height]
                 
-                // Text view should not be horizontally resizable when minimap is shown
-                textView.isHorizontallyResizable = false
+                // Text view MUST be horizontally resizable for horizontal scrolling to work
+                textView.isHorizontallyResizable = true
                 
-                // Set a fixed frame for the text view that matches the content width
-                textView.frame = NSRect(x: 0, y: 0, width: contentWidth, height: textView.frame.height)
+                // Don't set the frame when horizontal scrolling is enabled
+                // The text view will size itself based on content when isHorizontallyResizable = true
                 
-                // Set text container to match the content width minus gutters
-                let textWidth = contentWidth - configuration.layout.gutterWidth - configuration.layout.lineNumberPadding
+                // Set text container to unlimited width to allow horizontal scrolling
                 textView.textContainer?.containerSize = NSSize(
-                    width: textWidth,
+                    width: CGFloat.greatestFiniteMagnitude,
                     height: CGFloat.greatestFiniteMagnitude
                 )
                 
-                // Ensure the text container tracks the text view width
-                textView.textContainer?.widthTracksTextView = true
+                // Text container should NOT track the text view width when we want horizontal scrolling
+                textView.textContainer?.widthTracksTextView = false
                 
-                // Force layout update
-                textView.needsDisplay = true
-                scrollView.reflectScrolledClipView(scrollView.contentView)
+                // Layout has already been updated by setting the frame and container size
+            }
+            
+            // Restore scroll position after all layout changes
+            // This is critical to prevent scroll position from resetting during layout
+            if savedVisibleRect.width > 0 && savedVisibleRect.height > 0 {
+                // IMPORTANT: We must restore the scroll position immediately, not async
+                // The issue is that TextKit's layout manager might reset the scroll position
+                // when it updates the text view's frame during layout
+                
+                // Force the scroll view to maintain its position
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                CATransaction.setValue(true, forKey: kCATransactionDisableActions)
+                
+                // Directly set the bounds origin to restore scroll position
+                // This is more reliable than using scroll(to:) which can be overridden
+                scrollView.contentView.bounds.origin = savedScrollPosition
+                
+                // Also ensure the visible rect is preserved
+                scrollView.contentView.setBoundsOrigin(savedScrollPosition)
+                
+                CATransaction.commit()
+                
+                // Don't call reflectScrolledClipView - it can cause recursion
             }
         } else {
             minimapView.isHidden = true
@@ -413,8 +448,8 @@ extension CodeEditorContainerView {
             scrollView.verticalRulerView?.needsDisplay = true
             // Also mark the scroll view itself for display update
             scrollView.needsDisplay = true
-            // Force immediate display update to prevent line numbers from disappearing
-            scrollView.window?.displayIfNeeded()
+            // Don't force immediate display - let it happen naturally to avoid layout recursion
+            // scrollView.window?.displayIfNeeded()
             // Ensure the ruler view is visible
             scrollView.rulersVisible = true
         }

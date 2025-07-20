@@ -80,13 +80,11 @@ extension CodeEditorContainerView {
         // Update text container insets when configuration changes (for all platforms)
         updateTextContainerInsets()
         
-        // Force layout update
+        // Request layout update without forcing immediate layout
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         needsLayout = true
-        layout() // Force immediate layout on macOS
         #else
         setNeedsLayout()
-        layoutIfNeeded()
         #endif
         
         // Update minimap if it's now visible
