@@ -144,30 +144,8 @@ public class GutterViewRenderer {
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
         let fontLineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
         return lineRect.minY + (lineRect.height - fontLineHeight) / 2
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        guard let text = textView.text,
-              let stringRange = Range(lineRange, in: text) else {
-            return CGFloat(lineNumber - 1) * TextMetricsCalculator.calculateLineHeight(for: font)
-        }
-        
-        // Get the start position of the line
-        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
-        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
-        
-        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
-              let textRange = textView.textRange(from: position, to: position) else {
-            return CGFloat(lineNumber - 1) * TextMetricsCalculator.calculateLineHeight(for: font)
-        }
-        
-        // Get the rect for this position
-        let lineRect = textView.firstRect(for: textRange)
-        
-        // Return the Y position adjusted for scroll
-        return lineRect.minY - textView.contentOffset.y
-        
         #else
-        // iOS implementation - account for scroll position
+        // iOS/Catalyst implementation - use TextKit 1 for proper scrolling and color support
         let layoutManager = textView.layoutManager
         let textContainer = textView.textContainer
         
@@ -175,17 +153,20 @@ public class GutterViewRenderer {
         let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
         
-        // The lineRect is in the text container's coordinate system
-        // We need to convert it to the gutter view's coordinate system
-        
-        // The lineRect.minY is relative to the text container
-        // To get the position in the text view's coordinate system, we add the container inset
+        // Calculate position in text view coordinate system
         let textViewY = lineRect.minY + textView.textContainerInset.top
         
         // Convert to gutter coordinate system by accounting for scroll offset
-        // The gutter is fixed, so we need to subtract the scroll offset
+        // The gutter is fixed, so we need to subtract the scroll offset to get the correct position
+        // For Catalyst, we need to ensure we're getting the actual content offset
+        let scrollOffset = textView.contentOffset.y
+        let gutterY = textViewY - scrollOffset
         
-        return textViewY - textView.contentOffset.y
+        // Center the line number vertically within the line
+        let lineNumberHeight = font.lineHeight
+        let centeredY = gutterY + (lineRect.height - lineNumberHeight) / 2
+        
+        return centeredY
         #endif
     }
     

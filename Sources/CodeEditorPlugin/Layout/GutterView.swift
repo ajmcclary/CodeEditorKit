@@ -118,7 +118,22 @@ public class GutterView: PlatformView, GutterViewProtocol {
     #else
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
-        drawLineNumbers(in: rect)
+        
+        // On Mac Catalyst, force clearing the entire bounds before drawing
+        #if targetEnvironment(macCatalyst)
+        if let context = UIGraphicsGetCurrentContext() {
+            // Clear the entire bounds, not just the dirty rect
+            context.clear(bounds)
+            
+            // Set the fill color to clear/transparent
+            context.setFillColor(UIColor.clear.cgColor)
+            context.fill(bounds)
+        }
+        #endif
+        
+        // Always redraw the full bounds to ensure line numbers are visible
+        // Use bounds instead of rect to force full redraw
+        drawLineNumbers(in: bounds)
     }
     #endif
     
@@ -370,12 +385,28 @@ extension GutterView {
 
 #if canImport(UIKit)
 extension GutterView: UITextViewDelegate {
-    @objc public func scrollViewDidScroll(_: UIScrollView) {
+    @objc public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // Activate display link for smooth updates during scrolling
         displayLink?.isPaused = false
         
-        // Also trigger an immediate update
+        // Store the current offset
+        lastContentOffset = scrollView.contentOffset
+        
+        // Force immediate redraw
         setNeedsDisplay()
+        layer.setNeedsDisplay()
+        
+        // On Catalyst, we need to force the display update more aggressively
+        #if targetEnvironment(macCatalyst)
+        // Mark the entire bounds as needing display
+        setNeedsDisplay(bounds)
+        
+        // Force Core Animation to update immediately
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.displayIfNeeded()
+        CATransaction.commit()
+        #endif
     }
     
     @objc public func scrollViewWillBeginDragging(_: UIScrollView) {

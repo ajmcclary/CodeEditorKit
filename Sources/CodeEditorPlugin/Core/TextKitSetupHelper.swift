@@ -89,8 +89,10 @@ public enum TextKitSetupHelper {
             notes.append("Applied performance optimizations")
         }
         
-        // Set up delegate
-        textView.delegate = textView.delegateProxy
+        // Set up delegate only if not already set by container
+        if textView.delegate == nil {
+            textView.delegate = textView.delegateProxy
+        }
         
         // Set up notifications
         setupNotifications(for: textView)

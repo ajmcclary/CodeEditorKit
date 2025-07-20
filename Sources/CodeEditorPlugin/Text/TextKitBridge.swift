@@ -253,10 +253,11 @@ final class TextKitBridge {
         let bounds = textView.bounds
         
         // Create visible rect that accounts for scroll position
+        // Don't add textContainerInset.top to y - it's already included in the layout
         let visibleRect = CGRect(
-            x: contentOffset.x,
-            y: contentOffset.y + textContainerInset.top,
-            width: bounds.width,
+            x: 0,  // Text is always at x=0 in the container
+            y: contentOffset.y,
+            width: bounds.width - textContainerInset.left - textContainerInset.right,
             height: bounds.height
         )
         
@@ -278,10 +279,11 @@ final class TextKitBridge {
         let bounds = textView.bounds
         
         // Create visible rect that accounts for scroll position
+        // Don't add textContainerInset.top to y - it's already included in the layout
         let visibleRect = CGRect(
-            x: contentOffset.x,
-            y: contentOffset.y + textContainerInset.top,
-            width: bounds.width,
+            x: 0,  // Text is always at x=0 in the container
+            y: contentOffset.y,
+            width: bounds.width - textContainerInset.left - textContainerInset.right,
             height: bounds.height
         )
         #endif

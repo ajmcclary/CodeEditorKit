@@ -201,12 +201,12 @@ enum ContainerViewInitializer {
         components.textView.translatesAutoresizingMaskIntoConstraints = false
         components.minimapView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Set delegate
-        components.textView.delegate = container
-        
-        // Configure gutter-textview relationship
+        // Configure gutter-textview relationship FIRST
         components.gutterView.textView = components.textView
         components.gutterView.observeTextView()
+        
+        // Set delegate LAST to ensure it's not overridden
+        components.textView.delegate = container
         
         // Rebuild constraints using container's existing method
         container.rebuildConstraints()

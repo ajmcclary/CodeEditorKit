@@ -60,14 +60,19 @@ extension CodeEditorContainerView {
         textView.translatesAutoresizingMaskIntoConstraints = false
         minimapView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Set the text view's delegate
-        textView.delegate = self
-        
         // Configure gutter
         gutterView.textView = textView
         
         // Apply configuration BEFORE building constraints
         configuration.apply(to: textView)
+        
+        // Set the text view's delegate AFTER configuration
+        // This must be done after textView.setupTextView() and configuration.apply()
+        textView.delegate = self
+        
+        #if targetEnvironment(macCatalyst)
+        print("📱 Mac Catalyst: Setting up container view with textView delegate: \(textView.delegate != nil)")
+        #endif
         
         // Set up constraints based on configuration
         rebuildConstraints()
@@ -242,17 +247,30 @@ extension CodeEditorContainerView {
 
 extension CodeEditorContainerView: UITextViewDelegate {
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        #if targetEnvironment(macCatalyst)
+        print("📜 scrollViewDidScroll called on Mac Catalyst - offset: \(scrollView.contentOffset.y)")
+        #endif
+        
         // Update minimap when text view scrolls
         updateMinimap()
         
         // Don't move the gutter view - keep it fixed in position
         // The gutter will adjust its drawing based on the text view's scroll offset
         
-        // Notify the gutter view to update line numbers
-        gutterView.setNeedsDisplayLineNumbers()
-        
-        // Call the gutter's scroll method directly to activate display link
+        // Call the gutter's scroll method directly to update its state
         gutterView.scrollViewDidScroll(scrollView)
+        
+        // Force the gutter view to redraw immediately
+        gutterView.setNeedsDisplay()
+        
+        // On Mac Catalyst, we need to force the display update more aggressively
+        #if targetEnvironment(macCatalyst)
+        gutterView.layer.setNeedsDisplay()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gutterView.layer.displayIfNeeded()
+        CATransaction.commit()
+        #endif
     }
     
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
