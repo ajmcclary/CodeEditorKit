@@ -125,14 +125,8 @@ public enum TextKitSetupHelper {
         // Mac Catalyst: Check for TextKit2 using runtime detection
         // UITextView on Mac Catalyst can use TextKit2 starting from iOS 16
         if #available(iOS 16.0, *) {
-            // Try to detect TextKit2 by checking if certain TextKit2 behaviors are present
-            // When TextKit2 is active, the text container behaves differently
-            let originalLineBreakMode = textView.textContainer.lineBreakMode
-            let originalSize = textView.textContainer.size
-            
-            // TextKit2 containers have different default behaviors
-            // If we can access the text layout manager through the text container, it's TextKit2
-            // For now, we'll prefer TextKit2 on Mac Catalyst when available
+            // TextKit2 is available on Mac Catalyst starting from iOS 16
+            // We'll prefer TextKit2 for better performance and features
             return true
         }
         return false

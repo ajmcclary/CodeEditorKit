@@ -180,7 +180,7 @@ public final class AsyncSyntaxHighlighter {
         }
         
         // Start new highlighting task
-        highlightingTask = Task { [weak self] in
+        let task = Task { [weak self] in
             guard let self else { return }
             
             let startTime = CFAbsoluteTimeGetCurrent()
@@ -227,6 +227,12 @@ public final class AsyncSyntaxHighlighter {
                 }
             }
         }
+        
+        // Store the task
+        highlightingTask = task
+        
+        // Wait for the task to complete
+        await task.value
     }
     
     nonisolated private func highlightInBackground(text: String, language: Language) async -> [HighlightedToken] {

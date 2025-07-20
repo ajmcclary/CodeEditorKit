@@ -429,7 +429,7 @@ extension CodeEditorBaseCoordinator {
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
         if let textView = gesture.view as? CodeEditorView,
            currentConfiguration.behavior.isEditable {
-            textView.becomeFirstResponder()
+            _ = textView.becomeFirstResponder()
         }
     }
     
