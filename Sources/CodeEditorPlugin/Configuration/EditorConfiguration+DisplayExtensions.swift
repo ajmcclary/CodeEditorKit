@@ -59,10 +59,6 @@ extension EditorConfiguration {
         /// - Note: Only supported on macOS. Not available on iOS or Mac Catalyst due to TextKit limitations.
         public var showInvisibleCharacters: Bool = false
         
-        /// Whether to show indent guides (vertical lines at indentation levels)
-        /// - Note: Not yet implemented on any platform. This is a placeholder for future development.
-        public var showIndentGuides: Bool = false
-        
         /// Whether to enable code folding functionality
         public var enableCodeFolding: Bool = false
         
@@ -104,7 +100,6 @@ extension EditorConfiguration.Display: Codable {
         case selectedLineHighlightColor
         case visibleLines
         case showInvisibleCharacters
-        case showIndentGuides
         case enableCodeFolding
         case showFoldingControls
         case minimumFoldableLines
@@ -131,7 +126,6 @@ extension EditorConfiguration.Display: Codable {
         }
         visibleLines = try container.decodeIfPresent(Int.self, forKey: .visibleLines) ?? 50
         showInvisibleCharacters = try container.decodeIfPresent(Bool.self, forKey: .showInvisibleCharacters) ?? false
-        showIndentGuides = try container.decodeIfPresent(Bool.self, forKey: .showIndentGuides) ?? false
         enableCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .enableCodeFolding) ?? false
         showFoldingControls = try container.decodeIfPresent(Bool.self, forKey: .showFoldingControls) ?? false
         minimumFoldableLines = try container.decodeIfPresent(Int.self, forKey: .minimumFoldableLines) ?? 3
@@ -149,7 +143,6 @@ extension EditorConfiguration.Display: Codable {
         try container.encode(CodableColor(color: selectedLineHighlightColor), forKey: .selectedLineHighlightColor)
         try container.encode(visibleLines, forKey: .visibleLines)
         try container.encode(showInvisibleCharacters, forKey: .showInvisibleCharacters)
-        try container.encode(showIndentGuides, forKey: .showIndentGuides)
         try container.encode(enableCodeFolding, forKey: .enableCodeFolding)
         try container.encode(showFoldingControls, forKey: .showFoldingControls)
         try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)

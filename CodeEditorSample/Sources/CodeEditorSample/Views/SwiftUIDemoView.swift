@@ -9,7 +9,6 @@ struct SwiftUIDemoView: View {
     
     @StateObject private var appState = AppState()
     @State private var selectedLanguage: Language = .swift
-    @State private var selectedTheme: CodeEditorSwiftUITheme = .default
     
     var body: some View {
         NavigationView {
@@ -25,7 +24,6 @@ struct SwiftUIDemoView: View {
                     language: selectedLanguage.name.lowercased()
                 )
                 .environmentObject(appState)
-                .environment(\.codeEditorTheme, selectedTheme)
             }
         }
         .navigationTitle("SwiftUI Demo")
@@ -47,18 +45,6 @@ struct SwiftUIDemoView: View {
                     Text("Python").tag(Language.python)
                     Text("JavaScript").tag(Language.javascript)
                     Text("JSON").tag(Language.json)
-                }
-                .pickerStyle(.segmented)
-            }
-            
-            // Theme selection
-            HStack {
-                Text("Theme:")
-                    .font(.headline)
-                Spacer()
-                Picker("Theme", selection: $selectedTheme) {
-                    Text("Default").tag(CodeEditorSwiftUITheme.default)
-                    Text("Dark").tag(CodeEditorSwiftUITheme.dark)
                 }
                 .pickerStyle(.segmented)
             }

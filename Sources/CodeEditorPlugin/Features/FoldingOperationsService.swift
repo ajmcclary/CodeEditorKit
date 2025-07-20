@@ -205,8 +205,12 @@ internal final class FoldingOperationsService {
         textStorage.removeAttribute(.foregroundColor, range: contentRange)
         textStorage.removeAttribute(.foldedRegion, range: contentRange)
         
-        // Restore original text formatting by reapplying syntax highlighting
+        // Restore the configured font
         if let textView {
+            let fontSize = textView.configuration.display.fontSize
+            let font = PlatformFonts.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+            textStorage.addAttribute(.font, value: font, range: contentRange)
+            
             // Force layout update to properly display unfolded content
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textView.setNeedsDisplay(textView.bounds)

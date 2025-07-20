@@ -37,15 +37,6 @@ struct UnifiedConfigurationView: View {
                 content: { AnyView(presetsContent) }
             ),
             SearchableSection(
-                id: "Theme",
-                title: "Themes",
-                keywords: [
-                    "theme", "color", "appearance", "dark", "light", "xcode", "github", "solarized", 
-                    "minimal", "presentation", "preview"
-                ],
-                content: { AnyView(ThemeConfigurationSection()) }
-            ),
-            SearchableSection(
                 id: "Display",
                 title: "Display",
                 keywords: [
@@ -249,7 +240,6 @@ struct UnifiedConfigurationView: View {
     private func systemImageForSection(_ sectionId: String) -> String {
         switch sectionId {
         case "Presets": return "slider.horizontal.3"
-        case "Theme": return "paintbrush.fill"
         case "Display": return "eye"
         case "Layout": return "rectangle.grid.1x2"
         case "Behavior": return "gear"

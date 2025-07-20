@@ -41,6 +41,8 @@ struct DisplayConfigurationSection: View {
                 }
             ))
             .toggleStyle(.platform)
+            .disabled(!isShowInvisibleCharactersSupported())
+            .help(showInvisibleCharactersHelpText())
             
             Toggle("Enable Syntax Highlighting", isOn: Binding(
                 get: { appState.coordinator.configuration.display.enableSyntaxHighlighting },
@@ -58,17 +60,6 @@ struct DisplayConfigurationSection: View {
                 set: { newValue in
                     appState.coordinator.update { config in
                         config.display.enableAnnotations = newValue
-                    }
-                    appState.objectWillChange.send()
-                }
-            ))
-            .toggleStyle(.platform)
-            
-            Toggle("Show Indent Guides", isOn: Binding(
-                get: { appState.coordinator.configuration.display.showIndentGuides },
-                set: { newValue in
-                    appState.coordinator.update { config in
-                        config.display.showIndentGuides = newValue
                     }
                     appState.objectWillChange.send()
                 }
@@ -172,6 +163,24 @@ struct DisplayConfigurationSection: View {
             }
         }
         .padding(.horizontal, adaptiveHorizontalPadding())
+    }
+    
+    // MARK: - Platform Support Helpers
+    
+    private func isShowInvisibleCharactersSupported() -> Bool {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return true  // Only supported on native macOS
+        #else
+        return false
+        #endif
+    }
+    
+    private func showInvisibleCharactersHelpText() -> String {
+        if isShowInvisibleCharactersSupported() {
+            return "Show spaces, tabs, and line breaks"
+        } else {
+            return "Only available on macOS. Not supported on iOS or Mac Catalyst due to TextKit limitations"
+        }
     }
     
     // MARK: - Adaptive Layout Helpers
