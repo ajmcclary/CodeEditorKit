@@ -4,330 +4,352 @@ This diagram shows the comprehensive SwiftUI integration ecosystem that provides
 
 ```mermaid
 classDiagram
-    %% Core SwiftUI Integration
+    direction LR
+    
+    %% Row 1 - Core Integration System
     class SwiftUIIntegrationSystem {
-        +codeEditor: CodeEditor
-        +representableHelper: CodeEditorRepresentableHelper
-        +environmentManager: SwiftUIEnvironmentManager
-        +modifierSystem: ViewModifierSystem
-        +bindingSystem: SwiftUIBindingSystem
-        +integrateWithSwiftUI(view: SwiftUIView) IntegrationResult
-        +setupEnvironment(configuration: EditorConfiguration)
-        +handleViewUpdates(context: ViewContext)
+        <<integration system>>
+        +codeEditor CodeEditor
+        +representableHelper CodeEditorRepresentableHelper
+        +environmentManager SwiftUIEnvironmentManager
+        +modifierSystem ViewModifierSystem
+        +bindingSystem SwiftUIBindingSystem
+        +integrateWithSwiftUI()
+        +setupEnvironment()
+        +handleViewUpdates()
     }
 
-    %% Main SwiftUI View
     class CodeEditor {
-        &lt;&lt;SwiftUI View&gt;&gt;
-        @Binding text: String
-        @State private configuration: EditorConfiguration
-        @State private isEditing: Bool
-        @State private selectionRange: NSRange
-        +language: LanguageConfig?
-        +onTextChange: ((String) -> Void)?
-        +onSelectionChange: ((NSRange) -> Void)?
-        +onEditingChanged: ((Bool) -> Void)?
-        +body: some View
+        <<SwiftUI View>>
+        @Binding text String
+        @State configuration EditorConfiguration
+        @State isEditing Bool
+        @State selectionRange NSRange
+        +language LanguageConfig?
+        +onTextChange Closure?
+        +onSelectionChange Closure?
+        +body some View
     }
 
-    %% Platform-Specific Representables
+    class CodeEditorRepresentableHelper {
+        <<representable helper>>
+        +platformDetector PlatformDetector
+        +viewFactory SwiftUIViewFactory
+        +updateCoordinator ViewUpdateCoordinator
+        +lifecycleManager ViewLifecycleManager
+        +createRepresentable()
+        +handleViewUpdate()
+        +manageViewLifecycle()
+    }
+
+    %% Row 2 - Platform Representables
     class CodeEditorRepresentable {
-        &lt;&lt;UIViewRepresentable/NSViewRepresentable&gt;&gt;
-        +configuration: EditorConfiguration
-        +text: Binding~String~
-        +coordinator: Coordinator
-        +makeCoordinator() Coordinator
+        <<representable protocol>>
+        +configuration EditorConfiguration
+        +text Binding<String>
+        +coordinator Coordinator
+        +makeCoordinator()
     }
 
     class AppKitCodeEditorRepresentable {
-        &lt;&lt;NSViewRepresentable&gt;&gt;
-        +makeNSView(context: Context) NSView
-        +updateNSView(nsView: NSView, context: Context)
-        +dismantleNSView(nsView: NSView, coordinator: Coordinator)
-        +handleMacOSSpecificUpdates(nsView: NSView)
+        <<NSViewRepresentable>>
+        +makeNSView()
+        +updateNSView()
+        +dismantleNSView()
+        +handleMacOSSpecificUpdates()
     }
 
     class UIKitCodeEditorRepresentable {
-        &lt;&lt;UIViewRepresentable&gt;&gt;
-        +makeUIView(context: Context) UIView
-        +updateUIView(uiView: UIView, context: Context)
-        +dismantleUIView(uiView: UIView, coordinator: Coordinator)
-        +handleiOSSpecificUpdates(uiView: UIView)
-    }
-
-    %% Coordinator System
-    class CodeEditorCoordinator {
-        +parent: CodeEditor
-        +codeEditorView: CodeEditorView
-        +bindingManager: SwiftUIBindingManager
-        +eventBridge: SwiftUIEventBridge
-        +setupCodeEditor() CodeEditorView
-        +textDidChange(newText: String)
-        +selectionDidChange(newSelection: NSRange)
-        +configurationDidChange(newConfig: EditorConfiguration)
-    }
-
-    class SwiftUIBindingManager {
-        +textBinding: Binding~String~
-        +configurationBinding: Binding~EditorConfiguration~
-        +selectionBinding: Binding~NSRange~
-        +editingBinding: Binding~Bool~
-        +syncBindings()
-        +updateBinding~T~(keyPath: WritableKeyPath~Self, T~, value: T)
-        +observeChanges~T~(keyPath: KeyPath~Self, T~, handler: (T) -> Void)
-    }
-
-    class SwiftUIEventBridge {
-        +swiftUICallbacks: [EventType: SwiftUICallback]
-        +codeEditorEvents: [CodeEditorEvent]
-        +bridgeEvent(from: CodeEditorEvent, to: SwiftUICallback)
-        +registerCallback(eventType: EventType, callback: SwiftUICallback)
-        +handleCodeEditorEvent(event: CodeEditorEvent)
-    }
-
-    %% Representable Helper System
-    class CodeEditorRepresentableHelper {
-        +platformDetector: PlatformDetector
-        +viewFactory: SwiftUIViewFactory
-        +updateCoordinator: ViewUpdateCoordinator
-        +lifecycleManager: ViewLifecycleManager
-        +createRepresentable(for: PlatformType) CodeEditorRepresentable
-        +handleViewUpdate(representable: CodeEditorRepresentable, context: ViewContext)
-        +manageViewLifecycle(view: PlatformView, state: ViewState)
+        <<UIViewRepresentable>>
+        +makeUIView()
+        +updateUIView()
+        +dismantleUIView()
+        +handleiOSSpecificUpdates()
     }
 
     class SwiftUIViewFactory {
-        +createAppKitRepresentable() AppKitCodeEditorRepresentable
-        +createUIKitRepresentable() UIKitCodeEditorRepresentable
-        +createCatalystRepresentable() CatalystCodeEditorRepresentable
-        +configureRepresentable(representable: CodeEditorRepresentable)
+        <<view factory>>
+        +createAppKitRepresentable()
+        +createUIKitRepresentable()
+        +createCatalystRepresentable()
+        +configureRepresentable()
+    }
+
+    %% Row 3 - Coordination System
+    class CodeEditorCoordinator {
+        <<coordinator>>
+        +parent CodeEditor
+        +codeEditorView CodeEditorView
+        +bindingManager SwiftUIBindingManager
+        +eventBridge SwiftUIEventBridge
+        +setupCodeEditor()
+        +textDidChange()
+        +selectionDidChange()
+        +configurationDidChange()
+    }
+
+    class SwiftUIBindingManager {
+        <<binding manager>>
+        +textBinding Binding<String>
+        +configurationBinding Binding<EditorConfiguration>
+        +selectionBinding Binding<NSRange>
+        +editingBinding Binding<Bool>
+        +syncBindings()
+        +updateBinding()
+        +observeChanges()
+    }
+
+    class SwiftUIEventBridge {
+        <<event bridge>>
+        +swiftUICallbacks [EventType: SwiftUICallback]
+        +codeEditorEvents [CodeEditorEvent]
+        +bridgeEvent()
+        +registerCallback()
+        +handleCodeEditorEvent()
     }
 
     class ViewUpdateCoordinator {
-        +pendingUpdates: [ViewUpdate]
-        +updateScheduler: ViewUpdateScheduler
-        +animationCoordinator: SwiftUIAnimationCoordinator
-        +scheduleUpdate(update: ViewUpdate)
+        <<update coordinator>>
+        +pendingUpdates [ViewUpdate]
+        +updateScheduler ViewUpdateScheduler
+        +animationCoordinator SwiftUIAnimationCoordinator
+        +scheduleUpdate()
         +processUpdates()
-        +coordinateAnimations(updates: [ViewUpdate])
+        +coordinateAnimations()
     }
 
-    %% Environment Management
+    %% Row 4 - Environment System
     class SwiftUIEnvironmentManager {
-        +environmentValues: SwiftUIEnvironmentValues
-        +configurationKey: ConfigurationEnvironmentKey
-        +themeKey: ThemeEnvironmentKey
-        +languageKey: LanguageEnvironmentKey
-        +setupEnvironment(configuration: EditorConfiguration)
-        +updateEnvironment(changes: [EnvironmentChange])
+        <<environment manager>>
+        +environmentValues SwiftUIEnvironmentValues
+        +configurationKey ConfigurationEnvironmentKey
+        +themeKey ThemeEnvironmentKey
+        +languageKey LanguageEnvironmentKey
+        +setupEnvironment()
+        +updateEnvironment()
         +propagateEnvironmentChanges()
     }
 
     class SwiftUIEnvironmentValues {
-        +codeEditorConfiguration: EditorConfiguration
-        +codeEditorTheme: EditorTheme
-        +codeEditorLanguage: LanguageConfig?
-        +codeEditorState: EditorState
-        +isDebugMode: Bool
-        +accessibilityConfiguration: AccessibilityConfiguration
+        <<environment values>>
+        +codeEditorConfiguration EditorConfiguration
+        +codeEditorTheme EditorTheme
+        +codeEditorLanguage LanguageConfig?
+        +codeEditorState EditorState
+        +isDebugMode Bool
+        +accessibilityConfiguration AccessibilityConfiguration
     }
 
     class ConfigurationEnvironmentKey {
-        &lt;&lt;EnvironmentKey&gt;&gt;
-        +static defaultValue: EditorConfiguration
+        <<EnvironmentKey>>
+        +static defaultValue EditorConfiguration
     }
 
     class ThemeEnvironmentKey {
-        &lt;&lt;EnvironmentKey&gt;&gt;
-        +static defaultValue: EditorTheme
+        <<EnvironmentKey>>
+        +static defaultValue EditorTheme
     }
 
     class LanguageEnvironmentKey {
-        &lt;&lt;EnvironmentKey&gt;&gt;
-        +static defaultValue: LanguageConfig?
+        <<EnvironmentKey>>
+        +static defaultValue LanguageConfig?
     }
 
-    %% View Modifier System
+    %% Row 5 - View Modifier System
     class ViewModifierSystem {
-        +modifiers: [CodeEditorViewModifier]
-        +modifierChain: ViewModifierChain
-        +modifierProcessor: ModifierProcessor
-        +applyModifiers(to: CodeEditor) ModifiedCodeEditor
-        +registerModifier(modifier: CodeEditorViewModifier)
-        +processModifierChain(chain: ViewModifierChain)
+        <<modifier system>>
+        +modifiers [CodeEditorViewModifier]
+        +modifierChain ViewModifierChain
+        +modifierProcessor ModifierProcessor
+        +applyModifiers()
+        +registerModifier()
+        +processModifierChain()
     }
 
     class CodeEditorViewModifier {
-        &lt;&lt;protocol&gt;&gt;
-        +body(content: Content) some View
-        +modifierName: String
-        +priority: Int
+        <<modifier protocol>>
+        +body()
+        +modifierName String
+        +priority Int
     }
 
     class LanguageViewModifier {
-        +language: LanguageConfig
-        +body(content: Content) some View
+        <<language modifier>>
+        +language LanguageConfig
+        +body()
     }
 
     class ThemeViewModifier {
-        +theme: EditorTheme
-        +body(content: Content) some View
+        <<theme modifier>>
+        +theme EditorTheme
+        +body()
     }
 
     class ConfigurationViewModifier {
-        +configuration: EditorConfiguration
-        +body(content: Content) some View
+        <<configuration modifier>>
+        +configuration EditorConfiguration
+        +body()
     }
 
     class ReadOnlyViewModifier {
-        +isReadOnly: Bool
-        +body(content: Content) some View
+        <<readonly modifier>>
+        +isReadOnly Bool
+        +body()
     }
 
     class DebugModeViewModifier {
-        +isDebugMode: Bool
-        +showDebugOverlay: Bool
-        +body(content: Content) some View
+        <<debug modifier>>
+        +isDebugMode Bool
+        +showDebugOverlay Bool
+        +body()
     }
 
-    %% State Management
+    %% Row 6 - State Management
     class SwiftUIStateManager {
-        +editorState: EditorState
-        +bindingObserver: StateBindingObserver
-        +stateValidator: StateValidator
-        +changeNotifier: StateChangeNotifier
-        +manageState(initialState: EditorState)
-        +updateState(changes: [StateChange])
-        +validateState(state: EditorState) ValidationResult
+        <<state manager>>
+        +editorState EditorState
+        +bindingObserver StateBindingObserver
+        +stateValidator StateValidator
+        +changeNotifier StateChangeNotifier
+        +manageState()
+        +updateState()
+        +validateState()
     }
 
     class EditorState {
-        +text: String
-        +selection: NSRange
-        +isEditing: Bool
-        +language: LanguageConfig?
-        +configuration: EditorConfiguration
-        +hasUnsavedChanges: Bool
-        +version: Int
+        <<editor state>>
+        +text String
+        +selection NSRange
+        +isEditing Bool
+        +language LanguageConfig?
+        +configuration EditorConfiguration
+        +hasUnsavedChanges Bool
+        +version Int
     }
 
     class StateBindingObserver {
-        +observedBindings: [StateBinding]
-        +changeHandlers: [StateChangeHandler]
-        +observeBinding~T~(binding: Binding~T~, handler: (T) -> Void)
-        +removeObserver(bindingId: String)
+        <<binding observer>>
+        +observedBindings [StateBinding]
+        +changeHandlers [StateChangeHandler]
+        +observeBinding()
+        +removeObserver()
         +notifyChanges()
     }
 
-    %% Animation and Transitions
+    %% Row 7 - Animation & Accessibility
     class SwiftUIAnimationCoordinator {
-        +animationPresets: [AnimationPreset]
-        +transitionManager: TransitionManager
-        +timingCurves: [TimingCurve]
-        +animateChanges(changes: [ViewChange], animation: Animation?)
-        +coordinateTransitions(transitions: [ViewTransition])
-        +createCustomAnimation(duration: Double, curve: TimingCurve) Animation
+        <<animation coordinator>>
+        +animationPresets [AnimationPreset]
+        +transitionManager TransitionManager
+        +timingCurves [TimingCurve]
+        +animateChanges()
+        +coordinateTransitions()
+        +createCustomAnimation()
     }
 
     class AnimationPreset {
-        +name: String
-        +animation: Animation
-        +duration: Double
-        +curve: AnimationCurve
-        +apply(to: SwiftUIView) AnimatedView
+        <<animation preset>>
+        +name String
+        +animation Animation
+        +duration Double
+        +curve AnimationCurve
+        +apply()
     }
 
-    %% Accessibility Integration
     class SwiftUIAccessibilityManager {
-        +accessibilityConfiguration: AccessibilityConfiguration
-        +voiceOverSupport: VoiceOverSupport
-        +keyboardNavigation: KeyboardNavigationSupport
-        +setupAccessibility(for: CodeEditor)
+        <<accessibility manager>>
+        +accessibilityConfiguration AccessibilityConfiguration
+        +voiceOverSupport VoiceOverSupport
+        +keyboardNavigation KeyboardNavigationSupport
+        +setupAccessibility()
         +updateAccessibilityLabels()
-        +handleAccessibilityActions(action: AccessibilityAction)
+        +handleAccessibilityActions()
     }
 
     class AccessibilityConfiguration {
-        +isVoiceOverEnabled: Bool
-        +dynamicTypeSize: DynamicTypeSize
-        +reduceMotion: Bool
-        +increaseContrast: Bool
-        +customLabels: [String: String]
-        +customActions: [AccessibilityAction]
+        <<accessibility config>>
+        +isVoiceOverEnabled Bool
+        +dynamicTypeSize DynamicTypeSize
+        +reduceMotion Bool
+        +increaseContrast Bool
+        +customLabels [String: String]
+        +customActions [AccessibilityAction]
     }
 
-    %% Preview and Development Support
+    %% Row 8 - Development Support
     class SwiftUIPreviewSupport {
-        +previewProviders: [PreviewProvider]
-        +mockDataManager: MockDataManager
-        +previewConfigurations: [PreviewConfiguration]
-        +createPreview(configuration: PreviewConfiguration) PreviewView
-        +generateMockData(type: MockDataType) MockData
+        <<preview support>>
+        +previewProviders [PreviewProvider]
+        +mockDataManager MockDataManager
+        +previewConfigurations [PreviewConfiguration]
+        +createPreview()
+        +generateMockData()
         +setupPreviewEnvironment()
     }
 
     class PreviewProvider {
-        &lt;&lt;protocol&gt;&gt;
-        +static var previews: some View
-        +static var previewDevice: PreviewDevice?
-        +static var previewDisplayName: String?
+        <<preview protocol>>
+        +static previews some View
+        +static previewDevice PreviewDevice?
+        +static previewDisplayName String?
     }
 
     class CodeEditorPreview {
-        +static var previews: some View
-        +static var sampleCode: String
-        +static var configurations: [EditorConfiguration]
+        <<code editor preview>>
+        +static previews some View
+        +static sampleCode String
+        +static configurations [EditorConfiguration]
     }
 
-    %% Extension Support
     class SwiftUIExtensionManager {
-        +customViews: [CustomSwiftUIView]
-        +viewExtensions: [SwiftUIViewExtension]
-        +modifierExtensions: [SwiftUIModifierExtension]
-        +registerCustomView(view: CustomSwiftUIView)
-        +registerExtension(extension: SwiftUIViewExtension)
-        +applyExtensions(to: CodeEditor) ExtendedCodeEditor
+        <<extension manager>>
+        +customViews [CustomSwiftUIView]
+        +viewExtensions [SwiftUIViewExtension]
+        +modifierExtensions [SwiftUIModifierExtension]
+        +registerCustomView()
+        +registerExtension()
+        +applyExtensions()
     }
 
-    %% Relationships
+    %% Key Relationships
     SwiftUIIntegrationSystem --> CodeEditor : manages
     SwiftUIIntegrationSystem --> CodeEditorRepresentableHelper : uses
     SwiftUIIntegrationSystem --> SwiftUIEnvironmentManager : manages environment
     SwiftUIIntegrationSystem --> ViewModifierSystem : applies modifiers
-
+    
     CodeEditor --> CodeEditorRepresentable : uses
     CodeEditor --> CodeEditorCoordinator : coordinates with
-
+    
     CodeEditorRepresentable <|-- AppKitCodeEditorRepresentable : implements
     CodeEditorRepresentable <|-- UIKitCodeEditorRepresentable : implements
-
+    
     CodeEditorCoordinator --> SwiftUIBindingManager : manages bindings
     CodeEditorCoordinator --> SwiftUIEventBridge : bridges events
-
+    
     CodeEditorRepresentableHelper --> SwiftUIViewFactory : creates views
     CodeEditorRepresentableHelper --> ViewUpdateCoordinator : coordinates updates
-
+    
     SwiftUIEnvironmentManager --> SwiftUIEnvironmentValues : manages
     SwiftUIEnvironmentManager --> ConfigurationEnvironmentKey : uses
     SwiftUIEnvironmentManager --> ThemeEnvironmentKey : uses
     SwiftUIEnvironmentManager --> LanguageEnvironmentKey : uses
-
+    
     ViewModifierSystem --> CodeEditorViewModifier : applies
     CodeEditorViewModifier <|-- LanguageViewModifier : implements
     CodeEditorViewModifier <|-- ThemeViewModifier : implements
     CodeEditorViewModifier <|-- ConfigurationViewModifier : implements
     CodeEditorViewModifier <|-- ReadOnlyViewModifier : implements
     CodeEditorViewModifier <|-- DebugModeViewModifier : implements
-
+    
     SwiftUIStateManager --> EditorState : manages
     SwiftUIStateManager --> StateBindingObserver : observes with
-
+    
     SwiftUIAnimationCoordinator --> AnimationPreset : uses
     SwiftUIAccessibilityManager --> AccessibilityConfiguration : uses
-
+    
     SwiftUIPreviewSupport --> PreviewProvider : manages
     PreviewProvider <|-- CodeEditorPreview : implements
-
+    
     SwiftUIIntegrationSystem --> SwiftUIExtensionManager : extends with
 
     %% Styling - Dark mode friendly colors
