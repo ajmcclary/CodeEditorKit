@@ -4,68 +4,280 @@ This diagram shows the comprehensive annotation system that provides code annota
 
 ```mermaid
 classDiagram
-    %% Core Annotation System
+    direction LR
+    
+    %% Row 1 - Core Annotation System
     class AnnotationSystem {
-        +annotationManager: AnnotationManager
-        +dataSource: AnnotationsDataSource
-        +viewRenderer: AnnotationViewRenderer
-        +contentProvider: AnnotationsContentView
-        +eventProcessor: AnnotationEventProcessor
-        +initialize(codeEditorView: CodeEditorView)
-        +addAnnotation(annotation: Annotation)
-        +removeAnnotation(id: String)
-        +updateAnnotation(id: String, annotation: Annotation)
-        +getAnnotations(range: NSRange) [Annotation]
+        <<system>>
+        +annotationManager AnnotationManager
+        +dataSource AnnotationsDataSource
+        +viewRenderer AnnotationViewRenderer
+        +eventProcessor AnnotationEventProcessor
+        +initialize()
+        +addAnnotation()
+        +removeAnnotation()
+        +updateAnnotation()
     }
 
     class AnnotationManager {
-        +annotations: [String: Annotation]
-        +lineAnnotations: [Int: [LineAnnotation]]
-        +messageAnnotations: [String: MessageLineAnnotation]
-        +codeAnnotations: [String: CodeEditorViewAnnotation]
-        +sortedAnnotations: SortedAnnotationList
-        +addAnnotation(annotation: Annotation) String
-        +removeAnnotation(id: String) Bool
-        +updateAnnotation(id: String, annotation: Annotation) Bool
-        +getAnnotationsInRange(range: NSRange) [Annotation]
-        +getAnnotationsForLine(line: Int) [LineAnnotation]
+        <<manager>>
+        +annotations [String: Annotation]
+        +lineAnnotations [Int: [LineAnnotation]]
+        +messageAnnotations [String: MessageLineAnnotation]
+        +sortedAnnotations SortedAnnotationList
+        +addAnnotation()
+        +removeAnnotation()
+        +getAnnotationsInRange()
     }
 
-    %% Annotation Models
+    class AnnotationsDataSource {
+        <<data source>>
+        +providers [AnnotationProvider]
+        +cache AnnotationCache
+        +filterManager AnnotationFilterManager
+        +loadAnnotations()
+        +registerProvider()
+        +applyFilters()
+    }
+
+    %% Row 2 - Annotation Models
     class Annotation {
-        +id: String
-        +kind: AnnotationKind
-        +range: NSRange
-        +message: String
-        +severity: AnnotationSeverity
-        +source: AnnotationSource
-        +data: AnnotationData
-        +timestamp: Date
-        +isVisible: Bool
-        +priority: Int
+        <<annotation>>
+        +id String
+        +kind AnnotationKind
+        +range NSRange
+        +message String
+        +severity AnnotationSeverity
+        +source AnnotationSource
+        +data AnnotationData
+        +isVisible Bool
     }
 
+    class AnnotationData {
+        <<data>>
+        +title String?
+        +description String?
+        +suggestions [FixSuggestion]
+        +relatedInformation [RelatedInformation]
+        +actions [AnnotationAction]
+    }
+
+    class LineAnnotation {
+        <<line annotation>>
+        +line Int
+        +column Int?
+        +text String
+        +icon AnnotationIcon?
+        +backgroundColor PlatformColor?
+        +isFullLine Bool
+    }
+
+    class MessageLineAnnotation {
+        <<message annotation>>
+        +messageText String
+        +attributedMessage NSAttributedString
+        +messageType MessageType
+        +isExpandable Bool
+        +expandedContent String?
+    }
+
+
+    %% Row 3 - View System
+    class AnnotationViewRenderer {
+        <<renderer>>
+        +viewCache AnnotationViewCache
+        +layoutManager AnnotationLayoutManager
+        +animationController AnnotationAnimationController
+        +renderAnnotation()
+        +updateAnnotationView()
+        +layoutAnnotations()
+    }
+
+    class AnnotationView {
+        <<view>>
+        +annotation Annotation
+        +contentView AnnotationContentView
+        +backgroundView AnnotationBackgroundView
+        +gestureRecognizers [UIGestureRecognizer]
+        +configure()
+        +updateAppearance()
+        +handleTap()
+    }
+
+    class AnnotationContentView {
+        <<content view>>
+        +titleLabel UILabel
+        +messageLabel UILabel
+        +iconView UIImageView
+        +actionsStackView UIStackView
+        +setupLayout()
+        +updateContent()
+        +addAction()
+    }
+
+    class AnnotationLayoutManager {
+        <<layout manager>>
+        +positioningStrategy AnnotationPositioningStrategy
+        +collisionDetector AnnotationCollisionDetector
+        +spacingCalculator AnnotationSpacingCalculator
+        +calculatePosition()
+        +resolveCollisions()
+        +optimizeLayout()
+    }
+
+    %% Row 4 - Annotation Providers
+
+    class AnnotationProvider {
+        <<protocol>>
+        +providerName String
+        +supportedKinds [AnnotationKind]
+        +priority Int
+        +provideAnnotations()
+        +canProvideAnnotation()
+        +validateAnnotation()
+    }
+
+    class DiagnosticAnnotationProvider {
+        <<diagnostic provider>>
+        +diagnosticsSource DiagnosticsSource
+        +severityMapper SeverityMapper
+        +messageFormatter DiagnosticMessageFormatter
+        +provideAnnotations()
+        +convertDiagnostic()
+        +formatDiagnosticMessage()
+    }
+
+    class LSPAnnotationProvider {
+        <<lsp provider>>
+        +lspClient LSPClient
+        +diagnosticProcessor LSPDiagnosticProcessor
+        +codeActionProvider LSPCodeActionProvider
+        +provideAnnotations()
+        +processDiagnostics()
+        +extractCodeActions()
+    }
+
+    class UserAnnotationProvider {
+        <<user provider>>
+        +bookmarkManager BookmarkManager
+        +noteManager NoteManager
+        +todoExtractor TodoCommentExtractor
+        +provideAnnotations()
+        +extractTodos()
+        +loadBookmarks()
+    }
+
+    %% Row 5 - Interaction & Actions
+    class AnnotationInteractionManager {
+        <<interaction manager>>
+        +gestureProcessor AnnotationGestureProcessor
+        +contextMenuProvider AnnotationContextMenuProvider
+        +hoverController AnnotationHoverController
+        +handleAnnotationInteraction()
+        +showContextMenu()
+        +processHover()
+    }
+
+    class AnnotationAction {
+        <<action>>
+        +id String
+        +title String
+        +icon ActionIcon?
+        +handler AnnotationActionHandler
+        +isDestructive Bool
+        +requiresConfirmation Bool
+        +execute()
+        +canExecute()
+    }
+
+    class FixSuggestion {
+        <<fix suggestion>>
+        +title String
+        +description String
+        +textEdits [TextEdit]
+        +additionalChanges [DocumentChange]
+        +confidence Double
+        +apply()
+        +preview()
+    }
+
+    %% Row 6 - Filtering & Caching
+    class AnnotationFilterManager {
+        <<filter manager>>
+        +activeFilters [AnnotationFilter]
+        +filterPresets [FilterPreset]
+        +customFilters [CustomAnnotationFilter]
+        +applyFilters()
+        +addFilter()
+        +createPreset()
+    }
+
+    class AnnotationFilter {
+        <<filter>>
+        +filterId String
+        +name String
+        +predicate AnnotationPredicate
+        +isEnabled Bool
+        +priority Int
+        +apply()
+        +matches()
+    }
+
+    class AnnotationCache {
+        <<cache>>
+        +cache LRUCache~String, [Annotation]~
+        +persistentCache PersistentAnnotationCache
+        +invalidationRules [CacheInvalidationRule]
+        +cacheAnnotations()
+        +getCachedAnnotations()
+        +invalidateCache()
+    }
+
+    %% Row 7 - Theme System
+    class AnnotationThemeManager {
+        <<theme manager>>
+        +currentTheme AnnotationTheme
+        +lightTheme AnnotationTheme
+        +darkTheme AnnotationTheme
+        +customThemes [String: AnnotationTheme]
+        +getTheme()
+        +updateTheme()
+        +createCustomTheme()
+    }
+
+    class AnnotationTheme {
+        <<theme>>
+        +name String
+        +appearances [AnnotationKind: AnnotationAppearance]
+        +defaultAppearance AnnotationAppearance
+        +backgroundOverlay OverlayStyle
+        +getAppearance()
+    }
+
+    class AnnotationAppearance {
+        <<appearance>>
+        +backgroundColor PlatformColor
+        +borderColor PlatformColor
+        +textColor PlatformColor
+        +iconTint PlatformColor
+        +borderWidth CGFloat
+        +cornerRadius CGFloat
+    }
+
+    %% Row 8 - Enumerations
     class AnnotationKind {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         error
         warning
         info
         hint
-        deprecated
         todo
-        fixme
-        note
         bookmark
         breakpoint
-        coverage
-        performance
-        security
-        accessibility
-        custom(type: String)
     }
 
     class AnnotationSeverity {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         error
         warning
         information
@@ -73,253 +285,18 @@ classDiagram
     }
 
     class AnnotationSource {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         compiler
         linter
         languageServer
         plugin
         user
-        debugger
-        testing
-        performance
-        security
     }
 
-    class AnnotationData {
-        +title: String?
-        +description: String?
-        +suggestions: [FixSuggestion]
-        +relatedInformation: [RelatedInformation]
-        +tags: [String]
-        +metadata: [String: Any]
-        +actions: [AnnotationAction]
-    }
-
-    %% Specialized Annotation Types
-    class LineAnnotation {
-        +line: Int
-        +column: Int?
-        +text: String
-        +icon: AnnotationIcon?
-        +backgroundColor: PlatformColor?
-        +textColor: PlatformColor?
-        +isFullLine: Bool
-        +indentationLevel: Int
-    }
-
-    class MessageLineAnnotation {
-        +messageText: String
-        +attributedMessage: NSAttributedString
-        +messageType: MessageType
-        +isExpandable: Bool
-        +expandedContent: String?
-        +contextualActions: [MessageAction]
-        +formatting: MessageFormatting
-    }
-
-    class CodeEditorViewAnnotation {
-        +editorView: CodeEditorView
-        +overlayView: AnnotationOverlayView
-        +positioning: AnnotationPositioning
-        +layoutConstraints: [NSLayoutConstraint]
-        +isFloating: Bool
-        +tracksCursor: Bool
-        +autoHide: Bool
-    }
-
-    %% Annotation Views and Rendering
-    class AnnotationView {
-        +annotation: Annotation
-        +contentView: AnnotationContentView
-        +backgroundView: AnnotationBackgroundView
-        +borderView: AnnotationBorderView
-        +gestureRecognizers: [UIGestureRecognizer]
-        +configure(with: Annotation)
-        +updateAppearance()
-        +handleTap(gesture: UITapGestureRecognizer)
-        +handleHover(gesture: UIHoverGestureRecognizer)
-    }
-
-    class AnnotationContentView {
-        +titleLabel: UILabel
-        +messageLabel: UILabel
-        +iconView: UIImageView
-        +actionsStackView: UIStackView
-        +detailsView: AnnotationDetailsView?
-        +setupLayout()
-        +updateContent(annotation: Annotation)
-        +addAction(action: AnnotationAction)
-    }
-
-    class AnnotationViewRenderer {
-        +viewCache: AnnotationViewCache
-        +layoutManager: AnnotationLayoutManager
-        +animationController: AnnotationAnimationController
-        +themeManager: AnnotationThemeManager
-        +renderAnnotation(annotation: Annotation) AnnotationView
-        +updateAnnotationView(view: AnnotationView, annotation: Annotation)
-        +layoutAnnotations(annotations: [Annotation])
-        +animateAnnotationChange(change: AnnotationChange)
-    }
-
-    class AnnotationLayoutManager {
-        +positioningStrategy: AnnotationPositioningStrategy
-        +collisionDetector: AnnotationCollisionDetector
-        +spacingCalculator: AnnotationSpacingCalculator
-        +calculatePosition(annotation: Annotation) CGPoint
-        +resolveCollisions(annotations: [PositionedAnnotation]) [PositionedAnnotation]
-        +optimizeLayout(layout: AnnotationLayout) AnnotationLayout
-    }
-
-    %% Data Source and Content Management
-    class AnnotationsDataSource {
-        +providers: [AnnotationProvider]
-        +cache: AnnotationCache
-        +filterManager: AnnotationFilterManager
-        +sortingManager: AnnotationSortingManager
-        +loadAnnotations(document: TextDocument) [Annotation]
-        +registerProvider(provider: AnnotationProvider)
-        +applyFilters(annotations: [Annotation]) [Annotation]
-        +sortAnnotations(annotations: [Annotation]) [Annotation]
-    }
-
-    class AnnotationProvider {
-        &lt;&lt;protocol&gt;&gt;
-        +providerName: String
-        +supportedKinds: [AnnotationKind]
-        +priority: Int
-        +provideAnnotations(document: TextDocument) [Annotation]
-        +canProvideAnnotation(kind: AnnotationKind) Bool
-        +validateAnnotation(annotation: Annotation) ValidationResult
-    }
-
-    class DiagnosticAnnotationProvider {
-        +diagnosticsSource: DiagnosticsSource
-        +severityMapper: SeverityMapper
-        +messageFormatter: DiagnosticMessageFormatter
-        +provideAnnotations(document: TextDocument) [Annotation]
-        +convertDiagnostic(diagnostic: Diagnostic) Annotation
-        +formatDiagnosticMessage(diagnostic: Diagnostic) String
-    }
-
-    class LSPAnnotationProvider {
-        +lspClient: LSPClient
-        +diagnosticProcessor: LSPDiagnosticProcessor
-        +codeActionProvider: LSPCodeActionProvider
-        +provideAnnotations(document: TextDocument) [Annotation]
-        +processDiagnostics(diagnostics: [LSPDiagnostic]) [Annotation]
-        +extractCodeActions(annotation: Annotation) [AnnotationAction]
-    }
-
-    class UserAnnotationProvider {
-        +bookmarkManager: BookmarkManager
-        +noteManager: NoteManager
-        +todoExtractor: TodoCommentExtractor
-        +provideAnnotations(document: TextDocument) [Annotation]
-        +extractTodos(text: String) [Annotation]
-        +loadBookmarks(document: TextDocument) [Annotation]
-    }
-
-    %% Annotation Interaction and Actions
-    class AnnotationInteractionManager {
-        +gestureProcessor: AnnotationGestureProcessor
-        +contextMenuProvider: AnnotationContextMenuProvider
-        +hoverController: AnnotationHoverController
-        +clickHandler: AnnotationClickHandler
-        +handleAnnotationInteraction(interaction: AnnotationInteraction)
-        +showContextMenu(annotation: Annotation, point: CGPoint)
-        +processHover(annotation: Annotation, duration: TimeInterval)
-    }
-
-    class AnnotationAction {
-        +id: String
-        +title: String
-        +icon: ActionIcon?
-        +handler: AnnotationActionHandler
-        +isDestructive: Bool
-        +requiresConfirmation: Bool
-        +shortcut: KeyboardShortcut?
-        +execute(context: AnnotationActionContext)
-        +canExecute(context: AnnotationActionContext) Bool
-    }
-
-    class FixSuggestion {
-        +title: String
-        +description: String
-        +textEdits: [TextEdit]
-        +additionalChanges: [DocumentChange]
-        +confidence: Double
-        +category: FixCategory
-        +apply(document: TextDocument) FixResult
-        +preview() FixPreview
-    }
-
-    %% Annotation Filtering and Organization
-    class AnnotationFilterManager {
-        +activeFilters: [AnnotationFilter]
-        +filterPresets: [FilterPreset]
-        +customFilters: [CustomAnnotationFilter]
-        +applyFilters(annotations: [Annotation]) [Annotation]
-        +addFilter(filter: AnnotationFilter)
-        +removeFilter(filterId: String)
-        +createPreset(filters: [AnnotationFilter], name: String) FilterPreset
-    }
-
-    class AnnotationFilter {
-        +filterId: String
-        +name: String
-        +predicate: AnnotationPredicate
-        +isEnabled: Bool
-        +priority: Int
-        +apply(annotations: [Annotation]) [Annotation]
-        +matches(annotation: Annotation) Bool
-    }
-
-    class AnnotationCache {
-        +cache: LRUCache~String, [Annotation]~
-        +persistentCache: PersistentAnnotationCache
-        +invalidationRules: [CacheInvalidationRule]
-        +cacheAnnotations(documentId: String, annotations: [Annotation])
-        +getCachedAnnotations(documentId: String) [Annotation]?
-        +invalidateCache(documentId: String)
-        +cleanupExpiredEntries()
-    }
-
-    %% Theme and Appearance
-    class AnnotationThemeManager {
-        +currentTheme: AnnotationTheme
-        +lightTheme: AnnotationTheme
-        +darkTheme: AnnotationTheme
-        +customThemes: [String: AnnotationTheme]
-        +getTheme(kind: AnnotationKind) AnnotationAppearance
-        +updateTheme(theme: AnnotationTheme)
-        +createCustomTheme(name: String, appearance: [AnnotationKind: AnnotationAppearance])
-    }
-
-    class AnnotationTheme {
-        +name: String
-        +appearances: [AnnotationKind: AnnotationAppearance]
-        +defaultAppearance: AnnotationAppearance
-        +backgroundOverlay: OverlayStyle
-        +getAppearance(kind: AnnotationKind) AnnotationAppearance
-    }
-
-    class AnnotationAppearance {
-        +backgroundColor: PlatformColor
-        +borderColor: PlatformColor
-        +textColor: PlatformColor
-        +iconTint: PlatformColor
-        +borderWidth: CGFloat
-        +cornerRadius: CGFloat
-        +shadow: ShadowStyle?
-        +animation: AnimationStyle?
-    }
-
-    %% Relationships
+    %% Key Relationships
     AnnotationSystem --> AnnotationManager : manages
     AnnotationSystem --> AnnotationsDataSource : uses
     AnnotationSystem --> AnnotationViewRenderer : renders with
-    AnnotationSystem --> AnnotationsContentView : displays
     AnnotationSystem --> AnnotationInteractionManager : handles interactions
 
     AnnotationManager --> Annotation : stores
@@ -330,7 +307,6 @@ classDiagram
 
     Annotation <|-- LineAnnotation : specializes to
     Annotation <|-- MessageLineAnnotation : specializes to
-    Annotation <|-- CodeEditorViewAnnotation : specializes to
 
     AnnotationViewRenderer --> AnnotationView : creates
     AnnotationViewRenderer --> AnnotationLayoutManager : uses
@@ -347,7 +323,6 @@ classDiagram
 
     AnnotationInteractionManager --> AnnotationAction : executes
     AnnotationData --> FixSuggestion : contains
-    AnnotationData --> AnnotationAction : contains
 
     AnnotationViewRenderer --> AnnotationThemeManager : themes with
     AnnotationThemeManager --> AnnotationTheme : manages
