@@ -4,32 +4,278 @@ This diagram shows the comprehensive text processing and validation system that 
 
 ```mermaid
 classDiagram
-    %% Core Text Processing System
+    direction LR
+    
+    %% Row 1 - Core Text Processing System
     class AdvancedTextProcessor {
-        +textStorage: NSTextStorage
-        +validationSystem: TextValidationSystem
-        +rangeManager: RangeManager
-        +versioningSystem: TextVersioningSystem
-        +styler: TextSystemStyler
-        +processTextChange(change: TextChange) TextProcessingResult
-        +validateText(text: String) ValidationResult
+        <<processor>>
+        +textStorage NSTextStorage
+        +validationSystem TextValidationSystem
+        +rangeManager RangeManager
+        +versioningSystem TextVersioningSystem
+        +styler TextSystemStyler
+        +processTextChange()
+        +validateText()
         +optimizeTextStorage()
-        +synchronizeWithUI()
     }
 
     class TextValidationSystem {
-        +singlePhaseValidator: SinglePhaseRangeValidator
-        +threePhaseValidator: ThreePhaseRangeValidator
-        +tokenValidator: TokenSystemValidator
-        +contextValidator: ValidationContext
-        +hybridValidator: HybridSyncAsyncValidator
-        +validateText(text: String, mode: ValidationMode) ValidationResult
-        +validateRange(range: NSRange, text: String) RangeValidationResult
-        +validateTokens(tokens: [Token]) TokenValidationResult
+        <<validation system>>
+        +singlePhaseValidator SinglePhaseRangeValidator
+        +threePhaseValidator ThreePhaseRangeValidator
+        +tokenValidator TokenSystemValidator
+        +contextValidator ValidationContext
+        +hybridValidator HybridSyncAsyncValidator
+        +validateText()
+        +validateRange()
+        +validateTokens()
     }
 
+    class TextProcessingOptimizer {
+        <<optimizer>>
+        +memoryOptimizer MemoryOptimizer
+        +performanceProfiler TextProcessingProfiler
+        +cacheManager ProcessingCacheManager
+        +asyncProcessor AsyncTextProcessor
+        +optimizeProcessing()
+        +profilePerformance()
+        +manageCache()
+    }
+
+
+    %% Row 2 - Validation Components
+    class SinglePhaseRangeValidator {
+        <<single phase>>
+        +validationRules [ValidationRule]
+        +errorCollector ValidationErrorCollector
+        +performanceMetrics ValidationMetrics
+        +validate()
+        +applyRules()
+        +optimizeValidation()
+    }
+
+    class ThreePhaseRangeValidator {
+        <<three phase>>
+        +phase1Validator PreProcessingValidator
+        +phase2Validator CoreValidator
+        +phase3Validator PostProcessingValidator
+        +phaseCoordinator PhaseCoordinator
+        +validate()
+        +executePhase1()
+        +executePhase2()
+        +executePhase3()
+    }
+
+    class TokenSystemValidator {
+        <<token validator>>
+        +tokenizer AdvancedTokenizer
+        +tokenRules [TokenValidationRule]
+        +semanticAnalyzer SemanticTokenAnalyzer
+        +syntaxValidator SyntaxValidator
+        +validate()
+        +tokenize()
+        +validateSyntax()
+        +analyzeSemantics()
+    }
+
+    class ValidationContext {
+        <<context>>
+        +documentContext DocumentContext
+        +languageContext LanguageContext
+        +editContext EditingContext
+        +performanceContext PerformanceContext
+        +createContext()
+        +updateContext()
+        +optimizeForContext()
+    }
+
+    class HybridSyncAsyncValidator {
+        <<hybrid validator>>
+        +syncValidator SynchronousValidator
+        +asyncValidator AsynchronousValidator
+        +validationQueue ValidationQueue
+        +resultMerger ValidationResultMerger
+        +validate()
+        +scheduleSyncValidation()
+        +scheduleAsyncValidation()
+    }
+
+    %% Row 3 - Range Management
+    class RangeManager {
+        <<range manager>>
+        +versionedRanges [VersionedRange]
+        +rangeBuffer RangeInvalidationBuffer
+        +rangeCalculator RangeCalculator
+        +invalidationTracker InvalidationTracker
+        +createRange()
+        +invalidateRange()
+        +updateRanges()
+        +optimizeRanges()
+    }
+
+    class VersionedRange {
+        <<versioned range>>
+        +range NSRange
+        +version Int
+        +isValid Bool
+        +invalidationReason InvalidationReason?
+        +metadata RangeMetadata
+        +updateVersion()
+        +invalidate()
+        +validate()
+    }
+
+    class RangeInvalidationBuffer {
+        <<invalidation buffer>>
+        +pendingInvalidations [PendingInvalidation]
+        +batchProcessor BatchInvalidationProcessor
+        +invalidationScheduler InvalidationScheduler
+        +addInvalidation()
+        +processPendingInvalidations()
+        +batchInvalidations()
+        +flushBuffer()
+    }
+
+    class RangeCalculator {
+        <<calculator>>
+        +textMetrics TextMetricsCalculator
+        +lineIndexer LineIndexer
+        +characterMapper CharacterMapper
+        +calculateRange()
+        +calculateTextPosition()
+        +adjustRangeForChange()
+    }
+
+
+    %% Row 4 - Versioning System
+    class TextVersioningSystem {
+        <<versioning system>>
+        +versions [TextVersion]
+        +currentVersion Int
+        +versionHistory VersionHistory
+        +changeTracker TextChangeTracker
+        +createVersion()
+        +incrementVersion()
+        +rollbackToVersion()
+        +compareVersions()
+    }
+
+    class TextVersion {
+        <<version>>
+        +versionNumber Int
+        +text String
+        +checksum String
+        +timestamp Date
+        +changes [TextChange]
+        +parentVersion Int?
+        +metadata VersionMetadata
+    }
+
+    class VersionedContent {
+        <<versioned content>>
+        +content String
+        +version Int
+        +contentHash String
+        +associatedRanges [VersionedRange]
+        +updateContent()
+        +validateConsistency()
+        +generateDiff()
+    }
+
+
+    %% Row 5 - Text Stylers
+    class TextSystemStyler {
+        <<protocol>>
+        +styleText()
+        +updateStyles()
+        +optimizeStyles()
+    }
+
+    class BasicTextSystemStyler {
+        <<basic styler>>
+        +basicStyles [TextStyle]
+        +colorScheme ColorScheme
+        +fontManager FontManager
+        +styleText()
+        +applyBasicStyles()
+    }
+
+    class AdvancedTextSystemStyler {
+        <<advanced styler>>
+        +syntaxHighlighter SyntaxHighlighter
+        +semanticAnalyzer SemanticStyleAnalyzer
+        +contextualStyler ContextualStyler
+        +performanceOptimizer StylingOptimizer
+        +styleText()
+        +applySyntaxHighlighting()
+        +applySemanticStyles()
+    }
+
+    class OptimizedTextSystemStyler {
+        <<optimized styler>>
+        +cacheManager StyleCacheManager
+        +incrementalStyler IncrementalStyler
+        +backgroundProcessor BackgroundStylingProcessor
+        +styleText()
+        +incrementalStyle()
+        +scheduleBackgroundStyling()
+    }
+
+    class HybridTextSystemStyler {
+        <<hybrid styler>>
+        +basicStyler BasicTextSystemStyler
+        +advancedStyler AdvancedTextSystemStyler
+        +optimizedStyler OptimizedTextSystemStyler
+        +styleCoordinator StyleCoordinator
+        +styleText()
+        +selectOptimalStyler()
+        +coordiateStyles()
+    }
+
+    %% Row 6 - Validation Results & Types
+    class ValidationResult {
+        <<result>>
+        +isValid Bool
+        +errors [ValidationError]
+        +warnings [ValidationWarning]
+        +performance ValidationPerformance
+        +suggestions [ValidationSuggestion]
+        +metadata ValidationMetadata
+    }
+
+    class ValidationError {
+        <<error>>
+        +range NSRange
+        +severity ErrorSeverity
+        +message String
+        +errorCode String
+        +suggestions [FixSuggestion]
+        +relatedInformation [RelatedInfo]
+    }
+
+    class TextChange {
+        <<change>>
+        +range NSRange
+        +replacementText String
+        +changeType TextChangeType
+        +timestamp Date
+        +source TextChangeSource
+        +metadata ChangeMetadata
+    }
+
+    class AsyncTextProcessor {
+        <<async processor>>
+        +processingQueue DispatchQueue
+        +taskScheduler ProcessingTaskScheduler
+        +resultAggregator AsyncResultAggregator
+        +processAsync()
+        +scheduleProcessing()
+        +aggregateResults()
+    }
+
+    %% Row 7 - Enumerations
     class ValidationMode {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         singlePhase
         threePhase
         token
@@ -37,207 +283,8 @@ classDiagram
         context
     }
 
-    %% Range Validation System
-    class SinglePhaseRangeValidator {
-        +validationRules: [ValidationRule]
-        +errorCollector: ValidationErrorCollector
-        +performanceMetrics: ValidationMetrics
-        +validate(text: String) SinglePhaseResult
-        +applyRules(text: String, rules: [ValidationRule]) [ValidationError]
-        +optimizeValidation(text: String) OptimizedValidation
-    }
-
-    class ThreePhaseRangeValidator {
-        +phase1Validator: PreProcessingValidator
-        +phase2Validator: CoreValidator
-        +phase3Validator: PostProcessingValidator
-        +phaseCoordinator: PhaseCoordinator
-        +validate(text: String) ThreePhaseResult
-        +executePhase1(text: String) Phase1Result
-        +executePhase2(phase1Result: Phase1Result) Phase2Result
-        +executePhase3(phase2Result: Phase2Result) Phase3Result
-    }
-
-    class TokenSystemValidator {
-        +tokenizer: AdvancedTokenizer
-        +tokenRules: [TokenValidationRule]
-        +semanticAnalyzer: SemanticTokenAnalyzer
-        +syntaxValidator: SyntaxValidator
-        +validate(text: String) TokenValidationResult
-        +tokenize(text: String) [ValidatedToken]
-        +validateSyntax(tokens: [ValidatedToken]) SyntaxValidationResult
-        +analyzeSemantics(tokens: [ValidatedToken]) SemanticAnalysisResult
-    }
-
-    class ValidationContext {
-        +documentContext: DocumentContext
-        +languageContext: LanguageContext
-        +editContext: EditingContext
-        +performanceContext: PerformanceContext
-        +createContext(document: TextDocument) ValidationContext
-        +updateContext(change: TextChange)
-        +optimizeForContext(validator: Validator) OptimizedValidator
-    }
-
-    class HybridSyncAsyncValidator {
-        +syncValidator: SynchronousValidator
-        +asyncValidator: AsynchronousValidator
-        +validationQueue: ValidationQueue
-        +resultMerger: ValidationResultMerger
-        +validate(text: String, mode: HybridMode) HybridValidationResult
-        +scheduleSyncValidation(text: String) SyncValidationResult
-        +scheduleAsyncValidation(text: String) Future~AsyncValidationResult~
-    }
-
-    %% Range Management System
-    class RangeManager {
-        +versionedRanges: [VersionedRange]
-        +rangeBuffer: RangeInvalidationBuffer
-        +rangeCalculator: RangeCalculator
-        +invalidationTracker: InvalidationTracker
-        +createRange(location: Int, length: Int) VersionedRange
-        +invalidateRange(range: NSRange, reason: InvalidationReason)
-        +updateRanges(textChange: TextChange) [RangeUpdate]
-        +optimizeRanges() RangeOptimizationResult
-    }
-
-    class VersionedRange {
-        +range: NSRange
-        +version: Int
-        +isValid: Bool
-        +invalidationReason: InvalidationReason?
-        +metadata: RangeMetadata
-        +updateVersion()
-        +invalidate(reason: InvalidationReason)
-        +validate(text: String) Bool
-    }
-
-    class RangeInvalidationBuffer {
-        +pendingInvalidations: [PendingInvalidation]
-        +batchProcessor: BatchInvalidationProcessor
-        +invalidationScheduler: InvalidationScheduler
-        +addInvalidation(range: NSRange, reason: InvalidationReason)
-        +processPendingInvalidations()
-        +batchInvalidations(threshold: Int) [BatchInvalidation]
-        +flushBuffer()
-    }
-
-    class RangeCalculator {
-        +textMetrics: TextMetricsCalculator
-        +lineIndexer: LineIndexer
-        +characterMapper: CharacterMapper
-        +calculateRange(start: TextPosition, end: TextPosition) NSRange
-        +calculateTextPosition(range: NSRange) (TextPosition, TextPosition)
-        +adjustRangeForChange(range: NSRange, change: TextChange) NSRange
-    }
-
-    %% Text Versioning System
-    class TextVersioningSystem {
-        +versions: [TextVersion]
-        +currentVersion: Int
-        +versionHistory: VersionHistory
-        +changeTracker: TextChangeTracker
-        +createVersion(text: String) TextVersion
-        +incrementVersion(changes: [TextChange]) TextVersion
-        +rollbackToVersion(version: Int) RollbackResult
-        +compareVersions(v1: Int, v2: Int) VersionDifference
-    }
-
-    class TextVersion {
-        +versionNumber: Int
-        +text: String
-        +checksum: String
-        +timestamp: Date
-        +changes: [TextChange]
-        +parentVersion: Int?
-        +metadata: VersionMetadata
-    }
-
-    class VersionedContent {
-        +content: String
-        +version: Int
-        +contentHash: String
-        +associatedRanges: [VersionedRange]
-        +updateContent(newContent: String)
-        +validateConsistency() Bool
-        +generateDiff(other: VersionedContent) ContentDifference
-    }
-
-    %% Text System Stylers
-    class TextSystemStyler {
-        &lt;&lt;protocol&gt;&gt;
-        +styleText(text: String, context: StylingContext) StyledText
-        +updateStyles(changes: [TextChange])
-        +optimizeStyles(text: String) StylingOptimization
-    }
-
-    class BasicTextSystemStyler {
-        +basicStyles: [TextStyle]
-        +colorScheme: ColorScheme
-        +fontManager: FontManager
-        +styleText(text: String, context: StylingContext) StyledText
-        +applyBasicStyles(text: String) StyledText
-    }
-
-    class AdvancedTextSystemStyler {
-        +syntaxHighlighter: SyntaxHighlighter
-        +semanticAnalyzer: SemanticStyleAnalyzer
-        +contextualStyler: ContextualStyler
-        +performanceOptimizer: StylingOptimizer
-        +styleText(text: String, context: StylingContext) StyledText
-        +applySyntaxHighlighting(text: String) StyledText
-        +applySemanticStyles(text: String) StyledText
-    }
-
-    class OptimizedTextSystemStyler {
-        +cacheManager: StyleCacheManager
-        +incrementalStyler: IncrementalStyler
-        +backgroundProcessor: BackgroundStylingProcessor
-        +styleText(text: String, context: StylingContext) StyledText
-        +incrementalStyle(changes: [TextChange]) IncrementalStyleResult
-        +scheduleBackgroundStyling(text: String)
-    }
-
-    class HybridTextSystemStyler {
-        +basicStyler: BasicTextSystemStyler
-        +advancedStyler: AdvancedTextSystemStyler
-        +optimizedStyler: OptimizedTextSystemStyler
-        +styleCoordinator: StyleCoordinator
-        +styleText(text: String, context: StylingContext) StyledText
-        +selectOptimalStyler(context: StylingContext) TextSystemStyler
-        +coordiateStyles(results: [StyledText]) StyledText
-    }
-
-    %% Validation Results and Types
-    class ValidationResult {
-        +isValid: Bool
-        +errors: [ValidationError]
-        +warnings: [ValidationWarning]
-        +performance: ValidationPerformance
-        +suggestions: [ValidationSuggestion]
-        +metadata: ValidationMetadata
-    }
-
-    class ValidationError {
-        +range: NSRange
-        +severity: ErrorSeverity
-        +message: String
-        +errorCode: String
-        +suggestions: [FixSuggestion]
-        +relatedInformation: [RelatedInfo]
-    }
-
-    class TextChange {
-        +range: NSRange
-        +replacementText: String
-        +changeType: TextChangeType
-        +timestamp: Date
-        +source: TextChangeSource
-        +metadata: ChangeMetadata
-    }
-
     class TextChangeType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         insertion
         deletion
         replacement
@@ -246,31 +293,12 @@ classDiagram
         batch
     }
 
-    %% Performance Optimization
-    class TextProcessingOptimizer {
-        +memoryOptimizer: MemoryOptimizer
-        +performanceProfiler: TextProcessingProfiler
-        +cacheManager: ProcessingCacheManager
-        +asyncProcessor: AsyncTextProcessor
-        +optimizeProcessing(text: String) OptimizationResult
-        +profilePerformance(operation: ProcessingOperation) PerformanceProfile
-        +manageCache(cacheOperation: CacheOperation)
-    }
-
-    class AsyncTextProcessor {
-        +processingQueue: DispatchQueue
-        +taskScheduler: ProcessingTaskScheduler
-        +resultAggregator: AsyncResultAggregator
-        +processAsync(text: String, operation: ProcessingOperation) Future~ProcessingResult~
-        +scheduleProcessing(tasks: [ProcessingTask])
-        +aggregateResults(results: [ProcessingResult]) AggregatedResult
-    }
-
-    %% Relationships
+    %% Key Relationships
     AdvancedTextProcessor --> TextValidationSystem : validates with
     AdvancedTextProcessor --> RangeManager : manages ranges
     AdvancedTextProcessor --> TextVersioningSystem : versions with
     AdvancedTextProcessor --> TextSystemStyler : styles with
+    AdvancedTextProcessor --> TextProcessingOptimizer : optimizes with
 
     TextValidationSystem --> SinglePhaseRangeValidator : uses
     TextValidationSystem --> ThreePhaseRangeValidator : uses
@@ -295,7 +323,6 @@ classDiagram
     HybridTextSystemStyler --> OptimizedTextSystemStyler : delegates to
 
     ValidationResult --> ValidationError : contains
-    AdvancedTextProcessor --> TextProcessingOptimizer : optimizes with
     TextProcessingOptimizer --> AsyncTextProcessor : processes async
 
     %% Styling - Dark mode friendly colors
