@@ -4,40 +4,263 @@ This diagram shows the comprehensive Language Server Protocol implementation tha
 
 ```mermaid
 classDiagram
-    %% LSP Core Management
+    direction LR
+    
+    %% Top Row - Core Management
     class LSPManager {
-        +clients: [String: LSPClient]
-        +registry: LSPClientRegistry
-        +documentManager: LSPDocumentManager
-        +messageHandler: LSPMessageHandler
-        +pathResolver: LSPPathResolver
-        +startLanguageServer(languageId: String) LSPClient?
-        +stopLanguageServer(languageId: String)
-        +getClient(languageId: String) LSPClient?
-        +handleDocumentChange(uri: String, changes: [TextDocumentContentChangeEvent])
+        &lt;&lt;LSP orchestrator&gt;&gt;
+        +clients [String: LSPClient]
+        +registry LSPClientRegistry
+        +documentManager LSPDocumentManager
+        +messageHandler LSPMessageHandler
+        +pathResolver LSPPathResolver
+        +startLanguageServer()
+        +stopLanguageServer()
+        +getClient()
+        +handleDocumentChange()
     }
 
     class LSPClientRegistry {
-        +registeredServers: [String: LSPServerConfiguration]
-        +activeClients: [String: LSPClient]
-        +configurationProvider: LSPConfigurationProvider
-        +register(languageId: String, config: LSPServerConfiguration)
-        +unregister(languageId: String)
-        +getConfiguration(languageId: String) LSPServerConfiguration?
-        +isLanguageSupported(languageId: String) Bool
+        &lt;&lt;client registry&gt;&gt;
+        +registeredServers [String: LSPServerConfiguration]
+        +activeClients [String: LSPClient]
+        +configurationProvider LSPConfigurationProvider
+        +register()
+        +unregister()
+        +getConfiguration()
+        +isLanguageSupported()
     }
 
     class LSPClient {
-        +serverProcess: Process?
-        +transport: LSPTransport
-        +messageHandler: LSPMessageHandler
-        +documentManager: LSPDocumentManager
-        +capabilities: ServerCapabilities?
-        +state: LSPClientState
-        +initialize(initializationOptions: InitializeParams)
+        &lt;&lt;language client&gt;&gt;
+        +serverProcess Process?
+        +transport LSPTransport
+        +messageHandler LSPMessageHandler
+        +documentManager LSPDocumentManager
+        +capabilities ServerCapabilities?
+        +state LSPClientState
+        +initialize()
         +shutdown()
-        +sendRequest~T~(method: String, params: T) Future~LSPResponse~
-        +sendNotification~T~(method: String, params: T)
+        +sendRequest()
+        +sendNotification()
+    }
+
+    %% Second Row - Transport Layer
+    class LSPTransport {
+        &lt;&lt;transport protocol&gt;&gt;
+        +isConnected Bool
+        +connect()
+        +disconnect()
+        +sendMessage()
+        +onMessageReceived
+        +onError
+    }
+
+    class ProcessTransport {
+        &lt;&lt;stdio transport&gt;&gt;
+        +process Process
+        +executablePath String
+        +arguments [String]
+        +workingDirectory String?
+        +environment [String: String]
+        +startProcess()
+        +terminateProcess()
+        +writeToStdin()
+        +readFromStdout()
+    }
+
+    class WebSocketTransport {
+        &lt;&lt;websocket transport&gt;&gt;
+        +webSocket URLSessionWebSocketTask
+        +url URL
+        +headers [String: String]
+        +connectWebSocket()
+        +closeWebSocket()
+        +sendWebSocketMessage()
+    }
+
+    %% Third Row - Document Management & TCP
+    class LSPDocumentManager {
+        &lt;&lt;document sync&gt;&gt;
+        +openDocuments [String: LSPTextDocument]
+        +documentVersions [String: Int]
+        +synchronizationKind TextDocumentSyncKind
+        +openDocument()
+        +closeDocument()
+        +changeDocument()
+        +saveDocument()
+        +getDocument()
+    }
+
+    class LSPTextDocument {
+        &lt;&lt;text document&gt;&gt;
+        +uri String
+        +languageId String
+        +version Int
+        +text String
+        +isDirty Bool
+        +lastSyncedVersion Int
+        +applyChanges()
+        +getTextInRange()
+        +positionToOffset()
+    }
+
+    class TCPTransport {
+        &lt;&lt;TCP transport&gt;&gt;
+        +socket NWConnection
+        +host String
+        +port Int
+        +establishConnection()
+        +closeConnection()
+        +sendData()
+        +receiveData()
+    }
+
+    %% Fourth Row - Message Handling & Protocol
+    class LSPMessageHandler {
+        &lt;&lt;message handler&gt;&gt;
+        +requestHandlers [String: LSPRequestHandler]
+        +notificationHandlers [String: LSPNotificationHandler]
+        +responseCallbacks [String: LSPResponseCallback]
+        +nextRequestId Int
+        +handleMessage()
+        +registerRequestHandler()
+        +registerNotificationHandler()
+        +sendRequest()
+    }
+
+    class LSPMessage {
+        &lt;&lt;LSP message&gt;&gt;
+        +jsonrpc String
+        +id LSPRequestId?
+        +method String?
+        +params Any?
+        +result Any?
+        +error LSPResponseError?
+    }
+
+    class LSPProtocol {
+        &lt;&lt;protocol methods&gt;&gt;
+        +initialize InitializeRequest
+        +textDocument TextDocumentMethods
+        +workspace WorkspaceMethods
+        +window WindowMethods
+        +completionProvider CompletionProvider
+        +hoverProvider HoverProvider
+        +signatureHelpProvider SignatureHelpProvider
+        +definitionProvider DefinitionProvider
+    }
+
+    %% Fifth Row - Protocol Types & Configuration
+    class LSPTypes {
+        &lt;&lt;protocol types&gt;&gt;
+        +Position LSPPosition
+        +Range LSPRange
+        +Location LSPLocation
+        +Diagnostic LSPDiagnostic
+        +CompletionItem LSPCompletionItem
+        +Hover LSPHover
+        +SignatureHelp LSPSignatureHelp
+    }
+
+    class ServerCapabilities {
+        &lt;&lt;server capabilities&gt;&gt;
+        +textDocumentSync TextDocumentSyncOptions?
+        +completionProvider CompletionOptions?
+        +hoverProvider Bool
+        +signatureHelpProvider SignatureHelpOptions?
+        +definitionProvider Bool
+        +referencesProvider Bool
+        +documentHighlightProvider Bool
+        +documentSymbolProvider Bool
+        +codeActionProvider CodeActionOptions?
+        +documentFormattingProvider Bool
+        +documentRangeFormattingProvider Bool
+        +renameProvider RenameOptions?
+        +foldingRangeProvider Bool
+        +semanticTokensProvider SemanticTokensOptions?
+    }
+
+    class LSPConfigurationProvider {
+        &lt;&lt;config provider&gt;&gt;
+        +configurations [String: LSPServerConfiguration]
+        +userConfigurations [String: Any]
+        +workspaceConfigurations [String: Any]
+        +getConfiguration()
+        +updateConfiguration()
+        +loadUserConfigurations()
+        +loadWorkspaceConfigurations()
+    }
+
+    %% Sixth Row - Configuration & Path Resolution
+    class LSPServerConfiguration {
+        &lt;&lt;server config&gt;&gt;
+        +languageId String
+        +serverName String
+        +command String
+        +arguments [String]
+        +workingDirectory String?
+        +environment [String: String]
+        +transportType LSPTransportType
+        +initializationOptions [String: Any]?
+        +settings [String: Any]?
+    }
+
+    class LSPPathResolver {
+        &lt;&lt;path resolver&gt;&gt;
+        +workspaceRoots [String]
+        +fileWatcher LSPFileWatcher
+        +resolveURI()
+        +createURI()
+        +isFileInWorkspace()
+        +getRelativePath()
+        +watchWorkspaceChanges()
+    }
+
+    class RemoteLSPConfiguration {
+        &lt;&lt;remote config&gt;&gt;
+        +remoteServers [RemoteServerConfig]
+        +connectionManager RemoteConnectionManager
+        +authenticator RemoteAuthenticator
+        +connectToRemoteServer()
+        +authenticateConnection()
+        +handleConnectionLoss()
+    }
+
+    %% Seventh Row - Feature Providers & Enums
+    class LSPCompletionProvider {
+        &lt;&lt;completion provider&gt;&gt;
+        +client LSPClient
+        +triggerCharacters [String]
+        +resolveProvider Bool
+        +provideCompletions()
+        +resolveCompletion()
+        +mapLSPCompletionItems()
+    }
+
+    class LSPHoverProvider {
+        &lt;&lt;hover provider&gt;&gt;
+        +client LSPClient
+        +provideHover()
+        +convertLSPHover()
+    }
+
+    class LSPDefinitionProvider {
+        &lt;&lt;definition provider&gt;&gt;
+        +client LSPClient
+        +provideDefinition()
+        +convertLSPLocations()
+    }
+
+    %% Bottom Row - Diagnostics & Enums
+    class LSPDiagnosticsProvider {
+        &lt;&lt;diagnostics provider&gt;&gt;
+        +client LSPClient
+        +diagnosticsByURI [String: [LSPDiagnostic]]
+        +onDiagnosticsReceived
+        +handlePublishDiagnostics()
+        +getDiagnostics()
+        +clearDiagnostics()
     }
 
     class LSPClientState {
@@ -50,215 +273,15 @@ classDiagram
         failed
     }
 
-    %% Transport Layer
-    class LSPTransport {
-        &lt;&lt;protocol&gt;&gt;
-        +isConnected: Bool
-        +connect() Future~Void~
-        +disconnect()
-        +sendMessage(message: LSPMessage)
-        +onMessageReceived: ((LSPMessage) -> Void)?
-        +onError: ((Error) -> Void)?
-    }
-
-    class ProcessTransport {
-        +process: Process
-        +executablePath: String
-        +arguments: [String]
-        +workingDirectory: String?
-        +environment: [String: String]
-        +startProcess()
-        +terminateProcess()
-        +writeToStdin(data: Data)
-        +readFromStdout() Data?
-    }
-
-    class WebSocketTransport {
-        +webSocket: URLSessionWebSocketTask
-        +url: URL
-        +headers: [String: String]
-        +connectWebSocket()
-        +closeWebSocket()
-        +sendWebSocketMessage(message: URLSessionWebSocketTask.Message)
-    }
-
-    class TCPTransport {
-        +socket: NWConnection
-        +host: String
-        +port: Int
-        +establishConnection()
-        +closeConnection()
-        +sendData(data: Data)
-        +receiveData() Data?
-    }
-
-    %% Document Management
-    class LSPDocumentManager {
-        +openDocuments: [String: LSPTextDocument]
-        +documentVersions: [String: Int]
-        +synchronizationKind: TextDocumentSyncKind
-        +openDocument(uri: String, languageId: String, text: String)
-        +closeDocument(uri: String)
-        +changeDocument(uri: String, changes: [TextDocumentContentChangeEvent])
-        +saveDocument(uri: String)
-        +getDocument(uri: String) LSPTextDocument?
-    }
-
-    class LSPTextDocument {
-        +uri: String
-        +languageId: String
-        +version: Int
-        +text: String
-        +isDirty: Bool
-        +lastSyncedVersion: Int
-        +applyChanges(changes: [TextDocumentContentChangeEvent])
-        +getTextInRange(range: LSPRange) String
-        +positionToOffset(position: LSPPosition) Int
-    }
-
-    %% Message Handling
-    class LSPMessageHandler {
-        +requestHandlers: [String: LSPRequestHandler]
-        +notificationHandlers: [String: LSPNotificationHandler]
-        +responseCallbacks: [String: LSPResponseCallback]
-        +nextRequestId: Int
-        +handleMessage(message: LSPMessage)
-        +registerRequestHandler(method: String, handler: LSPRequestHandler)
-        +registerNotificationHandler(method: String, handler: LSPNotificationHandler)
-        +sendRequest~T~(method: String, params: T) Future~LSPResponse~
-    }
-
-    class LSPMessage {
-        +jsonrpc: String
-        +id: LSPRequestId?
-        +method: String?
-        +params: Any?
-        +result: Any?
-        +error: LSPResponseError?
-    }
-
-    %% Protocol Types & Models
-    class LSPProtocol {
-        +initialize: InitializeRequest
-        +textDocument: TextDocumentMethods
-        +workspace: WorkspaceMethods
-        +window: WindowMethods
-        +completionProvider: CompletionProvider
-        +hoverProvider: HoverProvider
-        +signatureHelpProvider: SignatureHelpProvider
-        +definitionProvider: DefinitionProvider
-    }
-
-    class LSPTypes {
-        +Position: LSPPosition
-        +Range: LSPRange
-        +Location: LSPLocation
-        +Diagnostic: LSPDiagnostic
-        +CompletionItem: LSPCompletionItem
-        +Hover: LSPHover
-        +SignatureHelp: LSPSignatureHelp
-    }
-
-    class ServerCapabilities {
-        +textDocumentSync: TextDocumentSyncOptions?
-        +completionProvider: CompletionOptions?
-        +hoverProvider: Bool
-        +signatureHelpProvider: SignatureHelpOptions?
-        +definitionProvider: Bool
-        +referencesProvider: Bool
-        +documentHighlightProvider: Bool
-        +documentSymbolProvider: Bool
-        +codeActionProvider: CodeActionOptions?
-        +documentFormattingProvider: Bool
-        +documentRangeFormattingProvider: Bool
-        +renameProvider: RenameOptions?
-        +foldingRangeProvider: Bool
-        +semanticTokensProvider: SemanticTokensOptions?
-    }
-
-    %% Configuration & Path Resolution
-    class LSPConfigurationProvider {
-        +configurations: [String: LSPServerConfiguration]
-        +userConfigurations: [String: Any]
-        +workspaceConfigurations: [String: Any]
-        +getConfiguration(languageId: String) LSPServerConfiguration
-        +updateConfiguration(languageId: String, config: LSPServerConfiguration)
-        +loadUserConfigurations()
-        +loadWorkspaceConfigurations()
-    }
-
-    class LSPServerConfiguration {
-        +languageId: String
-        +serverName: String
-        +command: String
-        +arguments: [String]
-        +workingDirectory: String?
-        +environment: [String: String]
-        +transportType: LSPTransportType
-        +initializationOptions: [String: Any]?
-        +settings: [String: Any]?
-    }
-
     class LSPTransportType {
         &lt;&lt;enumeration&gt;&gt;
         stdio
-        tcp(host: String, port: Int)
-        websocket(url: URL)
-        namedPipe(path: String)
+        tcp
+        websocket
+        namedPipe
     }
 
-    class LSPPathResolver {
-        +workspaceRoots: [String]
-        +fileWatcher: LSPFileWatcher
-        +resolveURI(uri: String) String?
-        +createURI(filePath: String) String
-        +isFileInWorkspace(filePath: String) Bool
-        +getRelativePath(filePath: String) String?
-        +watchWorkspaceChanges()
-    }
-
-    %% LSP Feature Providers
-    class LSPCompletionProvider {
-        +client: LSPClient
-        +triggerCharacters: [String]
-        +resolveProvider: Bool
-        +provideCompletions(document: TextDocument, position: Position) [CompletionItem]
-        +resolveCompletion(item: CompletionItem) CompletionItem
-        +mapLSPCompletionItems(items: [LSPCompletionItem]) [CompletionItem]
-    }
-
-    class LSPHoverProvider {
-        +client: LSPClient
-        +provideHover(document: TextDocument, position: Position) Hover?
-        +convertLSPHover(hover: LSPHover) Hover
-    }
-
-    class LSPDefinitionProvider {
-        +client: LSPClient
-        +provideDefinition(document: TextDocument, position: Position) [Location]
-        +convertLSPLocations(locations: [LSPLocation]) [Location]
-    }
-
-    class LSPDiagnosticsProvider {
-        +client: LSPClient
-        +diagnosticsByURI: [String: [LSPDiagnostic]]
-        +onDiagnosticsReceived: (([LSPDiagnostic]) -> Void)?
-        +handlePublishDiagnostics(params: PublishDiagnosticsParams)
-        +getDiagnostics(uri: String) [LSPDiagnostic]
-        +clearDiagnostics(uri: String)
-    }
-
-    %% Remote Configuration Support
-    class RemoteLSPConfiguration {
-        +remoteServers: [RemoteServerConfig]
-        +connectionManager: RemoteConnectionManager
-        +authenticator: RemoteAuthenticator
-        +connectToRemoteServer(config: RemoteServerConfig) LSPClient
-        +authenticateConnection(credentials: RemoteCredentials)
-        +handleConnectionLoss()
-    }
-
-    %% Relationships
+    %% Key Relationships
     LSPManager --> LSPClientRegistry : uses
     LSPManager --> LSPClient : manages
     LSPManager --> LSPDocumentManager : coordinates
@@ -283,15 +306,11 @@ classDiagram
     LSPProtocol --> LSPTypes : uses
     LSPConfigurationProvider --> LSPServerConfiguration : provides
     LSPServerConfiguration --> LSPTransportType : specifies
-    LSPPathResolver --> LSPFileWatcher : uses
 
     LSPCompletionProvider --> LSPClient : uses
     LSPHoverProvider --> LSPClient : uses
     LSPDefinitionProvider --> LSPClient : uses
     LSPDiagnosticsProvider --> LSPClient : uses
-
-    RemoteLSPConfiguration --> RemoteConnectionManager : uses
-    RemoteLSPConfiguration --> RemoteAuthenticator : uses
 
     %% Styling - Dark mode friendly colors
     classDef manager fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
