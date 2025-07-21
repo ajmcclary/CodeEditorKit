@@ -4,63 +4,378 @@ This diagram shows the comprehensive debugging integration system that provides 
 
 ```mermaid
 classDiagram
-    %% Core Debugging System
+    direction LR
+    
+    %% Row 1 - Core Debug System
     class DebugIntegrationSystem {
-        +debugSessionManager: DebugSessionManager
-        +breakpointManager: BreakpointManager
-        +debugUI: DebugUIController
-        +debugEventProcessor: DebugEventProcessor
-        +debugDataProvider: DebugDataProvider
-        +initializeDebugging(codeEditor: CodeEditorView)
-        +startDebugSession(config: DebugConfiguration)
+        <<debug system>>
+        +debugSessionManager DebugSessionManager
+        +breakpointManager BreakpointManager
+        +debugUI DebugUIController
+        +debugEventProcessor DebugEventProcessor
+        +debugDataProvider DebugDataProvider
+        +initializeDebugging()
+        +startDebugSession()
         +stopDebugSession()
-        +attachToProcess(processId: Int)
-        +detachFromProcess()
+        +attachToProcess()
     }
 
     class DebugSessionManager {
-        +activeSessions: [String: DebugSession]
-        +sessionFactory: DebugSessionFactory
-        +protocolManager: DebugProtocolManager
-        +stateManager: DebugStateManager
-        +createSession(config: DebugConfiguration) DebugSession
-        +terminateSession(sessionId: String)
-        +pauseSession(sessionId: String)
-        +resumeSession(sessionId: String)
-        +stepInto(sessionId: String)
-        +stepOver(sessionId: String)
-        +stepOut(sessionId: String)
+        <<session manager>>
+        +activeSessions [String: DebugSession]
+        +sessionFactory DebugSessionFactory
+        +protocolManager DebugProtocolManager
+        +stateManager DebugStateManager
+        +createSession()
+        +terminateSession()
+        +pauseSession()
+        +resumeSession()
+        +stepInto()
+        +stepOver()
+        +stepOut()
     }
 
-    %% Debug Session Types
+    class DebugDataProvider {
+        <<data provider>>
+        +sessionDataCache DebugSessionDataCache
+        +symbolResolver DebugSymbolResolver
+        +sourceMapper DebugSourceMapper
+        +memoryReader MemoryReader
+        +getVariables()
+        +getCallStack()
+        +evaluateExpression()
+        +readMemory()
+        +resolveSymbol()
+    }
+
+    %% Row 2 - Debug Session & Configuration
     class DebugSession {
-        +sessionId: String
-        +debugger: Debugger
-        +state: DebugState
-        +configuration: DebugConfiguration
-        +threads: [DebugThread]
-        +callStack: [StackFrame]
-        +variables: [Variable]
-        +start() DebugResult
-        +stop() DebugResult
-        +pause() DebugResult
-        +resume() DebugResult
-        +evaluate(expression: String) EvaluationResult
+        <<debug session>>
+        +sessionId String
+        +debugger Debugger
+        +state DebugState
+        +configuration DebugConfiguration
+        +threads [DebugThread]
+        +callStack [StackFrame]
+        +variables [Variable]
+        +start()
+        +stop()
+        +pause()
+        +resume()
+        +evaluate()
     }
 
     class DebugConfiguration {
-        +name: String
-        +type: DebuggerType
-        +executable: String
-        +arguments: [String]
-        +workingDirectory: String
-        +environment: [String: String]
-        +attachMode: AttachMode
-        +sourceMap: [String: String]
-        +breakOnEntry: Bool
-        +stopOnException: Bool
+        <<debug config>>
+        +name String
+        +type DebuggerType
+        +executable String
+        +arguments [String]
+        +workingDirectory String
+        +environment [String: String]
+        +attachMode AttachMode
+        +sourceMap [String: String]
+        +breakOnEntry Bool
+        +stopOnException Bool
     }
 
+    class DebugThread {
+        <<debug thread>>
+        +threadId String
+        +name String
+        +state ThreadState
+        +callStack [StackFrame]
+        +topFrame StackFrame?
+        +canStep Bool
+        +canContinue Bool
+    }
+
+    class StackFrame {
+        <<stack frame>>
+        +frameId String
+        +name String
+        +source SourceLocation
+        +line Int
+        +column Int
+        +variables [Variable]
+        +scopes [Scope]
+        +instructionPointerReference String?
+    }
+
+    %% Row 3 - Breakpoint System
+    class BreakpointManager {
+        <<breakpoint manager>>
+        +breakpoints [String: Breakpoint]
+        +lineBreakpoints [Int: LineBreakpoint]
+        +conditionalBreakpoints [String: ConditionalBreakpoint]
+        +logBreakpoints [String: LogBreakpoint]
+        +exceptionBreakpoints [String: ExceptionBreakpoint]
+        +addBreakpoint()
+        +removeBreakpoint()
+        +toggleBreakpoint()
+        +enableAllBreakpoints()
+        +disableAllBreakpoints()
+        +clearAllBreakpoints()
+    }
+
+    class Breakpoint {
+        <<breakpoint>>
+        +id String
+        +enabled Bool
+        +verified Bool
+        +condition String?
+        +hitCondition String?
+        +logMessage String?
+        +location BreakpointLocation
+        +hitCount Int
+        +metadata BreakpointMetadata
+        +toggle()
+        +validate()
+    }
+
+    class LineBreakpoint {
+        <<line breakpoint>>
+        +line Int
+        +column Int?
+        +sourceFile String
+        +isResolved Bool
+        +actualLine Int?
+        +instructionAddress UInt64?
+        +resolve()
+    }
+
+    class ConditionalBreakpoint {
+        <<conditional breakpoint>>
+        +condition String
+        +conditionLanguage ConditionLanguage
+        +evaluationCount Int
+        +lastEvaluationResult Bool
+        +conditionValidator ConditionValidator
+        +evaluateCondition()
+    }
+
+    class LogBreakpoint {
+        <<log breakpoint>>
+        +logMessage String
+        +logFormat LogFormat
+        +outputDestination LogDestination
+        +interpolatedVariables [String]
+        +logCount Int
+        +formatMessage()
+        +writeLog()
+    }
+
+    class ExceptionBreakpoint {
+        <<exception breakpoint>>
+        +exceptionType ExceptionType
+        +uncaughtOnly Bool
+        +includeSubtypes Bool
+        +filterPattern String?
+        +exceptionMatcher ExceptionMatcher
+        +matchesException()
+    }
+
+    %% Row 4 - Debug UI System
+    class DebugUIController {
+        <<ui controller>>
+        +breakpointGutter BreakpointGutter
+        +debugInfoOverlay DebugInfoOverlay
+        +variableInspector VariableInspectorView
+        +callStackView CallStackView
+        +debugConsole DebugConsoleView
+        +stepControls DebugStepControls
+        +updateUI()
+        +showBreakpointHit()
+        +highlightCurrentLine()
+        +clearHighlights()
+    }
+
+    class BreakpointGutter {
+        <<breakpoint gutter>>
+        +gutterView GutterView
+        +breakpointRenderer BreakpointRenderer
+        +gestureHandler BreakpointGestureHandler
+        +breakpointIcons [BreakpointState: PlatformImage]
+        +renderBreakpoint()
+        +handleBreakpointClick()
+        +showBreakpointContextMenu()
+    }
+
+    class DebugInfoOverlay {
+        <<debug overlay>>
+        +overlayView OverlayView
+        +hoverController DebugHoverController
+        +tooltipManager DebugTooltipManager
+        +valueRenderer DebugValueRenderer
+        +showVariableValue()
+        +showExpressionResult()
+        +hideOverlays()
+    }
+
+    class VariableInspectorView {
+        <<variable inspector>>
+        +treeView ExpandableTreeView
+        +variableRenderer VariableRenderer
+        +valueEditor VariableValueEditor
+        +filterController VariableFilterController
+        +updateVariables()
+        +expandVariable()
+        +editVariableValue()
+        +applyFilters()
+    }
+
+    class CallStackView {
+        <<call stack view>>
+        +stackFrameList StackFrameListView
+        +frameRenderer StackFrameRenderer
+        +navigationController CallStackNavigationController
+        +sourceLocator SourceLocationResolver
+        +updateCallStack()
+        +selectFrame()
+        +navigateToFrame()
+    }
+
+    %% Row 5 - Data Models & Variables
+    class Variable {
+        <<variable>>
+        +name String
+        +value String
+        +type String?
+        +kind VariableKind
+        +memoryReference String?
+        +presentationHint VariablePresentationHint?
+        +children [Variable]
+        +isExpandable Bool
+        +evaluate()
+        +setValue()
+    }
+
+    class DebugSymbolResolver {
+        <<symbol resolver>>
+        +symbolTable DebugSymbolTable
+        +sourceLineMapping SourceLineMapping
+        +typeInfoProvider TypeInformationProvider
+        +resolveSymbol()
+        +getTypeInformation()
+        +mapAddressToSource()
+    }
+
+    %% Row 6 - Event System
+    class DebugEventProcessor {
+        <<event processor>>
+        +eventHandlers [DebugEventType: DebugEventHandler]
+        +eventQueue DebugEventQueue
+        +filterManager DebugEventFilterManager
+        +notificationCenter DebugNotificationCenter
+        +processEvent()
+        +registerHandler()
+        +filterEvents()
+    }
+
+    class DebugEvent {
+        <<debug event>>
+        +eventType DebugEventType
+        +sessionId String
+        +timestamp Date
+        +data DebugEventData
+        +threadId String?
+        +frameId String?
+    }
+
+    %% Row 7 - Protocol System
+    class DebugProtocolManager {
+        <<protocol manager>>
+        +dapClient DebugAdapterProtocolClient
+        +protocolHandlers [DebuggerType: ProtocolHandler]
+        +messageQueue DebugMessageQueue
+        +responseManager DebugResponseManager
+        +sendRequest()
+        +handleNotification()
+        +establishConnection()
+    }
+
+    class DebugAdapterProtocolClient {
+        <<DAP client>>
+        +connection DebugConnection
+        +messageDispatcher MessageDispatcher
+        +sequenceManager SequenceManager
+        +initialize()
+        +launch()
+        +attach()
+        +setBreakpoints()
+        +continue()
+        +stepIn()
+        +stepOut()
+        +evaluate()
+    }
+
+    class ProtocolHandler {
+        <<protocol handler>>
+        +handlerType DebuggerType
+        +supportedCapabilities [DebugCapability]
+        +handleRequest()
+        +translateBreakpoint()
+        +parseVariable()
+    }
+
+    class LLDBProtocolHandler {
+        <<LLDB handler>>
+        +lldbClient LLDBClient
+        +commandTranslator LLDBCommandTranslator
+        +responseParser LLDBResponseParser
+        +targetManager LLDBTargetManager
+        +handleRequest()
+        +executeLLDBCommand()
+        +parseStackTrace()
+    }
+
+    class GDBProtocolHandler {
+        <<GDB handler>>
+        +gdbClient GDBClient
+        +miInterpreter GDBMachineInterface
+        +breakpointTranslator GDBBreakpointTranslator
+        +variableParser GDBVariableParser
+        +handleRequest()
+        +executeMICommand()
+        +parseGDBOutput()
+    }
+
+    %% Row 8 - Console & Performance
+    class DebugConsoleView {
+        <<debug console>>
+        +consoleTextView TextView
+        +commandInput CommandInputView
+        +commandHistory CommandHistory
+        +outputFormatter DebugOutputFormatter
+        +executeCommand()
+        +displayOutput()
+        +showEvaluationResult()
+        +clearConsole()
+    }
+
+    class CommandHistory {
+        <<command history>>
+        +commands [String]
+        +currentIndex Int
+        +maxHistorySize Int
+        +addCommand()
+        +getPreviousCommand()
+        +getNextCommand()
+        +searchHistory()
+    }
+
+    class DebugPerformanceOptimizer {
+        <<performance optimizer>>
+        +eventThrottler DebugEventThrottler
+        +dataCache DebugDataCache
+        +lazyLoader DebugDataLazyLoader
+        +memoryOptimizer DebugMemoryOptimizer
+        +optimizeEventProcessing()
+        +cacheDebugData()
+        +preloadCriticalData()
+    }
+
+    %% Row 9 - Enumerations
     class DebuggerType {
         <<enumeration>>
         lldb
@@ -70,7 +385,7 @@ classDiagram
         javaDebugger
         swiftDebugger
         rustDebugger
-        customDebugger(type: String)
+        customDebugger
     }
 
     class DebugState {
@@ -84,163 +399,6 @@ classDiagram
         error
     }
 
-    %% Breakpoint Management System
-    class BreakpointManager {
-        +breakpoints: [String: Breakpoint]
-        +lineBreakpoints: [Int: LineBreakpoint]
-        +conditionalBreakpoints: [String: ConditionalBreakpoint]
-        +logBreakpoints: [String: LogBreakpoint]
-        +exceptionBreakpoints: [String: ExceptionBreakpoint]
-        +addBreakpoint(breakpoint: Breakpoint) String
-        +removeBreakpoint(id: String) Bool
-        +toggleBreakpoint(id: String) Bool
-        +enableAllBreakpoints()
-        +disableAllBreakpoints()
-        +clearAllBreakpoints()
-    }
-
-    class Breakpoint {
-        +id: String
-        +enabled: Bool
-        +verified: Bool
-        +condition: String?
-        +hitCondition: String?
-        +logMessage: String?
-        +location: BreakpointLocation
-        +hitCount: Int
-        +metadata: BreakpointMetadata
-        +toggle()
-        +validate() ValidationResult
-    }
-
-    class LineBreakpoint {
-        +line: Int
-        +column: Int?
-        +sourceFile: String
-        +isResolved: Bool
-        +actualLine: Int?
-        +instructionAddress: UInt64?
-        +resolve(debugSession: DebugSession) ResolveResult
-    }
-
-    class ConditionalBreakpoint {
-        +condition: String
-        +conditionLanguage: ConditionLanguage
-        +evaluationCount: Int
-        +lastEvaluationResult: Bool
-        +conditionValidator: ConditionValidator
-        +evaluateCondition(context: DebugContext) Bool
-    }
-
-    class LogBreakpoint {
-        +logMessage: String
-        +logFormat: LogFormat
-        +outputDestination: LogDestination
-        +interpolatedVariables: [String]
-        +logCount: Int
-        +formatMessage(context: DebugContext) String
-        +writeLog(message: String)
-    }
-
-    class ExceptionBreakpoint {
-        +exceptionType: ExceptionType
-        +uncaughtOnly: Bool
-        +includeSubtypes: Bool
-        +filterPattern: String?
-        +exceptionMatcher: ExceptionMatcher
-        +matchesException(exception: Exception) Bool
-    }
-
-    %% Debug UI Integration
-    class DebugUIController {
-        +breakpointGutter: BreakpointGutter
-        +debugInfoOverlay: DebugInfoOverlay
-        +variableInspector: VariableInspectorView
-        +callStackView: CallStackView
-        +debugConsole: DebugConsoleView
-        +stepControls: DebugStepControls
-        +updateUI(debugEvent: DebugEvent)
-        +showBreakpointHit(breakpoint: Breakpoint, context: DebugContext)
-        +highlightCurrentLine(line: Int)
-        +clearHighlights()
-    }
-
-    class BreakpointGutter {
-        +gutterView: GutterView
-        +breakpointRenderer: BreakpointRenderer
-        +gestureHandler: BreakpointGestureHandler
-        +breakpointIcons: [BreakpointState: PlatformImage]
-        +renderBreakpoint(breakpoint: Breakpoint, line: Int)
-        +handleBreakpointClick(line: Int, gesture: ClickGesture)
-        +showBreakpointContextMenu(breakpoint: Breakpoint, point: CGPoint)
-    }
-
-    class DebugInfoOverlay {
-        +overlayView: OverlayView
-        +hoverController: DebugHoverController
-        +tooltipManager: DebugTooltipManager
-        +valueRenderer: DebugValueRenderer
-        +showVariableValue(variable: Variable, location: CGPoint)
-        +showExpressionResult(expression: String, result: EvaluationResult)
-        +hideOverlays()
-    }
-
-    class VariableInspectorView {
-        +treeView: ExpandableTreeView
-        +variableRenderer: VariableRenderer
-        +valueEditor: VariableValueEditor
-        +filterController: VariableFilterController
-        +updateVariables(variables: [Variable])
-        +expandVariable(variable: Variable)
-        +editVariableValue(variable: Variable, newValue: String)
-        +applyFilters(filter: VariableFilter)
-    }
-
-    class CallStackView {
-        +stackFrameList: StackFrameListView
-        +frameRenderer: StackFrameRenderer
-        +navigationController: CallStackNavigationController
-        +sourceLocator: SourceLocationResolver
-        +updateCallStack(frames: [StackFrame])
-        +selectFrame(frame: StackFrame)
-        +navigateToFrame(frame: StackFrame)
-    }
-
-    %% Debug Data Models
-    class DebugThread {
-        +threadId: String
-        +name: String
-        +state: ThreadState
-        +callStack: [StackFrame]
-        +topFrame: StackFrame?
-        +canStep: Bool
-        +canContinue: Bool
-    }
-
-    class StackFrame {
-        +frameId: String
-        +name: String
-        +source: SourceLocation
-        +line: Int
-        +column: Int
-        +variables: [Variable]
-        +scopes: [Scope]
-        +instructionPointerReference: String?
-    }
-
-    class Variable {
-        +name: String
-        +value: String
-        +type: String?
-        +kind: VariableKind
-        +memoryReference: String?
-        +presentationHint: VariablePresentationHint?
-        +children: [Variable]
-        +isExpandable: Bool
-        +evaluate(expression: String) EvaluationResult
-        +setValue(newValue: String) SetValueResult
-    }
-
     class VariableKind {
         <<enumeration>>
         local
@@ -250,26 +408,6 @@ classDiagram
         static
         constant
         synthetic
-    }
-
-    %% Debug Events and Communication
-    class DebugEventProcessor {
-        +eventHandlers: [DebugEventType: DebugEventHandler]
-        +eventQueue: DebugEventQueue
-        +filterManager: DebugEventFilterManager
-        +notificationCenter: DebugNotificationCenter
-        +processEvent(event: DebugEvent)
-        +registerHandler(eventType: DebugEventType, handler: DebugEventHandler)
-        +filterEvents(events: [DebugEvent]) [DebugEvent]
-    }
-
-    class DebugEvent {
-        +eventType: DebugEventType
-        +sessionId: String
-        +timestamp: Date
-        +data: DebugEventData
-        +threadId: String?
-        +frameId: String?
     }
 
     class DebugEventType {
@@ -287,156 +425,47 @@ classDiagram
         outputReceived
     }
 
-    %% Debug Protocol Integration
-    class DebugProtocolManager {
-        +dapClient: DebugAdapterProtocolClient
-        +protocolHandlers: [DebuggerType: ProtocolHandler]
-        +messageQueue: DebugMessageQueue
-        +responseManager: DebugResponseManager
-        +sendRequest(request: DebugRequest) Future<DebugResponse>
-        +handleNotification(notification: DebugNotification)
-        +establishConnection(config: DebugConfiguration) ConnectionResult
-    }
-
-    class DebugAdapterProtocolClient {
-        +connection: DebugConnection
-        +messageDispatcher: MessageDispatcher
-        +sequenceManager: SequenceManager
-        +initialize(capabilities: DebugCapabilities) InitializeResult
-        +launch(config: LaunchConfiguration) LaunchResult
-        +attach(config: AttachConfiguration) AttachResult
-        +setBreakpoints(breakpoints: [SourceBreakpoint]) SetBreakpointsResult
-        +continue(threadId: String) ContinueResult
-        +stepIn(threadId: String) StepResult
-        +stepOut(threadId: String) StepResult
-        +evaluate(expression: String, context: EvaluateContext) EvaluateResult
-    }
-
-    class ProtocolHandler {
-        <<protocol>>
-        +handlerType: DebuggerType
-        +supportedCapabilities: [DebugCapability]
-        +handleRequest(request: DebugRequest) DebugResponse
-        +translateBreakpoint(breakpoint: Breakpoint) ProtocolBreakpoint
-        +parseVariable(protocolVariable: ProtocolVariable) Variable
-    }
-
-    class LLDBProtocolHandler {
-        +lldbClient: LLDBClient
-        +commandTranslator: LLDBCommandTranslator
-        +responseParser: LLDBResponseParser
-        +targetManager: LLDBTargetManager
-        +handleRequest(request: DebugRequest) DebugResponse
-        +executeLLDBCommand(command: String) LLDBResult
-        +parseStackTrace(output: String) [StackFrame]
-    }
-
-    class GDBProtocolHandler {
-        +gdbClient: GDBClient
-        +miInterpreter: GDBMachineInterface
-        +breakpointTranslator: GDBBreakpointTranslator
-        +variableParser: GDBVariableParser
-        +handleRequest(request: DebugRequest) DebugResponse
-        +executeMICommand(command: MICommand) MIResult
-        +parseGDBOutput(output: String) GDBResponse
-    }
-
-    %% Debug Data Provider
-    class DebugDataProvider {
-        +sessionDataCache: DebugSessionDataCache
-        +symbolResolver: DebugSymbolResolver
-        +sourceMapper: DebugSourceMapper
-        +memoryReader: MemoryReader
-        +getVariables(frameId: String) [Variable]
-        +getCallStack(threadId: String) [StackFrame]
-        +evaluateExpression(expression: String, frameId: String) EvaluationResult
-        +readMemory(memoryReference: String, count: Int) MemoryData
-        +resolveSymbol(symbolName: String) SymbolInformation?
-    }
-
-    class DebugSymbolResolver {
-        +symbolTable: DebugSymbolTable
-        +sourceLineMapping: SourceLineMapping
-        +typeInfoProvider: TypeInformationProvider
-        +resolveSymbol(name: String, context: DebugContext) SymbolResolution?
-        +getTypeInformation(variable: Variable) TypeInformation
-        +mapAddressToSource(address: UInt64) SourceLocation?
-    }
-
-    %% Debug Console Integration
-    class DebugConsoleView {
-        +consoleTextView: TextView
-        +commandInput: CommandInputView
-        +commandHistory: CommandHistory
-        +outputFormatter: DebugOutputFormatter
-        +executeCommand(command: String)
-        +displayOutput(output: String, type: OutputType)
-        +showEvaluationResult(expression: String, result: EvaluationResult)
-        +clearConsole()
-    }
-
-    class CommandHistory {
-        +commands: [String]
-        +currentIndex: Int
-        +maxHistorySize: Int
-        +addCommand(command: String)
-        +getPreviousCommand() String?
-        +getNextCommand() String?
-        +searchHistory(query: String) [String]
-    }
-
-    %% Performance and Optimization
-    class DebugPerformanceOptimizer {
-        +eventThrottler: DebugEventThrottler
-        +dataCache: DebugDataCache
-        +lazyLoader: DebugDataLazyLoader
-        +memoryOptimizer: DebugMemoryOptimizer
-        +optimizeEventProcessing(events: [DebugEvent]) [DebugEvent]
-        +cacheDebugData(sessionId: String, data: DebugData)
-        +preloadCriticalData(session: DebugSession)
-    }
-
-    %% Relationships
+    %% Key Relationships
     DebugIntegrationSystem --> DebugSessionManager : manages
     DebugIntegrationSystem --> BreakpointManager : manages
     DebugIntegrationSystem --> DebugUIController : controls
     DebugIntegrationSystem --> DebugEventProcessor : processes events
     DebugIntegrationSystem --> DebugDataProvider : provides data
-
+    
     DebugSessionManager --> DebugSession : creates
     DebugSession --> DebugConfiguration : configured by
     DebugSession --> DebugThread : contains
     DebugSession --> StackFrame : has stack
     DebugSession --> Variable : exposes
-
+    
     BreakpointManager --> Breakpoint : manages
     Breakpoint <|-- LineBreakpoint : specializes to
     Breakpoint <|-- ConditionalBreakpoint : specializes to
     Breakpoint <|-- LogBreakpoint : specializes to
     Breakpoint <|-- ExceptionBreakpoint : specializes to
-
+    
     DebugUIController --> BreakpointGutter : displays
     DebugUIController --> DebugInfoOverlay : shows overlays
     DebugUIController --> VariableInspectorView : displays variables
     DebugUIController --> CallStackView : shows stack
     DebugUIController --> DebugConsoleView : provides console
-
+    
     DebugThread --> StackFrame : contains
     StackFrame --> Variable : contains
-
+    
     DebugEventProcessor --> DebugEvent : processes
     DebugEvent --> DebugEventType : categorized by
-
+    
     DebugSessionManager --> DebugProtocolManager : communicates via
     DebugProtocolManager --> DebugAdapterProtocolClient : uses
     DebugProtocolManager --> ProtocolHandler : delegates to
     ProtocolHandler <|-- LLDBProtocolHandler : implements
     ProtocolHandler <|-- GDBProtocolHandler : implements
-
+    
     DebugDataProvider --> DebugSymbolResolver : resolves symbols
     DebugUIController --> DebugConsoleView : integrates
     DebugConsoleView --> CommandHistory : tracks history
-
+    
     DebugIntegrationSystem --> DebugPerformanceOptimizer : optimizes with
 
     %% Styling - Dark mode friendly colors
