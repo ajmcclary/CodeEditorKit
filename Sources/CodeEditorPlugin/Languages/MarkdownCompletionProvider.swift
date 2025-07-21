@@ -4,12 +4,7 @@ import Foundation
 
 /// Built-in completion provider for Markdown language
 @MainActor
-public final class MarkdownCompletionProvider: CompletionProvider {
-    public let id = "markdown-builtin"
-    public let supportedLanguages: [Language] = [.markdown]
-    public let triggerCharacters = ["#", "*", "_", "[", "]", "(", ")", "`", "!", "|", "-", "+", ":", "<", ">", " "]
-    public let supportsSnippets = true
-    
+public final class MarkdownCompletionProvider: BaseCompletionProvider {
     // Reference to static data from MarkdownCompletionData
     private let markdownSyntax = MarkdownCompletionData.markdownSyntax
     private let elements = MarkdownCompletionData.elements
@@ -19,17 +14,27 @@ public final class MarkdownCompletionProvider: CompletionProvider {
     private let mathSymbols = MarkdownCompletionData.mathSymbols
     private let linkPatterns = MarkdownCompletionData.linkPatterns
     
-    private let snippets = MarkdownCompletionData.snippets
+    // Override snippets property
+    override public var snippets: [SnippetTemplate] {
+        MarkdownCompletionData.snippets
+    }
     
-    public init() {}
+    public init() {
+        super.init(
+            id: "markdown-builtin",
+            supportedLanguages: [.markdown],
+            triggerCharacters: ["#", "*", "_", "[", "]", "(", ")", "`", "!", "|", "-", "+", ":", "<", ">", " "],
+            supportsSnippets: true
+        )
+    }
     
-    // MARK: - CompletionProvider Implementation
+    // MARK: - Overrides for Markdown Completions
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeMarkdownContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -70,7 +75,7 @@ public final class MarkdownCompletionProvider: CompletionProvider {
         case .general:
             items.append(contentsOf: createSyntaxCompletions(filter: analysisResult.filter))
             if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
+                items.append(contentsOf: super.createSnippetCompletions(filter: analysisResult.filter))
             }
         }
         
@@ -86,12 +91,12 @@ public final class MarkdownCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> MarkdownContextAnalysisResult {
+    private func analyzeMarkdownContext(_ context: CompletionContextModel) -> MarkdownContextAnalysisResult {
         let lineText = context.lineText
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
         // Extract current word being typed
-        let filter = extractCurrentWord(from: beforeCursor)
+        let filter = extractMarkdownWord(from: beforeCursor)
         
         // Check for math context
         if beforeCursor.contains("$") && !beforeCursor.hasSuffix("$") {
@@ -151,7 +156,7 @@ public final class MarkdownCompletionProvider: CompletionProvider {
         return MarkdownContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    private func extractMarkdownWord(from text: String) -> String {
         if text.hasSuffix(":") {
             return ":"
         }
@@ -473,23 +478,6 @@ public final class MarkdownCompletionProvider: CompletionProvider {
                     kind: .snippet,
                     detail: "Markdown syntax",
                     priority: 80
-                )
-            }
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
                 )
             }
     }

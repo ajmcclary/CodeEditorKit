@@ -4,14 +4,10 @@ import Foundation
 
 /// Built-in completion provider for TypeScript language
 @MainActor
-public final class TypeScriptCompletionProvider: CompletionProvider {
-    public let id = "typescript-builtin"
-    public let supportedLanguages: [Language] = [.typescript]
-    public let triggerCharacters = [".", "(", "[", "{", " ", ":", "<", ">"]
-    public let supportsSnippets = true
-    
+public final class TypeScriptCompletionProvider: BaseCompletionProvider {
     // TypeScript extends JavaScript, so include JS keywords plus TS-specific ones
-    private let keywords = [
+    override public var keywords: [String] {
+        [
         // JavaScript keywords
         "const", "let", "var", "function", "class", "if", "else", "for", "while",
         "do", "switch", "case", "default", "break", "continue", "return", "try",
@@ -24,9 +20,11 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         "implements", "private", "protected", "public", "readonly", "override",
         "keyof", "infer", "is", "asserts", "any", "unknown", "never", "object",
         "string", "number", "boolean", "symbol", "bigint", "undefined", "null"
-    ]
+        ]
+    }
     
-    private let builtinTypes = [
+    override public var types: [String] {
+        [
         // Primitive types
         "string", "number", "boolean", "symbol", "bigint", "any", "unknown",
         "never", "void", "undefined", "null", "object",
@@ -38,7 +36,8 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         // Common built-in types
         "Array", "Promise", "Map", "Set", "WeakMap", "WeakSet", "Date", "RegExp",
         "Error", "Function", "Object", "String", "Number", "Boolean", "Symbol"
-    ]
+        ]
+    }
     
     private let decorators = [
         "@Component", "@Injectable", "@Directive", "@Pipe", "@NgModule",
@@ -47,7 +46,8 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         "@deprecated", "@experimental", "@sealed", "@override", "@readonly"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "interface",
             insertText: "interface ${1:InterfaceName} {\n    ${2:property}: ${3:type};\n}",
@@ -133,24 +133,32 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
             insertText: "type ${1:ConditionalType} = ${2:T} extends ${3:U} ? ${4:TrueType} : ${5:FalseType};",
             description: "Conditional type"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    public init() {
+        super.init(
+            id: "typescript-builtin",
+            supportedLanguages: [.typescript],
+            triggerCharacters: [".", "(", "[", "{", " ", ":", "<", ">"],
+            supportsSnippets: true
+        )
+    }
     
     // MARK: - CompletionProvider Implementation
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeTypeScriptContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .type:
+            items.append(contentsOf: createTSTypeCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createBuiltinTypeCompletions(filter: analysisResult.filter))
             
         case .decorator:
             items.append(contentsOf: createDecoratorCompletions(filter: analysisResult.filter))
@@ -169,7 +177,7 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
             
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createBuiltinTypeCompletions(filter: analysisResult.filter))
+            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
@@ -190,7 +198,7 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> TypeScriptContextAnalysisResult {
+    private func analyzeTypeScriptContext(_ context: CompletionContextModel) -> TypeScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -231,12 +239,12 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         return TypeScriptContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"([\w$]+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -249,25 +257,8 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
     
     // MARK: - Completion Creation Methods
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "TypeScript keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createBuiltinTypeCompletions(filter: String) -> [CompletionItemModel] {
-        builtinTypes
+    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+        types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
             }
@@ -284,7 +275,7 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    private func createTSTypeCompletions(filter: String) -> [CompletionItemModel] {
         // Additional common types not in builtinTypes
         let additionalTypes = ["HTMLElement", "Document", "Window", "Event", "MouseEvent", "KeyboardEvent", "FormData", "Response", "Request"]
         
@@ -362,24 +353,9 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
+    // MARK: - Member Completions Override
     
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide TypeScript-aware member completions
@@ -402,7 +378,9 @@ public final class TypeScriptCompletionProvider: CompletionProvider {
         }
     }
     
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    // MARK: - Parameter Completions Override
+    
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = [
             "event: Event", "error: Error", "data: any", "result: T",
             "callback: () => void", "options: Options", "config: Config",

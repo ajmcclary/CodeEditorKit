@@ -4,34 +4,143 @@ import Foundation
 
 /// Built-in completion provider for Java language
 @MainActor
-public final class JavaCompletionProvider: CompletionProvider {
-    public let id = "java-builtin"
-    public let supportedLanguages: [Language] = [.java]
-    public let triggerCharacters = [".", "(", " ", "@", ":"]
-    public let supportsSnippets = true
-    
+public final class JavaCompletionProvider: BaseCompletionProvider {
     // Java keywords
-    private let keywords = [
-        "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
-        "class", "const", "continue", "default", "do", "double", "else", "enum",
-        "extends", "final", "finally", "float", "for", "goto", "if", "implements",
-        "import", "instanceof", "int", "interface", "long", "native", "new",
-        "package", "private", "protected", "public", "return", "short", "static",
-        "strictfp", "super", "switch", "synchronized", "this", "throw", "throws",
-        "transient", "try", "void", "volatile", "while", "true", "false", "null",
-        "var", "yield", "record", "sealed", "permits", "non-sealed"
-    ]
+    override public var keywords: [String] {
+        [
+            "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
+            "class", "const", "continue", "default", "do", "double", "else", "enum",
+            "extends", "final", "finally", "float", "for", "goto", "if", "implements",
+            "import", "instanceof", "int", "interface", "long", "native", "new",
+            "package", "private", "protected", "public", "return", "short", "static",
+            "strictfp", "super", "switch", "synchronized", "this", "throw", "throws",
+            "transient", "try", "void", "volatile", "while", "true", "false", "null",
+            "var", "yield", "record", "sealed", "permits", "non-sealed"
+        ]
+    }
     
     // Built-in types and classes
-    private let types = [
-        "boolean", "byte", "char", "short", "int", "long", "float", "double",
-        "String", "Object", "Class", "Integer", "Double", "Float", "Long",
-        "Boolean", "Character", "Byte", "Short", "Number", "Math", "System",
-        "Thread", "Runnable", "Exception", "RuntimeException", "Error",
-        "Throwable", "StringBuilder", "StringBuffer", "ArrayList", "LinkedList",
-        "HashMap", "HashSet", "TreeMap", "TreeSet", "Iterator", "Collection",
-        "List", "Set", "Map", "Queue", "Deque", "Stack", "Vector"
-    ]
+    override public var types: [String] {
+        [
+            "boolean", "byte", "char", "short", "int", "long", "float", "double",
+            "String", "Object", "Class", "Integer", "Double", "Float", "Long",
+            "Boolean", "Character", "Byte", "Short", "Number", "Math", "System",
+            "Thread", "Runnable", "Exception", "RuntimeException", "Error",
+            "Throwable", "StringBuilder", "StringBuffer", "ArrayList", "LinkedList",
+            "HashMap", "HashSet", "TreeMap", "TreeSet", "Iterator", "Collection",
+            "List", "Set", "Map", "Queue", "Deque", "Stack", "Vector"
+        ]
+    }
+    
+    override public var snippets: [SnippetTemplate] {
+        [
+            SnippetTemplate(
+                label: "class",
+                insertText: "public class ${1:ClassName} {\n    ${2:// fields and methods}\n}",
+                description: "Class declaration"
+            ),
+            SnippetTemplate(
+                label: "interface",
+                insertText: "public interface ${1:InterfaceName} {\n    ${2:// method signatures}\n}",
+                description: "Interface declaration"
+            ),
+            SnippetTemplate(
+                label: "enum",
+                insertText: "public enum ${1:EnumName} {\n    ${2:VALUE1},\n    ${3:VALUE2}\n}",
+                description: "Enum declaration"
+            ),
+            SnippetTemplate(
+                label: "main",
+                insertText: "public static void main(String[] args) {\n    ${1:// main code}\n}",
+                description: "Main method"
+            ),
+            SnippetTemplate(
+                label: "method",
+                insertText: "${1:public} ${2:void} ${3:methodName}(${4:parameters}) {\n    ${5:// method body}\n}",
+                description: "Method declaration"
+            ),
+            SnippetTemplate(
+                label: "constructor",
+                insertText: "public ${1:ClassName}(${2:parameters}) {\n    ${3:// constructor body}\n}",
+                description: "Constructor"
+            ),
+            SnippetTemplate(
+                label: "if",
+                insertText: "if (${1:condition}) {\n    ${2:// body}\n}",
+                description: "If statement"
+            ),
+            SnippetTemplate(
+                label: "ifelse",
+                insertText: "if (${1:condition}) {\n    ${2:// if body}\n} else {\n    ${3:// else body}\n}",
+                description: "If-else statement"
+            ),
+            SnippetTemplate(
+                label: "for",
+                insertText: "for (${1:int i = 0}; ${2:i < n}; ${3:i++}) {\n    ${4:// body}\n}",
+                description: "For loop"
+            ),
+            SnippetTemplate(
+                label: "foreach",
+                insertText: "for (${1:Type} ${2:item} : ${3:collection}) {\n    ${4:// body}\n}",
+                description: "Enhanced for loop"
+            ),
+            SnippetTemplate(
+                label: "while",
+                insertText: "while (${1:condition}) {\n    ${2:// body}\n}",
+                description: "While loop"
+            ),
+            SnippetTemplate(
+                label: "dowhile",
+                insertText: "do {\n    ${1:// body}\n} while (${2:condition});",
+                description: "Do-while loop"
+            ),
+            SnippetTemplate(
+                label: "switch",
+                insertText: "switch (${1:expression}) {\n    case ${2:value1}:\n        ${3:// code}\n        break;\n    default:\n        ${4:// default code}\n        break;\n}",
+                description: "Switch statement"
+            ),
+            SnippetTemplate(
+                label: "try",
+                insertText: "try {\n    ${1:// code}\n} catch (${2:Exception} ${3:e}) {\n    ${4:// handle exception}\n}",
+                description: "Try-catch block"
+            ),
+            SnippetTemplate(
+                label: "tryfinally",
+                insertText: "try {\n    ${1:// code}\n} catch (${2:Exception} ${3:e}) {\n    ${4:// handle exception}\n} finally {\n    ${5:// cleanup}\n}",
+                description: "Try-catch-finally"
+            ),
+            SnippetTemplate(
+                label: "lambda",
+                insertText: "(${1:params}) -> ${2:expression}",
+                description: "Lambda expression"
+            ),
+            SnippetTemplate(
+                label: "stream",
+                insertText: "${1:collection}.stream()${2:.filter(x -> x > 0)}${3:.collect(Collectors.toList())}",
+                description: "Stream operation"
+            ),
+            SnippetTemplate(
+                label: "sout",
+                insertText: "System.out.println(${1:message});",
+                description: "Print to console"
+            ),
+            SnippetTemplate(
+                label: "test",
+                insertText: "@Test\npublic void ${1:testMethodName}() {\n    ${2:// test code}\n}",
+                description: "JUnit test method"
+            ),
+            SnippetTemplate(
+                label: "getter",
+                insertText: "public ${1:Type} get${2:Property}() {\n    return ${3:property};\n}",
+                description: "Getter method"
+            ),
+            SnippetTemplate(
+                label: "setter",
+                insertText: "public void set${1:Property}(${2:Type} ${3:property}) {\n    this.${3:property} = ${3:property};\n}",
+                description: "Setter method"
+            )
+        ]
+    }
     
     // Common annotations
     private let annotations = [
@@ -51,151 +160,32 @@ public final class JavaCompletionProvider: CompletionProvider {
         "org.springframework", "org.junit", "org.apache", "com.google"
     ]
     
-    private let snippets: [SnippetTemplate] = [
-        SnippetTemplate(
-            label: "class",
-            insertText: "public class ${1:ClassName} {\n    ${2:// fields and methods}\n}",
-            description: "Class declaration"
-        ),
-        SnippetTemplate(
-            label: "interface",
-            insertText: "public interface ${1:InterfaceName} {\n    ${2:// method signatures}\n}",
-            description: "Interface declaration"
-        ),
-        SnippetTemplate(
-            label: "enum",
-            insertText: "public enum ${1:EnumName} {\n    ${2:VALUE1},\n    ${3:VALUE2}\n}",
-            description: "Enum declaration"
-        ),
-        SnippetTemplate(
-            label: "main",
-            insertText: "public static void main(String[] args) {\n    ${1:// main code}\n}",
-            description: "Main method"
-        ),
-        SnippetTemplate(
-            label: "method",
-            insertText: "${1:public} ${2:void} ${3:methodName}(${4:parameters}) {\n    ${5:// method body}\n}",
-            description: "Method declaration"
-        ),
-        SnippetTemplate(
-            label: "constructor",
-            insertText: "public ${1:ClassName}(${2:parameters}) {\n    ${3:// constructor body}\n}",
-            description: "Constructor"
-        ),
-        SnippetTemplate(
-            label: "if",
-            insertText: "if (${1:condition}) {\n    ${2:// body}\n}",
-            description: "If statement"
-        ),
-        SnippetTemplate(
-            label: "ifelse",
-            insertText: "if (${1:condition}) {\n    ${2:// if body}\n} else {\n    ${3:// else body}\n}",
-            description: "If-else statement"
-        ),
-        SnippetTemplate(
-            label: "for",
-            insertText: "for (${1:int i = 0}; ${2:i < n}; ${3:i++}) {\n    ${4:// body}\n}",
-            description: "For loop"
-        ),
-        SnippetTemplate(
-            label: "foreach",
-            insertText: "for (${1:Type} ${2:item} : ${3:collection}) {\n    ${4:// body}\n}",
-            description: "Enhanced for loop"
-        ),
-        SnippetTemplate(
-            label: "while",
-            insertText: "while (${1:condition}) {\n    ${2:// body}\n}",
-            description: "While loop"
-        ),
-        SnippetTemplate(
-            label: "dowhile",
-            insertText: "do {\n    ${1:// body}\n} while (${2:condition});",
-            description: "Do-while loop"
-        ),
-        SnippetTemplate(
-            label: "switch",
-            insertText: "switch (${1:expression}) {\n    case ${2:value1}:\n        ${3:// code}\n        break;\n    default:\n        ${4:// default code}\n        break;\n}",
-            description: "Switch statement"
-        ),
-        SnippetTemplate(
-            label: "try",
-            insertText: "try {\n    ${1:// code}\n} catch (${2:Exception} ${3:e}) {\n    ${4:// handle exception}\n}",
-            description: "Try-catch block"
-        ),
-        SnippetTemplate(
-            label: "tryfinally",
-            insertText: "try {\n    ${1:// code}\n} catch (${2:Exception} ${3:e}) {\n    ${4:// handle exception}\n} finally {\n    ${5:// cleanup}\n}",
-            description: "Try-catch-finally"
-        ),
-        SnippetTemplate(
-            label: "lambda",
-            insertText: "(${1:params}) -> ${2:expression}",
-            description: "Lambda expression"
-        ),
-        SnippetTemplate(
-            label: "stream",
-            insertText: "${1:collection}.stream()${2:.filter(x -> x > 0)}${3:.collect(Collectors.toList())}",
-            description: "Stream operation"
-        ),
-        SnippetTemplate(
-            label: "sout",
-            insertText: "System.out.println(${1:message});",
-            description: "Print to console"
-        ),
-        SnippetTemplate(
-            label: "test",
-            insertText: "@Test\npublic void ${1:testMethodName}() {\n    ${2:// test code}\n}",
-            description: "JUnit test method"
-        ),
-        SnippetTemplate(
-            label: "getter",
-            insertText: "public ${1:Type} get${2:Property}() {\n    return ${3:property};\n}",
-            description: "Getter method"
-        ),
-        SnippetTemplate(
-            label: "setter",
-            insertText: "public void set${1:Property}(${2:Type} ${3:property}) {\n    this.${3:property} = ${3:property};\n}",
-            description: "Setter method"
+    public init() {
+        super.init(
+            id: "java-builtin",
+            supportedLanguages: [.java],
+            triggerCharacters: [".", "(", " ", "@", ":"],
+            supportsSnippets: true
         )
-    ]
+    }
     
-    public init() {}
+    // MARK: - Completion Provider Override
     
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeContext(context)
         var items: [CompletionItemModel] = []
         
-        // Add appropriate completions based on context
-        switch analysisResult.type {
-        case .import:
+        // Handle Java-specific contexts
+        if analysisResult.targetType == "import" {
             items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
-            
-        case .annotation:
+        } else if analysisResult.targetType == "annotation" {
             items.append(contentsOf: createAnnotationCompletions(filter: analysisResult.filter))
-            
-        case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
-        case .type:
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
-        case .member:
-            items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
-        case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
-            }
-            
-        case .parameter:
-            items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
+        } else {
+            // Use base class implementation for standard contexts
+            return try await super.completions(for: context)
         }
         
         let processingTime = Date().timeIntervalSince(startTime)
@@ -208,9 +198,9 @@ public final class JavaCompletionProvider: CompletionProvider {
         )
     }
     
-    // MARK: - Context Analysis
+    // MARK: - Context Analysis Overrides
     
-    private func analyzeContext(_ context: CompletionContextModel) -> JavaContextAnalysisResult {
+    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -219,40 +209,40 @@ public final class JavaCompletionProvider: CompletionProvider {
         
         // Check for import statements
         if lineText.hasPrefix("import ") {
-            return JavaContextAnalysisResult(type: .import, filter: filter)
+            return ContextAnalysisResult(type: .general, filter: filter, targetType: "import")
         }
         
         // Check for annotation context
         if beforeCursor.hasSuffix("@") || filter.hasPrefix("@") {
-            return JavaContextAnalysisResult(type: .annotation, filter: filter)
+            return ContextAnalysisResult(type: .general, filter: filter, targetType: "annotation")
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return JavaContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for type context
         if lineText.contains(" ") && !lineText.contains("=") && !lineText.contains("(") {
             // Likely a variable declaration
-            return JavaContextAnalysisResult(type: .type, filter: filter)
+            return ContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for method declaration
         if lineText.contains("(") && !lineText.contains(")") {
-            return JavaContextAnalysisResult(type: .parameter, filter: filter)
+            return ContextAnalysisResult(type: .parameter, filter: filter)
         }
         
-        return JavaContextAnalysisResult(type: .general, filter: filter)
+        return ContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -263,26 +253,9 @@ public final class JavaCompletionProvider: CompletionProvider {
         return nil
     }
     
-    // MARK: - Completion Creation Methods
+    // MARK: - Completion Creation Method Overrides
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "Java keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -298,6 +271,54 @@ public final class JavaCompletionProvider: CompletionProvider {
                 )
             }
     }
+    
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+        let commonParams = [
+            "String str", "int n", "int i", "boolean flag", "Object obj",
+            "List<?> list", "Map<?, ?> map", "Exception e", "T value"
+        ]
+        
+        return commonParams
+            .filter { param in
+                filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
+            }
+            .map { param in
+                CompletionItemModel(
+                    label: param,
+                    insertText: param,
+                    kind: .variable,
+                    detail: "Parameter suggestion",
+                    priority: 50
+                )
+            }
+    }
+    
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+        guard let targetType else { return [] }
+        
+        // Provide common member completions based on type
+        switch targetType.lowercased() {
+        case "string":
+            return createStringMemberCompletions(filter: filter)
+            
+        case "list", "arraylist", "linkedlist":
+            return createListMemberCompletions(filter: filter)
+            
+        case "map", "hashmap", "treemap":
+            return createMapMemberCompletions(filter: filter)
+            
+        case "system":
+            return createSystemMemberCompletions(filter: filter)
+            
+        case "math":
+            return createMathMemberCompletions(filter: filter)
+            
+        default:
+            return createCommonMemberCompletions(filter: filter)
+        }
+    }
+    
+    // MARK: - Java-Specific Completion Methods
     
     private func createAnnotationCompletions(filter: String) -> [CompletionItemModel] {
         annotations
@@ -330,69 +351,6 @@ public final class JavaCompletionProvider: CompletionProvider {
                     priority: 85
                 )
             }
-    }
-    
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
-        let commonParams = [
-            "String str", "int n", "int i", "boolean flag", "Object obj",
-            "List<?> list", "Map<?, ?> map", "Exception e", "T value"
-        ]
-        
-        return commonParams
-            .filter { param in
-                filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
-            }
-            .map { param in
-                CompletionItemModel(
-                    label: param,
-                    insertText: param,
-                    kind: .variable,
-                    detail: "Parameter suggestion",
-                    priority: 50
-                )
-            }
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
-    
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
-        guard let targetType else { return [] }
-        
-        // Provide common member completions based on type
-        switch targetType.lowercased() {
-        case "string":
-            return createStringMemberCompletions(filter: filter)
-            
-        case "list", "arraylist", "linkedlist":
-            return createListMemberCompletions(filter: filter)
-            
-        case "map", "hashmap", "treemap":
-            return createMapMemberCompletions(filter: filter)
-            
-        case "system":
-            return createSystemMemberCompletions(filter: filter)
-            
-        case "math":
-            return createMathMemberCompletions(filter: filter)
-            
-        default:
-            return createCommonMemberCompletions(filter: filter)
-        }
     }
     
     // MARK: - Type-Specific Members
@@ -525,29 +483,5 @@ public final class JavaCompletionProvider: CompletionProvider {
                     priority: 85
                 )
             }
-    }
-}
-
-// MARK: - Supporting Types
-
-private struct JavaContextAnalysisResult {
-    enum CompletionType {
-        case keyword
-        case type
-        case `import`
-        case annotation
-        case member
-        case general
-        case parameter
-    }
-    
-    let type: CompletionType
-    let filter: String
-    let targetType: String?
-    
-    init(type: CompletionType, filter: String, targetType: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetType = targetType
     }
 }

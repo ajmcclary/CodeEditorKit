@@ -4,43 +4,48 @@ import Foundation
 
 /// Built-in completion provider for JavaScript language
 @MainActor
-public final class JavaScriptCompletionProvider: CompletionProvider {
-    public let id = "javascript-builtin"
-    public let supportedLanguages: [Language] = [.javascript]
-    public let triggerCharacters = [".", "(", "[", "{", " ", ":"]
-    public let supportsSnippets = true
+public final class JavaScriptCompletionProvider: BaseCompletionProvider {
+    // MARK: - Language Elements
     
-    // JavaScript language elements
-    private let keywords = [
-        "const", "let", "var", "function", "class", "if", "else", "for", "while",
-        "do", "switch", "case", "default", "break", "continue", "return", "try",
-        "catch", "finally", "throw", "async", "await", "import", "export", "from",
-        "as", "typeof", "instanceof", "new", "this", "super", "static", "extends",
-        "constructor", "get", "set", "of", "in", "delete", "void", "yield",
-        "debugger", "with"
-    ]
+    override public var keywords: [String] {
+        [
+            "const", "let", "var", "function", "class", "if", "else", "for", "while",
+            "do", "switch", "case", "default", "break", "continue", "return", "try",
+            "catch", "finally", "throw", "async", "await", "import", "export", "from",
+            "as", "typeof", "instanceof", "new", "this", "super", "static", "extends",
+            "constructor", "get", "set", "of", "in", "delete", "void", "yield",
+            "debugger", "with"
+        ]
+    }
     
-    private let builtinObjects = [
-        "Object", "Array", "String", "Number", "Boolean", "Function", "Symbol",
-        "Date", "RegExp", "Error", "Math", "JSON", "console", "Promise", "Map",
-        "Set", "WeakMap", "WeakSet", "Proxy", "Reflect", "Intl", "BigInt",
-        "ArrayBuffer", "SharedArrayBuffer", "DataView", "Float32Array", "Float64Array",
-        "Int8Array", "Int16Array", "Int32Array", "Uint8Array", "Uint16Array",
-        "Uint32Array", "Uint8ClampedArray"
-    ]
+    override public var types: [String] {
+        [
+            "Object", "Array", "String", "Number", "Boolean", "Function", "Symbol",
+            "Date", "RegExp", "Error", "Math", "JSON", "console", "Promise", "Map",
+            "Set", "WeakMap", "WeakSet", "Proxy", "Reflect", "Intl", "BigInt",
+            "ArrayBuffer", "SharedArrayBuffer", "DataView", "Float32Array", "Float64Array",
+            "Int8Array", "Int16Array", "Int32Array", "Uint8Array", "Uint16Array",
+            "Uint32Array", "Uint8ClampedArray"
+        ]
+    }
     
-    private let globalFunctions = [
-        "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI",
-        "encodeURIComponent", "decodeURIComponent", "eval", "setTimeout", "clearTimeout",
-        "setInterval", "clearInterval", "setImmediate", "clearImmediate", "requestAnimationFrame",
-        "cancelAnimationFrame", "fetch", "alert", "confirm", "prompt"
-    ]
+    override public var functions: [String] {
+        [
+            "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI",
+            "encodeURIComponent", "decodeURIComponent", "eval", "setTimeout", "clearTimeout",
+            "setInterval", "clearInterval", "setImmediate", "clearImmediate", "requestAnimationFrame",
+            "cancelAnimationFrame", "fetch", "alert", "confirm", "prompt"
+        ]
+    }
     
-    private let literals = [
-        "true", "false", "null", "undefined", "NaN", "Infinity", "globalThis",
-        "window", "document", "location", "navigator", "history"
-    ]
+    override public var literals: [String] {
+        [
+            "true", "false", "null", "undefined", "NaN", "Infinity", "globalThis",
+            "window", "document", "location", "navigator", "history"
+        ]
+    }
     
+    // Common modules for import completions
     private let commonModules = [
         "react", "vue", "angular", "express", "lodash", "axios", "moment",
         "jquery", "typescript", "webpack", "babel", "eslint", "jest", "mocha",
@@ -48,7 +53,8 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
         "mongoose", "sequelize", "graphql", "apollo", "redux", "mobx", "rxjs"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "function",
             insertText: "function ${1:name}(${2:params}) {\n    ${3:// body}\n}",
@@ -139,17 +145,27 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
             insertText: "try {\n    const response = await fetch('${1:url}');\n    const data = await response.json();\n    ${2:// handle data}\n} catch (error) {\n    ${3:// handle error}\n}",
             description: "Async fetch call"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    // MARK: - Initialization
+    
+    public init() {
+        super.init(
+            id: "javascript-builtin",
+            supportedLanguages: [.javascript],
+            triggerCharacters: [".", "(", "[", "{", " ", ":"],
+            supportsSnippets: true
+        )
+    }
     
     // MARK: - CompletionProvider Implementation
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeJavaScriptContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -191,7 +207,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> JavaScriptContextAnalysisResult {
+    private func analyzeJavaScriptContext(_ context: CompletionContextModel) -> JavaScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -222,18 +238,18 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
         return JavaScriptContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
     
     // MARK: - Completion Creation Methods
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -251,7 +267,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
     }
     
     private func createObjectCompletions(filter: String) -> [CompletionItemModel] {
-        builtinObjects
+        types
             .filter { object in
                 filter.isEmpty || object.localizedCaseInsensitiveContains(filter)
             }
@@ -267,7 +283,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
     }
     
     private func createGlobalFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        globalFunctions
+        functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
@@ -282,7 +298,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
         literals
             .filter { literal in
                 filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
@@ -314,7 +330,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
@@ -331,7 +347,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide common member completions based on type
@@ -359,7 +375,7 @@ public final class JavaScriptCompletionProvider: CompletionProvider {
         }
     }
     
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["event", "error", "data", "result", "callback", "options", "config", "request", "response", "next", "done", "resolve", "reject"]
         
         return commonParameters

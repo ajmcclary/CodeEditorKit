@@ -4,12 +4,7 @@ import Foundation
 
 /// Built-in completion provider for XML language
 @MainActor
-public final class XMLCompletionProvider: CompletionProvider {
-    public let id = "xml-builtin"
-    public let supportedLanguages: [Language] = [.xml]
-    public let triggerCharacters = ["<", ">", " ", "\"", "=", "/", "&", ":", "!"]
-    public let supportsSnippets = true
-    
+public final class XMLCompletionProvider: BaseCompletionProvider {
     // Common XML elements
     private let commonElements = [
         "xml", "element", "attribute", "text", "cdata", "comment", "processing-instruction",
@@ -81,7 +76,10 @@ public final class XMLCompletionProvider: CompletionProvider {
         "animateMotion", "animateTransform", "animateColor", "set", "mpath"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    // MARK: - Overrides
+    
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "xml-declaration",
             insertText: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -168,17 +166,27 @@ public final class XMLCompletionProvider: CompletionProvider {
 """,
             description: "SVG root element"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    // MARK: - Initialization
     
-    // MARK: - CompletionProvider Implementation
+    public init() {
+        super.init(
+            id: "xml-builtin",
+            supportedLanguages: [.xml],
+            triggerCharacters: ["<", ">", " ", "\"", "=", "/", "&", ":", "!"],
+            supportsSnippets: true
+        )
+    }
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    // MARK: - Overridden Methods
+    
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeXMLContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -222,9 +230,18 @@ public final class XMLCompletionProvider: CompletionProvider {
         )
     }
     
+    override public func extractCurrentWord(from text: String) -> String {
+        if text.hasSuffix("&") {
+            return "&"
+        }
+        
+        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-:&")).inverted)
+        return components.last ?? ""
+    }
+    
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> XMLContextAnalysisResult {
+    private func analyzeXMLContext(_ context: CompletionContextModel) -> XMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
         
@@ -270,15 +287,6 @@ public final class XMLCompletionProvider: CompletionProvider {
         }
         
         return XMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
-    }
-    
-    private func extractCurrentWord(from text: String) -> String {
-        if text.hasSuffix("&") {
-            return "&"
-        }
-        
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-:&")).inverted)
-        return components.last ?? ""
     }
     
     private func detectFileType(from text: String) -> XMLFileType {
@@ -584,23 +592,6 @@ public final class XMLCompletionProvider: CompletionProvider {
         }
         
         return items
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
     }
 }
 

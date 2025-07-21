@@ -4,14 +4,11 @@ import Foundation
 
 /// Built-in completion provider for CSS language
 @MainActor
-public final class CSSCompletionProvider: CompletionProvider {
-    public let id = "css-builtin"
-    public let supportedLanguages: [Language] = [.css]
-    public let triggerCharacters = [".", "#", ":", " ", "-", "(", "\"", "'"]
-    public let supportsSnippets = true
+public final class CSSCompletionProvider: BaseCompletionProvider {
+    // MARK: - CSS-specific properties
     
     // CSS properties
-    private let properties = [
+    private let cssProperties = [
         // Layout
         "display", "position", "top", "right", "bottom", "left", "float", "clear",
         "z-index", "overflow", "overflow-x", "overflow-y", "visibility", "opacity",
@@ -110,7 +107,7 @@ public final class CSSCompletionProvider: CompletionProvider {
     ]
     
     // CSS functions
-    private let functions = [
+    private let cssFunctions = [
         "rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch",
         "color", "color-mix", "linear-gradient", "radial-gradient", "conic-gradient",
         "repeating-linear-gradient", "repeating-radial-gradient", "repeating-conic-gradient",
@@ -139,7 +136,7 @@ public final class CSSCompletionProvider: CompletionProvider {
         "lavender", "violet", "indigo", "turquoise", "tan", "beige", "ivory"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    private let cssSnippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "media",
             insertText: "@media (${1:min-width: 768px}) {\n    ${2:/* styles */}\n}",
@@ -202,48 +199,130 @@ public final class CSSCompletionProvider: CompletionProvider {
         )
     ]
     
-    public init() {}
+    // MARK: - Initialization
     
-    // MARK: - CompletionProvider Implementation
+    public init() {
+        super.init(
+            id: "css-builtin",
+            supportedLanguages: [.css],
+            triggerCharacters: [".", "#", ":", " ", "-", "(", "\"", "'"],
+            supportsSnippets: true
+        )
+    }
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    // MARK: - BaseCompletionProvider Overrides
+    
+    override public var keywords: [String] {
+        // CSS at-rules and important keywords
+        [
+            "@media", "@import", "@keyframes", "@font-face", "@supports", "@page", 
+            "@namespace", "@charset", "@document", "@viewport", "@counter-style",
+            "@font-feature-values", "@property", "!important", "inherit", "initial", 
+            "unset", "revert"
+        ]
+    }
+    
+    override public var snippets: [SnippetTemplate] {
+        cssSnippets
+    }
+    
+    override public var functions: [String] {
+        cssFunctions
+    }
+    
+    // MARK: - Context Analysis Override
+    
+    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+        let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
+        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        
+        // Extract current word being typed
+        let filter = extractCurrentWord(from: beforeCursor)
+        
+        // Check for @ rules
+        if lineText.hasPrefix("@") || filter.hasPrefix("@") {
+            return ContextAnalysisResult(type: .keyword, filter: filter)
+        }
+        
+        // Check if we're in a rule block
+        if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
+            // Check for pseudo-element or pseudo-class
+            if beforeCursor.hasSuffix("::") || (beforeCursor.hasSuffix(":") && !ruleContext.inDeclaration) {
+                return ContextAnalysisResult(type: .keyword, filter: "")
+            }
+            
+            // Check if we're in a declaration
+            if ruleContext.inDeclaration {
+                // Check for function context
+                if beforeCursor.hasSuffix("(") || isInFunction(beforeCursor) {
+                    return ContextAnalysisResult(type: .function, filter: filter)
+                }
+                
+                // Default to general for CSS values
+                return ContextAnalysisResult(type: .general, filter: filter, targetType: ruleContext.currentProperty)
+            }
+        }
+        
+        // Default to general context
+        return ContextAnalysisResult(type: .general, filter: filter)
+    }
+    
+    override public func extractCurrentWord(from text: String) -> String {
+        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-@")).inverted)
+        return components.last ?? ""
+    }
+    
+    // MARK: - Custom Completions Override
+    
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeContext(context)
         var items: [CompletionItemModel] = []
         
-        // Add appropriate completions based on context
-        switch analysisResult.type {
-        case .property:
-            items.append(contentsOf: createPropertyCompletions(filter: analysisResult.filter))
-            
-        case .value:
-            items.append(contentsOf: createValueCompletions(for: analysisResult.targetProperty, filter: analysisResult.filter))
-            
-        case .selector:
-            items.append(contentsOf: createSelectorCompletions(filter: analysisResult.filter))
-            
-        case .pseudoClass:
-            items.append(contentsOf: createPseudoClassCompletions(filter: analysisResult.filter))
-            
-        case .pseudoElement:
-            items.append(contentsOf: createPseudoElementCompletions(filter: analysisResult.filter))
-            
-        case .function:
-            items.append(contentsOf: createFunctionCompletions(filter: analysisResult.filter))
-            
-        case .unit:
-            items.append(contentsOf: createUnitCompletions(filter: analysisResult.filter))
-            
-        case .atRule:
-            items.append(contentsOf: createAtRuleCompletions(filter: analysisResult.filter))
-            
-        case .general:
-            items.append(contentsOf: createPropertyCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
+        // Check for CSS-specific contexts
+        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        
+        // Handle CSS-specific completions
+        if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
+            // CSS Properties
+            if !ruleContext.inDeclaration {
+                items.append(contentsOf: createPropertyCompletions(filter: analysisResult.filter))
+            } else if let property = analysisResult.targetType {
+                // CSS Values for specific property
+                items.append(contentsOf: createValueCompletions(for: property, filter: analysisResult.filter))
+                
+                // Units for numeric values
+                if extractLastNumber(from: beforeCursor) != nil {
+                    items.append(contentsOf: createUnitCompletions(filter: analysisResult.filter))
+                }
             }
+            
+            // Pseudo-classes and pseudo-elements
+            if beforeCursor.hasSuffix("::") {
+                items.append(contentsOf: createPseudoElementCompletions(filter: ""))
+            } else if beforeCursor.hasSuffix(":") && !ruleContext.inDeclaration {
+                items.append(contentsOf: createPseudoClassCompletions(filter: ""))
+            }
+        } else {
+            // Selector context
+            items.append(contentsOf: createSelectorCompletions(filter: analysisResult.filter))
+        }
+        
+        // Add at-rules if appropriate
+        if analysisResult.type == .keyword && analysisResult.filter.hasPrefix("@") {
+            items.append(contentsOf: createAtRuleCompletions(filter: analysisResult.filter))
+        }
+        
+        // Add functions if in function context
+        if analysisResult.type == .function {
+            items.append(contentsOf: super.createFunctionCompletions(filter: analysisResult.filter))
+        }
+        
+        // Add snippets if supported
+        if supportsSnippets && analysisResult.type == .general {
+            items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
         }
         
         let processingTime = Date().timeIntervalSince(startTime)
@@ -254,61 +333,6 @@ public final class CSSCompletionProvider: CompletionProvider {
             isIncomplete: false,
             processingTime: processingTime
         )
-    }
-    
-    // MARK: - Context Analysis
-    
-    private func analyzeContext(_ context: CompletionContextModel) -> CSSContextAnalysisResult {
-        let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
-        // Extract current word being typed
-        let filter = extractCurrentWord(from: beforeCursor)
-        
-        // Check for @ rules
-        if lineText.hasPrefix("@") || filter.hasPrefix("@") {
-            return CSSContextAnalysisResult(type: .atRule, filter: filter)
-        }
-        
-        // Check if we're in a rule block
-        if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
-            // Check for pseudo-element (::)
-            if beforeCursor.hasSuffix("::") {
-                return CSSContextAnalysisResult(type: .pseudoElement, filter: "")
-            }
-            
-            // Check for pseudo-class (:)
-            if beforeCursor.hasSuffix(":") && !beforeCursor.hasSuffix("::") && !ruleContext.inDeclaration {
-                return CSSContextAnalysisResult(type: .pseudoClass, filter: "")
-            }
-            
-            // Check if we're after a property declaration
-            if ruleContext.inDeclaration {
-                if let property = ruleContext.currentProperty {
-                    // Check for function context
-                    if beforeCursor.hasSuffix("(") || isInFunction(beforeCursor) {
-                        return CSSContextAnalysisResult(type: .function, filter: filter)
-                    }
-                    
-                    // Check for unit context
-                    if extractLastNumber(from: beforeCursor) != nil {
-                        return CSSContextAnalysisResult(type: .unit, filter: filter)
-                    }
-                    
-                    return CSSContextAnalysisResult(type: .value, filter: filter, targetProperty: property)
-                }
-            } else {
-                return CSSContextAnalysisResult(type: .property, filter: filter)
-            }
-        }
-        
-        // We're likely in selector context
-        return CSSContextAnalysisResult(type: .selector, filter: filter)
-    }
-    
-    private func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-@")).inverted)
-        return components.last ?? ""
     }
     
     private func getCurrentRuleContext(from text: String) -> RuleContext? {
@@ -381,7 +405,7 @@ public final class CSSCompletionProvider: CompletionProvider {
     // MARK: - Completion Creation Methods
     
     private func createPropertyCompletions(filter: String) -> [CompletionItemModel] {
-        properties
+        cssProperties
             .filter { property in
                 filter.isEmpty || property.localizedCaseInsensitiveContains(filter)
             }
@@ -504,22 +528,6 @@ public final class CSSCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        functions
-            .filter { function in
-                filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
-            }
-            .map { function in
-                CompletionItemModel(
-                    label: function,
-                    insertText: "\(function)($0)",
-                    kind: .function,
-                    detail: "CSS function",
-                    priority: 80
-                )
-            }
-    }
-    
     private func createUnitCompletions(filter: String) -> [CompletionItemModel] {
         units
             .filter { unit in
@@ -595,50 +603,9 @@ public final class CSSCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
 }
 
 // MARK: - Supporting Types
-
-private struct CSSContextAnalysisResult {
-    enum CompletionType {
-        case property
-        case value
-        case selector
-        case pseudoClass
-        case pseudoElement
-        case function
-        case unit
-        case atRule
-        case general
-    }
-    
-    let type: CompletionType
-    let filter: String
-    let targetProperty: String?
-    
-    init(type: CompletionType, filter: String, targetProperty: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetProperty = targetProperty
-    }
-}
 
 private struct RuleContext {
     let inRule: Bool

@@ -4,152 +4,121 @@ import Foundation
 
 /// Built-in completion provider for Swift language
 @MainActor
-public final class SwiftCompletionProvider: CompletionProvider {
-    public let id = "swift-builtin"
-    public let supportedLanguages: [Language] = [.swift]
-    public let triggerCharacters = [".", "(", "[", "<", " "]
-    public let supportsSnippets = true
+public final class SwiftCompletionProvider: BaseCompletionProvider {
+    // MARK: - Language Elements
     
-    // Swift language elements
-    private let keywords = [
-        "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
-        "import", "if", "else", "for", "while", "do", "switch", "case", "default",
-        "break", "continue", "return", "throw", "try", "catch", "guard", "defer",
-        "public", "private", "internal", "fileprivate", "open", "static", "final",
-        "override", "mutating", "nonmutating", "convenience", "required", "lazy",
-        "weak", "unowned", "inout", "async", "await", "actor", "nonisolated"
-    ]
+    override public var keywords: [String] {
+        [
+            "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
+            "import", "if", "else", "for", "while", "do", "switch", "case", "default",
+            "break", "continue", "return", "throw", "try", "catch", "guard", "defer",
+            "public", "private", "internal", "fileprivate", "open", "static", "final",
+            "override", "mutating", "nonmutating", "convenience", "required", "lazy",
+            "weak", "unowned", "inout", "async", "await", "actor", "nonisolated"
+        ]
+    }
     
-    private let types = [
-        "String", "Int", "Double", "Float", "Bool", "Array", "Dictionary", "Set",
-        "Optional", "Result", "Data", "URL", "Date", "UUID", "NSString", "NSArray",
-        "NSMutableArray", "NSMutableDictionary", "NSObject", "Any", "AnyObject"
-    ]
+    override public var types: [String] {
+        [
+            "String", "Int", "Double", "Float", "Bool", "Array", "Dictionary", "Set",
+            "Optional", "Result", "Data", "URL", "Date", "UUID", "NSString", "NSArray",
+            "NSMutableArray", "NSMutableDictionary", "NSObject", "Any", "AnyObject"
+        ]
+    }
     
-    private let literals = [
-        "true", "false", "nil", "self", "super", "Self"
-    ]
+    override public var literals: [String] {
+        ["true", "false", "nil", "self", "super", "Self"]
+    }
     
-    private let snippets: [SnippetTemplate] = [
-        SnippetTemplate(
-            label: "func",
-            insertText: "func ${1:name}(${2:parameters}) ${3:-> ReturnType }{{\n    ${4:// implementation}\n}}",
-            description: "Function declaration"
-        ),
-        SnippetTemplate(
-            label: "class",
-            insertText: "class ${1:ClassName} {\n    ${2:// implementation}\n}",
-            description: "Class declaration"
-        ),
-        SnippetTemplate(
-            label: "struct",
-            insertText: "struct ${1:StructName} {\n    ${2:// implementation}\n}",
-            description: "Struct declaration"
-        ),
-        SnippetTemplate(
-            label: "enum",
-            insertText: "enum ${1:EnumName} {\n    case ${2:caseName}\n}",
-            description: "Enum declaration"
-        ),
-        SnippetTemplate(
-            label: "protocol",
-            insertText: "protocol ${1:ProtocolName} {\n    ${2:// requirements}\n}",
-            description: "Protocol declaration"
-        ),
-        SnippetTemplate(
-            label: "extension",
-            insertText: "extension ${1:TypeName} {\n    ${2:// implementation}\n}",
-            description: "Extension declaration"
-        ),
-        SnippetTemplate(
-            label: "if",
-            insertText: "if ${1:condition} {\n    ${2:// code}\n}",
-            description: "If statement"
-        ),
-        SnippetTemplate(
-            label: "guard",
-            insertText: "guard ${1:condition} else {\n    ${2:return}\n}",
-            description: "Guard statement"
-        ),
-        SnippetTemplate(
-            label: "for",
-            insertText: "for ${1:item} in ${2:collection} {\n    ${3:// code}\n}",
-            description: "For-in loop"
-        ),
-        SnippetTemplate(
-            label: "while",
-            insertText: "while ${1:condition} {\n    ${2:// code}\n}",
-            description: "While loop"
-        ),
-        SnippetTemplate(
-            label: "switch",
-            insertText: "switch ${1:value} {\ncase ${2:pattern}:\n    ${3:// code}\ndefault:\n    ${4:// code}\n}",
-            description: "Switch statement"
-        ),
-        SnippetTemplate(
-            label: "do-catch",
-            insertText: "do {\n    ${1:try statement}\n} catch {\n    ${2:// handle error}\n}",
-            description: "Do-catch block"
-        ),
-        SnippetTemplate(
-            label: "async func",
-            insertText: "func ${1:name}(${2:parameters}) async ${3:throws }${4:-> ReturnType }{{\n    ${5:// implementation}\n}}",
-            description: "Async function declaration"
-        ),
-        SnippetTemplate(
-            label: "actor",
-            insertText: "actor ${1:ActorName} {\n    ${2:// implementation}\n}",
-            description: "Actor declaration"
-        )
-    ]
+    override public var snippets: [SnippetTemplate] {
+        [
+            SnippetTemplate(
+                label: "func",
+                insertText: "func ${1:name}(${2:parameters}) ${3:-> ReturnType }{{\n    ${4:// implementation}\n}}",
+                description: "Function declaration"
+            ),
+            SnippetTemplate(
+                label: "class",
+                insertText: "class ${1:ClassName} {\n    ${2:// implementation}\n}",
+                description: "Class declaration"
+            ),
+            SnippetTemplate(
+                label: "struct",
+                insertText: "struct ${1:StructName} {\n    ${2:// implementation}\n}",
+                description: "Struct declaration"
+            ),
+            SnippetTemplate(
+                label: "enum",
+                insertText: "enum ${1:EnumName} {\n    case ${2:caseName}\n}",
+                description: "Enum declaration"
+            ),
+            SnippetTemplate(
+                label: "protocol",
+                insertText: "protocol ${1:ProtocolName} {\n    ${2:// requirements}\n}",
+                description: "Protocol declaration"
+            ),
+            SnippetTemplate(
+                label: "extension",
+                insertText: "extension ${1:TypeName} {\n    ${2:// implementation}\n}",
+                description: "Extension declaration"
+            ),
+            SnippetTemplate(
+                label: "if",
+                insertText: "if ${1:condition} {\n    ${2:// code}\n}",
+                description: "If statement"
+            ),
+            SnippetTemplate(
+                label: "guard",
+                insertText: "guard ${1:condition} else {\n    ${2:return}\n}",
+                description: "Guard statement"
+            ),
+            SnippetTemplate(
+                label: "for",
+                insertText: "for ${1:item} in ${2:collection} {\n    ${3:// code}\n}",
+                description: "For-in loop"
+            ),
+            SnippetTemplate(
+                label: "while",
+                insertText: "while ${1:condition} {\n    ${2:// code}\n}",
+                description: "While loop"
+            ),
+            SnippetTemplate(
+                label: "switch",
+                insertText: "switch ${1:value} {\ncase ${2:pattern}:\n    ${3:// code}\ndefault:\n    ${4:// code}\n}",
+                description: "Switch statement"
+            ),
+            SnippetTemplate(
+                label: "do-catch",
+                insertText: "do {\n    ${1:try statement}\n} catch {\n    ${2:// handle error}\n}",
+                description: "Do-catch block"
+            ),
+            SnippetTemplate(
+                label: "async func",
+                insertText: "func ${1:name}(${2:parameters}) async ${3:throws }${4:-> ReturnType }{{\n    ${5:// implementation}\n}}",
+                description: "Async function declaration"
+            ),
+            SnippetTemplate(
+                label: "actor",
+                insertText: "actor ${1:ActorName} {\n    ${2:// implementation}\n}",
+                description: "Actor declaration"
+            )
+        ]
+    }
     
-    public init() {}
+    // MARK: - Initialization
     
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        let startTime = Date()
-        
-        // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
-        var items: [CompletionItemModel] = []
-        
-        // Add appropriate completions based on context
-        switch analysisResult.type {
-        case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
-        case .type:
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
-        case .member:
-            items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
-        case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createLiteralCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
-            }
-            
-        case .parameter:
-            items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
-        }
-        
-        let processingTime = Date().timeIntervalSince(startTime)
-        
-        return CompletionResult(
-            items: items,
-            context: context,
-            isIncomplete: false,
-            processingTime: processingTime
+    public init() {
+        super.init(
+            id: "swift-builtin",
+            supportedLanguages: [.swift],
+            triggerCharacters: [".", "(", "[", "<", " "],
+            supportsSnippets: true
         )
     }
     
-    // MARK: - Context Analysis
+    // MARK: - Context Analysis Override
     
-    private func analyzeContext(_ context: CompletionContextModel) -> SwiftContextAnalysisResult {
+    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -158,104 +127,24 @@ public final class SwiftCompletionProvider: CompletionProvider {
         
         // Determine completion type based on context
         if lineText.contains("func ") && !lineText.contains("{") {
-            return SwiftContextAnalysisResult(type: .parameter, filter: filter)
+            return ContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return SwiftContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         if lineText.hasPrefix("import ") || lineText.contains(": ") {
-            return SwiftContextAnalysisResult(type: .type, filter: filter)
+            return ContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return SwiftContextAnalysisResult(type: .general, filter: filter)
+        return ContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.inverted)
-        return components.last ?? ""
-    }
+    // MARK: - Member Completions Override
     
-    private func extractTargetType(from text: String) -> String? {
-        // Simple heuristic to extract the type before the dot
-        let words = text.components(separatedBy: .whitespacesAndNewlines)
-        if let lastWord = words.last?.dropLast() { // Remove the dot
-            return String(lastWord)
-        }
-        return nil
-    }
-    
-    // MARK: - Completion Creation Methods
-    
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "Swift keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
-        types
-            .filter { type in
-                filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
-            }
-            .map { type in
-                CompletionItemModel(
-                    label: type,
-                    insertText: type,
-                    kind: determineTypeKind(type),
-                    detail: "Swift type",
-                    priority: 70
-                )
-            }
-    }
-    
-    private func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
-        literals
-            .filter { literal in
-                filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
-            }
-            .map { literal in
-                CompletionItemModel(
-                    label: literal,
-                    insertText: literal,
-                    kind: .value,
-                    detail: "Swift literal",
-                    priority: 60
-                )
-            }
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
-    
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide common member completions based on type
@@ -274,7 +163,9 @@ public final class SwiftCompletionProvider: CompletionProvider {
         }
     }
     
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    // MARK: - Parameter Completions Override
+    
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["completion", "handler", "delegate", "error", "result", "value", "index"]
         
         return commonParameters
@@ -287,6 +178,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
                     insertText: param,
                     kind: .variable,
                     detail: "Parameter suggestion",
+                    sortText: "f_\(param)",
                     priority: 50
                 )
             }
@@ -316,6 +208,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)", // Members get high priority
                     priority: 85
                 )
             }
@@ -345,6 +238,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)", // Members get high priority
                     priority: 85
                 )
             }
@@ -372,6 +266,7 @@ public final class SwiftCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)", // Members get high priority
                     priority: 85
                 )
             }
@@ -394,48 +289,9 @@ public final class SwiftCompletionProvider: CompletionProvider {
                 insertText: name,
                 kind: type == "method" ? .method : .property,
                 detail: description,
+                sortText: "c_\(name)", // Common members lower priority
                 priority: 40
             )
             }
-    }
-    
-    // MARK: - Helper Methods
-    
-    private func determineTypeKind(_ typeName: String) -> CompletionItemKind {
-        switch typeName {
-        case "String", "Int", "Double", "Float", "Bool":
-            return .struct
-
-        case "Array", "Dictionary", "Set", "Optional", "Result":
-            return .struct
-
-        case let name where name.hasPrefix("NS"):
-            return .class
-
-        default:
-            return .class
-        }
-    }
-}
-
-// MARK: - Supporting Types
-
-private struct SwiftContextAnalysisResult {
-    enum CompletionType {
-        case keyword    // Keywords like func, var, etc.
-        case type      // Type names and imports
-        case member    // Member access after dot
-        case general   // General context
-        case parameter // Function parameters
-    }
-    
-    let type: CompletionType
-    let filter: String
-    let targetType: String?
-    
-    init(type: CompletionType, filter: String, targetType: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetType = targetType
     }
 }

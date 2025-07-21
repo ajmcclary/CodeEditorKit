@@ -4,14 +4,10 @@ import Foundation
 
 /// Built-in completion provider for Rust language
 @MainActor
-public final class RustCompletionProvider: CompletionProvider {
-    public let id = "rust-builtin"
-    public let supportedLanguages: [Language] = [.rust]
-    public let triggerCharacters = [".", "::", "(", "<", " ", "!"]
-    public let supportsSnippets = true
-    
+public final class RustCompletionProvider: BaseCompletionProvider {
     // Rust language elements
-    private let keywords = [
+    override public var keywords: [String] {
+        [
         "as", "async", "await", "break", "const", "continue", "crate", "dyn",
         "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in",
         "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
@@ -19,14 +15,17 @@ public final class RustCompletionProvider: CompletionProvider {
         "unsafe", "use", "where", "while", "abstract", "become", "box", "do",
         "final", "macro", "override", "priv", "typeof", "unsized", "virtual",
         "yield", "try"
-    ]
+        ]
+    }
     
-    private let types = [
+    override public var types: [String] {
+        [
         "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128",
         "isize", "str", "u8", "u16", "u32", "u64", "u128", "usize",
         "String", "Vec", "HashMap", "HashSet", "Option", "Result", "Box",
         "Rc", "Arc", "RefCell", "Mutex", "RwLock", "Cell"
-    ]
+        ]
+    }
     
     private let macros = [
         "println!", "print!", "eprintln!", "eprint!", "format!", "write!",
@@ -52,7 +51,8 @@ public final class RustCompletionProvider: CompletionProvider {
         "std::iter", "std::ops", "std::cmp", "std::convert", "std::marker"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "fn",
             insertText: "fn ${1:function_name}(${2:params}) -> ${3:ReturnType} {\n    ${4:// body}\n}",
@@ -153,17 +153,25 @@ public final class RustCompletionProvider: CompletionProvider {
             insertText: "use ${1:std::}${2:module};",
             description: "Use statement"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    public init() {
+        super.init(
+            id: "rust-builtin",
+            supportedLanguages: [.rust],
+            triggerCharacters: [".", "::", "(", "<", " ", "!"],
+            supportsSnippets: true
+        )
+    }
     
     // MARK: - CompletionProvider Implementation
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeRustContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -210,7 +218,7 @@ public final class RustCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> RustContextAnalysisResult {
+    private func analyzeRustContext(_ context: CompletionContextModel) -> RustContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -257,12 +265,12 @@ public final class RustCompletionProvider: CompletionProvider {
         return RustContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_!'")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -286,24 +294,7 @@ public final class RustCompletionProvider: CompletionProvider {
     
     // MARK: - Completion Creation Methods
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "Rust keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -387,24 +378,9 @@ public final class RustCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
+    // MARK: - Member Completions Override
     
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide member completions based on type or module

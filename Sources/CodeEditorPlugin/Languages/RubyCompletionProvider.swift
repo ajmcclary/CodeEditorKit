@@ -4,41 +4,40 @@ import Foundation
 
 /// Built-in completion provider for Ruby language
 @MainActor
-public final class RubyCompletionProvider: CompletionProvider {
-    public let id = "ruby-builtin"
-    public let supportedLanguages: [Language] = [.ruby]
-    public let triggerCharacters = [".", ":", "@", "$", " ", "(", "[", "{", "|"]
-    public let supportsSnippets = true
+public final class RubyCompletionProvider: BaseCompletionProvider {
+    // MARK: - Language Elements
     
-    // Ruby keywords
-    private let keywords = [
-        "alias", "and", "begin", "break", "case", "class", "def", "defined?",
-        "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
-        "module", "next", "nil", "not", "or", "redo", "rescue", "retry",
-        "return", "self", "super", "then", "true", "undef", "unless", "until",
-        "when", "while", "yield", "__FILE__", "__LINE__", "__ENCODING__"
-    ]
+    override public var keywords: [String] {
+        [
+            "alias", "and", "begin", "break", "case", "class", "def", "defined?",
+            "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
+            "module", "next", "nil", "not", "or", "redo", "rescue", "retry",
+            "return", "self", "super", "then", "true", "undef", "unless", "until",
+            "when", "while", "yield", "__FILE__", "__LINE__", "__ENCODING__"
+        ]
+    }
     
-    // Ruby built-in classes
-    private let builtinClasses = [
-        "Array", "BasicObject", "Binding", "Class", "Complex", "Dir", "Encoding",
-        "Enumerator", "Exception", "FalseClass", "Fiber", "File", "Float",
-        "Hash", "Integer", "IO", "Kernel", "MatchData", "Method", "Module",
-        "NilClass", "Numeric", "Object", "Proc", "Range", "Rational", "Regexp",
-        "String", "Struct", "Symbol", "Thread", "Time", "TracePoint", "TrueClass",
-        "UnboundMethod", "StandardError", "RuntimeError", "ArgumentError",
-        "IndexError", "KeyError", "NameError", "NoMethodError", "TypeError"
-    ]
+    override public var types: [String] {
+        // Ruby built-in classes
+        [
+            "Array", "BasicObject", "Binding", "Class", "Complex", "Dir", "Encoding",
+            "Enumerator", "Exception", "FalseClass", "Fiber", "File", "Float",
+            "Hash", "Integer", "IO", "Kernel", "MatchData", "Method", "Module",
+            "NilClass", "Numeric", "Object", "Proc", "Range", "Rational", "Regexp",
+            "String", "Struct", "Symbol", "Thread", "Time", "TracePoint", "TrueClass",
+            "UnboundMethod", "StandardError", "RuntimeError", "ArgumentError",
+            "IndexError", "KeyError", "NameError", "NoMethodError", "TypeError"
+        ] + [
+            // Ruby modules (also act as types)
+            "Comparable", "Enumerable", "Errno", "FileUtils", "Find", "GC", "JSON",
+            "Kernel", "Marshal", "Math", "ObjectSpace", "Open3", "Process", "Signal",
+            "Singleton", "Warning"
+        ]
+    }
     
-    // Ruby modules
-    private let builtinModules = [
-        "Comparable", "Enumerable", "Errno", "FileUtils", "Find", "GC", "JSON",
-        "Kernel", "Marshal", "Math", "ObjectSpace", "Open3", "Process", "Signal",
-        "Singleton", "Warning"
-    ]
-    
-    // Common Ruby methods
-    private let commonMethods = [
+    override public var functions: [String] {
+        // Common Ruby methods
+        [
         // Object methods
         "new", "initialize", "class", "is_a?", "kind_of?", "instance_of?",
         "respond_to?", "send", "public_send", "method", "methods", "nil?",
@@ -63,7 +62,8 @@ public final class RubyCompletionProvider: CompletionProvider {
         "each_with_index", "each_with_object", "map", "flat_map", "filter_map",
         "find_all", "reject", "partition", "group_by", "sort", "sort_by",
         "min", "max", "minmax", "min_by", "max_by", "minmax_by"
-    ]
+        ]
+    }
     
     // Rails-specific methods (common in Ruby development)
     private let railsMethods = [
@@ -78,6 +78,10 @@ public final class RubyCompletionProvider: CompletionProvider {
         "respond_to", "format"
     ]
     
+    override public var literals: [String] {
+        ["true", "false", "nil", "self", "super", "__FILE__", "__LINE__", "__ENCODING__"]
+    }
+    
     // Ruby global variables
     private let globalVariables = [
         "$!", "$@", "$&", "$`", "$'", "$+", "$1", "$2", "$3", "$4", "$5",
@@ -88,7 +92,8 @@ public final class RubyCompletionProvider: CompletionProvider {
         "$-F", "$-i", "$-I", "$-l", "$-p", "$-v", "$-w"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "class",
             insertText: """
@@ -260,17 +265,56 @@ end
 """,
             description: "RSpec test"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    // MARK: - Computed Properties for Completion
+    
+    private var builtinClasses: [String] {
+        // Extract classes from types (first part of the types array)
+        [
+            "Array", "BasicObject", "Binding", "Class", "Complex", "Dir", "Encoding",
+            "Enumerator", "Exception", "FalseClass", "Fiber", "File", "Float",
+            "Hash", "Integer", "IO", "Kernel", "MatchData", "Method", "Module",
+            "NilClass", "Numeric", "Object", "Proc", "Range", "Rational", "Regexp",
+            "String", "Struct", "Symbol", "Thread", "Time", "TracePoint", "TrueClass",
+            "UnboundMethod", "StandardError", "RuntimeError", "ArgumentError",
+            "IndexError", "KeyError", "NameError", "NoMethodError", "TypeError"
+        ]
+    }
+    
+    private var builtinModules: [String] {
+        // Extract modules from types (second part of the types array)
+        [
+            "Comparable", "Enumerable", "Errno", "FileUtils", "Find", "GC", "JSON",
+            "Kernel", "Marshal", "Math", "ObjectSpace", "Open3", "Process", "Signal",
+            "Singleton", "Warning"
+        ]
+    }
+    
+    private var commonMethods: [String] {
+        // Use the functions array as common methods
+        functions
+    }
+    
+    // MARK: - Initialization
+    
+    public init() {
+        super.init(
+            id: "ruby-builtin",
+            supportedLanguages: [.ruby],
+            triggerCharacters: [".", ":", "@", "$", " ", "(", "[", "{", "|"],
+            supportsSnippets: true
+        )
+    }
     
     // MARK: - CompletionProvider Implementation
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeRubyContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -320,7 +364,7 @@ end
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> RubyContextAnalysisResult {
+    private func analyzeRubyContext(_ context: CompletionContextModel) -> RubyContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -371,18 +415,18 @@ end
         return RubyContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@$!?")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
     
     // MARK: - Completion Creation Methods
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -559,7 +603,7 @@ end
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)

@@ -4,47 +4,52 @@ import Foundation
 
 /// Built-in completion provider for Python language
 @MainActor
-public final class PythonCompletionProvider: CompletionProvider {
-    public let id = "python-builtin"
-    public let supportedLanguages: [Language] = [.python]
-    public let triggerCharacters = [".", "(", "[", " ", ":"]
-    public let supportsSnippets = true
+public final class PythonCompletionProvider: BaseCompletionProvider {
+    // MARK: - Language Elements
     
-    // Python language elements
-    private let keywords = [
-        "def", "class", "if", "elif", "else", "for", "while", "try", "except",
-        "finally", "with", "as", "import", "from", "return", "yield", "break",
-        "continue", "pass", "global", "nonlocal", "lambda", "and", "or", "not",
-        "in", "is", "del", "async", "await", "assert", "raise", "match", "case"
-    ]
+    override public var keywords: [String] {
+        [
+            "def", "class", "if", "elif", "else", "for", "while", "try", "except",
+            "finally", "with", "as", "import", "from", "return", "yield", "break",
+            "continue", "pass", "global", "nonlocal", "lambda", "and", "or", "not",
+            "in", "is", "del", "async", "await", "assert", "raise", "match", "case"
+        ]
+    }
     
-    private let builtinTypes = [
-        "int", "float", "str", "bool", "list", "tuple", "dict", "set", "frozenset",
-        "bytes", "bytearray", "memoryview", "range", "complex", "type", "object",
-        "property", "staticmethod", "classmethod", "super"
-    ]
+    override public var types: [String] {
+        [
+            "int", "float", "str", "bool", "list", "tuple", "dict", "set", "frozenset",
+            "bytes", "bytearray", "memoryview", "range", "complex", "type", "object",
+            "property", "staticmethod", "classmethod", "super"
+        ]
+    }
     
-    private let builtinFunctions = [
-        "print", "input", "len", "range", "enumerate", "zip", "map", "filter",
-        "sorted", "reversed", "sum", "min", "max", "any", "all", "abs", "round",
-        "pow", "divmod", "isinstance", "issubclass", "hasattr", "getattr", "setattr",
-        "delattr", "open", "format", "chr", "ord", "bin", "hex", "oct", "eval",
-        "exec", "compile", "globals", "locals", "vars", "dir", "help", "id",
-        "hash", "iter", "next", "callable", "repr", "ascii", "breakpoint"
-    ]
+    override public var functions: [String] {
+        [
+            "print", "input", "len", "range", "enumerate", "zip", "map", "filter",
+            "sorted", "reversed", "sum", "min", "max", "any", "all", "abs", "round",
+            "pow", "divmod", "isinstance", "issubclass", "hasattr", "getattr", "setattr",
+            "delattr", "open", "format", "chr", "ord", "bin", "hex", "oct", "eval",
+            "exec", "compile", "globals", "locals", "vars", "dir", "help", "id",
+            "hash", "iter", "next", "callable", "repr", "ascii", "breakpoint"
+        ]
+    }
     
-    private let literals = [
-        "True", "False", "None", "self", "__name__", "__main__", "__file__",
-        "__doc__", "__dict__", "__class__", "__init__", "__new__", "__del__",
-        "__str__", "__repr__", "__eq__", "__ne__", "__lt__", "__le__", "__gt__",
-        "__ge__", "__hash__", "__bool__", "__len__", "__getitem__", "__setitem__",
-        "__delitem__", "__iter__", "__next__", "__contains__", "__add__", "__sub__",
-        "__mul__", "__truediv__", "__floordiv__", "__mod__", "__pow__", "__and__",
-        "__or__", "__xor__", "__lshift__", "__rshift__", "__neg__", "__pos__",
-        "__abs__", "__invert__", "__enter__", "__exit__", "__call__"
-    ]
+    override public var literals: [String] {
+        [
+            "True", "False", "None", "self", "__name__", "__main__", "__file__",
+            "__doc__", "__dict__", "__class__", "__init__", "__new__", "__del__",
+            "__str__", "__repr__", "__eq__", "__ne__", "__lt__", "__le__", "__gt__",
+            "__ge__", "__hash__", "__bool__", "__len__", "__getitem__", "__setitem__",
+            "__delitem__", "__iter__", "__next__", "__contains__", "__add__", "__sub__",
+            "__mul__", "__truediv__", "__floordiv__", "__mod__", "__pow__", "__and__",
+            "__or__", "__xor__", "__lshift__", "__rshift__", "__neg__", "__pos__",
+            "__abs__", "__invert__", "__enter__", "__exit__", "__call__"
+        ]
+    }
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "def",
             insertText: "def ${1:function_name}(${2:parameters}):\n    ${3:pass}",
@@ -125,7 +130,8 @@ public final class PythonCompletionProvider: CompletionProvider {
             insertText: "if __name__ == \"__main__\":\n    ${1:main()}",
             description: "Main guard"
         )
-    ]
+        ]
+    }
     
     // Common module imports
     private let commonModules = [
@@ -136,93 +142,71 @@ public final class PythonCompletionProvider: CompletionProvider {
         "sqlite3", "urllib", "requests", "numpy", "pandas", "matplotlib"
     ]
     
-    public init() {}
+    // MARK: - Initialization
     
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        let startTime = Date()
-        
-        // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
-        var items: [CompletionItemModel] = []
-        
-        // Add appropriate completions based on context
-        switch analysisResult.type {
-        case .import:
-            items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
-            
-        case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
-        case .type:
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
-        case .member:
-            items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
-        case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createBuiltinFunctionCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createLiteralCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
-            }
-            
-        case .parameter:
-            items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
-        }
-        
-        let processingTime = Date().timeIntervalSince(startTime)
-        
-        return CompletionResult(
-            items: items,
-            context: context,
-            isIncomplete: false,
-            processingTime: processingTime
+    public init() {
+        super.init(
+            id: "python-builtin",
+            supportedLanguages: [.python],
+            triggerCharacters: [".", "(", "[", " ", ":"],
+            supportsSnippets: true
         )
     }
     
-    // MARK: - Context Analysis
+    // MARK: - Context Analysis Override
     
-    private func analyzeContext(_ context: CompletionContextModel) -> PythonContextAnalysisResult {
+    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
         
-        // Check for import statements
+        // Check for import statements - treat as keyword context
         if lineText.hasPrefix("import ") || lineText.hasPrefix("from ") {
-            return PythonContextAnalysisResult(type: .import, filter: filter)
+            // We'll handle imports in createFunctionCompletions by including modules
+            return ContextAnalysisResult(type: .function, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return PythonContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("def ") && lineText.contains("(") && !lineText.contains("):") {
-            return PythonContextAnalysisResult(type: .parameter, filter: filter)
+            return ContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         // Check for type hints
         if lineText.contains(": ") && !lineText.contains("=") {
-            return PythonContextAnalysisResult(type: .type, filter: filter)
+            return ContextAnalysisResult(type: .type, filter: filter)
         }
         
-        return PythonContextAnalysisResult(type: .general, filter: filter)
+        return ContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    // MARK: - Override Function Completions
+    
+    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+        let lineText = extractCurrentWord(from: filter) // This is a simplification
+        
+        // Check if we're in an import context
+        if lineText.contains("import") || lineText.contains("from") {
+            return createImportCompletions(filter: filter)
+        }
+        
+        // Otherwise return Python built-in functions
+        return createBuiltinFunctionCompletions(filter: filter)
+    }
+    
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Simple heuristic to extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -233,70 +217,21 @@ public final class PythonCompletionProvider: CompletionProvider {
         return nil
     }
     
-    // MARK: - Completion Creation Methods
-    
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "Python keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
-        builtinTypes
-            .filter { type in
-                filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
-            }
-            .map { type in
-                CompletionItemModel(
-                    label: type,
-                    insertText: type,
-                    kind: .class,
-                    detail: "Python built-in type",
-                    priority: 70
-                )
-            }
-    }
+    // MARK: - Python-Specific Completion Methods
     
     private func createBuiltinFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        builtinFunctions
+        functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
             .map { function in
                 CompletionItemModel(
                     label: function,
-                    insertText: "\(function)($0)",
+                    insertText: "\(function)()",
                     kind: .function,
                     detail: "Python built-in function",
+                    sortText: "d_\(function)",
                     priority: 75
-                )
-            }
-    }
-    
-    private func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
-        literals
-            .filter { literal in
-                filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
-            }
-            .map { literal in
-                let kind: CompletionItemKind = literal.hasPrefix("__") ? .method : .value
-                return CompletionItemModel(
-                    label: literal,
-                    insertText: literal,
-                    kind: kind,
-                    detail: literal.hasPrefix("__") ? "Python magic method" : "Python literal",
-                    priority: 60
                 )
             }
     }
@@ -312,29 +247,15 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: module,
                     kind: .module,
                     detail: "Python module",
+                    sortText: "a_\(module)",
                     priority: 85
                 )
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
+    // MARK: - Member Completions Override
     
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide common member completions based on type
@@ -356,7 +277,9 @@ public final class PythonCompletionProvider: CompletionProvider {
         }
     }
     
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    // MARK: - Parameter Completions Override
+    
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["self", "cls", "args", "kwargs", "key", "value", "index", "item", "data", "result", "error", "callback"]
         
         return commonParameters
@@ -369,6 +292,7 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: param,
                     kind: .variable,
                     detail: "Parameter suggestion",
+                    sortText: "f_\(param)",
                     priority: 50
                 )
             }
@@ -405,6 +329,7 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)",
                     priority: 85
                 )
             }
@@ -435,6 +360,7 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)",
                     priority: 85
                 )
             }
@@ -464,6 +390,7 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)",
                     priority: 85
                 )
             }
@@ -495,6 +422,7 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "a_\(name)",
                     priority: 85
                 )
             }
@@ -520,31 +448,9 @@ public final class PythonCompletionProvider: CompletionProvider {
                     insertText: name,
                     kind: type == "method" ? .method : .property,
                     detail: description,
+                    sortText: "c_\(name)",
                     priority: 40
                 )
             }
-    }
-}
-
-// MARK: - Supporting Types
-
-private struct PythonContextAnalysisResult {
-    enum CompletionType {
-        case keyword    // Keywords like def, class, etc.
-        case type      // Type names
-        case member    // Member access after dot
-        case general   // General context
-        case parameter // Function parameters
-        case `import`  // Import statements
-    }
-    
-    let type: CompletionType
-    let filter: String
-    let targetType: String?
-    
-    init(type: CompletionType, filter: String, targetType: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetType = targetType
     }
 }

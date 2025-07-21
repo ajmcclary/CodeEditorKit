@@ -4,14 +4,21 @@ import Foundation
 
 /// Built-in completion provider for JSON language
 @MainActor
-public final class JSONCompletionProvider: CompletionProvider {
-    public let id = "json-builtin"
-    public let supportedLanguages: [Language] = [.json]
-    public let triggerCharacters = ["\"", ":", ",", "[", "{", " "]
-    public let supportsSnippets = true
+public final class JSONCompletionProvider: BaseCompletionProvider {
+    // JSON keywords and values (overriding base class property)
+    override public var keywords: [String] {
+        ["true", "false", "null"]
+    }
     
-    // JSON keywords and values
-    private let keywords = ["true", "false", "null"]
+    // JSON types (overriding base class property)
+    override public var types: [String] {
+        ["object", "array", "string", "number", "integer", "boolean", "null"]
+    }
+    
+    // JSON snippets (overriding base class property)
+    override public var snippets: [SnippetTemplate] {
+        JSONCompletionData.snippets
+    }
     
     // Common JSON schema properties
     private let schemaProperties = [
@@ -23,9 +30,6 @@ public final class JSONCompletionProvider: CompletionProvider {
         "maxLength", "pattern", "minItems", "maxItems", "uniqueItems",
         "minProperties", "maxProperties", "if", "then", "else"
     ]
-    
-    // Common JSON types
-    private let types = ["object", "array", "string", "number", "integer", "boolean", "null"]
     
     // Common formats
     private let formats = [
@@ -69,17 +73,22 @@ public final class JSONCompletionProvider: CompletionProvider {
         "settings", "overrides", "globals", "ignorePatterns", "root"
     ]
     
-    private let snippets = JSONCompletionData.snippets
+    public init() {
+        super.init(
+            id: "json-builtin",
+            supportedLanguages: [.json],
+            triggerCharacters: ["\"", ":", ",", "[", "{", " "],
+            supportsSnippets: true
+        )
+    }
     
-    public init() {}
+    // MARK: - Overridden Completion Method
     
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeJSONContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -90,17 +99,12 @@ public final class JSONCompletionProvider: CompletionProvider {
         case .value:
             items.append(contentsOf: createValueCompletions(for: analysisResult.key, fileType: analysisResult.fileType, filter: analysisResult.filter))
             
-        case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
         case .schema:
             items.append(contentsOf: createSchemaCompletions(filter: analysisResult.filter))
             
-        case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
-            }
+        default:
+            // For keyword and general cases, use base class implementation
+            return try await super.completions(for: context)
         }
         
         let processingTime = Date().timeIntervalSince(startTime)
@@ -115,7 +119,7 @@ public final class JSONCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> JSONContextAnalysisResult {
+    private func analyzeJSONContext(_ context: CompletionContextModel) -> JSONContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
         
@@ -146,7 +150,9 @@ public final class JSONCompletionProvider: CompletionProvider {
         return JSONContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    // MARK: - Overridden Base Methods
+    
+    override public func extractCurrentWord(from text: String) -> String {
         // Handle quoted strings
         if let lastQuote = text.lastIndex(of: "\"") {
             let afterQuote = String(text[text.index(after: lastQuote)...])
@@ -342,7 +348,7 @@ public final class JSONCompletionProvider: CompletionProvider {
         // Add specific values based on key
         switch key {
         case "type" where fileType == .schema:
-            items.append(contentsOf: createTypeCompletions(filter: filter))
+            items.append(contentsOf: createJSONTypeCompletions(filter: filter))
             
         case "format" where fileType == .schema:
             items.append(contentsOf: createFormatCompletions(filter: filter))
@@ -374,22 +380,6 @@ public final class JSONCompletionProvider: CompletionProvider {
         return items
     }
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "JSON value",
-                    priority: 85
-                )
-            }
-    }
-    
     private func createSchemaCompletions(filter: String) -> [CompletionItemModel] {
         // Return schema-specific completions
         var items: [CompletionItemModel] = []
@@ -412,7 +402,7 @@ public final class JSONCompletionProvider: CompletionProvider {
         return items
     }
     
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    private func createJSONTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -494,23 +484,6 @@ public final class JSONCompletionProvider: CompletionProvider {
                     kind: .value,
                     detail: "License type",
                     priority: 85
-                )
-            }
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
                 )
             }
     }

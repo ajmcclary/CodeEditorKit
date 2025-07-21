@@ -4,12 +4,7 @@ import Foundation
 
 /// Built-in completion provider for HTML language
 @MainActor
-public final class HTMLCompletionProvider: CompletionProvider {
-    public let id = "html-builtin"
-    public let supportedLanguages: [Language] = [.html]
-    public let triggerCharacters = ["<", ">", " ", "\"", "=", "/", "&"]
-    public let supportsSnippets = true
-    
+public final class HTMLCompletionProvider: BaseCompletionProvider {
     // HTML5 elements
     private let elements = [
         // Document metadata
@@ -75,10 +70,11 @@ public final class HTMLCompletionProvider: CompletionProvider {
         "&mdash;", "&ndash;", "&hellip;", "&laquo;", "&raquo;", "&ldquo;", "&rdquo;"
     ]
     
-    private let snippets: [SnippetTemplate] = [
-        SnippetTemplate(
-            label: "html5",
-            insertText: """
+    override public var snippets: [SnippetTemplate] {
+        [
+            SnippetTemplate(
+                label: "html5",
+                insertText: """
 <!DOCTYPE html>
 <html lang="${1:en}">
 <head>
@@ -91,46 +87,46 @@ public final class HTMLCompletionProvider: CompletionProvider {
 </body>
 </html>
 """,
-            description: "HTML5 boilerplate"
-        ),
-        SnippetTemplate(
-            label: "link-css",
-            insertText: "<link rel=\"stylesheet\" href=\"${1:style.css}\">",
-            description: "Link to CSS file"
-        ),
-        SnippetTemplate(
-            label: "script",
-            insertText: "<script src=\"${1:script.js}\"></script>",
-            description: "Script tag"
-        ),
-        SnippetTemplate(
-            label: "img",
-            insertText: "<img src=\"${1:image.jpg}\" alt=\"${2:description}\" width=\"${3:}\" height=\"${4:}\">",
-            description: "Image tag"
-        ),
-        SnippetTemplate(
-            label: "a",
-            insertText: "<a href=\"${1:url}\">${2:link text}</a>",
-            description: "Anchor link"
-        ),
-        SnippetTemplate(
-            label: "form",
-            insertText: """
+                description: "HTML5 boilerplate"
+            ),
+            SnippetTemplate(
+                label: "link-css",
+                insertText: "<link rel=\"stylesheet\" href=\"${1:style.css}\">",
+                description: "Link to CSS file"
+            ),
+            SnippetTemplate(
+                label: "script",
+                insertText: "<script src=\"${1:script.js}\"></script>",
+                description: "Script tag"
+            ),
+            SnippetTemplate(
+                label: "img",
+                insertText: "<img src=\"${1:image.jpg}\" alt=\"${2:description}\" width=\"${3:}\" height=\"${4:}\">",
+                description: "Image tag"
+            ),
+            SnippetTemplate(
+                label: "a",
+                insertText: "<a href=\"${1:url}\">${2:link text}</a>",
+                description: "Anchor link"
+            ),
+            SnippetTemplate(
+                label: "form",
+                insertText: """
 <form action="${1:/submit}" method="${2:post}">
     ${3:<!-- form fields -->}
     <button type="submit">${4:Submit}</button>
 </form>
 """,
-            description: "Form structure"
-        ),
-        SnippetTemplate(
-            label: "input",
-            insertText: "<input type=\"${1:text}\" name=\"${2:name}\" placeholder=\"${3:placeholder}\" ${4:required}>",
-            description: "Input field"
-        ),
-        SnippetTemplate(
-            label: "nav",
-            insertText: """
+                description: "Form structure"
+            ),
+            SnippetTemplate(
+                label: "input",
+                insertText: "<input type=\"${1:text}\" name=\"${2:name}\" placeholder=\"${3:placeholder}\" ${4:required}>",
+                description: "Input field"
+            ),
+            SnippetTemplate(
+                label: "nav",
+                insertText: """
 <nav>
     <ul>
         <li><a href="${1:#}">${2:Home}</a></li>
@@ -139,11 +135,11 @@ public final class HTMLCompletionProvider: CompletionProvider {
     </ul>
 </nav>
 """,
-            description: "Navigation menu"
-        ),
-        SnippetTemplate(
-            label: "article",
-            insertText: """
+                description: "Navigation menu"
+            ),
+            SnippetTemplate(
+                label: "article",
+                insertText: """
 <article>
     <header>
         <h2>${1:Title}</h2>
@@ -152,11 +148,11 @@ public final class HTMLCompletionProvider: CompletionProvider {
     <p>${4:Content}</p>
 </article>
 """,
-            description: "Article structure"
-        ),
-        SnippetTemplate(
-            label: "table",
-            insertText: """
+                description: "Article structure"
+            ),
+            SnippetTemplate(
+                label: "table",
+                insertText: """
 <table>
     <thead>
         <tr>
@@ -172,29 +168,37 @@ public final class HTMLCompletionProvider: CompletionProvider {
     </tbody>
 </table>
 """,
-            description: "Table structure"
-        ),
-        SnippetTemplate(
-            label: "meta-viewport",
-            insertText: "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
-            description: "Viewport meta tag"
-        ),
-        SnippetTemplate(
-            label: "comment",
-            insertText: "<!-- ${1:comment} -->",
-            description: "HTML comment"
+                description: "Table structure"
+            ),
+            SnippetTemplate(
+                label: "meta-viewport",
+                insertText: "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+                description: "Viewport meta tag"
+            ),
+            SnippetTemplate(
+                label: "comment",
+                insertText: "<!-- ${1:comment} -->",
+                description: "HTML comment"
+            )
+        ]
+    }
+    
+    public init() {
+        super.init(
+            id: "html-builtin",
+            supportedLanguages: [.html],
+            triggerCharacters: ["<", ">", " ", "\"", "=", "/", "&"],
+            supportsSnippets: true
         )
-    ]
+    }
     
-    public init() {}
+    // MARK: - Overrides for HTML-specific completion
     
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeHTMLContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -234,9 +238,18 @@ public final class HTMLCompletionProvider: CompletionProvider {
         )
     }
     
+    override public func extractCurrentWord(from text: String) -> String {
+        if text.hasSuffix("&") {
+            return "&"
+        }
+        
+        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-&")).inverted)
+        return components.last ?? ""
+    }
+    
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> HTMLContextAnalysisResult {
+    private func analyzeHTMLContext(_ context: CompletionContextModel) -> HTMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         // let afterCursor = String(context.text.suffix(from: context.text.index(context.text.startIndex, offsetBy: context.cursorPosition)))
         
@@ -272,15 +285,6 @@ public final class HTMLCompletionProvider: CompletionProvider {
         }
         
         return HTMLContextAnalysisResult(type: .general, filter: filter)
-    }
-    
-    private func extractCurrentWord(from text: String) -> String {
-        if text.hasSuffix("&") {
-            return "&"
-        }
-        
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-&")).inverted)
-        return components.last ?? ""
     }
     
     private func getCurrentTagContext(from text: String) -> String? {
@@ -477,23 +481,6 @@ public final class HTMLCompletionProvider: CompletionProvider {
             priority: 95,
             preselect: true
         )
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
     }
 }
 

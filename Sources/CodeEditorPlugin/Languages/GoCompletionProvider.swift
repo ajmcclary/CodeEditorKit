@@ -4,35 +4,38 @@ import Foundation
 
 /// Built-in completion provider for Go language
 @MainActor
-public final class GoCompletionProvider: CompletionProvider {
-    public let id = "go-builtin"
-    public let supportedLanguages: [Language] = [.go]
-    public let triggerCharacters = [".", "(", "[", " ", ":"]
-    public let supportsSnippets = true
+public final class GoCompletionProvider: BaseCompletionProvider {
+    // MARK: - Language Elements
     
-    // Go language elements
-    private let keywords = [
-        "break", "case", "chan", "const", "continue", "default", "defer", "else",
-        "fallthrough", "for", "func", "go", "goto", "if", "import", "interface",
-        "map", "package", "range", "return", "select", "struct", "switch", "type",
-        "var"
-    ]
+    override public var keywords: [String] {
+        [
+            "break", "case", "chan", "const", "continue", "default", "defer", "else",
+            "fallthrough", "for", "func", "go", "goto", "if", "import", "interface",
+            "map", "package", "range", "return", "select", "struct", "switch", "type",
+            "var"
+        ]
+    }
     
-    private let builtinTypes = [
-        "bool", "byte", "complex64", "complex128", "error", "float32", "float64",
-        "int", "int8", "int16", "int32", "int64", "rune", "string", "uint",
-        "uint8", "uint16", "uint32", "uint64", "uintptr"
-    ]
+    override public var types: [String] {
+        [
+            "bool", "byte", "complex64", "complex128", "error", "float32", "float64",
+            "int", "int8", "int16", "int32", "int64", "rune", "string", "uint",
+            "uint8", "uint16", "uint32", "uint64", "uintptr"
+        ]
+    }
     
-    private let builtinFunctions = [
-        "append", "cap", "close", "complex", "copy", "delete", "imag", "len",
-        "make", "new", "panic", "print", "println", "real", "recover"
-    ]
+    override public var functions: [String] {
+        [
+            "append", "cap", "close", "complex", "copy", "delete", "imag", "len",
+            "make", "new", "panic", "print", "println", "real", "recover"
+        ]
+    }
     
-    private let constants = [
-        "true", "false", "nil", "iota"
-    ]
+    override public var literals: [String] {
+        ["true", "false", "nil", "iota"]
+    }
     
+    // Common packages for import completions
     private let commonPackages = [
         "fmt", "io", "os", "strings", "strconv", "time", "errors", "sync",
         "context", "net/http", "encoding/json", "database/sql", "log",
@@ -40,7 +43,8 @@ public final class GoCompletionProvider: CompletionProvider {
         "filepath", "testing", "flag", "runtime"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "func",
             insertText: "func ${1:name}(${2:params}) ${3:returnType} {\n    ${4:// body}\n}",
@@ -121,103 +125,62 @@ public final class GoCompletionProvider: CompletionProvider {
             insertText: "func init() {\n    ${1:// initialization}\n}",
             description: "Init function"
         )
-    ]
+        ]
+    }
     
-    public init() {}
-    
-    // MARK: - CompletionProvider Implementation
-    
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
-        let startTime = Date()
-        
-        // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
-        var items: [CompletionItemModel] = []
-        
-        // Add appropriate completions based on context
-        switch analysisResult.type {
-        case .import:
-            items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
-            
-        case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
-        case .type:
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
-        case .function:
-            items.append(contentsOf: createFunctionCompletions(filter: analysisResult.filter))
-            
-        case .member:
-            items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
-        case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createBuiltinFunctionCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            items.append(contentsOf: createConstantCompletions(filter: analysisResult.filter))
-            if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
-            }
-            
-        case .parameter:
-            items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
-        }
-        
-        let processingTime = Date().timeIntervalSince(startTime)
-        
-        return CompletionResult(
-            items: items,
-            context: context,
-            isIncomplete: false,
-            processingTime: processingTime
+    public init() {
+        super.init(
+            id: "go-builtin",
+            supportedLanguages: [.go],
+            triggerCharacters: [".", "(", " ", ":"],
+            supportsSnippets: true
         )
     }
     
-    // MARK: - Context Analysis
+    // MARK: - Context Analysis Override
     
-    private func analyzeContext(_ context: CompletionContextModel) -> GoContextAnalysisResult {
+    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
         
-        // Check for import statements
+        // Check for import statements - treat as function context
         if lineText.hasPrefix("import ") {
-            return GoContextAnalysisResult(type: .import, filter: filter)
+            return ContextAnalysisResult(type: .function, filter: filter)
         }
         
         // Check for type context
         if lineText.contains("var ") && lineText.contains(" ") && !lineText.contains("=") {
-            return GoContextAnalysisResult(type: .type, filter: filter)
+            return ContextAnalysisResult(type: .type, filter: filter)
         }
         
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
-            return GoContextAnalysisResult(type: .member, filter: "", targetType: targetType)
+            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
         
         // Check for function definition
         if lineText.contains("func ") && lineText.contains("(") && !lineText.contains(")") {
-            return GoContextAnalysisResult(type: .parameter, filter: filter)
+            return ContextAnalysisResult(type: .parameter, filter: filter)
         }
         
         // Check for function call context
         if beforeCursor.hasSuffix("(") {
-            return GoContextAnalysisResult(type: .function, filter: filter)
+            return ContextAnalysisResult(type: .function, filter: filter)
         }
         
-        return GoContextAnalysisResult(type: .general, filter: filter)
+        return ContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -228,43 +191,20 @@ public final class GoCompletionProvider: CompletionProvider {
         return nil
     }
     
-    // MARK: - Completion Creation Methods
+    // MARK: - Function Completions Override
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "Go keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
-        builtinTypes
-            .filter { type in
-                filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
-            }
-            .map { type in
-                CompletionItemModel(
-                    label: type,
-                    insertText: type,
-                    kind: .struct,
-                    detail: "Go built-in type",
-                    priority: 70
-                )
-            }
+    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+        // Check if we're in import context
+        if filter.contains("import") {
+            return createImportCompletions(filter: filter)
+        }
+        
+        // Otherwise return Go built-in functions
+        return createBuiltinFunctionCompletions(filter: filter)
     }
     
     private func createBuiltinFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        builtinFunctions
+        functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
@@ -279,8 +219,8 @@ public final class GoCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createConstantCompletions(filter: String) -> [CompletionItemModel] {
-        constants
+    override public func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
+        literals
             .filter { constant in
                 filter.isEmpty || constant.localizedCaseInsensitiveContains(filter)
             }
@@ -288,8 +228,8 @@ public final class GoCompletionProvider: CompletionProvider {
                 CompletionItemModel(
                     label: constant,
                     insertText: constant,
-                    kind: .constant,
-                    detail: "Go constant",
+                    kind: .value,
+                    detail: "Go literal",
                     priority: 65
                 )
             }
@@ -311,24 +251,9 @@ public final class GoCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
-                )
-            }
-    }
+    // MARK: - Member Completions Override
     
-    private func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
         
         // Provide common member completions based on type
@@ -350,7 +275,9 @@ public final class GoCompletionProvider: CompletionProvider {
         }
     }
     
-    private func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    // MARK: - Parameter Completions Override
+    
+    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["ctx context.Context", "err error", "w http.ResponseWriter", "r *http.Request", "data []byte", "id string", "name string", "value interface{}"]
         
         return commonParameters
@@ -364,32 +291,6 @@ public final class GoCompletionProvider: CompletionProvider {
                     kind: .variable,
                     detail: "Parameter suggestion",
                     priority: 50
-                )
-            }
-    }
-    
-    private func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        // Common function patterns
-        let patterns = [
-            ("error", "Handle error"),
-            ("context.Context", "Context parameter"),
-            ("string, error", "String with error"),
-            ("[]byte, error", "Bytes with error"),
-            ("int, error", "Int with error"),
-            ("bool", "Boolean return")
-        ]
-        
-        return patterns
-            .filter { pattern, _ in
-                filter.isEmpty || pattern.localizedCaseInsensitiveContains(filter)
-            }
-            .map { pattern, description in
-                CompletionItemModel(
-                    label: pattern,
-                    insertText: pattern,
-                    kind: .typeParameter,
-                    detail: description,
-                    priority: 60
                 )
             }
     }
@@ -488,29 +389,5 @@ public final class GoCompletionProvider: CompletionProvider {
                     priority: 85
                 )
             }
-    }
-}
-
-// MARK: - Supporting Types
-
-private struct GoContextAnalysisResult {
-    enum CompletionType {
-        case keyword
-        case type
-        case function
-        case member
-        case general
-        case parameter
-        case `import`
-    }
-    
-    let type: CompletionType
-    let filter: String
-    let targetType: String?
-    
-    init(type: CompletionType, filter: String, targetType: String? = nil) {
-        self.type = type
-        self.filter = filter
-        self.targetType = targetType
     }
 }

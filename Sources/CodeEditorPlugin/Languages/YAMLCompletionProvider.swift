@@ -4,14 +4,8 @@ import Foundation
 
 /// Built-in completion provider for YAML language
 @MainActor
-public final class YAMLCompletionProvider: CompletionProvider {
-    public let id = "yaml-builtin"
-    public let supportedLanguages: [Language] = [.yaml]
-    public let triggerCharacters = [":", "-", " ", ".", "$", "{"]
-    public let supportsSnippets = true
-    
+public final class YAMLCompletionProvider: BaseCompletionProvider {
     // Reference to static data from YAMLCompletionData
-    private let keywords = YAMLCompletionData.keywords
     private let specialSymbols = YAMLCompletionData.specialSymbols
     private let githubActionsKeys = YAMLCompletionData.githubActionsKeys
     private let dockerComposeKeys = YAMLCompletionData.dockerComposeKeys
@@ -19,37 +13,54 @@ public final class YAMLCompletionProvider: CompletionProvider {
     private let ansibleKeys = YAMLCompletionData.ansibleKeys
     private let circleciKeys = YAMLCompletionData.circleciKeys
     
-    private let snippets = YAMLCompletionData.snippets
+    // MARK: - Overridden Properties
     
-    public init() {}
+    override public var keywords: [String] {
+        YAMLCompletionData.keywords
+    }
     
-    // MARK: - CompletionProvider Implementation
+    override public var snippets: [SnippetTemplate] {
+        YAMLCompletionData.snippets
+    }
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    // MARK: - Initialization
+    
+    public init() {
+        super.init(
+            id: "yaml-builtin",
+            supportedLanguages: [.yaml],
+            triggerCharacters: [":", "-", " ", ".", "$", "{"],
+            supportsSnippets: true
+        )
+    }
+    
+    // MARK: - Override BaseCompletionProvider Methods
+    
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let yamlAnalysisResult = analyzeYAMLContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
-        switch analysisResult.type {
+        switch yamlAnalysisResult.type {
         case .key:
-            items.append(contentsOf: createKeyCompletions(for: analysisResult.fileType, parentKey: analysisResult.parentKey, filter: analysisResult.filter))
+            items.append(contentsOf: createKeyCompletions(for: yamlAnalysisResult.fileType, parentKey: yamlAnalysisResult.parentKey, filter: yamlAnalysisResult.filter))
             
         case .value:
-            items.append(contentsOf: createValueCompletions(for: analysisResult.key, fileType: analysisResult.fileType, filter: analysisResult.filter))
+            items.append(contentsOf: createValueCompletions(for: yamlAnalysisResult.key, fileType: yamlAnalysisResult.fileType, filter: yamlAnalysisResult.filter))
             
         case .listItem:
-            items.append(contentsOf: createListItemCompletions(filter: analysisResult.filter))
+            items.append(contentsOf: createListItemCompletions(filter: yamlAnalysisResult.filter))
             
         case .reference:
-            items.append(contentsOf: createReferenceCompletions(filter: analysisResult.filter))
+            items.append(contentsOf: createReferenceCompletions(filter: yamlAnalysisResult.filter))
             
         case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
+            items.append(contentsOf: createYAMLKeywordCompletions(filter: yamlAnalysisResult.filter))
             if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
+                items.append(contentsOf: createYAMLSnippetCompletions(filter: yamlAnalysisResult.filter))
             }
         }
         
@@ -63,9 +74,14 @@ public final class YAMLCompletionProvider: CompletionProvider {
         )
     }
     
-    // MARK: - Context Analysis
+    override public func extractCurrentWord(from text: String) -> String {
+        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-*&")).inverted)
+        return components.last ?? ""
+    }
     
-    private func analyzeContext(_ context: CompletionContextModel) -> YAMLContextAnalysisResult {
+    // MARK: - YAML-Specific Context Analysis
+    
+    private func analyzeYAMLContext(_ context: CompletionContextModel) -> YAMLContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
@@ -95,11 +111,6 @@ public final class YAMLCompletionProvider: CompletionProvider {
         }
         
         return YAMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
-    }
-    
-    private func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-*&")).inverted)
-        return components.last ?? ""
     }
     
     private func detectFileType(from text: String) -> YAMLFileType {
@@ -254,7 +265,7 @@ public final class YAMLCompletionProvider: CompletionProvider {
         // Add boolean values for common boolean keys
         let booleanKeys = ["continue-on-error", "fail-fast", "required", "become", "gather_facts", "ignore_errors", "run_once"]
         if booleanKeys.contains(key) {
-            items.append(contentsOf: createKeywordCompletions(filter: filter).filter { ["true", "false", "yes", "no"].contains($0.label) })
+            items.append(contentsOf: createYAMLKeywordCompletions(filter: filter).filter { ["true", "false", "yes", "no"].contains($0.label) })
         }
         
         // Add specific values based on key and file type
@@ -283,7 +294,7 @@ public final class YAMLCompletionProvider: CompletionProvider {
         }
         
         // Always add keywords
-        items.append(contentsOf: createKeywordCompletions(filter: filter))
+        items.append(contentsOf: createYAMLKeywordCompletions(filter: filter))
         
         return items
     }
@@ -338,7 +349,7 @@ public final class YAMLCompletionProvider: CompletionProvider {
         return items
     }
     
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    private func createYAMLKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -452,7 +463,7 @@ public final class YAMLCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    private func createYAMLSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)

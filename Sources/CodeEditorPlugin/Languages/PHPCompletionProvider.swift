@@ -4,50 +4,60 @@ import Foundation
 
 /// Built-in completion provider for PHP language
 @MainActor
-public final class PHPCompletionProvider: CompletionProvider {
-    public let id = "php-builtin"
-    public let supportedLanguages: [Language] = [.php]
-    public let triggerCharacters = ["$", "->", "::", "(", " ", "\\", "<?", "=", "["]
-    public let supportsSnippets = true
-    
-    // PHP keywords
-    private let keywords = [
-        "abstract", "and", "array", "as", "break", "callable", "case", "catch",
-        "class", "clone", "const", "continue", "declare", "default", "die", "do",
-        "echo", "else", "elseif", "empty", "enddeclare", "endfor", "endforeach",
-        "endif", "endswitch", "endwhile", "eval", "exit", "extends", "final",
-        "finally", "fn", "for", "foreach", "function", "global", "goto", "if",
-        "implements", "include", "include_once", "instanceof", "insteadof",
-        "interface", "isset", "list", "match", "namespace", "new", "or", "print",
-        "private", "protected", "public", "readonly", "require", "require_once",
-        "return", "static", "switch", "throw", "trait", "try", "unset", "use",
-        "var", "while", "xor", "yield", "yield from", "__halt_compiler",
-        // PHP 8 keywords
-        "enum", "mixed", "never"
-    ]
-    
-    // PHP types
-    private let types = [
-        "int", "float", "string", "bool", "array", "object", "callable",
-        "iterable", "void", "null", "mixed", "never", "false", "true",
-        "self", "parent", "static"
-    ]
-    
-    // PHP superglobals
-    private let superglobals = [
+public final class PHPCompletionProvider: BaseCompletionProvider {
+    // PHP-specific properties
+    public let phpSuperglobals = [
         "$GLOBALS", "$_SERVER", "$_GET", "$_POST", "$_FILES", "$_COOKIE",
         "$_SESSION", "$_REQUEST", "$_ENV", "$HTTP_RAW_POST_DATA",
         "$http_response_header", "$argc", "$argv"
     ]
     
-    // PHP magic constants
-    private let magicConstants = [
+    public let phpMagicConstants = [
         "__LINE__", "__FILE__", "__DIR__", "__FUNCTION__", "__CLASS__",
         "__TRAIT__", "__METHOD__", "__NAMESPACE__"
     ]
     
-    // PHP built-in functions (common ones)
-    private let builtinFunctions = [
+    public let phpBuiltinClasses = [
+        "Exception", "ErrorException", "Error", "ParseError", "TypeError",
+        "ArgumentCountError", "ArithmeticError", "DivisionByZeroError",
+        "DateTime", "DateTimeImmutable", "DateInterval", "DateTimeZone",
+        "PDO", "PDOStatement", "PDOException", "mysqli", "mysqli_result",
+        "DOMDocument", "DOMElement", "DOMNode", "SimpleXMLElement",
+        "ArrayObject", "ArrayIterator", "Iterator", "IteratorAggregate",
+        "Countable", "Serializable", "JsonSerializable", "Traversable",
+        "ReflectionClass", "ReflectionMethod", "ReflectionProperty",
+        "SplFileInfo", "SplFileObject", "DirectoryIterator",
+        "RecursiveDirectoryIterator", "RecursiveIteratorIterator"
+    ]
+    
+    // Override base properties
+    override public var keywords: [String] {
+        [
+            "abstract", "and", "array", "as", "break", "callable", "case", "catch",
+            "class", "clone", "const", "continue", "declare", "default", "die", "do",
+            "echo", "else", "elseif", "empty", "enddeclare", "endfor", "endforeach",
+            "endif", "endswitch", "endwhile", "eval", "exit", "extends", "final",
+            "finally", "fn", "for", "foreach", "function", "global", "goto", "if",
+            "implements", "include", "include_once", "instanceof", "insteadof",
+            "interface", "isset", "list", "match", "namespace", "new", "or", "print",
+            "private", "protected", "public", "readonly", "require", "require_once",
+            "return", "static", "switch", "throw", "trait", "try", "unset", "use",
+            "var", "while", "xor", "yield", "yield from", "__halt_compiler",
+            // PHP 8 keywords
+            "enum", "mixed", "never"
+        ]
+    }
+    
+    override public var types: [String] {
+        [
+            "int", "float", "string", "bool", "array", "object", "callable",
+            "iterable", "void", "null", "mixed", "never", "false", "true",
+            "self", "parent", "static"
+        ]
+    }
+    
+    override public var functions: [String] {
+        [
         // String functions
         "strlen", "strpos", "strrpos", "substr", "str_replace", "str_repeat",
         "strtolower", "strtoupper", "ucfirst", "ucwords", "trim", "ltrim",
@@ -83,23 +93,11 @@ public final class PHPCompletionProvider: CompletionProvider {
         // Other common functions
         "header", "setcookie", "session_start", "session_destroy", "mail",
         "filter_var", "filter_input", "hash", "password_hash", "password_verify"
-    ]
+        ]
+    }
     
-    // PHP classes (common built-in)
-    private let builtinClasses = [
-        "Exception", "ErrorException", "Error", "ParseError", "TypeError",
-        "ArgumentCountError", "ArithmeticError", "DivisionByZeroError",
-        "DateTime", "DateTimeImmutable", "DateInterval", "DateTimeZone",
-        "PDO", "PDOStatement", "PDOException", "mysqli", "mysqli_result",
-        "DOMDocument", "DOMElement", "DOMNode", "SimpleXMLElement",
-        "ArrayObject", "ArrayIterator", "Iterator", "IteratorAggregate",
-        "Countable", "Serializable", "JsonSerializable", "Traversable",
-        "ReflectionClass", "ReflectionMethod", "ReflectionProperty",
-        "SplFileInfo", "SplFileObject", "DirectoryIterator",
-        "RecursiveDirectoryIterator", "RecursiveIteratorIterator"
-    ]
-    
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         SnippetTemplate(
             label: "php",
             insertText: "<?php\n${1:// code}\n?>",
@@ -278,17 +276,25 @@ public function set${1:Property}(${2:?string} $${3:property}): void
 """,
             description: "Setter method"
         )
-    ]
+        ]
+    }
     
-    public init() {}
+    public init() {
+        super.init(
+            id: "php-builtin",
+            supportedLanguages: [.php],
+            triggerCharacters: ["$", "->", "::", "(", " ", "\\", "<?", "=", "["],
+            supportsSnippets: true
+        )
+    }
     
-    // MARK: - CompletionProvider Implementation
+    // MARK: - Override CompletionProvider
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzePHPContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -338,9 +344,9 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         )
     }
     
-    // MARK: - Context Analysis
+    // MARK: - PHP Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> PHPContextAnalysisResult {
+    private func analyzePHPContext(_ context: CompletionContextModel) -> PHPContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -396,11 +402,12 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         return PHPContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$\\")).inverted)
         return components.last ?? ""
     }
     
+    // PHP-specific method for extracting target type
     private func extractTargetType(from text: String, separator: String) -> String? {
         // Extract the object/class before -> or ::
         let pattern = separator == "->" ? #"(\$\w+)\s*->$"# : #"(\w+)\s*::$"#
@@ -443,24 +450,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         return parenCount > 0
     }
     
-    // MARK: - Completion Creation Methods
-    
-    private func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
-        keywords
-            .filter { keyword in
-                filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
-            }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    insertText: keyword,
-                    kind: .keyword,
-                    detail: "PHP keyword",
-                    priority: 80,
-                    preselect: keyword == filter
-                )
-            }
-    }
+    // MARK: - PHP-Specific Completion Creation Methods
     
     private func createVariableCompletions(filter: String) -> [CompletionItemModel] {
         // Common variable names
@@ -487,8 +477,8 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             }
     }
     
-    private func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
-        builtinFunctions
+    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+        functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
@@ -530,7 +520,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
     }
     
     private func createClassCompletions(filter: String) -> [CompletionItemModel] {
-        builtinClasses
+        phpBuiltinClasses
             .filter { className in
                 filter.isEmpty || className.localizedCaseInsensitiveContains(filter)
             }
@@ -541,22 +531,6 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                     kind: .class,
                     detail: "PHP class",
                     priority: 70
-                )
-            }
-    }
-    
-    private func createTypeCompletions(filter: String) -> [CompletionItemModel] {
-        types
-            .filter { type in
-                filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
-            }
-            .map { type in
-                CompletionItemModel(
-                    label: type,
-                    insertText: type,
-                    kind: .typeParameter,
-                    detail: "PHP type",
-                    priority: 75
                 )
             }
     }
@@ -586,7 +560,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
     }
     
     private func createSuperglobalCompletions(filter: String) -> [CompletionItemModel] {
-        superglobals
+        phpSuperglobals
             .filter { superglobal in
                 let filterToUse = filter.hasPrefix("$") ? filter : "$\(filter)"
                 return superglobal.localizedCaseInsensitiveContains(filterToUse)
@@ -605,7 +579,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
     }
     
     private func createMagicConstantCompletions(filter: String) -> [CompletionItemModel] {
-        magicConstants
+        phpMagicConstants
             .filter { constant in
                 filter.isEmpty || constant.localizedCaseInsensitiveContains(filter)
             }
@@ -616,23 +590,6 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                     kind: .constant,
                     detail: "Magic constant",
                     priority: 80
-                )
-            }
-    }
-    
-    private func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
-        snippets
-            .filter { snippet in
-                filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
-            }
-            .map { snippet in
-                CompletionItemModel(
-                    label: snippet.label,
-                    insertText: snippet.insertText,
-                    kind: .snippet,
-                    detail: snippet.description,
-                    priority: 90,
-                    snippetSupport: true
                 )
             }
     }

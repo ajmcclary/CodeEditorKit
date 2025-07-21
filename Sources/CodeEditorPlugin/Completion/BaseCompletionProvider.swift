@@ -2,7 +2,56 @@ import Foundation
 
 // MARK: - Base Completion Provider
 
-/// Base class for language completion providers with common functionality
+/// Base class for language-specific completion providers that reduces code duplication
+/// and provides common functionality across all language implementations.
+///
+/// ## Overview
+/// 
+/// `BaseCompletionProvider` implements the standard completion flow and provides
+/// reusable methods for creating completion items. Language-specific providers
+/// inherit from this class and override only the parts they need to customize.
+///
+/// ## Usage Example
+///
+/// ```swift
+/// public final class SwiftCompletionProvider: BaseCompletionProvider {
+///     override public var keywords: [String] {
+///         ["func", "var", "let", "class", "struct", "enum", "protocol"]
+///     }
+///     
+///     override public var types: [String] {
+///         ["String", "Int", "Double", "Bool", "Array", "Dictionary"]
+///     }
+///     
+///     public init() {
+///         super.init(
+///             id: "swift-builtin",
+///             supportedLanguages: [.swift],
+///             triggerCharacters: [".", "(", "[", " "],
+///             supportsSnippets: true
+///         )
+///     }
+///     
+///     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+///         // Custom context analysis for Swift
+///     }
+/// }
+/// ```
+///
+/// ## Customization Points
+///
+/// - **Language Elements**: Override `keywords`, `types`, `literals`, `functions`, and `snippets`
+/// - **Context Analysis**: Override `analyzeContext(_:)` for language-specific parsing
+/// - **Member Completions**: Override `createMemberCompletions(for:filter:)` for type members
+/// - **Parameter Completions**: Override `createParameterCompletions(filter:)` for parameters
+///
+/// ## Benefits
+///
+/// 1. **Reduced Duplication**: Common completion logic is implemented once
+/// 2. **Consistent Behavior**: All languages follow the same completion flow
+/// 3. **Easy Maintenance**: Bug fixes and improvements benefit all languages
+/// 4. **Simplified Testing**: Test the base behavior once, then test language specifics
+///
 @MainActor
 open class BaseCompletionProvider: CompletionProvider {
     // MARK: - Properties
@@ -127,7 +176,8 @@ open class BaseCompletionProvider: CompletionProvider {
                     insertText: keyword,
                     kind: .keyword,
                     detail: "Keyword",
-                    sortText: "a_\(keyword)" // Keywords first
+                    sortText: "a_\(keyword)", // Keywords first
+                    priority: 80
                 )
             }
     }
@@ -144,7 +194,8 @@ open class BaseCompletionProvider: CompletionProvider {
                     insertText: type,
                     kind: .class,
                     detail: "Type",
-                    sortText: "b_\(type)"
+                    sortText: "b_\(type)",
+                    priority: 70
                 )
             }
     }
@@ -161,7 +212,8 @@ open class BaseCompletionProvider: CompletionProvider {
                     insertText: literal,
                     kind: .value,
                     detail: "Literal",
-                    sortText: "c_\(literal)"
+                    sortText: "c_\(literal)",
+                    priority: 60
                 )
             }
     }
@@ -178,7 +230,8 @@ open class BaseCompletionProvider: CompletionProvider {
                     insertText: "\(function)()",
                     kind: .function,
                     detail: "Function",
-                    sortText: "d_\(function)"
+                    sortText: "d_\(function)",
+                    priority: 65
                 )
             }
     }
@@ -195,7 +248,9 @@ open class BaseCompletionProvider: CompletionProvider {
                     insertText: snippet.insertText,
                     kind: .snippet,
                     detail: snippet.description,
-                    sortText: "e_\(snippet.label)"
+                    sortText: "e_\(snippet.label)",
+                    priority: 90,
+                    snippetSupport: true
                 )
             }
     }

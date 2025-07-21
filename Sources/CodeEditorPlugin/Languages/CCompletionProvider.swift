@@ -4,12 +4,7 @@ import Foundation
 
 /// Built-in completion provider for C and C++ languages
 @MainActor
-public final class CCompletionProvider: CompletionProvider {
-    public let id = "c-cpp-builtin"
-    public let supportedLanguages: [Language] = [.c, .cpp]
-    public let triggerCharacters = [".", "->", "::", "(", "<", " ", "#"]
-    public let supportsSnippets = true
-    
+public final class CCompletionProvider: BaseCompletionProvider {
     // C keywords
     private let cKeywords = [
         "auto", "break", "case", "char", "const", "continue", "default", "do",
@@ -63,7 +58,8 @@ public final class CCompletionProvider: CompletionProvider {
         "#elif", "#endif", "#error", "#pragma", "#warning", "#line"
     ]
     
-    private let snippets: [SnippetTemplate] = [
+    override public var snippets: [SnippetTemplate] {
+        [
         // C snippets
         SnippetTemplate(
             label: "main",
@@ -166,24 +162,31 @@ public final class CCompletionProvider: CompletionProvider {
             insertText: "std::vector<${1:Type}> ${2:vec};",
             description: "Vector declaration"
         )
-    ]
+        ]
+    }
     
     private let isCpp: Bool
     
     public init() {
         self.isCpp = false // Will be determined by context
+        super.init(
+            id: "c-cpp-builtin",
+            supportedLanguages: [.c, .cpp],
+            triggerCharacters: [".", "->", "::", "(", "<", " ", "#"],
+            supportsSnippets: true
+        )
     }
     
     // MARK: - CompletionProvider Implementation
     
-    public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
         
         // Determine if we're in C++ mode
         let isCurrentlyCpp = context.language == .cpp
         
         // Analyze context to determine what kind of completions to provide
-        let analysisResult = analyzeContext(context)
+        let analysisResult = analyzeCContext(context)
         var items: [CompletionItemModel] = []
         
         // Add appropriate completions based on context
@@ -195,10 +198,10 @@ public final class CCompletionProvider: CompletionProvider {
             items.append(contentsOf: createIncludeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             
         case .keyword:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
+            items.append(contentsOf: createCKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             
         case .type:
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
+            items.append(contentsOf: createCTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter, isCpp: isCurrentlyCpp))
@@ -207,10 +210,10 @@ public final class CCompletionProvider: CompletionProvider {
             items.append(contentsOf: createNamespaceCompletions(filter: analysisResult.filter))
             
         case .general:
-            items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
-            items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
+            items.append(contentsOf: createCKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
+            items.append(contentsOf: createCTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             if supportsSnippets {
-                items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
+                items.append(contentsOf: createCSnippetCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             }
         }
         
@@ -226,7 +229,7 @@ public final class CCompletionProvider: CompletionProvider {
     
     // MARK: - Context Analysis
     
-    private func analyzeContext(_ context: CompletionContextModel) -> CContextAnalysisResult {
+    private func analyzeCContext(_ context: CompletionContextModel) -> CContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         
@@ -262,12 +265,12 @@ public final class CCompletionProvider: CompletionProvider {
         return CContextAnalysisResult(type: .general, filter: filter)
     }
     
-    private func extractCurrentWord(from text: String) -> String {
+    override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
     
-    private func extractTargetType(from text: String) -> String? {
+    override public func extractTargetType(from text: String) -> String? {
         // Extract the object before . or ->
         let pattern = #"(\w+)\s*(?:\.|->)\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -291,7 +294,7 @@ public final class CCompletionProvider: CompletionProvider {
     
     // MARK: - Completion Creation Methods
     
-    private func createKeywordCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
+    private func createCKeywordCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         var keywords = cKeywords
         if isCpp {
             keywords += cppKeywords
@@ -313,7 +316,7 @@ public final class CCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createTypeCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
+    private func createCTypeCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         var types = ["int", "char", "float", "double", "void", "long", "short", "unsigned", "signed"]
         
         if isCpp {
@@ -376,7 +379,7 @@ public final class CCompletionProvider: CompletionProvider {
             }
     }
     
-    private func createSnippetCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
+    private func createCSnippetCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         let relevantSnippets = isCpp ? snippets : snippets.filter { snippet in
             !["class", "template", "namespace", "try", "lambda", "unique_ptr", "shared_ptr", "vector"].contains(snippet.label)
         }
