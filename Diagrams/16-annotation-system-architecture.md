@@ -365,14 +365,33 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class AnnotationSystem system
-    class AnnotationManager,AnnotationsDataSource,AnnotationCache core
-    class Annotation,LineAnnotation,MessageLineAnnotation,CodeEditorViewAnnotation,AnnotationData annotation
-    class AnnotationView,AnnotationContentView,AnnotationViewRenderer,AnnotationLayoutManager view
-    class AnnotationProvider,DiagnosticAnnotationProvider,LSPAnnotationProvider,UserAnnotationProvider provider
-    class AnnotationInteractionManager,AnnotationAction,FixSuggestion interaction
-    class AnnotationFilterManager,AnnotationFilter filter
-    class AnnotationThemeManager,AnnotationTheme,AnnotationAppearance theme
-    class AnnotationKind,AnnotationSeverity,AnnotationSource enum
+    class AnnotationManager core
+    class AnnotationsDataSource core
+    class AnnotationCache core
+    class Annotation annotation
+    class LineAnnotation annotation
+    class MessageLineAnnotation annotation
+    class CodeEditorViewAnnotation annotation
+    class AnnotationData annotation
+    class AnnotationView view
+    class AnnotationContentView view
+    class AnnotationViewRenderer view
+    class AnnotationLayoutManager view
+    class AnnotationProvider provider
+    class DiagnosticAnnotationProvider provider
+    class LSPAnnotationProvider provider
+    class UserAnnotationProvider provider
+    class AnnotationInteractionManager interaction
+    class AnnotationAction interaction
+    class FixSuggestion interaction
+    class AnnotationFilterManager filter
+    class AnnotationFilter filter
+    class AnnotationThemeManager theme
+    class AnnotationTheme theme
+    class AnnotationAppearance theme
+    class AnnotationKind enum
+    class AnnotationSeverity enum
+    class AnnotationSource enum
 ```
 
 ## Annotation System Flow

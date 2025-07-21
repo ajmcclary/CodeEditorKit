@@ -406,16 +406,34 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class AdvancedLayoutSystem system
-    class LayoutEngine,LayoutPerformanceOptimizer engine
-    class UIComponent,CodeEditorComponent,GutterComponent,MinimapComponent,ScrollComponent,OverlayManager component
-    class ResponsiveLayoutManager,ResponsiveBreakpoint,AdaptiveConstraint responsive
-    class ConstraintSolver,LayoutConstraint constraint
-    class LayoutAnimationCoordinator,LayoutAnimation,AnimationConfiguration animation
-    class ComponentFactory,ComponentLifecycleManager factory
-    class FlexboxLayout,GridLayout,AbsoluteLayout layout
+    class LayoutEngine engine
+    class LayoutPerformanceOptimizer engine
+    class UIComponent component
+    class CodeEditorComponent component
+    class GutterComponent component
+    class MinimapComponent component
+    class ScrollComponent component
+    class OverlayManager component
+    class ResponsiveLayoutManager responsive
+    class ResponsiveBreakpoint responsive
+    class AdaptiveConstraint responsive
+    class ConstraintSolver constraint
+    class LayoutConstraint constraint
+    class LayoutAnimationCoordinator animation
+    class LayoutAnimation animation
+    class AnimationConfiguration animation
+    class ComponentFactory factory
+    class ComponentLifecycleManager factory
+    class FlexboxLayout layout
+    class GridLayout layout
+    class AbsoluteLayout layout
     class LayoutCache performance
-    class AccessibilityLayoutManager,ComponentEventSystem accessibility
-    class LayoutAlgorithm,LayoutAttribute,ConstraintRelation,ComponentLifecycleState enum
+    class AccessibilityLayoutManager accessibility
+    class ComponentEventSystem accessibility
+    class LayoutAlgorithm enum
+    class LayoutAttribute enum
+    class ConstraintRelation enum
+    class ComponentLifecycleState enum
 ```
 
 ## Layout System Flow
@@ -474,12 +492,24 @@ flowchart TB
     classDef animation fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
     classDef result fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
 
-    class INIT,REGISTER,SETUP init
-    class MEASURE,SOLVE,LAYOUT,POSITION,RENDER,UPDATE process
-    class FLEX,GRID,ABS algorithm
-    class BREAK,ADAPT responsive
-    class TRANS,COORD animation
-    class CONSTRAINT,READY,UPDATE result
+    class INIT init
+    class REGISTER init
+    class SETUP init
+    class MEASURE process
+    class SOLVE process
+    class LAYOUT process
+    class POSITION process
+    class RENDER process
+    class UPDATE process
+    class FLEX algorithm
+    class GRID algorithm
+    class ABS algorithm
+    class BREAK responsive
+    class ADAPT responsive
+    class TRANS animation
+    class COORD animation
+    class CONSTRAINT result
+    class READY result
 ```
 
 ## Key Layout System Features

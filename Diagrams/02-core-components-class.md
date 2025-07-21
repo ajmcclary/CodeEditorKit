@@ -314,15 +314,31 @@ classDiagram
     classDef support fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     
-    class CodeEditorAPI,CodeEditorViewDelegate protocol
-    class CodeEditorView,CodeEditorContainerView core
+    class CodeEditorAPI protocol
+    class CodeEditorViewDelegate protocol
+    class CodeEditorView core
+    class CodeEditorContainerView core
     class CodeEditor swiftui
-    class UnifiedEventSystem,Event,EventHandler,EventFilter event
-    class BusinessLogicServiceRegistry,TextEditingService,SyntaxHighlightingService,LanguageDetectionService,CompletionManager,MemoryMonitor service
-    class CodeEditorLayoutManager,LineIndexCache layout
-    class GutterView,MinimapView ui
-    class EditorConfiguration,LanguageConfig config
-    class LineInfo,TextChange,CompletionContext,CompletionItem support
+    class UnifiedEventSystem event
+    class Event event
+    class EventHandler event
+    class EventFilter event
+    class BusinessLogicServiceRegistry service
+    class TextEditingService service
+    class SyntaxHighlightingService service
+    class LanguageDetectionService service
+    class CompletionManager service
+    class MemoryMonitor service
+    class CodeEditorLayoutManager layout
+    class LineIndexCache layout
+    class GutterView ui
+    class MinimapView ui
+    class EditorConfiguration config
+    class LanguageConfig config
+    class LineInfo support
+    class TextChange support
+    class CompletionContext support
+    class CompletionItem support
     class EventType enum
 ```
 

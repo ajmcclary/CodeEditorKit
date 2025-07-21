@@ -452,15 +452,39 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class DebugIntegrationSystem system
-    class DebugSessionManager,DebugSession,DebugConfiguration,DebugThread session
-    class BreakpointManager,Breakpoint,LineBreakpoint,ConditionalBreakpoint,LogBreakpoint,ExceptionBreakpoint breakpoint
-    class DebugUIController,BreakpointGutter,DebugInfoOverlay,VariableInspectorView,CallStackView ui
-    class StackFrame,Variable,DebugDataProvider,DebugSymbolResolver data
-    class DebugEventProcessor,DebugEvent event
-    class DebugProtocolManager,DebugAdapterProtocolClient,ProtocolHandler,LLDBProtocolHandler,GDBProtocolHandler protocol
-    class DebugConsoleView,CommandHistory console
+    class DebugSessionManager session
+    class DebugSession session
+    class DebugConfiguration session
+    class DebugThread session
+    class BreakpointManager breakpoint
+    class Breakpoint breakpoint
+    class LineBreakpoint breakpoint
+    class ConditionalBreakpoint breakpoint
+    class LogBreakpoint breakpoint
+    class ExceptionBreakpoint breakpoint
+    class DebugUIController ui
+    class BreakpointGutter ui
+    class DebugInfoOverlay ui
+    class VariableInspectorView ui
+    class CallStackView ui
+    class StackFrame data
+    class Variable data
+    class DebugDataProvider data
+    class DebugSymbolResolver data
+    class DebugEventProcessor event
+    class DebugEvent event
+    class DebugProtocolManager protocol
+    class DebugAdapterProtocolClient protocol
+    class ProtocolHandler protocol
+    class LLDBProtocolHandler protocol
+    class GDBProtocolHandler protocol
+    class DebugConsoleView console
+    class CommandHistory console
     class DebugPerformanceOptimizer optimization
-    class DebuggerType,DebugState,VariableKind,DebugEventType enum
+    class DebuggerType enum
+    class DebugState enum
+    class VariableKind enum
+    class DebugEventType enum
 ```
 
 ## Debug Integration Flow

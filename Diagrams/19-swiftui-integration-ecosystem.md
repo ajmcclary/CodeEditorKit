@@ -342,12 +342,38 @@ classDiagram
 
     class SwiftUIIntegrationSystem system
     class CodeEditor swiftui
-    class CodeEditorRepresentable,AppKitCodeEditorRepresentable,UIKitCodeEditorRepresentable representable
-    class CodeEditorCoordinator,SwiftUIBindingManager,SwiftUIEventBridge,CodeEditorRepresentableHelper,SwiftUIViewFactory,ViewUpdateCoordinator coordinator
-    class SwiftUIEnvironmentManager,SwiftUIEnvironmentValues,ConfigurationEnvironmentKey,ThemeEnvironmentKey,LanguageEnvironmentKey environment
-    class ViewModifierSystem,CodeEditorViewModifier,LanguageViewModifier,ThemeViewModifier,ConfigurationViewModifier,ReadOnlyViewModifier,DebugModeViewModifier modifier
-    class SwiftUIStateManager,EditorState,StateBindingObserver state
-    class SwiftUIAnimationCoordinator,SwiftUIAccessibilityManager,SwiftUIPreviewSupport,SwiftUIExtensionManager,AnimationPreset,AccessibilityConfiguration,PreviewProvider,CodeEditorPreview support
+    class CodeEditorRepresentable representable
+    class AppKitCodeEditorRepresentable representable
+    class UIKitCodeEditorRepresentable representable
+    class CodeEditorCoordinator coordinator
+    class SwiftUIBindingManager coordinator
+    class SwiftUIEventBridge coordinator
+    class CodeEditorRepresentableHelper coordinator
+    class SwiftUIViewFactory coordinator
+    class ViewUpdateCoordinator coordinator
+    class SwiftUIEnvironmentManager environment
+    class SwiftUIEnvironmentValues environment
+    class ConfigurationEnvironmentKey environment
+    class ThemeEnvironmentKey environment
+    class LanguageEnvironmentKey environment
+    class ViewModifierSystem modifier
+    class CodeEditorViewModifier modifier
+    class LanguageViewModifier modifier
+    class ThemeViewModifier modifier
+    class ConfigurationViewModifier modifier
+    class ReadOnlyViewModifier modifier
+    class DebugModeViewModifier modifier
+    class SwiftUIStateManager state
+    class EditorState state
+    class StateBindingObserver state
+    class SwiftUIAnimationCoordinator support
+    class SwiftUIAccessibilityManager support
+    class SwiftUIPreviewSupport support
+    class SwiftUIExtensionManager support
+    class AnimationPreset support
+    class AccessibilityConfiguration support
+    class PreviewProvider support
+    class CodeEditorPreview support
 ```
 
 ## SwiftUI Integration Flow

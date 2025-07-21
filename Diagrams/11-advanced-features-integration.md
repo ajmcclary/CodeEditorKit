@@ -232,10 +232,24 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class AdvancedFeaturesCoordinator coordinator
-    class DebuggerIntegrationCore,DebugAdapter,DebuggerModels,BreakpointManager,DebuggerEvaluation,DebuggerExecution debugger
-    class SearchReplaceEngine,SearchProvider,ReplaceProvider,SearchContext search
-    class SmartEditingEngine,AutoCompletionEnhancer,SmartIndentationEngine,CodeActionProvider smart
-    class CodeFoldingEngine,BraceFoldingProvider,IndentationFoldingProvider,CommentFoldingProvider folding
+    class DebuggerIntegrationCore debugger
+    class DebugAdapter debugger
+    class DebuggerModels debugger
+    class BreakpointManager debugger
+    class DebuggerEvaluation debugger
+    class DebuggerExecution debugger
+    class SearchReplaceEngine search
+    class SearchProvider search
+    class ReplaceProvider search
+    class SearchContext search
+    class SmartEditingEngine smart
+    class AutoCompletionEnhancer smart
+    class SmartIndentationEngine smart
+    class CodeActionProvider smart
+    class CodeFoldingEngine folding
+    class BraceFoldingProvider folding
+    class IndentationFoldingProvider folding
+    class CommentFoldingProvider folding
     class SymbolNavigator symbol
     class FoldingProvider provider
     class FeatureType enum

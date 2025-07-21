@@ -112,12 +112,31 @@ flowchart TB
     classDef perf fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef render fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
     
-    class KEYBOARD,PASTE,API,UNDO input
-    class TS,TSN,ATTR storage
-    class TC,LM,TLF,GLYPH textkit
-    class VAL,TRANS,RANGE,LIC,LICALC,LIUPD process
-    class BATCH,ASYNC,VIEWPORT,CACHE perf
-    class DRAW,LAYERS,COMP,EVENTS render
+    class KEYBOARD input
+    class PASTE input
+    class API input
+    class UNDO input
+    class TS storage
+    class TSN storage
+    class ATTR storage
+    class TC textkit
+    class LM textkit
+    class TLF textkit
+    class GLYPH textkit
+    class VAL process
+    class TRANS process
+    class RANGE process
+    class LIC process
+    class LICALC process
+    class LIUPD process
+    class BATCH perf
+    class ASYNC perf
+    class VIEWPORT perf
+    class CACHE perf
+    class DRAW render
+    class LAYERS render
+    class COMP render
+    class EVENTS render
 ```
 
 ## Detailed Processing Steps

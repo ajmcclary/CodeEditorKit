@@ -324,15 +324,31 @@ classDiagram
     classDef types fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
-    class SymbolNavigator,OptimizedSymbolNavigator navigator
-    class SymbolProvider,SwiftSymbolProvider,PythonSymbolProvider,JavaScriptSymbolProvider,GenericSymbolProvider provider
-    class DocumentSymbol,SymbolInformation,SymbolReference symbol
-    class OutlineProvider,DocumentOutline,OutlineViewModel outline
-    class BreadcrumbProvider,BreadcrumbItem,ScopeAnalyzer breadcrumb
-    class SymbolIndexManager,SymbolIndex,SymbolCache index
-    class ReferenceProvider,DefinitionProvider,CrossReferenceAnalyzer reference
+    class SymbolNavigator navigator
+    class OptimizedSymbolNavigator navigator
+    class SymbolProvider provider
+    class SwiftSymbolProvider provider
+    class PythonSymbolProvider provider
+    class JavaScriptSymbolProvider provider
+    class GenericSymbolProvider provider
+    class DocumentSymbol symbol
+    class SymbolInformation symbol
+    class SymbolReference symbol
+    class OutlineProvider outline
+    class DocumentOutline outline
+    class OutlineViewModel outline
+    class BreadcrumbProvider breadcrumb
+    class BreadcrumbItem breadcrumb
+    class ScopeAnalyzer breadcrumb
+    class SymbolIndexManager index
+    class SymbolIndex index
+    class SymbolCache index
+    class ReferenceProvider reference
+    class DefinitionProvider reference
+    class CrossReferenceAnalyzer reference
     class SymbolNavigationTypes types
-    class SymbolKind,ReferenceKind enum
+    class SymbolKind enum
+    class ReferenceKind enum
 ```
 
 ## Symbol Navigation Flow

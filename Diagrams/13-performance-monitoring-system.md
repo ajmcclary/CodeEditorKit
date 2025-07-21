@@ -305,14 +305,28 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class UnifiedPerformanceSystem system
-    class PerformanceMonitor,TelemetryCollector monitor
-    class PerformanceMetrics,RenderingMetrics,MemoryMetrics,TextProcessingMetrics metrics
-    class PerformanceInsights,PerformanceAnalyzer,PerformancePredictor,ProductionPerformanceMetrics insights
-    class AdaptivePerformanceMode,PerformanceModeController adaptive
-    class MemoryMonitor,MemoryPressureHandler,MemoryLeakDetector memory
-    class ViewportManager,ViewportCache,ScrollPredictor viewport
-    class OptimizedLineIndexCache,IncrementalSyntaxHighlighter optimized
-    class PerformanceViews,PerformanceDashboard views
+    class PerformanceMonitor monitor
+    class TelemetryCollector monitor
+    class PerformanceMetrics metrics
+    class RenderingMetrics metrics
+    class MemoryMetrics metrics
+    class TextProcessingMetrics metrics
+    class PerformanceInsights insights
+    class PerformanceAnalyzer insights
+    class PerformancePredictor insights
+    class ProductionPerformanceMetrics insights
+    class AdaptivePerformanceMode adaptive
+    class PerformanceModeController adaptive
+    class MemoryMonitor memory
+    class MemoryPressureHandler memory
+    class MemoryLeakDetector memory
+    class ViewportManager viewport
+    class ViewportCache viewport
+    class ScrollPredictor viewport
+    class OptimizedLineIndexCache optimized
+    class IncrementalSyntaxHighlighter optimized
+    class PerformanceViews views
+    class PerformanceDashboard views
     class PerformanceMode enum
 ```
 
@@ -361,13 +375,29 @@ flowchart TD
     classDef process fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
     classDef decision fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef action fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef end fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
+    classDef endNode fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
     
-    class START,CONTINUE start
-    class COLLECT,ANALYZE,PREDICT,REPORT,VERIFY process
-    class CHECK,MEMORY,RENDERING,TEXT,SUCCESS decision
-    class IDENTIFY,ADAPT,CLEANUP,VIEWPORT,INCREMENTAL,MONITOR_MEM,OPTIMIZE_RENDER,BATCH action
-    class ESCALATE end
+    class START start
+    class CONTINUE start
+    class COLLECT process
+    class ANALYZE process
+    class PREDICT process
+    class REPORT process
+    class VERIFY process
+    class CHECK decision
+    class MEMORY decision
+    class RENDERING decision
+    class TEXT decision
+    class SUCCESS decision
+    class IDENTIFY action
+    class ADAPT action
+    class CLEANUP action
+    class VIEWPORT action
+    class INCREMENTAL action
+    class MONITOR_MEM action
+    class OPTIMIZE_RENDER action
+    class BATCH action
+    class ESCALATE endNode
 ```
 
 ## Key Performance Features

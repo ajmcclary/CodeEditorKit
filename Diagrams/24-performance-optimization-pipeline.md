@@ -76,11 +76,28 @@ flowchart TB
     classDef adaptive fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
     classDef implementation fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
     
-    class COLLECT,METRICS,PROFILE,TELEMETRY monitoring
-    class ANALYZE,BOTTLENECK,PATTERN,PREDICT analysis
-    class MEMORY,CPU,IO,RENDER,CACHE,ASYNC optimization
-    class DYNAMIC,LEARNING,FEEDBACK,TUNING adaptive
-    class APPLY,VALIDATE,ROLLBACK,MONITOR implementation
+    class COLLECT monitoring
+    class METRICS monitoring
+    class PROFILE monitoring
+    class TELEMETRY monitoring
+    class ANALYZE analysis
+    class BOTTLENECK analysis
+    class PATTERN analysis
+    class PREDICT analysis
+    class MEMORY optimization
+    class CPU optimization
+    class IO optimization
+    class RENDER optimization
+    class CACHE optimization
+    class ASYNC optimization
+    class DYNAMIC adaptive
+    class LEARNING adaptive
+    class FEEDBACK adaptive
+    class TUNING adaptive
+    class APPLY implementation
+    class VALIDATE implementation
+    class ROLLBACK implementation
+    class MONITOR implementation
 ```
 
 ## Detailed Performance Architecture
@@ -381,12 +398,30 @@ classDiagram
     classDef metrics fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
 
     class PerformanceOptimizationPipeline pipeline
-    class PerformanceMonitoringSystem,MetricsCollector,ContinuousProfiler,TelemetrySystem monitoring
-    class PerformanceAnalysisEngine,BottleneckDetector,PerformancePatternRecognizer,PredictivePerformanceAnalyzer analysis
-    class OptimizationStrategy,MemoryOptimizationStrategy,CPUOptimizationStrategy,RenderingOptimizationStrategy,IOOptimizationStrategy strategy
-    class AdaptiveOptimizationSystem,DynamicPerformanceAdjuster,PerformanceLearningSystem,PerformanceFeedbackLoop adaptive
-    class OptimizationImplementationLayer,OptimizationQueue,RollbackManager implementation
-    class PerformanceMetrics,CPUMetrics,MemoryMetrics,RenderingMetrics metrics
+    class PerformanceMonitoringSystem monitoring
+    class MetricsCollector monitoring
+    class ContinuousProfiler monitoring
+    class TelemetrySystem monitoring
+    class PerformanceAnalysisEngine analysis
+    class BottleneckDetector analysis
+    class PerformancePatternRecognizer analysis
+    class PredictivePerformanceAnalyzer analysis
+    class OptimizationStrategy strategy
+    class MemoryOptimizationStrategy strategy
+    class CPUOptimizationStrategy strategy
+    class RenderingOptimizationStrategy strategy
+    class IOOptimizationStrategy strategy
+    class AdaptiveOptimizationSystem adaptive
+    class DynamicPerformanceAdjuster adaptive
+    class PerformanceLearningSystem adaptive
+    class PerformanceFeedbackLoop adaptive
+    class OptimizationImplementationLayer implementation
+    class OptimizationQueue implementation
+    class RollbackManager implementation
+    class PerformanceMetrics metrics
+    class CPUMetrics metrics
+    class MemoryMetrics metrics
+    class RenderingMetrics metrics
 ```
 
 ## Performance Optimization Flow

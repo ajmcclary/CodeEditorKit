@@ -6,42 +6,42 @@ This diagram provides a comprehensive matrix view of language support capabiliti
 flowchart TB
     subgraph "Language Support Matrix"
         subgraph "Compiled Languages"
-            SWIFT[Swift<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>✅ LSP<br/>✅ Debugging<br/>✅ Refactoring]
-            CPP[C++<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (clangd)<br/>✅ Debugging<br/>✅ Refactoring]
-            C[C<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (clangd)<br/>✅ Debugging<br/>⚠️ Refactoring]
-            RUST[Rust<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (rust-analyzer)<br/>✅ Debugging<br/>✅ Refactoring]
-            GO[Go<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (gopls)<br/>✅ Debugging<br/>✅ Refactoring]
+            SWIFT[Swift<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>+ LSP<br/>+ Debugging<br/>+ Refactoring]
+            CPP[C++<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP clangd<br/>+ Debugging<br/>+ Refactoring]
+            C[C<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP clangd<br/>+ Debugging<br/>~ Refactoring]
+            RUST[Rust<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP rust-analyzer<br/>+ Debugging<br/>+ Refactoring]
+            GO[Go<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP gopls<br/>+ Debugging<br/>+ Refactoring]
         end
 
         subgraph "Dynamic Languages"
-            PYTHON[Python<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (Pylsp/Pyright)<br/>✅ Debugging<br/>✅ Refactoring]
-            JS[JavaScript<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (TypeScript)<br/>⚠️ Debugging<br/>✅ Refactoring]
-            TS[TypeScript<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (tsserver)<br/>✅ Debugging<br/>✅ Refactoring]
-            RUBY[Ruby<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (solargraph)<br/>⚠️ Debugging<br/>✅ Refactoring]
-            PHP[PHP<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (intelephense)<br/>⚠️ Debugging<br/>✅ Refactoring]
+            PYTHON[Python<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP Pylsp/Pyright<br/>+ Debugging<br/>+ Refactoring]
+            JS[JavaScript<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP TypeScript<br/>~ Debugging<br/>+ Refactoring]
+            TS[TypeScript<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP tsserver<br/>+ Debugging<br/>+ Refactoring]
+            RUBY[Ruby<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP solargraph<br/>~ Debugging<br/>+ Refactoring]
+            PHP[PHP<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP intelephense<br/>~ Debugging<br/>+ Refactoring]
         end
 
         subgraph "JVM Languages"
-            JAVA[Java<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (Eclipse JDT)<br/>✅ Debugging<br/>✅ Refactoring]
-            KOTLIN[Kotlin<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (Kotlin LSP)<br/>✅ Debugging<br/>✅ Refactoring]
-            SCALA[Scala<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (Metals)<br/>⚠️ Debugging<br/>✅ Refactoring]
+            JAVA[Java<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP Eclipse JDT<br/>+ Debugging<br/>+ Refactoring]
+            KOTLIN[Kotlin<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP Kotlin LSP<br/>+ Debugging<br/>+ Refactoring]
+            SCALA[Scala<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP Metals<br/>~ Debugging<br/>+ Refactoring]
         end
 
         subgraph "Functional Languages"
-            HASKELL[Haskell<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (HLS)<br/>⚠️ Debugging<br/>✅ Refactoring]
-            ELIXIR[Elixir<br/>✅ Completion<br/>✅ Symbols<br/>✅ Folding<br/>⚡ LSP (ElixirLS)<br/>⚠️ Debugging<br/>✅ Refactoring]
+            HASKELL[Haskell<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP HLS<br/>~ Debugging<br/>+ Refactoring]
+            ELIXIR[Elixir<br/>+ Completion<br/>+ Symbols<br/>+ Folding<br/>* LSP ElixirLS<br/>~ Debugging<br/>+ Refactoring]
         end
 
         subgraph "Data & Markup Languages"
-            JSON[JSON<br/>✅ Completion<br/>✅ Schema Validation<br/>✅ Folding<br/>⚡ LSP (JSON LSP)<br/>❌ Debugging<br/>⚠️ Formatting]
-            YAML[YAML<br/>✅ Completion<br/>✅ Schema Validation<br/>✅ Folding<br/>⚡ LSP (YAML LSP)<br/>❌ Debugging<br/>✅ Formatting]
-            XML[XML<br/>✅ Completion<br/>✅ Schema Validation<br/>✅ Folding<br/>⚡ LSP (XML LSP)<br/>❌ Debugging<br/>✅ Formatting]
-            MD[Markdown<br/>✅ Completion<br/>✅ Link Resolution<br/>✅ Folding<br/>⚡ LSP (Marksman)<br/>❌ Debugging<br/>✅ Formatting]
+            JSON[JSON<br/>+ Completion<br/>+ Schema Validation<br/>+ Folding<br/>* LSP JSON LSP<br/>- Debugging<br/>~ Formatting]
+            YAML[YAML<br/>+ Completion<br/>+ Schema Validation<br/>+ Folding<br/>* LSP YAML LSP<br/>- Debugging<br/>+ Formatting]
+            XML[XML<br/>+ Completion<br/>+ Schema Validation<br/>+ Folding<br/>* LSP XML LSP<br/>- Debugging<br/>+ Formatting]
+            MD[Markdown<br/>+ Completion<br/>+ Link Resolution<br/>+ Folding<br/>* LSP Marksman<br/>- Debugging<br/>+ Formatting]
         end
     end
 
     subgraph "Support Legend"
-        LEGEND[✅ Full Support<br/>⚡ External LSP<br/>⚠️ Limited Support<br/>❌ Not Applicable]
+        LEGEND[+ Full Support<br/>* External LSP<br/>~ Limited Support<br/>- Not Applicable]
     end
 
     %% Styling - Dark mode friendly colors
@@ -52,11 +52,25 @@ flowchart TB
     classDef data fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
     classDef legend fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
-    class SWIFT,CPP,C,RUST,GO compiled
-    class PYTHON,JS,TS,RUBY,PHP dynamic
-    class JAVA,KOTLIN,SCALA jvm
-    class HASKELL,ELIXIR functional
-    class JSON,YAML,XML,MD data
+    class SWIFT compiled
+    class CPP compiled
+    class C compiled
+    class RUST compiled
+    class GO compiled
+    class PYTHON dynamic
+    class JS dynamic
+    class TS dynamic
+    class RUBY dynamic
+    class PHP dynamic
+    class JAVA jvm
+    class KOTLIN jvm
+    class SCALA jvm
+    class HASKELL functional
+    class ELIXIR functional
+    class JSON data
+    class YAML data
+    class XML data
+    class MD data
     class LEGEND legend
 ```
 
@@ -335,14 +349,28 @@ classDiagram
 
     class LanguageSupportMatrix matrix
     class LanguageSupport support
-    class CompiledLanguageSupport,SwiftLanguageSupport,CppLanguageSupport compiled
-    class DynamicLanguageSupport,PythonLanguageSupport,JavaScriptLanguageSupport,TypeScriptLanguageSupport dynamic
-    class JVMLanguageSupport,JavaLanguageSupport,KotlinLanguageSupport jvm
-    class FunctionalLanguageSupport,HaskellLanguageSupport functional
-    class DataFormatSupport,JSONLanguageSupport,YAMLLanguageSupport data
-    class LSPIntegration,LSPCapability,DebuggingSupport integration
+    class CompiledLanguageSupport compiled
+    class SwiftLanguageSupport compiled
+    class CppLanguageSupport compiled
+    class DynamicLanguageSupport dynamic
+    class PythonLanguageSupport dynamic
+    class JavaScriptLanguageSupport dynamic
+    class TypeScriptLanguageSupport dynamic
+    class JVMLanguageSupport jvm
+    class JavaLanguageSupport jvm
+    class KotlinLanguageSupport jvm
+    class FunctionalLanguageSupport functional
+    class HaskellLanguageSupport functional
+    class DataFormatSupport data
+    class JSONLanguageSupport data
+    class YAMLLanguageSupport data
+    class LSPIntegration integration
+    class LSPCapability integration
+    class DebuggingSupport integration
     class LanguagePerformanceMetrics performance
-    class SupportLevel,Capability,OverallSupportLevel enum
+    class SupportLevel enum
+    class Capability enum
+    class OverallSupportLevel enum
 ```
 
 ## Language Support Tiers

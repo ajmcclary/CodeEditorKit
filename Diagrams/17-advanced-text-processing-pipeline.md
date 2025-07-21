@@ -309,13 +309,31 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class AdvancedTextProcessor processor
-    class TextValidationSystem,SinglePhaseRangeValidator,ThreePhaseRangeValidator,TokenSystemValidator,ValidationContext,HybridSyncAsyncValidator validation
-    class RangeManager,VersionedRange,RangeInvalidationBuffer,RangeCalculator range
-    class TextVersioningSystem,TextVersion,VersionedContent version
-    class TextSystemStyler,BasicTextSystemStyler,AdvancedTextSystemStyler,OptimizedTextSystemStyler,HybridTextSystemStyler styler
-    class ValidationResult,ValidationError,TextChange result
-    class TextProcessingOptimizer,AsyncTextProcessor optimizer
-    class ValidationMode,TextChangeType enum
+    class TextValidationSystem validation
+    class SinglePhaseRangeValidator validation
+    class ThreePhaseRangeValidator validation
+    class TokenSystemValidator validation
+    class ValidationContext validation
+    class HybridSyncAsyncValidator validation
+    class RangeManager range
+    class VersionedRange range
+    class RangeInvalidationBuffer range
+    class RangeCalculator range
+    class TextVersioningSystem version
+    class TextVersion version
+    class VersionedContent version
+    class TextSystemStyler styler
+    class BasicTextSystemStyler styler
+    class AdvancedTextSystemStyler styler
+    class OptimizedTextSystemStyler styler
+    class HybridTextSystemStyler styler
+    class ValidationResult result
+    class ValidationError result
+    class TextChange result
+    class TextProcessingOptimizer optimizer
+    class AsyncTextProcessor optimizer
+    class ValidationMode enum
+    class TextChangeType enum
 ```
 
 ## Text Processing Flow
@@ -373,12 +391,29 @@ flowchart TB
     classDef styler fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
     classDef output fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
     
-    class INPUT,OUTPUT input
-    class VALIDATE,OPTIMIZE,ASYNCP process
-    class SINGLE,THREE,TOKEN,BASIC,ADVANCED,OPTIM,ASYNC decision
-    class SINGLEV,THREEV,TOKENV,HYBRID validator
-    class RANGE,VERSION system
-    class STYLE,BASICS,ADVS,OPTS,HYBS styler
+    class INPUT input
+    class OUTPUT input
+    class VALIDATE process
+    class OPTIMIZE process
+    class ASYNCP process
+    class SINGLE decision
+    class THREE decision
+    class TOKEN decision
+    class BASIC decision
+    class ADVANCED decision
+    class OPTIM decision
+    class ASYNC decision
+    class SINGLEV validator
+    class THREEV validator
+    class TOKENV validator
+    class HYBRID validator
+    class RANGE system
+    class VERSION system
+    class STYLE styler
+    class BASICS styler
+    class ADVS styler
+    class OPTS styler
+    class HYBS styler
     class RESULT output
 ```
 

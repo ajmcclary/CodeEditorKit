@@ -350,15 +350,35 @@ classDiagram
     classDef shared fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class LanguageProviderFactory factory
-    class CompletionProviderRegistry,LanguageMetadataRegistry registry
-    class SwiftCompletionProvider,CppCompletionProvider,CCompletionProvider,RustCompletionProvider,GoCompletionProvider compiled
-    class PythonCompletionProvider,JavaScriptCompletionProvider,TypeScriptCompletionProvider,RubyCompletionProvider,PHPCompletionProvider dynamic
-    class JavaCompletionProvider,KotlinCompletionProvider,ScalaCompletionProvider jvm
-    class HaskellCompletionProvider,ElixirCompletionProvider functional
-    class JSONCompletionProvider,YAMLCompletionProvider,XMLCompletionProvider,MarkdownCompletionProvider data
-    class SymbolProviderRegistry,UniversalSymbolProvider symbol
-    class FoldingProviderRegistry,BraceFoldingProvider,IndentationFoldingProvider,CommentFoldingProvider folding
-    class SharedCompletionBuilder,LanguageMemberCompletions shared
+    class CompletionProviderRegistry registry
+    class LanguageMetadataRegistry registry
+    class SwiftCompletionProvider compiled
+    class CppCompletionProvider compiled
+    class CCompletionProvider compiled
+    class RustCompletionProvider compiled
+    class GoCompletionProvider compiled
+    class PythonCompletionProvider dynamic
+    class JavaScriptCompletionProvider dynamic
+    class TypeScriptCompletionProvider dynamic
+    class RubyCompletionProvider dynamic
+    class PHPCompletionProvider dynamic
+    class JavaCompletionProvider jvm
+    class KotlinCompletionProvider jvm
+    class ScalaCompletionProvider jvm
+    class HaskellCompletionProvider functional
+    class ElixirCompletionProvider functional
+    class JSONCompletionProvider data
+    class YAMLCompletionProvider data
+    class XMLCompletionProvider data
+    class MarkdownCompletionProvider data
+    class SymbolProviderRegistry symbol
+    class UniversalSymbolProvider symbol
+    class FoldingProviderRegistry folding
+    class BraceFoldingProvider folding
+    class IndentationFoldingProvider folding
+    class CommentFoldingProvider folding
+    class SharedCompletionBuilder shared
+    class LanguageMemberCompletions shared
 ```
 
 ## Language Support Matrix
@@ -406,11 +426,25 @@ flowchart TB
     classDef functional fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
     classDef data fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
 
-    class SWIFT,CPP,C,RUST,GO compiled
-    class PYTHON,JS,TS,RUBY,PHP dynamic
-    class JAVA,KOTLIN,SCALA jvm
-    class HASKELL,ELIXIR functional
-    class JSON,YAML,XML,MD data
+    class SWIFT compiled
+    class CPP compiled
+    class C compiled
+    class RUST compiled
+    class GO compiled
+    class PYTHON dynamic
+    class JS dynamic
+    class TS dynamic
+    class RUBY dynamic
+    class PHP dynamic
+    class JAVA jvm
+    class KOTLIN jvm
+    class SCALA jvm
+    class HASKELL functional
+    class ELIXIR functional
+    class JSON data
+    class YAML data
+    class XML data
+    class MD data
 ```
 
 ## Key Ecosystem Features

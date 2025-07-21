@@ -411,14 +411,37 @@ classDiagram
     classDef specialized fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
-    class UtilitySystemManager,CrossPlatformHelperManager manager
-    class FileSystemHelpers,NetworkHelpers,CryptographyHelpers,CompressionHelpers,ImageUtilities,TextUtilities,DataUtilities,DateTimeUtilities helper
-    class StringProcessor,RegexHelper,BinaryDataAnalyzer specialized
-    class PerformanceUtilityManager,CacheManager,LazyLoadingManager performance
-    class ConcurrencyUtilities,TaskManager,ThreadPoolManager concurrency
-    class ExtensionRegistry,Extension,ExtensionManifest extension
-    class UtilityProvider,CoreUtilityProvider,NetworkUtilityProvider,CryptoUtilityProvider,PerformanceUtilityProvider provider
-    class UtilityType,ExtensionState,CompressionAlgorithm,ImageFormat enum
+    class UtilitySystemManager manager
+    class CrossPlatformHelperManager manager
+    class FileSystemHelpers helper
+    class NetworkHelpers helper
+    class CryptographyHelpers helper
+    class CompressionHelpers helper
+    class ImageUtilities helper
+    class TextUtilities helper
+    class DataUtilities helper
+    class DateTimeUtilities helper
+    class StringProcessor specialized
+    class RegexHelper specialized
+    class BinaryDataAnalyzer specialized
+    class PerformanceUtilityManager performance
+    class CacheManager performance
+    class LazyLoadingManager performance
+    class ConcurrencyUtilities concurrency
+    class TaskManager concurrency
+    class ThreadPoolManager concurrency
+    class ExtensionRegistry extension
+    class Extension extension
+    class ExtensionManifest extension
+    class UtilityProvider provider
+    class CoreUtilityProvider provider
+    class NetworkUtilityProvider provider
+    class CryptoUtilityProvider provider
+    class PerformanceUtilityProvider provider
+    class UtilityType enum
+    class ExtensionState enum
+    class CompressionAlgorithm enum
+    class ImageFormat enum
 ```
 
 ## Utility System Integration Flow
@@ -502,11 +525,30 @@ flowchart TB
     classDef concurrency fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef result fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
 
-    class INIT,READY init
-    class LOAD,SCAN,VALIDATE,RESOLVE,REGISTER,ACTIVATE process
-    class FS,NET,CRYPTO,COMP,TEXT,DATA,IMG,DATE core
-    class CACHE,LAZY,PROF,MEM performance
-    class TASK,THREAD,LOCK,ATOMIC concurrency
+    class INIT init
+    class READY init
+    class LOAD process
+    class SCAN process
+    class VALIDATE process
+    class RESOLVE process
+    class REGISTER process
+    class ACTIVATE process
+    class FS core
+    class NET core
+    class CRYPTO core
+    class COMP core
+    class TEXT core
+    class DATA core
+    class IMG core
+    class DATE core
+    class CACHE performance
+    class LAZY performance
+    class PROF performance
+    class MEM performance
+    class TASK concurrency
+    class THREAD concurrency
+    class LOCK concurrency
+    class ATOMIC concurrency
     class PROVIDE result
 ```
 

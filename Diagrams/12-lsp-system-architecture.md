@@ -304,13 +304,29 @@ classDiagram
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
     class LSPManager manager
-    class LSPClientRegistry,LSPClient client
-    class LSPTransport,ProcessTransport,WebSocketTransport,TCPTransport transport
-    class LSPDocumentManager,LSPTextDocument document
-    class LSPMessageHandler,LSPMessage,LSPProtocol,LSPTypes,ServerCapabilities protocol
-    class LSPCompletionProvider,LSPHoverProvider,LSPDefinitionProvider,LSPDiagnosticsProvider provider
-    class LSPConfigurationProvider,LSPServerConfiguration,LSPPathResolver,RemoteLSPConfiguration config
-    class LSPClientState,LSPTransportType enum
+    class LSPClientRegistry client
+    class LSPClient client
+    class LSPTransport transport
+    class ProcessTransport transport
+    class WebSocketTransport transport
+    class TCPTransport transport
+    class LSPDocumentManager document
+    class LSPTextDocument document
+    class LSPMessageHandler protocol
+    class LSPMessage protocol
+    class LSPProtocol protocol
+    class LSPTypes protocol
+    class ServerCapabilities protocol
+    class LSPCompletionProvider provider
+    class LSPHoverProvider provider
+    class LSPDefinitionProvider provider
+    class LSPDiagnosticsProvider provider
+    class LSPConfigurationProvider config
+    class LSPServerConfiguration config
+    class LSPPathResolver config
+    class RemoteLSPConfiguration config
+    class LSPClientState enum
+    class LSPTransportType enum
 ```
 
 ## LSP System Flow

@@ -95,10 +95,23 @@ flowchart TB
     classDef process fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
     classDef types fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
     
-    class UI,TEXT,SYS,SERV,CONF source
-    class EMIT,FILTER,QUEUE,DISPATCH,REG,PRIORITY system
-    class SYNC,ASYNC,BATCH handler
-    class PRE,EXEC,POST process
+    class UI source
+    class TEXT source
+    class SYS source
+    class SERV source
+    class CONF source
+    class EMIT system
+    class FILTER system
+    class QUEUE system
+    class DISPATCH system
+    class REG system
+    class PRIORITY system
+    class SYNC handler
+    class ASYNC handler
+    class BATCH handler
+    class PRE process
+    class EXEC process
+    class POST process
     class TYPES types
 ```
 

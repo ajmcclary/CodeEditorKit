@@ -134,13 +134,32 @@ flowchart TB
     classDef process fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
     classDef perf fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     
-    class FILE,CONTENT,MANUAL input
-    class LDS,DETECT,LANG,REG detection
-    class COORD,SELECT,CACHE coordinator
-    class SS,PARSE,VISIT,ASTCACHE swift
-    class RH,PATTERNS,TOKENIZE regex
-    class TOKENS,MERGE,OPTIMIZE,ATTRS,THEME,ASYNC process
-    class DEBOUNCE,VIEWPORT,INCREMENTAL perf
+    class FILE input
+    class CONTENT input
+    class MANUAL input
+    class LDS detection
+    class DETECT detection
+    class LANG detection
+    class REG detection
+    class COORD coordinator
+    class SELECT coordinator
+    class CACHE coordinator
+    class SS swift
+    class PARSE swift
+    class VISIT swift
+    class ASTCACHE swift
+    class RH regex
+    class PATTERNS regex
+    class TOKENIZE regex
+    class TOKENS process
+    class MERGE process
+    class OPTIMIZE process
+    class ATTRS process
+    class THEME process
+    class ASYNC process
+    class DEBOUNCE perf
+    class VIEWPORT perf
+    class INCREMENTAL perf
 ```
 
 ## Language Configuration Example

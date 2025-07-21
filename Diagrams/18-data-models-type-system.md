@@ -443,15 +443,40 @@ classDiagram
     classDef perf fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
 
-    class TypeSystem,TypeRegistry system
-    class FoldableRegion,MarkedText,TextMarker,MarkerData,RegionMetadata,TextSegment,SegmentMetadata model
-    class Token,SemanticInfo,TokenType,SyntaxKind token
-    class Versioned,VersionedContent,VersionMetadata,VersionDifference version
-    class RangeMutation,MutationResult mutation
-    class TypeInformation,TypeKind,GenericParameter,TypeConstraint,TypeMember type
-    class ContentType,LineEndingType,ChangeType,NSTextSegmentType content
-    class ModelPerformanceTracker,ModelCache perf
-    class FoldingType,MarkerType,MutationType,RelationshipType enum
+    class TypeSystem system
+    class TypeRegistry system
+    class FoldableRegion model
+    class MarkedText model
+    class TextMarker model
+    class MarkerData model
+    class RegionMetadata model
+    class TextSegment model
+    class SegmentMetadata model
+    class Token token
+    class SemanticInfo token
+    class TokenType token
+    class SyntaxKind token
+    class Versioned version
+    class VersionedContent version
+    class VersionMetadata version
+    class VersionDifference version
+    class RangeMutation mutation
+    class MutationResult mutation
+    class TypeInformation type
+    class TypeKind type
+    class GenericParameter type
+    class TypeConstraint type
+    class TypeMember type
+    class ContentType content
+    class LineEndingType content
+    class ChangeType content
+    class NSTextSegmentType content
+    class ModelPerformanceTracker perf
+    class ModelCache perf
+    class FoldingType enum
+    class MarkerType enum
+    class MutationType enum
+    class RelationshipType enum
 ```
 
 ## Data Model Interaction Flow
