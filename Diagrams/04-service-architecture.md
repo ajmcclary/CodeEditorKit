@@ -4,174 +4,185 @@ This diagram shows the service-oriented architecture and how services interact w
 
 ```mermaid
 classDiagram
-    %% Service Registry
+    %% Central Service Registry
     class BusinessLogicServiceRegistry {
-        -services: Dictionary~String, Any~
-        -eventSystem: UnifiedEventSystem
-        +shared: BusinessLogicServiceRegistry
-        +register~T~(type: T.Type, service: T)
-        +resolve~T~(type: T.Type) T?
-        +initialize(eventSystem: UnifiedEventSystem)
+        &lt;&lt;dependency injection container&gt;&gt;
+        -services Dictionary~String, Any~
+        -eventSystem UnifiedEventSystem
+        +shared BusinessLogicServiceRegistry
+        +register~T~(type T.Type, service T)
+        +resolve~T~(type T.Type) T?
+        +initialize(eventSystem UnifiedEventSystem)
         +shutdown()
     }
 
-    %% Core Services
+    %% Text Processing Services
     class TextEditingService {
-        -textView: CodeEditorView
-        -undoManager: UndoManager
+        &lt;&lt;text operations&gt;&gt;
+        -textView CodeEditorView
+        -undoManager UndoManager
         +performEdit(EditAction)
-        +insertText(String, at: NSRange)
-        +deleteText(in: NSRange)
-        +replaceText(in: NSRange, with: String)
-        +applyIndentation(to: NSRange)
-        +toggleComment(in: NSRange)
+        +insertText(String, at NSRange)
+        +deleteText(in NSRange)
+        +replaceText(in NSRange, with String)
+        +applyIndentation(to NSRange)
+        +toggleComment(in NSRange)
     }
 
     class EditAction {
-        &lt;&lt;enumeration&gt;&gt;
-        insert(text: String, range: NSRange)
-        delete(range: NSRange)
-        replace(range: NSRange, text: String)
-        indent(range: NSRange)
-        outdent(range: NSRange)
-        comment(range: NSRange)
+        &lt;&lt;operation types&gt;&gt;
+        insert(text String, range NSRange)
+        delete(range NSRange)
+        replace(range NSRange, text String)
+        indent(range NSRange)
+        outdent(range NSRange)
+        comment(range NSRange)
     }
 
     class SyntaxHighlightingService {
-        -coordinator: SyntaxHighlightingCoordinator
-        -cache: HighlightingCache
-        -queue: DispatchQueue
-        +highlightDocument(text: String, language: LanguageConfig)
-        +highlightRange(NSRange, in: String, language: LanguageConfig)
-        +invalidateCache(for: NSRange?)
+        &lt;&lt;syntax coloring&gt;&gt;
+        -coordinator SyntaxHighlightingCoordinator
+        -cache HighlightingCache
+        -queue DispatchQueue
+        +highlightDocument(text String, language LanguageConfig)
+        +highlightRange(NSRange, in String, language LanguageConfig)
+        +invalidateCache(for NSRange?)
         +cancelPendingHighlighting()
     }
 
     class LanguageDetectionService {
-        -detectors: [LanguageDetector]
-        -cache: Dictionary~String, LanguageConfig~
-        +detectLanguage(fileExtension: String) LanguageConfig?
-        +detectLanguage(content: String) LanguageConfig?
+        &lt;&lt;language recognition&gt;&gt;
+        -detectors [LanguageDetector]
+        -cache Dictionary~String, LanguageConfig~
+        +detectLanguage(fileExtension String) LanguageConfig?
+        +detectLanguage(content String) LanguageConfig?
         +registerDetector(LanguageDetector)
         +clearCache()
     }
 
     class CompletionManager {
-        -providers: Dictionary~String, CompletionProvider~
-        -activeSession: CompletionSession?
-        -debouncer: Debouncer
-        +requestCompletions(context: CompletionContext)
-        +registerProvider(for: String, provider: CompletionProvider)
+        &lt;&lt;code completion&gt;&gt;
+        -providers Dictionary~String, CompletionProvider~
+        -activeSession CompletionSession?
+        -debouncer Debouncer
+        +requestCompletions(context CompletionContext)
+        +registerProvider(for String, provider CompletionProvider)
         +cancelActiveSession()
         +applyCompletion(CompletionItem)
     }
 
     class MemoryMonitor {
-        -threshold: Double
-        -timer: Timer?
-        -delegate: MemoryMonitorDelegate?
-        +startMonitoring(interval: TimeInterval)
+        &lt;&lt;resource monitoring&gt;&gt;
+        -threshold Double
+        -timer Timer?
+        -delegate MemoryMonitorDelegate?
+        +startMonitoring(interval TimeInterval)
         +stopMonitoring()
         +currentMemoryUsage() Double
         +checkMemoryPressure()
     }
 
-    %% Service Lifecycle
+    %% Service Infrastructure
     class ServiceLifecycle {
-        &lt;&lt;interface&gt;&gt;
+        &lt;&lt;lifecycle protocol&gt;&gt;
         +initialize()
         +shutdown()
         +suspend()
         +resume()
     }
 
-    %% Service Dependencies
     class ServiceDependencies {
-        +eventSystem: UnifiedEventSystem
-        +configuration: EditorConfiguration
-        +logger: CrossPlatformLogger
-        +cache: CacheManager
+        &lt;&lt;dependency container&gt;&gt;
+        +eventSystem UnifiedEventSystem
+        +configuration EditorConfiguration
+        +logger CrossPlatformLogger
+        +cache CacheManager
     }
 
-    %% Coordination
+    %% Service Coordination Layer
     class SyntaxHighlightingCoordinator {
-        -highlighters: Dictionary~String, SyntaxHighlighter~
-        -swiftSyntaxHighlighter: SwiftSyntaxHighlighter?
-        -regexHighlighter: RegexHighlighter
-        +coordinate(request: HighlightingRequest)
-        +selectHighlighter(for: LanguageConfig) SyntaxHighlighter
+        &lt;&lt;highlighting orchestrator&gt;&gt;
+        -highlighters Dictionary~String, SyntaxHighlighter~
+        -swiftSyntaxHighlighter SwiftSyntaxHighlighter?
+        -regexHighlighter RegexHighlighter
+        +coordinate(request HighlightingRequest)
+        +selectHighlighter(for LanguageConfig) SyntaxHighlighter
     }
 
     class CompletionSession {
-        +id: UUID
-        +context: CompletionContext
-        +provider: CompletionProvider
-        +startTime: Date
-        +items: [CompletionItem]
-        +isActive: Bool
+        &lt;&lt;completion state&gt;&gt;
+        +id UUID
+        +context CompletionContext
+        +provider CompletionProvider
+        +startTime Date
+        +items [CompletionItem]
+        +isActive Bool
         +cancel()
     }
 
-    %% Cache Management
+    %% Performance & Caching
     class CacheManager {
-        -caches: Dictionary~String, Cache~
-        +syntaxCache: Cache~HighlightingResult~
-        +completionCache: Cache~CompletionResult~
-        +languageCache: Cache~LanguageConfig~
+        &lt;&lt;cache orchestrator&gt;&gt;
+        -caches Dictionary~String, Cache~
+        +syntaxCache Cache~HighlightingResult~
+        +completionCache Cache~CompletionResult~
+        +languageCache Cache~LanguageConfig~
         +clearAll()
         +clearExpired()
     }
 
-    %% Event Integration
     class ServiceEventHandler {
-        -registry: BusinessLogicServiceRegistry
+        &lt;&lt;event dispatcher&gt;&gt;
+        -registry BusinessLogicServiceRegistry
         +handleTextChange(Event)
         +handleLanguageChange(Event)
         +handleConfigurationChange(Event)
         +handleMemoryWarning(Event)
     }
 
-    %% Missing Referenced Components
+    %% Provider Protocols & Support Types
     class LanguageDetector {
-        <<protocol>>
-        +detectorName: String
-        +supportedExtensions: [String]
-        +confidence: Double
-        +detectLanguage(content: String) LanguageConfig?
-        +detectLanguage(fileExtension: String) LanguageConfig?
-        +canDetect(content: String) Bool
+        &lt;&lt;detection protocol&gt;&gt;
+        +detectorName String
+        +supportedExtensions [String]
+        +confidence Double
+        +detectLanguage(content String) LanguageConfig?
+        +detectLanguage(fileExtension String) LanguageConfig?
+        +canDetect(content String) Bool
     }
 
     class CompletionProvider {
-        <<protocol>>
-        +providerId: String
-        +supportedLanguages: [String]
-        +priority: Int
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +canProvideCompletions(context: CompletionContext) Bool
+        &lt;&lt;completion protocol&gt;&gt;
+        +providerId String
+        +supportedLanguages [String]
+        +priority Int
+        +provideCompletions(context CompletionContext) [CompletionItem]
+        +canProvideCompletions(context CompletionContext) Bool
     }
 
     class CompletionContext {
-        +position: NSRange
-        +text: String
-        +language: LanguageConfig?
-        +triggerCharacter: String?
-        +isRetrigger: Bool
-        +previousContext: CompletionContext?
+        &lt;&lt;completion request&gt;&gt;
+        +position NSRange
+        +text String
+        +language LanguageConfig?
+        +triggerCharacter String?
+        +isRetrigger Bool
+        +previousContext CompletionContext?
     }
 
     class CompletionItem {
-        +title: String
-        +detail: String?
-        +kind: CompletionItemKind
-        +insertText: String
-        +replaceRange: NSRange
-        +priority: Int
-        +documentation: String?
+        &lt;&lt;completion suggestion&gt;&gt;
+        +title String
+        +detail String?
+        +kind CompletionItemKind
+        +insertText String
+        +replaceRange NSRange
+        +priority Int
+        +documentation String?
     }
 
     class CompletionItemKind {
-        <<enumeration>>
+        &lt;&lt;suggestion types&gt;&gt;
         text
         method
         function
@@ -192,96 +203,108 @@ classDiagram
         reference
     }
 
+    %% Supporting Infrastructure
     class MemoryMonitorDelegate {
-        <<protocol>>
-        +memoryMonitor(MemoryMonitor, didExceedThreshold: Double)
-        +memoryMonitor(MemoryMonitor, memoryPressureChanged: MemoryPressure)
+        &lt;&lt;monitoring protocol&gt;&gt;
+        +memoryMonitor(MemoryMonitor, didExceedThreshold Double)
+        +memoryMonitor(MemoryMonitor, memoryPressureChanged MemoryPressure)
         +memoryMonitorDidReceiveWarning(MemoryMonitor)
     }
 
     class Debouncer {
-        +delay: TimeInterval
-        +queue: DispatchQueue
-        +workItem: DispatchWorkItem?
-        +debounce(action: @escaping () -> Void)
+        &lt;&lt;timing utility&gt;&gt;
+        +delay TimeInterval
+        +queue DispatchQueue
+        +workItem DispatchWorkItem?
+        +debounce(action @escaping () -> Void)
         +cancel()
         +flush()
     }
 
+    %% Syntax Highlighting System
     class HighlightingCache {
-        +maxSize: Int
-        +cache: LRUCache~String, HighlightingResult~
-        +store(key: String, result: HighlightingResult)
-        +retrieve(key: String) HighlightingResult?
-        +invalidate(key: String)
+        &lt;&lt;highlighting cache&gt;&gt;
+        +maxSize Int
+        +cache LRUCache~String, HighlightingResult~
+        +store(key String, result HighlightingResult)
+        +retrieve(key String) HighlightingResult?
+        +invalidate(key String)
         +clear()
     }
 
     class HighlightingRequest {
-        +text: String
-        +language: LanguageConfig
-        +range: NSRange?
-        +priority: HighlightingPriority
-        +completion: (HighlightingResult) -> Void
+        &lt;&lt;highlighting task&gt;&gt;
+        +text String
+        +language LanguageConfig
+        +range NSRange?
+        +priority HighlightingPriority
+        +completion (HighlightingResult) -> Void
     }
 
     class HighlightingResult {
-        +attributedString: NSAttributedString
-        +tokens: [SyntaxToken]
-        +processingTime: TimeInterval
-        +cacheKey: String
-        +isFromCache: Bool
+        &lt;&lt;highlighting output&gt;&gt;
+        +attributedString NSAttributedString
+        +tokens [SyntaxToken]
+        +processingTime TimeInterval
+        +cacheKey String
+        +isFromCache Bool
     }
 
     class SyntaxHighlighter {
-        <<protocol>>
-        +highlighterName: String
-        +supportedLanguages: [String]
-        +highlight(text: String, language: LanguageConfig) HighlightingResult
-        +highlightRange(text: String, range: NSRange, language: LanguageConfig) HighlightingResult
-        +canHighlight(language: LanguageConfig) Bool
+        &lt;&lt;highlighter protocol&gt;&gt;
+        +highlighterName String
+        +supportedLanguages [String]
+        +highlight(text String, language LanguageConfig) HighlightingResult
+        +highlightRange(text String, range NSRange, language LanguageConfig) HighlightingResult
+        +canHighlight(language LanguageConfig) Bool
     }
 
     class SwiftSyntaxHighlighter {
-        +swiftSyntax: SwiftSyntaxAPI
-        +colorScheme: SyntaxColorScheme
-        +highlight(text: String, language: LanguageConfig) HighlightingResult
-        +parseSwiftCode(text: String) SyntaxTree
-        +applyColors(tokens: [SyntaxToken]) NSAttributedString
+        &lt;&lt;Swift AST highlighter&gt;&gt;
+        +swiftSyntax SwiftSyntaxAPI
+        +colorScheme SyntaxColorScheme
+        +highlight(text String, language LanguageConfig) HighlightingResult
+        +parseSwiftCode(text String) SyntaxTree
+        +applyColors(tokens [SyntaxToken]) NSAttributedString
     }
 
     class RegexHighlighter {
-        +patterns: [String: NSRegularExpression]
-        +colorMappings: [String: NSColor]
-        +highlight(text: String, language: LanguageConfig) HighlightingResult
-        +loadPatterns(for: LanguageConfig) [NSRegularExpression]
-        +applyPattern(pattern: NSRegularExpression, to: String) [SyntaxToken]
+        &lt;&lt;pattern-based highlighter&gt;&gt;
+        +patterns [String: NSRegularExpression]
+        +colorMappings [String: NSColor]
+        +highlight(text String, language LanguageConfig) HighlightingResult
+        +loadPatterns(for LanguageConfig) [NSRegularExpression]
+        +applyPattern(pattern NSRegularExpression, to String) [SyntaxToken]
     }
 
+    %% Generic Cache System
     class Cache~T~ {
-        +maxSize: Int
-        +storage: [String: CacheEntry~T~]
-        +hitCount: Int
-        +missCount: Int
-        +store(key: String, value: T, expiry: Date?)
-        +retrieve(key: String) T?
-        +remove(key: String)
+        &lt;&lt;generic cache&gt;&gt;
+        +maxSize Int
+        +storage [String: CacheEntry~T~]
+        +hitCount Int
+        +missCount Int
+        +store(key String, value T, expiry Date?)
+        +retrieve(key String) T?
+        +remove(key String)
         +clear()
     }
 
     class CacheEntry~T~ {
-        +value: T
-        +timestamp: Date
-        +expiry: Date?
-        +accessCount: Int
-        +isExpired: Bool
+        &lt;&lt;cache entry&gt;&gt;
+        +value T
+        +timestamp Date
+        +expiry Date?
+        +accessCount Int
+        +isExpired Bool
     }
 
     class SyntaxToken {
-        +text: String
-        +range: NSRange
-        +type: SyntaxTokenType
-        +attributes: [NSAttributedString.Key: Any]
+        &lt;&lt;syntax element&gt;&gt;
+        +text String
+        +range NSRange
+        +type SyntaxTokenType
+        +attributes [NSAttributedString.Key: Any]
     }
 
     class SyntaxTokenType {

@@ -3,122 +3,127 @@
 This diagram shows the overall architecture of the CodeEditorPlugin framework, illustrating the main layers and their relationships.
 
 ```mermaid
-graph TB
-    %% SwiftUI Layer
-    subgraph "SwiftUI Integration"
-        SE[CodeEditor<br/>SwiftUI View]
-        ENV[Environment Values]
-        MOD[View Modifiers]
+graph TD
+    %% SwiftUI Integration Layer
+    subgraph SUI [" SwiftUI Integration Layer "]
+        direction TB
+        SE["CodeEditor<br/>Main SwiftUI View"]
+        ENV["Environment<br/>Values & Config"]
+        MOD["View Modifiers<br/>Customization"]
     end
 
-    %% Core Layer
-    subgraph "Core Components"
-        API[CodeEditorAPI<br/>Protocol]
-        CEV[CodeEditorView<br/>NSTextView/UITextView]
-        CCV[CodeEditorContainerView]
-        UES[UnifiedEventSystem]
+    %% Core Framework Layer  
+    subgraph CORE [" Core Framework "]
+        direction TB
+        API["CodeEditorAPI<br/>Main Protocol"]
+        CEV["CodeEditorView<br/>Text Engine Core"]
+        CCV["ContainerView<br/>Layout Manager"]
+        UES["Event System<br/>Coordination Hub"]
     end
 
-    %% Services Layer
-    subgraph "Services"
-        BLS[BusinessLogicServiceRegistry]
-        TES[TextEditingService]
-        LDS[LanguageDetectionService]
-        SHS[SyntaxHighlightingService]
-        CMS[CompletionManager]
-        MMS[MemoryMonitor]
+    %% Business Services Layer
+    subgraph SERVICES [" Business Logic Services "]
+        direction TB
+        BLS["Service Registry<br/>Dependency Injection"]
+        subgraph SRVS [" Core Services "]
+            TES["Text Editing<br/>Operations"]
+            LDS["Language<br/>Detection"] 
+            SHS["Syntax<br/>Highlighting"]
+            CMS["Code<br/>Completion"]
+            MMS["Memory<br/>Monitoring"]
+        end
     end
 
-    %% Configuration
-    subgraph "Configuration"
-        EC[EditorConfiguration]
-        DC[Display Config]
-        LC[Layout Config]
-        BC[Behavior Config]
-        PC[Performance Config]
+    %% Configuration System
+    subgraph CONFIG [" Configuration System "]
+        direction TB
+        EC["Editor<br/>Configuration"]
+        subgraph CFGS [" Config Modules "]
+            DC["Display<br/>Settings"]
+            LC["Layout<br/>Options"]
+            BC["Behavior<br/>Rules"] 
+            PC["Performance<br/>Tuning"]
+        end
     end
 
-    %% Platform Abstraction
-    subgraph "Platform Abstraction"
-        PAB[Platform Capabilities]
-        PV[PlatformView]
-        PF[PlatformFont]
-        PCL[PlatformColor]
-        CPC[CrossPlatformCoordinator]
+    %% Platform Abstraction Layer
+    subgraph PLATFORM [" Platform Abstraction "]
+        direction TB
+        PAB["Platform<br/>Capabilities"]
+        subgraph PLATS [" Platform Types "]
+            PV["Platform<br/>Views"]
+            PF["Platform<br/>Fonts"]
+            PCL["Platform<br/>Colors"]
+            CPC["Cross-Platform<br/>Coordinator"]
+        end
     end
 
-    %% Features
-    subgraph "Features"
-        GUT[Gutter]
-        MM[Minimap]
-        BRA[Bracket Matching]
-        FOLD[Code Folding]
-        IND[Indentation]
-        ANN[Annotations]
+    %% Feature Components
+    subgraph FEATURES [" Feature Components "]
+        direction TB
+        subgraph UI_FEAT [" UI Features "]
+            GUT["Line Numbers<br/>& Gutter"]
+            MM["Code<br/>Minimap"]
+        end
+        subgraph EDIT_FEAT [" Editing Features "]
+            BRA["Bracket<br/>Matching"]
+            FOLD["Code<br/>Folding"]
+            IND["Smart<br/>Indentation"]
+            ANN["Code<br/>Annotations"]
+        end
     end
 
-    %% Language Support
-    subgraph "Language Support"
-        LP[Language Providers]
-        SHL[Syntax Highlighters]
-        CP[Completion Providers]
-        TOK[Tokenizers]
+    %% Language Support System
+    subgraph LANG [" Language Support "]
+        direction TB
+        LP["Language Provider<br/>Framework"]
+        subgraph LANG_COMP [" Language Components "]
+            SHL["Syntax<br/>Highlighters"]
+            CP["Completion<br/>Providers"] 
+            TOK["Language<br/>Tokenizers"]
+        end
     end
 
-    %% External
-    subgraph "External Integration"
-        LSP[LSP Client]
-        PLG[Plugin System]
-        SS[SwiftSyntax]
+    %% External Integrations
+    subgraph EXTERNAL [" External Integrations "]
+        direction TB
+        LSP["LSP Client<br/>Language Servers"]
+        PLG["Plugin System<br/>Extensibility"]
+        SS["SwiftSyntax<br/>Swift AST"]
     end
 
-    %% Connections
+    %% Main Architecture Flow
+    SUI -.-> CORE
+    CORE --> SERVICES
+    SERVICES --> CONFIG
+    CORE --> PLATFORM
+    
+    %% Detailed Connections
     SE --> API
-    SE --> ENV
-    SE --> MOD
-    
-    API <--> CEV
-    CEV --> CCV
-    CCV --> UES
-    
-    UES <--> BLS
-    BLS --> TES
-    BLS --> LDS
-    BLS --> SHS
-    BLS --> CMS
-    BLS --> MMS
-    
-    EC --> DC
-    EC --> LC
-    EC --> BC
-    EC --> PC
-    
-    CEV --> PAB
-    PAB --> PV
-    PAB --> PF
-    PAB --> PCL
-    PAB --> CPC
-    
-    CCV --> GUT
-    CCV --> MM
-    CEV --> BRA
-    CEV --> FOLD
-    CEV --> IND
-    CEV --> ANN
-    
-    SHS --> LP
-    LP --> SHL
-    LP --> CP
-    LP --> TOK
-    
-    CMS --> LSP
-    CEV --> PLG
-    SHL --> SS
-    
     ENV --> EC
     MOD --> EC
     
-    %% Styling - Dark mode friendly colors
+    API --> CEV
+    CEV --> CCV
+    CEV --> UES
+    
+    UES --> BLS
+    BLS --> SRVS
+    
+    EC --> CFGS
+    PAB --> PLATS
+    
+    CCV --> UI_FEAT
+    CEV --> EDIT_FEAT
+    
+    SHS --> LP
+    LP --> LANG_COMP
+    
+    CMS --> LSP
+    SHL --> SS
+    CEV --> PLG
+    
+    %% Styling - Dark mode friendly colors  
     classDef swiftui fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
     classDef core fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
     classDef service fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
@@ -128,6 +133,7 @@ graph TB
     classDef lang fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
     classDef external fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
     
+    %% Apply styling to components
     class SE swiftui
     class ENV swiftui
     class MOD swiftui

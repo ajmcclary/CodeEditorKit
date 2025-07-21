@@ -4,61 +4,66 @@ This diagram illustrates the comprehensive configuration system used throughout 
 
 ```mermaid
 classDiagram
-    %% Main Configuration
+    %% Root Configuration
     class EditorConfiguration {
-        +display: DisplayConfiguration
-        +layout: LayoutConfiguration
-        +behavior: BehaviorConfiguration
-        +performance: PerformanceConfiguration
-        +static defaultConfiguration: EditorConfiguration
-        +static minimalConfiguration: EditorConfiguration
-        +static performanceConfiguration: EditorConfiguration
+        &lt;&lt;configuration root&gt;&gt;
+        +display DisplayConfiguration
+        +layout LayoutConfiguration
+        +behavior BehaviorConfiguration
+        +performance PerformanceConfiguration
+        +static defaultConfiguration EditorConfiguration
+        +static minimalConfiguration EditorConfiguration
+        +static performanceConfiguration EditorConfiguration
         +validate() throws
-        +copy(with: (inout EditorConfiguration) -> Void) EditorConfiguration
+        +copy(with (inout EditorConfiguration) -> Void) EditorConfiguration
     }
 
-    %% Display Configuration
+    %% Visual Display Settings
     class DisplayConfiguration {
-        +fontSize: CGFloat
-        +fontName: String?
-        +showLineNumbers: Bool
-        +showInvisibles: Bool
-        +showMinimap: Bool
-        +theme: ThemeConfiguration
-        +cursorStyle: CursorStyle
-        +selectionStyle: SelectionStyle
+        &lt;&lt;visual settings&gt;&gt;
+        +fontSize CGFloat
+        +fontName String?
+        +showLineNumbers Bool
+        +showInvisibles Bool
+        +showMinimap Bool
+        +theme ThemeConfiguration
+        +cursorStyle CursorStyle
+        +selectionStyle SelectionStyle
     }
 
     class ThemeConfiguration {
-        +backgroundColor: Color
-        +textColor: Color
-        +lineNumberColor: Color
-        +gutterBackgroundColor: Color
-        +selectionColor: Color
-        +cursorColor: Color
-        +syntaxColors: SyntaxColorScheme
+        &lt;&lt;color theme&gt;&gt;
+        +backgroundColor Color
+        +textColor Color
+        +lineNumberColor Color
+        +gutterBackgroundColor Color
+        +selectionColor Color
+        +cursorColor Color
+        +syntaxColors SyntaxColorScheme
     }
 
     class SyntaxColorScheme {
-        +keyword: Color
-        +string: Color
-        +comment: Color
-        +number: Color
-        +function: Color
-        +type: Color
-        +variable: Color
-        +operator: Color
+        &lt;&lt;syntax coloring&gt;&gt;
+        +keyword Color
+        +string Color
+        +comment Color
+        +number Color
+        +function Color
+        +type Color
+        +variable Color
+        +operator Color
     }
 
-    %% Layout Configuration
+    %% Layout & Spacing Settings
     class LayoutConfiguration {
-        +tabWidth: Int
-        +indentStyle: IndentStyle
-        +lineWrapping: LineWrappingMode
-        +gutterWidth: CGFloat?
-        +minimapWidth: CGFloat
-        +lineSpacing: CGFloat
-        +contentInsets: EdgeInsets
+        &lt;&lt;layout settings&gt;&gt;
+        +tabWidth Int
+        +indentStyle IndentStyle
+        +lineWrapping LineWrappingMode
+        +gutterWidth CGFloat?
+        +minimapWidth CGFloat
+        +lineSpacing CGFloat
+        +contentInsets EdgeInsets
     }
 
     class IndentStyle {
@@ -74,15 +79,16 @@ classDiagram
         character
     }
 
-    %% Behavior Configuration
+    %% Editor Behavior Settings
     class BehaviorConfiguration {
-        +autoIndent: Bool
-        +autoCloseBrackets: Bool
-        +highlightMatchingBrackets: Bool
-        +enableCompletions: Bool
-        +completionTriggerCharacters: Set~String~
-        +tabKeyBehavior: TabKeyBehavior
-        +pasteFormatting: PasteFormatting
+        &lt;&lt;editing behavior&gt;&gt;
+        +autoIndent Bool
+        +autoCloseBrackets Bool
+        +highlightMatchingBrackets Bool
+        +enableCompletions Bool
+        +completionTriggerCharacters Set~String~
+        +tabKeyBehavior TabKeyBehavior
+        +pasteFormatting PasteFormatting
     }
 
     class TabKeyBehavior {
@@ -92,19 +98,21 @@ classDiagram
         triggerCompletion
     }
 
-    %% Performance Configuration
+    %% Performance & Optimization Settings
     class PerformanceConfiguration {
-        +asyncHighlighting: Bool
-        +highlightingDebounce: TimeInterval
-        +maxHighlightingLength: Int
-        +enableLineCache: Bool
-        +cacheSize: Int
-        +virtualScrolling: Bool
-        +memoryWarningThreshold: Double
+        &lt;&lt;performance tuning&gt;&gt;
+        +asyncHighlighting Bool
+        +highlightingDebounce TimeInterval
+        +maxHighlightingLength Int
+        +enableLineCache Bool
+        +cacheSize Int
+        +virtualScrolling Bool
+        +memoryWarningThreshold Double
     }
 
-    %% Configuration Management
+    %% Configuration Management System
     class ConfigurationValidator {
+        &lt;&lt;validation logic&gt;&gt;
         +validate(EditorConfiguration) throws
         +validateFontSize(CGFloat) throws
         +validateTabWidth(Int) throws
@@ -112,6 +120,7 @@ classDiagram
     }
 
     class ConfigurationPresets {
+        &lt;&lt;preset factory&gt;&gt;
         +minimal() EditorConfiguration
         +standard() EditorConfiguration
         +performance() EditorConfiguration
@@ -119,25 +128,26 @@ classDiagram
         +custom(builder) EditorConfiguration
     }
 
-    %% SwiftUI Integration
+    %% SwiftUI Integration Layer
     class ConfigurationEnvironmentKey {
         &lt;&lt;EnvironmentKey&gt;&gt;
-        +defaultValue: EditorConfiguration
+        +defaultValue EditorConfiguration
     }
 
     class AppState {
         &lt;&lt;ObservableObject&gt;&gt;
-        @Published configuration: EditorConfiguration
+        @Published configuration EditorConfiguration
         +updateConfiguration((inout EditorConfiguration) -> Void)
         +resetToDefault()
         +loadFromUserDefaults()
         +saveToUserDefaults()
     }
 
-    %% Configuration Storage
+    %% Persistence & Storage
     class ConfigurationPersistence {
-        +save(EditorConfiguration, to: URL) throws
-        +load(from: URL) EditorConfiguration throws
+        &lt;&lt;data persistence&gt;&gt;
+        +save(EditorConfiguration, to URL) throws
+        +load(from URL) EditorConfiguration throws
         +encodeJSON(EditorConfiguration) Data throws
         +decodeJSON(Data) EditorConfiguration throws
     }
