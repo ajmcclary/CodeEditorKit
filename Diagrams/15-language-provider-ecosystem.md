@@ -4,329 +4,317 @@ This comprehensive diagram shows the complete language provider ecosystem suppor
 
 ```mermaid
 classDiagram
-    %% Core Provider Management
+    direction LR
+    
+    %% Row 1 - Core Provider Management
     class LanguageProviderFactory {
-        +registry: CompletionProviderRegistry
-        +metadataRegistry: LanguageMetadataRegistry
-        +sharedBuilder: SharedCompletionBuilder
-        +createProvider(languageId: String) CompletionProvider?
-        +registerCustomProvider(CompletionProvider)
-        +getProviderCapabilities(languageId: String) ProviderCapabilities
+        <<factory>>
+        +registry CompletionProviderRegistry
+        +metadataRegistry LanguageMetadataRegistry
+        +sharedBuilder SharedCompletionBuilder
+        +createProvider()
+        +registerCustomProvider()
         +initializeAllProviders()
     }
 
     class CompletionProviderRegistry {
-        +providers: [String: CompletionProvider]
-        +symbolProviders: [String: SymbolProvider]
-        +foldingProviders: [String: FoldingProvider]
-        +dataProviders: [String: DataProvider]
-        +registerProvider(languageId: String, provider: CompletionProvider)
-        +getProvider(languageId: String) CompletionProvider?
-        +getAllSupportedLanguages() [String]
+        <<registry>>
+        +providers [String: CompletionProvider]
+        +symbolProviders [String: SymbolProvider]
+        +foldingProviders [String: FoldingProvider]
+        +registerProvider()
+        +getProvider()
+        +getAllSupportedLanguages()
     }
 
     class LanguageMetadataRegistry {
-        +languageMetadata: [String: LanguageMetadata]
-        +completionMetadata: [String: CompletionMetadata]
-        +symbolMetadata: [String: SymbolMetadata]
-        +getLanguageInfo(languageId: String) LanguageMetadata?
-        +updateMetadata(languageId: String, metadata: LanguageMetadata)
+        <<metadata registry>>
+        +languageMetadata [String: LanguageMetadata]
+        +completionMetadata [String: CompletionMetadata]
+        +getLanguageInfo()
+        +updateMetadata()
     }
 
-    %% Core Language Providers (Compiled Languages)
+
+    %% Row 2 - Compiled Languages
     class SwiftCompletionProvider {
-        +swiftSyntax: SwiftSyntaxHighlighter
-        +symbolProvider: SwiftSymbolProvider
-        +contextAnalyzer: SwiftContextAnalyzer
-        +completionEngine: SwiftCompletionEngine
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveImports(imports: [ImportDecl]) [CompletionItem]
-        +inferTypes(expression: Expr) TypeInformation
+        <<swift provider>>
+        +swiftSyntax SwiftSyntaxHighlighter
+        +symbolProvider SwiftSymbolProvider
+        +contextAnalyzer SwiftContextAnalyzer
+        +provideCompletions()
+        +resolveImports()
+        +inferTypes()
     }
 
     class CppCompletionProvider {
-        +clangParser: ClangParser
-        +headerResolver: HeaderResolver
-        +templateEngine: TemplateEngine
-        +macroExpander: MacroExpander
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveIncludes(includes: [IncludeDirective]) [CompletionItem]
-        +expandTemplates(template: TemplateDecl) [CompletionItem]
+        <<cpp provider>>
+        +clangParser ClangParser
+        +headerResolver HeaderResolver
+        +templateEngine TemplateEngine
+        +provideCompletions()
+        +resolveIncludes()
+        +expandTemplates()
     }
 
     class CCompletionProvider {
-        +cParser: CParser
-        +headerAnalyzer: CHeaderAnalyzer
-        +libraryResolver: CLibraryResolver
-        +functionAnalyzer: CFunctionAnalyzer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveHeaders(headers: [HeaderInclude]) [CompletionItem]
-        +analyzeFunctionSignatures(functions: [FunctionDecl]) [CompletionItem]
+        <<c provider>>
+        +cParser CParser
+        +headerAnalyzer CHeaderAnalyzer
+        +libraryResolver CLibraryResolver
+        +provideCompletions()
+        +resolveHeaders()
+        +analyzeFunctionSignatures()
     }
 
     class RustCompletionProvider {
-        +rustAnalyzer: RustAnalyzer
-        +cargoResolver: CargoResolver
-        +traitResolver: TraitResolver
-        +macroExpander: RustMacroExpander
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveCrates(crates: [CrateDecl]) [CompletionItem]
-        +expandMacros(macros: [MacroCall]) [CompletionItem]
+        <<rust provider>>
+        +rustAnalyzer RustAnalyzer
+        +cargoResolver CargoResolver
+        +traitResolver TraitResolver
+        +provideCompletions()
+        +resolveCrates()
+        +expandMacros()
     }
 
     class GoCompletionProvider {
-        +goParser: GoParser
-        +packageResolver: GoPackageResolver
-        +interfaceAnalyzer: InterfaceAnalyzer
-        +methodResolver: GoMethodResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolvePackages(packages: [PackageDecl]) [CompletionItem]
-        +analyzeInterfaces(interfaces: [InterfaceDecl]) [CompletionItem]
+        <<go provider>>
+        +goParser GoParser
+        +packageResolver GoPackageResolver
+        +interfaceAnalyzer InterfaceAnalyzer
+        +provideCompletions()
+        +resolvePackages()
+        +analyzeInterfaces()
     }
 
-    %% Dynamic/Interpreted Language Providers
+    %% Row 3 - Dynamic Languages
     class PythonCompletionProvider {
-        +astParser: PythonASTParser
-        +importResolver: PythonImportResolver
-        +typeInferencer: PythonTypeInferencer
-        +libraryAnalyzer: PythonLibraryAnalyzer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveImports(imports: [ImportStmt]) [CompletionItem]
-        +inferTypes(node: AST) TypeInformation
-        +analyzeLibraries(libraries: [ModuleType]) [CompletionItem]
+        <<python provider>>
+        +astParser PythonASTParser
+        +importResolver PythonImportResolver
+        +typeInferencer PythonTypeInferencer
+        +provideCompletions()
+        +resolveImports()
+        +inferTypes()
     }
 
     class JavaScriptCompletionProvider {
-        +babelParser: BabelParser
-        +moduleResolver: JSModuleResolver
-        +typeInferencer: JSTypeInferencer
-        +nodeResolver: NodeModuleResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveModules(modules: [ImportDeclaration]) [CompletionItem]
-        +inferJSTypes(expression: Expression) TypeInformation
+        <<javascript provider>>
+        +babelParser BabelParser
+        +moduleResolver JSModuleResolver
+        +typeInferencer JSTypeInferencer
+        +provideCompletions()
+        +resolveModules()
+        +inferJSTypes()
     }
 
     class TypeScriptCompletionProvider {
-        +tsCompiler: TypeScriptCompiler
-        +definitionResolver: TSDefinitionResolver
-        +interfaceAnalyzer: TSInterfaceAnalyzer
-        +decoratorResolver: DecoratorResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveDefinitions(definitions: [TypeDefinition]) [CompletionItem]
-        +analyzeInterfaces(interfaces: [InterfaceDeclaration]) [CompletionItem]
+        <<typescript provider>>
+        +tsCompiler TypeScriptCompiler
+        +definitionResolver TSDefinitionResolver
+        +interfaceAnalyzer TSInterfaceAnalyzer
+        +provideCompletions()
+        +resolveDefinitions()
+        +analyzeInterfaces()
     }
 
     class RubyCompletionProvider {
-        +rubyParser: RubyParser
-        +gemResolver: GemResolver
-        +classAnalyzer: RubyClassAnalyzer
-        +methodResolver: RubyMethodResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveGems(gems: [GemDecl]) [CompletionItem]
-        +analyzeClasses(classes: [ClassDecl]) [CompletionItem]
+        <<ruby provider>>
+        +rubyParser RubyParser
+        +gemResolver GemResolver
+        +classAnalyzer RubyClassAnalyzer
+        +provideCompletions()
+        +resolveGems()
+        +analyzeClasses()
     }
 
     class PHPCompletionProvider {
-        +phpParser: PHPParser
-        +namespaceResolver: PHPNamespaceResolver
-        +classAnalyzer: PHPClassAnalyzer
-        +composerResolver: ComposerResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveNamespaces(namespaces: [NamespaceDecl]) [CompletionItem]
-        +analyzeClasses(classes: [ClassDeclaration]) [CompletionItem]
+        <<php provider>>
+        +phpParser PHPParser
+        +namespaceResolver PHPNamespaceResolver
+        +classAnalyzer PHPClassAnalyzer
+        +provideCompletions()
+        +resolveNamespaces()
+        +analyzeClasses()
     }
 
-    %% JVM Language Providers
+    %% Row 4 - JVM Languages
     class JavaCompletionProvider {
-        +javaParser: JavaParser
-        +classPathResolver: ClassPathResolver
-        +annotationProcessor: AnnotationProcessor
-        +genericsResolver: GenericsResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveClassPath(classPath: [ClassReference]) [CompletionItem]
-        +processAnnotations(annotations: [Annotation]) [CompletionItem]
+        <<java provider>>
+        +javaParser JavaParser
+        +classPathResolver ClassPathResolver
+        +annotationProcessor AnnotationProcessor
+        +provideCompletions()
+        +resolveClassPath()
+        +processAnnotations()
     }
 
     class KotlinCompletionProvider {
-        +kotlinCompiler: KotlinCompiler
-        +coroutineAnalyzer: CoroutineAnalyzer
-        +extensionResolver: ExtensionFunctionResolver
-        +delegateResolver: DelegateResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +analyzeCoroutines(coroutines: [SuspendFunction]) [CompletionItem]
-        +resolveExtensions(extensions: [ExtensionFunction]) [CompletionItem]
+        <<kotlin provider>>
+        +kotlinCompiler KotlinCompiler
+        +coroutineAnalyzer CoroutineAnalyzer
+        +extensionResolver ExtensionFunctionResolver
+        +provideCompletions()
+        +analyzeCoroutines()
+        +resolveExtensions()
     }
 
     class ScalaCompletionProvider {
-        +scalaCompiler: ScalaCompiler
-        +implicitResolver: ImplicitResolver
-        +traitAnalyzer: TraitAnalyzer
-        +patternMatcher: PatternMatcher
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveImplicits(implicits: [ImplicitDecl]) [CompletionItem]
-        +analyzePatterns(patterns: [Pattern]) [CompletionItem]
+        <<scala provider>>
+        +scalaCompiler ScalaCompiler
+        +implicitResolver ImplicitResolver
+        +traitAnalyzer TraitAnalyzer
+        +provideCompletions()
+        +resolveImplicits()
+        +analyzePatterns()
     }
 
-    %% Functional Language Providers
+    %% Row 5 - Functional Languages
     class HaskellCompletionProvider {
-        +ghcCompiler: GHCCompiler
-        +typeClassResolver: TypeClassResolver
-        +moduleResolver: HaskellModuleResolver
-        +monadAnalyzer: MonadAnalyzer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveTypeClasses(typeClasses: [TypeClass]) [CompletionItem]
-        +analyzeMonads(monads: [MonadDecl]) [CompletionItem]
+        <<haskell provider>>
+        +ghcCompiler GHCCompiler
+        +typeClassResolver TypeClassResolver
+        +moduleResolver HaskellModuleResolver
+        +provideCompletions()
+        +resolveTypeClasses()
+        +analyzeMonads()
     }
 
     class ElixirCompletionProvider {
-        +elixirParser: ElixirParser
-        +mixResolver: MixProjectResolver
-        +genServerAnalyzer: GenServerAnalyzer
-        +protocolResolver: ProtocolResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveMixDependencies(deps: [Dependency]) [CompletionItem]
-        +analyzeProtocols(protocols: [Protocol]) [CompletionItem]
+        <<elixir provider>>
+        +elixirParser ElixirParser
+        +mixResolver MixProjectResolver
+        +genServerAnalyzer GenServerAnalyzer
+        +provideCompletions()
+        +resolveMixDependencies()
+        +analyzeProtocols()
     }
 
-    %% Data Format Providers
+    %% Row 6 - Data Format Providers
     class JSONCompletionProvider {
-        +schemaValidator: JSONSchemaValidator
-        +schemaResolver: JSONSchemaResolver
-        +pathAnalyzer: JSONPathAnalyzer
-        +valueInferencer: JSONValueInferencer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +validateSchema(schema: JSONSchema) ValidationResult
-        +inferValueTypes(jsonPath: String) [CompletionItem]
+        <<json provider>>
+        +schemaValidator JSONSchemaValidator
+        +schemaResolver JSONSchemaResolver
+        +pathAnalyzer JSONPathAnalyzer
+        +provideCompletions()
+        +validateSchema()
+        +inferValueTypes()
     }
 
     class YAMLCompletionProvider {
-        +yamlParser: YAMLParser
-        +schemaValidator: YAMLSchemaValidator
-        +anchorResolver: YAMLAnchorResolver
-        +indentationAnalyzer: YAMLIndentationAnalyzer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveAnchors(anchors: [YAMLAnchor]) [CompletionItem]
-        +validateIndentation(yaml: YAMLDocument) ValidationResult
+        <<yaml provider>>
+        +yamlParser YAMLParser
+        +schemaValidator YAMLSchemaValidator
+        +anchorResolver YAMLAnchorResolver
+        +provideCompletions()
+        +resolveAnchors()
+        +validateIndentation()
     }
 
     class XMLCompletionProvider {
-        +xmlParser: XMLParser
-        +xsdValidator: XSDValidator
-        +namespaceResolver: XMLNamespaceResolver
-        +dtdResolver: DTDResolver
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +validateXSD(xsd: XSDSchema) ValidationResult
-        +resolveNamespaces(namespaces: [XMLNamespace]) [CompletionItem]
+        <<xml provider>>
+        +xmlParser XMLParser
+        +xsdValidator XSDValidator
+        +namespaceResolver XMLNamespaceResolver
+        +provideCompletions()
+        +validateXSD()
+        +resolveNamespaces()
     }
 
     class MarkdownCompletionProvider {
-        +markdownParser: MarkdownParser
-        +linkResolver: MarkdownLinkResolver
-        +referenceLookup: ReferenceManager
-        +syntaxAnalyzer: MarkdownSyntaxAnalyzer
-        +provideCompletions(context: CompletionContext) [CompletionItem]
-        +resolveLinks(links: [MarkdownLink]) [CompletionItem]
-        +analyzeSyntax(markdown: MarkdownDocument) [CompletionItem]
+        <<markdown provider>>
+        +markdownParser MarkdownParser
+        +linkResolver MarkdownLinkResolver
+        +referenceLookup ReferenceManager
+        +provideCompletions()
+        +resolveLinks()
+        +analyzeSyntax()
     }
 
-    %% Symbol Providers
+    %% Row 7 - Symbol & Folding Providers
     class SymbolProviderRegistry {
-        +symbolProviders: [String: SymbolProvider]
-        +universalProvider: UniversalSymbolProvider
-        +cacheManager: SymbolCacheManager
-        +getSymbolProvider(languageId: String) SymbolProvider?
-        +registerSymbolProvider(languageId: String, provider: SymbolProvider)
+        <<symbol registry>>
+        +symbolProviders [String: SymbolProvider]
+        +universalProvider UniversalSymbolProvider
+        +cacheManager SymbolCacheManager
+        +getSymbolProvider()
+        +registerSymbolProvider()
     }
 
     class UniversalSymbolProvider {
-        +patternMatchers: [LanguagePatternMatcher]
-        +heuristicAnalyzer: SymbolHeuristicAnalyzer
-        +fallbackExtractor: FallbackSymbolExtractor
-        +provideSymbols(document: TextDocument) [DocumentSymbol]
-        +extractWithPatterns(text: String, language: String) [DocumentSymbol]
+        <<universal symbol>>
+        +patternMatchers [LanguagePatternMatcher]
+        +heuristicAnalyzer SymbolHeuristicAnalyzer
+        +fallbackExtractor FallbackSymbolExtractor
+        +provideSymbols()
+        +extractWithPatterns()
     }
 
-    %% Folding Providers
     class FoldingProviderRegistry {
-        +foldingProviders: [String: FoldingProvider]
-        +braceProvider: BraceFoldingProvider
-        +indentationProvider: IndentationFoldingProvider
-        +commentProvider: CommentFoldingProvider
-        +customProviders: [String: CustomFoldingProvider]
+        <<folding registry>>
+        +foldingProviders [String: FoldingProvider]
+        +braceProvider BraceFoldingProvider
+        +indentationProvider IndentationFoldingProvider
+        +commentProvider CommentFoldingProvider
     }
 
     class BraceFoldingProvider {
-        +braceMatchers: [BraceMatcher]
-        +balanceChecker: BraceBalanceChecker
-        +nestedAnalyzer: NestedStructureAnalyzer
-        +detectBraceRegions(text: String) [FoldingRange]
-        +validateBraceBalance(text: String) BalanceResult
-        +analyzeNesting(ranges: [FoldingRange]) NestingAnalysis
+        <<brace folding>>
+        +braceMatchers [BraceMatcher]
+        +balanceChecker BraceBalanceChecker
+        +nestedAnalyzer NestedStructureAnalyzer
+        +detectBraceRegions()
+        +validateBraceBalance()
     }
 
     class IndentationFoldingProvider {
-        +indentationDetector: IndentationDetector
-        +hierarchyBuilder: IndentationHierarchy
-        +foldingRangeCalculator: FoldingRangeCalculator
-        +detectIndentationRegions(text: String) [FoldingRange]
-        +buildIndentationHierarchy(lines: [String]) IndentationTree
-        +calculateFoldingRanges(hierarchy: IndentationTree) [FoldingRange]
+        <<indentation folding>>
+        +indentationDetector IndentationDetector
+        +hierarchyBuilder IndentationHierarchy
+        +detectIndentationRegions()
+        +buildIndentationHierarchy()
     }
 
     class CommentFoldingProvider {
-        +commentDetectors: [CommentDetector]
-        +blockCommentAnalyzer: BlockCommentAnalyzer
-        +docCommentExtractor: DocumentationCommentExtractor
-        +detectCommentBlocks(text: String, language: String) [FoldingRange]
-        +extractDocComments(comments: [CommentBlock]) [DocumentationComment]
+        <<comment folding>>
+        +commentDetectors [CommentDetector]
+        +blockCommentAnalyzer BlockCommentAnalyzer
+        +detectCommentBlocks()
+        +extractDocComments()
     }
 
-    %% Shared Completion Infrastructure
+    %% Row 8 - Shared Infrastructure
     class SharedCompletionBuilder {
-        +keywordDatabase: KeywordDatabase
-        +snippetLibrary: SnippetLibrary
-        +contextAnalyzer: SharedContextAnalyzer
-        +priorityCalculator: CompletionPriorityCalculator
-        +buildKeywordCompletions(language: String) [CompletionItem]
-        +buildSnippetCompletions(context: CompletionContext) [CompletionItem]
-        +calculatePriorities(items: [CompletionItem], context: CompletionContext) [CompletionItem]
+        <<shared builder>>
+        +keywordDatabase KeywordDatabase
+        +snippetLibrary SnippetLibrary
+        +contextAnalyzer SharedContextAnalyzer
+        +buildKeywordCompletions()
+        +buildSnippetCompletions()
+        +calculatePriorities()
     }
 
     class LanguageMemberCompletions {
-        +memberAnalyzer: MemberAnalyzer
-        +inheritanceResolver: InheritanceResolver
-        +accessibilityChecker: AccessibilityChecker
-        +overrideDetector: OverrideDetector
-        +analyzeMembers(type: TypeDeclaration) [MemberInfo]
-        +resolveInheritance(type: TypeDeclaration) [InheritedMember]
-        +checkAccessibility(member: MemberInfo, context: CompletionContext) Bool
+        <<member completions>>
+        +memberAnalyzer MemberAnalyzer
+        +inheritanceResolver InheritanceResolver
+        +accessibilityChecker AccessibilityChecker
+        +analyzeMembers()
+        +resolveInheritance()
+        +checkAccessibility()
     }
 
-    %% Relationships
+    %% Key Relationships
     LanguageProviderFactory --> CompletionProviderRegistry : manages
     LanguageProviderFactory --> LanguageMetadataRegistry : uses
     LanguageProviderFactory --> SharedCompletionBuilder : coordinates
 
     CompletionProviderRegistry --> SwiftCompletionProvider : contains
-    CompletionProviderRegistry --> CppCompletionProvider : contains
-    CompletionProviderRegistry --> CCompletionProvider : contains
-    CompletionProviderRegistry --> RustCompletionProvider : contains
-    CompletionProviderRegistry --> GoCompletionProvider : contains
     CompletionProviderRegistry --> PythonCompletionProvider : contains
     CompletionProviderRegistry --> JavaScriptCompletionProvider : contains
-    CompletionProviderRegistry --> TypeScriptCompletionProvider : contains
-    CompletionProviderRegistry --> RubyCompletionProvider : contains
-    CompletionProviderRegistry --> PHPCompletionProvider : contains
     CompletionProviderRegistry --> JavaCompletionProvider : contains
-    CompletionProviderRegistry --> KotlinCompletionProvider : contains
-    CompletionProviderRegistry --> ScalaCompletionProvider : contains
-    CompletionProviderRegistry --> HaskellCompletionProvider : contains
-    CompletionProviderRegistry --> ElixirCompletionProvider : contains
     CompletionProviderRegistry --> JSONCompletionProvider : contains
-    CompletionProviderRegistry --> YAMLCompletionProvider : contains
-    CompletionProviderRegistry --> XMLCompletionProvider : contains
-    CompletionProviderRegistry --> MarkdownCompletionProvider : contains
-
+    
     CompletionProviderRegistry --> SymbolProviderRegistry : coordinates
     CompletionProviderRegistry --> FoldingProviderRegistry : coordinates
 
