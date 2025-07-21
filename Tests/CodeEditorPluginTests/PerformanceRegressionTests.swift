@@ -3,7 +3,6 @@ import XCTest
 
 /// Performance regression tests to ensure optimizations don't degrade over time
 final class PerformanceRegressionTests: XCTestCase {
-    
     override func setUp() async throws {
         try await super.setUp()
         // Give the system time to settle between tests
