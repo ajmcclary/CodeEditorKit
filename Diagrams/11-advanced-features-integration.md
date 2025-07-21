@@ -4,16 +4,19 @@ This diagram shows the advanced features system that extends the core CodeEditor
 
 ```mermaid
 classDiagram
-    %% Core Feature Integration
+    direction LR
+    
+    %% Top Row - Core Coordinator & Feature Types
     class AdvancedFeaturesCoordinator {
-        +debuggerIntegration: DebuggerIntegrationCore
-        +searchEngine: SearchReplaceEngine
-        +smartEditing: SmartEditingEngine
-        +codeFolding: CodeFoldingEngine
-        +symbolNavigator: SymbolNavigator
-        +initialize(codeEditorView: CodeEditorView)
-        +enableFeature(FeatureType)
-        +disableFeature(FeatureType)
+        &lt;&lt;features coordinator&gt;&gt;
+        +debuggerIntegration DebuggerIntegrationCore
+        +searchEngine SearchReplaceEngine
+        +smartEditing SmartEditingEngine
+        +codeFolding CodeFoldingEngine
+        +symbolNavigator SymbolNavigator
+        +initialize()
+        +enableFeature()
+        +disableFeature()
     }
 
     class FeatureType {
@@ -25,51 +28,69 @@ classDiagram
         symbolNavigation
     }
 
-    %% Debugger Integration System
+    class SymbolNavigator {
+        &lt;&lt;symbol navigation&gt;&gt;
+        +symbolProviders [SymbolProvider]
+        +symbolCache SymbolCache
+        +breadcrumbProvider BreadcrumbProvider
+        +outlineProvider OutlineProvider
+        +navigateToSymbol()
+        +findSymbolReferences()
+        +getDocumentOutline()
+    }
+
+    %% Second Row - Debugger System
     class DebuggerIntegrationCore {
-        +adapter: DebugAdapter
-        +models: DebuggerModels
-        +breakpointManager: BreakpointManager
-        +evaluationEngine: DebuggerEvaluation
-        +executionController: DebuggerExecution
-        +startDebugging(config: DebugConfiguration)
+        &lt;&lt;debugger core&gt;&gt;
+        +adapter DebugAdapter
+        +models DebuggerModels
+        +breakpointManager BreakpointManager
+        +evaluationEngine DebuggerEvaluation
+        +executionController DebuggerExecution
+        +startDebugging()
         +stopDebugging()
-        +handleDebugEvent(DebugEvent)
+        +handleDebugEvent()
     }
 
     class DebugAdapter {
-        +protocol: DebugProtocol
-        +transport: DebugTransport
-        +connect(endpoint: String)
-        +sendRequest(DebugRequest)
-        +handleResponse(DebugResponse)
-    }
-
-    class DebuggerModels {
-        +session: DebugSession
-        +threads: [DebugThread]
-        +stackFrames: [StackFrame]
-        +variables: [Variable]
-        +sources: [DebugSource]
+        &lt;&lt;debug adapter&gt;&gt;
+        +protocol DebugProtocol
+        +transport DebugTransport
+        +connect()
+        +sendRequest()
+        +handleResponse()
     }
 
     class BreakpointManager {
-        +breakpoints: [Breakpoint]
-        +pendingBreakpoints: [PendingBreakpoint]
-        +addBreakpoint(line: Int, file: String)
-        +removeBreakpoint(id: String)
+        &lt;&lt;breakpoint mgmt&gt;&gt;
+        +breakpoints [Breakpoint]
+        +pendingBreakpoints [PendingBreakpoint]
+        +addBreakpoint()
+        +removeBreakpoint()
         +validateBreakpoints()
         +syncWithDebugger()
     }
 
+    %% Third Row - Debugger Support & Search Engine
+    class DebuggerModels {
+        &lt;&lt;debug models&gt;&gt;
+        +session DebugSession
+        +threads [DebugThread]
+        +stackFrames [StackFrame]
+        +variables [Variable]
+        +sources [DebugSource]
+    }
+
     class DebuggerEvaluation {
-        +evaluateExpression(expression: String) DebugValue
-        +evaluateHover(position: TextPosition) HoverInfo?
-        +getVariableDetails(variableRef: Int) [Variable]
-        +setVariableValue(variableRef: Int, value: String)
+        &lt;&lt;debug evaluation&gt;&gt;
+        +evaluateExpression()
+        +evaluateHover()
+        +getVariableDetails()
+        +setVariableValue()
     }
 
     class DebuggerExecution {
+        &lt;&lt;debug execution&gt;&gt;
         +continue()
         +stepOver()
         +stepInto()
@@ -79,122 +100,123 @@ classDiagram
         +terminate()
     }
 
-    %% Search & Replace Engine
+    %% Fourth Row - Search & Replace System
     class SearchReplaceEngine {
-        +searchProvider: SearchProvider
-        +replaceProvider: ReplaceProvider
-        +regexEngine: RegexEngine
-        +searchHistory: SearchHistory
-        +currentSearch: SearchContext?
-        +search(query: SearchQuery) [SearchResult]
-        +replace(query: ReplaceQuery) ReplaceResult
-        +replaceAll(query: ReplaceQuery) ReplaceAllResult
+        &lt;&lt;search engine&gt;&gt;
+        +searchProvider SearchProvider
+        +replaceProvider ReplaceProvider
+        +regexEngine RegexEngine
+        +searchHistory SearchHistory
+        +currentSearch SearchContext?
+        +search()
+        +replace()
+        +replaceAll()
     }
 
     class SearchProvider {
-        +textualSearch(query: String, options: SearchOptions) [TextMatch]
-        +regexSearch(pattern: String, options: SearchOptions) [RegexMatch]
-        +symbolSearch(query: String) [SymbolMatch]
-        +fileSearch(query: String) [FileMatch]
+        &lt;&lt;search provider&gt;&gt;
+        +textualSearch()
+        +regexSearch()
+        +symbolSearch()
+        +fileSearch()
     }
 
     class ReplaceProvider {
-        +performReplace(match: SearchResult, replacement: String) ReplaceResult
-        +performReplaceAll(matches: [SearchResult], replacement: String) ReplaceAllResult
-        +undoReplace(operation: ReplaceOperation)
-        +redoReplace(operation: ReplaceOperation)
+        &lt;&lt;replace provider&gt;&gt;
+        +performReplace()
+        +performReplaceAll()
+        +undoReplace()
+        +redoReplace()
     }
 
-    class SearchContext {
-        +query: SearchQuery
-        +results: [SearchResult]
-        +currentIndex: Int
-        +searchScope: SearchScope
-        +options: SearchOptions
-    }
-
-    %% Smart Editing Engine
+    %% Fifth Row - Smart Editing System
     class SmartEditingEngine {
-        +autoCompletionEnhancer: AutoCompletionEnhancer
-        +smartIndentationEngine: SmartIndentationEngine
-        +bracketCompletionHandler: BracketCompletionHandler
-        +codeActionProvider: CodeActionProvider
-        +refactoringEngine: RefactoringEngine
-        +enhanceCompletion(context: CompletionContext)
-        +performSmartIndent(range: NSRange)
-        +handleBracketInput(character: String)
+        &lt;&lt;smart editing&gt;&gt;
+        +autoCompletionEnhancer AutoCompletionEnhancer
+        +smartIndentationEngine SmartIndentationEngine
+        +bracketCompletionHandler BracketCompletionHandler
+        +codeActionProvider CodeActionProvider
+        +enhanceCompletion()
+        +performSmartIndent()
+        +handleBracketInput()
     }
 
     class AutoCompletionEnhancer {
-        +contextAnalyzer: ContextAnalyzer
-        +priorityCalculator: PriorityCalculator
-        +enhanceCompletions(completions: [CompletionItem]) [EnhancedCompletionItem]
-        +analyzeContext(position: TextPosition) CompletionContext
-        +calculatePriority(item: CompletionItem, context: CompletionContext) Double
+        &lt;&lt;completion enhancer&gt;&gt;
+        +contextAnalyzer ContextAnalyzer
+        +priorityCalculator PriorityCalculator
+        +enhanceCompletions()
+        +analyzeContext()
+        +calculatePriority()
     }
 
     class SmartIndentationEngine {
-        +indentationRules: [IndentationRule]
-        +languageSpecificRules: [String: [IndentationRule]]
-        +calculateIndentation(line: Int, language: LanguageConfig) IndentationLevel
-        +adjustIndentationForContext(range: NSRange)
-        +handleElectricCharacters(character: String)
+        &lt;&lt;smart indentation&gt;&gt;
+        +indentationRules [IndentationRule]
+        +languageSpecificRules Dictionary
+        +calculateIndentation()
+        +adjustIndentationForContext()
+        +handleElectricCharacters()
+    }
+
+    %% Sixth Row - Code Folding & Actions
+    class CodeFoldingEngine {
+        &lt;&lt;code folding&gt;&gt;
+        +foldingProviders [FoldingProvider]
+        +foldingRegions [FoldingRegion]
+        +foldingRenderer FoldingRenderer
+        +detectFoldingRegions()
+        +foldRegion()
+        +unfoldRegion()
+        +toggleFolding()
     }
 
     class CodeActionProvider {
-        +availableActions: [CodeAction]
-        +getActionsForRange(range: NSRange) [CodeAction]
-        +executeAction(action: CodeAction)
-        +registerAction(action: CodeAction)
+        &lt;&lt;code actions&gt;&gt;
+        +availableActions [CodeAction]
+        +getActionsForRange()
+        +executeAction()
+        +registerAction()
     }
 
-    %% Code Folding Engine
-    class CodeFoldingEngine {
-        +foldingProviders: [FoldingProvider]
-        +foldingRegions: [FoldingRegion]
-        +foldingRenderer: FoldingRenderer
-        +detectFoldingRegions(text: String, language: LanguageConfig) [FoldingRegion]
-        +foldRegion(region: FoldingRegion)
-        +unfoldRegion(region: FoldingRegion)
-        +toggleFolding(line: Int)
+    class SearchContext {
+        &lt;&lt;search context&gt;&gt;
+        +query SearchQuery
+        +results [SearchResult]
+        +currentIndex Int
+        +searchScope SearchScope
+        +options SearchOptions
     }
 
+    %% Seventh Row - Folding Providers
     class FoldingProvider {
-        &lt;&lt;protocol&gt;&gt;
-        +languageId: String
-        +provideFolding(document: TextDocument) [FoldingRange]
-        +supportsFoldingType(type: FoldingType) Bool
+        &lt;&lt;folding protocol&gt;&gt;
+        +languageId String
+        +provideFolding()
+        +supportsFoldingType()
     }
 
     class BraceFoldingProvider {
-        +detectBraceRegions(text: String) [FoldingRange]
-        +matchBraces(text: String) [(Int, Int)]
-        +validateBraceStructure(ranges: [FoldingRange]) [FoldingRange]
+        &lt;&lt;brace folding&gt;&gt;
+        +detectBraceRegions()
+        +matchBraces()
+        +validateBraceStructure()
     }
 
     class IndentationFoldingProvider {
-        +detectIndentationRegions(text: String) [FoldingRange]
-        +analyzeIndentationLevel(line: String) Int
-        +groupByIndentation(lines: [String]) [FoldingRange]
+        &lt;&lt;indent folding&gt;&gt;
+        +detectIndentationRegions()
+        +analyzeIndentationLevel()
+        +groupByIndentation()
     }
 
     class CommentFoldingProvider {
-        +detectCommentBlocks(text: String, language: LanguageConfig) [FoldingRange]
-        +identifyCommentStyles(language: LanguageConfig) [CommentStyle]
+        &lt;&lt;comment folding&gt;&gt;
+        +detectCommentBlocks()
+        +identifyCommentStyles()
     }
 
-    %% Symbol Navigation (Basic Overview - Detailed in separate diagram)
-    class SymbolNavigator {
-        +symbolProviders: [SymbolProvider]
-        +symbolCache: SymbolCache
-        +breadcrumbProvider: BreadcrumbProvider
-        +outlineProvider: OutlineProvider
-        +navigateToSymbol(symbol: DocumentSymbol)
-        +findSymbolReferences(symbol: DocumentSymbol) [SymbolReference]
-        +getDocumentOutline() DocumentOutline
-    }
-
-    %% Relationships
+    %% Key Relationships
     AdvancedFeaturesCoordinator --> DebuggerIntegrationCore : manages
     AdvancedFeaturesCoordinator --> SearchReplaceEngine : manages
     AdvancedFeaturesCoordinator --> SmartEditingEngine : manages

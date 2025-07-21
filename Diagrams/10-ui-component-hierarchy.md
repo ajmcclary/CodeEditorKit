@@ -4,154 +4,170 @@ This diagram shows the visual component hierarchy and layout structure of the Co
 
 ```mermaid
 classDiagram
-    %% Container Views
+    direction LR
+        
+    %% Top Row - Container & Main Editor
     class CodeEditorContainerView {
-        +frame: CGRect
-        +configuration: EditorConfiguration
-        +codeEditorView: CodeEditorView
-        +gutterView: GutterView?
-        +minimapView: MinimapView?
-        +scrollView: NSScrollView
+        &lt;&lt;main container&gt;&gt;
+        +frame CGRect
+        +configuration EditorConfiguration
+        +codeEditorView CodeEditorView
+        +gutterView GutterView?
+        +minimapView MinimapView?
+        +scrollView NSScrollView
         +layoutSubviews()
-        +updateConfiguration(EditorConfiguration)
+        +updateConfiguration()
     }
 
-    %% Main Editor View
     class CodeEditorView {
-        +textContainer: NSTextContainer
-        +layoutManager: CodeEditorLayoutManager
-        +textStorage: NSTextStorage
-        +selectionView: SelectionView
-        +cursorView: CursorView
-        +overlayViews: [OverlayView]
+        &lt;&lt;text editor&gt;&gt;
+        +textContainer NSTextContainer
+        +layoutManager CodeEditorLayoutManager
+        +textStorage NSTextStorage
+        +selectionView SelectionView
+        +cursorView CursorView
+        +overlayViews [OverlayView]
     }
 
-    %% Gutter Components
+    class EditorScrollView {
+        &lt;&lt;scroll management&gt;&gt;
+        +contentView NSClipView
+        +verticalScroller NSScroller
+        +horizontalScroller NSScroller
+        +hasVerticalScroller Bool
+        +hasHorizontalScroller Bool
+        +synchronizedScrollViews [NSScrollView]
+    }
+
+    %% Second Row - Gutter Components
     class GutterView {
-        +width: CGFloat
-        +backgroundColor: PlatformColor
-        +lineNumberView: LineNumberView
-        +breakpointView: BreakpointView
-        +foldingView: FoldingView
-        +drawRect(CGRect)
+        &lt;&lt;gutter container&gt;&gt;
+        +width CGFloat
+        +backgroundColor PlatformColor
+        +lineNumberView LineNumberView
+        +breakpointView BreakpointView
+        +foldingView FoldingView
+        +drawRect()
     }
 
     class LineNumberView {
-        +font: PlatformFont
-        +textColor: PlatformColor
-        +currentLineHighlight: Bool
-        +drawLineNumbers(in: CGRect, for: NSRange)
+        &lt;&lt;line numbers&gt;&gt;
+        +font PlatformFont
+        +textColor PlatformColor
+        +currentLineHighlight Bool
+        +drawLineNumbers()
     }
 
     class BreakpointView {
-        +breakpoints: Set~Int~
-        +breakpointColor: PlatformColor
-        +addBreakpoint(at: Int)
-        +removeBreakpoint(at: Int)
-        +drawBreakpoints(in: CGRect)
+        &lt;&lt;breakpoints&gt;&gt;
+        +breakpoints Set
+        +breakpointColor PlatformColor
+        +addBreakpoint()
+        +removeBreakpoint()
+        +drawBreakpoints()
     }
 
-    class FoldingView {
-        +foldedRanges: [NSRange]
-        +foldingIndicatorColor: PlatformColor
-        +toggleFolding(at: Int)
-        +drawFoldingIndicators(in: CGRect)
-    }
-
-    %% Minimap Components
+    %% Third Row - Minimap & Folding
     class MinimapView {
-        +width: CGFloat
-        +scale: CGFloat
-        +visibleRect: CGRect
-        +textRepresentation: NSAttributedString
-        +viewportIndicator: ViewportIndicator
+        &lt;&lt;minimap&gt;&gt;
+        +width CGFloat
+        +scale CGFloat
+        +visibleRect CGRect
+        +textRepresentation NSAttributedString
+        +viewportIndicator ViewportIndicator
         +drawMinimap()
     }
 
     class ViewportIndicator {
-        +rect: CGRect
-        +color: PlatformColor
-        +alpha: CGFloat
+        &lt;&lt;viewport indicator&gt;&gt;
+        +rect CGRect
+        +color PlatformColor
+        +alpha CGFloat
         +drawIndicator()
     }
 
-    %% Editor Overlays
+    class FoldingView {
+        &lt;&lt;code folding&gt;&gt;
+        +foldedRanges [NSRange]
+        +foldingIndicatorColor PlatformColor
+        +toggleFolding()
+        +drawFoldingIndicators()
+    }
+
+    %% Fourth Row - Editor Overlays
     class SelectionView {
-        +selections: [NSRange]
-        +selectionColor: PlatformColor
+        &lt;&lt;selection overlay&gt;&gt;
+        +selections [NSRange]
+        +selectionColor PlatformColor
         +drawSelections()
     }
 
     class CursorView {
-        +position: CGPoint
-        +width: CGFloat
-        +color: PlatformColor
-        +blinkRate: TimeInterval
+        &lt;&lt;cursor overlay&gt;&gt;
+        +position CGPoint
+        +width CGFloat
+        +color PlatformColor
+        +blinkRate TimeInterval
         +startBlinking()
         +stopBlinking()
     }
 
     class BracketMatchingView {
-        +matchedBrackets: [(NSRange, NSRange)]
-        +highlightColor: PlatformColor
+        &lt;&lt;bracket matching&gt;&gt;
+        +matchedBrackets [Range]
+        +highlightColor PlatformColor
         +drawMatches()
     }
 
+    %% Fifth Row - Search & Annotations
     class SearchHighlightView {
-        +searchResults: [NSRange]
-        +currentResult: Int?
-        +highlightColor: PlatformColor
-        +currentHighlightColor: PlatformColor
+        &lt;&lt;search highlights&gt;&gt;
+        +searchResults [NSRange]
+        +currentResult Int?
+        +highlightColor PlatformColor
+        +currentHighlightColor PlatformColor
     }
 
-    %% Scroll Management
-    class EditorScrollView {
-        +contentView: NSClipView
-        +verticalScroller: NSScroller
-        +horizontalScroller: NSScroller
-        +hasVerticalScroller: Bool
-        +hasHorizontalScroller: Bool
-        +synchronizedScrollViews: [NSScrollView]
-    }
-
-    %% Annotation System
     class AnnotationContainerView {
-        +annotations: [CodeAnnotation]
-        +annotationViews: [AnnotationView]
-        +addAnnotation(CodeAnnotation)
-        +removeAnnotation(CodeAnnotation)
+        &lt;&lt;annotation container&gt;&gt;
+        +annotations [CodeAnnotation]
+        +annotationViews [AnnotationView]
+        +addAnnotation()
+        +removeAnnotation()
         +layoutAnnotations()
     }
 
     class AnnotationView {
-        +annotation: CodeAnnotation
-        +backgroundColor: PlatformColor
-        +borderColor: PlatformColor
+        &lt;&lt;annotation&gt;&gt;
+        +annotation CodeAnnotation
+        +backgroundColor PlatformColor
+        +borderColor PlatformColor
         +drawAnnotation()
     }
 
-    %% Status Bar
+    %% Bottom Row - Status & Layout
     class StatusBarView {
-        +height: CGFloat
-        +backgroundColor: PlatformColor
-        +lineColumnLabel: NSTextField
-        +languageLabel: NSTextField
-        +encodingLabel: NSTextField
+        &lt;&lt;status bar&gt;&gt;
+        +height CGFloat
+        +backgroundColor PlatformColor
+        +lineColumnLabel NSTextField
+        +languageLabel NSTextField
+        +encodingLabel NSTextField
         +updateStatus()
     }
 
-    %% Layout Constraints
     class LayoutConstraints {
-        +gutterWidth: CGFloat
-        +minimapWidth: CGFloat
-        +statusBarHeight: CGFloat
-        +contentInsets: EdgeInsets
-        +calculateEditorFrame() CGRect
-        +calculateGutterFrame() CGRect
-        +calculateMinimapFrame() CGRect
+        &lt;&lt;layout helper&gt;&gt;
+        +gutterWidth CGFloat
+        +minimapWidth CGFloat
+        +statusBarHeight CGFloat
+        +contentInsets EdgeInsets
+        +calculateEditorFrame()
+        +calculateGutterFrame()
+        +calculateMinimapFrame()
     }
 
-    %% Relationships - Hierarchy
+    %% Key Relationships - Hierarchy
     CodeEditorContainerView *-- CodeEditorView : contains
     CodeEditorContainerView *-- GutterView : contains
     CodeEditorContainerView *-- MinimapView : contains
@@ -161,7 +177,6 @@ classDiagram
     GutterView *-- LineNumberView : contains
     GutterView *-- BreakpointView : contains
     GutterView *-- FoldingView : contains
-    
     MinimapView *-- ViewportIndicator : contains
     
     CodeEditorView *-- SelectionView : contains
@@ -169,12 +184,10 @@ classDiagram
     CodeEditorView *-- BracketMatchingView : overlay
     CodeEditorView *-- SearchHighlightView : overlay
     CodeEditorView *-- AnnotationContainerView : overlay
-    
     AnnotationContainerView *-- AnnotationView : manages
     
     EditorScrollView --> CodeEditorView : scrolls
     EditorScrollView --> MinimapView : synchronizes
-    
     CodeEditorContainerView --> LayoutConstraints : uses
 
     %% Styling - Dark mode friendly colors

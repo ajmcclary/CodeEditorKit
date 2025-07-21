@@ -4,18 +4,168 @@ This diagram shows how the CodeEditorPlugin achieves cross-platform compatibilit
 
 ```mermaid
 classDiagram
-    %% Platform Detection
+    direction LR
+    
+    %% Top Row - Platform Detection & Coordination
     class PlatformCapabilities {
-        +isMacOS: Bool
-        +isiOS: Bool
-        +isMacCatalyst: Bool
-        +hasHoverSupport: Bool
-        +hasPreciseScrolling: Bool
-        +hasKeyboardShortcuts: Bool
-        +hasContextMenus: Bool
-        +screenScale: CGFloat
+        &lt;&lt;platform detection&gt;&gt;
+        +isMacOS Bool
+        +isiOS Bool
+        +isMacCatalyst Bool
+        +hasHoverSupport Bool
+        +hasPreciseScrolling Bool
+        +hasKeyboardShortcuts Bool
         +detect()
-        +supportsFeature(PlatformFeature) Bool
+        +supportsFeature()
+    }
+
+    class CrossPlatformCoordinator {
+        &lt;&lt;platform coordinator&gt;&gt;
+        +currentPlatform Platform
+        +capabilities PlatformCapabilities
+        +eventAdapter EventAdapter
+        +inputAdapter InputAdapter
+        +coordinate()
+        +adaptEvent()
+    }
+
+    class PlatformTypeAliases {
+        &lt;&lt;type aliases&gt;&gt;
+        PlatformView = NSView or UIView
+        PlatformColor = NSColor or UIColor
+        PlatformFont = NSFont or UIFont
+        PlatformImage = NSImage or UIImage
+        PlatformEvent = NSEvent or UIEvent
+    }
+
+    %% Second Row - Event Handling Protocols & Implementations
+    class EventAdapter {
+        &lt;&lt;event protocol&gt;&gt;
+        +adaptMouseEvent()
+        +adaptTouchEvent()
+        +adaptKeyEvent()
+        +adaptGestureEvent()
+    }
+
+    class MacOSEventAdapter {
+        &lt;&lt;macOS events&gt;&gt;
+        +adaptMouseEvent()
+        +adaptKeyEvent()
+        +handleRightClick()
+        +handleScroll()
+    }
+
+    class iOSEventAdapter {
+        &lt;&lt;iOS events&gt;&gt;
+        +adaptTouchEvent()
+        +adaptGestureEvent()
+        +handleLongPress()
+    }
+
+    %% Third Row - Input Handling
+    class InputAdapter {
+        &lt;&lt;input protocol&gt;&gt;
+        +handleTextInput()
+        +handleKeyCommand()
+        +handlePaste()
+        +handleDragDrop()
+    }
+
+    class MacOSInputAdapter {
+        &lt;&lt;macOS input&gt;&gt;
+        -keyBindings [KeyBinding]
+        +handleKeyDown()
+        +handleFlagsChanged()
+        +performDragOperation()
+    }
+
+    class iOSInputAdapter {
+        &lt;&lt;iOS input&gt;&gt;
+        -textInputView UITextInput
+        +insertText()
+        +deleteBackward()
+        +handleKeyCommand()
+    }
+
+    %% Fourth Row - View Abstractions
+    class PlatformTextView {
+        &lt;&lt;text view protocol&gt;&gt;
+        +text String
+        +selectedRange NSRange
+        +font PlatformFont
+        +textColor PlatformColor
+        +becomeFirstResponder()
+        +resignFirstResponder()
+    }
+
+    class MacOSTextView {
+        &lt;&lt;NSTextView&gt;&gt;
+        +isRichText Bool
+        +isEditable Bool
+        +allowsUndo Bool
+        +textContainer NSTextContainer
+    }
+
+    class iOSTextView {
+        &lt;&lt;UITextView&gt;&gt;
+        +isEditable Bool
+        +dataDetectorTypes UIDataDetectorTypes
+        +textContainer NSTextContainer
+    }
+
+    %% Fifth Row - Graphics & Menu Abstractions
+    class PlatformGraphicsContext {
+        &lt;&lt;graphics protocol&gt;&gt;
+        +fillRect()
+        +strokeRect()
+        +drawText()
+        +setFont()
+    }
+
+    class MacOSGraphicsContext {
+        &lt;&lt;macOS graphics&gt;&gt;
+        -nsGraphicsContext NSGraphicsContext
+        +saveGraphicsState()
+        +restoreGraphicsState()
+        +setNeedsDisplay()
+    }
+
+    class iOSGraphicsContext {
+        &lt;&lt;iOS graphics&gt;&gt;
+        -cgContext CGContext
+        +saveGState()
+        +restoreGState()
+        +setNeedsDisplay()
+    }
+
+    %% Sixth Row - Menu Builders & Enumerations
+    class PlatformMenuBuilder {
+        &lt;&lt;menu protocol&gt;&gt;
+        +buildEditMenu()
+        +buildViewMenu()
+        +buildFormatMenu()
+    }
+
+    class MacOSMenuBuilder {
+        &lt;&lt;macOS menus&gt;&gt;
+        +buildMainMenu()
+        +buildContextMenu()
+        +addKeyboardShortcut()
+    }
+
+    class iOSMenuBuilder {
+        &lt;&lt;iOS menus&gt;&gt;
+        +buildEditMenu()
+        +buildContextMenu()
+        +buildKeyCommands()
+    }
+
+    %% Bottom Row - Enumerations
+    class Platform {
+        &lt;&lt;enumeration&gt;&gt;
+        macOS
+        iOS
+        macCatalyst
     }
 
     class PlatformFeature {
@@ -29,150 +179,7 @@ classDiagram
         forceTouch
     }
 
-    %% Type Aliases
-    class PlatformTypeAliases {
-        &lt;&lt;module&gt;&gt;
-        PlatformView = NSView or UIView
-        PlatformViewController = NSViewController or UIViewController
-        PlatformColor = NSColor or UIColor
-        PlatformFont = NSFont or UIFont
-        PlatformImage = NSImage or UIImage
-        PlatformEvent = NSEvent or UIEvent
-        PlatformBezierPath = NSBezierPath or UIBezierPath
-    }
-
-    %% Cross-Platform Coordinator
-    class CrossPlatformCoordinator {
-        +currentPlatform: Platform
-        +capabilities: PlatformCapabilities
-        +eventAdapter: EventAdapter
-        +inputAdapter: InputAdapter
-        +coordinate(action: PlatformAction)
-        +adaptEvent(PlatformEvent) UnifiedEvent
-    }
-
-    class Platform {
-        &lt;&lt;enumeration&gt;&gt;
-        macOS
-        iOS
-        macCatalyst
-    }
-
-    %% Event Handling
-    class EventAdapter {
-        &lt;&lt;protocol&gt;&gt;
-        +adaptMouseEvent(NSEvent) UnifiedEvent
-        +adaptTouchEvent(UITouch) UnifiedEvent
-        +adaptKeyEvent(PlatformEvent) UnifiedEvent
-        +adaptGestureEvent(PlatformGestureRecognizer) UnifiedEvent
-    }
-
-    class MacOSEventAdapter {
-        +adaptMouseEvent(NSEvent) UnifiedEvent
-        +adaptKeyEvent(NSEvent) UnifiedEvent
-        +handleRightClick(NSEvent) UnifiedEvent
-        +handleScroll(NSEvent) UnifiedEvent
-    }
-
-    class iOSEventAdapter {
-        +adaptTouchEvent(UITouch) UnifiedEvent
-        +adaptGestureEvent(UIGestureRecognizer) UnifiedEvent
-        +handleLongPress(UILongPressGestureRecognizer) UnifiedEvent
-    }
-
-    %% Input Handling
-    class InputAdapter {
-        &lt;&lt;protocol&gt;&gt;
-        +handleTextInput(String)
-        +handleKeyCommand(KeyCommand)
-        +handlePaste(String)
-        +handleDragDrop(DragInfo)
-    }
-
-    class MacOSInputAdapter {
-        -keyBindings: [KeyBinding]
-        +handleKeyDown(NSEvent)
-        +handleFlagsChanged(NSEvent)
-        +performDragOperation(NSDraggingInfo)
-    }
-
-    class iOSInputAdapter {
-        -textInputView: UITextInput
-        +insertText(String)
-        +deleteBackward()
-        +handleKeyCommand(UIKeyCommand)
-    }
-
-    %% View Abstractions
-    class PlatformTextView {
-        &lt;&lt;protocol&gt;&gt;
-        +text: String
-        +selectedRange: NSRange
-        +font: PlatformFont
-        +textColor: PlatformColor
-        +becomeFirstResponder()
-        +resignFirstResponder()
-    }
-
-    class MacOSTextView {
-        &lt;&lt;NSTextView&gt;&gt;
-        +isRichText: Bool
-        +isEditable: Bool
-        +allowsUndo: Bool
-        +textContainer: NSTextContainer
-    }
-
-    class iOSTextView {
-        &lt;&lt;UITextView&gt;&gt;
-        +isEditable: Bool
-        +dataDetectorTypes: UIDataDetectorTypes
-        +textContainer: NSTextContainer
-    }
-
-    %% Graphics Abstractions
-    class PlatformGraphicsContext {
-        &lt;&lt;protocol&gt;&gt;
-        +fillRect(CGRect, color: PlatformColor)
-        +strokeRect(CGRect, color: PlatformColor)
-        +drawText(String, at: CGPoint)
-        +setFont(PlatformFont)
-    }
-
-    class MacOSGraphicsContext {
-        -nsGraphicsContext: NSGraphicsContext
-        +saveGraphicsState()
-        +restoreGraphicsState()
-        +setNeedsDisplay(CGRect)
-    }
-
-    class iOSGraphicsContext {
-        -cgContext: CGContext
-        +saveGState()
-        +restoreGState()
-        +setNeedsDisplay()
-    }
-
-    %% Menu/Toolbar Abstractions
-    class PlatformMenuBuilder {
-        &lt;&lt;protocol&gt;&gt;
-        +buildEditMenu() PlatformMenu
-        +buildViewMenu() PlatformMenu
-        +buildFormatMenu() PlatformMenu
-    }
-
-    class MacOSMenuBuilder {
-        +buildMainMenu() NSMenu
-        +buildContextMenu() NSMenu
-        +addKeyboardShortcut(NSMenuItem, key: String)
-    }
-
-    class iOSMenuBuilder {
-        +buildEditMenu() UIMenu
-        +buildContextMenu(for: CGPoint) UIMenu
-        +buildKeyCommands() [UIKeyCommand]
-    }
-
-    %% Relationships
+    %% Key Relationships
     CrossPlatformCoordinator --> PlatformCapabilities : uses
     CrossPlatformCoordinator --> Platform : manages
     CrossPlatformCoordinator --> EventAdapter : uses
@@ -180,16 +187,13 @@ classDiagram
     
     EventAdapter <|-- MacOSEventAdapter : implements
     EventAdapter <|-- iOSEventAdapter : implements
-    
     InputAdapter <|-- MacOSInputAdapter : implements
     InputAdapter <|-- iOSInputAdapter : implements
     
     PlatformTextView <|-- MacOSTextView : implements
     PlatformTextView <|-- iOSTextView : implements
-    
     PlatformGraphicsContext <|-- MacOSGraphicsContext : implements
     PlatformGraphicsContext <|-- iOSGraphicsContext : implements
-    
     PlatformMenuBuilder <|-- MacOSMenuBuilder : implements
     PlatformMenuBuilder <|-- iOSMenuBuilder : implements
     

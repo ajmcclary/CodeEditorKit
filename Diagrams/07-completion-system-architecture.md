@@ -4,106 +4,147 @@ This diagram shows the code completion system architecture, including provider m
 
 ```mermaid
 classDiagram
-    %% Core Manager
+    direction LR
+    
+    %% Top Row - Core Manager & Context
     class CompletionManager {
-        -providers: Dictionary~String, CompletionProvider~
-        -activeSession: CompletionSession?
-        -debouncer: Debouncer
-        -cache: CompletionCache
-        -eventSystem: UnifiedEventSystem
-        +requestCompletions(context: CompletionContext)
-        +registerProvider(language: String, provider: CompletionProvider)
+        &lt;&lt;completion orchestrator&gt;&gt;
+        -providers Dictionary
+        -activeSession CompletionSession?
+        -debouncer Debouncer
+        -cache CompletionCache
+        +requestCompletions()
+        +registerProvider()
         +cancelActiveSession()
-        +applyCompletion(item: CompletionItem)
-        +updateTriggerCharacters(Set~String~)
+        +applyCompletion()
     }
 
-    %% Completion Context
     class CompletionContext {
-        +textView: CodeEditorView
-        +position: TextPosition
-        +prefix: String
-        +lineContent: String
-        +language: LanguageConfig
-        +trigger: CompletionTrigger
-        +scopeContext: ScopeContext
+        &lt;&lt;completion request&gt;&gt;
+        +textView CodeEditorView
+        +position TextPosition
+        +prefix String
+        +lineContent String
+        +language LanguageConfig
+        +trigger CompletionTrigger
+    }
+
+    class CompletionSession {
+        &lt;&lt;session state&gt;&gt;
+        +id UUID
+        +context CompletionContext
+        +provider CompletionProvider
+        +startTime Date
+        +items [CompletionItem]
+        +isActive Bool
+        +cancel()
+        +filter()
+        +sort()
+    }
+
+    %% Second Row - Provider System
+    class CompletionProvider {
+        &lt;&lt;provider protocol&gt;&gt;
+        +languageId String
+        +triggerCharacters Set
+        +provideCompletions() async
+        +resolveCompletion() async
+        +shouldTrigger() Bool
+    }
+
+    class UniversalCompletionProvider {
+        &lt;&lt;provider factory&gt;&gt;
+        -registry ProviderRegistry
+        +createProvider()
+        +registerCustomProvider()
+    }
+
+    class SwiftCompletionProvider {
+        &lt;&lt;Swift provider&gt;&gt;
+        -sourceKitService SourceKitService
+        -astCache ASTCache
+        +provideCompletions() async
+        +resolveCompletion() async
+    }
+
+    %% Third Row - Provider Implementations
+    class LSPCompletionProvider {
+        &lt;&lt;LSP provider&gt;&gt;
+        -lspClient LSPClient
+        -documentManager DocumentManager
+        +provideCompletions() async
+        +resolveCompletion() async
+    }
+
+    class KeywordCompletionProvider {
+        &lt;&lt;keyword provider&gt;&gt;
+        -keywordDatabase KeywordDatabase
+        +provideCompletions() async
+    }
+
+    class SnippetCompletionProvider {
+        &lt;&lt;snippet provider&gt;&gt;
+        -snippetLibrary SnippetLibrary
+        +provideCompletions() async
+        +expandSnippet() String
+    }
+
+    %% Fourth Row - Completion Items & UI
+    class CompletionItem {
+        &lt;&lt;completion suggestion&gt;&gt;
+        +label String
+        +kind CompletionItemKind
+        +detail String?
+        +documentation String?
+        +insertText String
+        +range NSRange
+        +score Double
+    }
+
+    class CompletionWindowController {
+        &lt;&lt;UI controller&gt;&gt;
+        -tableView NSTableView
+        -items [CompletionItem]
+        -selectedIndex Int
+        +show()
+        +hide()
+        +selectNext()
+        +selectPrevious()
+        +applySelectedCompletion()
+    }
+
+    class CompletionCellView {
+        &lt;&lt;UI cell&gt;&gt;
+        +iconView NSImageView
+        +labelField NSTextField
+        +detailField NSTextField
+        +configure()
+    }
+
+    %% Fifth Row - Caching & Enumerations
+    class CompletionCache {
+        &lt;&lt;completion cache&gt;&gt;
+        -cache LRUCache
+        -ttl TimeInterval
+        +get() CachedCompletion?
+        +set()
+        +invalidate()
+        +cleanExpired()
+    }
+
+    class CachedCompletion {
+        &lt;&lt;cached data&gt;&gt;
+        +items [CompletionItem]
+        +timestamp Date
+        +context CompletionContext
     }
 
     class CompletionTrigger {
         &lt;&lt;enumeration&gt;&gt;
-        automatic(character: String)
+        automatic
         manual
         snippet
         import
-    }
-
-    %% Session Management
-    class CompletionSession {
-        +id: UUID
-        +context: CompletionContext
-        +provider: CompletionProvider
-        +startTime: Date
-        +items: [CompletionItem]
-        +isActive: Bool
-        +cancel()
-        +filter(prefix: String)
-        +sort(by: CompletionSortCriteria)
-    }
-
-    %% Provider System
-    class CompletionProvider {
-        &lt;&lt;protocol&gt;&gt;
-        +languageId: String
-        +triggerCharacters: Set~String~
-        +provideCompletions(context: CompletionContext) async [CompletionItem]
-        +resolveCompletion(item: CompletionItem) async CompletionItem?
-        +shouldTrigger(context: CompletionContext) Bool
-    }
-
-    class UniversalCompletionProvider {
-        -registry: ProviderRegistry
-        +createProvider(for: LanguageConfig) CompletionProvider
-        +registerCustomProvider(CompletionProvider)
-    }
-
-    %% Provider Implementations
-    class SwiftCompletionProvider {
-        -sourceKitService: SourceKitService
-        -astCache: ASTCache
-        +provideCompletions(context) async [CompletionItem]
-        +resolveCompletion(item) async CompletionItem?
-    }
-
-    class LSPCompletionProvider {
-        -lspClient: LSPClient
-        -documentManager: DocumentManager
-        +provideCompletions(context) async [CompletionItem]
-        +resolveCompletion(item) async CompletionItem?
-    }
-
-    class KeywordCompletionProvider {
-        -keywordDatabase: KeywordDatabase
-        +provideCompletions(context) async [CompletionItem]
-    }
-
-    class SnippetCompletionProvider {
-        -snippetLibrary: SnippetLibrary
-        +provideCompletions(context) async [CompletionItem]
-        +expandSnippet(CompletionItem) String
-    }
-
-    %% Completion Items
-    class CompletionItem {
-        +label: String
-        +kind: CompletionItemKind
-        +detail: String?
-        +documentation: String?
-        +insertText: String
-        +range: NSRange
-        +sortText: String?
-        +filterText: String?
-        +additionalEdits: [TextEdit]?
-        +score: Double
     }
 
     class CompletionItemKind {
@@ -122,42 +163,7 @@ classDiagram
         snippet
     }
 
-    %% UI Components
-    class CompletionWindowController {
-        -tableView: NSTableView
-        -items: [CompletionItem]
-        -selectedIndex: Int
-        +show(items: [CompletionItem], at: NSPoint)
-        +hide()
-        +selectNext()
-        +selectPrevious()
-        +applySelectedCompletion()
-    }
-
-    class CompletionCellView {
-        +iconView: NSImageView
-        +labelField: NSTextField
-        +detailField: NSTextField
-        +configure(with: CompletionItem)
-    }
-
-    %% Caching
-    class CompletionCache {
-        -cache: LRUCache~String, CachedCompletion~
-        -ttl: TimeInterval
-        +get(key: String) CachedCompletion?
-        +set(key: String, completion: CachedCompletion)
-        +invalidate(for: String?)
-        +cleanExpired()
-    }
-
-    class CachedCompletion {
-        +items: [CompletionItem]
-        +timestamp: Date
-        +context: CompletionContext
-    }
-
-    %% Relationships
+    %% Key Relationships
     CompletionManager --> CompletionSession : manages
     CompletionManager --> CompletionProvider : uses
     CompletionManager --> CompletionCache : uses
@@ -172,12 +178,9 @@ classDiagram
     CompletionProvider <|-- SnippetCompletionProvider : implements
     
     UniversalCompletionProvider --> CompletionProvider : creates
-    
     CompletionContext --> CompletionTrigger : contains
     CompletionItem --> CompletionItemKind : has
-    
     CompletionWindowController --> CompletionCellView : displays
-    
     CompletionCache --> CachedCompletion : stores
     
     %% Styling - Dark mode friendly colors

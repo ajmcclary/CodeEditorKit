@@ -4,41 +4,33 @@ This diagram details the main classes and protocols that form the core of the Co
 
 ```mermaid
 classDiagram
-    %% Core Protocols
+    direction LR
+    
+    %% Top Row - Core Protocols
     class CodeEditorAPI {
         &lt;&lt;protocol&gt;&gt;
         +language LanguageConfig?
         +text String
-        +textStorage NSTextStorage
         +configuration EditorConfiguration
-        +setLanguage(LanguageConfig?)
-        +setLanguage(fileExtension String)
+        +setLanguage()
         +invalidateLayout()
-        +ensureLayout()
-        +scrollToLine(Int)
     }
 
     class CodeEditorViewDelegate {
         &lt;&lt;protocol&gt;&gt;
-        +codeEditorViewDidChangeText(CodeEditorView)
-        +codeEditorView(shouldChangeTextIn NSRange, replacementString String) Bool
-        +codeEditorViewDidChangeSelection(CodeEditorView)
+        +didChangeText()
+        +shouldChangeText()
+        +didChangeSelection()
     }
 
-    %% Main Editor Components
+    %% Second Row - Main Components
     class CodeEditorView {
         &lt;&lt;main text view&gt;&gt;
         +delegate CodeEditorViewDelegate?
         +language LanguageConfig?
         +eventSystem UnifiedEventSystem
         +serviceRegistry BusinessLogicServiceRegistry
-        +textContainer NSTextContainer
-        +layoutManager CodeEditorLayoutManager
-        +lineIndexCache LineIndexCache
-        -setupTextSystem()
-        -setupServices()
-        -registerEventHandlers()
-        +performTextEdit(EditAction)
+        +performTextEdit()
     }
 
     class CodeEditorContainerView {
@@ -47,166 +39,24 @@ classDiagram
         +gutterView GutterView?
         +minimapView MinimapView?
         +configuration EditorConfiguration
-        -setupSubviews()
-        -updateLayout()
-        -configureGutter()
-        -configureMinimap()
     }
 
+    %% Third Row - SwiftUI & Configuration
     class CodeEditor {
         &lt;&lt;SwiftUI wrapper&gt;&gt;
         @Binding text String
         +configuration EditorConfiguration
         +language LanguageConfig?
-        +onTextChange ((String) -> Void)?
-        +makeNSView(context) NSView
-        +makeUIView(context) UIView
-        +updateNSView(NSView, context)
-        +updateUIView(UIView, context)
+        +makeNSView()
+        +makeUIView()
     }
 
-    %% Event Management System
-    class UnifiedEventSystem {
-        &lt;&lt;singleton&gt;&gt;
-        -eventHandlers [EventType: [EventHandler]]
-        -eventFilters [EventFilter]
-        +shared UnifiedEventSystem
-        +register(EventType, priority Int, handler)
-        +emit(Event)
-        +addFilter(EventFilter)
-        +removeFilter(EventFilter)
-    }
-
-    class Event {
-        &lt;&lt;data structure&gt;&gt;
-        +type EventType
-        +source Any
-        +timestamp Date
-        +data [String: Any]
-    }
-
-    %% Service Management
-    class BusinessLogicServiceRegistry {
-        &lt;&lt;dependency injection&gt;&gt;
-        -services [String: Any]
-        +textEditingService TextEditingService
-        +syntaxHighlightingService SyntaxHighlightingService
-        +languageDetectionService LanguageDetectionService
-        +completionManager CompletionManager
-        +memoryMonitor MemoryMonitor
-        +register(T.Type, service T)
-        +resolve(T.Type) T?
-    }
-
-    %% Layout & Performance
-    class CodeEditorLayoutManager {
-        &lt;&lt;NSLayoutManager subclass&gt;&gt;
-        +lineHeight CGFloat
-        +characterWidth CGFloat
-        +tabWidth Int
-        +showInvisibles Bool
-        -calculateLineHeight()
-        -calculateCharacterWidth()
-        +drawBackground(forGlyphRange, at)
-        +drawGlyphs(forGlyphRange, at)
-    }
-
-    class LineIndexCache {
-        &lt;&lt;performance optimization&gt;&gt;
-        -cache [Int: LineInfo]
-        -version Int
-        +invalidate()
-        +lineInfo(at Int) LineInfo?
-        +updateLine(Int, info LineInfo)
-        +batchUpdate(updates)
-    }
-
-    %% UI Feature Components
-    class GutterView {
-        &lt;&lt;line numbers & markers&gt;&gt;
-        +showLineNumbers Bool
-        +showFoldingMarkers Bool
-        +showBreakpoints Bool
-        +backgroundColor PlatformColor
-        +lineNumberColor PlatformColor
-        +width CGFloat
-        +drawLineNumbers(range NSRange)
-        +drawFoldingMarkers(range NSRange)
-        +handleClick(at CGPoint)
-    }
-
-    class MinimapView {
-        &lt;&lt;code overview&gt;&gt;
-        +isVisible Bool
-        +scale CGFloat
-        +contentView PlatformView
-        +viewportIndicator PlatformView
-        +updateContent()
-        +syncWithEditor(scrollPosition CGPoint)
-        +handleScroll(gesture PanGesture)
-    }
-
-    %% Business Logic Services
-    class TextEditingService {
-        &lt;&lt;text operations&gt;&gt;
-        +performEdit(action EditAction) EditResult
-        +undoManager UndoManager
-        +canUndo Bool
-        +canRedo Bool
-        +undo()
-        +redo()
-        +validateEdit(action EditAction) Bool
-    }
-
-    class SyntaxHighlightingService {
-        &lt;&lt;syntax coloring&gt;&gt;
-        +highlightText(text String, language LanguageConfig) HighlightResult
-        +highlightRange(range NSRange, language LanguageConfig)
-        +clearHighlighting()
-        +updateHighlighting(change TextChange)
-        +isHighlightingEnabled Bool
-    }
-
-    class LanguageDetectionService {
-        &lt;&lt;language recognition&gt;&gt;
-        +detectLanguage(text String) LanguageConfig?
-        +detectLanguage(fileExtension String) LanguageConfig?
-        +detectLanguage(fileName String) LanguageConfig?
-        +supportedLanguages [LanguageConfig]
-        +registerLanguage(config LanguageConfig)
-    }
-
-    class CompletionManager {
-        &lt;&lt;code completion&gt;&gt;
-        +provideCompletions(context CompletionContext) [CompletionItem]
-        +registerProvider(provider CompletionProvider)
-        +isCompletionActive Bool
-        +activeSession CompletionSession?
-        +triggerCompletion(at NSRange)
-        +dismissCompletion()
-    }
-
-    class MemoryMonitor {
-        &lt;&lt;performance monitoring&gt;&gt;
-        +currentMemoryUsage Int64
-        +peakMemoryUsage Int64
-        +memoryWarningThreshold Int64
-        +startMonitoring()
-        +stopMonitoring()
-        +reportMemoryUsage() MemoryReport
-        +cleanup()
-    }
-
-    %% Configuration System
     class EditorConfiguration {
-        &lt;&lt;configuration root&gt;&gt;
+        &lt;&lt;configuration&gt;&gt;
         +display DisplayConfiguration
         +layout LayoutConfiguration
         +behavior BehaviorConfiguration
-        +performance PerformanceConfiguration
-        +validate() ValidationResult
-        +reset()
-        +copy() EditorConfiguration
+        +validate()
     }
 
     class LanguageConfig {
@@ -215,44 +65,112 @@ classDiagram
         +name String
         +fileExtensions [String]
         +supportsCompletion Bool
-        +supportsSyntaxHighlighting Bool
-        +supportsSymbolNavigation Bool
     }
 
-    %% Event System Support
+    %% Fourth Row - Event System
+    class UnifiedEventSystem {
+        &lt;&lt;singleton&gt;&gt;
+        +shared UnifiedEventSystem
+        +register()
+        +emit()
+        +addFilter()
+    }
+
+    class Event {
+        &lt;&lt;data structure&gt;&gt;
+        +type EventType
+        +source Any
+        +timestamp Date
+    }
+
     class EventType {
         &lt;&lt;enumeration&gt;&gt;
         textChanged
         selectionChanged
         configurationChanged
         languageChanged
-        memoryWarning
-        completionRequested
-        custom(String)
     }
 
-    class EventHandler {
-        &lt;&lt;event processor&gt;&gt;
-        +priority Int
-        +handle(event Event) EventResult
-        +canHandle(eventType EventType) Bool
+    %% Fifth Row - Service Registry
+    class BusinessLogicServiceRegistry {
+        &lt;&lt;dependency injection&gt;&gt;
+        +textEditingService TextEditingService
+        +syntaxHighlightingService SyntaxHighlightingService
+        +languageDetectionService LanguageDetectionService
+        +completionManager CompletionManager
+        +register()
+        +resolve()
     }
 
-    class EventFilter {
-        &lt;&lt;event filter&gt;&gt;
-        +shouldFilter(event Event) Bool
-        +transform(event Event) Event?
-        +priority Int
+    class TextEditingService {
+        &lt;&lt;text operations&gt;&gt;
+        +performEdit()
+        +undoManager UndoManager
+        +undo()
+        +redo()
     }
 
-    %% Supporting Data Types
+    class SyntaxHighlightingService {
+        &lt;&lt;syntax coloring&gt;&gt;
+        +highlightText()
+        +highlightRange()
+        +clearHighlighting()
+    }
+
+    %% Sixth Row - More Services & Layout
+    class LanguageDetectionService {
+        &lt;&lt;language recognition&gt;&gt;
+        +detectLanguage()
+        +supportedLanguages [LanguageConfig]
+        +registerLanguage()
+    }
+
+    class CompletionManager {
+        &lt;&lt;code completion&gt;&gt;
+        +provideCompletions()
+        +registerProvider()
+        +triggerCompletion()
+    }
+
+    class CodeEditorLayoutManager {
+        &lt;&lt;NSLayoutManager&gt;&gt;
+        +lineHeight CGFloat
+        +characterWidth CGFloat
+        +tabWidth Int
+        +drawBackground()
+        +drawGlyphs()
+    }
+
+    %% Seventh Row - UI & Performance
+    class LineIndexCache {
+        &lt;&lt;performance&gt;&gt;
+        +invalidate()
+        +lineInfo()
+        +updateLine()
+    }
+
+    class GutterView {
+        &lt;&lt;line numbers&gt;&gt;
+        +showLineNumbers Bool
+        +width CGFloat
+        +drawLineNumbers()
+        +handleClick()
+    }
+
+    class MinimapView {
+        &lt;&lt;code overview&gt;&gt;
+        +isVisible Bool
+        +scale CGFloat
+        +updateContent()
+        +syncWithEditor()
+    }
+
+    %% Bottom Row - Supporting Data Types
     class LineInfo {
         &lt;&lt;line metadata&gt;&gt;
         +lineNumber Int
         +startIndex Int
         +endIndex Int
-        +lineHeight CGFloat
-        +attributes [NSAttributedString.Key: Any]
     }
 
     class TextChange {
@@ -265,7 +183,6 @@ classDiagram
     class CompletionContext {
         &lt;&lt;completion state&gt;&gt;
         +position NSRange
-        +triggerCharacter String?
         +language LanguageConfig?
         +text String
     }
@@ -274,9 +191,7 @@ classDiagram
         &lt;&lt;completion suggestion&gt;&gt;
         +title String
         +detail String?
-        +kind CompletionItemKind
         +insertText String
-        +priority Int
     }
 
     %% Relationships

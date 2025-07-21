@@ -4,91 +4,17 @@ This diagram shows the service-oriented architecture and how services interact w
 
 ```mermaid
 classDiagram
-    %% Central Service Registry
+    direction LR
+    
+    %% Top Row - Central Registry & Core Services
     class BusinessLogicServiceRegistry {
-        &lt;&lt;dependency injection container&gt;&gt;
-        -services Dictionary~String, Any~
+        &lt;&lt;dependency injection&gt;&gt;
+        -services Dictionary
         -eventSystem UnifiedEventSystem
-        +shared BusinessLogicServiceRegistry
-        +register~T~(type T.Type, service T)
-        +resolve~T~(type T.Type) T?
-        +initialize(eventSystem UnifiedEventSystem)
-        +shutdown()
-    }
-
-    %% Text Processing Services
-    class TextEditingService {
-        &lt;&lt;text operations&gt;&gt;
-        -textView CodeEditorView
-        -undoManager UndoManager
-        +performEdit(EditAction)
-        +insertText(String, at NSRange)
-        +deleteText(in NSRange)
-        +replaceText(in NSRange, with String)
-        +applyIndentation(to NSRange)
-        +toggleComment(in NSRange)
-    }
-
-    class EditAction {
-        &lt;&lt;operation types&gt;&gt;
-        insert(text String, range NSRange)
-        delete(range NSRange)
-        replace(range NSRange, text String)
-        indent(range NSRange)
-        outdent(range NSRange)
-        comment(range NSRange)
-    }
-
-    class SyntaxHighlightingService {
-        &lt;&lt;syntax coloring&gt;&gt;
-        -coordinator SyntaxHighlightingCoordinator
-        -cache HighlightingCache
-        -queue DispatchQueue
-        +highlightDocument(text String, language LanguageConfig)
-        +highlightRange(NSRange, in String, language LanguageConfig)
-        +invalidateCache(for NSRange?)
-        +cancelPendingHighlighting()
-    }
-
-    class LanguageDetectionService {
-        &lt;&lt;language recognition&gt;&gt;
-        -detectors [LanguageDetector]
-        -cache Dictionary~String, LanguageConfig~
-        +detectLanguage(fileExtension String) LanguageConfig?
-        +detectLanguage(content String) LanguageConfig?
-        +registerDetector(LanguageDetector)
-        +clearCache()
-    }
-
-    class CompletionManager {
-        &lt;&lt;code completion&gt;&gt;
-        -providers Dictionary~String, CompletionProvider~
-        -activeSession CompletionSession?
-        -debouncer Debouncer
-        +requestCompletions(context CompletionContext)
-        +registerProvider(for String, provider CompletionProvider)
-        +cancelActiveSession()
-        +applyCompletion(CompletionItem)
-    }
-
-    class MemoryMonitor {
-        &lt;&lt;resource monitoring&gt;&gt;
-        -threshold Double
-        -timer Timer?
-        -delegate MemoryMonitorDelegate?
-        +startMonitoring(interval TimeInterval)
-        +stopMonitoring()
-        +currentMemoryUsage() Double
-        +checkMemoryPressure()
-    }
-
-    %% Service Infrastructure
-    class ServiceLifecycle {
-        &lt;&lt;lifecycle protocol&gt;&gt;
+        +register()
+        +resolve()
         +initialize()
         +shutdown()
-        +suspend()
-        +resume()
     }
 
     class ServiceDependencies {
@@ -99,14 +25,84 @@ classDiagram
         +cache CacheManager
     }
 
-    %% Service Coordination Layer
+    class ServiceEventHandler {
+        &lt;&lt;event dispatcher&gt;&gt;
+        -registry BusinessLogicServiceRegistry
+        +handleTextChange()
+        +handleLanguageChange()
+        +handleConfigurationChange()
+    }
+
+    %% Second Row - Core Text & Language Services
+    class TextEditingService {
+        &lt;&lt;text operations&gt;&gt;
+        -textView CodeEditorView
+        -undoManager UndoManager
+        +performEdit()
+        +insertText()
+        +deleteText()
+        +replaceText()
+        +applyIndentation()
+    }
+
+    class SyntaxHighlightingService {
+        &lt;&lt;syntax coloring&gt;&gt;
+        -coordinator SyntaxHighlightingCoordinator
+        -cache HighlightingCache
+        -queue DispatchQueue
+        +highlightDocument()
+        +highlightRange()
+        +invalidateCache()
+    }
+
+    class LanguageDetectionService {
+        &lt;&lt;language recognition&gt;&gt;
+        -detectors [LanguageDetector]
+        -cache Dictionary
+        +detectLanguage()
+        +registerDetector()
+        +clearCache()
+    }
+
+    %% Third Row - Completion & Memory Management
+    class CompletionManager {
+        &lt;&lt;code completion&gt;&gt;
+        -providers Dictionary
+        -activeSession CompletionSession?
+        -debouncer Debouncer
+        +requestCompletions()
+        +registerProvider()
+        +cancelActiveSession()
+    }
+
+    class MemoryMonitor {
+        &lt;&lt;resource monitoring&gt;&gt;
+        -threshold Double
+        -timer Timer?
+        -delegate MemoryMonitorDelegate?
+        +startMonitoring()
+        +stopMonitoring()
+        +currentMemoryUsage()
+    }
+
+    class CacheManager {
+        &lt;&lt;cache orchestrator&gt;&gt;
+        -caches Dictionary
+        +syntaxCache Cache
+        +completionCache Cache
+        +languageCache Cache
+        +clearAll()
+        +clearExpired()
+    }
+
+    %% Fourth Row - Service Coordination & Session Management
     class SyntaxHighlightingCoordinator {
         &lt;&lt;highlighting orchestrator&gt;&gt;
-        -highlighters Dictionary~String, SyntaxHighlighter~
+        -highlighters Dictionary
         -swiftSyntaxHighlighter SwiftSyntaxHighlighter?
         -regexHighlighter RegexHighlighter
-        +coordinate(request HighlightingRequest)
-        +selectHighlighter(for LanguageConfig) SyntaxHighlighter
+        +coordinate()
+        +selectHighlighter()
     }
 
     class CompletionSession {
@@ -120,35 +116,22 @@ classDiagram
         +cancel()
     }
 
-    %% Performance & Caching
-    class CacheManager {
-        &lt;&lt;cache orchestrator&gt;&gt;
-        -caches Dictionary~String, Cache~
-        +syntaxCache Cache~HighlightingResult~
-        +completionCache Cache~CompletionResult~
-        +languageCache Cache~LanguageConfig~
-        +clearAll()
-        +clearExpired()
+    class ServiceLifecycle {
+        &lt;&lt;lifecycle protocol&gt;&gt;
+        +initialize()
+        +shutdown()
+        +suspend()
+        +resume()
     }
 
-    class ServiceEventHandler {
-        &lt;&lt;event dispatcher&gt;&gt;
-        -registry BusinessLogicServiceRegistry
-        +handleTextChange(Event)
-        +handleLanguageChange(Event)
-        +handleConfigurationChange(Event)
-        +handleMemoryWarning(Event)
-    }
-
-    %% Provider Protocols & Support Types
+    %% Fifth Row - Provider Protocols & Core Types
     class LanguageDetector {
         &lt;&lt;detection protocol&gt;&gt;
         +detectorName String
         +supportedExtensions [String]
         +confidence Double
-        +detectLanguage(content String) LanguageConfig?
-        +detectLanguage(fileExtension String) LanguageConfig?
-        +canDetect(content String) Bool
+        +detectLanguage()
+        +canDetect()
     }
 
     class CompletionProvider {
@@ -156,8 +139,57 @@ classDiagram
         +providerId String
         +supportedLanguages [String]
         +priority Int
-        +provideCompletions(context CompletionContext) [CompletionItem]
-        +canProvideCompletions(context CompletionContext) Bool
+        +provideCompletions()
+        +canProvideCompletions()
+    }
+
+    class SyntaxHighlighter {
+        &lt;&lt;highlighter protocol&gt;&gt;
+        +highlighterName String
+        +supportedLanguages [String]
+        +highlight()
+        +highlightRange()
+        +canHighlight()
+    }
+
+    %% Sixth Row - Highlighter Implementations
+    class SwiftSyntaxHighlighter {
+        &lt;&lt;Swift AST highlighter&gt;&gt;
+        +swiftSyntax SwiftSyntaxAPI
+        +colorScheme SyntaxColorScheme
+        +highlight()
+        +parseSwiftCode()
+        +applyColors()
+    }
+
+    class RegexHighlighter {
+        &lt;&lt;pattern-based highlighter&gt;&gt;
+        +patterns Dictionary
+        +colorMappings Dictionary
+        +highlight()
+        +loadPatterns()
+        +applyPattern()
+    }
+
+    class HighlightingCache {
+        &lt;&lt;highlighting cache&gt;&gt;
+        +maxSize Int
+        +cache LRUCache
+        +store()
+        +retrieve()
+        +invalidate()
+        +clear()
+    }
+
+    %% Seventh Row - Support Types & Utilities
+    class EditAction {
+        &lt;&lt;operation types&gt;&gt;
+        insert
+        delete
+        replace
+        indent
+        outdent
+        comment
     }
 
     class CompletionContext {
@@ -166,8 +198,6 @@ classDiagram
         +text String
         +language LanguageConfig?
         +triggerCharacter String?
-        +isRetrigger Bool
-        +previousContext CompletionContext?
     }
 
     class CompletionItem {
@@ -176,232 +206,75 @@ classDiagram
         +detail String?
         +kind CompletionItemKind
         +insertText String
-        +replaceRange NSRange
         +priority Int
-        +documentation String?
     }
 
-    class CompletionItemKind {
-        &lt;&lt;suggestion types&gt;&gt;
-        text
-        method
-        function
-        constructor
-        field
-        variable
-        class
-        interface
-        module
-        property
-        unit
-        value
-        enum
-        keyword
-        snippet
-        color
-        file
-        reference
-    }
-
-    %% Supporting Infrastructure
-    class MemoryMonitorDelegate {
-        &lt;&lt;monitoring protocol&gt;&gt;
-        +memoryMonitor(MemoryMonitor, didExceedThreshold Double)
-        +memoryMonitor(MemoryMonitor, memoryPressureChanged MemoryPressure)
-        +memoryMonitorDidReceiveWarning(MemoryMonitor)
+    %% Bottom Row - Basic Support Types
+    class LanguageConfig {
+        &lt;&lt;language definition&gt;&gt;
+        +identifier String
+        +name String
+        +fileExtensions [String]
+        +supportsCompletion Bool
+        +supportsSyntaxHighlighting Bool
     }
 
     class Debouncer {
         &lt;&lt;timing utility&gt;&gt;
         +delay TimeInterval
         +queue DispatchQueue
-        +workItem DispatchWorkItem?
-        +debounce(action @escaping () -> Void)
+        +debounce()
         +cancel()
         +flush()
     }
 
-    %% Syntax Highlighting System
-    class HighlightingCache {
-        &lt;&lt;highlighting cache&gt;&gt;
-        +maxSize Int
-        +cache LRUCache~String, HighlightingResult~
-        +store(key String, result HighlightingResult)
-        +retrieve(key String) HighlightingResult?
-        +invalidate(key String)
-        +clear()
-    }
-
-    class HighlightingRequest {
-        &lt;&lt;highlighting task&gt;&gt;
-        +text String
-        +language LanguageConfig
-        +range NSRange?
-        +priority HighlightingPriority
-        +completion (HighlightingResult) -> Void
-    }
-
-    class HighlightingResult {
-        &lt;&lt;highlighting output&gt;&gt;
-        +attributedString NSAttributedString
-        +tokens [SyntaxToken]
-        +processingTime TimeInterval
-        +cacheKey String
-        +isFromCache Bool
-    }
-
-    class SyntaxHighlighter {
-        &lt;&lt;highlighter protocol&gt;&gt;
-        +highlighterName String
-        +supportedLanguages [String]
-        +highlight(text String, language LanguageConfig) HighlightingResult
-        +highlightRange(text String, range NSRange, language LanguageConfig) HighlightingResult
-        +canHighlight(language LanguageConfig) Bool
-    }
-
-    class SwiftSyntaxHighlighter {
-        &lt;&lt;Swift AST highlighter&gt;&gt;
-        +swiftSyntax SwiftSyntaxAPI
-        +colorScheme SyntaxColorScheme
-        +highlight(text String, language LanguageConfig) HighlightingResult
-        +parseSwiftCode(text String) SyntaxTree
-        +applyColors(tokens [SyntaxToken]) NSAttributedString
-    }
-
-    class RegexHighlighter {
-        &lt;&lt;pattern-based highlighter&gt;&gt;
-        +patterns [String: NSRegularExpression]
-        +colorMappings [String: NSColor]
-        +highlight(text String, language LanguageConfig) HighlightingResult
-        +loadPatterns(for LanguageConfig) [NSRegularExpression]
-        +applyPattern(pattern NSRegularExpression, to String) [SyntaxToken]
-    }
-
-    %% Generic Cache System
-    class Cache~T~ {
-        &lt;&lt;generic cache&gt;&gt;
-        +maxSize Int
-        +storage [String: CacheEntry~T~]
-        +hitCount Int
-        +missCount Int
-        +store(key String, value T, expiry Date?)
-        +retrieve(key String) T?
-        +remove(key String)
-        +clear()
-    }
-
-    class CacheEntry~T~ {
-        &lt;&lt;cache entry&gt;&gt;
-        +value T
-        +timestamp Date
-        +expiry Date?
-        +accessCount Int
-        +isExpired Bool
-    }
-
-    class SyntaxToken {
-        &lt;&lt;syntax element&gt;&gt;
-        +text String
-        +range NSRange
-        +type SyntaxTokenType
-        +attributes [NSAttributedString.Key: Any]
-    }
-
-    class SyntaxTokenType {
-        <<enumeration>>
-        keyword
-        identifier
-        string
-        number
-        comment
-        operator
-        punctuation
-        whitespace
-        newline
-        unknown
-    }
-
-    class LanguageConfig {
-        +identifier: String
-        +name: String
-        +fileExtensions: [String]
-        +mimeTypes: [String]
-        +supportsCompletion: Bool
-        +supportsSyntaxHighlighting: Bool
-        +supportsFormatting: Bool
-        +configuration: [String: Any]
-    }
-
     class CrossPlatformLogger {
-        +logLevel: LogLevel
-        +destinations: [LogDestination]
-        +log(level: LogLevel, message: String, file: String, function: String, line: Int)
-        +debug(String)
-        +info(String)
-        +warning(String)
-        +error(String)
+        &lt;&lt;logging&gt;&gt;
+        +logLevel LogLevel
+        +destinations [LogDestination]
+        +log()
+        +debug()
+        +info()
+        +warning()
+        +error()
     }
 
-    %% Relationships
-    BusinessLogicServiceRegistry "1" *-- "*" TextEditingService : manages
-    BusinessLogicServiceRegistry "1" *-- "1" SyntaxHighlightingService : manages
-    BusinessLogicServiceRegistry "1" *-- "1" LanguageDetectionService : manages
-    BusinessLogicServiceRegistry "1" *-- "1" CompletionManager : manages
-    BusinessLogicServiceRegistry "1" *-- "1" MemoryMonitor : manages
+    %% Key Relationships
+    BusinessLogicServiceRegistry *-- TextEditingService : manages
+    BusinessLogicServiceRegistry *-- SyntaxHighlightingService : manages
+    BusinessLogicServiceRegistry *-- LanguageDetectionService : manages
+    BusinessLogicServiceRegistry *-- CompletionManager : manages
+    BusinessLogicServiceRegistry *-- MemoryMonitor : manages
+    
+    BusinessLogicServiceRegistry --> ServiceDependencies : uses
+    BusinessLogicServiceRegistry --> ServiceEventHandler : uses
     
     TextEditingService --> EditAction : uses
     TextEditingService ..|> ServiceLifecycle : implements
     
     SyntaxHighlightingService --> SyntaxHighlightingCoordinator : uses
-    SyntaxHighlightingService --> CacheManager : uses
+    SyntaxHighlightingService --> HighlightingCache : uses
     SyntaxHighlightingService ..|> ServiceLifecycle : implements
     
-    LanguageDetectionService --> CacheManager : uses
-    LanguageDetectionService ..|> ServiceLifecycle : implements
-    
-    CompletionManager --> CompletionSession : creates
-    CompletionManager --> CacheManager : uses
-    CompletionManager ..|> ServiceLifecycle : implements
-    
-    MemoryMonitor ..|> ServiceLifecycle : implements
-    
-    BusinessLogicServiceRegistry --> ServiceDependencies : uses
-    BusinessLogicServiceRegistry --> ServiceEventHandler : uses
-    
-    ServiceEventHandler --> UnifiedEventSystem : listens to
-    
     SyntaxHighlightingCoordinator --> SyntaxHighlighter : coordinates
-    SyntaxHighlightingCoordinator --> SwiftSyntaxHighlighter : uses
-    SyntaxHighlightingCoordinator --> RegexHighlighter : uses
+    SyntaxHighlighter <|-- SwiftSyntaxHighlighter : implements
+    SyntaxHighlighter <|-- RegexHighlighter : implements
     
     LanguageDetectionService --> LanguageDetector : uses
     LanguageDetectionService --> LanguageConfig : detects
+    LanguageDetectionService ..|> ServiceLifecycle : implements
     
+    CompletionManager --> CompletionSession : creates
     CompletionManager --> CompletionProvider : uses
     CompletionManager --> CompletionContext : creates
     CompletionManager --> CompletionItem : provides
     CompletionManager --> Debouncer : uses
+    CompletionManager ..|> ServiceLifecycle : implements
     
-    CompletionProvider --> CompletionContext : receives
-    CompletionProvider --> CompletionItem : creates
-    CompletionItem --> CompletionItemKind : categorized by
-    
-    MemoryMonitor --> MemoryMonitorDelegate : notifies
-    
-    SyntaxHighlightingService --> HighlightingCache : caches in
-    SyntaxHighlightingCoordinator --> HighlightingRequest : processes
-    SyntaxHighlightingCoordinator --> HighlightingResult : produces
-    
-    SyntaxHighlighter <|-- SwiftSyntaxHighlighter : implements
-    SyntaxHighlighter <|-- RegexHighlighter : implements
-    
-    HighlightingResult --> SyntaxToken : contains
-    SyntaxToken --> SyntaxTokenType : categorized by
-    
-    CacheManager --> Cache : manages
-    Cache --> CacheEntry : stores
+    MemoryMonitor ..|> ServiceLifecycle : implements
     
     ServiceDependencies --> CrossPlatformLogger : includes
+    ServiceDependencies --> CacheManager : includes
     
     %% Styling - Dark mode friendly colors
     classDef registry fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff

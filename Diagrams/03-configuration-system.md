@@ -4,21 +4,37 @@ This diagram illustrates the comprehensive configuration system used throughout 
 
 ```mermaid
 classDiagram
-    %% Root Configuration
+    direction LR
+    
+    %% Top Row - Root Configuration
     class EditorConfiguration {
         &lt;&lt;configuration root&gt;&gt;
         +display DisplayConfiguration
         +layout LayoutConfiguration
         +behavior BehaviorConfiguration
         +performance PerformanceConfiguration
-        +static defaultConfiguration EditorConfiguration
-        +static minimalConfiguration EditorConfiguration
-        +static performanceConfiguration EditorConfiguration
-        +validate() throws
-        +copy(with (inout EditorConfiguration) -> Void) EditorConfiguration
+        +validate()
+        +copy()
     }
 
-    %% Visual Display Settings
+    class ConfigurationPresets {
+        &lt;&lt;preset factory&gt;&gt;
+        +minimal()
+        +standard()
+        +performance()
+        +accessibility()
+        +custom()
+    }
+
+    class ConfigurationValidator {
+        &lt;&lt;validation logic&gt;&gt;
+        +validate()
+        +validateFontSize()
+        +validateTabWidth()
+        +validateCacheSize()
+    }
+
+    %% Second Row - Core Configuration Sections
     class DisplayConfiguration {
         &lt;&lt;visual settings&gt;&gt;
         +fontSize CGFloat
@@ -27,8 +43,36 @@ classDiagram
         +showInvisibles Bool
         +showMinimap Bool
         +theme ThemeConfiguration
-        +cursorStyle CursorStyle
-        +selectionStyle SelectionStyle
+    }
+
+    class LayoutConfiguration {
+        &lt;&lt;layout settings&gt;&gt;
+        +tabWidth Int
+        +indentStyle IndentStyle
+        +lineWrapping LineWrappingMode
+        +gutterWidth CGFloat?
+        +minimapWidth CGFloat
+        +lineSpacing CGFloat
+    }
+
+    class BehaviorConfiguration {
+        &lt;&lt;editing behavior&gt;&gt;
+        +autoIndent Bool
+        +autoCloseBrackets Bool
+        +highlightMatchingBrackets Bool
+        +enableCompletions Bool
+        +tabKeyBehavior TabKeyBehavior
+    }
+
+    %% Third Row - Performance & Themes
+    class PerformanceConfiguration {
+        &lt;&lt;performance tuning&gt;&gt;
+        +asyncHighlighting Bool
+        +highlightingDebounce TimeInterval
+        +maxHighlightingLength Int
+        +enableLineCache Bool
+        +cacheSize Int
+        +virtualScrolling Bool
     }
 
     class ThemeConfiguration {
@@ -36,7 +80,6 @@ classDiagram
         +backgroundColor Color
         +textColor Color
         +lineNumberColor Color
-        +gutterBackgroundColor Color
         +selectionColor Color
         +cursorColor Color
         +syntaxColors SyntaxColorScheme
@@ -50,22 +93,9 @@ classDiagram
         +number Color
         +function Color
         +type Color
-        +variable Color
-        +operator Color
     }
 
-    %% Layout & Spacing Settings
-    class LayoutConfiguration {
-        &lt;&lt;layout settings&gt;&gt;
-        +tabWidth Int
-        +indentStyle IndentStyle
-        +lineWrapping LineWrappingMode
-        +gutterWidth CGFloat?
-        +minimapWidth CGFloat
-        +lineSpacing CGFloat
-        +contentInsets EdgeInsets
-    }
-
+    %% Fourth Row - Enumerations
     class IndentStyle {
         &lt;&lt;enumeration&gt;&gt;
         spaces(Int)
@@ -79,18 +109,6 @@ classDiagram
         character
     }
 
-    %% Editor Behavior Settings
-    class BehaviorConfiguration {
-        &lt;&lt;editing behavior&gt;&gt;
-        +autoIndent Bool
-        +autoCloseBrackets Bool
-        +highlightMatchingBrackets Bool
-        +enableCompletions Bool
-        +completionTriggerCharacters Set~String~
-        +tabKeyBehavior TabKeyBehavior
-        +pasteFormatting PasteFormatting
-    }
-
     class TabKeyBehavior {
         &lt;&lt;enumeration&gt;&gt;
         insertTab
@@ -98,58 +116,27 @@ classDiagram
         triggerCompletion
     }
 
-    %% Performance & Optimization Settings
-    class PerformanceConfiguration {
-        &lt;&lt;performance tuning&gt;&gt;
-        +asyncHighlighting Bool
-        +highlightingDebounce TimeInterval
-        +maxHighlightingLength Int
-        +enableLineCache Bool
-        +cacheSize Int
-        +virtualScrolling Bool
-        +memoryWarningThreshold Double
-    }
-
-    %% Configuration Management System
-    class ConfigurationValidator {
-        &lt;&lt;validation logic&gt;&gt;
-        +validate(EditorConfiguration) throws
-        +validateFontSize(CGFloat) throws
-        +validateTabWidth(Int) throws
-        +validateCacheSize(Int) throws
-    }
-
-    class ConfigurationPresets {
-        &lt;&lt;preset factory&gt;&gt;
-        +minimal() EditorConfiguration
-        +standard() EditorConfiguration
-        +performance() EditorConfiguration
-        +accessibility() EditorConfiguration
-        +custom(builder) EditorConfiguration
-    }
-
-    %% SwiftUI Integration Layer
-    class ConfigurationEnvironmentKey {
-        &lt;&lt;EnvironmentKey&gt;&gt;
-        +defaultValue EditorConfiguration
-    }
-
+    %% Fifth Row - SwiftUI Integration & Persistence
     class AppState {
         &lt;&lt;ObservableObject&gt;&gt;
         @Published configuration EditorConfiguration
-        +updateConfiguration((inout EditorConfiguration) -> Void)
+        +updateConfiguration()
         +resetToDefault()
         +loadFromUserDefaults()
         +saveToUserDefaults()
     }
 
-    %% Persistence & Storage
+    class ConfigurationEnvironmentKey {
+        &lt;&lt;EnvironmentKey&gt;&gt;
+        +defaultValue EditorConfiguration
+    }
+
     class ConfigurationPersistence {
         &lt;&lt;data persistence&gt;&gt;
-        +save(EditorConfiguration, to URL) throws
-        +load(from URL) EditorConfiguration throws
-        +encodeJSON(EditorConfiguration) Data throws
-        +decodeJSON(Data) EditorConfiguration throws
+        +save() throws
+        +load() throws
+        +encodeJSON() throws
+        +decodeJSON() throws
     }
 
     %% Relationships
