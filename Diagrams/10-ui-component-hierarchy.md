@@ -177,13 +177,13 @@ classDiagram
     
     CodeEditorContainerView --> LayoutConstraints : uses
 
-    %% Styling
-    classDef container fill:#e3f2fd,stroke:#2196f3,stroke-width:3px
-    classDef editor fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    classDef gutter fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    classDef minimap fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    classDef overlay fill:#fce4ec,stroke:#e91e63,stroke-width:2px
-    classDef support fill:#e0f2f1,stroke:#009688,stroke-width:2px
+    %% Styling - Dark mode friendly colors
+    classDef container fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
+    classDef editor fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
+    classDef gutter fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
+    classDef minimap fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
+    classDef overlay fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
+    classDef support fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     
     class CodeEditorContainerView container
     class CodeEditorView editor
@@ -240,12 +240,12 @@ graph TB
         end
     end
 
-    %% Styling
-    classDef container fill:#e3f2fd,stroke:#2196f3
-    classDef gutter fill:#e8f5e9,stroke:#4caf50
-    classDef editor fill:#fff3e0,stroke:#ff9800
-    classDef minimap fill:#f3e5f5,stroke:#9c27b0
-    classDef status fill:#e0f2f1,stroke:#009688
+    %% Styling - Dark mode friendly colors
+    classDef container fill:#6366f120,stroke:#6366f1,color:#fff
+    classDef gutter fill:#10b98120,stroke:#10b981,color:#fff
+    classDef editor fill:#8b5cf620,stroke:#8b5cf6,color:#fff
+    classDef minimap fill:#3b82f620,stroke:#3b82f6,color:#fff
+    classDef status fill:#6b728020,stroke:#6b7280,color:#fff
 ```
 
 ## Component Responsibilities

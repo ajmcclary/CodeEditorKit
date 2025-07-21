@@ -125,14 +125,14 @@ flowchart TB
     %% Output
     ASYNC --> RENDER[Rendered Text]
 
-    %% Styling
-    classDef input fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    classDef detection fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    classDef coordinator fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    classDef swift fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    classDef regex fill:#fce4ec,stroke:#e91e63,stroke-width:2px
-    classDef process fill:#e0f2f1,stroke:#009688,stroke-width:2px
-    classDef perf fill:#efebe9,stroke:#795548,stroke-width:2px
+    %% Styling - Dark mode friendly colors
+    classDef input fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
+    classDef detection fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef coordinator fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
+    classDef swift fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
+    classDef regex fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
+    classDef process fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
+    classDef perf fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     
     class FILE,CONTENT,MANUAL input
     class LDS,DETECT,LANG,REG detection
