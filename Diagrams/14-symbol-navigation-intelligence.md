@@ -4,282 +4,232 @@ This diagram shows the comprehensive symbol navigation and code intelligence sys
 
 ```mermaid
 classDiagram
-    %% Core Symbol Navigation System
+    direction LR
+    
+    %% Row 1 - Core Navigation System
     class SymbolNavigator {
-        +symbolProviders: [SymbolProvider]
-        +symbolCache: SymbolCache
-        +breadcrumbProvider: BreadcrumbProvider
-        +outlineProvider: OutlineProvider
-        +referenceProvider: ReferenceProvider
-        +definitionProvider: DefinitionProvider
-        +navigateToSymbol(symbol: DocumentSymbol)
-        +findSymbolReferences(symbol: DocumentSymbol) [SymbolReference]
-        +getDocumentOutline() DocumentOutline
-        +getCurrentScope(position: TextPosition) ScopeInfo?
+        <<navigator>>
+        +symbolProviders [SymbolProvider]
+        +symbolCache SymbolCache
+        +breadcrumbProvider BreadcrumbProvider
+        +navigateToSymbol()
+        +findSymbolReferences()
+        +getDocumentOutline()
     }
 
     class OptimizedSymbolNavigator {
-        +indexManager: SymbolIndexManager
-        +cacheManager: OptimizedCacheManager
-        +backgroundIndexer: BackgroundSymbolIndexer
-        +incrementalUpdater: IncrementalSymbolUpdater
-        +buildSymbolIndex(document: TextDocument)
-        +updateSymbolIndex(changes: [TextChange])
-        +querySymbolIndex(query: SymbolQuery) [DocumentSymbol]
-        +optimizeIndexPerformance()
+        <<optimized navigator>>
+        +indexManager SymbolIndexManager
+        +cacheManager OptimizedCacheManager
+        +backgroundIndexer BackgroundSymbolIndexer
+        +buildSymbolIndex()
+        +updateSymbolIndex()
+        +querySymbolIndex()
     }
 
-    %% Symbol Provider System
     class SymbolProvider {
-        &lt;&lt;protocol&gt;&gt;
-        +languageId: String
-        +capabilities: SymbolCapabilities
-        +provideDocumentSymbols(document: TextDocument) [DocumentSymbol]
-        +provideWorkspaceSymbols(query: String) [SymbolInformation]
-        +resolveSymbol(symbol: DocumentSymbol) ResolvedSymbol?
+        <<protocol>>
+        +languageId String
+        +capabilities SymbolCapabilities
+        +provideDocumentSymbols()
+        +provideWorkspaceSymbols()
+        +resolveSymbol()
     }
+
+    %% Row 2 - Language Providers
 
     class SwiftSymbolProvider {
-        +swiftSyntaxParser: SwiftSyntaxParser
-        +symbolExtractor: SwiftSymbolExtractor
-        +contextAnalyzer: SwiftContextAnalyzer
-        +extractClassSymbols(syntax: ClassDeclSyntax) [DocumentSymbol]
-        +extractFunctionSymbols(syntax: FunctionDeclSyntax) [DocumentSymbol]
-        +extractPropertySymbols(syntax: VariableDeclSyntax) [DocumentSymbol]
-        +resolveInheritance(classSymbol: DocumentSymbol) [DocumentSymbol]
+        <<swift provider>>
+        +swiftSyntaxParser SwiftSyntaxParser
+        +symbolExtractor SwiftSymbolExtractor
+        +extractClassSymbols()
+        +extractFunctionSymbols()
+        +resolveInheritance()
     }
 
     class PythonSymbolProvider {
-        +astParser: PythonASTParser
-        +symbolExtractor: PythonSymbolExtractor
-        +importResolver: PythonImportResolver
-        +extractClassSymbols(node: ast.ClassDef) [DocumentSymbol]
-        +extractFunctionSymbols(node: ast.FunctionDef) [DocumentSymbol]
-        +resolveImports(importNode: ast.Import) [DocumentSymbol]
+        <<python provider>>
+        +astParser PythonASTParser
+        +symbolExtractor PythonSymbolExtractor
+        +importResolver PythonImportResolver
+        +extractClassSymbols()
+        +resolveImports()
     }
 
     class JavaScriptSymbolProvider {
-        +babelParser: BabelParser
-        +symbolExtractor: JSSymbolExtractor
-        +moduleResolver: JSModuleResolver
-        +typeInferencer: JSTypeInferencer
-        +extractObjectSymbols(node: ObjectExpression) [DocumentSymbol]
-        +extractFunctionSymbols(node: FunctionDeclaration) [DocumentSymbol]
-        +inferTypes(symbol: DocumentSymbol) TypeInformation
+        <<javascript provider>>
+        +babelParser BabelParser
+        +symbolExtractor JSSymbolExtractor
+        +moduleResolver JSModuleResolver
+        +extractObjectSymbols()
+        +inferTypes()
     }
 
     class GenericSymbolProvider {
-        +regexPatterns: [SymbolPattern]
-        +heuristicAnalyzer: HeuristicAnalyzer
-        +patternMatcher: PatternMatcher
-        +fallbackExtractor: FallbackSymbolExtractor
-        +extractSymbolsWithPatterns(text: String) [DocumentSymbol]
-        +analyzeStructure(text: String) StructureAnalysis
+        <<generic provider>>
+        +regexPatterns [SymbolPattern]
+        +heuristicAnalyzer HeuristicAnalyzer
+        +extractSymbolsWithPatterns()
+        +analyzeStructure()
     }
 
-    %% Symbol Types and Models
+    %% Row 3 - Symbol Models
     class DocumentSymbol {
-        +name: String
-        +kind: SymbolKind
-        +range: NSRange
-        +selectionRange: NSRange
-        +detail: String?
-        +children: [DocumentSymbol]
-        +parent: DocumentSymbol?
-        +containerName: String?
-        +tags: [SymbolTag]
-        +deprecated: Bool
-    }
-
-    class SymbolKind {
-        &lt;&lt;enumeration&gt;&gt;
-        file
-        module
-        namespace
-        package
-        class
-        method
-        property
-        field
-        constructor
-        enum
-        interface
-        function
-        variable
-        constant
-        string
-        number
-        boolean
-        array
-        object
-        key
-        null
-        enumMember
-        struct
-        event
-        operator
-        typeParameter
+        <<symbol>>
+        +name String
+        +kind SymbolKind
+        +range NSRange
+        +children [DocumentSymbol]
+        +deprecated Bool
     }
 
     class SymbolInformation {
-        +symbol: DocumentSymbol
-        +location: SymbolLocation
-        +containerName: String?
-        +score: Double
-        +lastAccess: Date
-        +accessCount: Int
+        <<symbol info>>
+        +symbol DocumentSymbol
+        +location SymbolLocation
+        +score Double
+        +accessCount Int
     }
 
     class SymbolReference {
-        +symbol: DocumentSymbol
-        +location: SymbolLocation
-        +referenceKind: ReferenceKind
-        +context: ReferenceContext
-        +isDeclaration: Bool
+        <<reference>>
+        +symbol DocumentSymbol
+        +location SymbolLocation
+        +referenceKind ReferenceKind
+        +isDeclaration Bool
+    }
+
+
+    %% Row 4 - Outline System
+    class OutlineProvider {
+        <<outline provider>>
+        +symbolNavigator SymbolNavigator
+        +filterManager OutlineFilterManager
+        +viewModel OutlineViewModel
+        +generateOutline()
+        +applyFilter()
+        +groupSymbols()
+    }
+
+    class DocumentOutline {
+        <<outline>>
+        +rootSymbols [DocumentSymbol]
+        +flatSymbols [DocumentSymbol]
+        +symbolHierarchy SymbolHierarchy
+        +findSymbol()
+        +getSymbolPath()
+    }
+
+    class OutlineViewModel {
+        <<view model>>
+        +expandedNodes Set~String~
+        +selectedSymbol DocumentSymbol?
+        +filteredSymbols [DocumentSymbol]
+        +expandNode()
+        +selectSymbol()
+    }
+
+    %% Row 5 - Breadcrumb System
+    class BreadcrumbProvider {
+        <<breadcrumb provider>>
+        +symbolNavigator SymbolNavigator
+        +scopeAnalyzer ScopeAnalyzer
+        +generateBreadcrumbs()
+        +getCurrentScope()
+    }
+
+    class BreadcrumbItem {
+        <<breadcrumb item>>
+        +symbol DocumentSymbol
+        +displayName String
+        +icon SymbolIcon
+        +range NSRange
+    }
+
+    class ScopeAnalyzer {
+        <<scope analyzer>>
+        +analyzeScope()
+        +findContainingScope()
+        +getVisibleSymbols()
+        +resolveSymbolVisibility()
+    }
+
+    %% Row 6 - Indexing & Caching
+    class SymbolIndexManager {
+        <<index manager>>
+        +indices [String: SymbolIndex]
+        +indexBuilder SymbolIndexBuilder
+        +incrementalUpdater IncrementalIndexUpdater
+        +buildIndex()
+        +querySymbols()
+    }
+
+    class SymbolIndex {
+        <<index>>
+        +documentId String
+        +symbols [IndexedSymbol]
+        +nameIndex [String: [IndexedSymbol]]
+        +positionIndex IntervalTree~IndexedSymbol~
+        +version Int
+    }
+
+    class SymbolCache {
+        <<cache>>
+        +cache LRUCache~String, CachedSymbols~
+        +invalidationManager CacheInvalidationManager
+        +cacheSymbols()
+        +getCachedSymbols()
+        +invalidateCache()
+    }
+
+    %% Row 7 - Reference & Definition
+    class ReferenceProvider {
+        <<reference provider>>
+        +symbolNavigator SymbolNavigator
+        +crossReferenceAnalyzer CrossReferenceAnalyzer
+        +findReferences()
+        +analyzeSymbolUsage()
+    }
+
+    class DefinitionProvider {
+        <<definition provider>>
+        +symbolNavigator SymbolNavigator
+        +definitionResolver DefinitionResolver
+        +findDefinition()
+        +findTypeDefinition()
+        +resolveImportedSymbol()
+    }
+
+    class CrossReferenceAnalyzer {
+        <<reference analyzer>>
+        +referenceDatabase ReferenceDatabase
+        +linkAnalyzer SymbolLinkAnalyzer
+        +analyzeReferences()
+        +buildReferenceGraph()
+        +detectCircularReferences()
+    }
+
+    %% Row 8 - Enumerations
+    class SymbolKind {
+        <<enumeration>>
+        file
+        class
+        method
+        property
+        function
+        variable
     }
 
     class ReferenceKind {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         declaration
         definition
         read
         write
         call
-        instantiation
-        inheritance
-        implementation
     }
 
-    %% Document Outline System
-    class OutlineProvider {
-        +symbolNavigator: SymbolNavigator
-        +filterManager: OutlineFilterManager
-        +groupingStrategy: OutlineGroupingStrategy
-        +viewModel: OutlineViewModel
-        +generateOutline(document: TextDocument) DocumentOutline
-        +applyFilter(filter: OutlineFilter)
-        +groupSymbols(symbols: [DocumentSymbol]) GroupedOutline
-    }
-
-    class DocumentOutline {
-        +rootSymbols: [DocumentSymbol]
-        +flatSymbols: [DocumentSymbol]
-        +symbolHierarchy: SymbolHierarchy
-        +metadata: OutlineMetadata
-        +findSymbol(name: String) DocumentSymbol?
-        +getSymbolPath(symbol: DocumentSymbol) [DocumentSymbol]
-        +filterByKind(kinds: [SymbolKind]) [DocumentSymbol]
-    }
-
-    class OutlineViewModel {
-        +expandedNodes: Set~String~
-        +selectedSymbol: DocumentSymbol?
-        +searchQuery: String?
-        +filteredSymbols: [DocumentSymbol]
-        +expandNode(symbolId: String)
-        +collapseNode(symbolId: String)
-        +selectSymbol(symbol: DocumentSymbol)
-        +updateFilter(query: String)
-    }
-
-    %% Breadcrumb System
-    class BreadcrumbProvider {
-        +symbolNavigator: SymbolNavigator
-        +scopeAnalyzer: ScopeAnalyzer
-        +breadcrumbFormatter: BreadcrumbFormatter
-        +generateBreadcrumbs(position: TextPosition) [BreadcrumbItem]
-        +getCurrentScope(position: TextPosition) ScopeInfo
-        +getSymbolPath(position: TextPosition) [DocumentSymbol]
-    }
-
-    class BreadcrumbItem {
-        +symbol: DocumentSymbol
-        +displayName: String
-        +icon: SymbolIcon
-        +range: NSRange
-        +clickAction: BreadcrumbAction
-        +contextMenu: [BreadcrumbMenuItem]
-    }
-
-    class ScopeAnalyzer {
-        +analyzeScope(position: TextPosition, symbols: [DocumentSymbol]) ScopeInfo
-        +findContainingScope(position: TextPosition) DocumentSymbol?
-        +getVisibleSymbols(scope: DocumentSymbol) [DocumentSymbol]
-        +resolveSymbolVisibility(symbol: DocumentSymbol, position: TextPosition) Bool
-    }
-
-    %% Symbol Indexing & Caching
-    class SymbolIndexManager {
-        +indices: [String: SymbolIndex]
-        +indexBuilder: SymbolIndexBuilder
-        +incrementalUpdater: IncrementalIndexUpdater
-        +queryEngine: SymbolQueryEngine
-        +buildIndex(document: TextDocument) SymbolIndex
-        +updateIndex(documentId: String, changes: [TextChange])
-        +querySymbols(query: SymbolQuery) [SymbolSearchResult]
-    }
-
-    class SymbolIndex {
-        +documentId: String
-        +symbols: [IndexedSymbol]
-        +nameIndex: [String: [IndexedSymbol]]
-        +kindIndex: [SymbolKind: [IndexedSymbol]]
-        +positionIndex: IntervalTree~IndexedSymbol~
-        +lastUpdated: Date
-        +version: Int
-    }
-
-    class SymbolCache {
-        +cache: LRUCache~String, CachedSymbols~
-        +invalidationManager: CacheInvalidationManager
-        +persistentCache: PersistentSymbolCache
-        +cacheSymbols(documentId: String, symbols: [DocumentSymbol])
-        +getCachedSymbols(documentId: String) [DocumentSymbol]?
-        +invalidateCache(documentId: String)
-        +persistCache()
-    }
-
-    %% Reference and Definition Resolution
-    class ReferenceProvider {
-        +symbolNavigator: SymbolNavigator
-        +crossReferenceAnalyzer: CrossReferenceAnalyzer
-        +workspaceIndexer: WorkspaceIndexer
-        +findReferences(symbol: DocumentSymbol) [SymbolReference]
-        +findAllReferences(symbol: DocumentSymbol, includeDeclaration: Bool) [SymbolReference]
-        +analyzeSymbolUsage(symbol: DocumentSymbol) UsageAnalysis
-    }
-
-    class DefinitionProvider {
-        +symbolNavigator: SymbolNavigator
-        +definitionResolver: DefinitionResolver
-        +importResolver: ImportResolver
-        +findDefinition(symbol: DocumentSymbol) SymbolLocation?
-        +findTypeDefinition(symbol: DocumentSymbol) SymbolLocation?
-        +resolveImportedSymbol(importSymbol: DocumentSymbol) DocumentSymbol?
-    }
-
-    class CrossReferenceAnalyzer {
-        +referenceDatabase: ReferenceDatabase
-        +linkAnalyzer: SymbolLinkAnalyzer
-        +dependencyTracker: DependencyTracker
-        +analyzeReferences(document: TextDocument) [CrossReference]
-        +buildReferenceGraph(symbols: [DocumentSymbol]) ReferenceGraph
-        +detectCircularReferences(graph: ReferenceGraph) [CircularReference]
-    }
-
-    %% Symbol Navigation Types
-    class SymbolNavigationTypes {
-        +SymbolQuery: SymbolQuery
-        +SymbolSearchResult: SymbolSearchResult
-        +SymbolCapabilities: SymbolCapabilities
-        +SymbolLocation: SymbolLocation
-        +ScopeInfo: ScopeInfo
-        +OutlineMetadata: OutlineMetadata
-        +UsageAnalysis: UsageAnalysis
-        +ReferenceGraph: ReferenceGraph
-    }
-
-    %% Relationships
+    %% Key Relationships
     SymbolNavigator --> SymbolProvider : uses
     SymbolNavigator --> SymbolCache : caches with
     SymbolNavigator --> BreadcrumbProvider : coordinates
@@ -288,7 +238,6 @@ classDiagram
     SymbolNavigator --> DefinitionProvider : uses
 
     OptimizedSymbolNavigator --> SymbolIndexManager : uses
-    OptimizedSymbolNavigator --> BackgroundSymbolIndexer : schedules
 
     SymbolProvider <|-- SwiftSymbolProvider : implements
     SymbolProvider <|-- PythonSymbolProvider : implements
@@ -296,7 +245,6 @@ classDiagram
     SymbolProvider <|-- GenericSymbolProvider : implements
 
     DocumentSymbol --> SymbolKind : categorized by
-    DocumentSymbol --> SymbolInformation : extends to
     SymbolReference --> ReferenceKind : categorized by
 
     OutlineProvider --> DocumentOutline : generates
@@ -305,13 +253,9 @@ classDiagram
 
     BreadcrumbProvider --> BreadcrumbItem : generates
     BreadcrumbProvider --> ScopeAnalyzer : uses
-    BreadcrumbItem --> DocumentSymbol : represents
 
     SymbolIndexManager --> SymbolIndex : manages
-    SymbolCache --> CachedSymbols : stores
-
     ReferenceProvider --> CrossReferenceAnalyzer : uses
-    CrossReferenceAnalyzer --> ReferenceGraph : builds
 
     %% Styling - Dark mode friendly colors
     classDef navigator fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
