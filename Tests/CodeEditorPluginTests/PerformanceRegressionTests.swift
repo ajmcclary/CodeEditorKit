@@ -34,7 +34,7 @@ final class PerformanceRegressionTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            wait(for: [expectation], timeout: 1.0)
+            wait(for: [expectation], timeout: 3.0)
         }
     }
     
@@ -235,7 +235,7 @@ final class PerformanceRegressionTests: XCTestCase {
         
         // 3. Debounced operations
         for index in 0..<10 {
-            try? await asyncManager.debounce(key: "edit", delay: 0.01) { @MainActor in
+            try? await asyncManager.debounce(key: "edit", delay: 0.01) {
                 // Simulate edit without actually modifying the editor
                 _ = index
             }

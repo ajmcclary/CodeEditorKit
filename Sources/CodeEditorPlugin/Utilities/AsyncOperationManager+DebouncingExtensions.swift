@@ -51,7 +51,7 @@ extension AsyncOperationManager {
         debounceErrors.removeValue(forKey: key)
         
         // Create new debounce task
-        let task = Task { @MainActor [weak self] in
+        let task = Task { [weak self] in
             do {
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 

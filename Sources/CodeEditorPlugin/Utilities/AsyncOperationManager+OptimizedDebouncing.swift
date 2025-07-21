@@ -33,41 +33,41 @@ extension AsyncOperationManager {
         // Create a unique identifier for this specific call
         _ = UUID()
         
-        // Use continuation for better performance
-        return try await withCheckedThrowingContinuation { continuation in
-            // Create new debounce task
-            let task = Task { @MainActor [weak self] in
-                do {
-                    // Use a more efficient sleep that can be interrupted
-                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                    
-                    // Check if this is still the latest call for this key
-                    guard let self else {
-                        continuation.resume(throwing: AsyncOperationError.operationCancelled)
-                        return
-                    }
-                    
-                    // Execute the operation
-                    let result = try await operation()
-                    
-                    // Store result and resume
-                    await self.storeDebounceResult(key: key, result: result)
-                    continuation.resume(returning: result)
-                } catch {
-                    if !Task.isCancelled {
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume(throwing: AsyncOperationError.operationCancelled)
-                    }
-                }
+        // Create new debounce task
+        let task = Task { [weak self] in
+            do {
+                // Use a more efficient sleep that can be interrupted
+                try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 
-                // Cleanup
-                await self?.cleanupDebounceTask(key: key)
+                guard !Task.isCancelled else { return }
+                
+                // Execute the operation
+                let result = try await operation()
+                await self?.storeDebounceResult(key: key, result: result)
+            } catch {
+                if !Task.isCancelled {
+                    await self?.storeDebounceError(key: key, error: error)
+                }
             }
             
-            // Store the task
-            self.debounceTasks[key] = task
+            await self?.cleanupDebounceTask(key: key)
         }
+        
+        debounceTasks[key] = task
+        
+        // Wait for task completion
+        _ = await task.value
+        
+        // Return result or throw error
+        if let error = debounceErrors[key] {
+            throw error
+        }
+        
+        guard let result = debounceResults[key] as? T else {
+            throw AsyncOperationError.noResult
+        }
+        
+        return result
     }
     
     /// Fast debounce for fire-and-forget operations
@@ -88,7 +88,7 @@ extension AsyncOperationManager {
         debounceTasks[key]?.cancel()
         
         // Create new debounce task
-        let task = Task { @MainActor [weak self] in
+        let task = Task { [weak self] in
             do {
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 
