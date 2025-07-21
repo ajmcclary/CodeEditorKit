@@ -224,11 +224,11 @@ extension CodeEditorView {
         
         // Calculate scaled tab width
         let spaceWidth: CGFloat
-        if let font = font {
+        if let font {
             #if canImport(UIKit)
             // iOS and Mac Catalyst don't have maximumAdvancement, calculate manually
             let spaceAttributes = [NSAttributedString.Key.font: font]
-            spaceWidth = (" " as NSString).size(withAttributes: spaceAttributes).width
+            spaceWidth = " ".size(withAttributes: spaceAttributes).width
             #else
             // macOS has maximumAdvancement
             spaceWidth = font.maximumAdvancement(for: " ").width

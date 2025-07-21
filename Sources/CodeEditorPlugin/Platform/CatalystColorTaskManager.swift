@@ -14,7 +14,7 @@ actor CatalystColorTaskManager {
     ///   - color: The color to apply
     ///   - textView: The text view to apply the color to
     ///   - delay: The delay before reapplying the color (in milliseconds)
-    func applyColorWithDelay(_ color: UIColor, to textView: CodeEditorView, delay: UInt64 = 100) async {
+    func applyColorWithDelay(_: UIColor, to textView: CodeEditorView, delay: UInt64 = 100) async {
         // Cancel any existing task
         activeTask?.cancel()
         
