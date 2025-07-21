@@ -4,257 +4,214 @@ This diagram shows the comprehensive performance monitoring and optimization sys
 
 ```mermaid
 classDiagram
-    %% Unified Performance System
+    direction LR
+    
+    %% Row 1 - Core System
     class UnifiedPerformanceSystem {
-        +performanceMonitor: PerformanceMonitor
-        +performanceInsights: PerformanceInsights
-        +productionMetrics: ProductionPerformanceMetrics
-        +adaptiveMode: AdaptivePerformanceMode
-        +memoryMonitor: MemoryMonitor
-        +viewportManager: ViewportManager
+        <<performance system>>
+        +performanceMonitor PerformanceMonitor
+        +performanceInsights PerformanceInsights
+        +productionMetrics ProductionPerformanceMetrics
         +initialize()
         +startMonitoring()
-        +stopMonitoring()
-        +generateReport() PerformanceReport
+        +generateReport()
     }
 
     class PerformanceMonitor {
-        +metrics: PerformanceMetrics
-        +collectors: [MetricCollector]
-        +thresholds: PerformanceThresholds
-        +alertManager: AlertManager
-        +isMonitoring: Bool
-        +recordMetric(name: String, value: Double, tags: [String: String])
-        +recordDuration(name: String, duration: TimeInterval)
-        +recordMemoryUsage(component: String, bytes: Int)
+        <<monitor>>
+        +metrics PerformanceMetrics
+        +thresholds PerformanceThresholds
+        +isMonitoring Bool
+        +recordMetric()
         +checkThresholds()
     }
 
+    class PerformanceInsights {
+        <<insights>>
+        +analyzer PerformanceAnalyzer
+        +predictor PerformancePredictor
+        +analyzePerformance()
+        +predictBottlenecks()
+    }
+
+    %% Row 2 - Metrics
     class PerformanceMetrics {
-        +renderingMetrics: RenderingMetrics
-        +memoryMetrics: MemoryMetrics
-        +textProcessingMetrics: TextProcessingMetrics
-        +highlightingMetrics: HighlightingMetrics
-        +completionMetrics: CompletionMetrics
-        +timestamp: Date
-        +sessionId: String
+        <<metrics container>>
+        +renderingMetrics RenderingMetrics
+        +memoryMetrics MemoryMetrics
+        +textProcessingMetrics TextProcessingMetrics
+        +timestamp Date
     }
 
     class RenderingMetrics {
-        +frameRate: Double
-        +frameDrops: Int
-        +renderTime: TimeInterval
-        +layoutTime: TimeInterval
-        +drawingTime: TimeInterval
-        +scrollPerformance: ScrollPerformance
-        +viewportUtilization: Double
+        <<rendering>>
+        +frameRate Double
+        +frameDrops Int
+        +renderTime TimeInterval
+        +scrollPerformance ScrollPerformance
     }
 
     class MemoryMetrics {
-        +totalMemoryUsage: Int
-        +peakMemoryUsage: Int
-        +memoryPressureLevel: MemoryPressureLevel
-        +gcFrequency: Int
-        +leakDetection: [MemoryLeak]
-        +componentBreakdown: [String: Int]
+        <<memory>>
+        +totalMemoryUsage Int
+        +peakMemoryUsage Int
+        +memoryPressureLevel MemoryPressureLevel
+        +leakDetection [MemoryLeak]
     }
 
-    class TextProcessingMetrics {
-        +editingLatency: TimeInterval
-        +typingResponsiveness: Double
-        +undoRedoPerformance: TimeInterval
-        +largeFileHandling: FilePerformanceMetrics
-        +batchOperationTimes: [TimeInterval]
-    }
 
-    %% Performance Insights
-    class PerformanceInsights {
-        +analyzer: PerformanceAnalyzer
-        +predictor: PerformancePredictor
-        +optimizer: PerformanceOptimizer
-        +reportGenerator: ReportGenerator
-        +analyzePerformance(metrics: PerformanceMetrics) PerformanceAnalysis
-        +predictBottlenecks() [PotentialBottleneck]
-        +suggestOptimizations() [OptimizationSuggestion]
-    }
+    %% Row 3 - Analysis & Production
 
     class PerformanceAnalyzer {
-        +patterns: [PerformancePattern]
-        +trendAnalyzer: TrendAnalyzer
-        +anomalyDetector: AnomalyDetector
-        +identifyBottlenecks(metrics: PerformanceMetrics) [Bottleneck]
-        +analyzeRenderingPerformance(metrics: RenderingMetrics) RenderingAnalysis
-        +analyzeMemoryUsage(metrics: MemoryMetrics) MemoryAnalysis
+        <<analyzer>>
+        +patterns [PerformancePattern]
+        +trendAnalyzer TrendAnalyzer
+        +identifyBottlenecks()
+        +analyzeRenderingPerformance()
     }
 
     class PerformancePredictor {
-        +models: [PredictionModel]
-        +historicalData: PerformanceHistory
-        +predictFrameRate(context: RenderingContext) Double
-        +predictMemoryUsage(operation: TextOperation) Int
-        +estimateOperationTime(operation: Operation) TimeInterval
+        <<predictor>>
+        +models [PredictionModel]
+        +historicalData PerformanceHistory
+        +predictFrameRate()
+        +predictMemoryUsage()
     }
 
-    %% Production Metrics
     class ProductionPerformanceMetrics {
-        +telemetryCollector: TelemetryCollector
-        +metricsAggregator: MetricsAggregator
-        +cloudReporter: CloudReporter
-        +privacyManager: PrivacyManager
+        <<production>>
+        +telemetryCollector TelemetryCollector
+        +metricsAggregator MetricsAggregator
         +collectUserMetrics()
-        +aggregateSessionData()
-        +reportToCloud(data: AggregatedMetrics)
+        +reportToCloud()
     }
 
+
+    %% Row 4 - Adaptive & Memory
+    class AdaptivePerformanceMode {
+        <<adaptive>>
+        +currentMode PerformanceMode
+        +modeController PerformanceModeController
+        +adjustPerformanceMode()
+        +optimizeForBattery()
+    }
+
+    class MemoryMonitor {
+        <<memory monitor>>
+        +memoryPressureHandler MemoryPressureHandler
+        +leakDetector MemoryLeakDetector
+        +startMemoryMonitoring()
+        +performCleanup()
+    }
+
+    class ViewportManager {
+        <<viewport>>
+        +visibleRange NSRange
+        +cachedContent ViewportCache
+        +updateVisibleRange()
+        +optimizeRendering()
+    }
+
+    %% Row 5 - Support Components
     class TelemetryCollector {
-        +userConsent: Bool
-        +dataRetentionPolicy: DataRetentionPolicy
-        +anonymizer: DataAnonymizer
+        <<telemetry>>
+        +userConsent Bool
+        +dataRetentionPolicy DataRetentionPolicy
         +collectRenderingTelemetry()
         +collectUsagePatterns()
-        +collectErrorMetrics()
-    }
-
-    %% Adaptive Performance Mode
-    class AdaptivePerformanceMode {
-        +currentMode: PerformanceMode
-        +modeController: PerformanceModeController
-        +resourceMonitor: ResourceMonitor
-        +adaptationRules: [AdaptationRule]
-        +adjustPerformanceMode(metrics: PerformanceMetrics)
-        +optimizeForBattery()
-        +optimizeForPerformance()
-        +optimizeForMemory()
-    }
-
-    class PerformanceMode {
-        &lt;&lt;enumeration&gt;&gt;
-        battery
-        balanced
-        performance
-        memory
-        custom(settings: PerformanceModeSettings)
     }
 
     class PerformanceModeController {
-        +currentSettings: PerformanceModeSettings
-        +switchMode(mode: PerformanceMode)
-        +applySettings(settings: PerformanceModeSettings)
-        +validateModeSwitch(newMode: PerformanceMode) Bool
+        <<mode controller>>
+        +currentSettings PerformanceModeSettings
+        +switchMode()
+        +applySettings()
     }
 
-    %% Memory Monitoring
-    class MemoryMonitor {
-        +memoryPressureHandler: MemoryPressureHandler
-        +leakDetector: MemoryLeakDetector
-        +allocationTracker: AllocationTracker
-        +cleanupScheduler: CleanupScheduler
-        +thresholds: MemoryThresholds
-        +startMemoryMonitoring()
-        +handleMemoryPressure(level: MemoryPressureLevel)
-        +performCleanup(aggressiveness: CleanupLevel)
+    class TextProcessingMetrics {
+        <<text metrics>>
+        +editingLatency TimeInterval
+        +typingResponsiveness Double
+        +undoRedoPerformance TimeInterval
     }
 
+
+    %% Row 6 - Memory & Viewport Support
     class MemoryPressureHandler {
-        +pressureCallbacks: [MemoryPressureCallback]
-        +cleanupStrategies: [CleanupStrategy]
+        <<pressure handler>>
+        +pressureCallbacks [MemoryPressureCallback]
+        +cleanupStrategies [CleanupStrategy]
         +handleLowMemory()
-        +handleCriticalMemory()
         +recoverFromMemoryPressure()
     }
 
     class MemoryLeakDetector {
-        +trackedObjects: WeakObjectSet
-        +suspiciousRetainCycles: [RetainCycle]
-        +detectionRules: [LeakDetectionRule]
+        <<leak detector>>
+        +trackedObjects WeakObjectSet
+        +suspiciousRetainCycles [RetainCycle]
         +scanForLeaks()
-        +reportSuspiciousObjects()
         +analyzeRetainCycles()
     }
 
-    %% Viewport Management
-    class ViewportManager {
-        +visibleRange: NSRange
-        +cachedContent: ViewportCache
-        +renderingOptimizer: RenderingOptimizer
-        +scrollPredictor: ScrollPredictor
-        +updateVisibleRange(range: NSRange)
-        +preloadContent(predictedRange: NSRange)
-        +invalidateViewport()
-        +optimizeRendering()
-    }
-
     class ViewportCache {
-        +cachedLines: [Int: CachedLine]
-        +cacheStrategy: CacheStrategy
-        +maxCacheSize: Int
-        +evictionPolicy: EvictionPolicy
-        +cacheLine(lineNumber: Int, content: CachedLine)
-        +getCachedLine(lineNumber: Int) CachedLine?
+        <<cache>>
+        +cachedLines [Int: CachedLine]
+        +cacheStrategy CacheStrategy
+        +cacheLine()
         +evictLeastUsed()
     }
 
+    %% Row 7 - Optimization Components
     class ScrollPredictor {
-        +scrollHistory: ScrollHistory
-        +predictionModel: ScrollPredictionModel
-        +predictScrollDirection() ScrollDirection
-        +predictScrollTarget() NSRange?
-        +estimateScrollVelocity() Double
+        <<scroll prediction>>
+        +scrollHistory ScrollHistory
+        +predictionModel ScrollPredictionModel
+        +predictScrollDirection()
+        +estimateScrollVelocity()
     }
 
-    %% Optimized Components
     class OptimizedLineIndexCache {
-        +cache: LRUCache~Int, LineInfo~
-        +version: Int
-        +incrementalUpdater: IncrementalUpdater
-        +performanceMode: CachePerformanceMode
-        +optimizedLineInfo(at: Int) LineInfo?
-        +batchUpdate(changes: [LineChange])
-        +compactCache()
+        <<optimized cache>>
+        +cache LRUCache
+        +incrementalUpdater IncrementalUpdater
+        +optimizedLineInfo()
+        +batchUpdate()
     }
 
     class IncrementalSyntaxHighlighter {
-        +highlighter: SyntaxHighlighter
-        +changeTracker: ChangeTracker
-        +backgroundQueue: DispatchQueue
-        +debouncer: Debouncer
-        +incrementalHighlight(changes: [TextChange])
+        <<incremental highlighter>>
+        +highlighter SyntaxHighlighter
+        +changeTracker ChangeTracker
+        +incrementalHighlight()
         +scheduleBackgroundHighlighting()
-        +optimizeHighlightingRange(range: NSRange) NSRange
     }
 
-    %% Performance Views & Debugging
+    %% Row 8 - Views & Types
     class PerformanceViews {
-        +performanceDashboard: PerformanceDashboard
-        +metricsOverlay: MetricsOverlay
-        +renderingDebugger: RenderingDebugger
-        +memoryProfiler: MemoryProfiler
+        <<views>>
+        +performanceDashboard PerformanceDashboard
+        +metricsOverlay MetricsOverlay
         +showPerformanceDashboard()
         +toggleMetricsOverlay()
-        +startRenderingDebug()
     }
 
     class PerformanceDashboard {
-        +realTimeMetrics: RealTimeMetricsView
-        +charts: [PerformanceChart]
-        +alerts: [PerformanceAlert]
-        +controls: PerformanceControls
-        +updateMetrics(metrics: PerformanceMetrics)
-        +addChart(chart: PerformanceChart)
-        +showAlert(alert: PerformanceAlert)
+        <<dashboard>>
+        +realTimeMetrics RealTimeMetricsView
+        +charts [PerformanceChart]
+        +updateMetrics()
+        +addChart()
     }
 
-    %% Type System
-    class PerformanceTypes {
-        +Bottleneck: PerformanceBottleneck
-        +Threshold: PerformanceThreshold
-        +Alert: PerformanceAlert
-        +Report: PerformanceReport
-        +Analysis: PerformanceAnalysis
-        +Suggestion: OptimizationSuggestion
+    class PerformanceMode {
+        <<enumeration>>
+        battery
+        balanced
+        performance
+        memory
     }
 
-    %% Relationships
+    %% Key Relationships
     UnifiedPerformanceSystem --> PerformanceMonitor : uses
     UnifiedPerformanceSystem --> PerformanceInsights : uses
     UnifiedPerformanceSystem --> ProductionPerformanceMetrics : uses
@@ -269,28 +226,18 @@ classDiagram
 
     PerformanceInsights --> PerformanceAnalyzer : uses
     PerformanceInsights --> PerformancePredictor : uses
-    PerformanceAnalyzer --> TrendAnalyzer : uses
-    PerformanceAnalyzer --> AnomalyDetector : uses
 
     ProductionPerformanceMetrics --> TelemetryCollector : uses
-    TelemetryCollector --> DataAnonymizer : uses
-    TelemetryCollector --> DataRetentionPolicy : follows
-
-    AdaptivePerformanceMode --> PerformanceMode : manages
     AdaptivePerformanceMode --> PerformanceModeController : uses
-    PerformanceModeController --> PerformanceModeSettings : applies
+    AdaptivePerformanceMode --> PerformanceMode : manages
 
     MemoryMonitor --> MemoryPressureHandler : uses
     MemoryMonitor --> MemoryLeakDetector : uses
-    MemoryPressureHandler --> CleanupStrategy : executes
 
     ViewportManager --> ViewportCache : uses
     ViewportManager --> ScrollPredictor : uses
-    ViewportCache --> CacheStrategy : follows
-    ViewportCache --> EvictionPolicy : uses
 
     PerformanceViews --> PerformanceDashboard : contains
-    PerformanceDashboard --> RealTimeMetricsView : displays
 
     %% Styling - Dark mode friendly colors
     classDef system fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
