@@ -1,6 +1,6 @@
 # CodeEditorPlugin Architecture Diagrams
 
-This directory contains comprehensive architectural diagrams for the CodeEditorPlugin framework. These diagrams illustrate the various components, their relationships, and data flows throughout the system.
+This directory contains **24 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
 
 ## Index of Diagrams
 
@@ -33,6 +33,48 @@ Text processing flow from input to rendering, including TextKit2 integration, li
 
 ### 10. [UI Component Hierarchy](10-ui-component-hierarchy.md)
 Visual component hierarchy showing CodeEditorContainerView and all child components including gutter, minimap, overlays, and status bar. Includes layout structure diagram.
+
+### 11. [Advanced Features Integration Architecture](11-advanced-features-integration.md)
+Comprehensive architecture for advanced features including debugging integration, search functionality, smart editing, and code folding. Shows feature coordination, state management, and UI integration.
+
+### 12. [LSP System Complete Architecture](12-lsp-system-architecture.md)
+Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, and error handling.
+
+### 13. [Performance Monitoring & Optimization System](13-performance-monitoring-system.md)
+Advanced performance monitoring with adaptive optimization, memory management, and real-time metrics. Includes profiling, bottleneck detection, and automatic performance tuning.
+
+### 14. [Symbol Navigation & Code Intelligence](14-symbol-navigation-intelligence.md)
+Symbol navigation and code intelligence system with multi-language support, cross-reference tracking, and intelligent navigation. Includes definition lookup, reference finding, and workspace symbol search.
+
+### 15. [Language Provider Complete Ecosystem](15-language-provider-ecosystem.md)
+Comprehensive language provider ecosystem supporting 17+ languages with completion, symbols, folding, and data providers. Shows the complete matrix of supported languages and their capabilities.
+
+### 16. [Annotation System Detailed Architecture](16-annotation-system-architecture.md)
+Comprehensive annotation system providing code annotations, diagnostics, and contextual information overlay capabilities. Includes multi-source annotation support, interactive features, and visual customization.
+
+### 17. [Advanced Text Processing & Validation Pipeline](17-advanced-text-processing-pipeline.md)
+Advanced text processing and validation system with multi-phase validation, range management, text versioning, and flexible styling. Includes performance optimization and comprehensive validation approaches.
+
+### 18. [Data Models & Type System Architecture](18-data-models-type-system.md)
+Comprehensive data models and type system forming the foundation of CodeEditorPlugin's data structures. Includes rich text models, versioning system, type information, and performance optimization.
+
+### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
+Complete SwiftUI integration ecosystem providing seamless integration between CodeEditorPlugin and SwiftUI applications. Includes platform-specific representables, environment management, and animation coordination.
+
+### 20. [Debugging Integration Detailed Architecture](20-debugging-integration-architecture.md)
+Comprehensive debugging integration system providing breakpoint management, debug session control, and debugging visualization capabilities. Supports multiple debuggers including LLDB, GDB, and Debug Adapter Protocol.
+
+### 21. [Utility Systems & Extensions Network](21-utility-systems-extensions.md)
+Comprehensive utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes file system helpers, cryptography, networking, performance utilities, and extension management.
+
+### 22. [Advanced Layout & UI Components Architecture](22-advanced-layout-ui-components.md)
+Advanced layout system and UI component architecture handling positioning, responsive design, and complex component interactions. Includes flexbox/grid layouts, constraint solving, animation coordination, and accessibility integration.
+
+### 23. [Multi-Language Support Matrix](23-multi-language-support-matrix.md)
+Comprehensive matrix view of language support capabilities across all 17+ supported languages. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
+
+### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
+Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
 
 ## How to View These Diagrams
 

@@ -115,6 +115,149 @@ classDiagram
         +batchUpdate(updates)
     }
 
+    %% UI Components
+    class GutterView {
+        +showLineNumbers: Bool
+        +showFoldingMarkers: Bool
+        +showBreakpoints: Bool
+        +backgroundColor: PlatformColor
+        +lineNumberColor: PlatformColor
+        +width: CGFloat
+        +drawLineNumbers(range: NSRange)
+        +drawFoldingMarkers(range: NSRange)
+        +handleClick(at: CGPoint)
+    }
+
+    class MinimapView {
+        +isVisible: Bool
+        +scale: CGFloat
+        +contentView: PlatformView
+        +viewportIndicator: PlatformView
+        +updateContent()
+        +syncWithEditor(scrollPosition: CGPoint)
+        +handleScroll(gesture: PanGesture)
+    }
+
+    %% Core Services
+    class TextEditingService {
+        +performEdit(action: EditAction) EditResult
+        +undoManager: UndoManager
+        +canUndo: Bool
+        +canRedo: Bool
+        +undo()
+        +redo()
+        +validateEdit(action: EditAction) Bool
+    }
+
+    class SyntaxHighlightingService {
+        +highlightText(text: String, language: LanguageConfig) HighlightResult
+        +highlightRange(range: NSRange, language: LanguageConfig)
+        +clearHighlighting()
+        +updateHighlighting(change: TextChange)
+        +isHighlightingEnabled: Bool
+    }
+
+    class LanguageDetectionService {
+        +detectLanguage(text: String) LanguageConfig?
+        +detectLanguage(fileExtension: String) LanguageConfig?
+        +detectLanguage(fileName: String) LanguageConfig?
+        +supportedLanguages: [LanguageConfig]
+        +registerLanguage(config: LanguageConfig)
+    }
+
+    class CompletionManager {
+        +provideCompletions(context: CompletionContext) [CompletionItem]
+        +registerProvider(provider: CompletionProvider)
+        +isCompletionActive: Bool
+        +activeSession: CompletionSession?
+        +triggerCompletion(at: NSRange)
+        +dismissCompletion()
+    }
+
+    class MemoryMonitor {
+        +currentMemoryUsage: Int64
+        +peakMemoryUsage: Int64
+        +memoryWarningThreshold: Int64
+        +startMonitoring()
+        +stopMonitoring()
+        +reportMemoryUsage() MemoryReport
+        +cleanup()
+    }
+
+    %% Configuration and Language
+    class EditorConfiguration {
+        +display: DisplayConfiguration
+        +layout: LayoutConfiguration
+        +behavior: BehaviorConfiguration
+        +performance: PerformanceConfiguration
+        +validate() ValidationResult
+        +reset()
+        +copy() EditorConfiguration
+    }
+
+    class LanguageConfig {
+        +identifier: String
+        +name: String
+        +fileExtensions: [String]
+        +supportsCompletion: Bool
+        +supportsSyntaxHighlighting: Bool
+        +supportsSymbolNavigation: Bool
+    }
+
+    %% Event System Components
+    class EventType {
+        &lt;&lt;enumeration&gt;&gt;
+        textChanged
+        selectionChanged
+        configurationChanged
+        languageChanged
+        memoryWarning
+        completionRequested
+        custom(String)
+    }
+
+    class EventHandler {
+        +priority: Int
+        +handle(event: Event) EventResult
+        +canHandle(eventType: EventType) Bool
+    }
+
+    class EventFilter {
+        +shouldFilter(event: Event) Bool
+        +transform(event: Event) Event?
+        +priority: Int
+    }
+
+    %% Support Types
+    class LineInfo {
+        +lineNumber: Int
+        +startIndex: Int
+        +endIndex: Int
+        +lineHeight: CGFloat
+        +attributes: [NSAttributedString.Key: Any]
+    }
+
+    class TextChange {
+        +range: NSRange
+        +replacementText: String
+        +timestamp: Date
+    }
+
+    class CompletionContext {
+        +position: NSRange
+        +triggerCharacter: String?
+        +language: LanguageConfig?
+        +text: String
+    }
+
+    class CompletionItem {
+        +title: String
+        +detail: String?
+        +kind: CompletionItemKind
+        +insertText: String
+        +priority: Int
+    }
+
     %% Relationships
     CodeEditorView ..|> CodeEditorAPI : implements
     CodeEditorView --> CodeEditorViewDelegate : delegates to
@@ -122,20 +265,40 @@ classDiagram
     CodeEditorView --> BusinessLogicServiceRegistry : uses
     CodeEditorView --> CodeEditorLayoutManager : uses
     CodeEditorView --> LineIndexCache : maintains
+    CodeEditorView --> EditorConfiguration : configured by
+    CodeEditorView --> LanguageConfig : uses
     
     CodeEditorContainerView --> CodeEditorView : contains
     CodeEditorContainerView --> GutterView : contains
     CodeEditorContainerView --> MinimapView : contains
+    CodeEditorContainerView --> EditorConfiguration : configured by
     
     CodeEditor --> CodeEditorContainerView : creates
     CodeEditor --> CodeEditorView : configures
+    CodeEditor --> EditorConfiguration : uses
+    CodeEditor --> LanguageConfig : uses
     
     UnifiedEventSystem --> Event : processes
+    UnifiedEventSystem --> EventType : categorizes
+    UnifiedEventSystem --> EventHandler : uses
+    UnifiedEventSystem --> EventFilter : applies
+    
     BusinessLogicServiceRegistry --> TextEditingService : manages
     BusinessLogicServiceRegistry --> SyntaxHighlightingService : manages
     BusinessLogicServiceRegistry --> LanguageDetectionService : manages
     BusinessLogicServiceRegistry --> CompletionManager : manages
     BusinessLogicServiceRegistry --> MemoryMonitor : manages
+    
+    Event --> EventType : categorized by
+    Event --> TextChange : may contain
+    
+    LineIndexCache --> LineInfo : stores
+    
+    TextEditingService --> TextChange : creates
+    SyntaxHighlightingService --> LanguageConfig : uses
+    LanguageDetectionService --> LanguageConfig : provides
+    CompletionManager --> CompletionContext : uses
+    CompletionManager --> CompletionItem : provides
     
     CodeEditorLayoutManager --> NSLayoutManager : inherits
 
@@ -146,17 +309,21 @@ classDiagram
     classDef event fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef service fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
     classDef layout fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
+    classDef ui fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
+    classDef config fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef support fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
     
-    class CodeEditorAPI protocol
-    class CodeEditorViewDelegate protocol
-    class CodeEditorView core
-    class CodeEditorContainerView core
+    class CodeEditorAPI,CodeEditorViewDelegate protocol
+    class CodeEditorView,CodeEditorContainerView core
     class CodeEditor swiftui
-    class UnifiedEventSystem event
-    class Event event
-    class BusinessLogicServiceRegistry service
-    class CodeEditorLayoutManager layout
-    class LineIndexCache layout
+    class UnifiedEventSystem,Event,EventHandler,EventFilter event
+    class BusinessLogicServiceRegistry,TextEditingService,SyntaxHighlightingService,LanguageDetectionService,CompletionManager,MemoryMonitor service
+    class CodeEditorLayoutManager,LineIndexCache layout
+    class GutterView,MinimapView ui
+    class EditorConfiguration,LanguageConfig config
+    class LineInfo,TextChange,CompletionContext,CompletionItem support
+    class EventType enum
 ```
 
 ## Key Design Patterns
