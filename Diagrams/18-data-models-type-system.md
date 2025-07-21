@@ -4,87 +4,293 @@ This diagram shows the comprehensive data models and type system that forms the 
 
 ```mermaid
 classDiagram
-    %% Core Type System
+    direction LR
+    
+    %% Row 1 - Core Type System
     class TypeSystem {
-        +typeRegistry: TypeRegistry
-        +typeValidator: TypeValidator
-        +typeInferencer: TypeInferencer
-        +typeConverter: TypeConverter
-        +registerType(type: DataType)
-        +validateType(value: Any, expectedType: DataType) Bool
-        +inferType(value: Any) DataType?
-        +convertType(value: Any, targetType: DataType) Any?
+        <<type system>>
+        +typeRegistry TypeRegistry
+        +typeValidator TypeValidator
+        +typeInferencer TypeInferencer
+        +typeConverter TypeConverter
+        +registerType()
+        +validateType()
+        +inferType()
+        +convertType()
     }
 
     class TypeRegistry {
-        +registeredTypes: [String: DataType]
-        +primitiveTypes: [PrimitiveType]
-        +compositeTypes: [CompositeType]
-        +customTypes: [CustomType]
-        +register(type: DataType, identifier: String)
-        +lookup(identifier: String) DataType?
-        +getAllTypes() [DataType]
+        <<registry>>
+        +registeredTypes [String: DataType]
+        +primitiveTypes [PrimitiveType]
+        +compositeTypes [CompositeType]
+        +customTypes [CustomType]
+        +register()
+        +lookup()
+        +getAllTypes()
     }
 
-    %% Core Data Models
+    class DataModel {
+        <<protocol>>
+        +modelId String
+        +version Int
+        +validate()
+        +serialize()
+        +deserialize()
+    }
+
+    %% Row 2 - Text Data Models
     class FoldableRegion {
-        +range: NSRange
-        +isExpanded: Bool
-        +foldingType: FoldingType
-        +displayText: String?
-        +nestedRegions: [FoldableRegion]
-        +metadata: RegionMetadata
+        <<foldable region>>
+        +range NSRange
+        +isExpanded Bool
+        +foldingType FoldingType
+        +displayText String?
+        +nestedRegions [FoldableRegion]
+        +metadata RegionMetadata
         +expand()
         +collapse()
         +toggle()
-        +containsRange(range: NSRange) Bool
     }
 
+    class MarkedText {
+        <<marked text>>
+        +text String
+        +markers [TextMarker]
+        +attributes [NSAttributedString.Key: Any]
+        +range NSRange
+        +language String?
+        +addMarker()
+        +removeMarker()
+        +getMarkersInRange()
+    }
+
+    class TextMarker {
+        <<text marker>>
+        +id String
+        +range NSRange
+        +type MarkerType
+        +priority Int
+        +data MarkerData
+        +isVisible Bool
+        +update()
+        +intersects()
+    }
+
+    class MarkerData {
+        <<marker data>>
+        +title String?
+        +description String?
+        +color PlatformColor?
+        +icon PlatformImage?
+        +metadata [String: Any]
+        +actions [MarkerAction]
+    }
+
+    %% Row 3 - Token System
+    class Token {
+        <<token>>
+        +value String
+        +type TokenType
+        +range NSRange
+        +syntaxKind SyntaxKind?
+        +semanticInfo SemanticInfo?
+        +parentToken Token?
+        +childTokens [Token]
+        +isValid Bool
+    }
+
+    class SemanticInfo {
+        <<semantic info>>
+        +symbolKind SymbolKind
+        +scope Scope
+        +references [TokenReference]
+        +definition TokenDefinition?
+        +typeInfo TypeInformation?
+        +accessibility AccessibilityLevel
+    }
+
+    class TextSegment {
+        <<text segment>>
+        +content String
+        +type NSTextSegmentType
+        +range NSRange
+        +attributes [NSAttributedString.Key: Any]
+        +metadata SegmentMetadata
+        +isEditable Bool
+        +render()
+    }
+
+    class SegmentMetadata {
+        <<segment metadata>>
+        +language String?
+        +syntaxHighlighted Bool
+        +lastModified Date
+        +userAnnotations [String]
+        +systemTags [SystemTag]
+        +performance SegmentPerformanceInfo
+    }
+
+    %% Row 4 - Versioning System
+    class Versioned~T~ {
+        <<versioned>>
+        +content T
+        +version Int
+        +timestamp Date
+        +checksum String
+        +metadata VersionMetadata
+        +updateContent()
+        +rollback()
+        +compare()
+    }
+
+    class VersionedContent {
+        <<versioned content>>
+        +textContent String
+        +binaryContent Data?
+        +encoding String.Encoding
+        +lineEndings LineEndingType
+        +contentType ContentType
+        +size Int
+        +hash String
+    }
+
+    class VersionMetadata {
+        <<version metadata>>
+        +author String?
+        +message String?
+        +tags [String]
+        +parentVersion Int?
+        +branchInfo BranchInfo?
+        +changeType ChangeType
+    }
+
+    class VersionDifference {
+        <<version difference>>
+        +addedLines [LineChange]
+        +removedLines [LineChange]
+        +modifiedLines [LineChange]
+        +statistics DifferenceStatistics
+        +generatePatch()
+    }
+
+    %% Row 5 - Mutation System
+    class RangeMutation {
+        <<range mutation>>
+        +originalRange NSRange
+        +newRange NSRange
+        +mutationType MutationType
+        +textDelta String
+        +timestamp Date
+        +reversible Bool
+        +apply()
+        +reverse()
+        +combine()
+    }
+
+    class MutationResult {
+        <<mutation result>>
+        +success Bool
+        +resultingRange NSRange
+        +affectedRanges [NSRange]
+        +warnings [MutationWarning]
+        +undo UndoOperation?
+    }
+
+    class RegionMetadata {
+        <<region metadata>>
+        +createdAt Date
+        +modifiedAt Date
+        +foldCount Int
+        +userPreference UserFoldingPreference
+        +persistentId String
+        +tags [String]
+    }
+
+    %% Row 6 - Type Information System
+    class TypeInformation {
+        <<type information>>
+        +typeName String
+        +typeKind TypeKind
+        +generics [GenericParameter]
+        +constraints [TypeConstraint]
+        +members [TypeMember]
+        +inheritance [TypeInformation]
+        +isNullable Bool
+        +documentation String?
+    }
+
+    class GenericParameter {
+        <<generic parameter>>
+        +name String
+        +constraints [TypeConstraint]
+        +defaultType TypeInformation?
+        +variance GenericVariance
+    }
+
+    class TypeConstraint {
+        <<type constraint>>
+        +constraintType ConstraintType
+        +targetType TypeInformation
+        +isOptional Bool
+    }
+
+    class TypeMember {
+        <<type member>>
+        +name String
+        +memberType TypeInformation
+        +accessibility AccessibilityLevel
+        +isStatic Bool
+        +isReadOnly Bool
+        +documentation String?
+    }
+
+    %% Row 7 - Model Relationships & Performance
+    class ModelRelationship {
+        <<model relationship>>
+        +sourceModel DataModel
+        +targetModel DataModel
+        +relationshipType RelationshipType
+        +cardinality Cardinality
+        +isOptional Bool
+        +cascadeDelete Bool
+    }
+
+    class ModelPerformanceTracker {
+        <<performance tracker>>
+        +accessPatterns [AccessPattern]
+        +memoryUsage MemoryUsageInfo
+        +serializationMetrics SerializationMetrics
+        +trackAccess()
+        +analyzePerformance()
+        +optimizeModel()
+    }
+
+    class ModelCache~T~ {
+        <<model cache>>
+        +cache LRUCache~String, T~
+        +validator ModelValidator~T~
+        +serializer ModelSerializer~T~
+        +store()
+        +retrieve()
+        +invalidate()
+        +compact()
+    }
+
+    %% Row 8 - Enumerations
     class FoldingType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         braces
         indentation
         comment
         imports
         function
         class
-        custom(type: String)
-    }
-
-    class RegionMetadata {
-        +createdAt: Date
-        +modifiedAt: Date
-        +foldCount: Int
-        +userPreference: UserFoldingPreference
-        +persistentId: String
-        +tags: [String]
-    }
-
-    class MarkedText {
-        +text: String
-        +markers: [TextMarker]
-        +attributes: [NSAttributedString.Key: Any]
-        +range: NSRange
-        +language: String?
-        +addMarker(marker: TextMarker)
-        +removeMarker(id: String)
-        +getMarkersInRange(range: NSRange) [TextMarker]
-        +applyAttributes(attributes: [NSAttributedString.Key: Any])
-    }
-
-    class TextMarker {
-        +id: String
-        +range: NSRange
-        +type: MarkerType
-        +priority: Int
-        +data: MarkerData
-        +isVisible: Bool
-        +update(range: NSRange)
-        +intersects(range: NSRange) Bool
+        custom
     }
 
     class MarkerType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         highlight
         error
         warning
@@ -93,32 +299,11 @@ classDiagram
         search
         annotation
         debugging
-        custom(type: String)
-    }
-
-    class MarkerData {
-        +title: String?
-        +description: String?
-        +color: PlatformColor?
-        +icon: PlatformImage?
-        +metadata: [String: Any]
-        +actions: [MarkerAction]
-    }
-
-    %% Token System
-    class Token {
-        +value: String
-        +type: TokenType
-        +range: NSRange
-        +syntaxKind: SyntaxKind?
-        +semanticInfo: SemanticInfo?
-        +parentToken: Token?
-        +childTokens: [Token]
-        +isValid: Bool
+        custom
     }
 
     class TokenType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         keyword
         identifier
         literal
@@ -131,11 +316,11 @@ classDiagram
         number
         boolean
         regex
-        custom(type: String)
+        custom
     }
 
     class SyntaxKind {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         declaration
         statement
         expression
@@ -147,69 +332,8 @@ classDiagram
         unknown
     }
 
-    class SemanticInfo {
-        +symbolKind: SymbolKind
-        +scope: Scope
-        +references: [TokenReference]
-        +definition: TokenDefinition?
-        +typeInfo: TypeInformation?
-        +accessibility: AccessibilityLevel
-    }
-
-    %% Versioning System
-    class Versioned~T~ {
-        +content: T
-        +version: Int
-        +timestamp: Date
-        +checksum: String
-        +metadata: VersionMetadata
-        +updateContent(newContent: T)
-        +rollback(version: Int) Bool
-        +compare(other: Versioned~T~) VersionDifference
-    }
-
-    class VersionedContent {
-        +textContent: String
-        +binaryContent: Data?
-        +encoding: String.Encoding
-        +lineEndings: LineEndingType
-        +contentType: ContentType
-        +size: Int
-        +hash: String
-    }
-
-    class VersionMetadata {
-        +author: String?
-        +message: String?
-        +tags: [String]
-        +parentVersion: Int?
-        +branchInfo: BranchInfo?
-        +changeType: ChangeType
-    }
-
-    class VersionDifference {
-        +addedLines: [LineChange]
-        +removedLines: [LineChange]
-        +modifiedLines: [LineChange]
-        +statistics: DifferenceStatistics
-        +generatePatch() String
-    }
-
-    %% Range and Mutation System
-    class RangeMutation {
-        +originalRange: NSRange
-        +newRange: NSRange
-        +mutationType: MutationType
-        +textDelta: String
-        +timestamp: Date
-        +reversible: Bool
-        +apply(text: inout String) MutationResult
-        +reverse() RangeMutation?
-        +combine(with: RangeMutation) RangeMutation?
-    }
-
     class MutationType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         insertion
         deletion
         replacement
@@ -219,17 +343,8 @@ classDiagram
         format
     }
 
-    class MutationResult {
-        +success: Bool
-        +resultingRange: NSRange
-        +affectedRanges: [NSRange]
-        +warnings: [MutationWarning]
-        +undo: UndoOperation?
-    }
-
-    %% Text Segment System
     class NSTextSegmentType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         standard
         whitespace
         tab
@@ -237,42 +352,11 @@ classDiagram
         selection
         link
         attachment
-        custom(type: String)
-    }
-
-    class TextSegment {
-        +content: String
-        +type: NSTextSegmentType
-        +range: NSRange
-        +attributes: [NSAttributedString.Key: Any]
-        +metadata: SegmentMetadata
-        +isEditable: Bool
-        +render() NSAttributedString
-    }
-
-    class SegmentMetadata {
-        +language: String?
-        +syntaxHighlighted: Bool
-        +lastModified: Date
-        +userAnnotations: [String]
-        +systemTags: [SystemTag]
-        +performance: SegmentPerformanceInfo
-    }
-
-    %% Type Information System
-    class TypeInformation {
-        +typeName: String
-        +typeKind: TypeKind
-        +generics: [GenericParameter]
-        +constraints: [TypeConstraint]
-        +members: [TypeMember]
-        +inheritance: [TypeInformation]
-        +isNullable: Bool
-        +documentation: String?
+        custom
     }
 
     class TypeKind {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         primitive
         struct
         class
@@ -287,31 +371,8 @@ classDiagram
         unknown
     }
 
-    class GenericParameter {
-        +name: String
-        +constraints: [TypeConstraint]
-        +defaultType: TypeInformation?
-        +variance: GenericVariance
-    }
-
-    class TypeConstraint {
-        +constraintType: ConstraintType
-        +targetType: TypeInformation
-        +isOptional: Bool
-    }
-
-    class TypeMember {
-        +name: String
-        +memberType: TypeInformation
-        +accessibility: AccessibilityLevel
-        +isStatic: Bool
-        +isReadOnly: Bool
-        +documentation: String?
-    }
-
-    %% Content Management
     class ContentType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         plainText
         sourcecode
         markdown
@@ -320,11 +381,11 @@ classDiagram
         yaml
         binary
         image
-        custom(mimeType: String)
+        custom
     }
 
     class LineEndingType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         lf
         crlf
         cr
@@ -333,7 +394,7 @@ classDiagram
     }
 
     class ChangeType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         created
         modified
         deleted
@@ -343,18 +404,8 @@ classDiagram
         conflicted
     }
 
-    %% Model Relationships and Dependencies
-    class ModelRelationship {
-        +sourceModel: DataModel
-        +targetModel: DataModel
-        +relationshipType: RelationshipType
-        +cardinality: Cardinality
-        +isOptional: Bool
-        +cascadeDelete: Bool
-    }
-
     class RelationshipType {
-        &lt;&lt;enumeration&gt;&gt;
+        <<enumeration>>
         oneToOne
         oneToMany
         manyToOne
@@ -364,71 +415,38 @@ classDiagram
         dependency
     }
 
-    class DataModel {
-        &lt;&lt;protocol&gt;&gt;
-        +modelId: String
-        +version: Int
-        +validate() ValidationResult
-        +serialize() Data
-        +deserialize(data: Data) Self?
-    }
-
-    %% Performance and Optimization
-    class ModelPerformanceTracker {
-        +accessPatterns: [AccessPattern]
-        +memoryUsage: MemoryUsageInfo
-        +serializationMetrics: SerializationMetrics
-        +trackAccess(model: DataModel, operation: ModelOperation)
-        +analyzePerformance() PerformanceReport
-        +optimizeModel(model: DataModel) OptimizationSuggestions
-    }
-
-    class ModelCache~T~ {
-        +cache: LRUCache~String, T~
-        +validator: ModelValidator~T~
-        +serializer: ModelSerializer~T~
-        +store(key: String, model: T)
-        +retrieve(key: String) T?
-        +invalidate(key: String)
-        +compact()
-    }
-
-    %% Relationships
+    %% Key Relationships
     TypeSystem --> TypeRegistry : uses
-    TypeSystem --> TypeValidator : validates with
-    TypeSystem --> TypeInferencer : infers with
-
+    TypeSystem --> DataModel : manages
+    
     FoldableRegion --> FoldingType : categorized by
     FoldableRegion --> RegionMetadata : contains
-    FoldableRegion --> FoldableRegion : contains nested
-
+    
     MarkedText --> TextMarker : contains
     TextMarker --> MarkerType : categorized by
     TextMarker --> MarkerData : contains
-
+    
     Token --> TokenType : categorized by
     Token --> SyntaxKind : has
     Token --> SemanticInfo : contains
-    Token --> Token : parent/child
-
+    
     Versioned --> VersionMetadata : contains
     Versioned --> VersionedContent : wraps
-    VersionMetadata --> ChangeType : categorized by
-
+    
     RangeMutation --> MutationType : categorized by
     RangeMutation --> MutationResult : produces
-
+    
     TextSegment --> NSTextSegmentType : categorized by
     TextSegment --> SegmentMetadata : contains
-
+    
     TypeInformation --> TypeKind : categorized by
     TypeInformation --> GenericParameter : contains
     TypeInformation --> TypeConstraint : has
     TypeInformation --> TypeMember : contains
-
+    
     ModelRelationship --> RelationshipType : categorized by
     ModelRelationship --> DataModel : relates
-
+    
     ModelPerformanceTracker --> DataModel : tracks
     ModelCache --> DataModel : caches
 
