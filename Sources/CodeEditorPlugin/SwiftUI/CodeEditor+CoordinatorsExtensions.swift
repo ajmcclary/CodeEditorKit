@@ -29,6 +29,11 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Text binding for SwiftUI integration
     var textBinding: Binding<String>?
     
+    #if targetEnvironment(macCatalyst)
+    /// Task manager for structured color application on Catalyst
+    private let catalystColorTaskManager = CatalystColorTaskManager()
+    #endif
+    
     /// Additional callbacks for extended functionality
     var onTextChangeCallback: ((String) -> Void)?
     var onSelectionChangeCallback: ((NSRange) -> Void)?
@@ -245,9 +250,20 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         notificationObservers.removeAll()
     }
     
+    /// Cleanup method to be called when the coordinator is no longer needed
+    /// This should be called before the coordinator is deallocated
+    func cleanup() {
+        #if targetEnvironment(macCatalyst)
+        Task {
+            await catalystColorTaskManager.cancelActiveTask()
+        }
+        #endif
+        // Notification observers are removed automatically in deinit
+    }
+    
     deinit {
         // Cannot access MainActor isolated properties in deinit with Swift 6
-        // removeNotificationObservers() should be called explicitly when view disappears
+        // cleanup() should be called explicitly when view disappears
         // NotificationCenter automatically removes observers when object is deallocated
     }
     
@@ -285,7 +301,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func applyCatalystThemeColors(theme: CodeEditorSwiftUITheme, to textView: CodeEditorView) {
         let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
         Task { @MainActor in
-            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView)
+            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
         }
     }
     #endif

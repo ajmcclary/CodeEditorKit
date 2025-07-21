@@ -59,11 +59,13 @@ public class GutterView: PlatformView, GutterViewProtocol {
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
+        setupAccessibility()
     }
     
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
+        setupAccessibility()
     }
     
     // MARK: - Setup
@@ -215,6 +217,11 @@ extension GutterView {
             gutterBounds: bounds,
             fillBackground: fillBackground
         )
+        
+        // Update accessibility elements for visible lines
+        #if canImport(UIKit)
+        updateAccessibilityElements()
+        #endif
     }
 }
 

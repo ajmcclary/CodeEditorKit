@@ -45,6 +45,9 @@ extension CodeEditorView {
         
         // Apply default configuration
         applyConfiguration()
+        
+        // Set up accessibility support
+        setupAccessibility()
     }
     
     internal func setupDefaultTheme() {

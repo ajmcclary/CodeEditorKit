@@ -509,23 +509,9 @@ public final class AsyncSyntaxHighlighter {
     }
     
     deinit {
-        // Ensure all tasks are cancelled even if cleanup() wasn't called
-        // Use MainActor.assumeIsolated since we know deinit runs on MainActor for @MainActor types
-        MainActor.assumeIsolated {
-            // Cancel all tasks to prevent memory leaks
-            if let task = debounceTask {
-                task.cancel()
-            }
-            if let task = periodicOptimizationTask {
-                task.cancel()
-            }
-            if let task = highlightingTask {
-                task.cancel()
-            }
-            
-            // Also ensure background highlighter is cleaned up
-            backgroundHighlighter.cancelAllRequests()
-        }
+        // Note: cleanup() should be called explicitly before deallocation
+        // We cannot access MainActor-isolated properties in deinit with Swift 6
+        // Any remaining cleanup will be handled by ARC when references are released
     }
     
     // MARK: - Cache Management

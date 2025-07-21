@@ -292,4 +292,91 @@ final class LSPClientRegistry {
     }
 }
 
+// MARK: - Language Enum Extensions
+
+extension LSPClientRegistry {
+    /// Register a language server configuration using Language enum
+    /// - Parameters:
+    ///   - language: The Language enum case
+    ///   - serverPath: Path to the language server executable
+    ///   - serverArguments: Command line arguments for the server
+    ///   - fileExtensions: File extensions associated with this language
+    ///   - capabilities: Client capabilities
+    ///   - autoStart: Whether to auto-start the server
+    ///   - enablePathResolution: Whether to enable path resolution
+    func registerLanguageServer(
+        for language: Language,
+        serverPath: String,
+        serverArguments: [String] = [],
+        fileExtensions: [String] = [],
+        capabilities: ClientCapabilities = ClientCapabilities(),
+        autoStart: Bool = false,
+        enablePathResolution: Bool = true
+    ) {
+        let config = LanguageServerConfig(
+            languageId: language.lspIdentifier,
+            serverPath: serverPath,
+            fileExtensions: fileExtensions,
+            serverArguments: serverArguments,
+            capabilities: capabilities,
+            autoStart: autoStart,
+            enablePathResolution: enablePathResolution
+        )
+        registerLanguageServer(config)
+    }
+    
+    /// Start a language server for the given language
+    /// - Parameter language: Language enum case
+    func startLanguageServer(for language: Language) async throws {
+        try await startLanguageServer(for: language.lspIdentifier)
+    }
+    
+    /// Stop a language server for the given language
+    /// - Parameter language: Language enum case
+    func stopLanguageServer(for language: Language) {
+        stopLanguageServer(for: language.lspIdentifier)
+    }
+    
+    /// Get LSP client for a language
+    /// - Parameter language: Language enum case
+    /// - Returns: LSP client if available
+    func client(for language: Language) -> LSPClient? {
+        client(for: language.lspIdentifier)
+    }
+    
+    /// Get language from file URL using Language enum
+    /// - Parameter fileURL: File URL to check
+    /// - Returns: Language if detected, nil otherwise
+    func language(for fileURL: URL) -> Language? {
+        guard let languageId = languageId(for: fileURL.path) else { return nil }
+        
+        // Map LSP language IDs back to Language enum cases
+        switch languageId {
+        case "swift": return .swift
+
+        case "typescript", "javascript": 
+            // Check file extension to distinguish between JS and TS
+            let ext = fileURL.pathExtension.lowercased()
+            return (ext == "ts" || ext == "tsx") ? .typescript : .javascript
+        case "python": return .python
+        case "go": return .go
+        case "rust": return .rust
+        case "c": return .c
+        case "cpp": return .cpp
+        case "java": return .java
+        case "html": return .html
+        case "css": return .css
+        case "json": return .json
+        case "markdown": return .markdown
+        case "yaml": return .yaml
+        case "xml": return .xml
+        case "sql": return .sql
+        case "ruby": return .ruby
+        case "php": return .php
+        case "shellscript": return .shell
+        default: return .plainText
+        }
+    }
+}
+
 #endif // canImport(AppKit) && !targetEnvironment(macCatalyst)

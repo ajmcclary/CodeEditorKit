@@ -345,6 +345,47 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         }
     }
     
+    /// The Language Server Protocol identifier for the language.
+    ///
+    /// This identifier is used when communicating with Language Server Protocol (LSP) servers.
+    /// It follows the standard LSP language identifiers as defined in the specification.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let language = Language.swift
+    /// let lspId = language.lspIdentifier // "swift"
+    /// 
+    /// // Use with LSP client
+    /// lspClient.initialize(languageId: language.lspIdentifier)
+    /// ```
+    ///
+    /// - SeeAlso: [LSP Specification - Text Document Item](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocumentItem)
+    public var lspIdentifier: String {
+        switch self {
+        case .swift: "swift"
+        case .javascript: "javascript"
+        case .typescript: "typescript"
+        case .python: "python"
+        case .go: "go"
+        case .rust: "rust"
+        case .c: "c"
+        case .cpp: "cpp"
+        case .java: "java"
+        case .html: "html"
+        case .css: "css"
+        case .json: "json"
+        case .markdown: "markdown"
+        case .yaml: "yaml"
+        case .xml: "xml"
+        case .sql: "sql"
+        case .ruby: "ruby"
+        case .php: "php"
+        case .shell: "shellscript"
+        case .plainText: "plaintext"
+        }
+    }
+    
     /// Initialize from file extension
     public init?(fileExtension: String) {
         let lowercased = fileExtension.lowercased()

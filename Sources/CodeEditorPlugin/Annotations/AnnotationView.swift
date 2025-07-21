@@ -57,6 +57,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         setupAppearance()
         setupIcon()
         setupInteraction()
+        setupAccessibility()
     }
     
     private func setupAppearance() {
@@ -478,6 +479,77 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         } else {
             showPopup(detachable: true)
         }
+    }
+    #endif
+    
+    // MARK: - Accessibility
+    
+    private func setupAccessibility() {
+        #if canImport(UIKit)
+        setupAccessibilityUIKit()
+        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        setupAccessibilityAppKit()
+        #endif
+    }
+    
+    #if canImport(UIKit)
+    private func setupAccessibilityUIKit() {
+        isAccessibilityElement = true
+        accessibilityTraits = [.button, .staticText]
+        
+        // Set accessibility label based on annotation type and message
+        let annotationType = annotationKind.rawValue
+        let message = annotationMessage
+        accessibilityLabel = "\(annotationType): \(message)"
+        
+        // Add hint to indicate interaction is available
+        accessibilityHint = "Double tap to show full message"
+        
+        // Add custom actions
+        accessibilityCustomActions = [
+            UIAccessibilityCustomAction(
+                name: "Show details",
+                target: self,
+                selector: #selector(showAccessibilityDetails)
+            )
+        ]
+    }
+    
+    @objc private func showAccessibilityDetails() {
+        showPopup(detachable: true)
+        
+        // Announce that details are shown
+        let announcement = "Showing details for \(annotationKind.rawValue)"
+        UIAccessibility.post(notification: .announcement, argument: announcement)
+    }
+    
+    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+    private func setupAccessibilityAppKit() {
+        setAccessibilityRole(.button)
+        setAccessibilityRoleDescription("Code annotation")
+        
+        // Set accessibility label based on annotation type and message
+        let annotationType = annotationKind.rawValue
+        let message = annotationMessage
+        setAccessibilityLabel("\(annotationType): \(message)")
+        setAccessibilityHelp("Click to show full message")
+        
+        // Enable accessibility
+        setAccessibilityEnabled(true)
+    }
+    
+    override public func accessibilityPerformPress() -> Bool {
+        showPopup(detachable: true)
+        
+        // Announce that details are shown
+        let announcement = "Showing details for \(annotationKind.rawValue)"
+        NSAccessibility.post(
+            element: self,
+            notification: .announcementRequested,
+            userInfo: [.announcement: announcement]
+        )
+        
+        return true
     }
     #endif
     

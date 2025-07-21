@@ -12,8 +12,10 @@ extension LSPClient {
     }
     
     /// Connect using server configuration that automatically selects appropriate transport
-    /// - Parameter configuration: Unified server configuration
-    public func connect(configuration: LSPServerConfiguration) async throws {
+    /// - Parameters:
+    ///   - configuration: Unified server configuration
+    ///   - language: The language to use for LSP communication
+    public func connect(configuration: LSPServerConfiguration, language: Language) async throws {
         // Create appropriate transport based on configuration
         let transport = try await configuration.createTransport()
         self.transport = transport
@@ -23,7 +25,7 @@ extension LSPClient {
         switch configuration {
         case .local(let localConfig):
             baseConfig = ServerConfiguration(
-                languageId: "swift", // TODO: Make this configurable
+                languageId: language.lspIdentifier,
                 serverPath: localConfig.executablePath,
                 workspaceRoot: localConfig.workingDirectory ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
                 serverArguments: localConfig.arguments
@@ -31,7 +33,7 @@ extension LSPClient {
 
         case .remote(let remoteConfig):
             baseConfig = ServerConfiguration(
-                languageId: "swift", // TODO: Make this configurable
+                languageId: language.lspIdentifier,
                 serverPath: remoteConfig.serverURL.absoluteString,
                 workspaceRoot: URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
                 serverArguments: []

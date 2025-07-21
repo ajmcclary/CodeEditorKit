@@ -76,6 +76,9 @@ extension CodeEditorView {
             eventPublisher.publishSync(.textDidChange(text ?? ""))
             #endif
             
+            // Update accessibility for text changes
+            notifyAccessibilityTextDidChange()
+            
             // Check for completion triggering
             if isCodeCompletionEnabled {
                 checkForCompletionTrigger(at: editedRange)

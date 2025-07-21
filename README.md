@@ -54,7 +54,7 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 - **Swift**: 6.0+
 - **Platforms**:
-  - macOS 12.0+ (optimized for 14+)
+  - macOS 14.0+
   - iOS 16.0+
   - Mac Catalyst 16.0+
 - **Xcode**: 16.0+

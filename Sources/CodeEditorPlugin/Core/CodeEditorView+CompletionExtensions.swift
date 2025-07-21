@@ -174,6 +174,9 @@ extension CodeEditorView {
         
         completionWindow = window
         window.orderFront(nil)
+        
+        // Announce code completion availability
+        announceChange("Code completion suggestions available")
         #else
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
@@ -189,6 +192,9 @@ extension CodeEditorView {
         
         completionPopover = popoverVC
         presentingVC.present(popoverVC, animated: true)
+        
+        // Announce code completion availability
+        announceChange("Code completion suggestions available")
         #endif
     }
     
@@ -229,6 +235,9 @@ extension CodeEditorView {
         
         completionViewController = nil
         isCompletionActive = false
+        
+        // Announce completion dismissal
+        announceChange("Code completion dismissed")
     }
     
     // MARK: - Keyboard Handling

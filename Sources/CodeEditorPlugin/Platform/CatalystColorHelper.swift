@@ -80,8 +80,9 @@ enum CatalystColorHelper {
     /// - Parameters:
     ///   - color: The color to apply
     ///   - textView: The text view to apply the color to
+    ///   - taskManager: Optional task manager for structured concurrency. If not provided, a new one will be created.
     @MainActor
-    static func applyTextColor(_ color: UIColor, to textView: CodeEditorView) async {
+    static func applyTextColor(_ color: UIColor, to textView: CodeEditorView, taskManager: CatalystColorTaskManager? = nil) async {
         // Ensure the color has full opacity for Mac Catalyst
         let effectiveColor: UIColor
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
@@ -107,12 +108,9 @@ enum CatalystColorHelper {
             textStorage.endEditing()
         }
         
-        // Also apply through the dedicated Mac Catalyst method
-        textView.applyTextColorForMacCatalyst()
-        
-        // Apply again after a delay to handle timing issues
-        try? await Task.sleep(for: .milliseconds(100))
-        textView.applyTextColorForMacCatalyst()
+        // Use task manager for structured delayed application
+        let manager = taskManager ?? CatalystColorTaskManager()
+        await manager.applyColorWithDelay(effectiveColor, to: textView)
     }
 }
 #endif
