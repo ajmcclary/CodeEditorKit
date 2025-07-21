@@ -35,8 +35,10 @@ extension CodeEditorView {
         
         // Configure text input traits for better accessibility
         #if !targetEnvironment(macCatalyst)
-        if responds(to: #selector(setter: UITextInput.accessibilityTextualContext)) {
-            accessibilityTextualContext = .sourceCode
+        if #available(iOS 13.0, *) {
+            // accessibilityTextualContext is a property on UITextView in iOS 13+
+            // CodeEditorView inherits from UITextView on iOS
+            self.accessibilityTextualContext = .sourceCode
         }
         #endif
     }
@@ -223,11 +225,12 @@ extension CodeEditorView {
         // Calculate scaled tab width
         let spaceWidth: CGFloat
         if let font = font {
-            #if targetEnvironment(macCatalyst)
-            // Mac Catalyst doesn't have maximumAdvancement, calculate manually
+            #if canImport(UIKit)
+            // iOS and Mac Catalyst don't have maximumAdvancement, calculate manually
             let spaceAttributes = [NSAttributedString.Key.font: font]
             spaceWidth = (" " as NSString).size(withAttributes: spaceAttributes).width
             #else
+            // macOS has maximumAdvancement
             spaceWidth = font.maximumAdvancement(for: " ").width
             #endif
         } else {
