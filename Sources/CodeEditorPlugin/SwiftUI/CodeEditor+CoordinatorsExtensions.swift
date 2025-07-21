@@ -301,7 +301,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func applyCatalystThemeColors(theme: CodeEditorSwiftUITheme, to textView: CodeEditorView) {
         let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
         Task { @MainActor in
-            await CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
+            CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
         }
     }
     #endif

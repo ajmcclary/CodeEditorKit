@@ -34,9 +34,11 @@ extension CodeEditorView {
         adjustsFontForContentSizeCategory = true
         
         // Configure text input traits for better accessibility
+        #if !targetEnvironment(macCatalyst)
         if responds(to: #selector(setter: UITextInput.accessibilityTextualContext)) {
             accessibilityTextualContext = .sourceCode
         }
+        #endif
     }
     
     /// Update accessibility label with current editor state
@@ -47,8 +49,8 @@ extension CodeEditorView {
         components.append("\(language.name) code editor")
         
         // Add line and column information if available
-        if let selectedRange = selectedTextRange,
-           let position = selectedRange.start {
+        if let selectedRange = selectedTextRange {
+            let position = selectedRange.start
             let location = offset(from: beginningOfDocument, to: position)
             let lineInfo = getLineAndColumn(for: location)
             components.append("Line \(lineInfo.line), Column \(lineInfo.column)")
@@ -74,7 +76,7 @@ extension CodeEditorView {
     
     /// Update accessibility when text changes
     internal func notifyAccessibilityTextDidChange() {
-        UIAccessibility.post(notification: .valueChanged, argument: nil)
+        UIAccessibility.post(notification: .announcement, argument: "Text changed")
         updateAccessibilityLabel()
     }
     
@@ -144,9 +146,13 @@ extension CodeEditorView {
     private func getLineAndColumn(for location: Int) -> (line: Int, column: Int) {
         guard location >= 0 else { return (1, 1) }
         
+        #if canImport(UIKit)
+        let text = self.text ?? ""
+        #else
         let text = self.string
+        #endif
         let substring = String(text.prefix(location))
-        let lines = substring.components(separatedBy: .newlines)
+        let lines = substring.components(separatedBy: CharacterSet.newlines)
         let line = lines.count
         let column = (lines.last?.count ?? 0) + 1
         
@@ -185,7 +191,7 @@ extension CodeEditorView {
         guard let baseFont = font else { return }
         
         // Get the current content size category
-        let contentSizeCategory = traitCollection.preferredContentSizeCategory
+        _ = traitCollection.preferredContentSizeCategory
         
         // Create a font metrics instance for the code text style
         let fontMetrics = UIFontMetrics(forTextStyle: .body)
@@ -206,25 +212,37 @@ extension CodeEditorView {
     /// Update layout metrics for Dynamic Type
     private func updateLayoutForDynamicType() {
         // Adjust line spacing based on text size
-        let baseLineSpacing = configuration.layout.lineSpacing
+        let baseLineSpacing = configuration.layout.lineHeightMultiple
         let scaleFactor = font?.pointSize ?? configuration.display.fontSize / configuration.display.fontSize
         
         // Update paragraph style with scaled line spacing
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = baseLineSpacing * scaleFactor
+        paragraphStyle.lineHeightMultiple = 1.0 + (baseLineSpacing * scaleFactor / 100.0)
         paragraphStyle.tabStops = []
         
         // Calculate scaled tab width
-        let tabWidth = CGFloat(configuration.layout.tabWidth) * (font?.maximumAdvancement(for: " ").width ?? 8.0)
+        let spaceWidth: CGFloat
+        if let font = font {
+            #if targetEnvironment(macCatalyst)
+            // Mac Catalyst doesn't have maximumAdvancement, calculate manually
+            let spaceAttributes = [NSAttributedString.Key.font: font]
+            spaceWidth = (" " as NSString).size(withAttributes: spaceAttributes).width
+            #else
+            spaceWidth = font.maximumAdvancement(for: " ").width
+            #endif
+        } else {
+            spaceWidth = 8.0
+        }
+        let tabWidth = CGFloat(configuration.layout.tabWidth) * spaceWidth
         for index in 0..<50 {
             paragraphStyle.tabStops.append(NSTextTab(textAlignment: .left, location: tabWidth * CGFloat(index + 1)))
         }
         
         // Apply to the entire text
-        textStorage?.addAttribute(
+        textStorage.addAttribute(
             .paragraphStyle,
             value: paragraphStyle,
-            range: NSRange(location: 0, length: textStorage?.length ?? 0)
+            range: NSRange(location: 0, length: textStorage.length)
         )
     }
     

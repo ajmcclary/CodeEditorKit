@@ -153,7 +153,7 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
         accessibilityLabel = "Line \(lineNumber)"
         
         // Add contextual information if available
-        if let textView,
+        if textView != nil,
            let lineContent = getLineContent() {
             let trimmedContent = lineContent.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedContent.isEmpty {
@@ -192,7 +192,11 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
     private func getLineContent() -> String? {
         guard let textView else { return nil }
         
+        #if canImport(UIKit)
+        let text = textView.text ?? ""
+        #else
         let text = textView.string
+        #endif
         let lines = String(text).components(separatedBy: .newlines)
         
         guard lineNumber > 0 && lineNumber <= lines.count else { return nil }
@@ -204,7 +208,11 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
     private func jumpToLine() {
         guard let textView else { return }
         
+        #if canImport(UIKit)
+        let text = textView.text ?? ""
+        #else
         let text = textView.string
+        #endif
         let lines = String(text).components(separatedBy: .newlines)
         
         // Calculate character position for the start of the line
@@ -215,10 +223,24 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
         
         // Set selection to start of line
         let range = NSRange(location: position, length: 0)
+        #if canImport(UIKit)
+        // For UIKit, we need to use text positions
+        if let start = textView.position(from: textView.beginningOfDocument, offset: position),
+           let end = textView.position(from: start, offset: 0) {
+            textView.selectedTextRange = textView.textRange(from: start, to: end)
+        }
+        
+        // Scroll to make the line visible
+        if let start = textView.position(from: textView.beginningOfDocument, offset: position) {
+            let rect = textView.caretRect(for: start)
+            textView.scrollRectToVisible(rect, animated: true)
+        }
+        #else
         textView.setSelectedRange(range)
         
         // Scroll to make the line visible
         textView.scrollRangeToVisible(range)
+        #endif
         
         // Announce the navigation
         textView.announceChange("Jumped to line \(lineNumber)")
