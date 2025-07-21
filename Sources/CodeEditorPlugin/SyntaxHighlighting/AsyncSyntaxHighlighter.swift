@@ -16,10 +16,10 @@ public final class AsyncSyntaxHighlighter {
     private var debounceTask: Task<Void, Never>?
     private var periodicOptimizationTask: Task<Void, Never>?
     private let debounceInterval: Duration
-    private let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
+    internal let performanceMonitor = SyntaxHighlightingPerformanceMonitor()
     
     // Smart cache for highlight results
-    private var tokenCache = SmartTokenCache()
+    internal var tokenCache = SmartTokenCache()
     
     // Enable background highlighting for large files
     public var enableBackgroundHighlighting: Bool = true
@@ -29,6 +29,9 @@ public final class AsyncSyntaxHighlighter {
     
     // Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor
+    
+    // Error recovery coordinator
+    private let errorRecovery = ErrorRecoveryCoordinator()
     
     // MARK: - Initialization
     
@@ -82,7 +85,23 @@ public final class AsyncSyntaxHighlighter {
         debounceTask?.cancel()
         debounceTask = nil
         
-        await performHighlighting(for: textView, language: language, visibleRange: visibleRange)
+        // Check if streaming should be used
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        let text = textView.string
+        #else
+        let text = textView.text ?? ""
+        #endif
+        
+        if shouldUseStreaming(for: text) {
+            await highlightStreamingly(
+                for: textView,
+                language: language,
+                visibleRange: visibleRange,
+                configuration: .largeFile
+            )
+        } else {
+            await performHighlighting(for: textView, language: language, visibleRange: visibleRange)
+        }
     }
     
     /// Cancel all pending highlighting operations
@@ -152,9 +171,29 @@ public final class AsyncSyntaxHighlighter {
         
         // Check performance limits
         guard textLength <= textView.configuration.performance.maxSyntaxHighlightingLength else {
-            // File too large for syntax highlighting
-            clearHighlighting(for: textView)
-            return
+            // File too large for syntax highlighting - try streaming instead
+            let error = SyntaxHighlightingError.textTooLarge(
+                size: textLength,
+                limit: textView.configuration.performance.maxSyntaxHighlightingLength
+            )
+            
+            // Attempt recovery with streaming
+            do {
+                try await errorRecovery.recover(from: error) {
+                    // Use streaming highlighter as recovery strategy
+                    await self.highlightStreamingly(
+                        for: textView,
+                        language: language,
+                        visibleRange: visibleRange,
+                        configuration: .largeFile
+                    )
+                }
+                return
+            } catch {
+                // If recovery fails, clear highlighting
+                clearHighlighting(for: textView)
+                return
+            }
         }
         
         // Create cache key
@@ -184,46 +223,60 @@ public final class AsyncSyntaxHighlighter {
             guard let self else { return }
             
             let startTime = CFAbsoluteTimeGetCurrent()
-            await performanceMonitor.measure(category: .syntaxHighlighting) {
-                // Choose highlighting strategy based on text size and settings
-                var tokens: [HighlightedToken]
-                
-                if self.enableBackgroundHighlighting && textLength > self.backgroundHighlightingThreshold {
-                    // Use background highlighter for large files
-                    tokens = await self.highlightWithBackgroundHighlighter(
-                        text: text, 
-                        language: language, 
-                        visibleRange: visibleRange
+            
+            do {
+                try await performanceMonitor.measure(category: .syntaxHighlighting) {
+                    // Choose highlighting strategy based on text size and settings
+                    var tokens: [HighlightedToken]
+                    
+                    do {
+                        if self.enableBackgroundHighlighting && textLength > self.backgroundHighlightingThreshold {
+                            // Use background highlighter for large files
+                            tokens = try await self.highlightWithBackgroundHighlighterSafe(
+                                text: text, 
+                                language: language, 
+                                visibleRange: visibleRange
+                            )
+                        } else {
+                            // Use synchronous highlighting for small files
+                            tokens = try await self.highlightInBackgroundSafe(text: text, language: language)
+                        }
+                    } catch let error as SyntaxHighlightingError {
+                        // Attempt error recovery
+                        tokens = try await self.errorRecovery.recover(from: error) {
+                            // Retry with fallback strategy
+                            try await self.highlightInBackgroundSafe(text: text, language: language)
+                        }
+                    }
+                    
+                    // Check if task was cancelled
+                    guard !Task.isCancelled else { 
+                        throw SyntaxHighlightingError.cancelled
+                    }
+                    
+                    // Cache all results with performance metrics (including empty for consistency)
+                    let endTime = CFAbsoluteTimeGetCurrent()
+                    let computationTime = Duration.seconds(endTime - startTime)
+                    await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
+                    
+                    // Track performance metrics for production monitoring
+                    await ProductionPerformanceMetrics.shared.trackHighlighting(
+                        duration: endTime - startTime,
+                        fileSize: textLength,
+                        language: language,
+                        cacheHit: false
                     )
                     
-                    // If background highlighting failed (returned empty), fall back to synchronous
-                    if tokens.isEmpty {
-                        tokens = await self.highlightInBackground(text: text, language: language)
+                    // Apply tokens on main thread
+                    await MainActor.run {
+                        self.applyTokens(tokens, to: textView, visibleRange: visibleRange)
                     }
-                } else {
-                    // Use synchronous highlighting for small files
-                    tokens = await self.highlightInBackground(text: text, language: language)
                 }
-                
-                // Check if task was cancelled
-                guard !Task.isCancelled else { return }
-                
-                // Cache all results with performance metrics (including empty for consistency)
-                let endTime = CFAbsoluteTimeGetCurrent()
-                let computationTime = Duration.seconds(endTime - startTime)
-                await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
-                
-                // Track performance metrics for production monitoring
-                await ProductionPerformanceMetrics.shared.trackHighlighting(
-                    duration: endTime - startTime,
-                    fileSize: textLength,
-                    language: language,
-                    cacheHit: false
-                )
-                
-                // Apply tokens on main thread
+            } catch {
+                // Log error and clear highlighting on failure
+                CrossPlatformLogger.logger().error("Highlighting failed: \(error)")
                 await MainActor.run {
-                    self.applyTokens(tokens, to: textView, visibleRange: visibleRange)
+                    self.clearHighlighting(for: textView)
                 }
             }
         }
@@ -240,6 +293,24 @@ public final class AsyncSyntaxHighlighter {
         await coordinator.highlightAsync(source: text, language: language)
     }
     
+    nonisolated private func highlightInBackgroundSafe(text: String, language: Language) async throws -> [HighlightedToken] {
+        // Check for cancellation
+        try Task.checkCancellation()
+        
+        // Validate language support
+        guard coordinator.supportsLanguage(language) else {
+            throw SyntaxHighlightingError.languageNotSupported(language)
+        }
+        
+        // Run the highlighting computation off the main thread for better performance
+        let tokens = await coordinator.highlightAsync(source: text, language: language)
+        
+        // Check for cancellation again
+        try Task.checkCancellation()
+        
+        return tokens
+    }
+    
     private func highlightWithBackgroundHighlighter(
         text: String,
         language: Language,
@@ -250,7 +321,35 @@ public final class AsyncSyntaxHighlighter {
         await highlightInBackground(text: text, language: language)
     }
     
-    private func applyTokens(
+    private func highlightWithBackgroundHighlighterSafe(
+        text: String,
+        language: Language,
+        visibleRange _: NSRange?
+    ) async throws -> [HighlightedToken] {
+        // Check memory pressure before processing large file
+        let requiredMemoryMB = Double(text.count) / (1_024 * 1_024) * 2 // Rough estimate: 2x text size
+        let availableMemoryMB = memoryMonitor.availableMemoryMB
+        
+        if availableMemoryMB < requiredMemoryMB {
+            throw SyntaxHighlightingError.memoryPressure(
+                availableMB: availableMemoryMB,
+                requiredMB: requiredMemoryMB
+            )
+        }
+        
+        // For large texts, try streaming first
+        if text.count > 500_000 {
+            // Delegate to streaming highlighter
+            throw SyntaxHighlightingError.textTooLarge(
+                size: text.count,
+                limit: 500_000
+            )
+        }
+        
+        return try await highlightInBackgroundSafe(text: text, language: language)
+    }
+    
+    internal func applyTokens(
         _ tokens: [HighlightedToken],
         to textView: CodeEditorView,
         visibleRange: NSRange? = nil

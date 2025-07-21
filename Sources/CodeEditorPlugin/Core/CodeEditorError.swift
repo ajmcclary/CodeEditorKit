@@ -78,6 +78,7 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
     case invalidRange(NSRange, textLength: Int)
     case invalidPosition(Int, textLength: Int)
     case textProcessingFailed(String)
+    case encodingFailed(String.Encoding)
     
     // MARK: - Language Server Errors
     case languageServerNotAvailable(String)
@@ -123,6 +124,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
             
         case .textProcessingFailed(let details):
             return "Text processing failed: \(details)"
+            
+        case .encodingFailed(let encoding):
+            return "Failed to convert text to encoding: \(encoding)"
             
         case .languageServerNotAvailable(let language):
             return "Language server not available: \(language)"
@@ -186,6 +190,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
         case .textProcessingFailed:
             return "An error occurred while processing the text content"
             
+        case .encodingFailed:
+            return "Text encoding conversion failed"
+            
         case .languageServerNotAvailable, 
              .languageServerTimeout, 
              .languageServerCommunicationFailed:
@@ -227,6 +234,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
             
         case .textProcessingFailed:
             return "Try again with different text content or check for encoding issues"
+            
+        case .encodingFailed:
+            return "Ensure the text can be represented in the target encoding or use a different encoding"
             
         case .languageServerNotAvailable:
             return "Install and configure a language server for this language"
@@ -352,6 +362,7 @@ extension CodeEditorError {
              .completionRequestFailed, 
              .syntaxHighlightingFailed,
              .textProcessingFailed,
+             .encodingFailed,
              .fileReadingFailed, 
              .fileWritingFailed:
             return true
@@ -377,7 +388,8 @@ extension CodeEditorError {
 
         case .invalidRange, 
              .invalidPosition, 
-             .textProcessingFailed:
+             .textProcessingFailed,
+             .encodingFailed:
             return "TextProcessing"
 
         case .languageServerNotAvailable, 
