@@ -97,7 +97,7 @@ final class CatalystIntegrationTests: XCTestCase {
         let editor = CodeEditorView()
         let testColor = UIColor.systemBlue
         
-        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        CatalystColorHelper.applyTextColor(testColor, to: editor)
         
         // Verify color was applied
         XCTAssertEqual(editor.textColor, testColor, "Text color should be applied")
@@ -162,13 +162,13 @@ final class CatalystIntegrationTests: XCTestCase {
         
         // Set initial text and color
         editor.text = "Initial text"
-        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        CatalystColorHelper.applyTextColor(testColor, to: editor)
         
         // Change text
         editor.text = "Updated text"
         
         // Apply color again
-        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        CatalystColorHelper.applyTextColor(testColor, to: editor)
         
         // Verify color persists after text change
         XCTAssertEqual(editor.textColor, testColor, "Text color should persist after text change")
@@ -188,13 +188,13 @@ final class CatalystIntegrationTests: XCTestCase {
         
         // Apply color to empty editor
         editor.text = ""
-        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        CatalystColorHelper.applyTextColor(testColor, to: editor)
         
         // Add text after color application
         editor.text = "New text"
         
         // Re-apply color
-        await CatalystColorHelper.applyTextColor(testColor, to: editor)
+        CatalystColorHelper.applyTextColor(testColor, to: editor)
         
         // Verify color is applied to new text
         XCTAssertEqual(editor.textColor, testColor, "Text color should be applied to new text")
@@ -214,7 +214,7 @@ final class CatalystIntegrationTests: XCTestCase {
         editor.text = "let value = 42"
         
         // Apply base color
-        await CatalystColorHelper.applyTextColor(baseColor, to: editor)
+        CatalystColorHelper.applyTextColor(baseColor, to: editor)
         
         // Verify base color is set (comparing semantic meaning, not exact instance)
         // Since UIColor.label may be wrapped in a dynamic provider, compare the resolved colors
@@ -284,7 +284,7 @@ final class CatalystIntegrationTests: XCTestCase {
             traitCollection.userInterfaceStyle == .dark ? .white : .black
         }
         
-        await CatalystColorHelper.applyTextColor(dynamicColor, to: editor)
+        CatalystColorHelper.applyTextColor(dynamicColor, to: editor)
         
         // Verify the color is applied
         XCTAssertNotNil(editor.textColor, "Text color should be set")
