@@ -1,0 +1,234 @@
+/* Apple-Inspired Pandoc Stylesheet - Optimized for Prince XML */
+/* Base reset */
+html {
+  font-size: 100%;
+}
+
+/* Body */
+body {
+  background: #F2F2F7;
+  color: #1D1D1F;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: auto;
+  padding: 1em;
+  max-width: 42em;
+  font-family: -apple-system, "SF Pro Text", "SF Pro Display",
+               "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "New York", "Times New Roman", serif;
+  color: #1D1D1F;
+  line-height: 1.25;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+  font-weight: normal;
+}
+
+h1 {
+  font-size: 2.2em;
+  page-break-before: always;
+}
+h2 { font-size: 1.8em; }
+h3 { font-size: 1.4em; }
+h4 { font-size: 1.2em; font-weight: bold; }
+h5 { font-size: 1em;   font-weight: bold; }
+h6 { font-size: 0.9em; font-weight: bold; }
+
+/* Links */
+a {
+  color: #007AFF;
+  text-decoration: none;
+}
+a:visited { color: #5E5CE6; }
+a:hover { color: #0A84FF; }
+a:active { color: #FFA600; }
+a:focus { outline: thin dotted; }
+
+/* Selection styles */
+::selection {
+  background: rgba(255, 255, 0, 0.3);
+  color: #000;
+}
+
+/* Basic elements */
+p { margin: 1em 0; }
+img {
+  max-width: 100%;
+  border: 0;
+  vertical-align: middle;
+}
+
+/* Blockquotes */
+blockquote {
+  color: #666666;
+  margin: 0;
+  padding-left: 1.5em;
+  border-left: 4px solid #E0E0E0;
+  font-style: italic;
+}
+
+/* Horizontal rule */
+hr {
+  display: block;
+  height: 2px;
+  border: 0;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #eee;
+  margin: 1.5em 0;
+}
+
+/* Code blocks */
+pre, code, kbd, samp {
+  font-family: "SF Mono", Menlo, "Courier New", monospace;
+  font-size: 0.95em;
+  color: #1D1D1F;
+}
+
+pre {
+  background: #F8F8F9;
+  padding: 1em;
+  margin: 0.5em 0;
+  border: 1px solid #E0E0E0;
+  white-space: pre-wrap;
+  page-break-inside: avoid;
+}
+
+/* Lists */
+ul, ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+ul ul, ol ol {
+  margin: 0.3em 0;
+}
+
+/* Definition lists */
+dl { margin-bottom: 1em; }
+dt {
+  font-weight: bold;
+  margin-bottom: 0.4em;
+}
+dd { margin: 0 0 0.8em 1.5em; }
+
+/* Tables */
+table {
+  width: 100%;
+  margin-bottom: 1.5em;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: 1px solid #DDDDDD;
+  page-break-inside: avoid;
+}
+
+table th, table td {
+  padding: 0.6em;
+  border: 1px solid #DDDDDD;
+  vertical-align: top;
+}
+
+table th {
+  background: #F2F2F7;
+  font-weight: bold;
+}
+
+/* Table of Contents */
+nav {
+  margin: 2em 0;
+  padding: 0;
+}
+
+nav ul {
+  margin: 0;
+  padding-left: 2em;
+  list-style-type: none;
+}
+
+nav > ul {
+  padding-left: 0;
+}
+
+nav li {
+  margin: 0.5em 0;
+}
+
+nav a {
+  text-decoration: none;
+}
+
+/* Prince-specific page layout */
+@page {
+  size: A4;
+  margin: 20mm 25mm;
+
+  @top-right {
+    content: string(chapter);
+    font-style: italic;
+    color: #666;
+  }
+
+  @bottom-center {
+    content: counter(page);
+    font-size: 0.9em;
+    color: #666;
+  }
+}
+
+/* Running headers */
+h1 {
+  string-set: chapter content();
+  prince-bookmark-level: 1;
+}
+
+h2 { prince-bookmark-level: 2; }
+h3 { prince-bookmark-level: 3; }
+
+/* Print optimization */
+@media print {
+  body {
+    background: none;
+    color: black;
+    font-size: 12pt;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  a {
+    color: black;
+    text-decoration: underline;
+  }
+
+  hr {
+    border-bottom: 1px solid black;
+  }
+
+  pre, blockquote {
+    border: 1px solid #999;
+    padding: 1em;
+  }
+
+  /* Orphans and widows control */
+  p, h2, h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* Table header rows repeat across pages */
+  thead {
+    display: table-header-group;
+  }
+
+  /* Image handling */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+}
