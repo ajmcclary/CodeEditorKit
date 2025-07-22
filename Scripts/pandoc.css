@@ -232,3 +232,185 @@ h3 { prince-bookmark-level: 3; }
     page-break-inside: avoid;
   }
 }
+
+/* Mermaid Diagram Styling */
+/* Based on Colors.md palette for consistent theming */
+
+/* Container for mermaid diagrams */
+.mermaid, pre.mermaid {
+  text-align: center;
+  margin: 2em 0;
+  page-break-inside: avoid;
+}
+
+/* Mermaid SVG container */
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Node styling - matches Colors.md palette */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  fill: #F2F2F7;
+  stroke: #007AFF;
+  stroke-width: 2px;
+}
+
+/* Node text */
+.mermaid .node text,
+.mermaid .nodeLabel {
+  fill: #1D1D1F;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+/* Subgraph styling */
+.mermaid .subgraph {
+  fill: #F2F2F7;
+  stroke: #3C3C43;
+  stroke-width: 1px;
+  stroke-opacity: 0.29;
+}
+
+/* Subgraph labels */
+.mermaid .subgraph text {
+  fill: #1D1D1F;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Edge/link styling */
+.mermaid .edgePath .path,
+.mermaid .flowchart-link {
+  stroke: #8E8E93;
+  stroke-width: 1.5px;
+  fill: none;
+}
+
+/* Edge labels */
+.mermaid .edgeLabel {
+  background-color: #FFFFFF;
+  fill: #3A3A3C;
+  font-size: 12px;
+}
+
+/* Specific color classes from diagrams */
+/* Blue (Primary) */
+.mermaid .fill-primary,
+.mermaid [fill*="#007AFF20"] {
+  fill: rgba(0, 122, 255, 0.1) !important;
+  stroke: #007AFF !important;
+  stroke-width: 2px;
+}
+
+/* Green (Success) */
+.mermaid .fill-success,
+.mermaid [fill*="#34C75920"] {
+  fill: rgba(52, 199, 89, 0.1) !important;
+  stroke: #34C759 !important;
+  stroke-width: 2px;
+}
+
+/* Orange (Warning) */
+.mermaid .fill-warning,
+.mermaid [fill*="#FF950020"] {
+  fill: rgba(255, 149, 0, 0.1) !important;
+  stroke: #FF9500 !important;
+  stroke-width: 2px;
+}
+
+/* Red (Error) */
+.mermaid .fill-error,
+.mermaid [fill*="#FF3B3020"] {
+  fill: rgba(255, 59, 48, 0.1) !important;
+  stroke: #FF3B30 !important;
+  stroke-width: 2px;
+}
+
+/* Purple (Accent) */
+.mermaid .fill-accent,
+.mermaid [fill*="#AF52DE20"] {
+  fill: rgba(175, 82, 222, 0.1) !important;
+  stroke: #AF52DE !important;
+  stroke-width: 2px;
+}
+
+/* Class diagram specific */
+.mermaid .classGroup rect {
+  fill: #FFFFFF;
+  stroke: #007AFF;
+  stroke-width: 1.5px;
+}
+
+.mermaid .classGroup text {
+  fill: #1D1D1F;
+  font-family: "SF Mono", Menlo, "Courier New", monospace;
+  font-size: 12px;
+}
+
+/* Sequence diagram specific */
+.mermaid .actor {
+  fill: #F2F2F7;
+  stroke: #007AFF;
+  stroke-width: 2px;
+}
+
+.mermaid .actor-line {
+  stroke: #8E8E93;
+  stroke-width: 1px;
+}
+
+.mermaid .messageLine0,
+.mermaid .messageLine1 {
+  stroke: #3A3A3C;
+  stroke-width: 1.5px;
+}
+
+.mermaid .messageText {
+  fill: #1D1D1F;
+  font-size: 13px;
+}
+
+/* State diagram specific */
+.mermaid .stateGroup rect {
+  fill: #F2F2F7;
+  stroke: #007AFF;
+  stroke-width: 1.5px;
+  border-radius: 5px;
+}
+
+/* Gantt chart specific */
+.mermaid .grid .tick line {
+  stroke: #E5E5EA;
+  stroke-width: 1px;
+}
+
+.mermaid .grid .tick text {
+  fill: #8E8E93;
+  font-size: 11px;
+}
+
+/* Print optimization for mermaid */
+@media print {
+  .mermaid svg {
+    max-height: 9in;
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  /* Ensure proper contrast in print */
+  .mermaid .node text,
+  .mermaid .nodeLabel,
+  .mermaid text {
+    fill: #000000 !important;
+  }
+  
+  .mermaid .edgePath .path {
+    stroke: #666666 !important;
+  }
+}
