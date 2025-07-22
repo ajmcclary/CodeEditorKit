@@ -4,7 +4,7 @@ local utils = require 'pandoc.utils'
 
 local opts = {
   format = "png",
-  theme = "default",
+  theme = "base",
   scale = "4"
 }
 

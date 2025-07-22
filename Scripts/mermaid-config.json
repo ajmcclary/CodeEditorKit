@@ -1,5 +1,5 @@
 {
-  "theme": "default",
+  "theme": "base",
   "look": "handDrawn",
   "themeVariables": {
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Helvetica Neue', Arial, sans-serif",
