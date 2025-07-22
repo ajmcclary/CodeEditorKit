@@ -13,13 +13,14 @@ body {
   margin: auto;
   padding: 1em;
   max-width: 42em;
-  font-family: -apple-system, "SF Pro Text", "SF Pro Display",
-               "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               system-ui, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "New York", "Times New Roman", serif;
+  font-family: "New York", "New York Small", "New York Medium", "New York Large",
+               "Times New Roman", Georgia, serif;
   color: #1D1D1F;
   line-height: 1.25;
   margin-top: 2em;
@@ -88,7 +89,8 @@ hr {
 
 /* Code blocks */
 pre, code, kbd, samp {
-  font-family: "SF Mono", Menlo, "Courier New", monospace;
+  font-family: "SF Mono", SFMono-Regular, "SF Mono Regular", Menlo, Monaco,
+               Consolas, "Courier New", monospace;
   font-size: 0.95em;
   color: #1D1D1F;
 }
@@ -257,7 +259,8 @@ h3 { prince-bookmark-level: 3; }
   max-width: 100%;
   height: auto;
   margin: 0 auto;
-  font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               system-ui, "Helvetica Neue", Arial, sans-serif;
   background-color: #FFFFFF !important;
 }
 
@@ -380,7 +383,8 @@ h3 { prince-bookmark-level: 3; }
 
 .mermaid .classGroup text {
   fill: #1D1D1F;
-  font-family: "SF Mono", Menlo, "Courier New", monospace;
+  font-family: "SF Mono", SFMono-Regular, "SF Mono Regular", Menlo, Monaco,
+               Consolas, "Courier New", monospace;
   font-size: 12px;
 }
 

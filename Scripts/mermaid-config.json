@@ -2,6 +2,10 @@
   "theme": "default",
   "look": "handDrawn",
   "themeVariables": {
-    "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+    "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Helvetica Neue', Arial, sans-serif",
+    "fontSize": "16px",
+    "primaryTextColor": "#1D1D1F",
+    "secondaryTextColor": "#3A3A3C",
+    "tertiaryTextColor": "#6C6C70"
   }
 }
