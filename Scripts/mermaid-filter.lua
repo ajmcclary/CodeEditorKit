@@ -5,7 +5,7 @@ local utils = require 'pandoc.utils'
 local opts = {
   format = "png",
   theme = "default",
-  scale = "3"
+  scale = "4"
 }
 
 local filetype = {
@@ -38,11 +38,15 @@ function render_mermaid(code, format)
   f:write(code)
   f:close()
 
-  local command = string.format('%s -i %s -o %s -t %s -s %s',
+  -- Get the directory of this script to find the config file
+  local script_dir = os.getenv("SCRIPT_DIR") or "Scripts"
+  local config_path = script_dir .. "/mermaid-config.json"
+
+  local command = string.format('%s -i %s -o %s -c %s -s %s',
     mermaid[format],
     mermaidfile,
     outfile,
-    opts.theme,
+    config_path,
     opts.scale)
 
   os.execute(command)
