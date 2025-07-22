@@ -4,312 +4,340 @@ This diagram shows the comprehensive utility systems and extensions network that
 
 ```mermaid
 classDiagram
-    %% Core Utility System
+    direction LR
+    
+    %% Row 1 - Core Utility System
     class UtilitySystemManager {
-        +extensionRegistry: ExtensionRegistry
-        +utilityProviders: [String: UtilityProvider]
-        +crossPlatformHelpers: CrossPlatformHelperManager
-        +performanceUtilities: PerformanceUtilityManager
-        +dataUtilities: DataUtilityManager
+        <<utility manager>>
+        +extensionRegistry ExtensionRegistry
+        +utilityProviders [String: UtilityProvider]
+        +crossPlatformHelpers CrossPlatformHelperManager
+        +performanceUtilities PerformanceUtilityManager
+        +dataUtilities DataUtilityManager
         +initializeUtilities()
-        +registerProvider(provider: UtilityProvider)
-        +getUtility~T~(type: T.Type) T?
+        +registerProvider()
+        +getUtility()
         +shutdownUtilities()
     }
 
     class ExtensionRegistry {
-        +loadedExtensions: [String: Extension]
-        +extensionManifests: [ExtensionManifest]
-        +dependencyResolver: ExtensionDependencyResolver
-        +lifecycleManager: ExtensionLifecycleManager
-        +loadExtension(manifestPath: String) ExtensionLoadResult
-        +unloadExtension(extensionId: String) Bool
-        +resolveExtensionDependencies(extension: Extension) [Extension]
-        +validateExtension(extension: Extension) ValidationResult
+        <<extension registry>>
+        +loadedExtensions [String: Extension]
+        +extensionManifests [ExtensionManifest]
+        +dependencyResolver ExtensionDependencyResolver
+        +lifecycleManager ExtensionLifecycleManager
+        +loadExtension()
+        +unloadExtension()
+        +resolveExtensionDependencies()
+        +validateExtension()
     }
 
-    %% Platform Utilities and Helpers
     class CrossPlatformHelperManager {
-        +fileSystemHelpers: FileSystemHelpers
-        +networkHelpers: NetworkHelpers
-        +cryptographyHelpers: CryptographyHelpers
-        +compressionHelpers: CompressionHelpers
-        +imageUtilities: ImageUtilities
-        +textUtilities: TextUtilities
-        +dateTimeUtilities: DateTimeUtilities
-        +concurrencyUtilities: ConcurrencyUtilities
+        <<helper manager>>
+        +fileSystemHelpers FileSystemHelpers
+        +networkHelpers NetworkHelpers
+        +cryptographyHelpers CryptographyHelpers
+        +compressionHelpers CompressionHelpers
+        +imageUtilities ImageUtilities
+        +textUtilities TextUtilities
+        +dateTimeUtilities DateTimeUtilities
+        +concurrencyUtilities ConcurrencyUtilities
     }
 
+    %% Row 2 - Core Platform Helpers
     class FileSystemHelpers {
-        +pathUtilities: PathUtilities
-        +fileOperations: FileOperations
-        +directoryWatcher: DirectoryWatcher
-        +temporaryFiles: TemporaryFileManager
-        +createPath(components: [String]) String
-        +relativePath(from: String, to: String) String
-        +watchDirectory(path: String, handler: DirectoryChangeHandler)
-        +createTemporaryFile(prefix: String) TemporaryFile
-        +copyFile(from: String, to: String) CopyResult
-        +moveFile(from: String, to: String) MoveResult
-        +deleteFile(path: String) Bool
+        <<filesystem helpers>>
+        +pathUtilities PathUtilities
+        +fileOperations FileOperations
+        +directoryWatcher DirectoryWatcher
+        +temporaryFiles TemporaryFileManager
+        +createPath()
+        +relativePath()
+        +watchDirectory()
+        +createTemporaryFile()
+        +copyFile()
+        +moveFile()
+        +deleteFile()
     }
 
     class NetworkHelpers {
-        +httpClient: HTTPClient
-        +downloadManager: DownloadManager
-        +uploadManager: UploadManager
-        +reachabilityMonitor: NetworkReachabilityMonitor
-        +makeRequest(request: HTTPRequest) HTTPResponse
-        +downloadFile(url: URL, destination: String) DownloadTask
-        +uploadFile(filePath: String, url: URL) UploadTask
-        +monitorReachability(handler: ReachabilityHandler)
+        <<network helpers>>
+        +httpClient HTTPClient
+        +downloadManager DownloadManager
+        +uploadManager UploadManager
+        +reachabilityMonitor NetworkReachabilityMonitor
+        +makeRequest()
+        +downloadFile()
+        +uploadFile()
+        +monitorReachability()
     }
 
     class CryptographyHelpers {
-        +hashGenerator: HashGenerator
-        +encryptionProvider: EncryptionProvider
-        +keyManager: CryptoKeyManager
-        +randomGenerator: SecureRandomGenerator
-        +generateHash(data: Data, algorithm: HashAlgorithm) String
-        +encrypt(data: Data, key: CryptoKey) EncryptionResult
-        +decrypt(encryptedData: Data, key: CryptoKey) DecryptionResult
-        +generateSecureRandom(length: Int) Data
+        <<crypto helpers>>
+        +hashGenerator HashGenerator
+        +encryptionProvider EncryptionProvider
+        +keyManager CryptoKeyManager
+        +randomGenerator SecureRandomGenerator
+        +generateHash()
+        +encrypt()
+        +decrypt()
+        +generateSecureRandom()
     }
 
     class CompressionHelpers {
-        +gzipCompressor: GZipCompressor
-        +zipArchiver: ZipArchiver
-        +tarArchiver: TarArchiver
-        +lz4Compressor: LZ4Compressor
-        +compressData(data: Data, algorithm: CompressionAlgorithm) CompressedData
-        +decompressData(compressedData: Data, algorithm: CompressionAlgorithm) Data
-        +createArchive(files: [String], destination: String) ArchiveResult
-        +extractArchive(archivePath: String, destination: String) ExtractionResult
+        <<compression helpers>>
+        +gzipCompressor GZipCompressor
+        +zipArchiver ZipArchiver
+        +tarArchiver TarArchiver
+        +lz4Compressor LZ4Compressor
+        +compressData()
+        +decompressData()
+        +createArchive()
+        +extractArchive()
     }
 
-    %% Text and Data Utilities
+    %% Row 3 - Data & Text Utilities
     class TextUtilities {
-        +stringProcessors: [StringProcessor]
-        +encodingDetector: TextEncodingDetector
-        +lineEndingDetector: LineEndingDetector
-        +textNormalizer: TextNormalizer
-        +regexHelper: RegexHelper
-        +detectEncoding(data: Data) String.Encoding?
-        +detectLineEndings(text: String) LineEndingType
-        +normalizeText(text: String, options: NormalizationOptions) String
-        +escapeRegexCharacters(text: String) String
-        +validateEmail(email: String) Bool
-        +validateURL(url: String) Bool
+        <<text utilities>>
+        +stringProcessors [StringProcessor]
+        +encodingDetector TextEncodingDetector
+        +lineEndingDetector LineEndingDetector
+        +textNormalizer TextNormalizer
+        +regexHelper RegexHelper
+        +detectEncoding()
+        +detectLineEndings()
+        +normalizeText()
+        +escapeRegexCharacters()
+        +validateEmail()
+        +validateURL()
     }
 
     class DataUtilities {
-        +jsonProcessor: JSONProcessor
-        +xmlProcessor: XMLProcessor
-        +yamlProcessor: YAMLProcessor
-        +csvProcessor: CSVProcessor
-        +binaryDataAnalyzer: BinaryDataAnalyzer
-        +parseJSON~T~(data: Data, type: T.Type) T?
-        +serializeJSON~T~(object: T) Data?
-        +parseXML(data: Data) XMLDocument?
-        +parseYAML~T~(data: Data, type: T.Type) T?
-        +parseCSV(data: Data, options: CSVOptions) CSVDocument
-        +analyzeBinaryData(data: Data) BinaryAnalysis
+        <<data utilities>>
+        +jsonProcessor JSONProcessor
+        +xmlProcessor XMLProcessor
+        +yamlProcessor YAMLProcessor
+        +csvProcessor CSVProcessor
+        +binaryDataAnalyzer BinaryDataAnalyzer
+        +parseJSON()
+        +serializeJSON()
+        +parseXML()
+        +parseYAML()
+        +parseCSV()
+        +analyzeBinaryData()
     }
 
     class ImageUtilities {
-        +imageProcessor: ImageProcessor
-        +formatConverter: ImageFormatConverter
-        +compressionOptimizer: ImageCompressionOptimizer
-        +metadataExtractor: ImageMetadataExtractor
-        +resizeImage(image: PlatformImage, size: CGSize) PlatformImage?
-        +convertFormat(image: PlatformImage, format: ImageFormat) Data?
-        +optimizeImage(image: PlatformImage, quality: Float) PlatformImage?
-        +extractMetadata(imageData: Data) ImageMetadata?
-        +generateThumbnail(image: PlatformImage, size: CGSize) PlatformImage?
+        <<image utilities>>
+        +imageProcessor ImageProcessor
+        +formatConverter ImageFormatConverter
+        +compressionOptimizer ImageCompressionOptimizer
+        +metadataExtractor ImageMetadataExtractor
+        +resizeImage()
+        +convertFormat()
+        +optimizeImage()
+        +extractMetadata()
+        +generateThumbnail()
     }
 
-    %% Performance and Optimization Utilities
+    class DateTimeUtilities {
+        <<datetime utilities>>
+        +calendarHelper CalendarHelper
+        +timeZoneManager TimeZoneManager
+        +dateFormatter DateFormatterPool
+        +durationCalculator DurationCalculator
+        +formatDate()
+        +parseDate()
+        +addTimeInterval()
+        +calculateDuration()
+        +convertTimeZone()
+        +isWorkday()
+    }
+
+    %% Row 4 - Performance System
     class PerformanceUtilityManager {
-        +profiler: PerformanceProfiler
-        +memoryTracker: MemoryUsageTracker
-        +cacheManager: CacheManager
-        +lazyLoader: LazyLoadingManager
-        +benchmarkRunner: BenchmarkRunner
-        +startProfiling(identifier: String)
-        +stopProfiling(identifier: String) ProfilingResult
-        +trackMemoryUsage(component: String) MemorySnapshot
-        +cacheObject~T~(key: String, object: T, policy: CachePolicy)
-        +getCachedObject~T~(key: String, type: T.Type) T?
+        <<performance manager>>
+        +profiler PerformanceProfiler
+        +memoryTracker MemoryUsageTracker
+        +cacheManager CacheManager
+        +lazyLoader LazyLoadingManager
+        +benchmarkRunner BenchmarkRunner
+        +startProfiling()
+        +stopProfiling()
+        +trackMemoryUsage()
+        +cacheObject()
+        +getCachedObject()
     }
 
     class CacheManager {
-        +memoryCaches: [String: MemoryCache]
-        +diskCache: DiskCache
-        +cacheEvictionPolicy: CacheEvictionPolicy
-        +cacheMetrics: CacheMetrics
-        +createMemoryCache~T~(identifier: String, capacity: Int) MemoryCache~T~
-        +store~T~(key: String, value: T, cache: String)
-        +retrieve~T~(key: String, cache: String, type: T.Type) T?
+        <<cache manager>>
+        +memoryCaches [String: MemoryCache]
+        +diskCache DiskCache
+        +cacheEvictionPolicy CacheEvictionPolicy
+        +cacheMetrics CacheMetrics
+        +createMemoryCache()
+        +store()
+        +retrieve()
         +evictExpiredEntries()
-        +clearCache(identifier: String)
+        +clearCache()
     }
 
     class LazyLoadingManager {
-        +lazyWrappers: [String: LazyWrapper]
-        +loadingQueue: DispatchQueue
-        +loadingStrategies: [LoadingStrategy]
-        +createLazyWrapper~T~(key: String, loader: LazyLoader~T~) LazyWrapper~T~
-        +loadValue~T~(wrapper: LazyWrapper~T~) T
-        +preloadValues(keys: [String])
-        +setLoadingStrategy(key: String, strategy: LoadingStrategy)
+        <<lazy loading manager>>
+        +lazyWrappers [String: LazyWrapper]
+        +loadingQueue DispatchQueue
+        +loadingStrategies [LoadingStrategy]
+        +createLazyWrapper()
+        +loadValue()
+        +preloadValues()
+        +setLoadingStrategy()
     }
 
-    %% Concurrency and Threading Utilities
+    %% Row 5 - Concurrency System
     class ConcurrencyUtilities {
-        +taskManager: TaskManager
-        +threadPoolManager: ThreadPoolManager
-        +lockManager: LockManager
-        +atomicOperations: AtomicOperations
-        +asyncHelper: AsyncHelper
-        +createTask~T~(operation: @escaping () -> T) Task~T~
-        +createTaskGroup() TaskGroup
-        +acquireLock(identifier: String) Lock
-        +performAtomic~T~(operation: @escaping () -> T) T
-        +delay(seconds: Double) async
+        <<concurrency utilities>>
+        +taskManager TaskManager
+        +threadPoolManager ThreadPoolManager
+        +lockManager LockManager
+        +atomicOperations AtomicOperations
+        +asyncHelper AsyncHelper
+        +createTask()
+        +createTaskGroup()
+        +acquireLock()
+        +performAtomic()
+        +delay()
     }
 
     class TaskManager {
-        +activeTasks: [String: Task]
-        +taskQueue: TaskQueue
-        +taskScheduler: TaskScheduler
-        +taskMonitor: TaskMonitor
-        +scheduleTask(task: Task, delay: TimeInterval)
-        +cancelTask(taskId: String)
-        +pauseTask(taskId: String)
-        +resumeTask(taskId: String)
-        +getTaskStatus(taskId: String) TaskStatus
+        <<task manager>>
+        +activeTasks [String: Task]
+        +taskQueue TaskQueue
+        +taskScheduler TaskScheduler
+        +taskMonitor TaskMonitor
+        +scheduleTask()
+        +cancelTask()
+        +pauseTask()
+        +resumeTask()
+        +getTaskStatus()
     }
 
     class ThreadPoolManager {
-        +threadPools: [String: ThreadPool]
-        +poolConfigurations: [ThreadPoolConfiguration]
-        +loadBalancer: ThreadPoolLoadBalancer
-        +createThreadPool(identifier: String, configuration: ThreadPoolConfiguration) ThreadPool
-        +submitWork~T~(poolId: String, work: @escaping () -> T) Future~T~
-        +shutdownPool(identifier: String)
+        <<thread pool manager>>
+        +threadPools [String: ThreadPool]
+        +poolConfigurations [ThreadPoolConfiguration]
+        +loadBalancer ThreadPoolLoadBalancer
+        +createThreadPool()
+        +submitWork()
+        +shutdownPool()
         +optimizePoolSizes()
     }
 
-    %% Date, Time, and Calendar Utilities
-    class DateTimeUtilities {
-        +calendarHelper: CalendarHelper
-        +timeZoneManager: TimeZoneManager
-        +dateFormatter: DateFormatterPool
-        +durationCalculator: DurationCalculator
-        +formatDate(date: Date, format: String) String
-        +parseDate(string: String, format: String) Date?
-        +addTimeInterval(date: Date, interval: TimeInterval) Date
-        +calculateDuration(start: Date, end: Date) Duration
-        +convertTimeZone(date: Date, from: TimeZone, to: TimeZone) Date
-        +isWorkday(date: Date, calendar: Calendar) Bool
-    }
-
-    %% Extension System
+    %% Row 6 - Extension System
     class Extension {
-        +extensionId: String
-        +manifest: ExtensionManifest
-        +bundle: Bundle
-        +principalClass: ExtensionPrincipalClass?
-        +dependencies: [ExtensionDependency]
-        +state: ExtensionState
-        +activate() ActivationResult
-        +deactivate() DeactivationResult
-        +handleMessage(message: ExtensionMessage) MessageResult
+        <<extension>>
+        +extensionId String
+        +manifest ExtensionManifest
+        +bundle Bundle
+        +principalClass ExtensionPrincipalClass?
+        +dependencies [ExtensionDependency]
+        +state ExtensionState
+        +activate()
+        +deactivate()
+        +handleMessage()
     }
 
     class ExtensionManifest {
-        +name: String
-        +version: String
-        +description: String
-        +author: String
-        +supportedPlatforms: [Platform]
-        +requiredCapabilities: [Capability]
-        +dependencies: [ExtensionDependency]
-        +entryPoints: [EntryPoint]
-        +permissions: [Permission]
+        <<extension manifest>>
+        +name String
+        +version String
+        +description String
+        +author String
+        +supportedPlatforms [Platform]
+        +requiredCapabilities [Capability]
+        +dependencies [ExtensionDependency]
+        +entryPoints [EntryPoint]
+        +permissions [Permission]
     }
 
+    %% Row 7 - Utility Providers
     class UtilityProvider {
-        <<protocol>>
-        +providerId: String
-        +supportedUtilities: [UtilityType]
-        +dependencies: [String]
-        +initialize() InitializationResult
+        <<utility provider>>
+        +providerId String
+        +supportedUtilities [UtilityType]
+        +dependencies [String]
+        +initialize()
         +shutdown()
-        +provideUtility~T~(type: T.Type) T?
-        +validateConfiguration() ValidationResult
+        +provideUtility()
+        +validateConfiguration()
     }
 
     class CoreUtilityProvider {
-        +fileSystemHelpers: FileSystemHelpers
-        +textUtilities: TextUtilities
-        +dataUtilities: DataUtilities
-        +dateTimeUtilities: DateTimeUtilities
-        +provideUtility~T~(type: T.Type) T?
+        <<core provider>>
+        +fileSystemHelpers FileSystemHelpers
+        +textUtilities TextUtilities
+        +dataUtilities DataUtilities
+        +dateTimeUtilities DateTimeUtilities
+        +provideUtility()
     }
 
     class NetworkUtilityProvider {
-        +networkHelpers: NetworkHelpers
-        +downloadManager: DownloadManager
-        +uploadManager: UploadManager
-        +provideUtility~T~(type: T.Type) T?
+        <<network provider>>
+        +networkHelpers NetworkHelpers
+        +downloadManager DownloadManager
+        +uploadManager UploadManager
+        +provideUtility()
     }
 
     class CryptoUtilityProvider {
-        +cryptographyHelpers: CryptographyHelpers
-        +keyManager: CryptoKeyManager
-        +secureRandomGenerator: SecureRandomGenerator
-        +provideUtility~T~(type: T.Type) T?
+        <<crypto provider>>
+        +cryptographyHelpers CryptographyHelpers
+        +keyManager CryptoKeyManager
+        +secureRandomGenerator SecureRandomGenerator
+        +provideUtility()
     }
 
     class PerformanceUtilityProvider {
-        +performanceProfiler: PerformanceProfiler
-        +memoryTracker: MemoryUsageTracker
-        +cacheManager: CacheManager
-        +provideUtility~T~(type: T.Type) T?
+        <<performance provider>>
+        +performanceProfiler PerformanceProfiler
+        +memoryTracker MemoryUsageTracker
+        +cacheManager CacheManager
+        +provideUtility()
     }
 
-    %% Specialized Utility Categories
+    %% Row 8 - Specialized Utilities
     class StringProcessor {
-        +processingType: StringProcessingType
-        +inputValidation: InputValidator
-        +outputFormatter: OutputFormatter
-        +process(input: String, options: ProcessingOptions) ProcessingResult
-        +validate(input: String) ValidationResult
-        +format(output: String, style: FormattingStyle) String
+        <<string processor>>
+        +processingType StringProcessingType
+        +inputValidation InputValidator
+        +outputFormatter OutputFormatter
+        +process()
+        +validate()
+        +format()
     }
 
     class RegexHelper {
-        +compiledPatterns: [String: NSRegularExpression]
-        +patternCache: PatternCache
-        +escapeUtility: RegexEscapeUtility
-        +compile(pattern: String, options: RegexOptions) NSRegularExpression?
-        +match(text: String, pattern: String) [RegexMatch]
-        +replace(text: String, pattern: String, replacement: String) String
-        +split(text: String, pattern: String) [String]
+        <<regex helper>>
+        +compiledPatterns [String: NSRegularExpression]
+        +patternCache PatternCache
+        +escapeUtility RegexEscapeUtility
+        +compile()
+        +match()
+        +replace()
+        +split()
     }
 
     class BinaryDataAnalyzer {
-        +dataTypeDetector: DataTypeDetector
-        +structureAnalyzer: BinaryStructureAnalyzer
-        +checksumValidator: ChecksumValidator
-        +analyzeStructure(data: Data) BinaryStructure
-        +detectDataType(data: Data) DataType
-        +validateIntegrity(data: Data, checksum: String) Bool
-        +extractMetadata(data: Data) BinaryMetadata
+        <<binary analyzer>>
+        +dataTypeDetector DataTypeDetector
+        +structureAnalyzer BinaryStructureAnalyzer
+        +checksumValidator ChecksumValidator
+        +analyzeStructure()
+        +detectDataType()
+        +validateIntegrity()
+        +extractMetadata()
     }
 
-    %% Support Types and Enums
+    %% Row 9 - Enumerations
     class UtilityType {
         <<enumeration>>
         fileSystem
@@ -322,7 +350,7 @@ classDiagram
         performance
         concurrency
         dateTime
-        custom(type: String)
+        custom
     }
 
     class ExtensionState {
@@ -343,7 +371,7 @@ classDiagram
         tar
         lz4
         bzip2
-        custom(algorithm: String)
+        custom
     }
 
     class ImageFormat {
@@ -357,15 +385,15 @@ classDiagram
         webp
     }
 
-    %% Relationships
+    %% Key Relationships
     UtilitySystemManager --> ExtensionRegistry : manages
     UtilitySystemManager --> CrossPlatformHelperManager : coordinates
     UtilitySystemManager --> PerformanceUtilityManager : uses
     UtilitySystemManager --> UtilityProvider : manages
-
+    
     ExtensionRegistry --> Extension : loads
     Extension --> ExtensionManifest : configured by
-
+    
     CrossPlatformHelperManager --> FileSystemHelpers : contains
     CrossPlatformHelperManager --> NetworkHelpers : contains
     CrossPlatformHelperManager --> CryptographyHelpers : contains
@@ -375,27 +403,27 @@ classDiagram
     CrossPlatformHelperManager --> DataUtilities : contains
     CrossPlatformHelperManager --> DateTimeUtilities : contains
     CrossPlatformHelperManager --> ConcurrencyUtilities : contains
-
+    
     PerformanceUtilityManager --> CacheManager : manages
     PerformanceUtilityManager --> LazyLoadingManager : manages
-
+    
     ConcurrencyUtilities --> TaskManager : uses
     ConcurrencyUtilities --> ThreadPoolManager : uses
-
+    
     TextUtilities --> StringProcessor : uses
     TextUtilities --> RegexHelper : uses
     DataUtilities --> BinaryDataAnalyzer : uses
-
+    
     UtilityProvider <|-- CoreUtilityProvider : implements
     UtilityProvider <|-- NetworkUtilityProvider : implements
     UtilityProvider <|-- CryptoUtilityProvider : implements
     UtilityProvider <|-- PerformanceUtilityProvider : implements
-
+    
     CoreUtilityProvider --> FileSystemHelpers : provides
     CoreUtilityProvider --> TextUtilities : provides
     CoreUtilityProvider --> DataUtilities : provides
     CoreUtilityProvider --> DateTimeUtilities : provides
-
+    
     NetworkUtilityProvider --> NetworkHelpers : provides
     CryptoUtilityProvider --> CryptographyHelpers : provides
     PerformanceUtilityProvider --> PerformanceUtilityManager : provides
