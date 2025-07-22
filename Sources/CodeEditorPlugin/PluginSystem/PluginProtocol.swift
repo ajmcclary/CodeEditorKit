@@ -69,14 +69,14 @@ public protocol Plugin: AnyObject, Sendable {
 // MARK: - Default Implementations
 
 @available(macOS 13.0, iOS 16.0, *)
-public extension Plugin {
+extension Plugin {
     /// Default implementation returns empty state
-    func saveState() async -> PluginState {
+    public func saveState() async -> PluginState {
         PluginState()
     }
     
     /// Default implementation does nothing
-    func restoreState(_: PluginState) async {
+    public func restoreState(_: PluginState) async {
         // No-op by default
     }
 }
@@ -282,7 +282,7 @@ public enum PluginError: Error, LocalizedError {
     
     public var errorDescription: String? {
         switch self {
-        case .incompatibleVersion(let required, let current):
+        case let .incompatibleVersion(required, current):
             return "Plugin requires version \(required) but current version is \(current)"
 
         case .missingDependency(let identifier):

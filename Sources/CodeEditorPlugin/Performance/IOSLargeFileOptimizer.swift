@@ -288,9 +288,9 @@ public final class IOSLargeFileOptimizer: ObservableObject {
 import SwiftUI
 
 @available(iOS 13.0, *)
-public extension View {
+extension View {
     /// Enable iOS-specific large file optimizations
-    func iOSLargeFileOptimization(_ enabled: Bool = true) -> some View {
+    public func iOSLargeFileOptimization(_ enabled: Bool = true) -> some View {
         self.modifier(IOSLargeFileOptimizationModifier(enabled: enabled))
     }
 }

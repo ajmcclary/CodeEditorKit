@@ -2,9 +2,9 @@ import Foundation
 
 /// Extensions to integrate the plugin system with CodeEditorView
 @available(macOS 13.0, iOS 16.0, *)
-public extension CodeEditorView {
+extension CodeEditorView {
     /// Plugin manager for this editor instance
-    var pluginManager: PluginManager? {
+    public var pluginManager: PluginManager? {
         get {
             objc_getAssociatedObject(self, &kPluginManagerKey) as? PluginManager
         }
@@ -15,7 +15,7 @@ public extension CodeEditorView {
     
     /// Initialize plugin system for this editor
     @MainActor
-    func initializePluginSystem() {
+    public func initializePluginSystem() {
         guard pluginManager == nil else { return }
         
         // Create a default event system if none exists in configuration
@@ -65,9 +65,9 @@ public extension CodeEditorView {
 import SwiftUI
 
 @available(macOS 13.0, iOS 16.0, *)
-public extension View {
+extension View {
     /// Enable plugin system for the code editor
-    func codeEditorPlugins(_: Bool = true) -> some View {
+    public func codeEditorPlugins(_: Bool = true) -> some View {
         self.onAppear {
             // This would need to be connected to the actual CodeEditorView instance
             // through the environment or view model
@@ -75,7 +75,7 @@ public extension View {
     }
     
     /// Configure allowed plugins
-    func codeEditorAllowedPlugins(_ identifiers: Set<String>) -> some View {
+    public func codeEditorAllowedPlugins(_ identifiers: Set<String>) -> some View {
         self.environment(\.allowedPlugins, identifiers)
     }
 }

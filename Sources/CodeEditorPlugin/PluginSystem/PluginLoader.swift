@@ -88,12 +88,12 @@ public final class PluginLoader {
                 PluginDependency(
                     identifier: $0.identifier,
                     minimumVersion: $0.minimumVersion,
-                    optional: $0.optional ?? false
+                    optional: $0.optional
                 )
             },
             platforms: Set(manifest.platforms.map { PluginPlatform(rawValue: $0) }),
             infoURL: manifest.infoURL.flatMap { URL(string: $0) },
-            enabledByDefault: manifest.enabledByDefault ?? true
+            enabledByDefault: manifest.enabledByDefault
         )
         
         // Create plugin bundle
@@ -112,7 +112,7 @@ public final class PluginLoader {
         let bundle = try loadPluginBundle(at: sourceURL)
         
         // Verify signature if required
-        if RequiresPluginSigning {
+        if kRequiresPluginSigning {
             try await verifyPluginSignature(bundle)
         }
         
@@ -208,9 +208,34 @@ public struct PluginManifest: Codable {
     public let dependencies: [ManifestDependency]
     public let platforms: [String]
     public let infoURL: String?
-    public let enabledByDefault: Bool?
-    public let permissions: [String]?
-    public let resources: [String]?
+    public let enabledByDefault: Bool
+    public let permissions: [String]
+    public let resources: [String]
+    
+    private enum CodingKeys: String, CodingKey {
+        case identifier, name, version, author, description, mainClass
+        case capabilities, minimumHostVersion, dependencies, platforms
+        case infoURL, enabledByDefault, permissions, resources
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        identifier = try container.decode(String.self, forKey: .identifier)
+        name = try container.decode(String.self, forKey: .name)
+        version = try container.decode(String.self, forKey: .version)
+        author = try container.decode(String.self, forKey: .author)
+        description = try container.decode(String.self, forKey: .description)
+        mainClass = try container.decode(String.self, forKey: .mainClass)
+        capabilities = try container.decodeIfPresent([String].self, forKey: .capabilities) ?? []
+        minimumHostVersion = try container.decodeIfPresent(String.self, forKey: .minimumHostVersion)
+        dependencies = try container.decodeIfPresent([ManifestDependency].self, forKey: .dependencies) ?? []
+        platforms = try container.decodeIfPresent([String].self, forKey: .platforms) ?? []
+        infoURL = try container.decodeIfPresent(String.self, forKey: .infoURL)
+        enabledByDefault = try container.decodeIfPresent(Bool.self, forKey: .enabledByDefault) ?? true
+        permissions = try container.decodeIfPresent([String].self, forKey: .permissions) ?? []
+        resources = try container.decodeIfPresent([String].self, forKey: .resources) ?? []
+    }
 }
 
 /// Dependency in manifest format
@@ -218,7 +243,19 @@ public struct PluginManifest: Codable {
 public struct ManifestDependency: Codable {
     public let identifier: String
     public let minimumVersion: String?
-    public let optional: Bool?
+    public let optional: Bool
+    
+    private enum CodingKeys: String, CodingKey {
+        case identifier, minimumVersion, optional
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        identifier = try container.decode(String.self, forKey: .identifier)
+        minimumVersion = try container.decodeIfPresent(String.self, forKey: .minimumVersion)
+        optional = try container.decodeIfPresent(Bool.self, forKey: .optional) ?? false
+    }
 }
 
 /// Plugin loader errors
@@ -265,7 +302,7 @@ public enum PluginLoaderError: Error, LocalizedError {
 // MARK: - Configuration
 
 /// Whether plugin signing is required
-private let RequiresPluginSigning: Bool = {
+private let kRequiresPluginSigning: Bool = {
     #if DEBUG
     return false
     #else

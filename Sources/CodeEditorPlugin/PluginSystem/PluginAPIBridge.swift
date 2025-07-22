@@ -61,7 +61,7 @@ private final class LanguageAPIImpl: LanguageAPI {
     
     func availableLanguages() async -> [Language] {
         // Return all known languages since registry doesn't have a method to list them
-        return Language.allCases
+        Language.allCases
     }
     
     func registerLanguageConfiguration(_: LanguageConfiguration, for language: Language) async throws {
@@ -86,7 +86,7 @@ private final class CompletionAPIImpl: CompletionAPI {
         self.context = context
     }
     
-    func registerProvider(_ provider: any CompletionProvider, for language: Language) async {
+    func registerProvider(_ provider: any CompletionProvider, for _: Language) async {
         guard context.hasPermission(.completion) else {
             context.logger.warning("Missing permission: completion")
             return
@@ -181,7 +181,7 @@ private final class ThemeAPIImpl: ThemeAPI {
     
     func availableThemes() async -> [EditorTheme] {
         // Return only registered themes as built-in themes aren't defined yet
-        return Array(registeredThemes.values)
+        Array(registeredThemes.values)
     }
     
     func currentTheme() async -> EditorTheme {
@@ -370,7 +370,7 @@ private final class DiagnosticAPIImpl: DiagnosticAPI {
         currentDiagnostics = diagnostics
         
         // Post diagnostic event
-        let _ = PluginDiagnosticEvent(
+        _ = PluginDiagnosticEvent(
             pluginId: context.pluginIdentifier,
             diagnostics: diagnostics.map { diagnostic in
                 PluginDiagnostic(
@@ -389,7 +389,7 @@ private final class DiagnosticAPIImpl: DiagnosticAPI {
     func clear() async {
         currentDiagnostics.removeAll()
         
-        let _ = PluginDiagnosticEvent(
+        _ = PluginDiagnosticEvent(
             pluginId: context.pluginIdentifier,
             diagnostics: []
         )
