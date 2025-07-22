@@ -172,7 +172,6 @@ Your review should produce:
    - 🚀 **Game-changers**: Transformative features
    - 💡 **Great additions**: Significant improvements
    - 🔧 **Nice improvements**: Polish and refinements
-
 1. **Risk Assessment**: Any critical issues or concerns for production use
 1. **Code Examples**: Specific code snippets demonstrating issues or excellence
 1. **Recommendations**: Concrete next steps for the development team
@@ -215,5 +214,8 @@ Structure your review similar to the existing REVIEW\_\*.md files:
 - Cross-platform support is critical - no platform can be second-class
 - Performance is paramount - this needs to handle large codebases
 - The sample app should demonstrate best practices
+- Omit feedback about building and testing for Linux
 
 Remember to consider both the immediate code quality and the strategic direction of the framework. Your insights should help guide the next phase of development while maintaining the high standards already established.
+
+Output your entire analysis and code review to REVIEW.md
