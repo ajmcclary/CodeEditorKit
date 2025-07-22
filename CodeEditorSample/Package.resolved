@@ -1,6 +1,15 @@
 {
-  "originHash" : "414a0f6686c734957cca841b1598b159779c1fd3b1735cf73d9b6af4070fb063",
+  "originHash" : "b8e7b9f6140c9750c9c18715a6e657d44b995613d0ce7f2f9fd6478d39a57935",
   "pins" : [
+    {
+      "identity" : "depermaid",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/daikimat/depermaid.git",
+      "state" : {
+        "revision" : "0d34e7d36e4c71559841757277e491e494bf422f",
+        "version" : "1.1.0"
+      }
+    },
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",

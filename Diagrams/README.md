@@ -1,6 +1,6 @@
 # CodeEditorPlugin Architecture Diagrams
 
-This directory contains **24 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
+This directory contains **26 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
 
 ## Index of Diagrams
 
@@ -76,6 +76,12 @@ Comprehensive matrix view of language support capabilities across all 17+ suppor
 ### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
 Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
 
+### 25. [Package Dependencies](25-package-dependencies.md)
+Automatically generated package dependency diagram for CodeEditorPlugin showing the relationship between the main package and its dependencies (SwiftSyntax, SwiftParser). Generated using depermaid plugin.
+
+### 26. [Sample App Dependencies](26-sample-dependencies.md)
+Automatically generated package dependency diagram for CodeEditorSample demonstration app showing its dependencies on CodeEditorPlugin and test target relationships. Generated using depermaid plugin.
+
 ## How to View These Diagrams
 
 All diagrams are written in Mermaid syntax and can be viewed:
@@ -83,6 +89,17 @@ All diagrams are written in Mermaid syntax and can be viewed:
 2. In VS Code with a Mermaid preview extension
 3. In any Mermaid-compatible viewer
 4. Exported to SVG/PNG using Mermaid CLI tools
+
+## Regenerating Dependency Diagrams
+
+The dependency diagrams (25 and 26) are automatically generated using the depermaid Swift package plugin. To regenerate these diagrams after package changes:
+
+```bash
+# From the project root
+./Scripts/generate-dependency-diagrams.sh
+```
+
+This will update both package dependency diagrams with the latest dependency information.
 
 ## Diagram Conventions
 

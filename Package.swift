@@ -49,7 +49,8 @@ let kpackage = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "601.0.1")
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "601.0.1"),
+        .package(url: "https://github.com/daikimat/depermaid.git", from: "1.1.0")
     ],
     targets: [
         .target(

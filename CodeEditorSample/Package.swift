@@ -79,7 +79,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "..")
+        .package(path: ".."),
+        .package(url: "https://github.com/daikimat/depermaid.git", from: "1.1.0")
     ],
     targets: [
         .executableTarget(
