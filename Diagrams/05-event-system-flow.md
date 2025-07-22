@@ -89,11 +89,11 @@ flowchart TB
     BATCH -.->|New Events| CREATE
 
     %% Styling - Dark mode friendly colors
-    classDef source fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef system fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef handler fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef process fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef types fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef source fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef handler fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef types fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
     class UI source
     class TEXT source

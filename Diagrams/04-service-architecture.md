@@ -276,17 +276,17 @@ classDiagram
     ServiceDependencies --> CrossPlatformLogger : includes
     ServiceDependencies --> CacheManager : includes
     
-    %% Styling - Dark mode friendly colors
-    classDef registry fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef service fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef coordinator fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef lifecycle fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef support fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef enum fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef protocol fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef cache fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
-    classDef highlighting fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef completion fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
+    %% Styling - Light/Dark mode compatible colors
+    classDef registry fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef service fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef lifecycle fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef support fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef protocol fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef cache fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef highlighting fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef completion fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
     class BusinessLogicServiceRegistry registry
     class TextEditingService service

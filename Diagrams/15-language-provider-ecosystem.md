@@ -326,16 +326,16 @@ classDiagram
     SharedCompletionBuilder --> LanguageMemberCompletions : uses
 
     %% Styling - Dark mode friendly colors
-    classDef factory fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef registry fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef compiled fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef dynamic fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef jvm fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef functional fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef data fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef symbol fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef folding fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef shared fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef factory fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef registry fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef compiled fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef dynamic fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef jvm fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef functional fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef data fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef symbol fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef folding fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef shared fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class LanguageProviderFactory factory
     class CompletionProviderRegistry registry
@@ -408,11 +408,11 @@ flowchart TB
     end
 
     %% Styling - Dark mode friendly colors
-    classDef compiled fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef dynamic fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef jvm fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef functional fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef data fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef compiled fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef dynamic fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef jvm fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef functional fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef data fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
 
     class SWIFT compiled
     class CPP compiled

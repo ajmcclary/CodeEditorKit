@@ -126,13 +126,13 @@ flowchart TB
     ASYNC --> RENDER[Rendered Text]
 
     %% Styling - Dark mode friendly colors
-    classDef input fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef detection fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef coordinator fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef swift fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef regex fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef process fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef perf fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef input fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef detection fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef swift fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef regex fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef process fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef perf fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
     
     class FILE input
     class CONTENT input

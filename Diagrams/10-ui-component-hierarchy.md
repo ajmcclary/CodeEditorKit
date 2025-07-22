@@ -191,12 +191,12 @@ classDiagram
     CodeEditorContainerView --> LayoutConstraints : uses
 
     %% Styling - Dark mode friendly colors
-    classDef container fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef editor fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef gutter fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef minimap fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef overlay fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef support fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef container fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef editor fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef gutter fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef minimap fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef overlay fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef support fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
     
     class CodeEditorContainerView container
     class CodeEditorView editor
@@ -254,11 +254,11 @@ graph TB
     end
 
     %% Styling - Dark mode friendly colors
-    classDef container fill:#6366f120,stroke:#6366f1,color:#fff
-    classDef gutter fill:#10b98120,stroke:#10b981,color:#fff
-    classDef editor fill:#8b5cf620,stroke:#8b5cf6,color:#fff
-    classDef minimap fill:#3b82f620,stroke:#3b82f6,color:#fff
-    classDef status fill:#6b728020,stroke:#6b7280,color:#fff
+    classDef container fill:#007AFF20,stroke:#007AFF,color:#1D1D1F
+    classDef gutter fill:#34C75920,stroke:#34C759,color:#1D1D1F
+    classDef editor fill:#AF52DE20,stroke:#AF52DE,color:#1D1D1F
+    classDef minimap fill:#007AFF20,stroke:#007AFF,color:#1D1D1F
+    classDef status fill:#8E8E9320,stroke:#8E8E93,color:#1D1D1F
 ```
 
 ## Component Responsibilities

@@ -353,14 +353,14 @@ classDiagram
     SwiftUIIntegrationSystem --> SwiftUIExtensionManager : extends with
 
     %% Styling - Dark mode friendly colors
-    classDef system fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef swiftui fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef representable fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef coordinator fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef environment fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef modifier fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef state fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef support fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef swiftui fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef representable fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef environment fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef modifier fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef state fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef support fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class SwiftUIIntegrationSystem system
     class CodeEditor swiftui

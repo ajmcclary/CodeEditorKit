@@ -240,16 +240,16 @@ classDiagram
     PerformanceViews --> PerformanceDashboard : contains
 
     %% Styling - Dark mode friendly colors
-    classDef system fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef monitor fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef metrics fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef insights fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef adaptive fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef memory fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef viewport fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef optimized fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef views fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
-    classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef monitor fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef metrics fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef insights fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef adaptive fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef memory fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef viewport fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef optimized fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef views fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class UnifiedPerformanceSystem system
     class PerformanceMonitor monitor
@@ -318,11 +318,11 @@ flowchart TD
     CONTINUE --> COLLECT
 
     %% Styling - Dark mode friendly colors
-    classDef start fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef process fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef decision fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef action fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef endNode fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
+    classDef start fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef process fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef decision fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef action fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef endNode fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
     
     class START start
     class CONTINUE start

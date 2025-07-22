@@ -326,14 +326,14 @@ classDiagram
     TextProcessingOptimizer --> AsyncTextProcessor : processes async
 
     %% Styling - Dark mode friendly colors
-    classDef processor fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef validation fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef range fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef version fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef styler fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef result fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef optimizer fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef processor fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef validation fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef range fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef version fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef styler fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef result fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef optimizer fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class AdvancedTextProcessor processor
     class TextValidationSystem validation
@@ -410,13 +410,13 @@ flowchart TB
     RESULT --> OUTPUT[Processed Text Output]
 
     %% Styling - Dark mode friendly colors
-    classDef input fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef process fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef decision fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef validator fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef system fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef styler fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef output fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef input fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef process fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef decision fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef validator fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef system fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef styler fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef output fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
     class INPUT input
     class OUTPUT input

@@ -469,16 +469,16 @@ classDiagram
     DebugIntegrationSystem --> DebugPerformanceOptimizer : optimizes with
 
     %% Styling - Dark mode friendly colors
-    classDef system fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef session fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef breakpoint fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef ui fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef data fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef event fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef protocol fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef console fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef optimization fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
-    classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef session fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef breakpoint fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef ui fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef data fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef event fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef protocol fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef console fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef optimization fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class DebugIntegrationSystem system
     class DebugSessionManager session

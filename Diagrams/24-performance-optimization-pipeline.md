@@ -70,11 +70,11 @@ flowchart TB
     MONITOR --> COLLECT
     
     %% Styling - Dark mode friendly colors
-    classDef monitoring fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef analysis fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef optimization fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef adaptive fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef implementation fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef monitoring fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef analysis fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef optimization fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef adaptive fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef implementation fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     
     class COLLECT monitoring
     class METRICS monitoring
@@ -389,13 +389,13 @@ classDiagram
     PerformanceMetrics --> RenderingMetrics : includes
 
     %% Styling - Dark mode friendly colors
-    classDef pipeline fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef monitoring fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef analysis fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef strategy fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef adaptive fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef implementation fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef metrics fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef pipeline fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef monitoring fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef analysis fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef strategy fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef adaptive fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef implementation fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef metrics fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
 
     class PerformanceOptimizationPipeline pipeline
     class PerformanceMonitoringSystem monitoring

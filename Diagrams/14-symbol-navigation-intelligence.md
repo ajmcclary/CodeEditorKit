@@ -258,15 +258,15 @@ classDiagram
     ReferenceProvider --> CrossReferenceAnalyzer : uses
 
     %% Styling - Dark mode friendly colors
-    classDef navigator fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef provider fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef symbol fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef outline fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef breadcrumb fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef index fill:#ec489920,stroke:#ec4899,stroke-width:2px,color:#fff
-    classDef reference fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef types fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
-    classDef enum fill:#6b728020,stroke:#6b7280,stroke-width:2px,color:#fff
+    classDef navigator fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef provider fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef symbol fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef outline fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef breadcrumb fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef index fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef reference fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef types fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class SymbolNavigator navigator
     class OptimizedSymbolNavigator navigator

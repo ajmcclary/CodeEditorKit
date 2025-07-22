@@ -200,11 +200,11 @@ classDiagram
     PlatformCapabilities --> PlatformFeature : checks
     
     %% Styling - Dark mode friendly colors
-    classDef detection fill:#3b82f620,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef coordinator fill:#6366f120,stroke:#6366f1,stroke-width:2px,color:#fff
-    classDef abstraction fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef platform fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef enum fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
+    classDef detection fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef abstraction fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef platform fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
     class PlatformCapabilities detection
     class CrossPlatformCoordinator coordinator

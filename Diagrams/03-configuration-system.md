@@ -161,13 +161,13 @@ classDiagram
     
     ConfigurationEnvironmentKey --> EditorConfiguration : provides
     
-    %% Styling - Dark mode friendly colors
-    classDef main fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
-    classDef section fill:#8b5cf620,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    classDef theme fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef enum fill:#06b6d420,stroke:#06b6d4,stroke-width:2px,color:#fff
-    classDef util fill:#f59e0b20,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef swiftui fill:#10b98120,stroke:#10b981,stroke-width:2px,color:#fff
+    %% Styling - Light/Dark mode compatible colors
+    classDef main fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef section fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef theme fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef util fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef swiftui fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     
     class EditorConfiguration main
     class DisplayConfiguration section

@@ -86,11 +86,16 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Diagram Conventions
 
-- **Blue boxes**: Core components/main systems
-- **Orange boxes**: Services/processing components
-- **Green boxes**: UI/visual components
-- **Purple boxes**: Configuration/settings
-- **Pink boxes**: External integrations
-- **Arrows**: Dependencies and data flow
-- **Subgraphs**: Logical groupings of related components
+All diagrams use a consistent light/dark mode compatible color palette:
+
+- **Primary Blue**: Core components/main systems  
+- **Success Green**: UI/visual components  
+- **Purple Accent**: Services/processing components  
+- **Warning Orange**: Configuration/settings  
+- **Error Red**: External integrations  
+- **Neutral Gray**: Supporting data types and enums  
+- **Arrows**: Dependencies and data flow  
+- **Subgraphs**: Logical groupings of related components  
+
+Colors automatically adapt to light/dark mode with semantic meaning maintained across all diagrams.
 
