@@ -134,7 +134,9 @@ public actor WebSocketTransport: LSPTransport {
     public func send(_ data: Data) async throws {
         // Format as LSP message with Content-Length header
         let header = "Content-Length: \(data.count)\r\n\r\n"
-        let headerData = header.data(using: .utf8)!
+        guard let headerData = header.data(using: .utf8) else {
+            throw LSPTransportError.transportSpecific(message: "Failed to encode header as UTF-8")
+        }
         var message = Data()
         message.append(headerData)
         message.append(data)

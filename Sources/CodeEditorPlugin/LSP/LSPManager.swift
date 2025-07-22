@@ -359,7 +359,7 @@ public final class LSPManager: ObservableObject {
     /// Get diagnostics for a file
     /// - Parameter filePath: Path to the file
     /// - Returns: Diagnostics for the file
-    public func getDiagnostics(for filePath: String) -> [Diagnostic] {
+    public func getDiagnostics(for filePath: String) -> [LSPDiagnostic] {
         let uri = "file://\(filePath)"
         
         guard let document = documentManager.getDocument(for: filePath) else {

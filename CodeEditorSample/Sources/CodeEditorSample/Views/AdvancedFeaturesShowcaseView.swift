@@ -725,7 +725,7 @@ enum FeatureDemo: String, CaseIterable {
                 }
                 
                 private func performAction(_ item: String) {
-                    print("Action for: \\(item)")
+                    CrossPlatformLogger.logger(subsystem: "Sample", category: "Actions").debug("Action for: \\(item)")
                 }
             }
 
@@ -742,7 +742,7 @@ enum FeatureDemo: String, CaseIterable {
                             // Update UI
                         }
                     } catch {
-                        print("Error: \\(error)")
+                        CrossPlatformLogger.logger(subsystem: "Sample", category: "Networking").error("Error loading data: \\(error)")
                     }
                 }
                 

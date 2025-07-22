@@ -25,7 +25,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     // MARK: - Properties
     
     private weak var textView: CodeEditorView?
-    private var bracketPairs: [BracketPair] = []
+    private var bracketPairs: [SmartEditingBracketPair] = []
     private var autoIndentRules: [AutoIndentRule] = []
     
     // MARK: - Initialization
@@ -49,12 +49,12 @@ public class SmartEditingEngine: NSObject, ObservableObject {
     private func setupDefaultRules() {
         // Setup default bracket pairs
         bracketPairs = [
-            BracketPair(open: "(", close: ")"),
-            BracketPair(open: "[", close: "]"),
-            BracketPair(open: "{", close: "}"),
-            BracketPair(open: "\"", close: "\"", isQuote: true),
-            BracketPair(open: "'", close: "'", isQuote: true),
-            BracketPair(open: "`", close: "`", isQuote: true)
+            SmartEditingBracketPair(open: "(", close: ")"),
+            SmartEditingBracketPair(open: "[", close: "]"),
+            SmartEditingBracketPair(open: "{", close: "}"),
+            SmartEditingBracketPair(open: "\"", close: "\"", isQuote: true),
+            SmartEditingBracketPair(open: "'", close: "'", isQuote: true),
+            SmartEditingBracketPair(open: "`", close: "`", isQuote: true)
         ]
         
         // Setup auto-indent rules
@@ -86,7 +86,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
         return false
     }
     
-    private func handleOpeningBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
+    private func handleOpeningBracket(_ pair: SmartEditingBracketPair, at range: NSRange) -> Bool {
         guard let textView else { return false }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -130,7 +130,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
         return true
     }
     
-    private func handleClosingBracket(_ pair: BracketPair, at range: NSRange) -> Bool {
+    private func handleClosingBracket(_ pair: SmartEditingBracketPair, at range: NSRange) -> Bool {
         guard let textView else { return false }
         
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -587,8 +587,8 @@ public struct TextCursor: Identifiable {
     }
 }
 
-/// Bracket pair definition
-public struct BracketPair {
+/// Bracket pair definition for smart editing
+public struct SmartEditingBracketPair {
     public let open: String
     public let close: String
     public let isQuote: Bool

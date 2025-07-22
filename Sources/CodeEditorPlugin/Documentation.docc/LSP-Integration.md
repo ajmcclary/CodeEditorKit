@@ -9,16 +9,31 @@ Enable IDE-level intelligence with Language Server Protocol support.
 
 ## Overview
 
-CodeEditorPlugin includes foundational support for the Language Server Protocol (LSP), bringing advanced IDE features like intelligent code completion, real-time diagnostics, and refactoring capabilities to your editor. However, due to platform-specific technical constraints, LSP functionality is currently **macOS-only**.
+CodeEditorPlugin provides comprehensive Language Server Protocol (LSP) support, bringing advanced IDE features like intelligent code completion, real-time diagnostics, and refactoring capabilities to your editor. The framework supports two modes of operation to ensure cross-platform compatibility.
 
-## Platform Support Status
+## Platform Support Matrix
 
-### ✅ Supported Platforms
-- **macOS 12.0+**: Full LSP support with process-based language servers
+| Feature | macOS | iOS | Mac Catalyst |
+|---------|-------|-----|--------------|
+| **Local LSP Servers** | ✅ Full support | ❌ Not available | ❌ Not available |
+| **Remote LSP Servers** | ✅ Full support | ✅ Full support | ✅ Full support |
 
-### ❌ Unsupported Platforms
-- **iOS 16.0+**: Not supported (requires Process API which is unavailable)
-- **Mac Catalyst 16.0+**: Not supported (Process API is restricted)
+### Local LSP Servers (macOS Only)
+
+Local language servers run as child processes and provide the best performance and integration:
+
+- **macOS 12.0+**: Full support using ProcessTransport
+- **iOS/Catalyst**: Not supported due to platform restrictions (no Process API)
+
+### Remote LSP Servers (All Platforms)
+
+Connect to language servers over WebSocket for cross-platform support:
+
+- **All platforms**: Full support via WebSocketTransport
+- **Use cases**: iOS apps, cloud-based development, shared language servers
+- **Security**: TLS/SSL support with certificate validation
+
+> Important: When developing for iOS or Mac Catalyst, you must use remote LSP servers. Plan your architecture accordingly.
 
 > Note: LSP integration is currently in preview with support for Swift, TypeScript, and Python. Full LSP 3.17 compliance is targeted for v2.0.
 
@@ -141,6 +156,87 @@ config.lsp.servers["python"] = LSPServerConfig(
     rootPath: projectPath
 )
 ```
+
+### Remote LSP Configuration (iOS/Catalyst Compatible)
+
+For platforms without local process support, use remote LSP servers:
+
+```swift
+// Remote LSP for iOS/Catalyst
+config.lsp.servers["swift"] = LSPServerConfig.remote(
+    RemoteLSPConfiguration(
+        serverURL: URL(string: "wss://lsp.example.com/swift")!,
+        authentication: .bearerToken("your-token"),
+        reconnectPolicy: .exponentialBackoff(maxAttempts: 5)
+    )
+)
+
+// SwiftUI example for iOS
+struct IOSLSPEditor: View {
+    @State private var config = EditorConfiguration()
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .onAppear {
+                // Remote LSP works on all platforms
+                config.lsp.enabled = true
+                config.lsp.servers["typescript"] = .remote(
+                    RemoteLSPConfiguration.publicServer(
+                        url: URL(string: "wss://typescript-lsp.cloud.com")!
+                    )
+                )
+            }
+            .environment(\.codeEditorConfiguration, config)
+    }
+}
+```
+
+> Tip: Many cloud IDE providers offer WebSocket-based LSP endpoints that work perfectly with iOS apps.
+
+### Secure Remote LSP Configuration
+
+For production environments, use certificate pinning and enhanced security:
+
+```swift
+// Certificate pinning with public key
+let secureLSPConfig = RemoteLSPConfiguration.enterpriseServer(
+    url: URL(string: "wss://secure-lsp.company.com")!,
+    authentication: .bearerToken(secureToken),
+    pinnedPublicKeys: [
+        Data(base64Encoded: "AAAB3NzaC1yc2EAAAADAQABAAAB...")!,
+        Data(base64Encoded: "AAAB3NzaC1yc2EAAAADAQABAAAC...")!
+    ],
+    backupKeys: [
+        // Backup keys for certificate rotation
+        Data(base64Encoded: "AAAB3NzaC1yc2EAAAADAQABAAAD...")!
+    ]
+)
+
+// Custom security configuration
+let customSecureConfig = RemoteLSPConfiguration(
+    serverURL: URL(string: "wss://lsp.secure.com")!,
+    authentication: .oauth2(accessToken: oauthToken),
+    certificatePinning: CertificatePinning(
+        method: .publicKey,
+        pinnedData: pinnedKeys,
+        allowDebugBypass: false  // Strict in production
+    ),
+    securityOptions: SecurityOptions(
+        minimumTLSVersion: .tls13,
+        allowedCipherSuites: ["TLS_AES_256_GCM_SHA384"],
+        requireOCSPStapling: true,
+        requireCertificateTransparency: true
+    )
+)
+
+// Load certificates from files
+let pinning = try CertificatePinning.fromCertificateFiles([
+    "/path/to/server-cert.pem",
+    "/path/to/intermediate-cert.pem"
+])
+```
+
+> Important: Certificate pinning helps prevent man-in-the-middle attacks but requires careful management during certificate rotation.
 
 ## LSP Client
 

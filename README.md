@@ -76,7 +76,13 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 | Memory Monitoring | ✅ | ✅ | ✅ |
 | Large File Support (10MB+) | ✅ | ⚠️ | ⚠️ |
 
-⚠️ = Limited support, see performance recommendations
+### Platform Notes
+
+- **Local LSP**: Only available on macOS due to Process API requirements. iOS and Catalyst apps must use remote LSP servers via WebSocket.
+- **Large Files**: iOS and Catalyst have memory constraints. Files over 10MB may experience reduced performance. Consider:
+  - Enabling viewport-based rendering
+  - Disabling real-time syntax highlighting for very large files
+  - Using the performance monitoring APIs to track memory usage
 
 ## 🔌 Plugin Architecture (Preview)
 

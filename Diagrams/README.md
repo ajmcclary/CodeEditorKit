@@ -1,6 +1,6 @@
 # CodeEditorPlugin Architecture Diagrams
 
-This directory contains **26 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
+This directory contains **27 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
 
 ## Index of Diagrams
 
@@ -81,6 +81,9 @@ Automatically generated package dependency diagram for CodeEditorPlugin showing 
 
 ### 26. [Sample App Dependencies](26-sample-dependencies.md)
 Automatically generated package dependency diagram for CodeEditorSample demonstration app showing its dependencies on CodeEditorPlugin and test target relationships. Generated using depermaid plugin.
+
+### 27. [Plugin System Architecture](27-plugin-system-architecture.md)
+Comprehensive plugin system architecture providing extensibility through a stable API with controlled access. Includes plugin lifecycle management, security model with permissions, dependency resolution, and event-based communication between plugins and the core system.
 
 ## How to View These Diagrams
 

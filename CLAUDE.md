@@ -70,6 +70,10 @@ appState.updateConfiguration { config in
     config.display.showLineNumbers = true
     config.display.fontSize = 16
 }
+
+// Dependency injection for ActorCoordinator
+var config = EditorConfiguration()
+config.actorCoordinator = ActorCoordinator.create()
 ```
 
 ### SwiftUI Integration
@@ -118,7 +122,9 @@ textView.language = .python
 ### Architecture Guidelines
 - **UI/Logic Separation**: Business logic in services, not views
 - **ViewModels**: Co-located with features (e.g., `GutterViewModel` in `Layout/`)
-- **Dependency Injection**: No singletons (use DI for MemoryMonitor, etc.)
+- **Dependency Injection**: No singletons - use DI for all services
+  - ActorCoordinator: Pass via `EditorConfiguration.actorCoordinator`
+  - MemoryMonitor: Inject through configuration
 - **Error Handling**: Comprehensive error types, no silent failures
 - **Testing**: Test new features (53+ test files exist)
 

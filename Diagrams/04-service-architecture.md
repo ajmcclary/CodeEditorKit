@@ -23,6 +23,7 @@ classDiagram
         +configuration EditorConfiguration
         +logger CrossPlatformLogger
         +cache CacheManager
+        +actorCoordinator ActorCoordinator
     }
 
     class ServiceEventHandler {
@@ -80,6 +81,8 @@ classDiagram
         -threshold Double
         -timer Timer?
         -delegate MemoryMonitorDelegate?
+        -actorCoordinator ActorCoordinator
+        +init(coordinator)
         +startMonitoring()
         +stopMonitoring()
         +currentMemoryUsage()
@@ -209,6 +212,25 @@ classDiagram
         +priority Int
     }
 
+    %% Eighth Row - Concurrency & Coordination
+    class ActorCoordinator {
+        &lt;&lt;concurrency management&gt;&gt;
+        +backgroundQueue DispatchQueue
+        +mainActor MainActor
+        +performAsync()
+        +performSync()
+        +schedule()
+        +create()$ ActorCoordinator
+    }
+
+    class PluginIntegration {
+        &lt;&lt;plugin service bridge&gt;&gt;
+        +pluginManager PluginManager
+        +serviceRegistry BusinessLogicServiceRegistry
+        +bridgeServices()
+        +exposeServicesToPlugins()
+    }
+
     %% Bottom Row - Basic Support Types
     class LanguageConfig {
         &lt;&lt;language definition&gt;&gt;
@@ -272,9 +294,14 @@ classDiagram
     CompletionManager ..|> ServiceLifecycle : implements
     
     MemoryMonitor ..|> ServiceLifecycle : implements
+    MemoryMonitor --> ActorCoordinator : uses
     
     ServiceDependencies --> CrossPlatformLogger : includes
     ServiceDependencies --> CacheManager : includes
+    ServiceDependencies --> ActorCoordinator : includes
+    
+    PluginIntegration --> BusinessLogicServiceRegistry : bridges
+    PluginIntegration --> PluginManager : coordinates
     
     %% Styling - Light/Dark mode compatible colors
     classDef registry fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
@@ -320,14 +347,18 @@ classDiagram
     class CompletionContext completion
     class CompletionItem completion
     class LanguageConfig completion
+    class ActorCoordinator coordinator
+    class PluginIntegration coordinator
+    class PluginManager service
 ```
 
 ## Service Architecture Principles
 
 1. **Service Registry Pattern**: Central registry manages all service instances
-2. **Dependency Injection**: Services receive dependencies through constructor
+2. **Dependency Injection**: Services receive dependencies through constructor - no singletons
 3. **Lifecycle Management**: All services implement lifecycle protocol
 4. **Event-Driven Communication**: Services communicate through event system
-5. **Caching Strategy**: Shared cache manager for performance
-6. **Async Operations**: Heavy operations run on background queues
-7. **Memory Management**: Automatic cleanup on memory warnings
+5. **Plugin Integration**: Services exposed to plugins through secure API bridge
+6. **Caching Strategy**: Shared cache manager for performance
+7. **Async Operations**: Heavy operations run on background queues via ActorCoordinator
+8. **Memory Management**: Automatic cleanup on memory warnings with injected monitor

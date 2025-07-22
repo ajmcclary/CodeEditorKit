@@ -110,6 +110,11 @@ public struct EditorConfiguration: Codable, Sendable {
     /// If nil, no events will be published
     public var eventSystem: UnifiedEventSystem?
     
+    /// Actor coordinator for managing specialized actors
+    /// If nil, a new instance will be created when needed
+    @available(macOS 13.0, iOS 16.0, *)
+    public var actorCoordinator: ActorCoordinator?
+    
     // MARK: - Initialization
     
     public init() {}

@@ -69,8 +69,8 @@ public final class LSPClient: ObservableObject {
     /// Server capabilities received during initialization
     @Published public private(set) var serverCapabilities: ServerCapabilities?
     
-    /// Active diagnostics by document URI
-    @Published public private(set) var diagnostics: [String: [Diagnostic]] = [:]
+    /// Active diagnostics by document URI  
+    @Published public private(set) var diagnostics: [String: [LSPDiagnostic]] = [:]
     
     /// LSP message handler
     private let messageHandler = LSPMessageHandler()

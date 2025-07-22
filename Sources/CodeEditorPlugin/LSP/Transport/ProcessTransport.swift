@@ -173,7 +173,9 @@ public actor ProcessTransport: LSPTransport {
             
             // Format as LSP message with Content-Length header
             let header = "Content-Length: \(data.count)\r\n\r\n"
-            let headerData = header.data(using: .utf8)!
+            guard let headerData = header.data(using: .utf8) else {
+                throw LSPTransportError.transportSpecific(message: "Failed to encode header as UTF-8")
+            }
             
             try fileHandle.write(contentsOf: headerData)
             try fileHandle.write(contentsOf: data)

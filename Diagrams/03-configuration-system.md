@@ -13,6 +13,10 @@ classDiagram
         +layout LayoutConfiguration
         +behavior BehaviorConfiguration
         +performance PerformanceConfiguration
+        +eventSystem UnifiedEventSystem?
+        +actorCoordinator ActorCoordinator?
+        +allowedPlugins Set~String~
+        +pluginSettings [String: Any]
         +validate()
         +copy()
     }
@@ -73,6 +77,9 @@ classDiagram
         +enableLineCache Bool
         +cacheSize Int
         +virtualScrolling Bool
+        +iOSLargeFileOptimization Bool
+        +chunkSize Int
+        +memoryThreshold Double
     }
 
     class ThemeConfiguration {
@@ -116,7 +123,26 @@ classDiagram
         triggerCompletion
     }
 
-    %% Fifth Row - SwiftUI Integration & Persistence
+    %% Fifth Row - Plugin & System Configuration
+    class PluginConfiguration {
+        &lt;&lt;plugin settings&gt;&gt;
+        +enabledPlugins Set~String~
+        +pluginPermissions [String: Set~PluginPermission~]
+        +pluginSettings [String: Any]
+        +autoLoadPlugins Bool
+        +pluginSearchPaths [URL]
+    }
+
+    class SystemConfiguration {
+        &lt;&lt;system integration&gt;&gt;
+        +eventSystem UnifiedEventSystem?
+        +actorCoordinator ActorCoordinator?
+        +memoryMonitor MemoryMonitor?
+        +languageRegistry LanguageRegistry
+        +completionRegistry CompletionProviderRegistry
+    }
+
+    %% Sixth Row - SwiftUI Integration & Persistence
     class AppState {
         &lt;&lt;ObservableObject&gt;&gt;
         @Published configuration EditorConfiguration
@@ -144,6 +170,8 @@ classDiagram
     EditorConfiguration *-- LayoutConfiguration : contains
     EditorConfiguration *-- BehaviorConfiguration : contains
     EditorConfiguration *-- PerformanceConfiguration : contains
+    EditorConfiguration --> SystemConfiguration : integrates
+    EditorConfiguration --> PluginConfiguration : includes
     
     DisplayConfiguration *-- ThemeConfiguration : contains
     ThemeConfiguration *-- SyntaxColorScheme : contains
@@ -178,6 +206,9 @@ classDiagram
     class SyntaxColorScheme theme
     class IndentStyle enum
     class LineWrappingMode enum
+    class PluginConfiguration integration
+    class SystemConfiguration integration
+    class PluginPermission enum
     class TabKeyBehavior enum
     class ConfigurationValidator util
     class ConfigurationPresets util

@@ -33,13 +33,21 @@ public struct RemoteLSPConfiguration: Sendable, Codable {
     /// Whether to validate SSL certificates (for wss:// connections)
     public let validateSSLCertificates: Bool
     
+    /// Certificate pinning configuration for enhanced security
+    public let certificatePinning: CertificatePinning?
+    
+    /// Additional security options
+    public let securityOptions: SecurityOptions
+    
     public init(
         serverURL: URL,
         authentication: LSPAuthentication? = nil,
         reconnectPolicy: ReconnectPolicy = .exponentialBackoff(maxAttempts: 3),
         customHeaders: [String: String] = [:],
         transportConfiguration: LSPTransportConfiguration? = nil,
-        validateSSLCertificates: Bool = true
+        validateSSLCertificates: Bool = true,
+        certificatePinning: CertificatePinning? = nil,
+        securityOptions: SecurityOptions = SecurityOptions()
     ) {
         self.serverURL = serverURL
         self.authentication = authentication
@@ -47,6 +55,89 @@ public struct RemoteLSPConfiguration: Sendable, Codable {
         self.customHeaders = customHeaders
         self.transportConfiguration = transportConfiguration
         self.validateSSLCertificates = validateSSLCertificates
+        self.certificatePinning = certificatePinning
+        self.securityOptions = securityOptions
+    }
+}
+
+/// Certificate pinning configuration for enhanced security
+@available(macOS 10.15, iOS 13.0, *)
+public struct CertificatePinning: Sendable, Codable {
+    /// Pinning method to use
+    public let method: PinningMethod
+    
+    /// Expected certificate data or public key hashes
+    public let pinnedData: [Data]
+    
+    /// Whether to allow pinning bypass in debug builds
+    public let allowDebugBypass: Bool
+    
+    /// Backup pins for certificate rotation
+    public let backupPins: [Data]
+    
+    public init(
+        method: PinningMethod,
+        pinnedData: [Data],
+        allowDebugBypass: Bool = false,
+        backupPins: [Data] = []
+    ) {
+        self.method = method
+        self.pinnedData = pinnedData
+        self.allowDebugBypass = allowDebugBypass
+        self.backupPins = backupPins
+    }
+    
+    /// Pinning method
+    public enum PinningMethod: String, Sendable, Codable {
+        /// Pin the entire certificate
+        case certificate
+        
+        /// Pin the Subject Public Key Info (SPKI)
+        case publicKey
+        
+        /// Pin intermediate CA certificates
+        case intermediateCertificate
+    }
+}
+
+/// Additional security options for remote connections
+@available(macOS 10.15, iOS 13.0, *)
+public struct SecurityOptions: Sendable, Codable {
+    /// Minimum TLS version to accept
+    public let minimumTLSVersion: TLSVersion
+    
+    /// Allowed cipher suites (empty means system default)
+    public let allowedCipherSuites: Set<String>
+    
+    /// Enable OCSP stapling verification
+    public let requireOCSPStapling: Bool
+    
+    /// Enable certificate transparency verification
+    public let requireCertificateTransparency: Bool
+    
+    /// Connection timeout for security validations
+    public let securityValidationTimeout: TimeInterval
+    
+    public init(
+        minimumTLSVersion: TLSVersion = .tls12,
+        allowedCipherSuites: Set<String> = [],
+        requireOCSPStapling: Bool = false,
+        requireCertificateTransparency: Bool = false,
+        securityValidationTimeout: TimeInterval = 10.0
+    ) {
+        self.minimumTLSVersion = minimumTLSVersion
+        self.allowedCipherSuites = allowedCipherSuites
+        self.requireOCSPStapling = requireOCSPStapling
+        self.requireCertificateTransparency = requireCertificateTransparency
+        self.securityValidationTimeout = securityValidationTimeout
+    }
+    
+    /// TLS Version
+    public enum TLSVersion: String, Sendable, Codable {
+        case tls10 = "1.0"
+        case tls11 = "1.1"
+        case tls12 = "1.2"
+        case tls13 = "1.3"
     }
 }
 
@@ -229,6 +320,86 @@ extension RemoteLSPConfiguration {
             serverURL: url,
             authentication: .bearerToken(token),
             reconnectPolicy: .exponentialBackoff(maxAttempts: 5)
+        )
+    }
+    
+    /// Create a secure configuration with certificate pinning
+    public static func secureServer(
+        url: URL,
+        authentication: LSPAuthentication,
+        pinnedCertificates: [Data]
+    ) -> RemoteLSPConfiguration {
+        RemoteLSPConfiguration(
+            serverURL: url,
+            authentication: authentication,
+            reconnectPolicy: .exponentialBackoff(maxAttempts: 5),
+            certificatePinning: CertificatePinning(
+                method: .certificate,
+                pinnedData: pinnedCertificates
+            ),
+            securityOptions: SecurityOptions(
+                minimumTLSVersion: .tls12,
+                requireOCSPStapling: true
+            )
+        )
+    }
+    
+    /// Create an enterprise-grade secure configuration
+    public static func enterpriseServer(
+        url: URL,
+        authentication: LSPAuthentication,
+        pinnedPublicKeys: [Data],
+        backupKeys: [Data] = []
+    ) -> RemoteLSPConfiguration {
+        RemoteLSPConfiguration(
+            serverURL: url,
+            authentication: authentication,
+            reconnectPolicy: .exponentialBackoff(maxAttempts: 10),
+            certificatePinning: CertificatePinning(
+                method: .publicKey,
+                pinnedData: pinnedPublicKeys,
+                allowDebugBypass: false,
+                backupPins: backupKeys
+            ),
+            securityOptions: SecurityOptions(
+                minimumTLSVersion: .tls13,
+                requireOCSPStapling: true,
+                requireCertificateTransparency: true
+            )
+        )
+    }
+}
+
+// MARK: - Certificate Pinning Helpers
+
+extension CertificatePinning {
+    /// Create pinning configuration from certificate files
+    public static func fromCertificateFiles(_ paths: [String]) throws -> CertificatePinning {
+        let pinnedData = try paths.compactMap { path -> Data? in
+            guard let data = FileManager.default.contents(atPath: path) else {
+                throw LSPTransportError.transportSpecific(message: "Failed to read certificate at \(path)")
+            }
+            return data
+        }
+        
+        return CertificatePinning(
+            method: .certificate,
+            pinnedData: pinnedData
+        )
+    }
+    
+    /// Create pinning configuration from base64-encoded public key hashes
+    public static func fromPublicKeyHashes(_ hashes: [String]) throws -> CertificatePinning {
+        let pinnedData = try hashes.compactMap { hash -> Data? in
+            guard let data = Data(base64Encoded: hash) else {
+                throw LSPTransportError.transportSpecific(message: "Invalid base64 hash: \(hash)")
+            }
+            return data
+        }
+        
+        return CertificatePinning(
+            method: .publicKey,
+            pinnedData: pinnedData
         )
     }
 }

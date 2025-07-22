@@ -73,6 +73,45 @@ import Combine
 /// }
 /// ```
 ///
+/// ## Integration with CodeEditorView
+///
+/// When using MemoryMonitor with CodeEditorView, ensure proper cleanup:
+///
+/// ```swift
+/// class CustomEditorView: CodeEditorView {
+///     private let memoryMonitor = MemoryMonitor()
+///     
+///     override func commonInit() {
+///         super.commonInit()
+///         
+///         // Configure memory monitor
+///         memoryMonitor.memoryThresholdMB = 200.0
+///         memoryMonitor.enableAutomaticCleanup = true
+///         
+///         // Register cleanup for syntax highlighting cache
+///         memoryMonitor.registerCleanupHandler(
+///             identifier: "syntax-cache",
+///             priority: .medium
+///         ) { [weak self] in
+///             let freed = self?.syntaxHighlighter?.clearCache() ?? 0
+///             return CleanupResult(
+///                 success: true,
+///                 memoryFreedMB: Double(freed) / 1_048_576,
+///                 description: "Cleared syntax highlighting cache"
+///             )
+///         }
+///         
+///         memoryMonitor.startMonitoring()
+///     }
+///     
+///     override func removeFromSuperview() {
+///         // CRITICAL: Stop monitoring before removal
+///         memoryMonitor.stopMonitoring()
+///         super.removeFromSuperview()
+///     }
+/// }
+/// ```
+///
 /// ## Cleanup Handlers
 ///
 /// Register custom cleanup handlers for your resources:
@@ -84,6 +123,52 @@ import Combine
 /// ) { @MainActor in
 ///     let freed = MyCache.shared.clear()
 ///     return CleanupResult(memoryFreedMB: freed)
+/// }
+/// ```
+///
+/// ## Multi-Window Applications
+///
+/// For apps with multiple editor windows, share a single monitor or coordinate multiple monitors:
+///
+/// ```swift
+/// // Shared monitor approach (recommended)
+/// @MainActor
+/// class EditorWindowManager {
+///     static let sharedMemoryMonitor = MemoryMonitor()
+///     
+///     static func setupSharedMonitor() {
+///         sharedMemoryMonitor.memoryThresholdMB = 500.0  // Higher for multi-window
+///         sharedMemoryMonitor.enableAutomaticCleanup = true
+///         sharedMemoryMonitor.startMonitoring()
+///     }
+/// }
+///
+/// // Per-window usage
+/// class EditorWindowController {
+///     override func windowDidLoad() {
+///         super.windowDidLoad()
+///         
+///         // Register window-specific cleanup
+///         EditorWindowManager.sharedMemoryMonitor.registerCleanupHandler(
+///             identifier: "window-\(windowID)",
+///             priority: .low
+///         ) { [weak self] in
+///             guard let self else { return CleanupResult(success: false) }
+///             let freed = self.editorView.performCleanup()
+///             return CleanupResult(
+///                 success: true,
+///                 memoryFreedMB: freed,
+///                 description: "Cleaned window \(self.windowID)"
+///             )
+///         }
+///     }
+///     
+///     func windowWillClose(_ notification: Notification) {
+///         // Unregister this window's cleanup handler
+///         EditorWindowManager.sharedMemoryMonitor.unregisterCleanupHandler(
+///             identifier: "window-\(windowID)"
+///         )
+///     }
 /// }
 /// ```
 ///

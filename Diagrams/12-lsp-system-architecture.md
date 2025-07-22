@@ -74,9 +74,12 @@ classDiagram
         +webSocket URLSessionWebSocketTask
         +url URL
         +headers [String: String]
+        +tlsConfiguration TLSConfiguration?
+        +certificatePinning CertificatePinning?
         +connectWebSocket()
         +closeWebSocket()
         +sendWebSocketMessage()
+        +validateCertificate()
     }
 
     %% Third Row - Document Management & TCP
@@ -222,9 +225,12 @@ classDiagram
         +remoteServers [RemoteServerConfig]
         +connectionManager RemoteConnectionManager
         +authenticator RemoteAuthenticator
+        +certificatePinning CertificatePinning
+        +tlsConfiguration TLSConfiguration
         +connectToRemoteServer()
         +authenticateConnection()
         +handleConnectionLoss()
+        +validateServerCertificate()
     }
 
     %% Seventh Row - Feature Providers & Enums
@@ -250,6 +256,25 @@ classDiagram
         +client LSPClient
         +provideDefinition()
         +convertLSPLocations()
+    }
+
+    %% Eighth Row - Security & TLS
+    class CertificatePinning {
+        &lt;&lt;security&gt;&gt;
+        +pinnedCertificates [SecCertificate]
+        +pinnedPublicKeys [SecKey]
+        +validationMode ValidationMode
+        +validateCertificateChain()
+        +extractPublicKey()
+    }
+
+    class TLSConfiguration {
+        &lt;&lt;TLS settings&gt;&gt;
+        +minimumTLSVersion TLSVersion
+        +cipherSuites [CipherSuite]
+        +certificateVerification Bool
+        +alpnProtocols [String]
+        +sessionCache URLSession.Configuration
     }
 
     %% Bottom Row - Diagnostics & Enums
@@ -300,6 +325,11 @@ classDiagram
     LSPTransport <|-- ProcessTransport : implements
     LSPTransport <|-- WebSocketTransport : implements
     LSPTransport <|-- TCPTransport : implements
+    
+    WebSocketTransport --> CertificatePinning : uses
+    WebSocketTransport --> TLSConfiguration : uses
+    RemoteLSPConfiguration --> CertificatePinning : configures
+    RemoteLSPConfiguration --> TLSConfiguration : configures
 
     LSPDocumentManager --> LSPTextDocument : manages
     LSPMessageHandler --> LSPMessage : processes
@@ -346,6 +376,10 @@ classDiagram
     class RemoteLSPConfiguration config
     class LSPClientState enum
     class LSPTransportType enum
+    class CertificatePinning security
+    class TLSConfiguration security
+    class ValidationMode enum
+    class TLSVersion enum
 ```
 
 ## LSP System Flow

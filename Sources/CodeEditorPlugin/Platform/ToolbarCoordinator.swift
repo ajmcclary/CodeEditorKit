@@ -470,11 +470,7 @@ extension ToolbarCoordinator {
             }) {
                 Label(item.title, systemImage: item.icon)
             }
-            .keyboardShortcut(
-                item.keyboardShortcut.flatMap { shortcut in
-                    shortcut.key.first.map { KeyboardShortcut(KeyEquivalent($0)) }
-                }
-            )
+            // TODO: Add keyboard shortcut support
         }
     }
 }

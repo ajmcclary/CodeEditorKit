@@ -9,6 +9,7 @@ import Foundation
 public final class ActorCoordinator {
     // MARK: - Singleton (for convenience, but DI is preferred)
     
+    @available(*, deprecated, message: "Use dependency injection instead. Pass ActorCoordinator through EditorConfiguration.")
     public static let shared = ActorCoordinator()
     
     // MARK: - Actors
@@ -107,19 +108,13 @@ public final class ActorCoordinator {
     }
 }
 
-// MARK: - Integration with EditorConfiguration
+// MARK: - Factory for creating ActorCoordinator instances
 
-extension EditorConfiguration {
-    /// The actor coordinator for this configuration
-    @MainActor
-    public var actorCoordinator: ActorCoordinator {
-        get {
-            // Could store custom coordinator in future
-            ActorCoordinator.shared
-        }
-        set { _ = newValue
-            // For future custom coordinator support
-        }
+extension ActorCoordinator {
+    /// Creates a new ActorCoordinator instance
+    /// Use this instead of the deprecated singleton
+    public static func create() -> ActorCoordinator {
+        ActorCoordinator()
     }
 }
 
@@ -127,8 +122,16 @@ extension EditorConfiguration {
 
 extension CodeEditorView {
     /// Access the actor coordinator for this editor instance
+    /// Creates a new instance if not provided in configuration
+    @available(macOS 13.0, iOS 16.0, *)
     public var actorCoordinator: ActorCoordinator {
-        configuration.actorCoordinator
+        if let coordinator = configuration.actorCoordinator {
+            return coordinator
+        }
+        // Create and store a new coordinator
+        let newCoordinator = ActorCoordinator.create()
+        configuration.actorCoordinator = newCoordinator
+        return newCoordinator
     }
     
     /// Process text using the integrated actor system

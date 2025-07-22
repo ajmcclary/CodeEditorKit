@@ -100,6 +100,8 @@ classDiagram
         <<memory monitor>>
         +memoryPressureHandler MemoryPressureHandler
         +leakDetector MemoryLeakDetector
+        +actorCoordinator ActorCoordinator
+        +init(coordinator)
         +startMemoryMonitoring()
         +performCleanup()
     }
@@ -186,7 +188,36 @@ classDiagram
         +scheduleBackgroundHighlighting()
     }
 
-    %% Row 8 - Views & Types
+    %% Row 8 - iOS-Specific Optimization
+    class IOSLargeFileOptimizer {
+        <<iOS optimizer>>
+        +optimizationThreshold Int
+        +maxHighlightingRange Int
+        +viewportExpansion CGFloat
+        +memoryPressureMode MemoryPressureMode
+        +isOptimizing Bool
+        +currentMode OptimizationMode
+        +metrics OptimizationMetrics
+        +enableOptimizations()
+        +disableOptimizations()
+        +startViewportHighlighting()
+    }
+
+    class OptimizationMode {
+        <<enumeration>>
+        normal
+        largeFile
+        extremeOptimization
+    }
+
+    class MemoryPressureMode {
+        <<enumeration>>
+        ignore
+        adaptive
+        aggressive
+    }
+
+    %% Row 9 - Views & Types
     class PerformanceViews {
         <<views>>
         +performanceDashboard PerformanceDashboard
@@ -203,7 +234,7 @@ classDiagram
         +addChart()
     }
 
-    class PerformanceMode {
+    class PerformanceConfigMode {
         <<enumeration>>
         battery
         balanced
@@ -239,6 +270,14 @@ classDiagram
 
     PerformanceViews --> PerformanceDashboard : contains
 
+    IOSLargeFileOptimizer --> MemoryMonitor : uses
+    IOSLargeFileOptimizer --> ViewportManager : coordinates with
+    IOSLargeFileOptimizer --> IncrementalSyntaxHighlighter : uses
+    IOSLargeFileOptimizer --> OptimizationMode : manages
+    IOSLargeFileOptimizer --> MemoryPressureMode : uses
+
+    PerformanceConfiguration --> IOSLargeFileOptimizer : configures
+
     %% Styling - Dark mode friendly colors
     classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
     classDef monitor fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
@@ -250,6 +289,7 @@ classDiagram
     classDef optimized fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef views fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
     classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef ios fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
 
     class UnifiedPerformanceSystem system
     class PerformanceMonitor monitor
@@ -272,9 +312,12 @@ classDiagram
     class ScrollPredictor viewport
     class OptimizedLineIndexCache optimized
     class IncrementalSyntaxHighlighter optimized
+    class IOSLargeFileOptimizer ios
     class PerformanceViews views
     class PerformanceDashboard views
-    class PerformanceMode enum
+    class PerformanceConfigMode enum
+    class OptimizationMode enum
+    class MemoryPressureMode enum
 ```
 
 ## Performance Optimization Flow
@@ -379,6 +422,13 @@ flowchart TD
 - **Predictive Analytics**: Performance prediction based on context
 - **Optimization Suggestions**: Automated performance recommendations
 
+### 6. iOS-Specific Optimizations
+- **Aggressive Memory Management**: Enhanced cleanup for limited iOS memory
+- **Viewport-Based Highlighting**: Only highlight visible content + small buffer
+- **Adaptive Optimization Modes**: Automatic switching based on file size/memory
+- **Reduced Undo History**: Dynamic undo levels based on available memory
+- **Chunked Processing**: Process large files in small, memory-efficient chunks
+
 ## Benefits
 
 1. **Consistent Performance**: Maintains 60fps across all operations
@@ -386,3 +436,4 @@ flowchart TD
 3. **Adaptive Behavior**: Automatically optimizes for current conditions
 4. **Proactive Optimization**: Prevents performance issues before they occur
 5. **Data-Driven**: Uses metrics to make optimization decisions
+6. **Platform-Specific**: Tailored optimizations for iOS device constraints

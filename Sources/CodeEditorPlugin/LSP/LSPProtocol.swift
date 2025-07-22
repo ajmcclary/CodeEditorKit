@@ -448,9 +448,9 @@ public enum SymbolTag: Int, Codable, Sendable {
 public struct PublishDiagnosticsParams: Codable, Sendable {
     public let uri: String
     public let version: Int?
-    public let diagnostics: [Diagnostic]
+    public let diagnostics: [LSPDiagnostic]
     
-    public init(uri: String, diagnostics: [Diagnostic], version: Int? = nil) {
+    public init(uri: String, diagnostics: [LSPDiagnostic], version: Int? = nil) {
         self.uri = uri
         self.version = version
         self.diagnostics = diagnostics

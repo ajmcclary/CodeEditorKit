@@ -72,6 +72,31 @@ extension EditorConfiguration {
         /// - Note: This only affects the UnifiedEventSystem when explicitly configured.
         public var maxEventsPerSecond: Int = 60
         
+        /// Enable iOS-specific large file optimizations
+        /// 
+        /// When enabled on iOS, the framework will automatically apply memory-efficient
+        /// strategies for files exceeding the threshold, including viewport-based
+        /// rendering and chunked syntax highlighting.
+        public var enableIOSOptimizations: Bool = {
+            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            return true
+            #else
+            return false
+            #endif
+        }()
+        
+        /// iOS large file threshold (bytes)
+        /// 
+        /// Files larger than this size will trigger iOS-specific optimizations
+        /// to maintain performance on memory-constrained devices.
+        public var iOSLargeFileThreshold: Int = 1_048_576 // 1MB
+        
+        /// iOS maximum highlighting chunk size
+        /// 
+        /// On iOS, syntax highlighting is performed in chunks to prevent
+        /// memory spikes. This sets the maximum characters per chunk.
+        public var iOSMaxHighlightingChunk: Int = 100_000 // 100KB
+        
         /// Custom memory monitor instance for tracking memory usage.
         ///
         /// When nil, the code editor will create its own instance.
@@ -140,6 +165,9 @@ extension EditorConfiguration.Performance: Codable {
         case smoothScrolling
         case animateCodeFolding
         case maxEventsPerSecond
+        case enableIOSOptimizations
+        case iOSLargeFileThreshold
+        case iOSMaxHighlightingChunk
     }
     
     public init(from decoder: Decoder) throws {
@@ -159,6 +187,15 @@ extension EditorConfiguration.Performance: Codable {
         smoothScrolling = try container.decodeIfPresent(Bool.self, forKey: .smoothScrolling) ?? true
         animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
         maxEventsPerSecond = try container.decodeIfPresent(Int.self, forKey: .maxEventsPerSecond) ?? 60
+        enableIOSOptimizations = try container.decodeIfPresent(Bool.self, forKey: .enableIOSOptimizations) ?? {
+            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            return true
+            #else
+            return false
+            #endif
+        }()
+        iOSLargeFileThreshold = try container.decodeIfPresent(Int.self, forKey: .iOSLargeFileThreshold) ?? 1_048_576
+        iOSMaxHighlightingChunk = try container.decodeIfPresent(Int.self, forKey: .iOSMaxHighlightingChunk) ?? 100_000
         // memoryMonitor is not decoded - it's a runtime dependency
     }
     
@@ -175,6 +212,9 @@ extension EditorConfiguration.Performance: Codable {
         try container.encode(smoothScrolling, forKey: .smoothScrolling)
         try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
         try container.encode(maxEventsPerSecond, forKey: .maxEventsPerSecond)
+        try container.encode(enableIOSOptimizations, forKey: .enableIOSOptimizations)
+        try container.encode(iOSLargeFileThreshold, forKey: .iOSLargeFileThreshold)
+        try container.encode(iOSMaxHighlightingChunk, forKey: .iOSMaxHighlightingChunk)
         // memoryMonitor is not encoded - it's a runtime dependency
     }
 }
@@ -193,7 +233,10 @@ extension EditorConfiguration.Performance: Equatable {
         lhs.smoothScrolling == rhs.smoothScrolling &&
         lhs.textChangeDebounceInterval == rhs.textChangeDebounceInterval &&
         lhs.animateCodeFolding == rhs.animateCodeFolding &&
-        lhs.maxEventsPerSecond == rhs.maxEventsPerSecond
+        lhs.maxEventsPerSecond == rhs.maxEventsPerSecond &&
+        lhs.enableIOSOptimizations == rhs.enableIOSOptimizations &&
+        lhs.iOSLargeFileThreshold == rhs.iOSLargeFileThreshold &&
+        lhs.iOSMaxHighlightingChunk == rhs.iOSMaxHighlightingChunk
         // memoryMonitor is intentionally excluded from equality comparison
     }
 }

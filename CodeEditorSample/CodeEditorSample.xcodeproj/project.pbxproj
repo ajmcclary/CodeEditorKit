@@ -41,6 +41,7 @@
 		27390B6E418D491352740C83 /* ConfigurationIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA661CAA19C99B7765BF5BD /* ConfigurationIntegrationTests.swift */; };
 		276720FFB534DFEC916306DA /* CodeEditorPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 05A2F2328E2EBAFC2B7A5F36 /* CodeEditorPlugin */; };
 		27CD438325D3386F32BA3CFD /* AnnotationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0BEB76B03A460992DE8A23 /* AnnotationTests.swift */; };
+		2867EB9CCDC9EC2360826CAA /* IOSLargeFilePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFD2A7F753C13425736114A /* IOSLargeFilePerformanceTests.swift */; };
 		294001AAD1E0950D6DA74BBC /* CodeEditorContainerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7109E937A6A384CCE2FB003C /* CodeEditorContainerViewTests.swift */; };
 		29856181659C2861D3C02521 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A2A4F0BBCBCE884CBF6FB1 /* AppState.swift */; };
 		29BD23C2590C4CC39F63B91B /* LargeFileHighlightingBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A5960A95095ECFE9D83F4E /* LargeFileHighlightingBenchmarkTests.swift */; };
@@ -109,6 +110,7 @@
 		780BC6178DC11CACF70190D6 /* SwiftUIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933BED684CA8A0A2B3E3A60E /* SwiftUIIntegrationTests.swift */; };
 		785EACB97ACF45B0DFBDAD13 /* SwiftUIModifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665A0EAD2484795F447CA10E /* SwiftUIModifierTests.swift */; };
 		7ABD9E42A73704C7C1D69E68 /* CodeEditorPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 233A82DBBE00A478259DD00D /* CodeEditorPlugin */; };
+		7C19EB174F0C411F434C3527 /* IOSLargeFilePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFD2A7F753C13425736114A /* IOSLargeFilePerformanceTests.swift */; };
 		7C865E572D404F910CC6F04B /* LanguageSampleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2465831FC673A15EEA9AB /* LanguageSampleRow.swift */; };
 		7EC6BA4692C61B3CB29D5D03 /* SampleCodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F0655B5DA5A8C726D42CF4 /* SampleCodeEditorView.swift */; };
 		81CA9C3E79FE80EFD5C2E63D /* CodeEditorPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = E7E72A767FB54ADF6309B673 /* CodeEditorPlugin */; };
@@ -337,6 +339,7 @@
 		DAA92C149DFBA616C7BFAD96 /* CodeEditorPluginTests-macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CodeEditorPluginTests-macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB5C883534F9124E7BEDB4B0 /* SampleCodeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeProvider.swift; sourceTree = "<group>"; };
 		DBF0212AE38BEFCCF9D99226 /* CodeEditorPlugin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditorPlugin; path = ..; sourceTree = SOURCE_ROOT; };
+		DBFD2A7F753C13425736114A /* IOSLargeFilePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSLargeFilePerformanceTests.swift; sourceTree = "<group>"; };
 		DCD6DDC0888E3B256631752E /* ConfigurationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationUITests.swift; sourceTree = "<group>"; };
 		DD94EA8BC5273C24AD01A6DC /* LSPIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LSPIntegrationTests.swift; sourceTree = "<group>"; };
 		E1A9EB862D0F2B9D90094326 /* PlatformSafeControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSafeControls.swift; sourceTree = "<group>"; };
@@ -481,6 +484,7 @@
 				B4D57C74A3FA9DAEA0B34FD3 /* InputCoordinatorTests.swift */,
 				D3991D555CED42A616BA2987 /* IntegrationTests.swift */,
 				56E81F83A7EAC689CB6E2643 /* IOSAnnotationTests.swift */,
+				DBFD2A7F753C13425736114A /* IOSLargeFilePerformanceTests.swift */,
 				1A5D2A0B6B164D266895D896 /* LanguageDetectionTests.swift */,
 				39A5960A95095ECFE9D83F4E /* LargeFileHighlightingBenchmarkTests.swift */,
 				C1C87CE64A02AA945F350436 /* LargeFilePerformanceTests.swift */,
@@ -837,6 +841,7 @@
 				6E4FCCD0C25EEE873D12B9E3 /* EditorConfigurationBuilderTests.swift in Sources */,
 				00DC0D0E1FBF93206D54A7A0 /* ErrorHandlingTests.swift in Sources */,
 				F38A42A3B9935AEC2D553897 /* IOSAnnotationTests.swift in Sources */,
+				7C19EB174F0C411F434C3527 /* IOSLargeFilePerformanceTests.swift in Sources */,
 				15A5FEF991317C0C1972FC3C /* InputCoordinatorTests.swift in Sources */,
 				BFF08ED312DF0AD3C6BB0C63 /* IntegrationTests.swift in Sources */,
 				41D1B785B33B6824B5F4E5A7 /* LSPIntegrationTests.swift in Sources */,
@@ -1023,6 +1028,7 @@
 				1FB6F51F409A3EFAB07203CD /* EditorConfigurationBuilderTests.swift in Sources */,
 				862EF0415BAEFEFEE01D1C33 /* ErrorHandlingTests.swift in Sources */,
 				F06752DC36E6EBEC3DE4398C /* IOSAnnotationTests.swift in Sources */,
+				2867EB9CCDC9EC2360826CAA /* IOSLargeFilePerformanceTests.swift in Sources */,
 				0471C26956B190BC334FC7B8 /* InputCoordinatorTests.swift in Sources */,
 				45B1DC7B485F1BEB7B600959 /* IntegrationTests.swift in Sources */,
 				B1B40D3430E9FBEEBE37711B /* LSPIntegrationTests.swift in Sources */,
