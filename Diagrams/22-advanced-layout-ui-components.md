@@ -4,183 +4,318 @@ This diagram shows the comprehensive layout system and UI component architecture
 
 ```mermaid
 classDiagram
-    %% Core Layout System
+    direction LR
+    
+    %% Row 1 - Core Layout System
     class AdvancedLayoutSystem {
-        +layoutEngine: LayoutEngine
-        +componentManager: UIComponentManager
-        +responsiveManager: ResponsiveLayoutManager
-        +animationCoordinator: LayoutAnimationCoordinator
-        +constraintSolver: ConstraintSolver
-        +initializeLayout(containerView: PlatformView)
-        +updateLayout(changes: [LayoutChange])
-        +invalidateLayout(component: UIComponent)
-        +performLayout() LayoutResult
-        +optimizeLayout() OptimizationResult
+        <<layout system>>
+        +layoutEngine LayoutEngine
+        +componentManager UIComponentManager
+        +responsiveManager ResponsiveLayoutManager
+        +animationCoordinator LayoutAnimationCoordinator
+        +initializeLayout()
+        +updateLayout()
+        +performLayout()
+        +optimizeLayout()
     }
 
     class LayoutEngine {
-        +layoutAlgorithm: LayoutAlgorithm
-        +measurementCache: MeasurementCache
-        +layoutTree: LayoutTree
-        +performanceTracker: LayoutPerformanceTracker
-        +calculateLayout(component: UIComponent) LayoutCalculation
-        +measureComponent(component: UIComponent, constraints: LayoutConstraints) ComponentMeasurement
-        +positionComponent(component: UIComponent, frame: CGRect)
-        +validateLayout(layoutTree: LayoutTree) ValidationResult
+        <<layout engine>>
+        +layoutAlgorithm LayoutAlgorithm
+        +measurementCache MeasurementCache
+        +layoutTree LayoutTree
+        +performanceTracker LayoutPerformanceTracker
+        +calculateLayout()
+        +measureComponent()
+        +positionComponent()
+        +validateLayout()
     }
 
+    class UIComponentManager {
+        <<component manager>>
+        +registeredComponents [String: UIComponent]
+        +componentHierarchy ComponentHierarchy
+        +componentFactory ComponentFactory
+        +lifecycleManager ComponentLifecycleManager
+        +registerComponent()
+        +createComponent()
+        +destroyComponent()
+        +updateComponent()
+    }
+
+    %% Row 2 - UI Component Management
+    class UIComponent {
+        <<component protocol>>
+        +componentId String
+        +frame CGRect
+        +constraints [LayoutConstraint]
+        +isVisible Bool
+        +render()
+        +measure()
+        +layoutSubcomponents()
+        +handleEvent()
+    }
+
+    class CodeEditorComponent {
+        <<editor component>>
+        +textView CodeTextView
+        +gutterView GutterComponent
+        +minimapView MinimapComponent
+        +scrollView ScrollComponent
+        +render()
+        +updateContent()
+        +scrollToLine()
+        +setSelectionRange()
+    }
+
+    class GutterComponent {
+        <<gutter component>>
+        +lineNumberRenderer LineNumberRenderer
+        +breakpointRenderer BreakpointRenderer
+        +foldingRenderer FoldingRenderer
+        +gutterWidth CGFloat
+        +renderLineNumbers()
+        +renderBreakpoints()
+        +handleGutterClick()
+    }
+
+    class MinimapComponent {
+        <<minimap component>>
+        +minimapRenderer MinimapRenderer
+        +viewportIndicator ViewportIndicator
+        +contentCache MinimapContentCache
+        +scaleFactor CGFloat
+        +updateMinimap()
+        +handleMinimapScroll()
+        +syncWithMainView()
+    }
+
+    %% Row 3 - Layout Algorithms
+    class FlexboxLayout {
+        <<flexbox layout>>
+        +flexDirection FlexDirection
+        +flexWrap FlexWrap
+        +justifyContent JustifyContent
+        +alignItems AlignItems
+        +calculateFlexLayout()
+        +distributeSpace()
+        +alignComponents()
+    }
+
+    class GridLayout {
+        <<grid layout>>
+        +templateColumns [GridTrack]
+        +templateRows [GridTrack]
+        +gap GridGap
+        +justifyItems JustifyItems
+        +calculateGridLayout()
+        +placeComponent()
+        +resolveTrackSizes()
+    }
+
+    class AbsoluteLayout {
+        <<absolute layout>>
+        +positioningStrategy PositioningStrategy
+        +zIndexManager ZIndexManager
+        +overflowBehavior OverflowBehavior
+        +calculateAbsoluteLayout()
+        +positionComponent()
+        +handleOverflow()
+    }
+
+    class ScrollComponent {
+        <<scroll component>>
+        +scrollView PlatformScrollView
+        +scrollBehavior ScrollBehavior
+        +elasticBehavior ElasticScrollBehavior
+        +zoomLevel CGFloat
+        +setContentSize()
+        +scrollToPoint()
+        +zoomToRect()
+    }
+
+    %% Row 4 - Responsive System
+    class ResponsiveLayoutManager {
+        <<responsive manager>>
+        +breakpoints [ResponsiveBreakpoint]
+        +adaptiveConstraints [AdaptiveConstraint]
+        +deviceMetrics DeviceMetrics
+        +orientationHandler OrientationChangeHandler
+        +updateLayoutForSize()
+        +handleOrientationChange()
+        +calculateBreakpoint()
+        +adaptConstraints()
+    }
+
+    class ResponsiveBreakpoint {
+        <<responsive breakpoint>>
+        +name String
+        +minWidth CGFloat?
+        +maxWidth CGFloat?
+        +deviceType DeviceType
+        +orientation DeviceOrientation?
+        +matches()
+    }
+
+    class AdaptiveConstraint {
+        <<adaptive constraint>>
+        +baseConstraint LayoutConstraint
+        +breakpointOverrides [ResponsiveBreakpoint: LayoutConstraint]
+        +priority ConstraintPriority
+        +isActive Bool
+        +getConstraintForBreakpoint()
+        +activateForBreakpoint()
+    }
+
+    class OverlayManager {
+        <<overlay manager>>
+        +activeOverlays [String: OverlayComponent]
+        +overlayLayers [OverlayLayer]
+        +positionCalculator OverlayPositionCalculator
+        +addOverlay()
+        +removeOverlay()
+        +updateOverlayPosition()
+        +renderOverlays()
+    }
+
+    %% Row 5 - Constraint System
+    class ConstraintSolver {
+        <<constraint solver>>
+        +constraints [LayoutConstraint]
+        +constraintGraph ConstraintGraph
+        +solver LinearConstraintSolver
+        +conflictResolver ConstraintConflictResolver
+        +addConstraint()
+        +removeConstraint()
+        +solveConstraints()
+        +detectConflicts()
+    }
+
+    class LayoutConstraint {
+        <<layout constraint>>
+        +constraintId String
+        +firstItem UIComponent
+        +firstAttribute LayoutAttribute
+        +relation ConstraintRelation
+        +secondItem UIComponent?
+        +multiplier CGFloat
+        +constant CGFloat
+        +priority ConstraintPriority
+        +isActive Bool
+    }
+
+    class ComponentFactory {
+        <<component factory>>
+        +componentTemplates [ComponentType: ComponentTemplate]
+        +dependencyInjector ComponentDependencyInjector
+        +configurationValidator ComponentConfigurationValidator
+        +createComponent()
+        +cloneComponent()
+        +validateConfiguration()
+        +registerTemplate()
+    }
+
+    class ComponentLifecycleManager {
+        <<lifecycle manager>>
+        +componentStates [String: ComponentLifecycleState]
+        +lifecycleObservers [ComponentLifecycleObserver]
+        +transitionComponent()
+        +notifyObservers()
+        +cleanupComponent()
+        +validateTransition()
+    }
+
+    %% Row 6 - Animation System
+    class LayoutAnimationCoordinator {
+        <<animation coordinator>>
+        +animationEngine AnimationEngine
+        +transitionManager TransitionManager
+        +timingFunctions [TimingFunction]
+        +activeAnimations [String: LayoutAnimation]
+        +animateLayoutChange()
+        +createTransition()
+        +interruptAnimation()
+        +completeAllAnimations()
+    }
+
+    class LayoutAnimation {
+        <<layout animation>>
+        +animationId String
+        +targetComponent UIComponent
+        +fromState LayoutState
+        +toState LayoutState
+        +duration TimeInterval
+        +timingFunction TimingFunction
+        +start()
+        +pause()
+        +resume()
+        +cancel()
+    }
+
+    class AnimationConfiguration {
+        <<animation config>>
+        +duration TimeInterval
+        +delay TimeInterval
+        +timingFunction TimingFunction
+        +repeatCount Int
+        +autoreverses Bool
+        +fillMode AnimationFillMode
+    }
+
+    class AccessibilityLayoutManager {
+        <<accessibility manager>>
+        +accessibilityElements [AccessibilityElement]
+        +focusManager AccessibilityFocusManager
+        +navigationAssistant AccessibilityNavigationAssistant
+        +setupAccessibility()
+        +updateAccessibilityElements()
+        +handleAccessibilityFocus()
+        +provideAccessibilityPath()
+    }
+
+    %% Row 7 - Performance & Optimization
+    class LayoutPerformanceOptimizer {
+        <<performance optimizer>>
+        +layoutCache LayoutCache
+        +measurementBatcher MeasurementBatcher
+        +dirtyRegionTracker DirtyRegionTracker
+        +layoutProfiler LayoutProfiler
+        +optimizeLayoutPass()
+        +batchMeasurements()
+        +trackDirtyRegion()
+        +invalidateCache()
+    }
+
+    class LayoutCache {
+        <<layout cache>>
+        +measurementCache [String: ComponentMeasurement]
+        +layoutResultCache [String: LayoutResult]
+        +cacheEvictionPolicy CacheEvictionPolicy
+        +hitRate Double
+        +cacheMeasurement()
+        +getCachedMeasurement()
+        +invalidateCache()
+        +clearExpiredEntries()
+    }
+
+    class ComponentEventSystem {
+        <<event system>>
+        +eventHandlers [ComponentEventType: ComponentEventHandler]
+        +eventPropagation EventPropagationManager
+        +gestureRecognizers [ComponentGestureRecognizer]
+        +handleEvent()
+        +propagateEvent()
+        +registerGestureRecognizer()
+    }
+
+    %% Row 8 - Enumerations
     class LayoutAlgorithm {
         <<enumeration>>
         flexbox
         grid
         absolute
         flow
-        custom(algorithm: String)
-    }
-
-    %% UI Component Management
-    class UIComponentManager {
-        +registeredComponents: [String: UIComponent]
-        +componentHierarchy: ComponentHierarchy
-        +componentFactory: ComponentFactory
-        +lifecycleManager: ComponentLifecycleManager
-        +registerComponent(component: UIComponent, identifier: String)
-        +createComponent(type: ComponentType, configuration: ComponentConfiguration) UIComponent
-        +destroyComponent(identifier: String)
-        +updateComponent(identifier: String, configuration: ComponentConfiguration)
-        +getComponent(identifier: String) UIComponent?
-    }
-
-    class UIComponent {
-        <<protocol>>
-        +componentId: String
-        +frame: CGRect
-        +constraints: [LayoutConstraint]
-        +isVisible: Bool
-        +alpha: CGFloat
-        +transformations: [ComponentTransformation]
-        +render(context: RenderContext)
-        +measure(constraints: LayoutConstraints) ComponentSize
-        +layoutSubcomponents()
-        +handleEvent(event: ComponentEvent)
-    }
-
-    %% Advanced Editor Components
-    class CodeEditorComponent {
-        +textView: CodeTextView
-        +gutterView: GutterComponent
-        +minimapView: MinimapComponent
-        +scrollView: ScrollComponent
-        +overlayManager: OverlayManager
-        +render(context: RenderContext)
-        +updateContent(text: String)
-        +scrollToLine(line: Int, animated: Bool)
-        +setSelectionRange(range: NSRange)
-    }
-
-    class GutterComponent {
-        +lineNumberRenderer: LineNumberRenderer
-        +breakpointRenderer: BreakpointRenderer
-        +foldingRenderer: FoldingRenderer
-        +annotationRenderer: AnnotationRenderer
-        +gutterWidth: CGFloat
-        +render(context: RenderContext)
-        +renderLineNumbers(visibleRange: NSRange)
-        +renderBreakpoints(breakpoints: [Breakpoint])
-        +handleGutterClick(location: CGPoint) GutterClickResult
-    }
-
-    class MinimapComponent {
-        +minimapRenderer: MinimapRenderer
-        +viewportIndicator: ViewportIndicator
-        +contentCache: MinimapContentCache
-        +scaleFactor: CGFloat
-        +isVisible: Bool
-        +render(context: RenderContext)
-        +updateMinimap(textContent: String)
-        +handleMinimapScroll(offset: CGPoint)
-        +syncWithMainView(scrollPosition: CGPoint)
-    }
-
-    class ScrollComponent {
-        +scrollView: PlatformScrollView
-        +scrollBehavior: ScrollBehavior
-        +scrollIndicators: ScrollIndicators
-        +elasticBehavior: ElasticScrollBehavior
-        +zoomLevel: CGFloat
-        +contentInsets: PlatformEdgeInsets
-        +setContentSize(size: CGSize)
-        +scrollToPoint(point: CGPoint, animated: Bool)
-        +zoomToRect(rect: CGRect, animated: Bool)
-        +handleScrollEvent(event: ScrollEvent)
-    }
-
-    class OverlayManager {
-        +activeOverlays: [String: OverlayComponent]
-        +overlayLayers: [OverlayLayer]
-        +positionCalculator: OverlayPositionCalculator
-        +addOverlay(overlay: OverlayComponent, layer: OverlayLayer)
-        +removeOverlay(identifier: String)
-        +updateOverlayPosition(identifier: String, position: CGPoint)
-        +renderOverlays(context: RenderContext)
-    }
-
-    %% Responsive Layout System
-    class ResponsiveLayoutManager {
-        +breakpoints: [ResponsiveBreakpoint]
-        +adaptiveConstraints: [AdaptiveConstraint]
-        +deviceMetrics: DeviceMetrics
-        +orientationHandler: OrientationChangeHandler
-        +updateLayoutForSize(size: CGSize) ResponsiveUpdateResult
-        +handleOrientationChange(orientation: DeviceOrientation)
-        +calculateBreakpoint(size: CGSize) ResponsiveBreakpoint?
-        +adaptConstraints(breakpoint: ResponsiveBreakpoint) [LayoutConstraint]
-    }
-
-    class ResponsiveBreakpoint {
-        +name: String
-        +minWidth: CGFloat?
-        +maxWidth: CGFloat?
-        +minHeight: CGFloat?
-        +maxHeight: CGFloat?
-        +deviceType: DeviceType
-        +orientation: DeviceOrientation?
-        +matches(size: CGSize, device: DeviceType) Bool
-    }
-
-    class AdaptiveConstraint {
-        +baseConstraint: LayoutConstraint
-        +breakpointOverrides: [ResponsiveBreakpoint: LayoutConstraint]
-        +priority: ConstraintPriority
-        +isActive: Bool
-        +getConstraintForBreakpoint(breakpoint: ResponsiveBreakpoint) LayoutConstraint
-        +activateForBreakpoint(breakpoint: ResponsiveBreakpoint)
-    }
-
-    %% Constraint System
-    class ConstraintSolver {
-        +constraints: [LayoutConstraint]
-        +constraintGraph: ConstraintGraph
-        +solver: LinearConstraintSolver
-        +conflictResolver: ConstraintConflictResolver
-        +addConstraint(constraint: LayoutConstraint) ConstraintResult
-        +removeConstraint(constraint: LayoutConstraint)
-        +solveConstraints() SolutionResult
-        +detectConflicts() [ConstraintConflict]
-        +resolveConflict(conflict: ConstraintConflict) ResolutionResult
-    }
-
-    class LayoutConstraint {
-        +constraintId: String
-        +firstItem: UIComponent
-        +firstAttribute: LayoutAttribute
-        +relation: ConstraintRelation
-        +secondItem: UIComponent?
-        +secondAttribute: LayoutAttribute?
-        +multiplier: CGFloat
-        +constant: CGFloat
-        +priority: ConstraintPriority
-        +isActive: Bool
+        custom
     }
 
     class LayoutAttribute {
@@ -194,8 +329,6 @@ classDiagram
         centerX
         centerY
         baseline
-        firstBaseline
-        lastBaseline
     }
 
     class ConstraintRelation {
@@ -203,61 +336,6 @@ classDiagram
         equal
         lessThanOrEqual
         greaterThanOrEqual
-    }
-
-    %% Animation and Transitions
-    class LayoutAnimationCoordinator {
-        +animationEngine: AnimationEngine
-        +transitionManager: TransitionManager
-        +timingFunctions: [TimingFunction]
-        +activeAnimations: [String: LayoutAnimation]
-        +animateLayoutChange(change: LayoutChange, animation: AnimationConfiguration)
-        +createTransition(from: LayoutState, to: LayoutState) LayoutTransition
-        +interruptAnimation(identifier: String)
-        +completeAllAnimations()
-    }
-
-    class LayoutAnimation {
-        +animationId: String
-        +targetComponent: UIComponent
-        +fromState: LayoutState
-        +toState: LayoutState
-        +duration: TimeInterval
-        +timingFunction: TimingFunction
-        +completion: AnimationCompletion?
-        +start()
-        +pause()
-        +resume()
-        +cancel()
-    }
-
-    class AnimationConfiguration {
-        +duration: TimeInterval
-        +delay: TimeInterval
-        +timingFunction: TimingFunction
-        +repeatCount: Int
-        +autoreverses: Bool
-        +fillMode: AnimationFillMode
-    }
-
-    %% Component Factory and Lifecycle
-    class ComponentFactory {
-        +componentTemplates: [ComponentType: ComponentTemplate]
-        +dependencyInjector: ComponentDependencyInjector
-        +configurationValidator: ComponentConfigurationValidator
-        +createComponent(type: ComponentType, config: ComponentConfiguration) UIComponent
-        +cloneComponent(component: UIComponent) UIComponent
-        +validateConfiguration(config: ComponentConfiguration) ValidationResult
-        +registerTemplate(type: ComponentType, template: ComponentTemplate)
-    }
-
-    class ComponentLifecycleManager {
-        +componentStates: [String: ComponentLifecycleState]
-        +lifecycleObservers: [ComponentLifecycleObserver]
-        +transitionComponent(componentId: String, to: ComponentLifecycleState)
-        +notifyObservers(componentId: String, event: LifecycleEvent)
-        +cleanupComponent(componentId: String)
-        +validateTransition(from: ComponentLifecycleState, to: ComponentLifecycleState) Bool
     }
 
     class ComponentLifecycleState {
@@ -271,126 +349,40 @@ classDiagram
         destroyed
     }
 
-    %% Advanced Layout Features
-    class FlexboxLayout {
-        +flexDirection: FlexDirection
-        +flexWrap: FlexWrap
-        +justifyContent: JustifyContent
-        +alignItems: AlignItems
-        +alignContent: AlignContent
-        +gap: CGFloat
-        +calculateFlexLayout(components: [UIComponent], container: CGRect) FlexLayoutResult
-        +distributeSpace(components: [UIComponent], availableSpace: CGFloat)
-        +alignComponents(components: [UIComponent], crossAxis: FlexCrossAxis)
-    }
-
-    class GridLayout {
-        +templateColumns: [GridTrack]
-        +templateRows: [GridTrack]
-        +gap: GridGap
-        +justifyItems: JustifyItems
-        +alignItems: AlignItems
-        +autoFlow: GridAutoFlow
-        +calculateGridLayout(components: [UIComponent], container: CGRect) GridLayoutResult
-        +placeComponent(component: UIComponent, cell: GridCell)
-        +resolveTrackSizes(tracks: [GridTrack], availableSize: CGFloat) [CGFloat]
-    }
-
-    class AbsoluteLayout {
-        +positioningStrategy: PositioningStrategy
-        +zIndexManager: ZIndexManager
-        +overflowBehavior: OverflowBehavior
-        +calculateAbsoluteLayout(components: [UIComponent], container: CGRect) AbsoluteLayoutResult
-        +positionComponent(component: UIComponent, position: CGPoint)
-        +handleOverflow(component: UIComponent, container: CGRect) OverflowResult
-    }
-
-    %% Performance Optimization
-    class LayoutPerformanceOptimizer {
-        +layoutCache: LayoutCache
-        +measurementBatcher: MeasurementBatcher
-        +dirtyRegionTracker: DirtyRegionTracker
-        +layoutProfiler: LayoutProfiler
-        +optimizeLayoutPass() OptimizationResult
-        +batchMeasurements(components: [UIComponent]) [ComponentMeasurement]
-        +trackDirtyRegion(region: CGRect)
-        +invalidateCache(component: UIComponent)
-    }
-
-    class LayoutCache {
-        +measurementCache: [String: ComponentMeasurement]
-        +layoutResultCache: [String: LayoutResult]
-        +cacheEvictionPolicy: CacheEvictionPolicy
-        +hitRate: Double
-        +cacheMeasurement(componentId: String, measurement: ComponentMeasurement)
-        +getCachedMeasurement(componentId: String) ComponentMeasurement?
-        +invalidateCache(componentId: String)
-        +clearExpiredEntries()
-    }
-
-    %% Accessibility Integration
-    class AccessibilityLayoutManager {
-        +accessibilityElements: [AccessibilityElement]
-        +focusManager: AccessibilityFocusManager
-        +navigationAssistant: AccessibilityNavigationAssistant
-        +setupAccessibility(components: [UIComponent])
-        +updateAccessibilityElements(layoutChange: LayoutChange)
-        +handleAccessibilityFocus(element: AccessibilityElement)
-        +provideAccessibilityPath() AccessibilityPath
-    }
-
-    %% Event Handling
-    class ComponentEventSystem {
-        +eventHandlers: [ComponentEventType: ComponentEventHandler]
-        +eventPropagation: EventPropagationManager
-        +gestureRecognizers: [ComponentGestureRecognizer]
-        +handleEvent(event: ComponentEvent, component: UIComponent)
-        +propagateEvent(event: ComponentEvent, hierarchy: ComponentHierarchy)
-        +registerGestureRecognizer(recognizer: ComponentGestureRecognizer)
-    }
-
-    %% Relationships
+    %% Key Relationships
     AdvancedLayoutSystem --> LayoutEngine : uses
     AdvancedLayoutSystem --> UIComponentManager : manages
     AdvancedLayoutSystem --> ResponsiveLayoutManager : adapts with
     AdvancedLayoutSystem --> LayoutAnimationCoordinator : animates with
     AdvancedLayoutSystem --> ConstraintSolver : solves with
-
+    
     LayoutEngine --> LayoutAlgorithm : implements
-    LayoutEngine --> LayoutCache : caches with
-
     UIComponentManager --> UIComponent : manages
     UIComponentManager --> ComponentFactory : creates with
-    UIComponentManager --> ComponentLifecycleManager : lifecycle with
-
     UIComponent <|-- CodeEditorComponent : specializes to
     UIComponent <|-- GutterComponent : specializes to
     UIComponent <|-- MinimapComponent : specializes to
     UIComponent <|-- ScrollComponent : specializes to
-
-    CodeEditorComponent --> OverlayManager : manages overlays
+    
     ResponsiveLayoutManager --> ResponsiveBreakpoint : uses
     ResponsiveLayoutManager --> AdaptiveConstraint : manages
-
+    
     ConstraintSolver --> LayoutConstraint : solves
     LayoutConstraint --> LayoutAttribute : references
     LayoutConstraint --> ConstraintRelation : defines
-
+    
     LayoutAnimationCoordinator --> LayoutAnimation : creates
     LayoutAnimation --> AnimationConfiguration : configured by
-
+    
     ComponentFactory --> ComponentLifecycleManager : coordinates with
-    ComponentLifecycleState --> ComponentLifecycleManager : managed by
-
+    ComponentLifecycleManager --> ComponentLifecycleState : manages
+    
     LayoutEngine --> FlexboxLayout : can use
     LayoutEngine --> GridLayout : can use
     LayoutEngine --> AbsoluteLayout : can use
-
-    AdvancedLayoutSystem --> LayoutPerformanceOptimizer : optimizes with
+    
     LayoutPerformanceOptimizer --> LayoutCache : uses
-
     AdvancedLayoutSystem --> AccessibilityLayoutManager : accessibility with
-    UIComponentManager --> ComponentEventSystem : events with
 
     %% Styling - Dark mode friendly colors
     classDef system fill:#6366f120,stroke:#6366f1,stroke-width:3px,color:#fff
