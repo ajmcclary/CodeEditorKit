@@ -5,12 +5,6 @@ import Foundation
 /// Centralized registry for managing completion providers with automatic language support
 @MainActor
 public final class CompletionProviderRegistry {
-    // MARK: - Singleton
-
-    /// Shared instance for convenience (deprecated)
-    @available(*, deprecated, message: "Use dependency injection instead of singleton pattern. Create your own CompletionProviderRegistry instance.")
-    public static let shared = CompletionProviderRegistry()
-
     /// Creates a new completion provider registry
     public init() {
         loadBuiltInProviders()

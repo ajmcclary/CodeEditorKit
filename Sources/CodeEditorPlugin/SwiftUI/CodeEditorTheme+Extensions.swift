@@ -64,12 +64,6 @@ extension View {
         environment(\.codeEditorTheme, theme)
     }
 
-    /// Control whether the code editor should become first responder
-    @available(*, deprecated, renamed: "becomeFirstResponder(_:)", message: "Use becomeFirstResponder(_:) instead")
-    public func codeEditorBecomeFirstResponder(_ become: Bool) -> some View {
-        environment(\.codeEditorBecomeFirstResponder, become)
-    }
-
     /// Set the selected line highlight color for the code editor
     public func codeEditorLineHighlightColor(_ color: PlatformColor) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in

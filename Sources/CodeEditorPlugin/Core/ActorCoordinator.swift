@@ -7,17 +7,6 @@ import Foundation
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
 public final class ActorCoordinator {
-    // MARK: - Singleton (for convenience, but DI is preferred)
-
-    /// Shared instance for convenience access.
-    ///
-    /// - Warning: This singleton is deprecated. Use dependency injection instead
-    ///   by passing an `ActorCoordinator` instance through `EditorConfiguration.actorCoordinator`.
-    ///
-    /// - SeeAlso: ``create()`` for creating new instances
-    @available(*, deprecated, message: "Use dependency injection instead. Pass ActorCoordinator through EditorConfiguration.")
-    public static let shared = ActorCoordinator()
-
     // MARK: - Actors
 
     /// Text processing actor for text manipulation operations.

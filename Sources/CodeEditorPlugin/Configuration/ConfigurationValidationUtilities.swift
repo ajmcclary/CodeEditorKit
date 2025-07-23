@@ -424,39 +424,4 @@ public enum ConfigurationBuilderHelpers {
 /// migration to the new unified validation system. These methods are deprecated
 /// and will be removed in a future version.
 public enum ConfigurationMigrationHelpers {
-    /// Maps old font size validation methods to new shared utilities
-    /// 
-    /// This legacy method provides a simple boolean result for backward compatibility,
-    /// but lacks the detailed validation information provided by the new system.
-    /// 
-    /// - Parameter fontSize: The font size to validate
-    /// - Returns: `true` if valid, `false` if invalid or needs fixing
-    @available(*, deprecated, message: "Use ConfigurationValidationUtilities.validateFontSize instead")
-    public static func legacyValidateFontSize(_ fontSize: CGFloat) -> Bool {
-        switch ConfigurationValidationUtilities.validateFontSize(fontSize) {
-        case .valid:
-            return true
-
-        case .invalid, .fixable:
-            return false
-        }
-    }
-
-    /// Maps old tab width validation methods to new shared utilities
-    /// 
-    /// This legacy method provides a simple boolean result for backward compatibility,
-    /// but lacks the detailed validation information provided by the new system.
-    /// 
-    /// - Parameter tabWidth: The tab width to validate
-    /// - Returns: `true` if valid, `false` if invalid or needs fixing
-    @available(*, deprecated, message: "Use ConfigurationValidationUtilities.validateTabWidth instead")
-    public static func legacyValidateTabWidth(_ tabWidth: Int) -> Bool {
-        switch ConfigurationValidationUtilities.validateTabWidth(tabWidth) {
-        case .valid:
-            return true
-
-        case .invalid, .fixable:
-            return false
-        }
-    }
 }

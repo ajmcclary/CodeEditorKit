@@ -152,27 +152,6 @@ public struct PlatformSpacing {
 
 // MARK: - Migration Helpers
 
-/// Helper methods to ease migration from scattered platform detection
-extension PlatformServiceLayer {
-    /// Replaces scattered UIDevice.current.userInterfaceIdiom == .pad checks
-    @available(*, deprecated, message: "Use PlatformServiceLayer.shared.isIPad instead")
-    public static var isIPadDevice: Bool {
-        shared.isIPad
-    }
-
-    /// Replaces scattered UIDevice.current.userInterfaceIdiom == .phone checks
-    @available(*, deprecated, message: "Use PlatformServiceLayer.shared.isIPhone instead")
-    public static var isIPhoneDevice: Bool {
-        shared.isIPhone
-    }
-
-    /// Replaces scattered #if targetEnvironment(macCatalyst) checks
-    @available(*, deprecated, message: "Use PlatformServiceLayer.shared.isMacCatalyst instead")
-    public static var isMacCatalystEnvironment: Bool {
-        shared.isMacCatalyst
-    }
-}
-
 // MARK: - Platform Capability Extensions
 
 extension PlatformDeviceService {

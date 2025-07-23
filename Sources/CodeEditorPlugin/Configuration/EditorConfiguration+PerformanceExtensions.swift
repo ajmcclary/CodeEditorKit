@@ -14,13 +14,6 @@ extension EditorConfiguration {
         /// Maximum file length for syntax highlighting (0 = unlimited)
         public var maxSyntaxHighlightingLength: Int = PlatformConstants.maxSyntaxHighlightingLength
 
-        /// Alias for maxSyntaxHighlightingLength for backward compatibility
-        @available(*, deprecated, renamed: "maxSyntaxHighlightingLength")
-        public var maxHighlightingLength: Int {
-            get { maxSyntaxHighlightingLength }
-            set { maxSyntaxHighlightingLength = newValue }
-        }
-
         /// Whether to use hardware acceleration
         public var useHardwareAcceleration: Bool = true
 

@@ -157,12 +157,6 @@ public final class PlatformCapabilities {
         DeviceType.current
     }
 
-    /// Legacy string-based device type for backward compatibility
-    @available(*, deprecated, message: "Use deviceType property which returns DeviceType enum instead")
-    public var deviceTypeString: String {
-        deviceType.rawValue
-    }
-
     // hasNotch moved to PlatformCapabilities+UI.swift
 
     // MARK: - Feature Recommendations

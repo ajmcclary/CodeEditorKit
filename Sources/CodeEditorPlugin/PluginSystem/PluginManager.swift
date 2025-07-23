@@ -308,14 +308,12 @@ public final class PluginManager: ObservableObject {
 
     private func checkPlatformCompatibility(_ metadata: PluginMetadata) throws {
         let currentPlatform: PluginPlatform
-        #if os(macOS) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         currentPlatform = .macOS
         #elseif targetEnvironment(macCatalyst)
         currentPlatform = .catalyst
-        #elseif os(iOS)
+        #elseif canImport(UIKit)
         currentPlatform = .iOS
-        #elseif os(visionOS)
-        currentPlatform = .visionOS
         #else
         throw PluginError.unsupportedPlatform(PluginPlatform(rawValue: "unknown"))
         #endif

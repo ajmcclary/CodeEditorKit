@@ -43,11 +43,6 @@ import AppKit
 /// - SeeAlso: ``ToolbarItem`` for toolbar item structure
 @MainActor
 public final class ToolbarCoordinator: ObservableObject {
-    /// Shared instance for backward compatibility
-    /// - Warning: This property is deprecated. Use dependency injection instead.
-    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
-    public static let shared = ToolbarCoordinator()
-
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ToolbarCoordinator")
     private let capabilities: PlatformCapabilities
 

@@ -16,35 +16,14 @@ extension EditorConfiguration {
         /// Whether to enable syntax highlighting
         public var enableSyntaxHighlighting: Bool = true
 
-        /// Alias for enableSyntaxHighlighting for backward compatibility
-        @available(*, deprecated, renamed: "enableSyntaxHighlighting")
-        public var syntaxHighlighting: Bool {
-            get { enableSyntaxHighlighting }
-            set { enableSyntaxHighlighting = newValue }
-        }
-
         /// Font size for the editor text
         public var fontSize: CGFloat = PlatformConstants.defaultFontSize
 
         /// Whether to enable line numbers in the gutter
         public var isLineNumbersEnabled: Bool = true
 
-        /// Alias for isLineNumbersEnabled for backward compatibility
-        @available(*, deprecated, renamed: "isLineNumbersEnabled", message: "Use isLineNumbersEnabled instead for consistency with CodeEditorView API")
-        public var showLineNumbers: Bool {
-            get { isLineNumbersEnabled }
-            set { isLineNumbersEnabled = newValue }
-        }
-
         /// Whether to enable annotations support
         public var enableAnnotations: Bool = true
-
-        /// Alias for enableAnnotations for backward compatibility
-        @available(*, deprecated, renamed: "enableAnnotations")
-        public var annotations: Bool {
-            get { enableAnnotations }
-            set { enableAnnotations = newValue }
-        }
 
         /// Whether to highlight the currently selected line
         public var highlightSelectedLine: Bool = true
@@ -61,13 +40,6 @@ extension EditorConfiguration {
 
         /// Whether to enable code folding functionality
         public var enableCodeFolding: Bool = false
-
-        /// Alias for enableCodeFolding for backward compatibility
-        @available(*, deprecated, renamed: "enableCodeFolding")
-        public var codeFolding: Bool {
-            get { enableCodeFolding }
-            set { enableCodeFolding = newValue }
-        }
 
         /// Whether to show folding controls in the gutter
         public var showFoldingControls: Bool = false

@@ -51,11 +51,6 @@ import AppKit
 /// - SeeAlso: ``ContextMenuAction`` for menu action definitions
 @MainActor
 public final class ContextMenuCoordinator: ObservableObject {
-    /// Shared instance for backward compatibility
-    /// - Warning: This property is deprecated. Use dependency injection instead.
-    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
-    public static let shared = ContextMenuCoordinator()
-
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ContextMenuCoordinator")
     private let capabilities: PlatformCapabilities
 

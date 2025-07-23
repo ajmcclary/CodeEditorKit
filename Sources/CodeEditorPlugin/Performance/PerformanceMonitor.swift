@@ -52,12 +52,6 @@ public actor PerformanceMonitor {
     /// Maximum age of metrics before automatic cleanup (in seconds)
     private static let maxMetricAge: TimeInterval = 3_600 // 1 hour
 
-    // MARK: - Singleton (Deprecated)
-
-    /// Shared instance of the performance monitor (deprecated).
-    @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with PerformanceMonitor() and pass it to components that need it.")
-    public static let shared = PerformanceMonitor()
-
     // MARK: - Properties
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "Performance")

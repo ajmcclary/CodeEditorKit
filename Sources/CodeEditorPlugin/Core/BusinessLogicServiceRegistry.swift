@@ -8,10 +8,6 @@ import Foundation
 public final class BusinessLogicServiceRegistry {
     // MARK: - Singleton
 
-    /// Shared instance for convenience. Consider using dependency injection instead.
-    @available(*, deprecated, message: "Use dependency injection by creating your own instance instead")
-    public static let shared = BusinessLogicServiceRegistry()
-
     // MARK: - Services
 
     private var _lineNumberCalculationService: LineNumberCalculationService?
@@ -312,59 +308,6 @@ extension BusinessLogicServiceRegistry {
 }
 
 // MARK: - Global Service Access
-
-/// Global convenience accessor for business logic services
-/// - Note: Consider injecting services directly instead of using this global accessor
-@MainActor
-public enum BusinessLogic {
-    /// Shared service registry instance (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var services: BusinessLogicServiceRegistry {
-        BusinessLogicServiceRegistry.shared
-    }
-
-    /// Direct access to line number calculation service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var lineNumbers: LineNumberCalculationService {
-        services.lineNumberCalculationService
-    }
-
-    /// Direct access to gutter sizing service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var gutterSizing: GutterSizingService {
-        services.gutterSizingService
-    }
-
-    /// Direct access to code folding service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var codeFolding: CodeFoldingCoordinatorService {
-        services.codeFoldingCoordinatorService
-    }
-
-    /// Direct access to editor layout service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var layout: EditorLayoutService {
-        services.editorLayoutService
-    }
-
-    /// Direct access to syntax highlighting service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var syntaxHighlighting: SyntaxHighlightingService {
-        services.syntaxHighlightingService
-    }
-
-    /// Direct access to language detection service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var languageDetection: LanguageDetectionService {
-        services.languageDetectionService
-    }
-
-    /// Direct access to text editing service (deprecated)
-    @available(*, deprecated, message: "Use dependency injection by passing services directly")
-    public static var textEditing: TextEditingService {
-        services.textEditingService
-    }
-}
 
 // MARK: - Dependency Injection Helper
 

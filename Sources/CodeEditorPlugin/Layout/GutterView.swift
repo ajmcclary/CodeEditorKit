@@ -241,43 +241,6 @@ extension GutterView {
     }
     #endif
 
-    // Click handling logic has been moved to GutterInteractionHandler
-    // The following method is kept for backward compatibility but will be removed
-    @available(*, deprecated, message: "Use GutterInteractionHandler instead")
-    private func handleClickAt(point: CGPoint, in textView: CodeEditorView) -> Bool {
-        // Only handle clicks if folding is enabled
-        guard textView.configuration.display.enableCodeFolding &&
-              textView.configuration.display.showFoldingControls else {
-            return false
-        }
-
-        // Find which line was clicked
-        guard let clickedLineNumber = findLineNumber(at: point, in: textView) else {
-            return false
-        }
-
-        // Check if click was on a folding control
-        if isFoldingControlClick(at: point, for: clickedLineNumber, in: textView) {
-            // Toggle folding for this line
-            let wasToggled = textView.toggleFold(at: clickedLineNumber)
-
-            if wasToggled {
-                // Trigger display update
-                setNeedsDisplayLineNumbers()
-
-                // Provide haptic feedback on iOS
-                #if canImport(UIKit)
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-                #endif
-            }
-
-            return wasToggled
-        }
-
-        return false
-    }
-
     /// Find the line number at the given point
     private func findLineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
         // Use TextKitLineNumberHelper to avoid forcing TextKit 1

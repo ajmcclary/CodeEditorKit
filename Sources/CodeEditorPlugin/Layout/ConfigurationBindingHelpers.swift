@@ -243,29 +243,6 @@ public enum ConfigurationSectionBuilder {
 
 // MARK: - Configuration View Presets
 
-/// Pre-built configuration views for common patterns
-public enum ConfigurationViewPresets {
-    /// Example display configuration controls (deprecated - use direct bindings instead)
-    /// See AdvancedFeaturesShowcaseView.swift for the recommended pattern
-    @available(*, deprecated, message: "Use direct bindings like $appState.currentConfiguration.display.property instead")
-    @MainActor
-    public static func displayControlsExample() -> some View {
-        Text("Use direct bindings instead: $appState.currentConfiguration.display.property")
-            .foregroundColor(.secondary)
-            .font(.caption)
-    }
-
-    /// Example behavior configuration controls (deprecated - use direct bindings instead)
-    /// See AdvancedFeaturesShowcaseView.swift for the recommended pattern
-    @available(*, deprecated, message: "Use direct bindings like $appState.currentConfiguration.behavior.property instead")
-    @MainActor
-    public static func behaviorControlsExample() -> some View {
-        Text("Use direct bindings instead: $appState.currentConfiguration.behavior.property")
-            .foregroundColor(.secondary)
-            .font(.caption)
-    }
-}
-
 // MARK: - Migration Helper
 
 /// Helper for migrating to direct binding patterns

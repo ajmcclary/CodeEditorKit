@@ -69,12 +69,6 @@ extension SyntaxHighlighter {
 /// Registry for managing language providers
 @MainActor
 public final class LanguageRegistry {
-    // MARK: - Singleton
-
-    /// Shared instance for convenience. Consider using dependency injection instead.
-    @available(*, deprecated, message: "Use dependency injection instead of singleton pattern. Create your own LanguageRegistry instance.")
-    public static let shared = LanguageRegistry()
-
     // MARK: - Properties
 
     private var providers: [String: any LanguageProvider] = [:]

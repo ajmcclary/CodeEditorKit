@@ -41,17 +41,6 @@ extension String {
         return substring.data(using: encoding)
     }
 
-    /// Produces a `TextProvider` for use with `Predicate` resolution.
-    @available(*, deprecated, renamed: "predicateTextProvider") var cursorTextProvider: TextProvider {
-        { nsRange, _ in
-            guard let range = Range<String.Index>(nsRange, in: self) else {
-                return nil
-            }
-
-            return String(self[range])
-        }
-    }
-
     var predicateTextProvider: TextProvider {
         predicateTextSnapshotProvider
     }

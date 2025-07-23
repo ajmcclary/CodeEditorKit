@@ -34,13 +34,6 @@ extension EditorConfiguration {
         /// Line height multiple
         public var lineHeightMultiple: CGFloat = PlatformConstants.defaultLineHeightMultiple
 
-        /// Line spacing (alias for lineHeightMultiple for compatibility)
-        @available(*, deprecated, renamed: "lineHeightMultiple")
-        public var lineSpacing: CGFloat {
-            get { lineHeightMultiple }
-            set { lineHeightMultiple = newValue }
-        }
-
         /// Inter-character spacing
         public var characterSpacing: CGFloat = 0
 

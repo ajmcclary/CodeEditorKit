@@ -20,25 +20,11 @@ extension EditorConfiguration {
         /// Whether to enable code completion
         public var enableCodeCompletion: Bool = true
 
-        /// Alias for enableCodeCompletion for backward compatibility
-        @available(*, deprecated, renamed: "enableCodeCompletion")
-        public var codeCompletion: Bool {
-            get { enableCodeCompletion }
-            set { enableCodeCompletion = newValue }
-        }
-
         /// Whether to detect links in text
         public var isAutomaticLinkDetectionEnabled: Bool = false
 
         /// Whether to enable automatic quote substitution
         public var isAutomaticQuoteSubstitutionEnabled: Bool = false
-
-        /// Alias for isAutomaticQuoteSubstitutionEnabled for backward compatibility
-        @available(*, deprecated, renamed: "isAutomaticQuoteSubstitutionEnabled")
-        public var autoQuoteSubstitution: Bool {
-            get { isAutomaticQuoteSubstitutionEnabled }
-            set { isAutomaticQuoteSubstitutionEnabled = newValue }
-        }
 
         /// Whether to enable automatic dash substitution
         public var isAutomaticDashSubstitutionEnabled: Bool = false
