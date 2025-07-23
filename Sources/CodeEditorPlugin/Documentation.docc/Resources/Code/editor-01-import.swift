@@ -1,1 +1,8 @@
-// Placeholder for editor-01-import.swift
+import CodeEditorPlugin
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        Text("Hello, World!")
+    }
+}

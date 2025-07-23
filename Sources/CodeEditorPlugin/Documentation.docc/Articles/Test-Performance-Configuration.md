@@ -10,16 +10,10 @@ This article describes the comprehensive test performance optimizations implemen
 
 ### Test Plans
 
-- CodeEditorPlugin.xctestplan
-- CodeEditorPlugin-Parallel.xctestplan
-- CodeEditorPlugin-SmartParallel.xctestplan
 
 ### Test Utilities
 
-- ``XCTestCase+Timeout``
-- ``XCTestCase+MemoryLeakDetection``
-- ``XCTestCase+PerformanceBudget``
-- ``TestMemoryOptimizer``
+The test utilities are internal testing helpers not exposed as part of the public API.
 
 ## Test Parallelization
 
@@ -38,15 +32,8 @@ Tests are configured to run in parallel where safe, significantly reducing overa
 Tests are intelligently grouped based on their characteristics:
 
 **Parallel Group** (Safe to run concurrently):
-- Unit tests without shared state
-- Tests using dependency injection
-- Tests creating isolated instances
 
 **Sequential Group** (Must run in order):
-- Performance/benchmark tests
-- Tests using singletons (PlatformCapabilities, ParagraphStyleCache)
-- UI tests with NotificationCenter
-- LSP integration tests
 
 ### Running Parallel Tests
 
@@ -290,9 +277,6 @@ func testPerformance() {
 ```
 
 2. **Run Performance Tests Sequentially**
-   - Always exclude from parallel groups
-   - Run on consistent hardware
-   - Use release builds for final measurements
 
 ### Debugging Timeout Issues
 
@@ -451,8 +435,6 @@ extension XCTestCase {
 
 ## See Also
 
-- <doc:Articles/Performance-Optimizations>
+- <doc:Performance-Optimizations>
 - <doc:Performance-Monitoring>
 - ``PerformanceBudget``
-- ``XCTestCase+Timeout``
-- ``TestMemoryOptimizer``

@@ -1,6 +1,6 @@
 @Tutorial(time: 10) {
     @Intro(title: "Adding Syntax Highlighting") {
-        Enable beautiful syntax highlighting for 17 programming languages in your code editor with just a few lines of code.
+        Enable beautiful syntax highlighting for 20 programming languages in your code editor with just a few lines of code.
         
         @Image(source: syntax-highlighting-intro.png, alt: "Syntax highlighted code examples")
     }

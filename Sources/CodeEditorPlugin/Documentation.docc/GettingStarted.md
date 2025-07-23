@@ -9,7 +9,7 @@ Learn how to quickly integrate CodeEditorPlugin into your application.
 
 ## Overview
 
-CodeEditorPlugin is a modern, cross-platform code editor component for macOS, iOS, and Mac Catalyst applications. Built with Swift 6 concurrency and production-grade reliability, it features syntax highlighting for 17+ programming languages, code completion, annotations, and comprehensive SwiftUI integration. With 53 comprehensive test files and zero linting violations, this guide will help you get up and running in minutes.
+CodeEditorPlugin is a modern, cross-platform code editor component for macOS, iOS, and Mac Catalyst applications. Built with Swift 6 concurrency and production-grade reliability, it features syntax highlighting for 20 programming languages, code completion, annotations, and comprehensive SwiftUI integration. With 66 comprehensive test files and zero linting violations, this guide will help you get up and running in minutes.
 
 ## Installation
 
@@ -52,8 +52,8 @@ struct ContentView: View {
     var body: some View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
-            .showsLineNumbers(true)
-            .enablesSyntaxHighlighting(true)
+            .lineNumbers(true)
+            .enableSyntaxHighlighting(true)
             .frame(minHeight: 400)
     }
 }

@@ -9,7 +9,7 @@ Use built-in configuration presets for common editing scenarios.
 
 ## Overview
 
-CodeEditorPlugin includes five carefully crafted configuration presets that cover most common use cases. Each preset is optimized for its specific purpose and can be further customized.
+CodeEditorPlugin includes nine carefully crafted configuration presets that cover most common use cases. Five main presets are designed for specific editing scenarios, while four platform-specific presets optimize for different Apple platforms. Each preset is optimized for its specific purpose and can be further customized.
 
 ## Available Presets
 
@@ -102,6 +102,80 @@ Features:
 - Maximum readability
 
 Best for: Live coding, screencasts, or conference presentations
+
+## Platform-Specific Presets
+
+### iOS
+
+Optimized for iPhone and iPad:
+
+```swift
+let config = EditorConfiguration.iOS
+```
+
+Features:
+- Touch-optimized UI
+- Larger tap targets
+- Appropriate font sizes
+- Memory-conscious settings
+- Viewport rendering enabled
+- Adapted for smaller screens
+
+Best for: iOS applications
+
+### Mac Catalyst
+
+Tailored for Mac Catalyst apps:
+
+```swift
+let config = EditorConfiguration.catalyst
+```
+
+Features:
+- Hybrid UI optimizations
+- Mac-like font sizing
+- Keyboard-focused interaction
+- Full feature set enabled
+- Native Mac feel
+- Catalyst-specific adjustments
+
+Best for: Mac Catalyst applications
+
+### macOS
+
+Native macOS configuration:
+
+```swift
+let config = EditorConfiguration.macOS
+```
+
+Features:
+- Full desktop features
+- Hardware acceleration
+- Rich UI elements
+- Professional tooling
+- Maximum performance
+- Desktop-oriented layout
+
+Best for: Native macOS applications
+
+### Platform Optimized
+
+Automatically selects the best configuration for the current platform:
+
+```swift
+let config = EditorConfiguration.platformOptimized
+```
+
+Features:
+- Compile-time platform detection
+- Returns appropriate preset:
+  - iOS builds → `.iOS`
+  - Catalyst builds → `.catalyst`
+  - macOS builds → `.macOS`
+  - Other platforms → `.default`
+
+Best for: Cross-platform applications where you want automatic optimization
 
 ## Using Presets
 

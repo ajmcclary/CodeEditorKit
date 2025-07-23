@@ -158,44 +158,6 @@ class EditorStore: ObservableObject {
 
 ## Collaborative Editing (Preparation)
 
-### CRDT Integration
-
-```swift
-// Prepare for future collaborative features
-protocol CollaborativeDocument {
-    associatedtype Operation
-    
-    func apply(_ operation: Operation)
-    func merge(_ operations: [Operation]) -> [Operation]
-}
-
-struct TextOperation {
-    enum Kind {
-        case insert(position: Int, text: String)
-        case delete(range: NSRange)
-    }
-    
-    let kind: Kind
-    let timestamp: Date
-    let authorID: String
-}
-
-class CollaborativeEditor: ObservableObject {
-    @Published var document: String = ""
-    private var operations: [TextOperation] = []
-    
-    func applyRemoteOperation(_ operation: TextOperation) {
-        // Transform operation against local changes
-        let transformed = transform(operation, against: operations)
-        
-        // Apply to document
-        apply(transformed)
-        
-        // Update UI
-        objectWillChange.send()
-    }
-}
-```
 
 ## Performance Patterns
 
@@ -549,7 +511,7 @@ performance.enableViewportRendering = true
 ```swift
 let memoryOptimizedConfig = EditorConfigurationBuilder()
     .enableViewportRendering()
-    .maxHighlightingLength(50_000)
+    .maxSyntaxHighlightingLength(50_000)
     .disableMinimap()
     .reduceAnimations()
     .build()

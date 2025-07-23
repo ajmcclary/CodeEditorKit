@@ -33,9 +33,6 @@ The retry behavior is controlled by the following properties:
 ### Default Configuration
 
 Standard retry configuration suitable for most use cases:
-- 3 retry attempts
-- 1 second initial delay
-- 2x exponential backoff
 
 ```swift
 let lspManager = LSPManager(workspaceRoot: projectURL)
@@ -45,9 +42,6 @@ try await lspManager.startLanguageServer(for: "swift")
 ### Aggressive Configuration
 
 More persistent retry behavior for critical servers:
-- 5 retry attempts
-- 0.5 second initial delay
-- 1.5x exponential backoff
 
 ```swift
 let swiftConfig = LanguageServerConfig(
@@ -62,9 +56,6 @@ lspManager.registerLanguageServer(swiftConfig)
 ### Conservative Configuration
 
 Fewer retries for resource-limited environments:
-- 2 retry attempts
-- 2 second initial delay
-- 2x exponential backoff
 
 ```swift
 try await lspManager.startLanguageServer(
@@ -123,9 +114,6 @@ When enabled, adds ±20% random variation to delays to prevent synchronized retr
 
 Retry attempts are logged with appropriate severity:
 
-- **INFO**: Successful connection
-- **WARNING**: Failed attempt with retry pending
-- **ERROR**: All retry attempts exhausted
 
 Example log output:
 ```
@@ -159,9 +147,6 @@ do {
 
 The retry logic is implemented at the `LSPClientRegistry` level and automatically applies to:
 
-- Manual server starts via `startLanguageServer()`
-- Auto-start when registering servers with `autoStart: true`
-- Server restarts when workspace root changes
 
 The retry mechanism:
 1. Attempts connection with the language server
@@ -174,5 +159,4 @@ The retry mechanism:
 
 - <doc:LSP-Integration>
 - ``LSPManager``
-- ``LSPClientRegistry``
 - ``LSPServerConfiguration``

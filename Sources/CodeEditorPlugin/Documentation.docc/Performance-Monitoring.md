@@ -10,7 +10,7 @@ Monitor and optimize your editor's performance with built-in tools.
 
 CodeEditorPlugin includes comprehensive performance monitoring tools that provide real-time insights into rendering performance, memory usage, and syntax highlighting efficiency.
 
-> Tip: For detailed optimization techniques, see <doc:Articles/Performance-Optimizations>. For test-specific performance configuration, see <doc:Articles/Test-Performance-Configuration>.
+> Tip: For detailed optimization techniques, see <doc:Performance-Optimizations>. For test-specific performance configuration, see <doc:Test-Performance-Configuration>.
 
 ## Enabling Performance Monitoring
 
@@ -151,60 +151,6 @@ config.performance.backgroundProcessingDelay = 100 // ms
 config.performance.useHardwareAcceleration = true
 ```
 
-## Performance Overlay
-
-Display real-time metrics overlay:
-
-```swift
-// Enable performance HUD
-editor.showPerformanceOverlay = true
-
-// Customize overlay
-editor.performanceOverlay.metrics = [
-    .frameRate,
-    .memoryUsage,
-    .highlightingTime,
-    .viewportInfo
-]
-```
-
-## Profiling Tools
-
-### Time Profiler
-
-Measure operation durations:
-
-```swift
-let profiler = TimeProfiler()
-
-profiler.measure("FileLoad") {
-    loadLargeFile()
-}
-
-profiler.measure("Highlighting") {
-    highlightSyntax()
-}
-
-print(profiler.report())
-// FileLoad: 234ms
-// Highlighting: 89ms
-```
-
-### Memory Profiler
-
-Track allocations:
-
-```swift
-let memProfiler = MemoryProfiler()
-memProfiler.startTracking()
-
-// Perform operations...
-
-let report = memProfiler.stopTracking()
-print("Allocated: \(report.allocated) bytes")
-print("Deallocated: \(report.deallocated) bytes")
-print("Leaked: \(report.leaked) bytes")
-```
 
 ## Performance Best Practices
 
@@ -291,6 +237,6 @@ try csv.write(to: csvURL)
 - <doc:Configuration-System>
 - <doc:Swift6-Concurrency>
 - <doc:Architecture-Overview>
-- <doc:Articles/Performance-Optimization-Integration>
-- <doc:Articles/Performance-Optimizations>
-- <doc:Articles/Test-Performance-Configuration>
+- <doc:Performance-Optimization-Integration>
+- <doc:Performance-Optimizations>
+- <doc:Test-Performance-Configuration>

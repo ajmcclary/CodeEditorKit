@@ -17,10 +17,8 @@ This article describes the extensive performance optimizations implemented in Co
 
 ### Test Performance
 
-- ``XCTestCase+Timeout``
 - ``PerformanceBudget``
 - ``PerformanceBudgetReporter``
-- ``TestMemoryOptimizer``
 
 ### Configuration Performance
 
@@ -34,11 +32,6 @@ This article describes the extensive performance optimizations implemented in Co
 The `IncrementalSyntaxHighlighter` provides efficient partial updates for text changes:
 
 **Key Features:**
-- Line-level token cache for minimal re-highlighting
-- Region-based cache (1KB regions) for better performance
-- Change detection to track modified text ranges
-- Memory monitoring integration for resource management
-- Automatic fallback to full highlighting for large changes
 
 ```swift
 // The system automatically uses incremental highlighting
@@ -65,11 +58,6 @@ The `BackgroundSyntaxHighlighter` implements a sophisticated priority system:
 
 #### Features
 
-- Priority-based request queue with automatic scheduling
-- Concurrent request processing with configurable limits
-- Smart caching with expiration (`CachedHighlightResult`)
-- Performance metrics tracking
-- Integration with viewport detection
 
 ```swift
 // Submit highlighting request with priority
@@ -100,10 +88,6 @@ coordinator.configuration = config
 ```
 
 **Features:**
-- **Viewport optimization**: Only highlights visible text plus buffer
-- **Chunking**: Large files processed in 5KB chunks
-- **Circuit breaker**: Stops highlighting if operation exceeds threshold
-- **Smart token caching**: LRU eviction for memory efficiency
 
 ## Test Performance Optimizations
 
@@ -153,10 +137,6 @@ await assertCompletesWithin(5.0) {
 ```
 
 **Timeout Categories:**
-- Default: 10 seconds (regular unit tests)
-- Performance: 30 seconds (performance tests)
-- Integration: 60 seconds (integration tests)
-- Stress: 120 seconds (stress tests)
 
 ### Performance Budgets
 
@@ -337,11 +317,6 @@ print(report.summary)
 
 ## Performance Targets
 
-- **Syntax Highlighting**: < 16ms for viewport (60fps)
-- **File Open**: < 100ms for small files, < 1s for large files
-- **Test Execution**: < 180s total for all platforms
-- **Memory Usage**: < 500MB peak during tests
-- **Configuration Updates**: < 5ms per batch
 
 ## Advanced Optimization Techniques
 
@@ -425,7 +400,7 @@ print(diagnostics.recommendations)
 ## See Also
 
 - <doc:Performance-Monitoring>
-- <doc:Articles/Test-Performance-Configuration>
+- <doc:Test-Performance-Configuration>
 - ``PerformanceBudget``
 - ``SyntaxHighlightingPerformanceTracker``
 - ``ConfigurationBatchUpdater``

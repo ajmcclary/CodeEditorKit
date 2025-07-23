@@ -160,17 +160,7 @@ symbolNavigator.includeAnnotations = true
 Find all annotations in your project:
 ```swift
 // Search for all TODOs
-searchEngine.findAnnotations(type: .todo)
-```
-
-### Export
-
-Export annotations for tracking:
-
-```swift
-let annotations = editor.getAllAnnotations()
-let report = AnnotationReport(annotations: annotations)
-try report.export(to: URL(fileURLWithPath: "annotations.json"))
+// Use search functionality to find annotation patterns
 ```
 
 ## Best Practices
@@ -197,15 +187,6 @@ annotation.addAction("Create Issue") { annotation in
 }
 ```
 
-### Annotation Metrics
-
-Track annotation trends:
-
-```swift
-let metrics = AnnotationMetrics(for: project)
-print("Total TODOs: \(metrics.todoCount)")
-print("Fixed this week: \(metrics.resolvedCount)")
-```
 
 ### CI Integration
 

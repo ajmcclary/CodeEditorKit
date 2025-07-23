@@ -112,7 +112,7 @@ struct FocusedEditor: View {
 
 ### `codeEditorEventSystem`
 
-Provides a custom event system for publishing and subscribing to editor events. By default, editors use the deprecated `UnifiedEventSystem.shared` singleton. Use this key to inject a custom instance for better testability and isolation.
+Provides a custom event system for publishing and subscribing to editor events. Use this key to inject a custom instance for better testability and isolation.
 
 ```swift
 struct MultiEditorView: View {
@@ -135,7 +135,7 @@ struct MultiEditorView: View {
 ```
 
 **Type**: `UnifiedEventSystem?`  
-**Default**: `nil` (uses `UnifiedEventSystem.shared`)
+**Default**: `nil` (creates a new instance)
 
 > **Related Modifier**: Use ``CodeEditor/eventSystem(_:)`` for setting a custom event system on individual editors.
 

@@ -277,15 +277,6 @@ let manager = PluginManager.shared
 try await manager.install(from: pluginURL)
 ```
 
-### Plugin Marketplace
-
-Coming in v2.0:
-
-```swift
-let marketplace = PluginMarketplace()
-let plugins = await marketplace.search("language")
-try await marketplace.install(plugin)
-```
 
 ## Best Practices
 

@@ -17,9 +17,9 @@ swift run
 ```
 
 ### Project Stats
-- **333 Source Files** across **17 directories**
-- **53 Test Files** with comprehensive coverage
-- **17+ Languages Supported** (Swift AST, Python, JS/TS, Rust, C/C++, Go, Java, Ruby, etc.)
+- **401 Source Files** across **17 directories**
+- **66 Test Files** with comprehensive coverage
+- **20 Languages Supported** (Swift, JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, HTML, CSS, JSON, Markdown, YAML, XML, SQL, Ruby, PHP, Shell, Plain Text)
 - **Zero SwiftLint Violations** maintained
 
 ## Architecture

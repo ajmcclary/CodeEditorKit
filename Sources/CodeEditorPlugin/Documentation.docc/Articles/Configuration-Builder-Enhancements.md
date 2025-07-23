@@ -57,7 +57,7 @@ let config = EditorConfigurationBuilder()
 let config = EditorConfigurationBuilder()
     // Performance settings
     .useHardwareAcceleration(true)
-    .maxHighlightingLength(500_000)
+    .maxSyntaxHighlightingLength(500_000)
     .memoryMonitor(customMonitor)
     .build()
 ```
@@ -376,7 +376,7 @@ extension EditorConfigurationBuilder {
             .insertSpacesForTabs(true)
             .showLineNumbers(true)
             .enableSyntaxHighlighting(true)
-            .maxHighlightingLength(100_000)
+            .maxSyntaxHighlightingLength(100_000)
     }
     
     /// Configure for accessibility

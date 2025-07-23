@@ -27,7 +27,7 @@ Sources/CodeEditorPlugin/
 ├── Text/                    # Unified text handling (TextKit, layout, processing)
 ├── Layout/                  # UI components, view models (GutterView, MinimapView)
 ├── Configuration/           # Settings and validation system
-├── SyntaxHighlighting/      # Language highlighting (17+ languages)
+├── SyntaxHighlighting/      # Language highlighting (20 languages)
 ├── Languages/               # Language-specific providers
 ├── Completion/              # Code completion with view model
 ├── Features/                # Optional features (flat structure)
@@ -95,7 +95,7 @@ A sophisticated configuration system with:
 Manages multi-language syntax highlighting:
 
 - SwiftSyntax integration for accurate Swift highlighting
-- Regex-based highlighting for 16+ other languages
+- Regex-based highlighting for 19 other languages
 - Viewport-based rendering for optimal performance
 - Background processing to maintain UI responsiveness
 
@@ -181,8 +181,8 @@ let config = EditorConfigurationBuilder()
 - Added CrossPlatformCoordinator for unified input handling
 
 ### Quality Achievements
-- **53 comprehensive tests** with 100% pass rate
-- **Zero SwiftLint violations** across 333 source files
+- **66 comprehensive tests** with 100% pass rate
+- **Zero SwiftLint violations** across 401 source files
 - **Enhanced cross-platform consistency**
 - **Directory streamlining** from 22 to 18 directories for better discoverability
 

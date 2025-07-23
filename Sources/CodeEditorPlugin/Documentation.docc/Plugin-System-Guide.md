@@ -245,15 +245,6 @@ context.logger.debug("Processing file: \(filename)")
 context.logger.error("Failed to parse: \(error)")
 ```
 
-### Plugin Inspector
-
-The framework includes a plugin inspector for debugging:
-
-```swift
-let inspector = PluginInspector()
-let report = await inspector.generateReport(for: pluginManager)
-print(report)
-```
 
 ## Example: Language Support Plugin
 
@@ -335,5 +326,5 @@ The plugin system is designed to be extensible. Planned enhancements include:
 ## See Also
 
 - <doc:Plugin-Architecture>
-- <doc:Creating-Language-Providers>
-- <doc:Security-Considerations>
+- <doc:Creating-a-Plugin>
+- <doc:Security>

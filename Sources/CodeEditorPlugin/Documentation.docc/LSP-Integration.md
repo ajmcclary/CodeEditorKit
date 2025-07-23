@@ -873,4 +873,4 @@ struct ProjectEditorView: View {
 - <doc:Advanced-Patterns>
 - <doc:Platform-Abstraction>
 - <doc:Catalyst-Best-Practices>
-- <doc:Articles/LSP-Retry-Configuration>
+- <doc:LSP-Retry-Configuration>
