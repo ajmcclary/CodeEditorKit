@@ -393,6 +393,8 @@ private actor ThrottledState {
 /// Creates a throttled async function that limits execution frequency
 /// - Parameters:
 ///   - interval: Minimum time interval between executions
+///   - maxConcurrentOperations: Maximum number of operations that can run concurrently
+///   - operation: The operation to execute with throttling applied
 public func throttledAsync<T: Sendable>(
     interval: TimeInterval,
     maxConcurrentOperations: Int = 1,
