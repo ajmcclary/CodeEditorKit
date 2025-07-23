@@ -52,26 +52,26 @@ struct UnifiedContentView: View {
     @StateObject private var appState = AppState()
     @State private var showConfiguration = true
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    
+
     // Dynamic Type support
     @Environment(\.sizeCategory) private var sizeCategory
-    
+
     var body: some View {
         Group {
             #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-            if !isIPad() {
-                iPhoneLayout
-            } else {
-                iPadLayout
-            }
+                if !isIPad() {
+                    iPhoneLayout
+                } else {
+                    iPadLayout
+                }
             #else
-            desktopLayout
+                desktopLayout
             #endif
         }
     }
-    
+
     // MARK: - Platform-Specific Layouts
-    
+
     @ViewBuilder
     private var iPhoneLayout: some View {
         NavigationStack {
@@ -79,41 +79,45 @@ struct UnifiedContentView: View {
                 .environmentObject(appState)
                 .navigationTitle("CodeEditor")
                 #if canImport(UIKit)
-                .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarTitleDisplayMode(.inline)
                 #endif
                 .toolbar {
-                    ToolbarItem(placement: {
-                        #if canImport(UIKit)
-                        return .navigationBarLeading
-                        #else
-                        return .automatic
-                        #endif
-                    }()) {
-                        NavigationLink(destination: UnifiedConfigurationView().environmentObject(appState)) {
+                    ToolbarItem(
+                        placement: {
+                            #if canImport(UIKit)
+                                return .navigationBarLeading
+                            #else
+                                return .automatic
+                            #endif
+                        }()
+                    ) {
+                        NavigationLink(
+                            destination: UnifiedConfigurationView().environmentObject(appState)
+                        ) {
                             Image(systemName: "gear")
                         }
                     }
                 }
         }
     }
-    
+
     @ViewBuilder
     private var iPadLayout: some View {
         navigationSplitView
             #if canImport(UIKit)
-            .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.large)
             #endif
             .navigationSplitViewStyle(.automatic)
     }
-    
+
     @ViewBuilder
     private var desktopLayout: some View {
         navigationSplitView
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            .navigationSplitViewStyle(.prominentDetail)
+                .navigationSplitViewStyle(.prominentDetail)
             #endif
     }
-    
+
     @ViewBuilder
     private var navigationSplitView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -131,128 +135,131 @@ struct UnifiedContentView: View {
             editorView
                 .environmentObject(appState)
                 #if canImport(UIKit)
-                // Fix for iPad: Ensure the editor fills the available width
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Fix for iPad: Ensure the editor fills the available width
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 #endif
         }
         .navigationTitle("CodeEditor Configuration Demo")
     }
-    
+
     // MARK: - Adaptive Layout Helpers
-    
+
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    
+
     private struct ColumnWidth {
         let min: CGFloat
         let ideal: CGFloat
         let max: CGFloat
     }
-    
+
     private func adaptiveColumnWidth() -> ColumnWidth {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            // iPad gets much more generous spacing to utilize screen
-            return ColumnWidth(min: 450, ideal: 500, max: 600)
-        } else {
-            // iPhone gets compact spacing
-            return ColumnWidth(min: 300, ideal: 350, max: 400)
-        }
+            if isIPad() {
+                // iPad gets much more generous spacing to utilize screen
+                return ColumnWidth(min: 450, ideal: 500, max: 600)
+            } else {
+                // iPhone gets compact spacing
+                return ColumnWidth(min: 300, ideal: 350, max: 400)
+            }
         #else
-        // macOS/Catalyst default
-        return ColumnWidth(min: 300, ideal: 350, max: 400)
+            // macOS/Catalyst default
+            return ColumnWidth(min: 300, ideal: 350, max: 400)
         #endif
     }
-    
+
     private func adaptiveSidebarMinWidth() -> CGFloat {
         #if targetEnvironment(macCatalyst)
-        return 350
+            return 350
         #elseif canImport(UIKit)
-        return horizontalSizeClass == .regular ? 375 : 300
+            return horizontalSizeClass == .regular ? 375 : 300
         #else
-        return 300
+            return 300
         #endif
     }
-    
+
     private func isIPad() -> Bool {
         #if canImport(UIKit)
-        return UIDevice.current.userInterfaceIdiom == .pad
+            return UIDevice.current.userInterfaceIdiom == .pad
         #else
-        return false
+            return false
         #endif
     }
-    
+
     private func adaptiveToolbarHorizontalPadding() -> CGFloat {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        if isIPad() {
-            return 16  // Less horizontal padding on iPad toolbar
-        } else {
-            return 12  // Tighter padding for iPhone
-        }
+            if isIPad() {
+                return 16  // Less horizontal padding on iPad toolbar
+            } else {
+                return 12  // Tighter padding for iPhone
+            }
         #else
-        return 16  // Default
+            return 16  // Default
         #endif
     }
-    
+
     private func dynamicImageScale() -> Image.Scale {
         #if canImport(UIKit)
-        switch sizeCategory {
-        case .extraSmall, .small:
-            return .small
-        case .medium, .large, .extraLarge:
-            return .medium
-        default:
-            return .large
-        }
+            switch sizeCategory {
+            case .extraSmall, .small:
+                return .small
+
+            case .medium, .large, .extraLarge:
+                return .medium
+
+            default:
+                return .large
+            }
         #else
-        return .medium
+            return .medium
         #endif
     }
-    
+
     // MARK: - Editor View
-    
+
     @ViewBuilder
     private var editorView: some View {
         VStack(spacing: 0) {
             // Editor toolbar
             editorToolbar
-            
+
             Divider()
-            
+
             // Main editor with live preview
             SampleCodeEditorView(
                 text: $appState.code,
-                language: appState.selectedLanguage?.fileExtensions.first ?? appState.selectedSample.fileExtension
+                language: appState.selectedLanguage?.fileExtensions.first
+                    ?? appState.selectedSample.fileExtension
             )
             .environmentObject(appState)
-            
+
             Divider()
-            
+
             // Status bar
             statusBar
         }
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        .frame(minWidth: 600, minHeight: 400)
+            .frame(minWidth: 600, minHeight: 400)
         #endif
     }
-    
+
     // MARK: - Editor Toolbar
-    
+
     @ViewBuilder
     private var editorToolbar: some View {
         HStack {
             // Configuration visibility toggle
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            PlatformSafeButton(action: toggleSidebar) {
-                Image(systemName: "sidebar.left")
-                    .help("Toggle Configuration Sidebar")
-            }
-            .buttonStyle(.plain)
-            
-            Divider()
-                .frame(height: 20)
+                PlatformSafeButton(action: toggleSidebar) {
+                    Image(systemName: "sidebar.left")
+                        .help("Toggle Configuration Sidebar")
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .frame(height: 20)
             #endif
-            
+
             // Current configuration preset
             HStack(spacing: 4) {
                 Image(systemName: "slider.horizontal.3")
@@ -263,58 +270,64 @@ struct UnifiedContentView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            
+
             Spacer()
-            
+
             // Quick toggles for frequently used options
-            HStack(spacing: {
-                #if targetEnvironment(macCatalyst)
-                return 6
-                #elseif canImport(UIKit)
-                return isIPad() ? 8 : 4
-                #else
-                return 12
-                #endif
-            }()) {
+            HStack(
+                spacing: {
+                    #if targetEnvironment(macCatalyst)
+                        return 6
+                    #elseif canImport(UIKit)
+                        return isIPad() ? 8 : 4
+                    #else
+                        return 12
+                    #endif
+                }()
+            ) {
                 quickToggleButtons
             }
-            
+
             Spacer()
-            
+
             // Advanced Features Demo button
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
-                HStack(spacing: 4) {
-                    Image(systemName: "gearshape.2.fill")
-                    Text("Advanced Demo")
-                        .font(.caption)
+                NavigationLink(
+                    destination: AdvancedFeaturesShowcaseView().environmentObject(appState)
+                ) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "gearshape.2.fill")
+                        Text("Advanced Demo")
+                            .font(.caption)
+                    }
                 }
-            }
-            .buttonStyle(.borderless)
+                .buttonStyle(.borderless)
             #endif
-            
+
             // Platform-specific actions
             Menu {
                 Button(action: copyConfiguration) {
                     Label("Copy Configuration", systemImage: "doc.on.doc")
                 }
-                
+
                 Button(action: shareConfiguration) {
                     Label("Share Configuration", systemImage: "square.and.arrow.up")
                 }
-                
+
                 Divider()
-                
+
                 Button(action: refreshEditor) {
                     Label("Refresh Editor", systemImage: "arrow.clockwise")
                 }
-                
+
                 #if canImport(UIKit)
-                Divider()
-                
-                NavigationLink(destination: AdvancedFeaturesShowcaseView().environmentObject(appState)) {
-                    Label("Advanced Demo", systemImage: "gearshape.2.fill")
-                }
+                    Divider()
+
+                    NavigationLink(
+                        destination: AdvancedFeaturesShowcaseView().environmentObject(appState)
+                    ) {
+                        Label("Advanced Demo", systemImage: "gearshape.2.fill")
+                    }
                 #endif
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -324,19 +337,19 @@ struct UnifiedContentView: View {
         }
         .padding(.horizontal, adaptiveToolbarHorizontalPadding())
         #if targetEnvironment(macCatalyst)
-        .padding(.vertical, 2)
-        .frame(height: 32)
+            .padding(.vertical, 2)
+            .frame(height: 32)
         #elseif canImport(UIKit)
-        .padding(.vertical, isIPad() ? 4 : 4)
-        .frame(height: isIPad() ? 44 : 36)
+            .padding(.vertical, isIPad() ? 4 : 4)
+            .frame(height: isIPad() ? 44 : 36)
         #else
-        .padding(.vertical, 8)
+            .padding(.vertical, 8)
         #endif
         .background(Color(PlatformColors.controlBackground))
     }
-    
+
     // MARK: - Status Bar
-    
+
     @ViewBuilder
     private var statusBar: some View {
         HStack(spacing: 16) {
@@ -347,10 +360,10 @@ struct UnifiedContentView: View {
                 Text(appState.selectedSample.displayName)
             }
             .font(isIPad() ? .caption : .caption2)
-            
+
             Divider()
                 .frame(height: isIPad() ? 16 : 12)
-            
+
             // Line count
             HStack(spacing: 4) {
                 Image(systemName: "text.alignleft")
@@ -358,10 +371,10 @@ struct UnifiedContentView: View {
             }
             .font(isIPad() ? .caption : .caption2)
             .foregroundColor(.secondary)
-            
+
             Divider()
                 .frame(height: isIPad() ? 16 : 12)
-            
+
             // Character count
             HStack(spacing: 4) {
                 Image(systemName: "textformat.size")
@@ -369,9 +382,9 @@ struct UnifiedContentView: View {
             }
             .font(isIPad() ? .caption : .caption2)
             .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             // Active features indicator
             HStack(spacing: 8) {
                 if appState.coordinator.configuration.display.enableSyntaxHighlighting {
@@ -379,19 +392,19 @@ struct UnifiedContentView: View {
                         .foregroundColor(.green)
                         .help("Syntax Highlighting Active")
                 }
-                
+
                 if appState.coordinator.configuration.display.enableAnnotations {
                     Image(systemName: "text.bubble.fill")
                         .foregroundColor(.orange)
                         .help("Annotations Active")
                 }
-                
+
                 if appState.coordinator.configuration.behavior.enableCodeCompletion {
                     Image(systemName: "text.insert")
                         .foregroundColor(.blue)
                         .help("Code Completion Active")
                 }
-                
+
                 if appState.coordinator.configuration.display.showMinimap {
                     Image(systemName: "map.fill")
                         .foregroundColor(.purple)
@@ -402,70 +415,84 @@ struct UnifiedContentView: View {
         }
         .padding(.horizontal, adaptiveToolbarHorizontalPadding())
         #if targetEnvironment(macCatalyst)
-        .padding(.vertical, 3)
+            .padding(.vertical, 3)
         #elseif canImport(UIKit)
-        .padding(.vertical, isIPad() ? 3 : 2)
-        .frame(height: isIPad() ? 32 : 24)
+            .padding(.vertical, isIPad() ? 3 : 2)
+            .frame(height: isIPad() ? 32 : 24)
         #else
-        .padding(.vertical, 6)
+            .padding(.vertical, 6)
         #endif
         .background(Color(PlatformColors.controlBackground))
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func toggleSidebar() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
+            NSApp.keyWindow?.firstResponder?.tryToPerform(
+                #selector(NSSplitViewController.toggleSidebar(_:)), with: nil
+            )
         #endif
     }
-    
+
     private func copyConfiguration() {
         if let jsonData = try? JSONEncoder().encode(appState.coordinator.configuration),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+            let jsonString = String(data: jsonData, encoding: .utf8)
+        {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(jsonString, forType: .string)
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(jsonString, forType: .string)
             #else
-            // Use secure pasteboard access on iOS 16+
-            if #available(iOS 16.0, *) {
-                UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: jsonString]]
-            } else {
-                UIPasteboard.general.string = jsonString
-            }
+                // Use secure pasteboard access on iOS 16+
+                if #available(iOS 16.0, *) {
+                    UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: jsonString]]
+                } else {
+                    UIPasteboard.general.string = jsonString
+                }
             #endif
         }
     }
-    
+
     private func shareConfiguration() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        exportConfiguration()
+            exportConfiguration()
         #else
-        // iOS share sheet implementation
-        if let jsonData = try? JSONEncoder().encode(appState.currentConfiguration) {
-            let activityVC = UIActivityViewController(activityItems: [jsonData], applicationActivities: nil)
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = windowScene.windows.first,
-               let rootVC = window.rootViewController {
-                rootVC.present(activityVC, animated: true)
+            // iOS share sheet implementation
+            if let jsonData = try? JSONEncoder().encode(appState.currentConfiguration) {
+                let activityVC = UIActivityViewController(
+                    activityItems: [jsonData], 
+                    applicationActivities: nil
+                )
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                    let window = windowScene.windows.first,
+                    let rootVC = window.rootViewController
+                {
+                    rootVC.present(activityVC, animated: true)
+                }
             }
-        }
         #endif
     }
-    
+
     private func exportConfiguration() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let window = NSApp.keyWindow {
-            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: window)
-        }
+            if let window = NSApp.keyWindow {
+                ConfigurationExporter.exportConfiguration(
+                    appState.coordinator.configuration, 
+                    from: window
+                )
+            }
         #else
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = scene.windows.first?.rootViewController {
-            ConfigurationExporter.exportConfiguration(appState.coordinator.configuration, from: rootVC)
-        }
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                let rootVC = scene.windows.first?.rootViewController
+            {
+                ConfigurationExporter.exportConfiguration(
+                    appState.coordinator.configuration, 
+                    from: rootVC
+                )
+            }
         #endif
     }
-    
+
     private func refreshEditor() {
         // Force editor refresh by toggling a benign setting
         let current = appState.coordinator.configuration.display.enableSyntaxHighlighting
@@ -473,15 +500,19 @@ struct UnifiedContentView: View {
             config.display.enableSyntaxHighlighting = !current
         }
         Task { @MainActor in
-            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            appState.coordinator.update { config in
-                config.display.enableSyntaxHighlighting = current
+            do {
+                try await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
+                appState.coordinator.update { config in
+                    config.display.enableSyntaxHighlighting = current
+                }
+            } catch {
+                // Handle error if needed
             }
         }
     }
-    
+
     // MARK: - Quick Toggle Buttons
-    
+
     @ViewBuilder
     private var quickToggleButtons: some View {
         PlatformSafeButton(
@@ -500,13 +531,13 @@ struct UnifiedContentView: View {
                     .help("Toggle Line Numbers")
             }
         )
-        
+
         // Show additional toggles on platforms that support them
         if shouldShowExtendedToggles() {
             minimapToggleButton
             invisibleCharactersToggleButton
         }
-        
+
         PlatformSafeButton(
             action: {
                 appState.coordinator.update { config in
@@ -522,17 +553,17 @@ struct UnifiedContentView: View {
             }
         )
     }
-    
+
     // MARK: - Toggle Button Helpers
-    
+
     private func shouldShowExtendedToggles() -> Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
-        return isIPad()
+            return isIPad()
         #else
-        return true
+            return true
         #endif
     }
-    
+
     @ViewBuilder
     private var minimapToggleButton: some View {
         PlatformSafeButton(
@@ -552,7 +583,7 @@ struct UnifiedContentView: View {
             }
         )
     }
-    
+
     @ViewBuilder
     private var invisibleCharactersToggleButton: some View {
         PlatformSafeButton(

@@ -49,22 +49,22 @@ import SwiftUI
 class AppState: ObservableObject {
     /// Configuration coordinator managing editor settings.
     @Published var coordinator = ConfigurationCoordinator()
-    
+
     /// Currently selected configuration preset.
     @Published var selectedPreset: ConfigurationPreset = .fullFeatured
-    
+
     /// Currently selected sample code type (legacy compatibility).
     @Published var selectedSample: SampleCode = .swift
-    
+
     /// Currently selected language information.
     @Published var selectedLanguage: LanguageDetectionService.LanguageInfo?
-    
+
     /// Custom code entered by the user.
     @Published var customCode: String = ""
-    
+
     /// Current code content displayed in the editor.
     @Published var code: String = ""
-    
+
     /// Current editor configuration.
     ///
     /// This computed property provides backward compatibility while
@@ -73,7 +73,7 @@ class AppState: ObservableObject {
     /// - Returns: The current `EditorConfiguration` from the coordinator.
     var currentConfiguration: EditorConfiguration {
         get { coordinator.configuration }
-        set { 
+        set {
             coordinator.update { $0 = newValue }
             // Force SwiftUI to detect the change
             objectWillChange.send()
@@ -120,7 +120,8 @@ class AppState: ObservableObject {
     func updateCode() {
         if customCode.isEmpty {
             if let language = selectedLanguage,
-               let sampleCode = SampleCodeStore.getSampleCode(for: language) {
+                let sampleCode = SampleCodeStore.getSampleCode(for: language)
+            {
                 code = sampleCode
             } else {
                 // Fallback to old method for backward compatibility
@@ -149,7 +150,7 @@ class AppState: ObservableObject {
         customCode = ""
         updateCode()
     }
-    
+
     /// Selects a programming language and updates the editor content.
     ///
     /// This is the modern method for language selection, with automatic
@@ -192,7 +193,7 @@ class AppState: ObservableObject {
     /// ```swift
     /// appState.setCustomCode("""
     /// func customFunction() {
-    ///     print("User-defined code")
+    ///     logger.debug("User-defined code")
     /// }
     /// """)
     /// ```
@@ -200,9 +201,9 @@ class AppState: ObservableObject {
         customCode = text
         code = text
     }
-    
+
     // MARK: - Configuration Import/Export
-    
+
     /// Exports the current editor configuration as formatted JSON.
     ///
     /// Creates a JSON representation of the current editor configuration
@@ -243,7 +244,7 @@ class AppState: ObservableObject {
     func exportConfigurationAsJSON() -> String? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        
+
         do {
             let data = try encoder.encode(currentConfiguration)
             return String(data: data, encoding: .utf8)
@@ -252,7 +253,7 @@ class AppState: ObservableObject {
             return nil
         }
     }
-    
+
     /// Imports an editor configuration from JSON.
     ///
     /// Parses JSON configuration data and applies it to the current editor.
@@ -275,9 +276,9 @@ class AppState: ObservableObject {
     /// """
     ///
     /// if appState.importConfiguration(from: jsonConfig) {
-    ///     print("Configuration imported successfully")
+    ///     logger.debug("Configuration imported successfully")
     /// } else {
-    ///     print("Failed to import configuration")
+    ///     logger.debug("Failed to import configuration")
     /// }
     /// ```
     ///
@@ -289,19 +290,19 @@ class AppState: ObservableObject {
     /// - Type mismatches in the JSON data
     func importConfiguration(from json: String) -> Bool {
         guard let data = json.data(using: .utf8) else { return false }
-        
+
         let decoder = JSONDecoder()
         do {
             let configuration = try decoder.decode(EditorConfiguration.self, from: data)
             currentConfiguration = configuration
-            selectedPreset = .fullFeatured // Reset to custom after import
+            selectedPreset = .fullFeatured  // Reset to custom after import
             return true
         } catch {
             CrossPlatformLogger.logger().error("Failed to decode configuration: \(error)")
             return false
         }
     }
-    
+
     /// Resets the editor configuration to default values.
     ///
     /// Restores the configuration coordinator to its initial state
@@ -323,7 +324,7 @@ class AppState: ObservableObject {
         coordinator.reset()
         selectedPreset = .fullFeatured
     }
-    
+
     /// Helper method for updating configuration and triggering UI updates.
     ///
     /// This method consolidates the common pattern of updating configuration
