@@ -1,6 +1,6 @@
 # Event System Flow Diagram
 
-This diagram illustrates the unified event system that enables decoupled communication between components.
+This diagram illustrates the enhanced unified event system with modern async processing, plugin integration, and performance monitoring.
 
 ```mermaid
 flowchart TB
@@ -11,165 +11,337 @@ flowchart TB
         SYS[System Events<br/>Memory, Focus, Resize]
         SERV[Service Events<br/>Completion, Highlight]
         CONF[Configuration<br/>Theme, Settings]
+        PLUGIN[Plugin Events<br/>Lifecycle, Commands, Diagnostics]
     end
 
-    %% Event Creation
-    subgraph "Event Creation"
-        CREATE[Event Factory]
-        EVENT[Event Object<br/>- type: EventType<br/>- source: Any<br/>- timestamp: Date<br/>- data: Dictionary]
+    %% Event Creation & Injection
+    subgraph "Event System Injection"
+        INJECT[EditorConfiguration<br/>Dependency Injection]
+        CREATE[Event Factory<br/>Type-safe Creation]
+        EVENT[EditorEvent Enum<br/>Type-safe Event Creation]
+        PLUGIN_EVENT[PluginEvent Protocol<br/>- eventId: UUID<br/>- eventTimestamp: Date]
     end
 
-    %% Event System Core
+    %% Enhanced Event System Core
     subgraph "UnifiedEventSystem"
-        EMIT[emit Event]
-        FILTER[Event Filters<br/>- Type Filter<br/>- Source Filter<br/>- Data Filter]
-        QUEUE[Event Queue<br/>Priority-based]
-        DISPATCH[Event Dispatcher]
+        PUBLISH["publish(_:)"]
+        BATCH_PUB["publishBatch(_:)"]
+        TYPED[Typed Publishers<br/>@Published Properties]
+        FILTER[Smart Event Filters<br/>- PlatformEventFilter<br/>- PerformanceEventFilter<br/>- Custom Filters]
+        THROTTLE["Throttling System<br/>- configureThrottling()<br/>- 60 events/sec default<br/>- Per-event-type limits"]
+        HISTORY[Event History<br/>- CircularBuffer<br/>- 100 events capacity<br/>- Typed queries]
     end
 
-    %% Event Registration
-    subgraph "Handler Registration"
-        REG[Handler Registry<br/>Dictionary&lt;EventType, Array of Handlers&gt;]
-        PRIORITY[Priority Management<br/>High, Normal, Low]
+    %% Metrics & Performance
+    subgraph "Performance Monitoring"
+        METRICS[EventMetrics<br/>- publishedCount<br/>- filteredCount<br/>- eventsPerSecond]
+        PERF_SYS[UnifiedPerformanceSystem<br/>Integration]
+        INSIGHTS[Performance Insights<br/>Automatic Generation]
     end
 
-    %% Event Handlers
-    subgraph "Event Handlers"
-        SYNC[Synchronous Handlers<br/>- UI Updates<br/>- Validation]
-        ASYNC[Asynchronous Handlers<br/>- Highlighting<br/>- Completion<br/>- File I/O]
-        BATCH[Batch Handlers<br/>- Multiple Changes<br/>- Bulk Operations]
+    %% Advanced Handler Registration
+    subgraph "Handler Management"
+        HANDLER_REG["EventHandler Protocol<br/>- canHandle(_:)<br/>- handle(_:)"]
+        TOKEN[EventHandlerToken<br/>Safe Unregistration]
+        COMBINE["Combine Integration<br/>- subscribe(to:handler:)<br/>- AnyPublisher&lt;EditorEvent&gt;"]
+        TYPE_SAFE[Type-safe Subscriptions<br/>EditorEventType Protocol]
     end
 
-    %% Event Processing
-    subgraph "Processing Pipeline"
-        PRE[Pre-processing<br/>- Validation<br/>- Transformation]
-        EXEC[Handler Execution<br/>- Error Handling<br/>- Timeout Management]
-        POST[Post-processing<br/>- Cleanup<br/>- Logging]
+    %% Smart Processing Pipeline
+    subgraph "Intelligent Processing"
+        DEBOUNCE[Smart Debouncing<br/>- TypingPatternAnalyzer<br/>- Dynamic delays<br/>- Priority queuing]
+        COMPLETION[CompletionDebouncer<br/>- Smart throttling<br/>- Priority-based execution<br/>- Queue management]
+        ASYNC_MGR[AsyncOperationManager<br/>- Throttling extensions<br/>- Concurrency control<br/>- Operation scheduling]
     end
 
-    %% Event Types
-    subgraph "Event Types"
-        direction LR
-        TYPES[TextChanged<br/>SelectionChanged<br/>LanguageChanged<br/>ConfigurationChanged<br/>MemoryWarning<br/>CompletionRequested<br/>HighlightingCompleted]
+    %% Event Types (Expanded)
+    subgraph "Event Type Hierarchy"
+        CORE_EVENTS[Core Events<br/>textDidChange<br/>textSelectionDidChange<br/>completionRequested<br/>performanceWarning]
+        PLUGIN_EVENTS[Plugin Events<br/>PluginLifecycleEvent<br/>PluginDiscoveryEvent<br/>PluginCommandEvent<br/>PluginDiagnosticEvent]
+        TYPED_EXTRACT[Type Extraction<br/>TextDidChangeEvent<br/>TextSelectionDidChangeEvent<br/>Custom Event Types]
     end
 
-    %% Flow
+    %% Cross-Platform Coordination
+    subgraph "CrossPlatformCoordinator"
+        INPUT_COORD[InputCoordinator<br/>Platform Input Events]
+        TOOLBAR_COORD[ToolbarCoordinator<br/>Toolbar Events]
+        CONTEXT_COORD[ContextMenuCoordinator<br/>Menu Events]
+        PLATFORM_EVENTS[Platform-specific<br/>Event Handling]
+    end
+
+    %% Enhanced Flow
     UI --> CREATE
     TEXT --> CREATE
     SYS --> CREATE
     SERV --> CREATE
     CONF --> CREATE
+    PLUGIN --> PLUGIN_EVENT
     
+    INJECT --> CREATE
     CREATE --> EVENT
-    EVENT --> EMIT
+    PLUGIN_EVENT -.->|Bridge via| EVENT
     
-    EMIT --> FILTER
-    FILTER -->|Pass| QUEUE
-    FILTER -->|Block| END1[Discarded]
+    EVENT --> PUBLISH
+    EVENT --> BATCH_PUB
     
-    QUEUE --> DISPATCH
-    DISPATCH --> REG
+    PUBLISH --> FILTER
+    BATCH_PUB --> FILTER
+    FILTER -->|Pass| THROTTLE
+    FILTER -->|Block| METRICS
     
-    REG --> PRIORITY
-    PRIORITY --> PRE
+    THROTTLE --> HISTORY
+    THROTTLE --> TYPED
+    THROTTLE --> METRICS
     
-    PRE --> EXEC
-    EXEC --> SYNC
-    EXEC --> ASYNC
-    EXEC --> BATCH
+    HISTORY --> HANDLER_REG
+    TYPED --> COMBINE
+    COMBINE --> TYPE_SAFE
     
-    SYNC --> POST
-    ASYNC --> POST
-    BATCH --> POST
+    HANDLER_REG --> TOKEN
+    HANDLER_REG --> DEBOUNCE
+    DEBOUNCE --> COMPLETION
+    COMPLETION --> ASYNC_MGR
     
-    POST --> COMPLETE[Complete]
+    ASYNC_MGR --> CORE_EVENTS
+    ASYNC_MGR --> PLUGIN_EVENTS
+    CORE_EVENTS --> TYPED_EXTRACT
     
-    %% Feedback Loop
-    ASYNC -.->|New Events| CREATE
-    BATCH -.->|New Events| CREATE
+    %% Performance Integration
+    METRICS --> PERF_SYS
+    PERF_SYS --> INSIGHTS
+    INSIGHTS -.->|Optimization| THROTTLE
+    
+    %% Cross-platform Integration
+    INPUT_COORD -.->|Events| EVENT
+    TOOLBAR_COORD -.->|Events| EVENT
+    CONTEXT_COORD -.->|Events| EVENT
+    PLATFORM_EVENTS -.->|Events| EVENT
+    
+    %% Feedback Loops
+    ASYNC_MGR -.->|New Events| CREATE
+    PLUGIN_EVENTS -.->|System Events| CREATE
+    INSIGHTS -.->|Config Changes| CONF
 
-    %% Styling - Dark mode friendly colors
+    %% Enhanced Styling
     classDef source fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef system fill:#30D15820,stroke:#30D158,stroke-width:2px,color:#1D1D1F
     classDef handler fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef types fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF9F0A20,stroke:#FF9F0A,stroke-width:2px,color:#1D1D1F
+    classDef coordination fill:#FF375F20,stroke:#FF375F,stroke-width:2px,color:#1D1D1F
     
-    class UI source
-    class TEXT source
-    class SYS source
-    class SERV source
-    class CONF source
-    class EMIT system
-    class FILTER system
-    class QUEUE system
-    class DISPATCH system
-    class REG system
-    class PRIORITY system
-    class SYNC handler
-    class ASYNC handler
-    class BATCH handler
-    class PRE process
-    class EXEC process
-    class POST process
-    class TYPES types
+    class UI,TEXT,SYS,SERV,CONF,PLUGIN source
+    class INJECT,CREATE,EVENT,PLUGIN_EVENT system
+    class PUBLISH,BATCH_PUB,TYPED,FILTER,THROTTLE,HISTORY system
+    class HANDLER_REG,TOKEN,COMBINE,TYPE_SAFE handler
+    class DEBOUNCE,COMPLETION,ASYNC_MGR process
+    class METRICS,PERF_SYS,INSIGHTS performance
+    class INPUT_COORD,TOOLBAR_COORD,CONTEXT_COORD,PLATFORM_EVENTS coordination
 ```
 
 ## Event System Code Examples
 
-### Event Definition
+### Modern Event Definition
 ```swift
-struct Event {
-    let type: EventType
-    let source: Any
-    let timestamp: Date
-    let data: [String: Any]
+// Type-safe EditorEvent enum
+public enum EditorEvent: Sendable {
+    case textDidChange(String)
+    case textWillChange(range: NSRange, replacement: String)
+    case textSelectionDidChange(NSRange)
+    case completionRequested(context: CompletionContext)
+    case completionItemSelected(any CompletionItemView)
+    case performanceWarning(message: String)
+    case error(Error)
 }
 
-enum EventType {
-    case textChanged
-    case selectionChanged
-    case languageChanged
-    case configurationChanged
-    case memoryWarning
-    case completionRequested
-    case highlightingCompleted
+// Plugin events with separate hierarchy
+public protocol PluginEvent: Sendable {
+    var eventId: UUID { get }
+    var eventTimestamp: Date { get }
 }
-```
 
-### Handler Registration
-```swift
-eventSystem.register(.textChanged, priority: .high) { event in
-    // Handle text change
-    guard let range = event.data["range"] as? NSRange else { return }
-    // Process change...
-}
-```
-
-### Event Emission
-```swift
-eventSystem.emit(Event(
-    type: .textChanged,
-    source: self,
-    timestamp: Date(),
-    data: ["range": range, "text": newText]
-))
-```
-
-### Event Filtering
-```swift
-eventSystem.addFilter { event in
-    // Only process events from specific sources
-    return event.source is CodeEditorView
+public struct PluginLifecycleEvent: PluginEvent {
+    public enum EventType: Sendable {
+        case activated(pluginId: String)
+        case deactivated(pluginId: String)
+        case failed(pluginId: String, error: Error)
+    }
+    
+    public let type: EventType
+    public let eventId = UUID()
+    public let eventTimestamp = Date()
 }
 ```
 
-## Key Features
+### Dependency Injection Setup
+```swift
+// Modern dependency injection approach
+let eventSystem = UnifiedEventSystem()
+var config = EditorConfiguration()
+config.eventSystem = eventSystem
 
-1. **Priority-based Processing**: High-priority events processed first
-2. **Asynchronous Support**: Long-running handlers don't block UI
-3. **Event Filtering**: Reduce unnecessary processing
-4. **Batch Processing**: Efficient handling of multiple related events
-5. **Error Isolation**: Handler errors don't crash the system
-6. **Event Chaining**: Handlers can emit new events
-7. **Performance Monitoring**: Track handler execution times
+// SwiftUI integration
+CodeEditor(text: $code)
+    .eventSystem(eventSystem)
+    .environment(\.codeEditorConfiguration, config)
+```
+
+### Type-Safe Event Handling
+```swift
+// Type-safe event subscription
+let cancellable = eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
+    print("Text changed: \(event.text)")
+}
+
+// Protocol-based handler registration
+struct MyEventHandler: EventHandler {
+    func canHandle(_ event: EditorEvent) -> Bool {
+        switch event {
+        case .textDidChange, .textSelectionDidChange:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func handle(_ event: EditorEvent) {
+        switch event {
+        case .textDidChange(let text):
+            // Handle text change
+            break
+        case .textSelectionDidChange(let range):
+            // Handle selection change
+            break
+        default:
+            break
+        }
+    }
+}
+
+let token = eventSystem.registerHandler(MyEventHandler())
+```
+
+### Enhanced Event Publishing
+```swift
+// Modern event publishing
+eventSystem.publish(.textDidChange("new text content"))
+
+// Batch publishing for efficiency
+let events: [EditorEvent] = [
+    .textDidChange("content"),
+    .textSelectionDidChange(NSRange(location: 0, length: 7))
+]
+eventSystem.publishBatch(events)
+
+// Direct publishing from CodeEditorView
+codeEditorView.publishEvent(.completionRequested(context: context))
+```
+
+### Smart Event Filtering and Throttling
+```swift
+// Configure throttling for performance
+eventSystem.configureThrottling(maxEventsPerSecond: 30)
+
+// Custom event filters
+struct DebugEventFilter: EventFilter {
+    func shouldAllow(_ event: EditorEvent) -> Bool {
+        #if DEBUG
+        return true
+        #else
+        // Filter out debug events in release builds
+        switch event {
+        case .performanceWarning:
+            return false
+        default:
+            return true
+        }
+        #endif
+    }
+}
+
+eventSystem.addFilter(DebugEventFilter())
+```
+
+### Completion System Integration
+```swift
+// Smart debouncing with typing pattern analysis
+let debouncer = CompletionDebouncer()
+debouncer.enableSmartDebouncing = true
+debouncer.debounceDelay = 0.3
+
+debouncer.requestCompletions(
+    for: context,
+    priority: .high
+) { result in
+    switch result {
+    case .success(let completions):
+        // Handle completions
+        break
+    case .failure(let error):
+        // Handle error
+        break
+    }
+}
+```
+
+### Performance Monitoring Integration
+```swift
+// Event metrics tracking
+let metrics = eventSystem.getMetrics()
+print("Events per second: \(metrics.eventsPerSecond)")
+print("Total published: \(metrics.publishedCount)")
+print("Filtered count: \(metrics.filteredCount)")
+
+// Event history queries
+let recentTextEvents = eventSystem.getEvents(
+    ofType: TextDidChangeEvent.self,
+    limit: 5
+)
+
+// Performance optimization based on metrics
+if metrics.eventsPerSecond > 50 {
+    eventSystem.configureThrottling(maxEventsPerSecond: 30)
+}
+```
+
+## Enhanced Key Features
+
+### Core Event System
+1. **Type-Safe Events**: Strongly-typed `EditorEvent` enum with associated values
+2. **Dependency Injection**: Event system injected via `EditorConfiguration.eventSystem`
+3. **Combine Integration**: Native support for reactive programming patterns
+4. **Batch Publishing**: Efficient `publishBatch(_:)` for multiple events
+
+### Performance & Throttling
+5. **Smart Throttling**: Configurable per-event-type throttling (default: 60 events/sec)
+6. **Event History**: Circular buffer storing last 100 events with typed queries
+7. **Performance Metrics**: Real-time tracking of event throughput and filtering
+8. **Memory-Efficient**: Automatic cleanup and bounded history storage
+
+### Advanced Processing
+9. **Smart Debouncing**: Typing pattern analysis with dynamic delay adjustment
+10. **Priority Queuing**: Completion requests with `immediate`, `high`, `normal`, `low` priorities
+11. **Async Operation Management**: Integration with `AsyncOperationManager` for concurrency control
+12. **Error Recovery**: Comprehensive error handling with recoverable error patterns
+
+### Plugin System Integration
+13. **Plugin Events**: Separate `PluginEvent` hierarchy for plugin lifecycle, commands, and diagnostics
+14. **Event Bridging**: Seamless integration between core and plugin event systems
+15. **Plugin Discovery**: Automatic event publishing for plugin lifecycle management
+
+### Cross-Platform Support
+16. **Platform Event Filtering**: `PlatformEventFilter` for platform-specific event handling
+17. **Coordinator Integration**: Events from `InputCoordinator`, `ToolbarCoordinator`, `ContextMenuCoordinator`
+18. **Platform Abstraction**: Unified event handling across macOS, iOS, and Catalyst
+
+### Developer Experience
+19. **Token-Based Unregistration**: Safe handler cleanup with `EventHandlerToken`
+20. **Type Extraction**: `EditorEventType` protocol for type-safe event filtering
+21. **Debugging Support**: Event history inspection and performance insights
+22. **SwiftUI Integration**: Environment-based configuration and typed publishers
+
+### Performance Optimization
+23. **Automatic Optimization**: Integration with `UnifiedPerformanceSystem` for adaptive throttling
+24. **Smart Filtering**: Multiple filter layers including performance and platform filters
+25. **Typing Pattern Analysis**: Dynamic debouncing based on user typing behavior
+26. **Resource Management**: Automatic cleanup and memory management for long-running applications

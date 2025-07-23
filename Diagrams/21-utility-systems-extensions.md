@@ -6,657 +6,659 @@ This diagram shows the comprehensive utility systems and extensions network that
 classDiagram
     direction LR
     
-    %% Row 1 - Core Utility System
-    class UtilitySystemManager {
-        <<utility manager>>
-        +extensionRegistry ExtensionRegistry
-        +utilityProviders [String: UtilityProvider]
-        +crossPlatformHelpers CrossPlatformHelperManager
-        +performanceUtilities PerformanceUtilityManager
-        +dataUtilities DataUtilityManager
-        +initializeUtilities()
-        +registerProvider()
-        +getUtility()
-        +shutdownUtilities()
+    %% Row 1 - Core Actor-Based Utility System
+    class ActorCoordinator {
+        <<main coordinator>>
+        +textProcessor TextProcessingActor
+        +cacheCoordinator CacheCoordinatorActor
+        +fileSystem FileSystemActor
+        +performanceMetrics PerformanceMetricsActor
+        +documentState DocumentStateActor
+        +errorRecovery ErrorRecoveryCoordinator
+        +processText() async
+        +trackPerformance() async
+        +createOrUpdateDocument() async
     }
 
-    class ExtensionRegistry {
-        <<extension registry>>
-        +loadedExtensions [String: Extension]
-        +extensionManifests [ExtensionManifest]
-        +dependencyResolver ExtensionDependencyResolver
-        +lifecycleManager ExtensionLifecycleManager
-        +loadExtension()
-        +unloadExtension()
-        +resolveExtensionDependencies()
-        +validateExtension()
+    class AsyncOperationManager {
+        <<operation manager>>
+        +scheduledOperations [UUID: ScheduledOperation]
+        +debounceTasks [String: Task]
+        +throttleInfo [String: Date]
+        +activeOperations Set<UUID>
+        +maxConcurrentOperations Int
+        +debounce() async
+        +throttle() async
+        +schedule() async
+        +retry() async
+        +cleanup()
     }
 
-    class CrossPlatformHelperManager {
-        <<helper manager>>
-        +fileSystemHelpers FileSystemHelpers
-        +networkHelpers NetworkHelpers
-        +cryptographyHelpers CryptographyHelpers
-        +compressionHelpers CompressionHelpers
-        +imageUtilities ImageUtilities
-        +textUtilities TextUtilities
-        +dateTimeUtilities DateTimeUtilities
-        +concurrencyUtilities ConcurrencyUtilities
+    class CrossPlatformLogger {
+        <<logging utility>>
+        +subsystem String
+        +category String
+        +debug()
+        +info()
+        +warning()
+        +error()
+        +fault()
     }
 
-    %% Row 2 - Core Platform Helpers
-    class FileSystemHelpers {
-        <<filesystem helpers>>
-        +pathUtilities PathUtilities
-        +fileOperations FileOperations
-        +directoryWatcher DirectoryWatcher
-        +temporaryFiles TemporaryFileManager
-        +createPath()
-        +relativePath()
-        +watchDirectory()
-        +createTemporaryFile()
-        +copyFile()
-        +moveFile()
-        +deleteFile()
+    %% Row 2 - Specialized Actors
+    class TextProcessingActor {
+        <<specialized actor>>
+        +activeProcessors [UUID: TextProcessor]
+        +textBuffers [UUID: String]
+        +errorRecovery ErrorRecoveryCoordinator
+        +process() async
+        +cancelAllProcessing()
+        +processIndentation() async
+        +processBracketMatching() async
+        +normalizeWhitespace() async
     }
 
-    class NetworkHelpers {
-        <<network helpers>>
-        +httpClient HTTPClient
-        +downloadManager DownloadManager
-        +uploadManager UploadManager
-        +reachabilityMonitor NetworkReachabilityMonitor
-        +makeRequest()
-        +downloadFile()
-        +uploadFile()
-        +monitorReachability()
+    class CacheCoordinatorActor {
+        <<cache coordinator>>
+        +caches [String: AnyCacheWrapper]
+        +cacheStats [String: CacheStatistics]
+        +maxGlobalMemoryMB Double
+        +currentMemoryUsageMB Double
+        +registerCache()
+        +getValue() async
+        +setValue() async
+        +clearCache() async
+        +performGlobalEviction() async
     }
 
-    class CryptographyHelpers {
-        <<crypto helpers>>
-        +hashGenerator HashGenerator
-        +encryptionProvider EncryptionProvider
-        +keyManager CryptoKeyManager
-        +randomGenerator SecureRandomGenerator
-        +generateHash()
-        +encrypt()
-        +decrypt()
-        +generateSecureRandom()
+    class FileSystemActor {
+        <<file system actor>>
+        +fileManager FileManager
+        +fileHandles [URL: FileHandle]
+        +watchers [URL: FileWatcher]
+        +readFile() async
+        +writeFile() async
+        +openFile()
+        +watchFile()
+        +unwatchFile()
     }
 
-    class CompressionHelpers {
-        <<compression helpers>>
-        +gzipCompressor GZipCompressor
-        +zipArchiver ZipArchiver
-        +tarArchiver TarArchiver
-        +lz4Compressor LZ4Compressor
-        +compressData()
-        +decompressData()
-        +createArchive()
-        +extractArchive()
+    class PerformanceMetricsActor {
+        <<metrics actor>>
+        +metrics [String: [SendablePerformanceMetric]]
+        +aggregatedStats [String: AggregatedStats]
+        +maxMetricsPerCategory Int
+        +record()
+        +getStats()
+        +getAllStats()
+        +clearMetrics()
+        +updateAggregatedStats()
     }
 
-    %% Row 3 - Data & Text Utilities
-    class TextUtilities {
-        <<text utilities>>
-        +stringProcessors [StringProcessor]
-        +encodingDetector TextEncodingDetector
-        +lineEndingDetector LineEndingDetector
-        +textNormalizer TextNormalizer
-        +regexHelper RegexHelper
-        +detectEncoding()
-        +detectLineEndings()
-        +normalizeText()
-        +escapeRegexCharacters()
-        +validateEmail()
-        +validateURL()
+    %% Row 3 - Memory & Performance Utilities
+    class MemoryMonitor {
+        <<memory monitor>>
+        +memoryProvider PlatformMemoryProvider
+        +memoryThresholdMB Double
+        +enableAutomaticCleanup Bool
+        +cleanupHandlers [String: CleanupHandler]
+        +memoryStats MemoryStatistics
+        +monitoringTask Task?
+        +registerCleanupHandler()
+        +performCleanup() async
+        +startMonitoring()
+        +stopMonitoring()
+        +getCurrentMemoryUsage()
     }
 
-    class DataUtilities {
-        <<data utilities>>
-        +jsonProcessor JSONProcessor
-        +xmlProcessor XMLProcessor
-        +yamlProcessor YAMLProcessor
-        +csvProcessor CSVProcessor
-        +binaryDataAnalyzer BinaryDataAnalyzer
-        +parseJSON()
-        +serializeJSON()
-        +parseXML()
-        +parseYAML()
-        +parseCSV()
-        +analyzeBinaryData()
+    class LRUCache {
+        <<cache implementation>>
+        +capacity Int
+        +cache [Key: Node]
+        +head Node?
+        +tail Node?
+        +memoryMonitor MemoryMonitor
+        +get()
+        +set()
+        +removeValue()
+        +removeAll()
+        +contains()
+        +statistics CacheStatistics
     }
 
-    class ImageUtilities {
-        <<image utilities>>
-        +imageProcessor ImageProcessor
-        +formatConverter ImageFormatConverter
-        +compressionOptimizer ImageCompressionOptimizer
-        +metadataExtractor ImageMetadataExtractor
-        +resizeImage()
-        +convertFormat()
-        +optimizeImage()
-        +extractMetadata()
-        +generateThumbnail()
+    class TextMetricsCalculator {
+        <<metrics calculator>>
+        +calculateLineHeight()
+        +measureText()
+        +measureTextWidth()
+        +estimateMemoryUsage()
+        +calculateVisibleLines()
+        +calculateAverageCharacterWidth()
+        +calculateTabWidth()
+        +calculateLineNumberWidth()
+        +estimateRenderingComplexity()
     }
 
-    class DateTimeUtilities {
-        <<datetime utilities>>
-        +calendarHelper CalendarHelper
-        +timeZoneManager TimeZoneManager
-        +dateFormatter DateFormatterPool
-        +durationCalculator DurationCalculator
-        +formatDate()
-        +parseDate()
-        +addTimeInterval()
-        +calculateDuration()
-        +convertTimeZone()
-        +isWorkday()
+    class PlatformMemoryProvider {
+        <<protocol>>
+        +getCurrentMemoryUsage() Double
+        +getPhysicalMemory() UInt64
+        +getMemoryPressure() MemoryPressure
+        +isUnderMemoryPressure() Bool
     }
 
-    %% Row 4 - Performance System
-    class PerformanceUtilityManager {
-        <<performance manager>>
-        +profiler PerformanceProfiler
-        +memoryTracker MemoryUsageTracker
-        +cacheManager CacheManager
-        +lazyLoader LazyLoadingManager
-        +benchmarkRunner BenchmarkRunner
-        +startProfiling()
-        +stopProfiling()
-        +trackMemoryUsage()
-        +cacheObject()
-        +getCachedObject()
+    %% Row 4 - Extension System with +Extensions Pattern
+    class ExtensionPattern {
+        <<extension pattern>>
+        +AsyncOperationManager+DebouncingExtensions
+        +AsyncOperationManager+ThrottlingExtensions
+        +AsyncOperationManager+RetryExtensions
+        +AsyncOperationManager+BatchExtensions
+        +AsyncOperationManager+SchedulingExtensions
+        +NSRange+Extensions
+        +String+Extensions
+        +Duration+Extensions
+        +CGRect+Extensions
+        +PlatformColor+Extensions
     }
 
-    class CacheManager {
-        <<cache manager>>
-        +memoryCaches [String: MemoryCache]
-        +diskCache DiskCache
-        +cacheEvictionPolicy CacheEvictionPolicy
-        +cacheMetrics CacheMetrics
-        +createMemoryCache()
-        +store()
-        +retrieve()
-        +evictExpiredEntries()
-        +clearCache()
+    class TypeExtensions {
+        <<type extensions>>
+        +NSTextView+Extensions
+        +NSTextLayoutManager+Extensions
+        +NSTextRange+Extensions
+        +CodeEditorView+Extensions
+        +Bundle+Extensions
+        +IndexSet+Extensions
+        +EdgeInsets+Extensions
+        +View+Extensions
     }
 
-    class LazyLoadingManager {
-        <<lazy loading manager>>
-        +lazyWrappers [String: LazyWrapper]
-        +loadingQueue DispatchQueue
-        +loadingStrategies [LoadingStrategy]
-        +createLazyWrapper()
-        +loadValue()
-        +preloadValues()
-        +setLoadingStrategy()
+    class CoreExtensions {
+        <<core extensions>>
+        +CodeEditorView+CoreExtensions
+        +CodeEditorView+ConfigurationExtensions
+        +CodeEditorView+PerformanceExtensions
+        +CodeEditorView+SyntaxHighlightingExtensions
+        +CodeEditorView+CompletionExtensions
+        +CodeEditorView+AnnotationsExtensions
+        +CodeEditorView+AccessibilityExtensions
+        +CodeEditorView+LayoutExtensions
     }
 
-    %% Row 5 - Concurrency System
-    class ConcurrencyUtilities {
-        <<concurrency utilities>>
-        +taskManager TaskManager
-        +threadPoolManager ThreadPoolManager
-        +lockManager LockManager
-        +atomicOperations AtomicOperations
-        +asyncHelper AsyncHelper
-        +createTask()
-        +createTaskGroup()
-        +acquireLock()
-        +performAtomic()
-        +delay()
+    class PlatformExtensions {
+        <<platform extensions>>
+        +CrossPlatformCoordinator+AppKitExtensions
+        +CrossPlatformCoordinator+UIKitExtensions
+        +PlatformCapabilities+InputExtensions
+        +PlatformCapabilities+UIExtensions
+        +PlatformCapabilities+PerformanceExtensions
+        +PlatformAdjustments+Extensions
     }
 
-    class TaskManager {
-        <<task manager>>
-        +activeTasks [String: Task]
-        +taskQueue TaskQueue
-        +taskScheduler TaskScheduler
-        +taskMonitor TaskMonitor
-        +scheduleTask()
-        +cancelTask()
-        +pauseTask()
-        +resumeTask()
-        +getTaskStatus()
+    %% Row 5 - Async Operation Extensions
+    class AsyncOperationDebouncing {
+        <<debouncing extensions>>
+        +debounce() async
+        +makeDebounced()
+        +storeDebounceResult()
+        +storeDebounceError()
+        +cleanupDebounceTask()
     }
 
-    class ThreadPoolManager {
-        <<thread pool manager>>
-        +threadPools [String: ThreadPool]
-        +poolConfigurations [ThreadPoolConfiguration]
-        +loadBalancer ThreadPoolLoadBalancer
-        +createThreadPool()
-        +submitWork()
-        +shutdownPool()
-        +optimizePoolSizes()
+    class AsyncOperationThrottling {
+        <<throttling extensions>>
+        +throttle() async
+        +makeThrottled()
+        +shouldExecute() Bool
+        +updateLastRun()
     }
 
-    %% Row 6 - Extension System
-    class Extension {
-        <<extension>>
-        +extensionId String
-        +manifest ExtensionManifest
-        +bundle Bundle
-        +principalClass ExtensionPrincipalClass?
-        +dependencies [ExtensionDependency]
-        +state ExtensionState
-        +activate()
-        +deactivate()
-        +handleMessage()
+    class AsyncOperationRetry {
+        <<retry extensions>>
+        +retry() async
+        +retryWithBackoff() async
+        +exponentialBackoff()
+        +jitteredBackoff()
+        +isRetryableError() Bool
     }
 
-    class ExtensionManifest {
-        <<extension manifest>>
+    class AsyncOperationBatch {
+        <<batch extensions>>
+        +batch() async
+        +batchWithConcurrency() async
+        +processBatch() async
+        +mergeBatchResults()
+        +handleBatchErrors()
+    }
+
+    %% Row 6 - Document State Management
+    class DocumentStateActor {
+        <<document actor>>
+        +documents [UUID: DocumentState]
+        +documentURLs [URL: UUID]
+        +createDocument()
+        +updateContent()
+        +getDocument()
+        +markSaved()
+        +closeDocument()
+    }
+
+    class DocumentState {
+        <<document state>>
+        +id UUID
+        +url URL?
+        +content String
+        +isDirty Bool
+        +version Int
+        +language Language
+        +lastModified Date
+        +metadata [String: String]
+    }
+
+    class ErrorRecoveryCoordinator {
+        <<error recovery>>
+        +recover() async
+        +shouldRetry() Bool
+        +getRecoveryStrategy()
+        +reportError()
+        +clearErrorState()
+    }
+
+    %% Row 7 - Utility Integration Types
+    class SendablePerformanceMetric {
+        <<performance metric>>
         +name String
-        +version String
-        +description String
-        +author String
-        +supportedPlatforms [Platform]
-        +requiredCapabilities [Capability]
-        +dependencies [ExtensionDependency]
-        +entryPoints [EntryPoint]
-        +permissions [Permission]
+        +duration Duration
+        +metadata [String: String]
+        +timestamp Date
     }
 
-    %% Row 7 - Utility Providers
-    class UtilityProvider {
-        <<utility provider>>
-        +providerId String
-        +supportedUtilities [UtilityType]
-        +dependencies [String]
-        +initialize()
-        +shutdown()
-        +provideUtility()
-        +validateConfiguration()
+    class CleanupResult {
+        <<cleanup result>>
+        +memoryFreedMB Double
+        +description String?
     }
 
-    class CoreUtilityProvider {
-        <<core provider>>
-        +fileSystemHelpers FileSystemHelpers
-        +textUtilities TextUtilities
-        +dataUtilities DataUtilities
-        +dateTimeUtilities DateTimeUtilities
-        +provideUtility()
+    class MemoryStatistics {
+        <<memory stats>>
+        +currentUsageMB Double
+        +peakUsageMB Double
+        +averageUsageMB Double
+        +totalCleanupOperations Int
+        +totalMemoryFreed Double
+        +usageHistory [Double]
     }
 
-    class NetworkUtilityProvider {
-        <<network provider>>
-        +networkHelpers NetworkHelpers
-        +downloadManager DownloadManager
-        +uploadManager UploadManager
-        +provideUtility()
+    class CacheStatistics {
+        <<cache stats>>
+        +currentSize Int
+        +maxSize Int
+        +utilizationPercentage Double
+        +isFull Bool
+        +availableSpace Int
     }
 
-    class CryptoUtilityProvider {
-        <<crypto provider>>
-        +cryptographyHelpers CryptographyHelpers
-        +keyManager CryptoKeyManager
-        +secureRandomGenerator SecureRandomGenerator
-        +provideUtility()
-    }
-
-    class PerformanceUtilityProvider {
-        <<performance provider>>
-        +performanceProfiler PerformanceProfiler
-        +memoryTracker MemoryUsageTracker
-        +cacheManager CacheManager
-        +provideUtility()
-    }
-
-    %% Row 8 - Specialized Utilities
-    class StringProcessor {
-        <<string processor>>
-        +processingType StringProcessingType
-        +inputValidation InputValidator
-        +outputFormatter OutputFormatter
-        +process()
-        +validate()
-        +format()
-    }
-
-    class RegexHelper {
-        <<regex helper>>
-        +compiledPatterns [String: NSRegularExpression]
-        +patternCache PatternCache
-        +escapeUtility RegexEscapeUtility
-        +compile()
-        +match()
-        +replace()
-        +split()
-    }
-
-    class BinaryDataAnalyzer {
-        <<binary analyzer>>
-        +dataTypeDetector DataTypeDetector
-        +structureAnalyzer BinaryStructureAnalyzer
-        +checksumValidator ChecksumValidator
-        +analyzeStructure()
-        +detectDataType()
-        +validateIntegrity()
-        +extractMetadata()
-    }
-
-    %% Row 9 - Enumerations
-    class UtilityType {
+    %% Row 8 - Utility Enumerations
+    class Priority {
         <<enumeration>>
-        fileSystem
-        network
-        cryptography
-        compression
-        text
-        data
-        image
-        performance
-        concurrency
-        dateTime
-        custom
+        low
+        medium
+        high
+        critical
     }
 
-    class ExtensionState {
+    class CleanupPriority {
         <<enumeration>>
-        unloaded
-        loading
-        loaded
-        active
-        inactive
-        error
-        unloading
+        low
+        normal
+        high
+        critical
     }
 
-    class CompressionAlgorithm {
+    class MemoryPressure {
         <<enumeration>>
-        gzip
-        zip
-        tar
-        lz4
-        bzip2
-        custom
+        normal
+        warning
+        urgent
+        critical
     }
 
-    class ImageFormat {
+    class RenderingComplexity {
         <<enumeration>>
-        png
-        jpeg
-        gif
-        tiff
-        bmp
-        heic
-        webp
+        low
+        medium
+        high
     }
 
     %% Key Relationships
-    UtilitySystemManager --> ExtensionRegistry : manages
-    UtilitySystemManager --> CrossPlatformHelperManager : coordinates
-    UtilitySystemManager --> PerformanceUtilityManager : uses
-    UtilitySystemManager --> UtilityProvider : manages
+    ActorCoordinator --> TextProcessingActor : coordinates
+    ActorCoordinator --> CacheCoordinatorActor : coordinates
+    ActorCoordinator --> FileSystemActor : coordinates
+    ActorCoordinator --> PerformanceMetricsActor : coordinates
+    ActorCoordinator --> DocumentStateActor : coordinates
+    ActorCoordinator --> ErrorRecoveryCoordinator : coordinates
     
-    ExtensionRegistry --> Extension : loads
-    Extension --> ExtensionManifest : configured by
+    AsyncOperationManager --> AsyncOperationDebouncing : extends
+    AsyncOperationManager --> AsyncOperationThrottling : extends
+    AsyncOperationManager --> AsyncOperationRetry : extends
+    AsyncOperationManager --> AsyncOperationBatch : extends
     
-    CrossPlatformHelperManager --> FileSystemHelpers : contains
-    CrossPlatformHelperManager --> NetworkHelpers : contains
-    CrossPlatformHelperManager --> CryptographyHelpers : contains
-    CrossPlatformHelperManager --> CompressionHelpers : contains
-    CrossPlatformHelperManager --> ImageUtilities : contains
-    CrossPlatformHelperManager --> TextUtilities : contains
-    CrossPlatformHelperManager --> DataUtilities : contains
-    CrossPlatformHelperManager --> DateTimeUtilities : contains
-    CrossPlatformHelperManager --> ConcurrencyUtilities : contains
+    MemoryMonitor --> PlatformMemoryProvider : uses
+    MemoryMonitor --> CleanupResult : produces
+    MemoryMonitor --> MemoryStatistics : maintains
     
-    PerformanceUtilityManager --> CacheManager : manages
-    PerformanceUtilityManager --> LazyLoadingManager : manages
+    LRUCache --> MemoryMonitor : integrates
+    LRUCache --> CacheStatistics : provides
     
-    ConcurrencyUtilities --> TaskManager : uses
-    ConcurrencyUtilities --> ThreadPoolManager : uses
+    CacheCoordinatorActor --> LRUCache : manages
+    CacheCoordinatorActor --> CacheStatistics : tracks
     
-    TextUtilities --> StringProcessor : uses
-    TextUtilities --> RegexHelper : uses
-    DataUtilities --> BinaryDataAnalyzer : uses
+    PerformanceMetricsActor --> SendablePerformanceMetric : processes
     
-    UtilityProvider <|-- CoreUtilityProvider : implements
-    UtilityProvider <|-- NetworkUtilityProvider : implements
-    UtilityProvider <|-- CryptoUtilityProvider : implements
-    UtilityProvider <|-- PerformanceUtilityProvider : implements
+    DocumentStateActor --> DocumentState : manages
     
-    CoreUtilityProvider --> FileSystemHelpers : provides
-    CoreUtilityProvider --> TextUtilities : provides
-    CoreUtilityProvider --> DataUtilities : provides
-    CoreUtilityProvider --> DateTimeUtilities : provides
+    TextMetricsCalculator --> RenderingComplexity : calculates
     
-    NetworkUtilityProvider --> NetworkHelpers : provides
-    CryptoUtilityProvider --> CryptographyHelpers : provides
-    PerformanceUtilityProvider --> PerformanceUtilityManager : provides
+    ExtensionPattern --> TypeExtensions : organizes
+    ExtensionPattern --> CoreExtensions : organizes
+    ExtensionPattern --> PlatformExtensions : organizes
+    
+    TypeExtensions --> CoreExtensions : enhances
+    CoreExtensions --> PlatformExtensions : supports
 
     %% Styling - Dark mode friendly colors
-    classDef manager fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef helper fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef utility fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef performance fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef concurrency fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef actor fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef utility fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef extension fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef provider fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef specialized fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef platform fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef types fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#6C6C7020,stroke:#6C6C70,stroke-width:2px,color:#1D1D1F
 
-    class UtilitySystemManager manager
-    class CrossPlatformHelperManager manager
-    class FileSystemHelpers helper
-    class NetworkHelpers helper
-    class CryptographyHelpers helper
-    class CompressionHelpers helper
-    class ImageUtilities helper
-    class TextUtilities helper
-    class DataUtilities helper
-    class DateTimeUtilities helper
-    class StringProcessor specialized
-    class RegexHelper specialized
-    class BinaryDataAnalyzer specialized
-    class PerformanceUtilityManager performance
-    class CacheManager performance
-    class LazyLoadingManager performance
-    class ConcurrencyUtilities concurrency
-    class TaskManager concurrency
-    class ThreadPoolManager concurrency
-    class ExtensionRegistry extension
-    class Extension extension
-    class ExtensionManifest extension
-    class UtilityProvider provider
-    class CoreUtilityProvider provider
-    class NetworkUtilityProvider provider
-    class CryptoUtilityProvider provider
-    class PerformanceUtilityProvider provider
-    class UtilityType enum
-    class ExtensionState enum
-    class CompressionAlgorithm enum
-    class ImageFormat enum
+    class ActorCoordinator coordinator
+    class AsyncOperationManager coordinator
+    class CrossPlatformLogger utility
+    class TextProcessingActor actor
+    class CacheCoordinatorActor actor
+    class FileSystemActor actor
+    class PerformanceMetricsActor actor
+    class DocumentStateActor actor
+    class MemoryMonitor performance
+    class LRUCache performance
+    class TextMetricsCalculator performance
+    class PlatformMemoryProvider platform
+    class ExtensionPattern extension
+    class TypeExtensions extension
+    class CoreExtensions extension
+    class PlatformExtensions extension
+    class AsyncOperationDebouncing extension
+    class AsyncOperationThrottling extension
+    class AsyncOperationRetry extension
+    class AsyncOperationBatch extension
+    class ErrorRecoveryCoordinator utility
+    class DocumentState types
+    class SendablePerformanceMetric types
+    class CleanupResult types
+    class MemoryStatistics types
+    class CacheStatistics types
+    class Priority enum
+    class CleanupPriority enum
+    class MemoryPressure enum
+    class RenderingComplexity enum
 ```
 
-## Utility System Integration Flow
+## Actor-Based Utility System Integration Flow
 
 ```mermaid
 flowchart TB
-    INIT[System Initialization] --> LOAD[Load Extension Registry]
-    LOAD --> SCAN[Scan for Extensions]
-    SCAN --> VALIDATE[Validate Extensions]
+    INIT[System Initialization] --> CREATE_COORD[Create ActorCoordinator]
+    CREATE_COORD --> INIT_ACTORS[Initialize Specialized Actors]
+    INIT_ACTORS --> SETUP_MEM[Setup Memory Management]
     
-    VALIDATE --> RESOLVE[Resolve Dependencies]
-    RESOLVE --> REGISTER[Register Utility Providers]
-    REGISTER --> ACTIVATE[Activate Extensions]
+    SETUP_MEM --> READY[System Ready]
     
-    ACTIVATE --> READY[System Ready]
-    
-    subgraph "Core Utilities"
-        FS[File System Helpers]
-        NET[Network Helpers]
-        CRYPTO[Cryptography Helpers]
-        COMP[Compression Helpers]
-        TEXT[Text Utilities]
-        DATA[Data Utilities]
-        IMG[Image Utilities]
-        DATE[DateTime Utilities]
+    subgraph "Core Actors"
+        direction TB
+        TEXT_ACTOR[TextProcessingActor]
+        CACHE_ACTOR[CacheCoordinatorActor]
+        FILE_ACTOR[FileSystemActor]
+        PERF_ACTOR[PerformanceMetricsActor]
+        DOC_ACTOR[DocumentStateActor]
     end
     
-    subgraph "Performance Utilities"
-        CACHE[Cache Manager]
-        LAZY[Lazy Loading Manager]
-        PROF[Performance Profiler]
-        MEM[Memory Tracker]
+    subgraph "Utility Operations"
+        direction TB
+        ASYNC_OP[AsyncOperationManager]
+        MEM_MON[MemoryMonitor]
+        CACHE[LRUCache]
+        METRICS[TextMetricsCalculator]
+        LOGGER[CrossPlatformLogger]
     end
     
-    subgraph "Concurrency Utilities"
-        TASK[Task Manager]
-        THREAD[Thread Pool Manager]
-        LOCK[Lock Manager]
-        ATOMIC[Atomic Operations]
+    subgraph "Extension System"
+        direction TB
+        EXT_PATTERN[+Extensions Pattern]
+        TYPE_EXT[Type Extensions]
+        CORE_EXT[Core Extensions]
+        PLATFORM_EXT[Platform Extensions]
     end
     
-    READY --> FS
-    READY --> NET
-    READY --> CRYPTO
-    READY --> COMP
-    READY --> TEXT
-    READY --> DATA
-    READY --> IMG
-    READY --> DATE
+    READY --> TEXT_ACTOR
+    READY --> CACHE_ACTOR
+    READY --> FILE_ACTOR
+    READY --> PERF_ACTOR
+    READY --> DOC_ACTOR
+    
+    READY --> ASYNC_OP
+    READY --> MEM_MON
     READY --> CACHE
-    READY --> LAZY
-    READY --> PROF
-    READY --> MEM
-    READY --> TASK
-    READY --> THREAD
-    READY --> LOCK
-    READY --> ATOMIC
+    READY --> METRICS
+    READY --> LOGGER
     
-    FS --> PROVIDE[Provide Utilities to Framework]
-    NET --> PROVIDE
-    CRYPTO --> PROVIDE
-    COMP --> PROVIDE
-    TEXT --> PROVIDE
-    DATA --> PROVIDE
-    IMG --> PROVIDE
-    DATE --> PROVIDE
+    READY --> EXT_PATTERN
+    
+    TEXT_ACTOR --> PROVIDE[Provide Services to Framework]
+    CACHE_ACTOR --> PROVIDE
+    FILE_ACTOR --> PROVIDE
+    PERF_ACTOR --> PROVIDE
+    DOC_ACTOR --> PROVIDE
+    ASYNC_OP --> PROVIDE
+    MEM_MON --> PROVIDE
     CACHE --> PROVIDE
-    LAZY --> PROVIDE
-    PROF --> PROVIDE
-    MEM --> PROVIDE
-    TASK --> PROVIDE
-    THREAD --> PROVIDE
-    LOCK --> PROVIDE
-    ATOMIC --> PROVIDE
+    METRICS --> PROVIDE
+    LOGGER --> PROVIDE
+    EXT_PATTERN --> PROVIDE
 
     %% Styling - Dark mode friendly colors
     classDef init fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef core fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef performance fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef concurrency fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef result fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef actor fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef utility fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef extension fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef result fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class INIT init
     class READY init
-    class LOAD process
-    class SCAN process
-    class VALIDATE process
-    class RESOLVE process
-    class REGISTER process
-    class ACTIVATE process
-    class FS core
-    class NET core
-    class CRYPTO core
-    class COMP core
-    class TEXT core
-    class DATA core
-    class IMG core
-    class DATE core
-    class CACHE performance
-    class LAZY performance
-    class PROF performance
-    class MEM performance
-    class TASK concurrency
-    class THREAD concurrency
-    class LOCK concurrency
-    class ATOMIC concurrency
+    class CREATE_COORD process
+    class INIT_ACTORS process
+    class SETUP_MEM process
+    class TEXT_ACTOR actor
+    class CACHE_ACTOR actor
+    class FILE_ACTOR actor
+    class PERF_ACTOR actor
+    class DOC_ACTOR actor
+    class ASYNC_OP utility
+    class MEM_MON utility
+    class CACHE utility
+    class METRICS utility
+    class LOGGER utility
+    class EXT_PATTERN extension
+    class TYPE_EXT extension
+    class CORE_EXT extension
+    class PLATFORM_EXT extension
     class PROVIDE result
 ```
 
 ## Key Utility System Features
 
-### 1. Comprehensive Platform Utilities
-- **File System Helpers**: Cross-platform file operations, path utilities, directory watching
-- **Network Helpers**: HTTP client, download/upload management, reachability monitoring
-- **Cryptography Helpers**: Secure hashing, encryption/decryption, key management
-- **Compression Helpers**: Multiple compression algorithms with archive support
+### 1. Actor-Based Architecture (Swift 6 Concurrency)
+- **ActorCoordinator**: Central coordination of all specialized actors with dependency injection
+- **TextProcessingActor**: Isolated text manipulation operations with cancellation support
+- **CacheCoordinatorActor**: Thread-safe cache management with global eviction policies
+- **FileSystemActor**: Async file operations with integrated file watching capabilities
+- **PerformanceMetricsActor**: Real-time performance tracking with aggregated statistics
 
-### 2. Advanced Data Processing
-- **Text Utilities**: Encoding detection, normalization, regex helpers, validation
-- **Data Utilities**: JSON/XML/YAML/CSV processing, binary data analysis
-- **Image Utilities**: Format conversion, compression optimization, metadata extraction
-- **Binary Analysis**: Data type detection, structure analysis, integrity validation
+### 2. Advanced Async Operation Management
+- **Debouncing Extensions**: Sophisticated debouncing with delayed execution and result caching
+- **Throttling Extensions**: Rate-limiting operations with configurable intervals
+- **Retry Extensions**: Exponential backoff retry logic with jittered timing
+- **Batch Extensions**: Concurrent batch processing with error handling
+- **Priority Scheduling**: Four-tier priority system (low, medium, high, critical)
 
-### 3. Performance Optimization
-- **Cache Management**: Multi-level caching with eviction policies
-- **Lazy Loading**: Smart loading strategies with preload capabilities
-- **Performance Profiling**: Built-in profiling and benchmarking tools
-- **Memory Tracking**: Comprehensive memory usage monitoring
+### 3. Memory-Optimized Performance System
+- **MemoryMonitor**: Dependency-injectable memory monitoring with automatic cleanup handlers
+- **LRUCache**: Thread-safe LRU cache with memory monitor integration
+- **TextMetricsCalculator**: Precise text measurement with rendering complexity estimation
+- **PlatformMemoryProvider**: Cross-platform memory usage detection with pressure monitoring
+- **Smart Cleanup**: Priority-based cleanup with memory pressure detection
 
-### 4. Concurrency Support
-- **Task Management**: Comprehensive task scheduling and monitoring
-- **Thread Pool Management**: Dynamic thread pool optimization
-- **Lock Management**: Advanced locking primitives and strategies
-- **Atomic Operations**: Thread-safe atomic operations
+### 4. Modern Extension Pattern (+Extensions)
+- **Type Extensions**: Comprehensive extensions for NSRange, String, Duration, CGRect, and platform types
+- **Core Extensions**: CodeEditorView extensions for configuration, performance, and features
+- **Platform Extensions**: Cross-platform coordinator extensions for AppKit/UIKit compatibility
+- **Utility Extensions**: AsyncOperationManager extensions for debouncing, throttling, retry, and batching
 
-### 5. Extension System
-- **Dynamic Loading**: Runtime extension loading and unloading
-- **Dependency Resolution**: Automatic dependency management
-- **Lifecycle Management**: Complete extension lifecycle control
-- **Validation**: Extension validation and security checks
+### 5. Cross-Platform Logging System
+- **CrossPlatformLogger**: Unified logging interface using os.log on Apple platforms
+- **Structured Logging**: Subsystem and category-based organization
+- **Fallback Support**: Print-based logging for non-Apple platforms
+- **Debug Integration**: Seamless integration with Xcode debugging tools
 
-### 6. Date and Time Support
-- **Calendar Helpers**: Advanced calendar operations and calculations
-- **Time Zone Management**: Cross-timezone date/time handling
-- **Date Formatting**: Flexible date formatting with locale support
-- **Duration Calculations**: Precise duration and interval calculations
+### 6. Document State Management
+- **DocumentStateActor**: Centralized document lifecycle management
+- **Version Tracking**: Automatic versioning with dirty state detection
+- **URL Management**: File URL to document ID mapping
+- **Metadata Support**: Extensible metadata storage per document
 
 ## Usage Examples
 
-### File System Operations
+### Actor Coordination
 ```swift
-let fileHelpers = UtilitySystemManager.shared.getUtility(FileSystemHelpers.self)
-let tempFile = fileHelpers?.createTemporaryFile(prefix: "editor_cache")
-let success = fileHelpers?.copyFile(from: sourcePath, to: destPath)
+// Create ActorCoordinator via dependency injection
+var config = EditorConfiguration()
+config.actorCoordinator = ActorCoordinator.create()
+
+// Use through CodeEditorView
+let processedText = try await editorView.processText(
+    with: .whitespaceNormalization,
+    priority: .high
+)
+
+// Direct actor usage
+let coordinator = ActorCoordinator()
+await coordinator.trackPerformance(
+    name: "syntax_highlighting",
+    duration: .milliseconds(150),
+    metadata: ["lines": "1000", "language": "swift"]
+)
 ```
 
-### Network Operations
+### Async Operation Management
 ```swift
-let networkHelpers = UtilitySystemManager.shared.getUtility(NetworkHelpers.self)
-let response = await networkHelpers?.makeRequest(httpRequest)
-let downloadTask = networkHelpers?.downloadFile(url: url, destination: path)
-```
+let operationManager = AsyncOperationManager(maxConcurrentOperations: 4)
 
-### Performance Monitoring
-```swift
-let perfManager = UtilitySystemManager.shared.getUtility(PerformanceUtilityManager.self)
-perfManager?.startProfiling(identifier: "text_processing")
-// ... perform operations
-let result = perfManager?.stopProfiling(identifier: "text_processing")
-```
-
-### Concurrency
-```swift
-let concurrency = UtilitySystemManager.shared.getUtility(ConcurrencyUtilities.self)
-let task = concurrency?.createTask {
-    // Background work
-    return processLargeFile()
+// Debounce search operations
+try await operationManager.debounce(key: "search", delay: 0.3) {
+    try await performSearch(query: searchText)
 }
-let result = await task?.value
+
+// Throttle API calls
+let data = try await operationManager.throttle(key: "api-call", interval: 1.0) {
+    try await apiClient.fetchData()
+}
+
+// Retry with exponential backoff
+let result = try await operationManager.retry(
+    operation: { try await unreliableNetworkCall() },
+    maxAttempts: 3,
+    delay: 1.0,
+    backoffMultiplier: 2.0
+)
+```
+
+### Memory Management
+```swift
+// Create and configure memory monitor
+let monitor = MemoryMonitor()
+monitor.memoryThresholdMB = 150.0
+monitor.enableAutomaticCleanup = true
+
+// Register cleanup handler
+monitor.registerCleanupHandler(
+    identifier: "syntax-cache",
+    priority: .high
+) { @MainActor in
+    let freed = syntaxCache.clear()
+    return CleanupResult(
+        memoryFreedMB: Double(freed) / 1_048_576,
+        description: "Cleared syntax cache"
+    )
+}
+
+// Start monitoring
+monitor.startMonitoring()
+
+// Inject via configuration
+config.performance.memoryMonitor = monitor
+```
+
+### Text Metrics & Performance
+```swift
+// Calculate text metrics
+let lineHeight = TextMetricsCalculator.calculateLineHeight(for: font)
+let textSize = TextMetricsCalculator.measureText(
+    "Sample text",
+    attributes: [.font: font],
+    constrainingSize: availableSize
+)
+
+// Estimate rendering complexity
+let complexity = TextMetricsCalculator.estimateRenderingComplexity(
+    text: document.content,
+    visibleRange: visibleRange,
+    attributeRuns: syntaxTokens.count
+)
+
+// Calculate optimal batch sizes
+let batchSize = TextMetricsCalculator.calculateOptimalBatchSize(
+    totalCharacters: document.content.count
+)
+```
+
+### Cross-Platform Logging
+```swift
+let logger = CrossPlatformLogger.logger(
+    subsystem: "com.myapp.editor",
+    category: "syntax-highlighting"
+)
+
+logger.debug("Starting syntax highlighting for \(language)")
+logger.info("Highlighting completed in \(duration)ms")
+logger.warning("Performance threshold exceeded: \(actualTime)ms > \(threshold)ms")
+logger.error("Failed to highlight document: \(error.localizedDescription)")
 ```
 
 ## Benefits
 
-1. **Unified Access**: Single point of access for all utility functions
-2. **Cross-Platform**: Consistent behavior across macOS, iOS, and Catalyst
-3. **Extensible**: Plugin architecture for custom utilities
-4. **Performance**: Optimized implementations with caching and lazy loading
-5. **Thread-Safe**: Comprehensive concurrency support throughout
-6. **Maintainable**: Modular design with clear separation of concerns
+1. **Swift 6 Concurrency**: Modern actor-based architecture with built-in thread safety and data isolation
+2. **Dependency Injection**: No singletons - all utilities support dependency injection for better testability
+3. **Memory Optimized**: Sophisticated memory monitoring with automatic cleanup and pressure detection
+4. **Extension-First Design**: Comprehensive +Extensions pattern for organized, discoverable functionality
+5. **Cross-Platform Logger**: Unified logging that uses os.log on Apple platforms with fallback support
+6. **Performance Focused**: Text metrics calculation, rendering complexity estimation, and async operations
+7. **Actor Coordination**: Centralized coordination of specialized actors with error recovery
+8. **Modern Async Patterns**: Debouncing, throttling, retry logic, and batch processing with Swift concurrency
+9. **Type Safety**: Comprehensive use of Sendable types and actor isolation for data safety
+10. **Production Ready**: Real-world tested with 60fps performance requirements and 500KB+ file support

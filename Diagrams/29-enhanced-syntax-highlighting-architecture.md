@@ -2,6 +2,13 @@
 
 This diagram shows the optimized syntax highlighting system with advanced performance features including viewport optimization, chunking, circuit breaker pattern, and comprehensive performance tracking.
 
+**⚠️ ARCHITECTURE STATUS:** This diagram represents the planned architecture. For the **current implementation**, see `29-enhanced-syntax-highlighting-architecture-updated.md` which reflects the actual codebase with:
+- Actor-based concurrency (Swift 6)
+- Streaming highlighter for large files (500KB+)  
+- Integrated circuit breaker patterns
+- Smart token cache with viewport filtering
+- Modern async/await patterns
+
 ```mermaid
 classDiagram
     direction LR
@@ -500,3 +507,29 @@ let report = tracker.getPerformanceReport()
 - **MemoryMonitor**: Memory pressure detection
 - **PerformanceBudget**: Budget enforcement
 - **UnifiedPerformanceSystem**: Central performance monitoring
+
+---
+
+## 📋 Current Implementation Status
+
+**This diagram represents the planned/theoretical architecture.** The actual implementation in the codebase has evolved beyond this design with:
+
+### ✅ **Fully Implemented:**
+- `OptimizedSyntaxHighlightingCoordinator` with integrated circuit breaker
+- `SyntaxHighlightingPerformanceTracker` with comprehensive metrics
+- `SmartTokenCache` (actor-based) with viewport optimization
+- `AsyncSyntaxHighlighter` with debouncing and cancellation
+- `StreamingHighlighter` for large files (500KB+)
+- Actor-based concurrency patterns (Swift 6)
+- Memory pressure integration
+
+### 🔄 **Architecture Differences:**
+- Circuit breaker is integrated (not separate class)
+- Chunking handled inline (no separate ChunkingManager)
+- Viewport optimization embedded in coordinator
+- Modern async/await patterns throughout
+- TextKit2 integration with cross-platform support
+
+### 📖 **See Updated Architecture:**
+For the current implementation details, refer to:
+**`29-enhanced-syntax-highlighting-architecture-updated.md`**

@@ -1,6 +1,6 @@
 # Language Support & Syntax Highlighting Pipeline
 
-This diagram shows the complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths, with enhanced performance optimization capabilities.
+This diagram shows the complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths, with sophisticated performance optimization capabilities including multiple highlighting strategies, intelligent caching, error recovery, and comprehensive monitoring.
 
 ```mermaid
 flowchart TB
@@ -20,59 +20,76 @@ flowchart TB
 
     %% Language Registry
     subgraph "Language Registry"
-        REG[Language Registry<br/>17+ Languages]
+        REG[Language Registry<br/>20+ Languages]
         SWIFT[Swift]
         PYTHON[Python]
         JS[JavaScript/TypeScript]
+        JSON["JSON (FastTokenizer)"]
         OTHER[Rust, Go, C/C++,<br/>Java, Ruby, etc.]
     end
 
-    %% Highlighting Coordinator
-    subgraph "SyntaxHighlightingCoordinator"
-        COORD[Coordinator]
-        SELECT[Highlighter Selection<br/>Based on Language]
-        CACHE[Highlighting Cache<br/>LRU with TTL]
-        OPTCOORD[OptimizedSyntaxHighlightingCoordinator<br/>- Viewport Optimization<br/>- Chunking Support<br/>- Circuit Breaker]
+    %% Advanced Coordination Layer
+    subgraph "Advanced Coordination Layer"
+        COORD[SyntaxHighlightingCoordinator]
+        OPTCOORD["OptimizedSyntaxHighlightingCoordinator<br/>📊 Circuit Breaker (P95/P99)<br/>🔄 Performance Degradation Protection<br/>📈 Chunking Strategies<br/>⚡ Performance Tracking"]
+        STRATEGY[Strategy Selection<br/>File Size & Performance Based]
+        MEMMON[MemoryMonitor Integration<br/>📊 Resource-Aware Processing<br/>🔍 Memory Pressure Detection<br/>⚙️ Adaptive Processing]
     end
 
-    %% Highlighter Types
-    subgraph "Highlighters"
-        subgraph "SwiftSyntax Path"
+    %% Smart Caching System
+    subgraph "Smart Caching System"
+        SMARTCACHE[SmartTokenCache<br/>🎯 Viewport-Aware Caching<br/>🔮 Predictive Prefetching<br/>📊 Cache Hit Rate Monitoring<br/>🧠 Intelligent Cache Warming]
+        CACHESTATS[Cache Statistics<br/>Hit Rate: 85-95%<br/>Memory Usage<br/>Eviction Patterns]
+        LRULOGIC[LRU Eviction Logic<br/>With Memory Monitoring]
+        PREFETCH[Predictive Prefetching<br/>Based on Scroll Patterns]
+    end
+
+    %% Highlighting Strategies
+    subgraph "Highlighting Strategies"
+        subgraph "Standard Path"
             SS[SwiftSyntaxHighlighter]
-            PARSE[Swift Parser<br/>Full AST]
-            VISIT[Syntax Visitor<br/>Token Classification]
-            ASTCACHE[AST Cache]
+            RH[RegexHighlighter]
         end
         
-        subgraph "Regex Path"
-            RH[RegexHighlighter]
-            PATTERNS[Language Patterns<br/>Keywords, Strings,<br/>Comments, etc.]
-            TOKENIZE[Tokenizer<br/>Pattern Matching]
+        subgraph "Performance Strategies"
+            STREAMING[StreamingHighlighter<br/>📁 500KB+ Files<br/>🔄 AsyncSequence Processing<br/>📊 Chunk-by-Chunk Rendering]
+            VIEWPORT_COORD[ViewportSyntaxCoordinator<br/>👁️ Viewport-Only Highlighting<br/>🎯 Smart Boundary Detection<br/>⚡ Ultra-Fast Updates]
+            BACKGROUND[BackgroundSyntaxHighlighter<br/>🎯 Priority Queuing<br/>📊 Processing Statistics<br/>⚙️ Resource Balancing]
+            FASTJSON[FastJSONTokenizer<br/>⚡ Specialized JSON Performance<br/>🔍 Streaming Parser<br/>📊 Optimized Token Stream]
         end
     end
 
-    %% Token Processing
-    subgraph "Token Processing"
-        TOKENS[Token Stream<br/>- type<br/>- range<br/>- attributes]
-        MERGE[Token Merger<br/>Combine Overlaps]
-        OPTIMIZE[Optimization<br/>Batch Updates]
+    %% Error Recovery & Resilience
+    subgraph "Error Recovery & Resilience"
+        ERRORRECOV["ErrorRecoveryCoordinator (Actor)<br/>🔄 Automatic Retry Logic<br/>📊 Failure Pattern Analysis<br/>⚙️ Progressive Fallback"]
+        SYNTAXERROR[SyntaxHighlightingError<br/>🛡️ Recovery Strategies<br/>📊 Error Classification<br/>🔄 Retry Policies]
+        FALLBACK[Fallback Highlighting<br/>💡 Plain Text Mode<br/>🎨 Basic Syntax Colors<br/>⚡ Minimal Processing]
+        CIRCUITBREAKER[Circuit Breaker Pattern<br/>🔒 Automatic Protection<br/>📊 Health Monitoring<br/>⚙️ Smart Recovery]
     end
 
-    %% Rendering
+    %% Token Processing Pipeline
+    subgraph "Token Processing Pipeline"
+        TOKENS[Token Stream<br/>- type<br/>- range<br/>- attributes<br/>- priority]
+        MERGE[Token Merger<br/>🔄 Combine Overlaps<br/>⚡ Batch Optimization]
+        PRIORITIZE[Priority Processing<br/>🎯 Viewport First<br/>📊 Performance Aware]
+        PROGRESSIVE[Progressive Rendering<br/>📁 Large File Support<br/>🔄 Incremental Updates]
+    end
+
+    %% Rendering Pipeline
     subgraph "Rendering Pipeline"
-        ATTRS[NSAttributedString<br/>Builder]
-        THEME[Theme Application<br/>Colors, Fonts]
-        ASYNC[Async Renderer<br/>Main Thread Updates]
+        ATTRS[NSAttributedString Builder<br/>📊 Performance Optimized<br/>🎯 Batch Updates]
+        THEME[Theme Application<br/>🎨 Colors, Fonts<br/>⚡ Cached Attributes]
+        ASYNC[Async Renderer<br/>🔄 Main Thread Coordination<br/>📊 Frame Rate Monitoring]
+        ADAPTIVE[Adaptive Rendering<br/>📊 60fps Target<br/>⚙️ Quality Scaling]
     end
 
-    %% Performance
-    subgraph "Performance Features"
-        DEBOUNCE[Debouncer<br/>250ms default]
-        VIEWPORT[Viewport Only<br/>Visible Range]
-        INCREMENTAL[Incremental<br/>Updates]
-        PERFTRACK[SyntaxHighlightingPerformanceTracker<br/>- Tokenization Time<br/>- Cache Hit Rate<br/>- Apply Attributes Time]
-        CHUNKING[Chunking Strategy<br/>Max 5K chars/chunk]
-        CIRCUITBREAK[Circuit Breaker<br/>100ms threshold]
+    %% Performance Monitoring
+    subgraph "Performance Monitoring & Analytics"
+        PERFTRACK[SyntaxHighlightingPerformanceTracker<br/>📊 P95/P99 Metrics<br/>⏱️ Tokenization Time<br/>💾 Cache Hit Rate<br/>🎯 Apply Attributes Time]
+        DEBOUNCE[Smart Debouncer<br/>⏱️ 250ms default<br/>📊 Adaptive Timing<br/>🎯 Event Coalescing]
+        VIEWPORT[Viewport Manager<br/>👁️ Visible Range<br/>📊 Scroll Prediction<br/>⚡ Smart Boundaries]
+        INCREMENTAL[Incremental Engine<br/>🔄 Change Detection<br/>📊 Minimal Updates<br/>⚡ Delta Processing]
+        CHUNKING[Advanced Chunking<br/>📁 Dynamic Sizing<br/>📊 Performance Aware<br/>⚙️ Memory Conscious]
     end
 
     %% Flow - Language Detection
@@ -87,92 +104,98 @@ flowchart TB
     REG --> SWIFT
     REG --> PYTHON
     REG --> JS
+    REG --> JSON
     REG --> OTHER
     
-    %% Flow - Highlighting
+    %% Flow - Advanced Coordination
     LANG --> COORD
     COORD --> OPTCOORD
-    OPTCOORD --> SELECT
-    SELECT --> CACHE
+    OPTCOORD --> MEMMON
+    MEMMON --> STRATEGY
     
-    CACHE -->|Hit| ATTRS
-    CACHE -->|Miss| HIGHLIGHTER{Language?}
+    %% Flow - Caching Integration
+    STRATEGY --> SMARTCACHE
+    SMARTCACHE --> CACHESTATS
+    SMARTCACHE --> LRULOGIC
+    SMARTCACHE --> PREFETCH
     
-    HIGHLIGHTER -->|Swift| SS
-    HIGHLIGHTER -->|Others| RH
+    %% Flow - Strategy Selection
+    SMARTCACHE -->|Cache Hit| ATTRS
+    SMARTCACHE -->|Cache Miss| STRATEGY_DECISION{File Size &<br/>Performance?}
     
-    %% SwiftSyntax Path
-    SS --> PARSE
-    PARSE --> ASTCACHE
-    ASTCACHE --> VISIT
-    VISIT --> TOKENS
+    STRATEGY_DECISION -->|Standard| SS
+    STRATEGY_DECISION -->|Standard| RH
+    STRATEGY_DECISION -->|500KB+| STREAMING
+    STRATEGY_DECISION -->|Viewport Only| VIEWPORT_COORD
+    STRATEGY_DECISION -->|Background| BACKGROUND
+    STRATEGY_DECISION -->|JSON| FASTJSON
     
-    %% Regex Path
-    RH --> PATTERNS
-    PATTERNS --> TOKENIZE
-    TOKENIZE --> TOKENS
+    %% Flow - Error Recovery Integration
+    SS --> ERRORRECOV
+    RH --> ERRORRECOV
+    STREAMING --> ERRORRECOV
+    VIEWPORT_COORD --> ERRORRECOV
+    BACKGROUND --> ERRORRECOV
+    FASTJSON --> ERRORRECOV
     
-    %% Token Processing
+    ERRORRECOV --> SYNTAXERROR
+    SYNTAXERROR -->|Retry| STRATEGY_DECISION
+    SYNTAXERROR -->|Fallback| FALLBACK
+    ERRORRECOV --> CIRCUITBREAKER
+    CIRCUITBREAKER --> FALLBACK
+    
+    %% Flow - Token Processing
+    SS --> TOKENS
+    RH --> TOKENS
+    STREAMING --> TOKENS
+    VIEWPORT_COORD --> TOKENS
+    BACKGROUND --> TOKENS
+    FASTJSON --> TOKENS
+    FALLBACK --> TOKENS
+    
     TOKENS --> MERGE
-    MERGE --> OPTIMIZE
-    OPTIMIZE --> ATTRS
+    MERGE --> PRIORITIZE
+    PRIORITIZE --> PROGRESSIVE
+    PROGRESSIVE --> ATTRS
     
-    %% Rendering
+    %% Flow - Rendering
     ATTRS --> THEME
     THEME --> ASYNC
+    ASYNC --> ADAPTIVE
     
-    %% Performance Integration
+    %% Flow - Performance Integration
     OPTCOORD --> DEBOUNCE
     OPTCOORD --> PERFTRACK
     DEBOUNCE --> VIEWPORT
     VIEWPORT --> INCREMENTAL
-    VIEWPORT --> CHUNKING
-    CHUNKING --> CIRCUITBREAK
-    INCREMENTAL --> ASYNC
-    PERFTRACK --> ASYNC
+    INCREMENTAL --> CHUNKING
+    CHUNKING --> CIRCUITBREAKER
+    PERFTRACK --> ADAPTIVE
+    MEMMON --> ADAPTIVE
     
     %% Output
-    ASYNC --> RENDER[Rendered Text]
+    ADAPTIVE --> RENDER[📱 Rendered Text<br/>60fps Target<br/>Resource Aware]
 
-    %% Styling - Dark mode friendly colors
+    %% Styling - Enhanced color scheme
     classDef input fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef detection fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef swift fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef regex fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef cache fill:#5856D620,stroke:#5856D6,stroke-width:2px,color:#1D1D1F
+    classDef strategies fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef error fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
     classDef process fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef perf fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef render fill:#00D4AA20,stroke:#00D4AA,stroke-width:2px,color:#1D1D1F
     
-    class FILE input
-    class CONTENT input
-    class MANUAL input
-    class LDS detection
-    class DETECT detection
-    class LANG detection
-    class REG detection
-    class COORD coordinator
-    class SELECT coordinator
-    class CACHE coordinator
-    class OPTCOORD coordinator
-    class SS swift
-    class PARSE swift
-    class VISIT swift
-    class ASTCACHE swift
-    class RH regex
-    class PATTERNS regex
-    class TOKENIZE regex
-    class TOKENS process
-    class MERGE process
-    class OPTIMIZE process
-    class ATTRS process
-    class THEME process
-    class ASYNC process
-    class DEBOUNCE perf
-    class VIEWPORT perf
-    class INCREMENTAL perf
-    class PERFTRACK perf
-    class CHUNKING perf
-    class CIRCUITBREAK perf
+    class FILE,CONTENT,MANUAL input
+    class LDS,DETECT,LANG,REG,SWIFT,PYTHON,JS,JSON,OTHER detection
+    class COORD,OPTCOORD,STRATEGY,MEMMON coordinator
+    class SMARTCACHE,CACHESTATS,LRULOGIC,PREFETCH cache
+    class SS,RH,STREAMING,VIEWPORT_COORD,BACKGROUND,FASTJSON strategies
+    class ERRORRECOV,SYNTAXERROR,FALLBACK,CIRCUITBREAKER error
+    class TOKENS,MERGE,PRIORITIZE,PROGRESSIVE process
+    class ATTRS,THEME,ASYNC,ADAPTIVE render
+    class DEBOUNCE,VIEWPORT,INCREMENTAL,PERFTRACK,CHUNKING perf
 ```
 
 ## Language Configuration Example
@@ -185,37 +208,189 @@ struct LanguageConfig {
     let highlighterType: HighlighterType
     let completionProvider: CompletionProvider?
     let indentationRules: IndentationRules
+    let performanceProfile: PerformanceProfile
 }
 
 enum HighlighterType {
     case swiftSyntax
     case regex(patterns: LanguagePatterns)
+    case streaming(chunkSize: Int)
+    case fastJSON
+    case viewport(boundaries: ViewportBoundaries)
+}
+
+struct PerformanceProfile {
+    let maxFileSize: Int
+    let preferredStrategy: HighlightingStrategy
+    let fallbackStrategy: HighlightingStrategy
+    let circuitBreakerThreshold: TimeInterval
 }
 ```
 
-## Performance Optimizations
+## Advanced Performance Optimizations
 
-1. **AST Caching**: SwiftSyntax ASTs cached for reuse
-2. **LRU Cache**: Recently highlighted documents cached with TTL
-3. **Viewport Rendering**: Only visible text highlighted with configurable padding
-4. **Incremental Updates**: Only changed regions re-highlighted
-5. **Debouncing**: Rapid changes batched together (250ms default)
-6. **Background Processing**: Heavy parsing off main thread
-7. **Token Batching**: Multiple tokens applied in single update
-8. **Chunking Strategy**: Large documents split into 5K character chunks
-9. **Circuit Breaker**: Operations exceeding 100ms threshold are interrupted
-10. **Performance Tracking**: Detailed metrics for tokenization, caching, and rendering
-11. **Cache Warming**: Proactive caching of likely-to-be-used content
+### 1. Multi-Strategy Highlighting System
+- **StreamingHighlighter**: AsyncSequence processing for 500KB+ files
+- **ViewportSyntaxCoordinator**: Ultra-fast viewport-only highlighting
+- **BackgroundSyntaxHighlighter**: Priority queuing with resource balancing
+- **FastJSONTokenizer**: Specialized high-performance JSON parsing
 
-## Optimized Coordinator Configuration
+### 2. Smart Caching Infrastructure
+- **Viewport-Aware Caching**: Intelligently caches based on visible content
+- **Predictive Prefetching**: Anticipates user scroll patterns
+- **Cache Hit Rate Monitoring**: 85-95% target hit rates with analytics
+- **Intelligent Cache Warming**: Proactive caching of likely-to-be-used content
+- **LRU Eviction with Memory Monitoring**: Memory-conscious cache management
+
+### 3. Error Recovery & Resilience
+- **ErrorRecoveryCoordinator**: Actor-based automatic retry logic
+- **Circuit Breaker Patterns**: Automatic protection with P95/P99 monitoring
+- **Progressive Fallback System**: Graceful degradation through multiple strategies
+- **SyntaxHighlightingError**: Comprehensive error classification and recovery
+
+### 4. Memory Management Integration
+- **MemoryMonitor Integration**: Resource-aware processing decisions
+- **Memory Pressure Detection**: Automatic adaptation to system constraints
+- **Adaptive Processing**: Dynamic adjustment based on available resources
+- **Progressive Rendering**: Memory-efficient rendering for large files
+
+### 5. Performance Monitoring & Analytics
+- **P95/P99 Metrics**: Advanced percentile tracking for performance optimization
+- **Circuit Breaker Monitoring**: Health tracking with automatic recovery
+- **Cache Statistics**: Hit rates, memory usage, and eviction pattern analysis
+- **Processing Statistics**: Detailed breakdown of tokenization and rendering times
+
+## OptimizedSyntaxHighlightingCoordinator Configuration
 
 ```swift
-let config = OptimizedSyntaxHighlightingCoordinator.HighlightingConfiguration(
+let config = OptimizedSyntaxHighlightingCoordinator.Configuration(
+    // Performance Thresholds
+    circuitBreakerThreshold: 0.1,      // 100ms P95 threshold
+    performanceDegradationThreshold: 0.05, // 50ms warning threshold
+    
+    // Chunking Strategies
+    standardChunkSize: 5_000,           // Standard chunk size
+    largeFileChunkSize: 10_000,         // For 500KB+ files
+    streamingThreshold: 500_000,        // Switch to streaming mode
+    
+    // Viewport Optimization
     enableViewportOptimization: true,
-    viewportPadding: 500,           // Characters before/after visible range
-    maxChunkSize: 5_000,            // Max characters per chunk
-    enableIncrementalHighlighting: true,
+    viewportPadding: 500,               // Characters before/after visible range
+    predictiveScrollDistance: 1000,     // Prefetch distance
+    
+    // Caching Configuration
     cacheWarmingEnabled: true,
-    circuitBreakerThreshold: 0.1    // 100ms
+    maxCacheSize: 50_000_000,          // 50MB cache limit
+    cacheHitRateTarget: 0.90,          // 90% target hit rate
+    
+    // Error Recovery
+    maxRetryAttempts: 3,
+    backoffMultiplier: 2.0,
+    enableProgressiveFallback: true,
+    
+    // Memory Management
+    memoryPressureThreshold: 0.8,      // 80% memory usage threshold
+    enableAdaptiveProcessing: true,
+    enableProgressiveRendering: true
 )
+```
+
+## SmartTokenCache Configuration
+
+```swift
+let cacheConfig = SmartTokenCache.Configuration(
+    // Viewport Awareness
+    viewportAwareCaching: true,
+    predictivePrefetching: true,
+    scrollPatternLearning: true,
+    
+    // Memory Management
+    maxMemoryUsage: 25_000_000,        // 25MB cache limit
+    lruEvictionEnabled: true,
+    memoryPressureResponse: true,
+    
+    // Performance Monitoring
+    hitRateMonitoring: true,
+    statisticsCollection: true,
+    performanceTracking: true,
+    
+    // Cache Warming
+    intelligentCacheWarming: true,
+    warmingThreshold: 0.1,             // Warm cache at 10% scroll
+    warmingDistance: 2000              // Characters to warm ahead
+)
+```
+
+## Highlighting Strategy Selection Logic
+
+```swift
+func selectHighlightingStrategy(
+    fileSize: Int,
+    language: LanguageConfig,
+    memoryPressure: Double,
+    performanceMetrics: PerformanceMetrics
+) -> HighlightingStrategy {
+    
+    // Circuit breaker check
+    if performanceMetrics.p95ResponseTime > circuitBreakerThreshold {
+        return .fallback(.plainText)
+    }
+    
+    // Memory pressure adaptation
+    if memoryPressure > 0.8 {
+        return .viewport(boundaries: .conservative)
+    }
+    
+    // File size-based strategy selection
+    switch fileSize {
+    case 0..<10_000:
+        return .standard(language.highlighterType)
+        
+    case 10_000..<100_000:
+        return .background(priority: .normal)
+        
+    case 100_000..<500_000:
+        return .viewport(boundaries: .standard)
+        
+    case 500_000...:
+        return .streaming(chunkSize: largeFileChunkSize)
+        
+    default:
+        return .fallback(.basicSyntax)
+    }
+}
+```
+
+## Error Recovery Strategies
+
+```swift
+enum RecoveryStrategy {
+    case retry(attempts: Int, backoff: TimeInterval)
+    case fallbackToSimpler(strategy: HighlightingStrategy)
+    case enableCircuitBreaker(threshold: TimeInterval)
+    case reduceQuality(level: QualityLevel)
+    case plainTextMode
+}
+
+enum SyntaxHighlightingError: Error {
+    case parsingTimeout(TimeInterval)
+    case memoryPressure(usage: Double)
+    case circuitBreakerTripped(threshold: TimeInterval)
+    case tokenizationFailure(reason: String)
+    
+    var recoveryStrategy: RecoveryStrategy {
+        switch self {
+        case .parsingTimeout(let time) where time < 0.2:
+            return .retry(attempts: 2, backoff: 0.1)
+        case .memoryPressure(let usage) where usage > 0.9:
+            return .fallbackToSimpler(.viewport(boundaries: .minimal))
+        case .circuitBreakerTripped:
+            return .plainTextMode
+        case .tokenizationFailure:
+            return .fallbackToSimpler(.basicSyntax)
+        default:
+            return .enableCircuitBreaker(threshold: 0.05)
+        }
+    }
+}
 ```

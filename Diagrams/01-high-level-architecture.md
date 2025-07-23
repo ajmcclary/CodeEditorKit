@@ -22,6 +22,41 @@ graph TD
         AC["ActorCoordinator<br/>Concurrency"]
     end
 
+    %% Async Operations Layer
+    subgraph ASYNC [" Async Operations Layer "]
+        direction TB
+        AOM["AsyncOperation<br/>Manager"]
+        subgraph ASYNC_COMP [" Async Components "]
+            DEBOUNCE["Debouncing<br/>Extensions"]
+            THROTTLE["Throttling<br/>Extensions"]
+            RETRY["Retry<br/>Extensions"]
+            BATCH["Batch<br/>Extensions"]
+            SCHEDULE["Priority<br/>Scheduling"]
+        end
+    end
+
+    %% Advanced Features Layer
+    subgraph ADVANCED [" Advanced Features Layer "]
+        direction TB
+        SRE["Search & Replace<br/>Engine"]
+        SEE["Smart Editing<br/>Engine"]
+        DIC["Debugger<br/>Integration"]
+        OSN["Symbol<br/>Navigator"]
+        CFE["Code Folding<br/>Engine"]
+    end
+
+    %% Performance System Layer
+    subgraph PERFORMANCE [" Unified Performance System "]
+        direction TB
+        UPS["Performance<br/>Insights"]
+        subgraph PERF_COMP [" Performance Components "]
+            ADAPTIVE["Adaptive<br/>Performance"]
+            BUDGETS["Performance<br/>Budgets"]
+            MONITOR["Real-time<br/>Monitoring"]
+            OPTIMIZER["Large File<br/>Optimizer"]
+        end
+    end
+
     %% Business Services Layer
     subgraph SERVICES [" Business Logic Services "]
         direction TB
@@ -31,8 +66,10 @@ graph TD
             LDS["Language<br/>Detection"] 
             SHS["Syntax<br/>Highlighting"]
             CMS["Code<br/>Completion"]
-            MMS["Memory<br/>Monitoring"]
-            PM["Plugin<br/>Manager"]
+            MMS["Memory<br/>Management"]
+            LNCS["Line Number<br/>Calculation"]
+            GSS["Gutter<br/>Sizing"]
+            CFCS["Code Folding<br/>Coordinator"]
         end
     end
 
@@ -57,7 +94,13 @@ graph TD
             PV["Platform<br/>Views"]
             PF["Platform<br/>Fonts"]
             PCL["Platform<br/>Colors"]
+        end
+        subgraph COORDS [" Platform Coordinators "]
             CPC["Cross-Platform<br/>Coordinator"]
+            IC["Input<br/>Coordinator"]
+            TC["Toolbar<br/>Coordinator"]
+            CMC["Context Menu<br/>Coordinator"]
+            UDC["Unified Drawing<br/>Coordinator"]
         end
     end
 
@@ -102,7 +145,10 @@ graph TD
 
     %% Main Architecture Flow
     SUI -.-> CORE
-    CORE --> SERVICES
+    CORE --> ASYNC
+    ASYNC --> ADVANCED
+    ADVANCED --> PERFORMANCE
+    PERFORMANCE --> SERVICES
     SERVICES --> CONFIG
     CORE --> PLATFORM
     
@@ -116,14 +162,23 @@ graph TD
     CEV --> UES
     CEV --> AC
     
+    UES --> AOM
+    AOM --> ASYNC_COMP
+    ASYNC_COMP --> ADVANCED
+    
+    UPS --> PERF_COMP
+    PERF_COMP --> BLS
     UES --> BLS
     BLS --> SRVS
     AC --> SRVS
+    AC --> AOM
     
     EC --> CFGS
     EC --> AC
     EC --> UES
     PAB --> PLATS
+    PAB --> COORDS
+    CPC --> COORDS
     
     CCV --> UI_FEAT
     CEV --> EDIT_FEAT
@@ -142,6 +197,9 @@ graph TD
     %% Styling - Light/Dark mode compatible colors  
     classDef swiftui fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef core fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef async fill:#5856D620,stroke:#5856D6,stroke-width:2px,color:#1D1D1F
+    classDef advanced fill:#FF2D9220,stroke:#FF2D92,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef service fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
     classDef config fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef platform fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
@@ -158,13 +216,31 @@ graph TD
     class CCV core
     class UES core
     class AC core
+    class AOM async
+    class DEBOUNCE async
+    class THROTTLE async
+    class RETRY async
+    class BATCH async
+    class SCHEDULE async
+    class SRE advanced
+    class SEE advanced
+    class DIC advanced
+    class OSN advanced
+    class CFE advanced
+    class UPS performance
+    class ADAPTIVE performance
+    class BUDGETS performance
+    class MONITOR performance
+    class OPTIMIZER performance
     class BLS service
     class TES service
     class LDS service
     class SHS service
     class CMS service
     class MMS service
-    class PM service
+    class LNCS service
+    class GSS service
+    class CFCS service
     class EC config
     class DC config
     class LC config
@@ -176,6 +252,10 @@ graph TD
     class PF platform
     class PCL platform
     class CPC platform
+    class IC platform
+    class TC platform
+    class CMC platform
+    class UDC platform
     class GUT feature
     class MM feature
     class BRA feature

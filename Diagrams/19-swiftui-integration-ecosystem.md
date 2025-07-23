@@ -1,536 +1,681 @@
 # SwiftUI Integration Complete Ecosystem
 
-This diagram shows the comprehensive SwiftUI integration ecosystem that provides seamless integration between the CodeEditorPlugin framework and SwiftUI applications.
+This diagram shows the comprehensive SwiftUI integration ecosystem that provides seamless integration between the CodeEditorPlugin framework and SwiftUI applications with modern Swift 6 patterns, @Observable ViewModels, and advanced performance monitoring.
 
 ```mermaid
 classDiagram
     direction LR
     
-    %% Row 1 - Core Integration System
-    class SwiftUIIntegrationSystem {
-        <<integration system>>
-        +codeEditor CodeEditor
-        +representableHelper CodeEditorRepresentableHelper
-        +environmentManager SwiftUIEnvironmentManager
-        +modifierSystem ViewModifierSystem
-        +bindingSystem SwiftUIBindingSystem
-        +integrateWithSwiftUI()
-        +setupEnvironment()
-        +handleViewUpdates()
-    }
-
+    %% Row 1 - Core SwiftUI Integration
     class CodeEditor {
         <<SwiftUI View>>
         @Binding text String
-        @State configuration EditorConfiguration
-        @State isEditing Bool
-        @State selectionRange NSRange
-        +language LanguageConfig?
-        +onTextChange Closure?
-        +onSelectionChange Closure?
+        @FocusState isFocused Bool
+        @State searchText String
+        @State isSearching Bool
+        @Environment(\.codeEditorEnvironment) environment
+        @State defaultMemoryMonitor MemoryMonitor
+        +initialLanguage Language?
+        +initialTheme CodeEditorSwiftUITheme?
+        +onTextChange (@Sendable (String) -> Void)?
+        +onSelectionChange (@Sendable (Range<String.Index>?) -> Void)?
+        +completionProvider (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
+        +textDebounceInterval Duration
         +body some View
     }
 
+    class CodeEditorEnvironment {
+        <<Sendable environment>>
+        +language Language
+        +theme CodeEditorSwiftUITheme
+        +configuration EditorConfiguration
+        +becomeFirstResponder Bool
+        +memoryMonitor MemoryMonitor?
+        +eventSystem UnifiedEventSystem?
+        +with() CodeEditorEnvironment
+        +static default CodeEditorEnvironment
+    }
+
     class CodeEditorRepresentableHelper {
-        <<representable helper>>
-        +platformDetector PlatformDetector
-        +viewFactory SwiftUIViewFactory
-        +updateCoordinator ViewUpdateCoordinator
-        +lifecycleManager ViewLifecycleManager
-        +createRepresentable()
-        +handleViewUpdate()
-        +manageViewLifecycle()
+        <<@MainActor helper>>
+        +ContainerParameters struct
+        +UpdateParameters struct
+        +createAndSetupContainer() CodeEditorContainerView
+        +updateContainer() Void
+        +calculateSize() CGSize?
+        +dismantle() Void
+        +applyCommonSizeConstraints() CGSize
+        +makeCoordinator() CodeEditorCoordinator
     }
 
     %% Row 2 - Platform Representables
     class CodeEditorRepresentable {
-        <<representable protocol>>
+        <<cross-platform representable>>
+        @Binding text String
+        +language Language
+        +theme CodeEditorSwiftUITheme
         +configuration EditorConfiguration
-        +text Binding<String>
-        +coordinator Coordinator
-        +makeCoordinator()
+        +memoryMonitor MemoryMonitor
+        @Binding isFocused Bool
+        +textDebounceInterval Duration
+        +onTextChange ((String) -> Void)?
+        +onSelectionChange ((NSRange) -> Void)?
+        +typealias Coordinator CodeEditorCoordinator
     }
 
     class AppKitCodeEditorRepresentable {
-        <<NSViewRepresentable>>
-        +makeNSView()
-        +updateNSView()
-        +dismantleNSView()
-        +handleMacOSSpecificUpdates()
+        <<NSViewRepresentable macOS 13.0+>>
+        +makeNSView(context) CodeEditorContainerView
+        +updateNSView(nsView, context) Void
+        +dismantleNSView(_, coordinator) Void
+        +sizeThatFits(proposal, nsView, context) CGSize?
+        +makeCoordinator() CodeEditorCoordinator
     }
 
     class UIKitCodeEditorRepresentable {
-        <<UIViewRepresentable>>
-        +makeUIView()
-        +updateUIView()
-        +dismantleUIView()
-        +handleiOSSpecificUpdates()
+        <<UIViewRepresentable iOS 16.0+>>
+        +makeUIView(context) CodeEditorContainerView
+        +updateUIView(uiView, context) Void
+        +dismantleUIView(_, coordinator) Void
+        +sizeThatFits(proposal, uiView, context) CGSize?
+        +makeCoordinator() CodeEditorCoordinator
     }
 
-    class SwiftUIViewFactory {
-        <<view factory>>
-        +createAppKitRepresentable()
-        +createUIKitRepresentable()
-        +createCatalystRepresentable()
-        +configureRepresentable()
+    %% Row 3 - Modern Coordination System
+    class CodeEditorBaseCoordinator {
+        <<@MainActor ObservableObject>>
+        @Published currentText String
+        @Published currentLanguage Language
+        @Published currentConfiguration EditorConfiguration
+        +onTextChange ((String) -> Void)?
+        +onSelectionChange ((NSRange) -> Void)?
+        +textBinding Binding<String>?
+        +textUpdateTask Task<Void, Never>?
+        +textDebounceInterval Duration
+        +hasFocusBeenRequested Bool
+        +requestFocusIfNeeded() Void
+        +handleTextChange() Void
+        +setupTextChangeObservers() Void
+        +updateTextView() Void
     }
 
-    %% Row 3 - Coordination System
     class CodeEditorCoordinator {
-        <<coordinator>>
-        +parent CodeEditor
-        +codeEditorView CodeEditorView
-        +bindingManager SwiftUIBindingManager
-        +eventBridge SwiftUIEventBridge
-        +setupCodeEditor()
-        +textDidChange()
-        +selectionDidChange()
-        +configurationDidChange()
+        <<platform-specific coordinator>>
+        +init(text, onTextChange, onSelectionChange)
+        +setupContainer() Void
+        +updateContainer() Void
+        +requestFocusIfNeeded() Void
+        +resetFocusTracking() Void
+        +removeNotificationObservers() Void
+        +cleanup() Void
     }
 
-    class SwiftUIBindingManager {
-        <<binding manager>>
-        +textBinding Binding<String>
-        +configurationBinding Binding<EditorConfiguration>
-        +selectionBinding Binding<NSRange>
-        +editingBinding Binding<Bool>
-        +syncBindings()
-        +updateBinding()
-        +observeChanges()
+    class SwiftUICompletionContext {
+        <<Sendable completion context>>
+        +text String
+        +cursorPosition Int
+        +language Language
+        +init(text, cursorPosition, language)
     }
 
-    class SwiftUIEventBridge {
-        <<event bridge>>
-        +swiftUICallbacks [EventType: SwiftUICallback]
-        +codeEditorEvents [CodeEditorEvent]
-        +bridgeEvent()
-        +registerCallback()
-        +handleCodeEditorEvent()
+    class SwiftUICompletionItem {
+        <<completion item>>
+        +label String
+        +kind CompletionKind
+        +detail String?
+        +insertText String
+        +documentation String?
+        +init(label, kind, detail?, insertText?, documentation?)
     }
 
-    class ViewUpdateCoordinator {
-        <<update coordinator>>
-        +pendingUpdates [ViewUpdate]
-        +updateScheduler ViewUpdateScheduler
-        +animationCoordinator SwiftUIAnimationCoordinator
-        +scheduleUpdate()
-        +processUpdates()
-        +coordinateAnimations()
+    %% Row 4 - Modern Environment System
+    class CodeEditorEnvironmentKey {
+        <<EnvironmentKey>>
+        +static defaultValue CodeEditorEnvironment
+        +typealias Value CodeEditorEnvironment
     }
 
-    %% Row 4 - Environment System
-    class SwiftUIEnvironmentManager {
-        <<environment manager>>
-        +environmentValues SwiftUIEnvironmentValues
-        +configurationKey ConfigurationEnvironmentKey
-        +themeKey ThemeEnvironmentKey
-        +languageKey LanguageEnvironmentKey
-        +setupEnvironment()
-        +updateEnvironment()
-        +propagateEnvironmentChanges()
-    }
-
-    class SwiftUIEnvironmentValues {
-        <<environment values>>
+    class EnvironmentValues {
+        <<SwiftUI EnvironmentValues extension>>
+        +codeEditorEnvironment CodeEditorEnvironment
+        +codeEditorTheme CodeEditorSwiftUITheme
+        +codeEditorLanguage Language
         +codeEditorConfiguration EditorConfiguration
-        +codeEditorTheme EditorTheme
-        +codeEditorLanguage LanguageConfig?
-        +codeEditorState EditorState
-        +isDebugMode Bool
-        +accessibilityConfiguration AccessibilityConfiguration
+        +codeEditorBecomeFirstResponder Bool
+        +codeEditorMemoryMonitor MemoryMonitor?
+        +codeEditorEventSystem UnifiedEventSystem?
     }
 
-    class ConfigurationEnvironmentKey {
-        <<EnvironmentKey>>
-        +static defaultValue EditorConfiguration
+    class CodeEditorEnvironmentBuilder {
+        <<@resultBuilder>>
+        +buildBlock() CodeEditorEnvironment
+        +buildExpression() CodeEditorEnvironment
     }
 
-    class ThemeEnvironmentKey {
-        <<EnvironmentKey>>
-        +static defaultValue EditorTheme
+    class BecomeFirstResponderOption {
+        <<Sendable enum>>
+        +yes
+        +no
+        +unchanged
     }
 
-    class LanguageEnvironmentKey {
-        <<EnvironmentKey>>
-        +static defaultValue LanguageConfig?
+    %% Row 5 - SwiftUI View Modifiers
+    class ViewModifiers {
+        <<View extensions>>
+        +codeTheme() some View
+        +codeLanguage() some View
+        +codeWorkspaceRoot() some View
+        +lineNumbers() some View
+        +becomeFirstResponder() some View
+        +codeEditorEnvironment() some View
+        +transformEnvironment() some View
     }
 
-    %% Row 5 - View Modifier System
-    class ViewModifierSystem {
-        <<modifier system>>
-        +modifiers [CodeEditorViewModifier]
-        +modifierChain ViewModifierChain
-        +modifierProcessor ModifierProcessor
-        +applyModifiers()
-        +registerModifier()
-        +processModifierChain()
+    class CodeEditorModifiers {
+        <<CodeEditor extensions>>
+        +highlightSelectedLine() some View
+        +editable() some View
+        +onTextChange() CodeEditor
+        +onSelectionChange() CodeEditor
+        +codeCompletion() CodeEditor
+        +codeFontSize() some View
+        +tabWidth() some View
+        +showInvisibleCharacters() some View
+        +showMinimap() some View
+        +autoScrollToCursor() some View
+        +enableCodeFolding() some View
+        +showFoldingControls() some View
+        +minimumFoldableLines() some View
+        +animateCodeFolding() some View
+        +memoryMonitor() some View
+        +eventSystem() some View
     }
 
-    class CodeEditorViewModifier {
-        <<modifier protocol>>
-        +body()
-        +modifierName String
-        +priority Int
+    class CompletionKind {
+        <<completion kind enum>>
+        +keyword
+        +function
+        +method
+        +variable
+        +constant
+        +class
+        +struct
+        +enum
+        +interface
+        +module
+        +property
+        +value
+        +reference
+        +snippet
+        +text
     }
 
-    class LanguageViewModifier {
-        <<language modifier>>
-        +language LanguageConfig
-        +body()
-    }
-
-    class ThemeViewModifier {
-        <<theme modifier>>
-        +theme EditorTheme
-        +body()
-    }
-
-    class ConfigurationViewModifier {
-        <<configuration modifier>>
-        +configuration EditorConfiguration
-        +body()
-    }
-
-    class ReadOnlyViewModifier {
-        <<readonly modifier>>
-        +isReadOnly Bool
-        +body()
-    }
-
-    class DebugModeViewModifier {
-        <<debug modifier>>
-        +isDebugMode Bool
-        +showDebugOverlay Bool
-        +body()
-    }
-
-    %% Row 6 - State Management
-    class SwiftUIStateManager {
-        <<state manager>>
+    %% Row 6 - @Observable State Management
+    class EditorContainerViewModel {
+        <<@Observable @MainActor>>
         +editorState EditorState
-        +bindingObserver StateBindingObserver
-        +stateValidator StateValidator
-        +changeNotifier StateChangeNotifier
-        +manageState()
-        +updateState()
-        +validateState()
+        +componentVisibility ComponentVisibility
+        +configuration EditorConfiguration
+        +layoutFrames EditorLayoutService.ComponentFrames?
+        +errorMessage String?
+        +isLoading Bool
+        +statusText String
+        +businessLogicServices BusinessLogicServiceRegistry
+        +updateTask Task<Void, Never>?
+        +configure() Void
+        +updateConfiguration() Void
+        +updateLayout() Void
+        +textDidChange() Void
+        +selectionDidChange() Void
+        +scrollPositionDidChange() Void
+        +configurationBinding Binding<EditorConfiguration>
+        +errorBinding Binding<String?>
+        +loadingBinding Binding<Bool>
     }
 
     class EditorState {
-        <<editor state>>
-        +text String
-        +selection NSRange
+        <<nested state struct>>
         +isEditing Bool
-        +language LanguageConfig?
-        +configuration EditorConfiguration
         +hasUnsavedChanges Bool
-        +version Int
+        +lineCount Int
+        +characterCount Int
+        +selectedRange NSRange
+        +visibleRange NSRange
+        +scrollPosition CGPoint
     }
 
-    class StateBindingObserver {
-        <<binding observer>>
-        +observedBindings [StateBinding]
-        +changeHandlers [StateChangeHandler]
-        +observeBinding()
-        +removeObserver()
-        +notifyChanges()
+    class ComponentVisibility {
+        <<visibility state struct>>
+        +showGutter Bool
+        +showMinimap Bool
+        +showScrollbar Bool
+        +showStatusBar Bool
+        +showCompletionPopup Bool
     }
 
-    %% Row 7 - Animation & Accessibility
-    class SwiftUIAnimationCoordinator {
-        <<animation coordinator>>
-        +animationPresets [AnimationPreset]
-        +transitionManager TransitionManager
-        +timingCurves [TimingCurve]
-        +animateChanges()
-        +coordinateTransitions()
-        +createCustomAnimation()
+    %% Row 7 - Performance & Accessibility
+    class PerformanceInsights {
+        <<@ObservedObject>>
+        +metrics PerformanceMetrics
+        +issues [InsightsPerformanceIssue]
+        +recommendations [InsightsPerformanceRecommendation]
+        +status PerformanceStatus
+        +reset() Void
     }
 
-    class AnimationPreset {
-        <<animation preset>>
-        +name String
-        +animation Animation
-        +duration Double
-        +curve AnimationCurve
-        +apply()
+    class PerformanceStatusView {
+        <<SwiftUI View>>
+        @ObservedObject insights PerformanceInsights
+        +body some View
     }
 
-    class SwiftUIAccessibilityManager {
-        <<accessibility manager>>
-        +accessibilityConfiguration AccessibilityConfiguration
-        +voiceOverSupport VoiceOverSupport
-        +keyboardNavigation KeyboardNavigationSupport
-        +setupAccessibility()
-        +updateAccessibilityLabels()
-        +handleAccessibilityActions()
+    class PerformanceInsightsPanel {
+        <<SwiftUI View>>
+        @ObservedObject insights PerformanceInsights
+        @State showingDetailedReport Bool
+        +body some View
     }
 
-    class AccessibilityConfiguration {
-        <<accessibility config>>
-        +isVoiceOverEnabled Bool
-        +dynamicTypeSize DynamicTypeSize
-        +reduceMotion Bool
-        +increaseContrast Bool
-        +customLabels [String: String]
-        +customActions [AccessibilityAction]
+    class CodeEditorAccessibility {
+        <<accessibility extensions>>
+        +setupAccessibility() Void
+        +updateAccessibilityLabel() Void
+        +announceChange() Void
+        +notifyAccessibilityTextDidChange() Void
+        +applyDynamicTypeScaling() Void
+        +setAccessibilityFileName() Void
+        +adjustsFontForContentSizeCategory Bool
+        +accessibilityTextualContext String
     }
 
-    %% Row 8 - Development Support
-    class SwiftUIPreviewSupport {
-        <<preview support>>
-        +previewProviders [PreviewProvider]
-        +mockDataManager MockDataManager
-        +previewConfigurations [PreviewConfiguration]
-        +createPreview()
-        +generateMockData()
-        +setupPreviewEnvironment()
+    %% Row 8 - Business Logic Integration
+    class BusinessLogicServiceRegistry {
+        <<@MainActor dependency injection>>
+        +lineNumberCalculationService LineNumberCalculationService
+        +gutterSizingService GutterSizingService
+        +codeFoldingCoordinatorService CodeFoldingCoordinatorService
+        +editorLayoutService EditorLayoutService
+        +syntaxHighlightingService SyntaxHighlightingService
+        +languageDetectionService LanguageDetectionService
+        +textEditingService TextEditingService
+        +completionProviderRegistry CompletionProviderRegistry
+        +configureForEditor() Void
+        +clearAllCaches() Void
     }
 
-    class PreviewProvider {
-        <<preview protocol>>
-        +static previews some View
-        +static previewDevice PreviewDevice?
-        +static previewDisplayName String?
+    class GutterViewModel {
+        <<@Observable @MainActor>>
+        +configuration EditorConfiguration
+        +businessLogicServices BusinessLogicServiceRegistry
+        +configure() Void
+        +updateConfiguration() Void
+        +textDidChange() Void
+        +selectionDidChange() Void
+        +scrollPositionDidChange() Void
+        +updateFrame() Void
+        +clearCache() Void
     }
 
-    class CodeEditorPreview {
-        <<code editor preview>>
-        +static previews some View
-        +static sampleCode String
-        +static configurations [EditorConfiguration]
+    class CompletionViewModel {
+        <<@Observable @MainActor>>
+        +configuration EditorConfiguration
+        +businessLogicServices BusinessLogicServiceRegistry
+        +showPopup() Void
+        +hidePopup() Void
+        +textDidChange() Void
+        +selectionDidChange() Void
+        +clearCache() Void
     }
 
-    class SwiftUIExtensionManager {
-        <<extension manager>>
-        +customViews [CustomSwiftUIView]
-        +viewExtensions [SwiftUIViewExtension]
-        +modifierExtensions [SwiftUIModifierExtension]
-        +registerCustomView()
-        +registerExtension()
-        +applyExtensions()
+    class MinimapViewModel {
+        <<@Observable @MainActor>>
+        +configuration EditorConfiguration
+        +businessLogicServices BusinessLogicServiceRegistry
+        +configure() Void
+        +updateFrame() Void
+        +textDidChange() Void
+        +scrollPositionDidChange() Void
+        +clearCache() Void
     }
 
     %% Key Relationships
-    SwiftUIIntegrationSystem --> CodeEditor : manages
-    SwiftUIIntegrationSystem --> CodeEditorRepresentableHelper : uses
-    SwiftUIIntegrationSystem --> SwiftUIEnvironmentManager : manages environment
-    SwiftUIIntegrationSystem --> ViewModifierSystem : applies modifiers
+    CodeEditor --> CodeEditorEnvironment : reads environment
+    CodeEditor --> CodeEditorRepresentable : creates representable
+    CodeEditor --> MemoryMonitor : manages default monitor
     
-    CodeEditor --> CodeEditorRepresentable : uses
-    CodeEditor --> CodeEditorCoordinator : coordinates with
+    CodeEditorRepresentable <|-- AppKitCodeEditorRepresentable : platform-specific
+    CodeEditorRepresentable <|-- UIKitCodeEditorRepresentable : platform-specific
     
-    CodeEditorRepresentable <|-- AppKitCodeEditorRepresentable : implements
-    CodeEditorRepresentable <|-- UIKitCodeEditorRepresentable : implements
+    CodeEditorRepresentableHelper --> CodeEditorCoordinator : creates coordinator
+    CodeEditorRepresentableHelper --> CodeEditorContainerView : manages container
     
-    CodeEditorCoordinator --> SwiftUIBindingManager : manages bindings
-    CodeEditorCoordinator --> SwiftUIEventBridge : bridges events
+    CodeEditorCoordinator --|> CodeEditorBaseCoordinator : inherits from
+    CodeEditorBaseCoordinator --> SwiftUICompletionContext : provides context
+    CodeEditorBaseCoordinator --> SwiftUICompletionItem : handles completions
     
-    CodeEditorRepresentableHelper --> SwiftUIViewFactory : creates views
-    CodeEditorRepresentableHelper --> ViewUpdateCoordinator : coordinates updates
+    EnvironmentValues --> CodeEditorEnvironment : contains consolidated config
+    CodeEditorEnvironmentKey --> CodeEditorEnvironment : provides key
+    CodeEditorEnvironmentBuilder --> CodeEditorEnvironment : builds declaratively
     
-    SwiftUIEnvironmentManager --> SwiftUIEnvironmentValues : manages
-    SwiftUIEnvironmentManager --> ConfigurationEnvironmentKey : uses
-    SwiftUIEnvironmentManager --> ThemeEnvironmentKey : uses
-    SwiftUIEnvironmentManager --> LanguageEnvironmentKey : uses
+    ViewModifiers --> EnvironmentValues : transforms environment
+    CodeEditorModifiers --> CodeEditor : returns modified view
+    CompletionKind --> SwiftUICompletionItem : categorizes items
     
-    ViewModifierSystem --> CodeEditorViewModifier : applies
-    CodeEditorViewModifier <|-- LanguageViewModifier : implements
-    CodeEditorViewModifier <|-- ThemeViewModifier : implements
-    CodeEditorViewModifier <|-- ConfigurationViewModifier : implements
-    CodeEditorViewModifier <|-- ReadOnlyViewModifier : implements
-    CodeEditorViewModifier <|-- DebugModeViewModifier : implements
+    EditorContainerViewModel --> EditorState : manages nested state
+    EditorContainerViewModel --> ComponentVisibility : controls UI visibility
+    EditorContainerViewModel --> BusinessLogicServiceRegistry : injects services
     
-    SwiftUIStateManager --> EditorState : manages
-    SwiftUIStateManager --> StateBindingObserver : observes with
+    PerformanceInsights --> PerformanceStatusView : provides data
+    PerformanceInsights --> PerformanceInsightsPanel : provides metrics
+    CodeEditorAccessibility --> CodeEditorView : extends with accessibility
     
-    SwiftUIAnimationCoordinator --> AnimationPreset : uses
-    SwiftUIAccessibilityManager --> AccessibilityConfiguration : uses
+    BusinessLogicServiceRegistry --> GutterViewModel : provides services
+    BusinessLogicServiceRegistry --> CompletionViewModel : provides services
+    BusinessLogicServiceRegistry --> MinimapViewModel : provides services
     
-    SwiftUIPreviewSupport --> PreviewProvider : manages
-    PreviewProvider <|-- CodeEditorPreview : implements
-    
-    SwiftUIIntegrationSystem --> SwiftUIExtensionManager : extends with
+    EditorContainerViewModel --> GutterViewModel : manages child
+    EditorContainerViewModel --> CompletionViewModel : manages child
+    EditorContainerViewModel --> MinimapViewModel : manages child
 
-    %% Styling - Dark mode friendly colors
-    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef swiftui fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef representable fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef environment fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef modifier fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef state fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef support fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    %% Styling - Modern SwiftUI colors
+    classDef swiftui fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef environment fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef representable fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef observable fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef modifier fill:#5AC8FA20,stroke:#5AC8FA,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FFCC0020,stroke:#FFCC00,stroke-width:2px,color:#1D1D1F
+    classDef service fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
-    class SwiftUIIntegrationSystem system
     class CodeEditor swiftui
+    class CodeEditorEnvironment environment
+    class CodeEditorEnvironmentKey environment
+    class EnvironmentValues environment
+    class CodeEditorEnvironmentBuilder environment
+    class BecomeFirstResponderOption environment
+    
     class CodeEditorRepresentable representable
     class AppKitCodeEditorRepresentable representable
     class UIKitCodeEditorRepresentable representable
+    class CodeEditorRepresentableHelper representable
+    
+    class CodeEditorBaseCoordinator coordinator
     class CodeEditorCoordinator coordinator
-    class SwiftUIBindingManager coordinator
-    class SwiftUIEventBridge coordinator
-    class CodeEditorRepresentableHelper coordinator
-    class SwiftUIViewFactory coordinator
-    class ViewUpdateCoordinator coordinator
-    class SwiftUIEnvironmentManager environment
-    class SwiftUIEnvironmentValues environment
-    class ConfigurationEnvironmentKey environment
-    class ThemeEnvironmentKey environment
-    class LanguageEnvironmentKey environment
-    class ViewModifierSystem modifier
-    class CodeEditorViewModifier modifier
-    class LanguageViewModifier modifier
-    class ThemeViewModifier modifier
-    class ConfigurationViewModifier modifier
-    class ReadOnlyViewModifier modifier
-    class DebugModeViewModifier modifier
-    class SwiftUIStateManager state
-    class EditorState state
-    class StateBindingObserver state
-    class SwiftUIAnimationCoordinator support
-    class SwiftUIAccessibilityManager support
-    class SwiftUIPreviewSupport support
-    class SwiftUIExtensionManager support
-    class AnimationPreset support
-    class AccessibilityConfiguration support
-    class PreviewProvider support
-    class CodeEditorPreview support
+    class SwiftUICompletionContext coordinator
+    class SwiftUICompletionItem coordinator
+    
+    class ViewModifiers modifier
+    class CodeEditorModifiers modifier
+    class CompletionKind modifier
+    
+    class EditorContainerViewModel observable
+    class EditorState observable
+    class ComponentVisibility observable
+    class GutterViewModel observable
+    class CompletionViewModel observable
+    class MinimapViewModel observable
+    
+    class PerformanceInsights performance
+    class PerformanceStatusView performance
+    class PerformanceInsightsPanel performance
+    class CodeEditorAccessibility performance
+    
+    class BusinessLogicServiceRegistry service
 ```
 
-## SwiftUI Integration Flow
+## Modern SwiftUI Integration Flow
 
 ```mermaid
 sequenceDiagram
     participant App as SwiftUI App
     participant Editor as CodeEditor
-    participant Repr as Representable
-    participant Coord as Coordinator
-    participant View as CodeEditorView
+    participant Env as CodeEditorEnvironment
+    participant Repr as CodeEditorRepresentable 
+    participant Helper as RepresentableHelper
+    participant Coord as CodeEditorCoordinator
+    participant Container as CodeEditorContainerView
+    participant VM as EditorContainerViewModel
 
-    App->>Editor: Initialize with bindings
-    Editor->>Repr: Create representable
-    Repr->>Coord: Make coordinator
-    Coord->>View: Create CodeEditorView
-    View-->>Coord: View created
-    Coord-->>Repr: Coordinator ready
+    App->>Editor: Initialize with @Binding text
+    Editor->>Env: Read environment configuration
+    Editor->>Repr: Create platform representable
+    Repr->>Helper: createAndSetupContainer()
+    Helper->>Coord: makeCoordinator()
+    Helper->>Container: Create container view
+    Container->>VM: Initialize @Observable ViewModel
+    VM-->>Container: ViewModel configured
+    Container-->>Helper: Container ready
+    Helper-->>Repr: Setup complete
     Repr-->>Editor: Representable ready
-    Editor-->>App: Editor view ready
+    Editor-->>App: CodeEditor view ready
 
-    App->>Editor: Text binding changes
-    Editor->>Repr: Update representable
-    Repr->>Coord: Handle text update
-    Coord->>View: Update text content
-    View-->>Coord: Text updated
-    Coord-->>Repr: Update complete
-    Repr-->>Editor: Representable updated
-    Editor-->>App: Binding synchronized
+    App->>Editor: Environment changes
+    Editor->>Repr: updateUIView/updateNSView
+    Repr->>Helper: updateContainer()
+    Helper->>Coord: Handle update
+    Coord->>Container: Update configuration
+    Container->>VM: updateConfiguration()
+    VM-->>Container: State updated
+    Container-->>Coord: Update applied
+    Coord-->>Helper: Update complete
+    Helper-->>Repr: Container updated
+    Repr-->>Editor: Update synchronized
 
-    View->>Coord: User edits text
-    Coord->>Editor: Text did change
-    Editor->>App: Binding update
-    App->>App: Handle text change
+    Container->>Coord: Text changed by user
+    Coord->>Coord: handleTextChange() with debouncing
+    Coord->>App: Update @Binding text
+    Coord->>VM: textDidChange()
+    VM->>VM: Update metrics and state
+    VM-->>Container: State synchronized
 
-    App->>Editor: Configuration changes
-    Editor->>Repr: Update configuration
-    Repr->>Coord: Apply new configuration
-    Coord->>View: Update editor config
-    View-->>Coord: Configuration applied
-    Coord-->>Repr: Update complete
-    Repr-->>Editor: Configuration updated
-    Editor-->>App: Environment synchronized
+    Note over App,VM: Swift 6 concurrency with @MainActor isolation
+    Note over Coord: Debounced updates with Task cancellation
+    Note over VM: Real-time performance monitoring
 ```
 
 ## Key SwiftUI Integration Features
 
-### 1. Seamless SwiftUI Integration
-- **Native SwiftUI View**: CodeEditor acts as a true SwiftUI view
-- **Binding Support**: Full two-way binding with SwiftUI state
-- **Environment Integration**: Uses SwiftUI environment system
-- **Modifier Support**: Custom view modifiers for configuration
+### 1. Modern SwiftUI Architecture
+- **Swift 6 Concurrency**: Full @MainActor isolation and Sendable compliance
+- **@Observable ViewModels**: Modern state management with @Observable macro
+- **Environment Consolidation**: Single consolidated `CodeEditorEnvironment` 
+- **@FocusState Integration**: Native SwiftUI focus management
+- **Searchable Support**: Built-in search functionality with `.searchable()`
 
-### 2. Platform-Specific Representables
-- **AppKit Integration**: Native macOS NSViewRepresentable
-- **UIKit Integration**: Native iOS/iPadOS UIViewRepresentable
-- **Mac Catalyst**: Specialized Catalyst representable
-- **Cross-Platform Coordination**: Unified behavior across platforms
+### 2. Advanced Environment System
+- **Consolidated Configuration**: Single `CodeEditorEnvironment` struct for all settings
+- **Result Builder Support**: Declarative environment configuration with `@CodeEditorEnvironmentBuilder`
+- **Legacy Compatibility**: Computed properties maintain backward compatibility
+- **Environment Transformations**: Efficient environment updates with `transformEnvironment`
+- **Dependency Injection**: Memory monitor and event system injection
 
-### 3. Advanced State Management
-- **Binding Synchronization**: Automatic sync between SwiftUI and CodeEditor
-- **State Validation**: Comprehensive state validation and consistency
-- **Change Observation**: Reactive updates to state changes
-- **Version Tracking**: State versioning and history
+### 3. Cross-Platform Representables
+- **Platform Detection**: Automatic AppKit vs UIKit representable selection
+- **Shared Helper Logic**: `CodeEditorRepresentableHelper` for common operations
+- **Size Calculation**: Platform-optimized size calculations with `sizeThatFits`
+- **Lifecycle Management**: Proper setup, update, and dismantling
+- **Focus Coordination**: Cross-platform focus management
 
-### 4. Rich Environment System
-- **Environment Values**: Custom environment values for configuration
-- **Theme Integration**: Automatic theme propagation through environment
-- **Language Support**: Language configuration via environment
-- **Accessibility**: Full accessibility environment integration
+### 4. Performance-Optimized Coordination
+- **Debounced Updates**: Configurable text change debouncing with Swift concurrency
+- **Task Cancellation**: Proper task lifecycle management
+- **Update Batching**: Efficient state synchronization
+- **Memory Monitoring**: Real-time performance insights
+- **Change Detection**: Smart update detection to prevent unnecessary work
 
-### 5. View Modifier Ecosystem
-- **Fluent API**: Chainable view modifiers for configuration
-- **Custom Modifiers**: Extensible modifier system
-- **Priority System**: Modifier application order management
-- **Animation Support**: Smooth transitions for modifier changes
+### 5. Rich Modifier Ecosystem
+- **Fluent API**: 20+ chainable view modifiers for comprehensive configuration
+- **Type Safety**: Strongly-typed parameters with proper defaults
+- **Environment Integration**: Modifiers update environment values efficiently
+- **Code Completion**: Custom completion provider support
+- **Advanced Features**: Code folding, minimap, accessibility integration
 
-### 6. Animation and Transitions
-- **SwiftUI Animations**: Native SwiftUI animation support
-- **Custom Transitions**: Specialized code editor transitions
-- **Performance Optimized**: Animations optimized for text editing
-- **Accessibility Aware**: Respects reduce motion preferences
+### 6. @Observable State Management
+- **EditorContainerViewModel**: Central state coordination with @Observable
+- **Child ViewModels**: Specialized ViewModels for gutter, completion, minimap
+- **SwiftUI Bindings**: Direct binding support for reactive UI updates
+- **Business Logic Integration**: Clean separation with service registry injection
+- **Real-time Metrics**: Performance monitoring and error handling
 
-### 7. Development Support
-- **Preview Support**: Comprehensive SwiftUI preview integration
-- **Mock Data**: Rich mock data for development and testing
-- **Debug Mode**: Special debug overlays and information
-- **Extension System**: Plugin architecture for custom SwiftUI components
+### 7. Accessibility & Performance
+- **Dynamic Type**: Full Dynamic Type scaling support
+- **VoiceOver**: Comprehensive accessibility labels and announcements
+- **Reduce Motion**: Respects accessibility preferences
+- **Performance Views**: Real-time performance monitoring UI components
+- **Memory Pressure**: Adaptive behavior under memory constraints
 
 ## Usage Examples
 
-### Basic Implementation
+### Modern Basic Implementation
 ```swift
 struct ContentView: View {
-    @State private var code = "// Hello World"
-    @State private var config = EditorConfiguration.default
+    @State private var code = """
+        func greet(name: String) {
+            logger.debug("Hello, \\(name)!")
+        }
+        """
     
     var body: some View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
-            .codeTheme(.xcode)
-            .environment(\.codeEditorConfiguration, config)
+            .lineNumbers(true)
+            .highlightSelectedLine(true)
+            .frame(height: 400)
     }
 }
 ```
 
-### Advanced Configuration
+### Consolidated Environment Configuration
 ```swift
-CodeEditor(text: $sourceCode)
-    .codeLanguage(.python)
-    .codeTheme(.github)
-    .readOnly(isReadOnly)
-    .showLineNumbers(true)
-    .enableSyntaxHighlighting(true)
-    .onTextChange { newText in
-        handleTextChange(newText)
+struct AdvancedCodeEditor: View {
+    @State private var code = "// Enter code here"
+    @State private var customMemoryMonitor = MemoryMonitor()
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .codeEditorEnvironment {
+                CodeEditorEnvironment(
+                    language: .swift,
+                    theme: .monokai,
+                    configuration: .presentation,
+                    memoryMonitor: customMemoryMonitor
+                )
+            }
     }
-    .onSelectionChange { range in
-        handleSelectionChange(range)
-    }
+}
 ```
 
-### Custom Environment
+### Advanced Configuration with Performance Monitoring
 ```swift
-CodeEditor(text: $code)
-    .environment(\.codeEditorConfiguration, customConfig)
-    .environment(\.codeEditorTheme, darkTheme)
-    .environment(\.codeEditorLanguage, .javascript)
+struct PerformanceAwareEditor: View {
+    @State private var code = ""
+    @State private var memoryMonitor = MemoryMonitor()
+    @State private var eventSystem = UnifiedEventSystem()
+    
+    var body: some View {
+        VStack {
+            CodeEditor(text: $code, debounceInterval: .milliseconds(300))
+                .codeLanguage(.swift)
+                .lineNumbers(true)
+                .enableCodeFolding(true)
+                .showMinimap(true)
+                .memoryMonitor(memoryMonitor)
+                .eventSystem(eventSystem)
+                .onTextChange { newText in
+                    // Handle with custom debouncing
+                    performExpensiveOperation(newText)
+                }
+                .codeCompletion { context in
+                    await fetchCompletions(for: context)
+                }
+            
+            PerformanceInsightsPanel(insights: memoryMonitor.performanceInsights)
+        }
+    }
+}
+```
+
+### @Observable ViewModel Integration
+```swift
+@Observable
+final class CodeEditorAppState {
+    var code: String = ""
+    var language: Language = .swift
+    var theme: CodeEditorSwiftUITheme = .default
+    var configuration = EditorConfiguration()
+    
+    func updateConfiguration(updates: (inout EditorConfiguration) -> Void) {
+        updates(&configuration)
+    }
+}
+
+struct ObservableCodeEditor: View {
+    @State private var appState = CodeEditorAppState()
+    
+    var body: some View {
+        CodeEditor(text: $appState.code)
+            .codeLanguage(appState.language)
+            .codeTheme(appState.theme)
+            .environment(\.codeEditorConfiguration, appState.configuration)
+    }
+}
+```
+
+### Factory Methods and Custom Completion
+```swift
+struct FactoryExampleView: View {
+    @State private var code = "// Swift code"
+    
+    var body: some View {
+        // Using factory method
+        CodeEditor.withLanguage(
+            $code, 
+            language: .swift, 
+            theme: .dark,
+            debounceInterval: .milliseconds(200)
+        )
+        .codeCompletion { context in
+            // Custom async completion provider
+            let items = await myCompletionService.getCompletions(
+                for: context.language,
+                at: context.cursorPosition,
+                in: context.text
+            )
+            
+            return items.map { item in
+                SwiftUICompletionItem(
+                    label: item.label,
+                    kind: .function,
+                    detail: item.signature,
+                    insertText: item.template,
+                    documentation: item.documentation
+                )
+            }
+        }
+    }
+}
 ```
 
 ## Benefits
 
-1. **Native SwiftUI**: True SwiftUI integration with full ecosystem support
-2. **Cross-Platform**: Single API works across macOS, iOS, and Catalyst
-3. **Reactive**: Automatic synchronization with SwiftUI state management
-4. **Extensible**: Rich modifier and extension system
-5. **Accessible**: Full accessibility support with VoiceOver integration
-6. **Developer Friendly**: Comprehensive preview and debugging support
+1. **Modern Swift 6**: Full concurrency safety with @MainActor isolation and Sendable compliance
+2. **@Observable Integration**: Latest SwiftUI state management patterns with @Observable ViewModels
+3. **Performance Excellence**: Real-time monitoring, adaptive behavior, and 60fps rendering targets
+4. **Cross-Platform**: Unified API across macOS, iOS, iPadOS, and Mac Catalyst
+5. **Developer Experience**: Rich modifier ecosystem, factory methods, and comprehensive completion support
+6. **Accessibility First**: Dynamic Type, VoiceOver, and accessibility preference awareness
+7. **Business Logic Separation**: Clean architecture with dependency injection and service registry
+8. **Memory Efficient**: Smart memory monitoring with adaptive performance modes
+9. **Environment Consolidation**: Single environment configuration with result builder support
+10. **Extensible Architecture**: Plugin-ready with event system and custom completion providers
+
+## Technical Highlights
+
+- **401 Source Files** with comprehensive SwiftUI integration
+- **66 Test Files** ensuring reliability across all platforms
+- **20+ View Modifiers** for declarative configuration
+- **Zero SwiftLint Violations** maintained for code quality
+- **Swift 6 Ready** with full concurrency compliance
+- **@Observable ViewModels** for modern state management
+- **Real-time Performance Monitoring** with adaptive behavior
+- **Cross-platform Representables** with shared helper logic

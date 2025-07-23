@@ -15,10 +15,12 @@ classDiagram
         +performance PerformanceConfiguration
         +eventSystem UnifiedEventSystem?
         +actorCoordinator ActorCoordinator?
+        +workspaceRoot URL?
         +allowedPlugins Set~String~
         +pluginSettings [String: Any]
         +validate()
         +copy()
+        +updateConfiguration()
     }
 
     class ConfigurationPresets {
@@ -36,6 +38,34 @@ classDiagram
         +validateFontSize()
         +validateTabWidth()
         +validateCacheSize()
+        +autoFixSuggestions()
+        +detailedReporting()
+    }
+
+    %% New Configuration Features
+    class ConfigurationDSL {
+        &lt;&lt;result builder&gt;&gt;
+        +buildBlock()
+        +buildExpression()
+        +createConfiguration()
+    }
+
+    class ConfigurationHotReload {
+        &lt;&lt;ObservableObject&gt;&gt;
+        +isEnabled Bool
+        +reloadHistory [ConfigurationSnapshot]
+        +undoStack [EditorConfiguration]
+        +enableHotReload()
+        +revertChanges()
+        +clearHistory()
+    }
+
+    class ConfigurationMigrator {
+        &lt;&lt;version management&gt;&gt;
+        +currentVersion String
+        +migrate()
+        +validateVersion()
+        +backup()
     }
 
     %% Second Row - Core Configuration Sections
@@ -152,9 +182,20 @@ classDiagram
         +saveToUserDefaults()
     }
 
-    class ConfigurationEnvironmentKey {
+    class CodeEditorEnvironment {
+        &lt;&lt;consolidated environment&gt;&gt;
+        +language Language
+        +theme CodeEditorSwiftUITheme
+        +configuration EditorConfiguration
+        +becomeFirstResponder Bool
+        +memoryMonitor MemoryMonitor?
+        +eventSystem UnifiedEventSystem?
+        +with() CodeEditorEnvironment
+    }
+
+    class CodeEditorEnvironmentKey {
         &lt;&lt;EnvironmentKey&gt;&gt;
-        +defaultValue EditorConfiguration
+        +defaultValue CodeEditorEnvironment
     }
 
     class ConfigurationPersistence {
@@ -172,6 +213,10 @@ classDiagram
         +updateTimer Timer?
         +updateDelay TimeInterval
         +onUpdate (EditorConfiguration) -> Void
+        +lazyEvaluation Bool
+        +validationCaching Bool
+        +batchUpdate()
+        +flushUpdates()
         +queueUpdate()
         +applyPendingUpdates()
         +scheduleUpdate()
@@ -195,10 +240,16 @@ classDiagram
     
     ConfigurationValidator --> EditorConfiguration : validates
     ConfigurationPresets --> EditorConfiguration : creates
+    ConfigurationDSL --> EditorConfiguration : builds
+    ConfigurationMigrator --> EditorConfiguration : upgrades
+    ConfigurationHotReload --> EditorConfiguration : observes
     
     AppState --> EditorConfiguration : manages
     AppState --> ConfigurationPersistence : uses
     AppState --> ConfigurationBatchUpdater : uses
+    
+    CodeEditorEnvironment --> EditorConfiguration : wraps
+    CodeEditorEnvironmentKey --> CodeEditorEnvironment : provides
     
     ConfigurationBatchUpdater --> EditorConfiguration : batches updates
     

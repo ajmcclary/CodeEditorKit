@@ -102,9 +102,16 @@ classDiagram
         +textEditingService TextEditingService
         +syntaxHighlightingService SyntaxHighlightingService
         +languageDetectionService LanguageDetectionService
-        +completionManager CompletionManager
-        +register()
-        +resolve()
+        +completionProviderRegistry CompletionProviderRegistry
+        +lineNumberCalculationService LineNumberCalculationService
+        +gutterSizingService GutterSizingService
+        +codeFoldingCoordinatorService CodeFoldingCoordinatorService
+        +editorLayoutService EditorLayoutService
+        +memoryManagementCoordinator MemoryManagementCoordinator
+        +configureForEditor()
+        +getServiceStatus()
+        +clearAllCaches()
+        +resetAllServices()
     }
 
     class TextEditingService {
@@ -130,11 +137,57 @@ classDiagram
         +registerLanguage()
     }
 
-    class CompletionManager {
-        &lt;&lt;code completion&gt;&gt;
-        +provideCompletions()
-        +registerProvider()
-        +triggerCompletion()
+    class CompletionProviderRegistry {
+        &lt;&lt;provider management&gt;&gt;
+        +providers [String: CompletionProvider]
+        +languageProviders [Language: [CompletionProvider]]
+        +register()
+        +getCompletions()
+        +mergeCompletionResults()
+        +validateProviders()
+    }
+
+    %% New Service Classes
+    class LineNumberCalculationService {
+        &lt;&lt;line positioning&gt;&gt;
+        +calculateVisibleLineRanges()
+        +calculateLinePosition()
+        +clearCache()
+    }
+
+    class GutterSizingService {
+        &lt;&lt;gutter calculations&gt;&gt;
+        -lineNumberCalculationService LineNumberCalculationService
+        +calculateOptimalWidth()
+        +clearCache()
+    }
+
+    class CodeFoldingCoordinatorService {
+        &lt;&lt;folding management&gt;&gt;
+        -lineNumberCalculationService LineNumberCalculationService
+        -codeFoldingEngine CodeFoldingEngine
+        +toggleFold()
+        +calculateFoldControlPosition()
+        +getCurrentFoldState()
+        +saveFoldingState()
+    }
+
+    class EditorLayoutService {
+        &lt;&lt;layout orchestration&gt;&gt;
+        -gutterSizingService GutterSizingService
+        +calculateComponentFrames()
+        +calculateTextContainerInsets()
+        +optimizeLayoutForConfiguration()
+    }
+
+    class MemoryManagementCoordinator {
+        &lt;&lt;memory orchestration&gt;&gt;
+        -memoryMonitor MemoryMonitor
+        -components ManagedComponents
+        +createAsyncHighlighter()
+        +createRenderingOptimizer()
+        +createCompletionManager()
+        +updateMemoryMonitor()
     }
 
     class CodeEditorLayoutManager {
@@ -246,8 +299,18 @@ classDiagram
     BusinessLogicServiceRegistry --> TextEditingService : manages
     BusinessLogicServiceRegistry --> SyntaxHighlightingService : manages
     BusinessLogicServiceRegistry --> LanguageDetectionService : manages
-    BusinessLogicServiceRegistry --> CompletionManager : manages
-    BusinessLogicServiceRegistry --> MemoryMonitor : manages
+    BusinessLogicServiceRegistry --> CompletionProviderRegistry : manages
+    BusinessLogicServiceRegistry --> LineNumberCalculationService : manages
+    BusinessLogicServiceRegistry --> GutterSizingService : manages
+    BusinessLogicServiceRegistry --> CodeFoldingCoordinatorService : manages
+    BusinessLogicServiceRegistry --> EditorLayoutService : manages
+    BusinessLogicServiceRegistry --> MemoryManagementCoordinator : manages
+    
+    %% Inter-service Dependencies
+    GutterSizingService --> LineNumberCalculationService : uses
+    EditorLayoutService --> GutterSizingService : uses
+    CodeFoldingCoordinatorService --> LineNumberCalculationService : uses
+    MemoryManagementCoordinator --> MemoryMonitor : orchestrates
     
     EditorConfiguration --> ActorCoordinator : includes
     EditorConfiguration --> UnifiedEventSystem : includes

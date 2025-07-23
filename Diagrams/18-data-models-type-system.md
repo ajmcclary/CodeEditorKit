@@ -1,606 +1,466 @@
 # Data Models & Type System Architecture
 
-This diagram shows the comprehensive data models and type system that forms the foundation of the CodeEditorPlugin's data structures and type safety.
+This diagram shows the comprehensive data models and type system that forms the foundation of the CodeEditorPlugin's data structures, featuring Swift 6 concurrency patterns, actor-based coordination, and advanced performance optimization.
 
 ```mermaid
 classDiagram
     direction LR
     
-    %% Row 1 - Core Type System
-    class TypeSystem {
-        <<type system>>
-        +typeRegistry TypeRegistry
-        +typeValidator TypeValidator
-        +typeInferencer TypeInferencer
-        +typeConverter TypeConverter
-        +registerType()
-        +validateType()
-        +inferType()
-        +convertType()
+    %% Row 1 - Swift 6 Actor Coordination System
+    class ActorCoordinator {
+        <<@MainActor final class>>
+        +textProcessor TextProcessingActor
+        +cacheCoordinator CacheCoordinatorActor
+        +fileSystem FileSystemActor
+        +performanceMetrics PerformanceMetricsActor
+        +documentState DocumentStateActor
+        +errorRecovery ErrorRecoveryCoordinator
+        +processText() async throws
+        +trackPerformance() async
+        +createOrUpdateDocument() async
+        +static create() ActorCoordinator
     }
 
-    class TypeRegistry {
-        <<registry>>
-        +registeredTypes [String: DataType]
-        +primitiveTypes [PrimitiveType]
-        +compositeTypes [CompositeType]
-        +customTypes [CustomType]
-        +register()
-        +lookup()
-        +getAllTypes()
+    class TextProcessingActor {
+        <<actor>>
+        -activeProcessors [UUID: TextProcessor]
+        -textBuffers [UUID: String]
+        -errorRecovery ErrorRecoveryCoordinator
+        +process(text, processorType, priority) async throws
+        +cancelAllProcessing()
+        +processIndentation() async throws
+        +processBracketMatching() async throws
+        +processLineWrapping() async throws
+        +normalizeWhitespace() async throws
     }
 
-    class DataModel {
-        <<protocol>>
-        +modelId String
-        +version Int
-        +validate()
-        +serialize()
-        +deserialize()
+    class CacheCoordinatorActor {
+        <<actor>>
+        -caches [String: AnyCacheWrapper]
+        -cacheStats [String: CacheStatistics]
+        -maxGlobalMemoryMB Double
+        -currentMemoryUsageMB Double
+        +registerCache() async
+        +getValue() async
+        +setValue() async
+        +performGlobalEviction() async
+        +clearCache() async
     }
 
-    %% Row 2 - Text Data Models
-    class FoldableRegion {
-        <<foldable region>>
+    class PerformanceMetricsActor {
+        <<actor>>
+        -metrics [String: [SendablePerformanceMetric]]
+        -aggregatedStats [String: AggregatedStats]
+        -maxMetricsPerCategory Int
+        +record(metric) async
+        +getStats(category) async
+        +getAllStats() async
+        +clearMetrics() async
+        +updateAggregatedStats() async
+    }
+
+    class DocumentStateActor {
+        <<actor>>
+        -documents [UUID: DocumentState]
+        -documentURLs [URL: UUID]
+        +createDocument() async
+        +updateContent() async
+        +getDocument() async
+        +markSaved() async
+        +closeDocument() async
+    }
+
+    %% Row 2 - Core Sendable Data Models
+    class Token {
+        <<struct Sendable>>
+        +name String
         +range NSRange
-        +isExpanded Bool
-        +foldingType FoldingType
-        +displayText String?
-        +nestedRegions [FoldableRegion]
-        +metadata RegionMetadata
-        +expand()
-        +collapse()
-        +toggle()
+        +init(name, range)
+        +debugDescription String
+    }
+
+    class TokenApplication {
+        <<struct Sendable>>
+        +tokens [Token]
+        +range NSRange?
+        +action Action
+        +init(tokens, range, action)
+        +static noChange TokenApplication
+    }
+
+    class TokenProvider {
+        <<typealias>>
+        HybridSyncAsyncValueProvider~NSRange, TokenApplication, Never~
+        +syncValueProvider SyncValueProvider
+        +asyncValueProvider AsyncValueProvider
+        +async() async throws
+        +sync() throws
+        +static empty TokenProvider
+        +static asyncOnlyNone TokenProvider
+    }
+
+    class RangeMutation {
+        <<struct Sendable>>
+        +range NSRange
+        +delta Int
+        +version Int
+        +transform(set IndexSet) IndexSet
+        +transform(range NSRange) NSRange?
+    }
+
+    class FoldableRegion {
+        <<struct Identifiable>>
+        +id UUID
+        +range NSRange
+        +title String
+        +type FoldingType
+        +level Int
+        +parentId UUID?
+        +foldedText String?
     }
 
     class MarkedText {
-        <<marked text>>
-        +text String
-        +markers [TextMarker]
-        +attributes [NSAttributedString.Key: Any]
-        +range NSRange
-        +language String?
-        +addMarker()
-        +removeMarker()
-        +getMarkersInRange()
+        <<package final class>>
+        +markedText NSAttributedString
+        +markedRange NSRange
+        +selectedRange NSRange
+        +debugDescription String
     }
 
-    class TextMarker {
-        <<text marker>>
-        +id String
-        +range NSRange
-        +type MarkerType
-        +priority Int
-        +data MarkerData
-        +isVisible Bool
-        +update()
-        +intersects()
-    }
-
-    class MarkerData {
-        <<marker data>>
-        +title String?
-        +description String?
-        +color PlatformColor?
-        +icon PlatformImage?
-        +metadata [String: Any]
-        +actions [MarkerAction]
-    }
-
-    %% Row 3 - Token System
-    class Token {
-        <<token>>
-        +value String
-        +type TokenType
-        +range NSRange
-        +syntaxKind SyntaxKind?
-        +semanticInfo SemanticInfo?
-        +parentToken Token?
-        +childTokens [Token]
-        +isValid Bool
-    }
-
-    class SemanticInfo {
-        <<semantic info>>
-        +symbolKind SymbolKind
-        +scope Scope
-        +references [TokenReference]
-        +definition TokenDefinition?
-        +typeInfo TypeInformation?
-        +accessibility AccessibilityLevel
-    }
-
-    class TextSegment {
-        <<text segment>>
-        +content String
-        +type NSTextSegmentType
-        +range NSRange
-        +attributes [NSAttributedString.Key: Any]
-        +metadata SegmentMetadata
-        +isEditable Bool
-        +render()
-    }
-
-    class SegmentMetadata {
-        <<segment metadata>>
-        +language String?
-        +syntaxHighlighted Bool
-        +lastModified Date
-        +userAnnotations [String]
-        +systemTags [SystemTag]
-        +performance SegmentPerformanceInfo
-    }
-
-    %% Row 4 - Versioning System
-    class Versioned~T~ {
-        <<versioned>>
-        +content T
-        +version Int
-        +timestamp Date
-        +checksum String
-        +metadata VersionMetadata
-        +updateContent()
-        +rollback()
-        +compare()
+    %% Row 3 - Versioning & Hybrid Systems
+    class Versioned~Version, Value~ {
+        <<struct Sendable>>
+        +value Value
+        +version Version
+        +init(value, version)
     }
 
     class VersionedContent {
-        <<versioned content>>
-        +textContent String
-        +binaryContent Data?
-        +encoding String.Encoding
-        +lineEndings LineEndingType
-        +contentType ContentType
-        +size Int
-        +hash String
+        <<protocol Sendable>>
+        +associatedtype Version
+        +version Version
+        +currentVersion Version
+        +currentLength Int
     }
 
-    class VersionMetadata {
-        <<version metadata>>
-        +author String?
-        +message String?
-        +tags [String]
-        +parentVersion Int?
-        +branchInfo BranchInfo?
-        +changeType ChangeType
+    class VersionedRange~Version~ {
+        <<struct Sendable>>
+        +range NSRange
+        +version Version
+        +value NSRange
+        +init(range, version)
     }
 
-    class VersionDifference {
-        <<version difference>>
-        +addedLines [LineChange]
-        +removedLines [LineChange]
-        +modifiedLines [LineChange]
-        +statistics DifferenceStatistics
-        +generatePatch()
+    class HybridSyncAsyncValueProvider~Input, Output, Failure~ {
+        <<struct Sendable>>
+        +syncValueProvider SyncValueProvider
+        +asyncValueProvider AsyncValueProvider
+        +async(isolation, input) async throws
+        +sync(input) throws
+        +init(syncValue, asyncValue)
+        +init(syncValue, mainActorAsyncValue)
     }
 
-    %% Row 5 - Mutation System
-    class RangeMutation {
-        <<range mutation>>
-        +originalRange NSRange
-        +newRange NSRange
-        +mutationType MutationType
-        +textDelta String
+    %% Row 4 - Advanced Configuration Models
+    class EditorConfiguration {
+        <<struct Sendable>>
+        +layout Layout
+        +display Display
+        +behavior Behavior
+        +performance Performance
+        +eventSystem UnifiedEventSystem?
+        +actorCoordinator ActorCoordinator?
+        +workspaceRoot URL?
+        +with(layout) Self
+        +with(display) Self
+        +validate() [ValidationError]
+    }
+
+    class SendableEditorEvent {
+        <<struct Sendable>>
+        +id UUID
         +timestamp Date
-        +reversible Bool
-        +apply()
-        +reverse()
-        +combine()
+        +type EventType
+        +init(type)
     }
 
-    class MutationResult {
-        <<mutation result>>
-        +success Bool
-        +resultingRange NSRange
-        +affectedRanges [NSRange]
-        +warnings [MutationWarning]
-        +undo UndoOperation?
+    class SendableCompletionContext {
+        <<struct Sendable>>
+        +text String
+        +cursorPosition Int
+        +language Language
+        +lineNumber Int
+        +columnNumber Int
+        +precedingText String
+        +followingText String
     }
 
-    class RegionMetadata {
-        <<region metadata>>
-        +createdAt Date
-        +modifiedAt Date
-        +foldCount Int
-        +userPreference UserFoldingPreference
-        +persistentId String
-        +tags [String]
+    class SendableResult~Success, Failure~ {
+        <<enum Sendable>>
+        case success(Success)
+        case failure(Failure)
+        +value Success?
+        +error Failure?
     }
 
-    %% Row 6 - Type Information System
-    class TypeInformation {
-        <<type information>>
-        +typeName String
-        +typeKind TypeKind
-        +generics [GenericParameter]
-        +constraints [TypeConstraint]
-        +members [TypeMember]
-        +inheritance [TypeInformation]
-        +isNullable Bool
-        +documentation String?
+    %% Row 5 - Performance & Memory Management
+    class MemoryMonitor {
+        <<@MainActor final class>>
+        +memoryProvider PlatformMemoryProvider
+        +memoryThresholdMB Double
+        +enableAutomaticCleanup Bool
+        +memoryStats MemoryStatistics
+        -cleanupHandlers [String: CleanupHandler]
+        +registerCleanupHandler() async
+        +performCleanup() async
+        +startMonitoring()
+        +stopMonitoring()
     }
 
-    class GenericParameter {
-        <<generic parameter>>
+    class SendablePerformanceMetric {
+        <<struct Sendable>>
         +name String
-        +constraints [TypeConstraint]
-        +defaultType TypeInformation?
-        +variance GenericVariance
+        +duration Duration
+        +metadata [String: String]
+        +timestamp Date
+        +init(name, duration, metadata)
     }
 
-    class TypeConstraint {
-        <<type constraint>>
-        +constraintType ConstraintType
-        +targetType TypeInformation
-        +isOptional Bool
+    class PerformanceHistory {
+        <<@MainActor final class>>
+        -dataPoints [PerformanceDataPoint]
+        -maxDataPoints Int
+        +record(metrics) async
+        +getHistory(metric, duration) [PerformanceDataPoint]
+        +analyzeTrend(metric) PerformanceTrend?
+        +clear()
     }
 
-    class TypeMember {
-        <<type member>>
-        +name String
-        +memberType TypeInformation
-        +accessibility AccessibilityLevel
-        +isStatic Bool
-        +isReadOnly Bool
+    class InsightsPerformanceIssue {
+        <<enum Identifiable>>
+        case slowTextLayout(TimeInterval)
+        case highMemoryUsage(Double, Double)
+        case lowCacheHitRate(Double, Double)
+        case increasingCPUUsage(PerformanceTrend)
+        case unresponsiveUI(Int)
+        case slowSyntaxHighlighting(TimeInterval)
+        +severity IssueSeverity
+        +description String
+    }
+
+    %% Row 6 - LSP & Completion Models
+    class LSPRequest {
+        <<struct Codable>>
+        +jsonrpc String
+        +id RequestId
+        +method String
+        +params AnyCodable
+        +init(id, method, params)
+    }
+
+    class CompletionItemModel {
+        <<struct Sendable>>
+        +id String
+        +label String
+        +insertText String
+        +kind CompletionItemKind
+        +detail String?
         +documentation String?
+        +priority Int
+        +snippetSupport Bool
+        +textEdit CompletionTextEdit?
+        +additionalTextEdits [CompletionTextEdit]
     }
 
-    %% Row 7 - Model Relationships & Performance
-    class ModelRelationship {
-        <<model relationship>>
-        +sourceModel DataModel
-        +targetModel DataModel
-        +relationshipType RelationshipType
-        +cardinality Cardinality
-        +isOptional Bool
-        +cascadeDelete Bool
+    class RequestId {
+        <<enum Sendable>>
+        case string(String)
+        case number(Int)
+        +init(from decoder) throws
+        +encode(to encoder) throws
     }
 
-    class ModelPerformanceTracker {
-        <<performance tracker>>
-        +accessPatterns [AccessPattern]
-        +memoryUsage MemoryUsageInfo
-        +serializationMetrics SerializationMetrics
-        +trackAccess()
-        +analyzePerformance()
-        +optimizeModel()
+    class AnyCodable {
+        <<struct Sendable>>
+        -value any Codable & Sendable
+        +init(value)
+        +init(from decoder) throws
+        +encode(to encoder) throws
     }
 
-    class ModelCache~T~ {
-        <<model cache>>
-        +cache LRUCache~String, T~
-        +validator ModelValidator~T~
-        +serializer ModelSerializer~T~
-        +store()
-        +retrieve()
-        +invalidate()
-        +compact()
-    }
-
-    %% Row 8 - Enumerations
+    %% Row 7 - Enumerations & Types
     class FoldingType {
-        <<enumeration>>
-        braces
-        indentation
-        comment
-        imports
-        function
-        class
-        custom
-    }
-
-    class MarkerType {
-        <<enumeration>>
-        highlight
-        error
-        warning
-        bookmark
-        selection
-        search
-        annotation
-        debugging
-        custom
-    }
-
-    class TokenType {
-        <<enumeration>>
-        keyword
-        identifier
-        literal
-        operator
-        punctuation
-        comment
-        whitespace
-        newline
-        string
-        number
-        boolean
-        regex
-        custom
-    }
-
-    class SyntaxKind {
-        <<enumeration>>
-        declaration
-        statement
-        expression
-        type
-        modifier
-        annotation
-        import
-        package
-        unknown
-    }
-
-    class MutationType {
-        <<enumeration>>
-        insertion
-        deletion
-        replacement
-        move
-        split
-        merge
-        format
+        <<enum>>
+        case function
+        case class
+        case method
+        case block
+        case comment
+        case imports
+        case region
+        case custom(String)
     }
 
     class NSTextSegmentType {
-        <<enumeration>>
-        standard
-        whitespace
-        tab
-        lineBreak
-        selection
-        link
-        attachment
-        custom
+        <<enum>>
+        case standard
+        case selection
+        case highlight
     }
 
-    class TypeKind {
-        <<enumeration>>
-        primitive
-        struct
-        class
-        interface
-        enum
-        union
-        function
-        generic
-        array
-        dictionary
-        optional
-        unknown
+    class EventType {
+        <<enum Sendable>>
+        case textChanged(String, NSRange)
+        case selectionChanged(NSRange)
+        case languageChanged(Language)
+        case configurationChanged
+        case annotationAdded(String)
+        case annotationRemoved(String)
+        case scrollPositionChanged(NSRange)
     }
 
-    class ContentType {
-        <<enumeration>>
-        plainText
-        sourcecode
-        markdown
-        json
-        xml
-        yaml
-        binary
-        image
-        custom
+    class CleanupPriority {
+        <<enum Sendable>>
+        case low
+        case normal
+        case high
+        case critical
     }
 
-    class LineEndingType {
-        <<enumeration>>
-        lf
-        crlf
-        cr
-        mixed
-        auto
-    }
-
-    class ChangeType {
-        <<enumeration>>
-        created
-        modified
-        deleted
-        moved
-        renamed
-        merged
-        conflicted
-    }
-
-    class RelationshipType {
-        <<enumeration>>
-        oneToOne
-        oneToMany
-        manyToOne
-        manyToMany
-        composition
-        aggregation
-        dependency
+    class IssueSeverity {
+        <<enum Comparable>>
+        case info
+        case warning
+        case critical
     }
 
     %% Key Relationships
-    TypeSystem --> TypeRegistry : uses
-    TypeSystem --> DataModel : manages
+    ActorCoordinator --> TextProcessingActor : manages
+    ActorCoordinator --> CacheCoordinatorActor : manages
+    ActorCoordinator --> PerformanceMetricsActor : manages
+    ActorCoordinator --> DocumentStateActor : manages
+    
+    EditorConfiguration --> ActorCoordinator : optionally contains
+    EditorConfiguration --> MemoryMonitor : configures
+    
+    TokenProvider --> Token : provides
+    TokenProvider --> TokenApplication : produces
+    TokenApplication --> Token : contains
+    
+    Versioned --> VersionedContent : implements pattern
+    VersionedRange --> Versioned : specialized version
+    
+    HybridSyncAsyncValueProvider --> TokenProvider : powers
+    
+    MemoryMonitor --> SendablePerformanceMetric : tracks
+    MemoryMonitor --> PerformanceHistory : records
+    
+    PerformanceMetricsActor --> SendablePerformanceMetric : stores
+    PerformanceHistory --> InsightsPerformanceIssue : analyzes
+    
+    CompletionItemModel --> SendableCompletionContext : uses
+    LSPRequest --> RequestId : identifies
+    LSPRequest --> AnyCodable : wraps params
+    
+    SendableEditorEvent --> EventType : categorizes
     
     FoldableRegion --> FoldingType : categorized by
-    FoldableRegion --> RegionMetadata : contains
+    MarkedText --> NSTextSegmentType : uses
     
-    MarkedText --> TextMarker : contains
-    TextMarker --> MarkerType : categorized by
-    TextMarker --> MarkerData : contains
-    
-    Token --> TokenType : categorized by
-    Token --> SyntaxKind : has
-    Token --> SemanticInfo : contains
-    
-    Versioned --> VersionMetadata : contains
-    Versioned --> VersionedContent : wraps
-    
-    RangeMutation --> MutationType : categorized by
-    RangeMutation --> MutationResult : produces
-    
-    TextSegment --> NSTextSegmentType : categorized by
-    TextSegment --> SegmentMetadata : contains
-    
-    TypeInformation --> TypeKind : categorized by
-    TypeInformation --> GenericParameter : contains
-    TypeInformation --> TypeConstraint : has
-    TypeInformation --> TypeMember : contains
-    
-    ModelRelationship --> RelationshipType : categorized by
-    ModelRelationship --> DataModel : relates
-    
-    ModelPerformanceTracker --> DataModel : tracks
-    ModelCache --> DataModel : caches
+    %% Styling - Modern Swift 6 Colors
+    classDef actor fill:#007AFF25,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef sendable fill:#34C75925,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef hybrid fill:#AF52DE25,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF950025,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef config fill:#FF3B3025,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef lsp fill:#5E5CE625,stroke:#5E5CE6,stroke-width:2px,color:#1D1D1F
+    classDef enum fill:#8E8E9325,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
-    %% Styling - Dark mode friendly colors
-    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef model fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef token fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef version fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef mutation fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef type fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef content fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef perf fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
-    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
-
-    class TypeSystem system
-    class TypeRegistry system
-    class FoldableRegion model
-    class MarkedText model
-    class TextMarker model
-    class MarkerData model
-    class RegionMetadata model
-    class TextSegment model
-    class SegmentMetadata model
-    class Token token
-    class SemanticInfo token
-    class TokenType token
-    class SyntaxKind token
-    class Versioned version
-    class VersionedContent version
-    class VersionMetadata version
-    class VersionDifference version
-    class RangeMutation mutation
-    class MutationResult mutation
-    class TypeInformation type
-    class TypeKind type
-    class GenericParameter type
-    class TypeConstraint type
-    class TypeMember type
-    class ContentType content
-    class LineEndingType content
-    class ChangeType content
-    class NSTextSegmentType content
-    class ModelPerformanceTracker perf
-    class ModelCache perf
+    class ActorCoordinator actor
+    class TextProcessingActor actor
+    class CacheCoordinatorActor actor
+    class PerformanceMetricsActor actor
+    class DocumentStateActor actor
+    
+    class Token sendable
+    class TokenApplication sendable
+    class RangeMutation sendable
+    class Versioned sendable
+    class VersionedContent sendable
+    class VersionedRange sendable
+    class SendableEditorEvent sendable
+    class SendableCompletionContext sendable
+    class SendableResult sendable
+    class SendablePerformanceMetric sendable
+    class CompletionItemModel sendable
+    class RequestId sendable
+    class AnyCodable sendable
+    
+    class TokenProvider hybrid
+    class HybridSyncAsyncValueProvider hybrid
+    
+    class MemoryMonitor performance
+    class PerformanceHistory performance
+    class InsightsPerformanceIssue performance
+    
+    class EditorConfiguration config
+    
+    class LSPRequest lsp
+    
     class FoldingType enum
-    class MarkerType enum
-    class MutationType enum
-    class RelationshipType enum
+    class NSTextSegmentType enum
+    class EventType enum
+    class CleanupPriority enum
+    class IssueSeverity enum
 ```
 
-## Data Model Interaction Flow
+## Data Model Architecture Evolution
 
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant System as TypeSystem
-    participant Registry as TypeRegistry
-    participant Model as DataModel
-    participant Cache as ModelCache
-    participant Tracker as PerformanceTracker
+### 1. Swift 6 Concurrency Foundation
+- **Actor-Based Coordination**: `ActorCoordinator` manages specialized actors for different subsystems
+- **Thread-Safe Data Models**: All models marked `Sendable` for safe cross-actor communication
+- **Async/Await Integration**: Comprehensive async patterns throughout the architecture
+- **Error Recovery**: Built-in error recovery coordination across actors
 
-    App->>System: Create/Update model
-    System->>Registry: Validate type
-    Registry-->>System: Type validation result
-    
-    alt Valid type
-        System->>Model: Create model instance
-        Model->>Model: Validate data
-        Model-->>System: Validation result
-        
-        alt Validation success
-            System->>Cache: Store model
-            System->>Tracker: Track access
-            System-->>App: Model created successfully
-        else Validation failed
-            System-->>App: Validation errors
-        end
-    else Invalid type
-        System-->>App: Type validation errors
-    end
+### 2. Advanced Type System Features
+- **Generic Versioning**: `Versioned<Version, Value>` supports any comparable version type
+- **Hybrid Sync/Async Providers**: `HybridSyncAsyncValueProvider` enables both synchronous and asynchronous operation modes
+- **Protocol-Based Abstractions**: `VersionedContent` protocol for flexible version tracking
+- **Type-Erased Wrappers**: `AnyCodable` for flexible JSON-RPC communication
 
-    App->>System: Retrieve model
-    System->>Cache: Check cache
-    
-    alt Cache hit
-        Cache-->>System: Return cached model
-        System->>Tracker: Track cache hit
-    else Cache miss
-        System->>Model: Load from storage
-        Model-->>System: Loaded model
-        System->>Cache: Cache loaded model
-        System->>Tracker: Track cache miss
-    end
-    
-    System-->>App: Return model
-    
-    App->>System: Update model
-    System->>Model: Apply changes
-    Model->>Model: Validate changes
-    Model-->>System: Change result
-    System->>Cache: Update cache
-    System->>Tracker: Track modification
-    System-->>App: Update complete
-```
+### 3. Performance-Optimized Data Structures
+- **Memory-Aware Caching**: `CacheCoordinatorActor` with automatic eviction and statistics
+- **Performance Metrics Collection**: Real-time performance tracking with `PerformanceMetricsActor`
+- **Memory Monitoring**: `MemoryMonitor` with configurable thresholds and cleanup handlers
+- **Range Processing**: Optimized `RangeMutation` with efficient transformation algorithms
 
-## Key Data Model Features
+### 4. Cross-Platform Data Abstractions
+- **Platform-Agnostic Models**: All core models work across macOS, iOS, and Catalyst
+- **Sendable Wrappers**: Specialized sendable types for cross-platform event handling
+- **Configuration System**: Comprehensive `EditorConfiguration` with validation and presets
+- **LSP Integration**: Full Language Server Protocol support with type-safe message handling
 
-### 1. Comprehensive Type System
-- **Type Registry**: Central type registration and validation
-- **Type Inference**: Automatic type detection and inference
-- **Generic Support**: Full generic type parameter support
-- **Constraint System**: Type constraints and validation rules
+### 5. Modern Swift Features
+- **Strict Concurrency**: All types properly marked for Swift 6 strict concurrency
+- **Isolated Parameters**: Proper actor isolation in method signatures
+- **Duration API**: Modern `Duration` types instead of `TimeInterval` where appropriate
+- **Result Builders**: Configuration DSL support through builder patterns
 
-### 2. Rich Text Models
-- **Foldable Regions**: Hierarchical code folding with metadata
-- **Marked Text**: Text with multiple markers and annotations
-- **Token System**: Comprehensive tokenization with semantic info
-- **Text Segments**: Typed text segments with attributes
+### 6. Business Logic Integration
+- **Service Architecture**: Models designed to integrate with service-based architecture
+- **Event System**: Unified event system with sendable event types
+- **Completion Engine**: Advanced completion models with LSP compatibility
+- **Document Management**: Sophisticated document state tracking with version control
 
-### 3. Versioning and History
-- **Generic Versioning**: Version any data type with full history
-- **Content Management**: Rich content with encoding and metadata
-- **Difference Tracking**: Detailed change analysis and patch generation
-- **Rollback Support**: Full version rollback capabilities
+## Key Benefits
 
-### 4. Range and Mutation System
-- **Range Mutations**: Comprehensive text range modification tracking
-- **Mutation Types**: Full spectrum of text change operations
-- **Reversible Operations**: Undo/redo support for all mutations
-- **Batch Operations**: Efficient handling of multiple changes
+1. **Concurrency Safety**: Full Swift 6 concurrency compliance with actor isolation
+2. **Performance Excellence**: Optimized for 60fps rendering and large file handling
+3. **Type Safety**: Comprehensive type system with validation and error handling
+4. **Memory Efficiency**: Advanced memory management with automatic cleanup
+5. **Cross-Platform**: Unified models work seamlessly across Apple platforms
+6. **Extensibility**: Protocol-based design allows easy extension and customization
+7. **Real-Time Insights**: Built-in performance monitoring and issue detection
+8. **Production Ready**: Battle-tested patterns with comprehensive error recovery
 
-### 5. Advanced Type Information
-- **Rich Type Metadata**: Comprehensive type information with documentation
-- **Generic Parameters**: Full generic type support with constraints
-- **Member Information**: Detailed type member analysis
-- **Inheritance Tracking**: Complete inheritance hierarchy support
-
-### 6. Performance Optimization
-- **Model Caching**: Efficient caching with LRU and validation
-- **Performance Tracking**: Comprehensive performance monitoring
-- **Access Pattern Analysis**: Optimize based on usage patterns
-- **Memory Management**: Smart memory usage and cleanup
-
-### 7. Content Type Support
-- **Multiple Formats**: Support for various content types and encodings
-- **Line Ending Handling**: Comprehensive line ending support
-- **Binary Content**: Support for both text and binary content
-- **MIME Type Integration**: Standard MIME type recognition
-
-## Benefits
-
-1. **Type Safety**: Comprehensive type validation and inference
-2. **Rich Metadata**: Detailed information for all data models
-3. **Version Control**: Complete history and change tracking
-4. **Performance**: Optimized caching and access patterns
-5. **Extensibility**: Easy addition of new data types and models
-6. **Consistency**: Uniform data model patterns throughout framework
+This architecture represents a sophisticated, modern Swift codebase that leverages the latest language features while maintaining high performance and cross-platform compatibility.

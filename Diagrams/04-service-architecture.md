@@ -9,12 +9,17 @@ classDiagram
     %% Top Row - Central Registry & Core Services
     class BusinessLogicServiceRegistry {
         &lt;&lt;dependency injection&gt;&gt;
-        -services Dictionary
+        -services Dictionary&lt;String, ServiceLifecycle&gt;
         -eventSystem UnifiedEventSystem
+        -coordinator MemoryManagementCoordinator
         +register()
         +resolve()
         +initialize()
         +shutdown()
+        +configureForEditor()
+        +getServiceStatus()
+        +clearAllCaches()
+        +resetAllServices()
     }
 
     class ServiceDependencies {
@@ -24,6 +29,7 @@ classDiagram
         +logger CrossPlatformLogger
         +cache CacheManager
         +actorCoordinator ActorCoordinator
+        +memoryCoordinator MemoryManagementCoordinator
     }
 
     class ServiceEventHandler {
@@ -32,6 +38,7 @@ classDiagram
         +handleTextChange()
         +handleLanguageChange()
         +handleConfigurationChange()
+        +handleMemoryWarning()
     }
 
     %% Second Row - Core Text & Language Services
@@ -65,15 +72,79 @@ classDiagram
         +clearCache()
     }
 
-    %% Third Row - Completion & Memory Management
-    class CompletionManager {
-        &lt;&lt;code completion&gt;&gt;
-        -providers Dictionary
+    %% Third Row - Enhanced Service Registry (8 Services Total)
+    class CompletionProviderRegistry {
+        &lt;&lt;completion orchestration&gt;&gt;
+        -providers Dictionary&lt;String, CompletionProvider&gt;
+        -universalProvider UniversalCompletionProvider
         -activeSession CompletionSession?
         -debouncer Debouncer
         +requestCompletions()
         +registerProvider()
+        +unregisterProvider()
         +cancelActiveSession()
+        +getProvidersForLanguage()
+    }
+
+    class LineNumberCalculationService {
+        &lt;&lt;line numbering&gt;&gt;
+        -textLayoutManager NSTextLayoutManager
+        -lineCache LRUCache&lt;LineNumberInfo&gt;
+        -coordinator ActorCoordinator
+        +calculateLineNumbers()
+        +getLineAtPosition()
+        +invalidateLineCache()
+        +getTotalLines()
+        +refreshLineNumbers()
+    }
+
+    class GutterSizingService {
+        &lt;&lt;gutter layout&gt;&gt;
+        -lineNumberService LineNumberCalculationService
+        -configuration EditorConfiguration
+        -sizingCache Dictionary&lt;String, CGFloat&gt;
+        +calculateGutterWidth()
+        +updateForLineCount()
+        +getGutterComponents()
+        +invalidateSizingCache()
+    }
+
+    class CodeFoldingCoordinatorService {
+        &lt;&lt;code folding&gt;&gt;
+        -foldingEngine CodeFoldingEngine
+        -lineNumberService LineNumberCalculationService
+        -foldingRanges [NSRange]
+        -coordinator ActorCoordinator
+        +calculateFoldingRanges()
+        +toggleFolding()
+        +expandAll()
+        +collapseAll()
+        +getFoldingState()
+    }
+
+    %% Fourth Row - New Services & Memory Coordination
+    class EditorLayoutService {
+        &lt;&lt;layout coordination&gt;&gt;
+        -gutterService GutterSizingService
+        -textContainer NSTextContainer
+        -layoutManager NSTextLayoutManager
+        +coordinateLayout()
+        +updateTextContainerSize()
+        +calculateViewportBounds()
+        +optimizeForPerformance()
+    }
+
+    class MemoryManagementCoordinator {
+        &lt;&lt;central memory coordination&gt;&gt;
+        -memoryMonitor MemoryMonitor
+        -managedComponents [WeakRef]
+        -cacheManager CacheManager
+        -coordinator ActorCoordinator
+        +registerManagedComponent()
+        +handleMemoryWarning()
+        +optimizeMemoryUsage()
+        +getMemoryStats()
+        +performCleanup()
     }
 
     class MemoryMonitor {
@@ -86,6 +157,7 @@ classDiagram
         +startMonitoring()
         +stopMonitoring()
         +currentMemoryUsage()
+        +⚠️ DEPRECATED: Use MemoryManagementCoordinator
     }
 
     class CacheManager {
@@ -94,11 +166,13 @@ classDiagram
         +syntaxCache Cache
         +completionCache Cache
         +languageCache Cache
+        +lineNumberCache Cache
+        +gutterSizingCache Cache
         +clearAll()
         +clearExpired()
     }
 
-    %% Fourth Row - Service Coordination & Session Management
+    %% Fifth Row - Service Coordination & Session Management
     class SyntaxHighlightingCoordinator {
         &lt;&lt;highlighting orchestrator&gt;&gt;
         -highlighters Dictionary
@@ -106,6 +180,15 @@ classDiagram
         -regexHighlighter RegexHighlighter
         +coordinate()
         +selectHighlighter()
+    }
+
+    class UniversalCompletionProvider {
+        &lt;&lt;completion factory&gt;&gt;
+        -providers Dictionary&lt;LanguageConfig, CompletionProvider&gt;
+        -fallbackProvider CompletionProvider
+        +createProvider()
+        +getProviderForLanguage()
+        +registerLanguageProvider()
     }
 
     class CompletionSession {
@@ -127,7 +210,16 @@ classDiagram
         +resume()
     }
 
-    %% Fifth Row - Provider Protocols & Core Types
+    class CodeFoldingEngine {
+        &lt;&lt;folding logic&gt;&gt;
+        -languageHandlers Dictionary
+        -foldingPatterns [FoldingPattern]
+        +calculateFoldingRanges()
+        +isFoldable()
+        +getFoldingLevel()
+    }
+
+    %% Sixth Row - Provider Protocols & Core Types
     class LanguageDetector {
         &lt;&lt;detection protocol&gt;&gt;
         +detectorName String
@@ -155,7 +247,24 @@ classDiagram
         +canHighlight()
     }
 
-    %% Sixth Row - Highlighter Implementations
+    class LineNumberInfo {
+        &lt;&lt;line metadata&gt;&gt;
+        +lineNumber Int
+        +characterRange NSRange
+        +yPosition CGFloat
+        +height CGFloat
+        +isVisible Bool
+    }
+
+    class FoldingPattern {
+        &lt;&lt;folding definition&gt;&gt;
+        +startPattern String
+        +endPattern String
+        +language LanguageConfig
+        +foldingType FoldingType
+    }
+
+    %% Seventh Row - Highlighter Implementations
     class SwiftSyntaxHighlighter {
         &lt;&lt;Swift AST highlighter&gt;&gt;
         +swiftSyntax SwiftSyntaxAPI
@@ -184,7 +293,7 @@ classDiagram
         +clear()
     }
 
-    %% Seventh Row - Support Types & Utilities
+    %% Eighth Row - Support Types & Utilities
     class EditAction {
         &lt;&lt;operation types&gt;&gt;
         insert
@@ -212,7 +321,7 @@ classDiagram
         +priority Int
     }
 
-    %% Eighth Row - Concurrency & Coordination
+    %% Ninth Row - Concurrency & Coordination
     class ActorCoordinator {
         &lt;&lt;concurrency management&gt;&gt;
         +backgroundQueue DispatchQueue
@@ -231,7 +340,7 @@ classDiagram
         +exposeServicesToPlugins()
     }
 
-    %% Bottom Row - Basic Support Types
+    %% Tenth Row - Basic Support Types
     class LanguageConfig {
         &lt;&lt;language definition&gt;&gt;
         +identifier String
@@ -261,45 +370,79 @@ classDiagram
         +error()
     }
 
-    %% Key Relationships
+    %% Key Relationships - Enhanced 8-Service Architecture
+    
+    %% Registry manages all 8 services
     BusinessLogicServiceRegistry *-- TextEditingService : manages
     BusinessLogicServiceRegistry *-- SyntaxHighlightingService : manages
     BusinessLogicServiceRegistry *-- LanguageDetectionService : manages
-    BusinessLogicServiceRegistry *-- CompletionManager : manages
-    BusinessLogicServiceRegistry *-- MemoryMonitor : manages
+    BusinessLogicServiceRegistry *-- CompletionProviderRegistry : manages
+    BusinessLogicServiceRegistry *-- LineNumberCalculationService : manages
+    BusinessLogicServiceRegistry *-- GutterSizingService : manages
+    BusinessLogicServiceRegistry *-- CodeFoldingCoordinatorService : manages
+    BusinessLogicServiceRegistry *-- EditorLayoutService : manages
     
+    %% Central coordination
     BusinessLogicServiceRegistry --> ServiceDependencies : uses
     BusinessLogicServiceRegistry --> ServiceEventHandler : uses
+    BusinessLogicServiceRegistry --> MemoryManagementCoordinator : coordinates
     
-    TextEditingService --> EditAction : uses
+    %% Service dependencies and relationships
+    GutterSizingService --> LineNumberCalculationService : depends on
+    EditorLayoutService --> GutterSizingService : coordinates
+    CodeFoldingCoordinatorService --> LineNumberCalculationService : uses
+    CodeFoldingCoordinatorService --> CodeFoldingEngine : coordinates
+    
+    %% Memory management coordination
+    MemoryManagementCoordinator --> MemoryMonitor : manages
+    MemoryManagementCoordinator --> CacheManager : coordinates
+    MemoryManagementCoordinator --> ActorCoordinator : uses
+    
+    %% Service lifecycle implementations
     TextEditingService ..|> ServiceLifecycle : implements
+    SyntaxHighlightingService ..|> ServiceLifecycle : implements
+    LanguageDetectionService ..|> ServiceLifecycle : implements
+    CompletionProviderRegistry ..|> ServiceLifecycle : implements
+    LineNumberCalculationService ..|> ServiceLifecycle : implements
+    GutterSizingService ..|> ServiceLifecycle : implements
+    CodeFoldingCoordinatorService ..|> ServiceLifecycle : implements
+    EditorLayoutService ..|> ServiceLifecycle : implements
+    
+    %% Core service relationships
+    TextEditingService --> EditAction : uses
     
     SyntaxHighlightingService --> SyntaxHighlightingCoordinator : uses
     SyntaxHighlightingService --> HighlightingCache : uses
-    SyntaxHighlightingService ..|> ServiceLifecycle : implements
-    
     SyntaxHighlightingCoordinator --> SyntaxHighlighter : coordinates
     SyntaxHighlighter <|-- SwiftSyntaxHighlighter : implements
     SyntaxHighlighter <|-- RegexHighlighter : implements
     
     LanguageDetectionService --> LanguageDetector : uses
     LanguageDetectionService --> LanguageConfig : detects
-    LanguageDetectionService ..|> ServiceLifecycle : implements
     
-    CompletionManager --> CompletionSession : creates
-    CompletionManager --> CompletionProvider : uses
-    CompletionManager --> CompletionContext : creates
-    CompletionManager --> CompletionItem : provides
-    CompletionManager --> Debouncer : uses
-    CompletionManager ..|> ServiceLifecycle : implements
+    CompletionProviderRegistry --> UniversalCompletionProvider : uses
+    CompletionProviderRegistry --> CompletionSession : creates
+    CompletionProviderRegistry --> CompletionProvider : manages
+    CompletionProviderRegistry --> CompletionContext : creates
+    CompletionProviderRegistry --> CompletionItem : provides
+    CompletionProviderRegistry --> Debouncer : uses
+    UniversalCompletionProvider --> CompletionProvider : creates
     
-    MemoryMonitor ..|> ServiceLifecycle : implements
+    LineNumberCalculationService --> LineNumberInfo : creates
+    LineNumberCalculationService --> ActorCoordinator : uses
+    
+    CodeFoldingEngine --> FoldingPattern : uses
+    
+    %% Deprecated singleton warnings
     MemoryMonitor --> ActorCoordinator : uses
     
+    %% Dependency injection
     ServiceDependencies --> CrossPlatformLogger : includes
     ServiceDependencies --> CacheManager : includes
     ServiceDependencies --> ActorCoordinator : includes
+    ServiceDependencies --> MemoryManagementCoordinator : includes
     
+    %% Plugin integration
     PluginIntegration --> BusinessLogicServiceRegistry : bridges
     PluginIntegration --> PluginManager : coordinates
     
@@ -319,10 +462,17 @@ classDiagram
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service
-    class CompletionManager service
+    class CompletionProviderRegistry service
+    class LineNumberCalculationService service
+    class GutterSizingService service
+    class CodeFoldingCoordinatorService service
+    class EditorLayoutService service
+    class MemoryManagementCoordinator coordinator
     class MemoryMonitor service
     class SyntaxHighlightingCoordinator coordinator
+    class UniversalCompletionProvider coordinator
     class CompletionSession coordinator
+    class CodeFoldingEngine coordinator
     class ServiceLifecycle lifecycle
     class ServiceDependencies support
     class CacheManager support
@@ -332,6 +482,7 @@ classDiagram
     class EditAction enum
     class CompletionItemKind enum
     class SyntaxTokenType enum
+    class FoldingType enum
     class LanguageDetector protocol
     class CompletionProvider protocol
     class MemoryMonitorDelegate protocol
@@ -347,6 +498,8 @@ classDiagram
     class CompletionContext completion
     class CompletionItem completion
     class LanguageConfig completion
+    class LineNumberInfo completion
+    class FoldingPattern completion
     class ActorCoordinator coordinator
     class PluginIntegration coordinator
     class PluginManager service
@@ -354,11 +507,38 @@ classDiagram
 
 ## Service Architecture Principles
 
-1. **Service Registry Pattern**: Central registry manages all service instances
-2. **Dependency Injection**: Services receive dependencies through constructor - no singletons
-3. **Lifecycle Management**: All services implement lifecycle protocol
-4. **Event-Driven Communication**: Services communicate through event system
-5. **Plugin Integration**: Services exposed to plugins through secure API bridge
-6. **Caching Strategy**: Shared cache manager for performance
-7. **Async Operations**: Heavy operations run on background queues via ActorCoordinator
-8. **Memory Management**: Automatic cleanup on memory warnings with injected monitor
+### Enhanced 8-Service Architecture
+
+The CodeEditorPlugin framework now implements a sophisticated service architecture with **8 core services** managed through a central registry pattern with enhanced memory coordination and dependency management.
+
+#### Core Services (8 Total)
+
+1. **TextEditingService** - Text manipulation and editing operations
+2. **SyntaxHighlightingService** - Syntax highlighting coordination
+3. **LanguageDetectionService** - Language detection and configuration
+4. **CompletionProviderRegistry** - Code completion orchestration (replaces CompletionManager)
+5. **LineNumberCalculationService** - Line numbering calculations and caching
+6. **GutterSizingService** - Gutter layout and sizing calculations
+7. **CodeFoldingCoordinatorService** - Code folding state management
+8. **EditorLayoutService** - Overall editor layout coordination
+
+#### Key Architectural Patterns
+
+1. **Enhanced Service Registry**: Central registry with **configureForEditor()**, **getServiceStatus()**, **clearAllCaches()**, and **resetAllServices()** methods
+2. **Memory Management Coordination**: **MemoryManagementCoordinator** provides centralized memory oversight and cleanup coordination
+3. **Dependency Injection**: All services receive dependencies through constructor injection - **no singletons** (deprecated pattern warnings included)
+4. **Service Interdependencies**: 
+   - GutterSizingService → LineNumberCalculationService
+   - EditorLayoutService → GutterSizingService  
+   - CodeFoldingCoordinatorService → LineNumberCalculationService + CodeFoldingEngine
+5. **Lifecycle Management**: All 8 services implement ServiceLifecycle protocol
+6. **Event-Driven Communication**: Services communicate through UnifiedEventSystem
+7. **Plugin Integration**: Services exposed to plugins through secure API bridge
+8. **Enhanced Caching**: Extended cache manager with specialized caches (line numbers, gutter sizing, etc.)
+9. **Async Operations**: Heavy operations coordinated through ActorCoordinator
+10. **Memory Optimization**: Automatic cleanup via MemoryManagementCoordinator with weak reference management
+
+#### Deprecation Warnings
+
+- **MemoryMonitor**: Direct usage deprecated - use **MemoryManagementCoordinator** for centralized memory management
+- **Singleton Patterns**: All singleton usage deprecated in favor of dependency injection

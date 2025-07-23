@@ -1,318 +1,514 @@
 # Advanced Features Integration Architecture
 
-This diagram shows the advanced features system that extends the core CodeEditorPlugin functionality with debugging, search/replace, smart editing, code folding, and symbol navigation capabilities.
+This diagram shows the sophisticated advanced features system with performance monitoring, actor-based coordination, and cross-platform abstractions that provide production-ready debugging, search/replace, smart editing, code folding, and symbol navigation capabilities.
 
 ```mermaid
 classDiagram
     direction LR
     
-    %% Top Row - Core Coordinator & Feature Types
-    class AdvancedFeaturesCoordinator {
-        &lt;&lt;features coordinator&gt;&gt;
-        +debuggerIntegration DebuggerIntegrationCore
-        +searchEngine SearchReplaceEngine
-        +smartEditing SmartEditingEngine
-        +codeFolding CodeFoldingEngine
-        +symbolNavigator SymbolNavigator
-        +initialize()
-        +enableFeature()
-        +disableFeature()
+    %% Top Row - Enhanced Core Coordination System
+    class ActorCoordinator {
+        <<actor coordinator>>
+        +textProcessor TextProcessingActor
+        +cacheCoordinator CacheCoordinatorActor
+        +fileSystem FileSystemActor
+        +performanceMetrics PerformanceMetricsActor
+        +documentState DocumentStateActor
+        +errorRecovery ErrorRecoveryCoordinator
+        +processText(text, processorType, priority)
+        +trackPerformance(name, duration, metadata)
+        +createOrUpdateDocument(content, url, language)
+        +manageActorLifecycle()
+        +coordinateAdvancedFeatures()
     }
 
-    class FeatureType {
-        &lt;&lt;enumeration&gt;&gt;
-        debugger
-        search
-        smartEditing
-        codeFolding
-        symbolNavigation
+    class MemoryManagementCoordinator {
+        <<memory coordinator>>
+        +memoryMonitor MemoryMonitor
+        +asyncHighlighter AsyncSyntaxHighlighter
+        +renderingOptimizer TextKit2RenderingOptimizer
+        +completionManager CompletionManager
+        +lspManager LSPManager
+        +createAsyncHighlighter()
+        +createRenderingOptimizer()
+        +updateMemoryMonitor(newMonitor)
+        +performMemoryCleanup()
     }
 
-    class SymbolNavigator {
-        &lt;&lt;symbol navigation&gt;&gt;
-        +symbolProviders [SymbolProvider]
-        +symbolCache SymbolCache
-        +breadcrumbProvider BreadcrumbProvider
-        +outlineProvider OutlineProvider
-        +navigateToSymbol()
-        +findSymbolReferences()
-        +getDocumentOutline()
+    class CrossPlatformCoordinator {
+        <<platform coordinator>>
+        +inputCoordinator InputCoordinator
+        +toolbarCoordinator ToolbarCoordinator
+        +contextMenuCoordinator ContextMenuCoordinator
+        +platformAdjustments PlatformAdjustments
+        +capabilities PlatformCapabilities
+        +optimizeTextView(textView)
+        +handlePlatformInput(event, textView)
+        +createContextMenu(range, textView)
+        +coordinatePlatformFeatures()
     }
 
-    %% Second Row - Debugger System
-    class DebuggerIntegrationCore {
-        &lt;&lt;debugger core&gt;&gt;
-        +adapter DebugAdapter
-        +models DebuggerModels
-        +breakpointManager BreakpointManager
-        +evaluationEngine DebuggerEvaluation
-        +executionController DebuggerExecution
-        +startDebugging()
-        +stopDebugging()
-        +handleDebugEvent()
+    %% Second Row - Enhanced Performance-Driven Advanced Features
+    class PerformanceInsights {
+        <<performance monitoring>>
+        +performanceMonitor PerformanceMonitor
+        +textKit2Monitor InsightsTextKit2Monitor
+        +memoryMonitor MemoryMonitor
+        +alertManager PerformanceAlertManager
+        +status InsightsPerformanceStatus
+        +issues [InsightsPerformanceIssue]
+        +recommendations [InsightsPerformanceRecommendation]
+        +startMonitoring()
+        +generateDetailedReport()
+        +configureMonitoring(config)
+        +detectIssues()
+        +generateRecommendations()
     }
 
-    class DebugAdapter {
-        &lt;&lt;debug adapter&gt;&gt;
-        +protocol DebugProtocol
-        +transport DebugTransport
-        +connect()
-        +sendRequest()
-        +handleResponse()
+    class AsyncOperationManager {
+        <<async operations>>
+        +scheduledOperations [ScheduledOperation]
+        +debounceTasks [String: Task]
+        +throttleInfo [String: Date]
+        +activeOperations Set<UUID>
+        +maxConcurrentOperations Int
+        +schedule(operation, priority)
+        +debounce(key, delay, operation)
+        +throttle(key, interval, operation)
+        +retry(operation, maxAttempts, backoff)
+        +batch(operations, batchSize)
+        +getStatus()
+        +cleanup(olderThan)
     }
 
-    class BreakpointManager {
-        &lt;&lt;breakpoint mgmt&gt;&gt;
-        +breakpoints [Breakpoint]
-        +pendingBreakpoints [PendingBreakpoint]
-        +addBreakpoint()
-        +removeBreakpoint()
-        +validateBreakpoints()
-        +syncWithDebugger()
+    class OptimizedSymbolNavigator {
+        <<symbol navigation>>
+        +providers [DocumentSymbolProvider]
+        +symbolRangeIndex IntervalTree<DocumentSymbol>
+        +flattenedSymbolsCache [DocumentSymbol]
+        +symbolByIdCache [UUID: DocumentSymbol]
+        +asyncOperationManager AsyncOperationManager
+        +currentBreadcrumbs [BreadcrumbItem]
+        +selectedSymbol DocumentSymbol
+        +attach(textView)
+        +updateSymbols()
+        +navigate(symbol)
+        +navigateToNext()
+        +navigateToPrevious()
+        +searchSymbols(query)
+        +symbolAt(location)
+        +updateBreadcrumbs()
     }
 
-    %% Third Row - Debugger Support & Search Engine
-    class DebuggerModels {
-        &lt;&lt;debug models&gt;&gt;
-        +session DebugSession
-        +threads [DebugThread]
-        +stackFrames [StackFrame]
-        +variables [Variable]
-        +sources [DebugSource]
-    }
-
-    class DebuggerEvaluation {
-        &lt;&lt;debug evaluation&gt;&gt;
-        +evaluateExpression()
-        +evaluateHover()
-        +getVariableDetails()
-        +setVariableValue()
-    }
-
-    class DebuggerExecution {
-        &lt;&lt;debug execution&gt;&gt;
-        +continue()
-        +stepOver()
-        +stepInto()
-        +stepOut()
-        +pause()
-        +restart()
-        +terminate()
-    }
-
-    %% Fourth Row - Search & Replace System
-    class SearchReplaceEngine {
-        &lt;&lt;search engine&gt;&gt;
-        +searchProvider SearchProvider
-        +replaceProvider ReplaceProvider
-        +regexEngine RegexEngine
-        +searchHistory SearchHistory
-        +currentSearch SearchContext?
-        +search()
-        +replace()
-        +replaceAll()
-    }
-
-    class SearchProvider {
-        &lt;&lt;search provider&gt;&gt;
-        +textualSearch()
-        +regexSearch()
-        +symbolSearch()
-        +fileSearch()
-    }
-
-    class ReplaceProvider {
-        &lt;&lt;replace provider&gt;&gt;
-        +performReplace()
-        +performReplaceAll()
-        +undoReplace()
-        +redoReplace()
-    }
-
-    %% Fifth Row - Smart Editing System
+    %% Third Row - Enhanced Smart Editing & Search
     class SmartEditingEngine {
-        &lt;&lt;smart editing&gt;&gt;
-        +autoCompletionEnhancer AutoCompletionEnhancer
-        +smartIndentationEngine SmartIndentationEngine
-        +bracketCompletionHandler BracketCompletionHandler
-        +codeActionProvider CodeActionProvider
-        +enhanceCompletion()
-        +performSmartIndent()
-        +handleBracketInput()
+        <<smart editing>>
+        +configuration SmartEditingConfiguration
+        +cursors [TextCursor]
+        +isMultiCursorMode Bool
+        +bracketPairs [SmartEditingBracketPair]
+        +autoIndentRules [AutoIndentRule]
+        +attach(textView)
+        +addCursor(location)
+        +addCursorsAtOccurrences()
+        +clearMultiCursors()
+        +handleMultiCursorInput(text)
+        +expandSelection()
+        +calculateIndentation(location)
     }
 
-    class AutoCompletionEnhancer {
-        &lt;&lt;completion enhancer&gt;&gt;
-        +contextAnalyzer ContextAnalyzer
-        +priorityCalculator PriorityCalculator
-        +enhanceCompletions()
-        +analyzeContext()
-        +calculatePriority()
+    class SearchReplaceEngine {
+        <<search engine>>
+        +isSearching Bool
+        +currentSearchResults [SearchResult]
+        +currentSearchIndex Int
+        +searchStatistics SearchStatistics
+        +searchOptions SearchOptions
+        +currentSearchTask Task<Void, Never>
+        +attach(textView)
+        +findAll(pattern, options)
+        +findNext(range)
+        +findPrevious(range)
+        +replace(index, replacement)
+        +replaceAll(pattern, replacement, options)
+        +performSearch(pattern, text, options)
+        +highlightSearchResults(results)
     }
 
-    class SmartIndentationEngine {
-        &lt;&lt;smart indentation&gt;&gt;
-        +indentationRules [IndentationRule]
-        +languageSpecificRules Dictionary
-        +calculateIndentation()
-        +adjustIndentationForContext()
-        +handleElectricCharacters()
+    class TextInputFeatures {
+        <<cross-platform input>>
+        +supportsSpellChecking Bool
+        +supportsGrammarChecking Bool
+        +supportsSmartQuotes Bool
+        +supportsSmartDashes Bool
+        +supportsTextReplacement Bool
+        +supportsAutomaticSpellingCorrection Bool
+        +supportsAutomaticTextCompletion Bool
+        +apply(textView, configuration)
     }
 
-    %% Sixth Row - Code Folding & Actions
+    %% Fourth Row - Enhanced Folding System
     class CodeFoldingEngine {
-        &lt;&lt;code folding&gt;&gt;
-        +foldingProviders [FoldingProvider]
-        +foldingRegions [FoldingRegion]
-        +foldingRenderer FoldingRenderer
-        +detectFoldingRegions()
-        +foldRegion()
-        +unfoldRegion()
-        +toggleFolding()
+        <<folding engine>>
+        +foldableRegions [FoldableRegion]
+        +foldedRegions Set<UUID>
+        +isProcessing Bool
+        +providerRegistry FoldingProviderRegistry
+        +operationsService FoldingOperationsService
+        +configuration CodeFoldingConfiguration
+        +foldRegionCache [Int: [FoldableRegion]]
+        +attach(textView)
+        +toggleFold(line)
+        +fold(region)
+        +unfold(region)
+        +foldAll()
+        +unfoldAll()
+        +foldLevel(level)
+        +updateFoldableRegions()
+        +detectFoldableRegions()
     }
 
-    class CodeActionProvider {
-        &lt;&lt;code actions&gt;&gt;
-        +availableActions [CodeAction]
-        +getActionsForRange()
-        +executeAction()
-        +registerAction()
+    class FoldingProviderRegistry {
+        <<folding registry>>
+        +providers [Language: CodeFoldingProvider]
+        +registerProvider(provider, language)
+        +unregisterProvider(language)
+        +provider(for language)
+        +supportedLanguages [Language]
     }
 
-    class SearchContext {
-        &lt;&lt;search context&gt;&gt;
-        +query SearchQuery
-        +results [SearchResult]
-        +currentIndex Int
-        +searchScope SearchScope
-        +options SearchOptions
+    class FoldingOperationsService {
+        <<folding operations>>
+        +textView CodeEditorView
+        +toggleFold(line, regions, foldedRegions)
+        +fold(region, foldedRegions, configuration)
+        +unfold(region, foldedRegions, configuration)
+        +foldAll(regions, foldedRegions, configuration)
+        +unfoldAll(regions, foldedRegions, configuration)
+        +foldLevel(level, regions, foldedRegions, configuration)
+        +isLineFolded(line, regions, foldedRegions)
+        +isStartOfFoldableRegion(line, regions)
     }
 
-    %% Seventh Row - Folding Providers
-    class FoldingProvider {
-        &lt;&lt;folding protocol&gt;&gt;
-        +languageId String
-        +provideFolding()
-        +supportsFoldingType()
+    %% Fifth Row - Specialized Actors
+    class TextProcessingActor {
+        <<text actor>>
+        +process(text, processorType, priority)
+        +processors [ProcessorType: TextProcessor]
+        +activeProcessingTasks [UUID: Task]
+        +processTextChanges()
+        +analyzeSyntax()
+        +calculateMetrics()
     }
 
-    class BraceFoldingProvider {
-        &lt;&lt;brace folding&gt;&gt;
-        +detectBraceRegions()
-        +matchBraces()
-        +validateBraceStructure()
+    class CacheCoordinatorActor {
+        <<cache actor>>
+        +caches [String: CacheProtocol]
+        +cacheEvictionPolicy CacheEvictionPolicy
+        +memoryPressureHandler MemoryPressureHandler
+        +registerCache(cache, key)
+        +unregisterCache(key)
+        +clearCache(key)
+        +clearAllCaches()
+        +handleMemoryPressure()
     }
 
-    class IndentationFoldingProvider {
-        &lt;&lt;indent folding&gt;&gt;
-        +detectIndentationRegions()
-        +analyzeIndentationLevel()
-        +groupByIndentation()
+    class PerformanceMetricsActor {
+        <<metrics actor>>
+        +metrics [SendablePerformanceMetric]
+        +aggregatedMetrics [String: AggregatedMetric]
+        +record(metric)
+        +getMetrics()
+        +getAggregatedMetrics()
+        +clearMetrics()
+        +generateReport()
     }
 
-    class CommentFoldingProvider {
-        &lt;&lt;comment folding&gt;&gt;
-        +detectCommentBlocks()
-        +identifyCommentStyles()
+    %% Sixth Row - Enhanced Debugger Integration with LSP
+    class DebuggerIntegrationCore {
+        <<debugger core>>
+        +debugSessions [String: DebugSession]
+        +activeSession DebugSession
+        +breakpoints [Breakpoint]
+        +currentFrame StackFrame
+        +variables [Variable]
+        +isDebugging Bool
+        +debugAdapters [String: DebugAdapter]
+        +configuration Configuration
+        +startSession(configuration, textView)
+        +stopSession(sessionId)
+        +registerAdapter(adapter, language)
+        +syncBreakpoints()
+        +getStackTrace()
+        +selectFrame(frame)
     }
 
-    %% Key Relationships
-    AdvancedFeaturesCoordinator --> DebuggerIntegrationCore : manages
-    AdvancedFeaturesCoordinator --> SearchReplaceEngine : manages
-    AdvancedFeaturesCoordinator --> SmartEditingEngine : manages
-    AdvancedFeaturesCoordinator --> CodeFoldingEngine : manages
-    AdvancedFeaturesCoordinator --> SymbolNavigator : manages
-    AdvancedFeaturesCoordinator --> FeatureType : uses
+    class LSPManager {
+        <<lsp manager>>
+        +clientRegistry LSPClientRegistry
+        +documentManager LSPDocumentManager
+        +activeClients [String: LSPClient]
+        +serverConfigurations [String: LanguageServerConfig]
+        +workspaceRoot URL
+        +memoryMonitor MemoryMonitor
+        +registerLanguageServer(config)
+        +startLanguageServer(languageId, retryConfig)
+        +openDocument(filePath, content, languageId)
+        +requestCompletion(filePath, line, character)
+        +requestHover(filePath, line, character)
+        +requestDefinition(filePath, line, character)
+    }
 
-    DebuggerIntegrationCore --> DebugAdapter : uses
-    DebuggerIntegrationCore --> DebuggerModels : manages
-    DebuggerIntegrationCore --> BreakpointManager : uses
-    DebuggerIntegrationCore --> DebuggerEvaluation : uses
-    DebuggerIntegrationCore --> DebuggerExecution : uses
+    class InputCoordinator {
+        <<input coordinator>>
+        +capabilities PlatformCapabilities
+        +gestureRecognizers [PlatformGestureRecognizer]
+        +keyboardHandlers [KeyboardHandler]
+        +touchHandlers [TouchHandler]
+        +configureGestures(textView)
+        +handleInput(event, textView)
+        +handleKeyboardEvent(event, textView)
+        +handleTouchEvent(event, textView)
+        +updateInputConfiguration(configuration)
+    }
 
-    SearchReplaceEngine --> SearchProvider : uses
-    SearchReplaceEngine --> ReplaceProvider : uses
-    SearchReplaceEngine --> SearchContext : manages
+    %% Seventh Row - Platform-Specific Text Input Handlers
+    class AppKitTextInputFeatures {
+        <<appkit input>>
+        +supportsSpellChecking true
+        +supportsGrammarChecking true
+        +supportsSmartQuotes true
+        +supportsSmartDashes true
+        +supportsTextReplacement true
+        +supportsAutomaticSpellingCorrection true
+        +supportsAutomaticTextCompletion true
+        +apply(textView, configuration)
+    }
 
-    SmartEditingEngine --> AutoCompletionEnhancer : uses
-    SmartEditingEngine --> SmartIndentationEngine : uses
-    SmartEditingEngine --> CodeActionProvider : uses
+    class UIKitTextInputFeatures {
+        <<uikit input>>
+        +supportsSpellChecking true
+        +supportsGrammarChecking false
+        +supportsSmartQuotes true
+        +supportsSmartDashes true
+        +supportsTextReplacement false
+        +supportsAutomaticSpellingCorrection true
+        +supportsAutomaticTextCompletion false
+        +apply(textView, configuration)
+    }
 
-    CodeFoldingEngine --> FoldingProvider : uses
-    FoldingProvider <|-- BraceFoldingProvider : implements
-    FoldingProvider <|-- IndentationFoldingProvider : implements
-    FoldingProvider <|-- CommentFoldingProvider : implements
+    class ToolbarCoordinator {
+        <<toolbar coordinator>>
+        +capabilities PlatformCapabilities
+        +standardItems [ToolbarItem]
+        +customItems [ToolbarItem]
+        +createToolbarItems()
+        +createStandardItems()
+        +createCustomItems()
+        +updateToolbarConfiguration(config)
+    }
 
-    %% Styling - Dark mode friendly colors
+    %% Eighth Row - Context Menu & Additional Coordinators
+    class ContextMenuCoordinator {
+        <<context menu coordinator>>
+        +capabilities PlatformCapabilities
+        +standardActions [ContextMenuAction]
+        +customActions [ContextMenuAction]
+        +createContextMenu(range, textView)
+        +showContextMenu(menu, location, textView)
+        +addStandardActions(builder, textView)
+        +addCustomActions(builder, textView)
+    }
+
+    class DocumentStateActor {
+        <<document actor>>
+        +documents [UUID: DocumentInfo]
+        +documentsByURL [URL: UUID]
+        +createDocument(content, url, language)
+        +updateContent(documentId, content)
+        +getDocument(documentId)
+        +getDocument(at url)
+        +deleteDocument(documentId)
+        +getAllDocuments()
+    }
+
+    class FileSystemActor {
+        <<filesystem actor>>
+        +fileOperations [UUID: FileOperation]
+        +readFile(url)
+        +writeFile(url, content)
+        +createDirectory(url)
+        +deleteFile(url)
+        +fileExists(url)
+        +getFileInfo(url)
+        +watchFile(url, handler)
+    }
+
+    %% Enhanced Coordination Relationships
+    ActorCoordinator --> TextProcessingActor : manages
+    ActorCoordinator --> CacheCoordinatorActor : manages
+    ActorCoordinator --> PerformanceMetricsActor : manages
+    ActorCoordinator --> DocumentStateActor : manages
+    ActorCoordinator --> FileSystemActor : manages
+    ActorCoordinator --> PerformanceInsights : coordinates
+
+    MemoryManagementCoordinator --> PerformanceInsights : reports to
+    MemoryManagementCoordinator --> CacheCoordinatorActor : collaborates
+    MemoryManagementCoordinator --> LSPManager : creates
+
+    CrossPlatformCoordinator --> InputCoordinator : manages
+    CrossPlatformCoordinator --> ToolbarCoordinator : manages
+    CrossPlatformCoordinator --> ContextMenuCoordinator : manages
+    CrossPlatformCoordinator --> TextInputFeatures : uses
+
+    %% Enhanced Performance Integration
+    PerformanceInsights --> OptimizedSymbolNavigator : monitors
+    PerformanceInsights --> SmartEditingEngine : monitors
+    PerformanceInsights --> SearchReplaceEngine : monitors
+    PerformanceInsights --> CodeFoldingEngine : monitors
+    PerformanceInsights --> DebuggerIntegrationCore : monitors
+    PerformanceInsights --> LSPManager : monitors
+
+    %% Advanced Feature Integration with AsyncOperationManager
+    AsyncOperationManager --> OptimizedSymbolNavigator : schedules symbol operations
+    AsyncOperationManager --> SearchReplaceEngine : manages search operations
+    AsyncOperationManager --> CodeFoldingEngine : schedules folding operations
+    AsyncOperationManager --> DebuggerIntegrationCore : manages debug operations
+
+    %% Cache and Processing Integration
+    OptimizedSymbolNavigator --> CacheCoordinatorActor : uses interval tree cache
+    OptimizedSymbolNavigator --> TextProcessingActor : requests symbol processing
+    OptimizedSymbolNavigator --> AsyncOperationManager : uses for debouncing
+
+    %% Smart Editing Integration
+    SmartEditingEngine --> TextProcessingActor : requests text processing
+    SmartEditingEngine --> PerformanceMetricsActor : reports editing metrics
+
+    %% Search Engine Integration
+    SearchReplaceEngine --> TextProcessingActor : requests text analysis
+    SearchReplaceEngine --> PerformanceMetricsActor : reports search metrics
+
+    %% Code Folding Integration
+    CodeFoldingEngine --> FoldingProviderRegistry : uses providers
+    CodeFoldingEngine --> FoldingOperationsService : delegates operations
+    CodeFoldingEngine --> TextProcessingActor : requests folding analysis
+    CodeFoldingEngine --> PerformanceMetricsActor : reports folding metrics
+
+    %% Debugger and LSP Integration
+    DebuggerIntegrationCore --> LSPManager : collaborates for debug info
+    DebuggerIntegrationCore --> DocumentStateActor : manages debug documents
+    DebuggerIntegrationCore --> FileSystemActor : accesses debug files
+
+    LSPManager --> DocumentStateActor : synchronizes documents
+    LSPManager --> FileSystemActor : manages workspace files
+    LSPManager --> PerformanceMetricsActor : reports LSP metrics
+
+    %% Platform Feature Integration
+    TextInputFeatures --> AppKitTextInputFeatures : delegates on macOS
+    TextInputFeatures --> UIKitTextInputFeatures : delegates on iOS/iPad
+
+    InputCoordinator --> AppKitTextInputFeatures : uses on macOS
+    InputCoordinator --> UIKitTextInputFeatures : uses on iOS/iPad
+
+    ToolbarCoordinator --> ContextMenuCoordinator : collaborates for actions
+
+    %% Enhanced Styling - Production-ready color scheme
     classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef debugger fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef search fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef advanced fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
     classDef smart fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef folding fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef symbol fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef provider fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef actor fill:#00C7BE20,stroke:#00C7BE,stroke-width:2px,color:#1D1D1F
+    classDef debugger fill:#FF375F20,stroke:#FF375F,stroke-width:2px,color:#1D1D1F
+    classDef platform fill:#5856D620,stroke:#5856D6,stroke-width:2px,color:#1D1D1F
+    classDef lsp fill:#FF2D9220,stroke:#FF2D92,stroke-width:2px,color:#1D1D1F
+    classDef input fill:#32D74B20,stroke:#32D74B,stroke-width:2px,color:#1D1D1F
 
-    class AdvancedFeaturesCoordinator coordinator
-    class DebuggerIntegrationCore debugger
-    class DebugAdapter debugger
-    class DebuggerModels debugger
-    class BreakpointManager debugger
-    class DebuggerEvaluation debugger
-    class DebuggerExecution debugger
-    class SearchReplaceEngine search
-    class SearchProvider search
-    class ReplaceProvider search
-    class SearchContext search
+    class ActorCoordinator coordinator
+    class MemoryManagementCoordinator coordinator
+    class CrossPlatformCoordinator coordinator
+    class PerformanceInsights performance
+    class AsyncOperationManager performance
+    class OptimizedSymbolNavigator advanced
     class SmartEditingEngine smart
-    class AutoCompletionEnhancer smart
-    class SmartIndentationEngine smart
-    class CodeActionProvider smart
+    class SearchReplaceEngine advanced
+    class TextInputFeatures platform
     class CodeFoldingEngine folding
-    class BraceFoldingProvider folding
-    class IndentationFoldingProvider folding
-    class CommentFoldingProvider folding
-    class SymbolNavigator symbol
-    class FoldingProvider provider
-    class FeatureType enum
+    class FoldingProviderRegistry folding
+    class FoldingOperationsService folding
+    class TextProcessingActor actor
+    class CacheCoordinatorActor actor
+    class PerformanceMetricsActor actor
+    class DocumentStateActor actor
+    class FileSystemActor actor
+    class DebuggerIntegrationCore debugger
+    class LSPManager lsp
+    class InputCoordinator input
+    class AppKitTextInputFeatures input
+    class UIKitTextInputFeatures input
+    class ToolbarCoordinator platform
+    class ContextMenuCoordinator platform
 ```
 
-## Key Features Integration
+## Enhanced Advanced Features Integration
 
-### 1. Debugger Integration
-- **Full DAP Support**: Debug Adapter Protocol implementation
-- **Breakpoint Management**: Visual breakpoints with validation
-- **Variable Inspection**: Expression evaluation and variable watching
-- **Execution Control**: Step-by-step debugging with full control
+### 1. Enhanced Actor-Based Coordination System
+- **ActorCoordinator**: Manages specialized actors with improved lifecycle management and error recovery
+- **TextProcessingActor**: Handles text processing with priority-based task scheduling
+- **CacheCoordinatorActor**: Coordinates multiple cache protocols with sophisticated eviction policies
+- **PerformanceMetricsActor**: Collects metrics with aggregation and automated reporting
+- **DocumentStateActor**: Manages document lifecycle with URL-based indexing
+- **FileSystemActor**: Handles file operations with async coordination and watching
 
-### 2. Search & Replace Engine
-- **Multi-mode Search**: Text, regex, symbol, and file search
-- **Advanced Replace**: Single and batch replace with undo/redo
-- **Search History**: Previous searches with quick access
-- **Scope Control**: Document, selection, or project-wide search
+### 2. Advanced Performance-Driven Architecture
+- **PerformanceInsights**: Real-time monitoring with detailed reporting, issue detection, and automated recommendations
+- **AsyncOperationManager**: Enhanced operation scheduling with priority queues, concurrent operation limits, and comprehensive cleanup
+- **Integrated Performance Tracking**: All components report metrics through centralized actor system
+- **Memory Management Coordination**: Sophisticated memory monitoring with component-specific cleanup strategies
 
-### 3. Smart Editing Engine
-- **Context-aware Completion**: Enhanced completion with priority calculation
-- **Intelligent Indentation**: Language-specific smart indentation
-- **Auto-completion**: Bracket matching and electric character handling
-- **Code Actions**: Quick fixes and refactoring suggestions
+### 3. Optimized Symbol Navigation & Smart Editing
+- **OptimizedSymbolNavigator**: Interval tree indexing with flattened symbol caching and breadcrumb navigation
+- **SmartEditingEngine**: Multi-cursor editing with bracket matching, smart indentation, and selection expansion
+- **Enhanced Search & Replace**: Async search operations with regex support and comprehensive result management
+- **Intelligent Text Input**: Platform-specific text input features with capability detection
 
-### 4. Code Folding System
-- **Multi-provider Support**: Brace, indentation, and comment folding
-- **Language Agnostic**: Works with any supported language
-- **Visual Integration**: Seamless UI integration with gutter
-- **Persistent State**: Folding state preserved across sessions
+### 4. Enhanced Cross-Platform Architecture
+- **CrossPlatformCoordinator**: Delegates to specialized coordinators for input, toolbar, and context menu management
+- **InputCoordinator**: Sophisticated input handling with gesture recognition and keyboard management
+- **ToolbarCoordinator & ContextMenuCoordinator**: Platform-aware UI component management
+- **TextInputFeatures**: Capability-based text input abstraction with AppKit and UIKit implementations
 
-### 5. Symbol Navigation
-- **Document Outline**: Hierarchical symbol view
-- **Breadcrumb Navigation**: Current scope breadcrumbs
-- **Go-to Definition**: Quick symbol navigation
-- **Find References**: Symbol usage across codebase
+### 5. Advanced Code Folding System
+- **CodeFoldingEngine**: Comprehensive folding management with caching and incremental updates
+- **FoldingProviderRegistry**: Language-specific provider management with dynamic registration
+- **FoldingOperationsService**: Dedicated operation handling with batch processing and state preservation
+- **Performance-Optimized Folding**: Cache-based region detection with hierarchy building
 
-## Architecture Benefits
+### 6. Production-Ready Debugger & LSP Integration
+- **DebuggerIntegrationCore**: Multi-session debugging with adapter management and event handling
+- **LSPManager**: Full Language Server Protocol support with document synchronization and workspace management
+- **Cross-Component Collaboration**: Debugger and LSP integration with document and file system actors
+- **Memory-Aware Operations**: All debugging and LSP operations integrated with memory monitoring
 
-1. **Modular Design**: Each feature can be enabled/disabled independently
-2. **Language Support**: Features work across all supported languages
-3. **Performance Optimized**: Lazy loading and efficient caching
-4. **Extensible**: Plugin architecture for additional features
-5. **Integration Ready**: Seamless integration with LSP and other systems
+### 7. Enhanced Memory Management
+- **MemoryManagementCoordinator**: Creates and manages all memory-monitored components
+- **Dynamic Memory Monitor Updates**: Runtime memory monitor switching with component coordination
+- **Component Lifecycle Management**: Automated cleanup handlers with priority-based execution
+- **Performance Integration**: Memory management directly integrated with performance insights
+
+## Enhanced Architecture Benefits
+
+1. **Advanced Performance Monitoring**: Real-time monitoring with automated issue detection, performance recommendations, and comprehensive reporting
+2. **Enhanced Actor-Based Concurrency**: Safe concurrent operations with priority-based scheduling, lifecycle management, and error recovery
+3. **Platform Excellence**: Sophisticated cross-platform abstractions with specialized coordinators for input, toolbar, and context menu management
+4. **Intelligent Memory Management**: Component-aware memory coordination with dynamic monitor updates and priority-based cleanup
+5. **Extensible Provider Systems**: Comprehensive plugin architecture with language-specific providers for folding, symbols, and text input features
+6. **Data-Driven Optimization**: Performance insights with automated recommendations and adaptive configuration based on usage patterns
+7. **Advanced Symbol Navigation**: Interval tree indexing with breadcrumb navigation, flattened caching, and optimized search capabilities
+8. **Sophisticated Smart Editing**: Multi-cursor operations, intelligent bracket matching, context-aware indentation, and selection expansion
+9. **Production-Ready Debugging**: Multi-session debugging with LSP integration, breakpoint management, and performance profiling
+10. **Enterprise-Scale LSP Support**: Full Language Server Protocol implementation with document synchronization, workspace management, and multi-language support
+11. **Async Operation Excellence**: Priority-based operation scheduling with debouncing, throttling, retry logic, and batch processing
+12. **Advanced Code Folding**: Hierarchical folding with incremental updates, performance optimization, and comprehensive provider support
+13. **Robust Error Recovery**: Comprehensive error handling with actor-based recovery and graceful degradation
+14. **Scalable Architecture**: Handles everything from simple text editing to complex IDE scenarios with consistent performance

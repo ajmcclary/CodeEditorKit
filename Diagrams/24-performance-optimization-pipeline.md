@@ -1,545 +1,488 @@
 # Performance Optimization Pipeline
 
-This diagram shows the comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance across all aspects of the CodeEditorPlugin framework.
+This diagram shows the comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance across all aspects of the CodeEditorPlugin framework, featuring actor-based concurrency, adaptive performance modes, cross-platform abstractions, and real-time analytics.
+
+## Overview Architecture
 
 ```mermaid
-flowchart TB
-    subgraph "Performance Monitoring Layer"
-        COLLECT[Performance Data Collection]
-        METRICS[Real-time Metrics Gathering]
-        PROFILE[Continuous Profiling]
-        TELEMETRY[Telemetry System]
+flowchart LR
+    subgraph "Actor-Based Performance Monitoring"
+        UPS["UnifiedPerformanceSystem<br/>@MainActor"]
+        PMA["PerformanceMetricsActor<br/>@available(macOS 13.0+)"]
+        PPM["ProductionPerformanceMetrics<br/>@actor"]
+        PM["PerformanceMonitor<br/>@actor"]
+        INSIGHTS["PerformanceInsights<br/>@MainActor"]
     end
     
-    subgraph "Analysis Engine"
-        ANALYZE[Performance Analysis]
-        BOTTLENECK[Bottleneck Detection]
-        PATTERN[Pattern Recognition]
-        PREDICT[Predictive Analysis]
+    subgraph "Memory & Resource Management"
+        MM["MemoryMonitor<br/>@MainActor"]
+        CCA["CacheCoordinatorActor<br/>@available(macOS 13.0+)"]
+        VM["ViewportManager<br/>@MainActor"]
+        PMP["PlatformMemoryProvider<br/>@Sendable"]
     end
     
-    subgraph "Optimization Strategies"
-        MEMORY[Memory Optimization]
-        CPU[CPU Optimization]
-        IO[I/O Optimization]
-        RENDER[Rendering Optimization]
-        CACHE[Cache Optimization]
-        ASYNC[Async Optimization]
+    subgraph "Adaptive Performance Modes"
+        APM["AdaptivePerformanceMode<br/>@MainActor"]
+        PB["PerformanceBudget<br/>@Sendable"]
+        PBR["PerformanceBudgetReporter<br/>@actor"]
+        TC[ThresholdConfiguration]
     end
     
-    subgraph "Adaptive Systems"
-        DYNAMIC[Dynamic Adjustment]
-        LEARNING[Machine Learning]
-        FEEDBACK[Feedback Loop]
-        TUNING[Auto-tuning]
+    subgraph "Cross-Platform Performance Abstraction"
+        PC[PlatformCapabilities<br/>Singleton]
+        PCPE[PlatformCapabilities+Performance<br/>Extensions]
+        TPA["TextProcessingActor<br/>@available(macOS 13.0+)"]
+        FSA["FileSystemActor<br/>@available(macOS 13.0+)"]
     end
     
-    subgraph "Implementation Layer"
-        APPLY[Apply Optimizations]
-        VALIDATE[Validate Improvements]
-        ROLLBACK[Rollback if Needed]
-        MONITOR[Monitor Results]
+    subgraph "Real-Time Analytics & Insights"
+        RTM["RealTimeMetrics<br/>@Published"]
+        PH["PerformanceHistory<br/>@MainActor"]
+        PI[PerformanceIssues<br/>Detection]
+        PR[PerformanceRecommendations<br/>Generation]
     end
     
-    COLLECT --> ANALYZE
-    METRICS --> ANALYZE
-    PROFILE --> BOTTLENECK
-    TELEMETRY --> PATTERN
+    subgraph "Performance Budget & Thresholds"
+        BV[BudgetViolation<br/>Detection]
+        PST[PerformanceStatus<br/>Tracking]
+        OT[OptimizationThresholds<br/>Dynamic]
+        AM[AlertManager<br/>Notification]
+    end
     
-    ANALYZE --> MEMORY
-    BOTTLENECK --> CPU
-    PATTERN --> IO
-    PREDICT --> RENDER
+    subgraph "Viewport-Based Optimization"
+        VR[ViewportRendering<br/>Optimization]
+        PP[PredictivePrefetching<br/>Algorithm]
+        RC[RangeCache<br/>LRU Management]
+        SV[ScrollVelocity<br/>Analysis]
+    end
     
-    MEMORY --> DYNAMIC
-    CPU --> DYNAMIC
-    IO --> CACHE
-    RENDER --> ASYNC
-    CACHE --> LEARNING
-    ASYNC --> FEEDBACK
+    subgraph "Background Processing Pipeline"
+        ITA[IncrementalTextAnalysis<br/>Background]
+        ASH[AsyncSyntaxHighlighting<br/>Viewport-based]
+        BTC[BackgroundTaskCoordination<br/>Priority Management]
+        MCO[MemoryCleanupOperations<br/>Automatic]
+    end
     
-    DYNAMIC --> APPLY
-    LEARNING --> TUNING
-    FEEDBACK --> APPLY
-    TUNING --> APPLY
+    %% Data Flow Connections
+    UPS --> PMA
+    UPS --> PPM
+    UPS --> PM
+    UPS --> INSIGHTS
     
-    APPLY --> VALIDATE
-    VALIDATE --> ROLLBACK
-    VALIDATE --> MONITOR
-    ROLLBACK --> MONITOR
-    MONITOR --> COLLECT
+    MM --> CCA
+    MM --> VM
+    MM --> PMP
     
-    %% Styling - Dark mode friendly colors
-    classDef monitoring fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef analysis fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef optimization fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef adaptive fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef implementation fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    APM --> PB
+    APM --> PBR
+    APM --> TC
     
-    class COLLECT monitoring
-    class METRICS monitoring
-    class PROFILE monitoring
-    class TELEMETRY monitoring
-    class ANALYZE analysis
-    class BOTTLENECK analysis
-    class PATTERN analysis
-    class PREDICT analysis
-    class MEMORY optimization
-    class CPU optimization
-    class IO optimization
-    class RENDER optimization
-    class CACHE optimization
-    class ASYNC optimization
-    class DYNAMIC adaptive
-    class LEARNING adaptive
-    class FEEDBACK adaptive
-    class TUNING adaptive
-    class APPLY implementation
-    class VALIDATE implementation
-    class ROLLBACK implementation
-    class MONITOR implementation
+    PC --> PCPE
+    PC --> TPA
+    PC --> FSA
+    
+    INSIGHTS --> RTM
+    INSIGHTS --> PH
+    INSIGHTS --> PI
+    INSIGHTS --> PR
+    
+    PBR --> BV
+    PBR --> PST
+    PBR --> OT
+    PBR --> AM
+    
+    VM --> VR
+    VM --> PP
+    VM --> RC
+    VM --> SV
+    
+    TPA --> ITA
+    CCA --> ASH
+    PM --> BTC
+    MM --> MCO
+    
+    %% Cross-layer Integration
+    APM --> VM
+    MM --> APM
+    PC --> MM
+    PB --> UPS
+    INSIGHTS --> APM
+    
+    %% Performance Feedback Loops
+    RTM --> APM
+    PI --> PBR
+    BV --> INSIGHTS
+    VR --> RTM
+    
+    %% Styling - Modern actor-based system colors
+    classDef actorSystem fill:#007AFF25,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef memorySystem fill:#34C75925,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef adaptiveSystem fill:#AF52DE25,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef platformSystem fill:#FF950025,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef analyticsSystem fill:#FF3B3025,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef budgetSystem fill:#30D15825,stroke:#30D158,stroke-width:2px,color:#1D1D1F
+    classDef viewportSystem fill:#5E5CE625,stroke:#5E5CE6,stroke-width:2px,color:#1D1D1F
+    classDef backgroundSystem fill:#FF9F0A25,stroke:#FF9F0A,stroke-width:2px,color:#1D1D1F
+    
+    class UPS,PMA,PPM,PM,INSIGHTS actorSystem
+    class MM,CCA,VM,PMP memorySystem
+    class APM,PB,PBR,TC adaptiveSystem
+    class PC,PCPE,TPA,FSA platformSystem
+    class RTM,PH,PI,PR analyticsSystem
+    class BV,PST,OT,AM budgetSystem
+    class VR,PP,RC,SV viewportSystem
+    class ITA,ASH,BTC,MCO backgroundSystem
 ```
 
-## Detailed Performance Architecture
+## Detailed Actor-Based Architecture
 
 ```mermaid
 classDiagram
-    %% Core Performance System
-    class PerformanceOptimizationPipeline {
-        +monitoringSystem: PerformanceMonitoringSystem
-        +analysisEngine: PerformanceAnalysisEngine
-        +optimizationStrategies: [OptimizationStrategy]
-        +adaptiveSystem: AdaptiveOptimizationSystem
-        +implementationLayer: OptimizationImplementationLayer
-        +initializePipeline()
-        +startOptimization()
-        +stopOptimization()
-        +getPerformanceReport() PerformanceReport
+    %% Core Performance Actors
+    class UnifiedPerformanceSystem {
+        <<@MainActor>>
+        +shared: UnifiedPerformanceSystem
+        -metrics: [PerformanceMetricType: [PerformanceMetric]]
+        -activeOperations: [UUID: OperationInfo]
+        -performanceProfiles: [String: PerformanceProfile]
+        +track(MetricType, operation: () async throws -> T) async throws -> T
+        +generateInsights() UnifiedPerformanceInsights
+        +applyOptimizations(basedOn: PerformanceProfile)
+        +getCurrentStatus() PerformanceStatus
     }
 
-    %% Performance Monitoring System
-    class PerformanceMonitoringSystem {
-        +metricsCollector: MetricsCollector
-        +profiler: ContinuousProfiler
-        +telemetrySystem: TelemetrySystem
-        +alertSystem: PerformanceAlertSystem
+    class PerformanceMonitor {
+        <<@actor>>
+        -metrics: [String: MonitoringPerformanceMetric]
+        -cleanupTask: Task<Void, Never>?
+        +startMeasuring(String) MeasurementToken
+        +endMeasuring(MeasurementToken)
+        +measure(String, block: () async throws -> T) async throws -> T
+        +generateReport() PerformanceReport
+        +clearMetrics()
+    }
+
+    class ProductionPerformanceMetrics {
+        <<@actor>>
+        +shared: ProductionPerformanceMetrics
+        -thresholds: ProductionThresholds
+        -metrics: AggregatedMetrics
+        -eventHandlers: [PerformanceEventHandler]
+        +trackHighlighting(duration: TimeInterval, fileSize: Int, language: Language)
+        +trackScrolling(frameRate: Double, viewportSize: Int, fileSize: Int)
+        +trackMemoryUsage(currentUsage: Double, peakUsage: Double, fileSize: Int)
+        +generateReport() ProductionPerformanceReport
+    }
+
+    class PerformanceMetricsActor {
+        <<@actor>>
+        -metrics: [String: [SendablePerformanceMetric]]
+        -aggregatedStats: [String: AggregatedStats]
+        +record(SendablePerformanceMetric)
+        +getStats(for: String) AggregatedStats?
+        +getAllStats() [String: AggregatedStats]
+        +clearMetrics(for: String)
+    }
+
+    %% Memory Management System
+    class MemoryMonitor {
+        <<@MainActor>>
+        -memoryProvider: PlatformMemoryProvider
+        +memoryThresholdMB: Double
+        +enableAutomaticCleanup: Bool
+        -cleanupHandlers: [String: CleanupHandler]
+        -monitoringTask: Task<Void, Never>?
+        +registerCleanupHandler(identifier: String, handler: @escaping @MainActor @Sendable () async -> CleanupResult)
+        +performCleanup(targetReduction: Double?) async -> Double
         +startMonitoring()
-        +collectMetrics() PerformanceMetrics
-        +generateProfile() ProfileData
-        +sendTelemetry(data: TelemetryData)
+        +getCurrentMemoryUsage() Double
     }
 
-    class MetricsCollector {
-        +cpuMetrics: CPUMetricsCollector
-        +memoryMetrics: MemoryMetricsCollector
-        +renderingMetrics: RenderingMetricsCollector
-        +ioMetrics: IOMetricsCollector
-        +networkMetrics: NetworkMetricsCollector
-        +collectAllMetrics() AllMetrics
-        +collectSpecificMetric(type: MetricType) Metric
-        +scheduleCollection(interval: TimeInterval)
+    class CacheCoordinatorActor {
+        <<@actor>>
+        -caches: [String: AnyCacheWrapper]
+        -cacheStats: [String: CacheStatistics]
+        -maxGlobalMemoryMB: Double
+        +registerCache<T: CacheProtocol>(T, identifier: String)
+        +getValue<T: Sendable>(for: String, from: String) async -> T?
+        +setValue<T: Sendable>(T, for: String, in: String, cost: Int) async
+        +clearCache(String) async
     }
 
-    class ContinuousProfiler {
-        +samplingRate: Double
-        +activeProfiles: [ProfileSession]
-        +callStackTracker: CallStackTracker
-        +hotspotDetector: HotspotDetector
-        +startProfiling(component: String)
-        +stopProfiling(component: String) ProfileResult
-        +analyzeProfile(result: ProfileResult) ProfileAnalysis
+    class ViewportManager {
+        <<@MainActor>>
+        -textView: PlatformTextView?
+        -textKitBridge: TextKitBridge
+        -memoryMonitor: MemoryMonitor
+        -rangeCache: LRUCache<ViewportManagerCacheKey, CachedViewportData>
+        -renderingTasks: [UUID: Task<Void, Never>]
+        -scrollVelocity: Double
+        +updateViewport()
+        +getOptimizationHints() [OptimizationHint]
+        +invalidateCache()
     }
 
-    class TelemetrySystem {
-        +telemetryProviders: [TelemetryProvider]
-        +dataBuffer: TelemetryBuffer
-        +privacyManager: TelemetryPrivacyManager
-        +sendTelemetry(event: TelemetryEvent)
-        +batchSendTelemetry(events: [TelemetryEvent])
-        +configureTelemetry(settings: TelemetrySettings)
+    class PlatformMemoryProvider {
+        <<protocol: Sendable>>
+        +getCurrentMemoryUsage() Double
+        +getPhysicalMemory() UInt64
+        +getMemoryPressure() MemoryPressure
+        +isUnderMemoryPressure() Bool
     }
 
-    %% Performance Analysis Engine
-    class PerformanceAnalysisEngine {
-        +bottleneckDetector: BottleneckDetector
-        +patternRecognizer: PerformancePatternRecognizer
-        +predictiveAnalyzer: PredictivePerformanceAnalyzer
-        +trendAnalyzer: PerformanceTrendAnalyzer
-        +analyzePerformance(metrics: PerformanceMetrics) AnalysisResult
-        +detectBottlenecks(profileData: ProfileData) [Bottleneck]
-        +predictPerformanceIssues(trends: PerformanceTrends) [PredictedIssue]
+    %% Adaptive Performance System
+    class AdaptivePerformanceMode {
+        <<@MainActor>>
+        +currentMode: PerformanceMode
+        +configuration: PerformanceModeConfiguration
+        -fileSizeThresholds: FileSizeThresholds
+        -memoryMonitor: MemoryMonitor
+        +updateMode(for: Int, language: Language)
+        +applyConfiguration(to: inout EditorConfiguration)
+        +forceMode(PerformanceMode)
     }
 
-    class BottleneckDetector {
-        +detectionThresholds: DetectionThresholds
-        +algorithmSelector: AlgorithmSelector
-        +statisticalAnalyzer: StatisticalAnalyzer
-        +detectCPUBottlenecks(metrics: CPUMetrics) [CPUBottleneck]
-        +detectMemoryBottlenecks(metrics: MemoryMetrics) [MemoryBottleneck]
-        +detectIOBottlenecks(metrics: IOMetrics) [IOBottleneck]
-        +detectRenderingBottlenecks(metrics: RenderingMetrics) [RenderingBottleneck]
+    class PerformanceBudget {
+        <<struct: Sendable>>
+        +budgets: [String: Budget]
+        +budget(for: String) Budget?
+        +checkBudgets([String: TimeInterval]) [BudgetViolation]
     }
 
-    class PerformancePatternRecognizer {
-        +patternDatabase: PerformancePatternDatabase
-        +machineLearningModel: MLPerformanceModel
-        +featureExtractor: PerformanceFeatureExtractor
-        +recognizePatterns(data: PerformanceData) [PerformancePattern]
-        +learnNewPatterns(data: HistoricalPerformanceData)
-        +classifyPerformanceIssue(symptoms: [Symptom]) IssueClassification
+    class PerformanceBudgetReporter {
+        <<@actor>>
+        -measurements: [String: [TimeInterval]]
+        +record(operation: String, duration: TimeInterval)
+        +averageMeasurements() [String: TimeInterval]
+        +generateReport() PerformanceBudgetReport
+        +reset()
     }
 
-    class PredictivePerformanceAnalyzer {
-        +predictionModels: [PredictionModel]
-        +timeSeriesAnalyzer: TimeSeriesAnalyzer
-        +capacityPlanner: CapacityPlanner
-        +predictFuturePerformance(currentMetrics: PerformanceMetrics) PerformancePrediction
-        +predictResourceExhaustion(trends: ResourceTrends) ExhaustionPrediction
-        +recommendPreventiveActions(prediction: PerformancePrediction) [PreventiveAction]
+    %% Platform Capabilities
+    class PlatformCapabilities {
+        <<singleton>>
+        +shared: PlatformCapabilities
+        +performanceCapabilities: PerformanceCapabilities
+        +supportsHardwareAcceleration: Bool
+        +supportsBackgroundProcessing: Bool
+        +supportsSmoothScrolling: Bool
+        +processorArchitecture: ProcessorArchitecture
+        +memoryProfile: MemoryProfile
+        +recommendedPerformanceConfiguration() PerformanceConfiguration
     }
 
-    %% Optimization Strategies
-    class OptimizationStrategy {
-        <<protocol>>
-        +strategyName: String
-        +applicabilityConditions: [OptimizationCondition]
-        +expectedImpact: ImpactEstimation
-        +canApply(context: OptimizationContext) Bool
-        +apply(context: OptimizationContext) OptimizationResult
-        +rollback(context: OptimizationContext) RollbackResult
-        +validateOptimization(result: OptimizationResult) ValidationResult
+    class TextProcessingActor {
+        <<@actor>>
+        -activeProcessors: [UUID: TextProcessor]
+        -textBuffers: [UUID: String]
+        +process(text: String, with: ProcessorType, priority: TaskPriority) async throws -> String
+        +cancelAllProcessing()
     }
 
-    class MemoryOptimizationStrategy {
-        +memoryPoolManager: MemoryPoolManager
-        +garbageCollectionOptimizer: GCOptimizer
-        +cacheOptimizer: CacheOptimizer
-        +objectPoolManager: ObjectPoolManager
-        +optimizeMemoryAllocation() MemoryOptimizationResult
-        +optimizeGarbageCollection() GCOptimizationResult
-        +optimizeCacheUsage() CacheOptimizationResult
-        +manageObjectPools() ObjectPoolResult
+    class FileSystemActor {
+        <<@actor>>
+        -fileHandles: [URL: FileHandle]
+        -watchers: [URL: FileWatcher]
+        +readFile(at: URL) async throws -> String
+        +writeFile(String, to: URL) async throws
+        +watchFile(at: URL, handler: @escaping @Sendable (FileChangeNotification) async -> Void) throws
     }
 
-    class CPUOptimizationStrategy {
-        +algorithmOptimizer: AlgorithmOptimizer
-        +concurrencyOptimizer: ConcurrencyOptimizer
-        +instructionOptimizer: InstructionOptimizer
-        +loadBalancer: CPULoadBalancer
-        +optimizeAlgorithms() AlgorithmOptimizationResult
-        +optimizeConcurrency() ConcurrencyOptimizationResult
-        +balanceLoad() LoadBalancingResult
-        +reduceComputationalComplexity() ComplexityReductionResult
-    }
-
-    class RenderingOptimizationStrategy {
-        +renderingPipeline: RenderingPipelineOptimizer
-        +bufferOptimizer: BufferOptimizer
-        +shaderOptimizer: ShaderOptimizer
-        +viewportOptimizer: ViewportOptimizer
-        +optimizeRenderingPipeline() RenderingOptimizationResult
-        +optimizeBufferUsage() BufferOptimizationResult
-        +optimizeViewportRendering() ViewportOptimizationResult
-    }
-
-    class IOOptimizationStrategy {
-        +fileIOOptimizer: FileIOOptimizer
-        +networkIOOptimizer: NetworkIOOptimizer
-        +diskCacheOptimizer: DiskCacheOptimizer
-        +compressionOptimizer: CompressionOptimizer
-        +optimizeFileIO() FileIOOptimizationResult
-        +optimizeNetworkIO() NetworkIOOptimizationResult
-        +optimizeDiskCache() DiskCacheOptimizationResult
-    }
-
-    %% Adaptive Optimization System
-    class AdaptiveOptimizationSystem {
-        +dynamicAdjuster: DynamicPerformanceAdjuster
-        +learningSystem: PerformanceLearningSystem
-        +feedbackLoop: PerformanceFeedbackLoop
-        +autoTuner: AutoTuningSystem
-        +adaptOptimizations(currentState: PerformanceState) AdaptationResult
-        +learnFromResults(results: [OptimizationResult])
-        +processFeedback(feedback: PerformanceFeedback)
-        +autoTuneParameters(parameters: [TuningParameter]) TuningResult
-    }
-
-    class DynamicPerformanceAdjuster {
-        +adjustmentRules: [AdjustmentRule]
-        +runtimeMonitor: RuntimePerformanceMonitor
-        +thresholdManager: PerformanceThresholdManager
-        +adjustPerformanceParameters(metrics: PerformanceMetrics) AdjustmentResult
-        +dynamicallyScaleResources(demand: ResourceDemand) ScalingResult
-        +balanceTradeoffs(tradeoffs: [PerformanceTradeoff]) BalancingResult
-    }
-
-    class PerformanceLearningSystem {
-        +learningAlgorithm: ReinforcementLearningAlgorithm
-        +experienceBuffer: ExperienceBuffer
-        +rewardCalculator: PerformanceRewardCalculator
-        +learnFromExperience(experience: PerformanceExperience)
-        +updateOptimizationPolicy(results: [OptimizationResult])
-        +generateOptimizationRecommendations() [OptimizationRecommendation]
-    }
-
-    class PerformanceFeedbackLoop {
-        +feedbackCollector: FeedbackCollector
-        +impactAnalyzer: OptimizationImpactAnalyzer
-        +correlationAnalyzer: CorrelationAnalyzer
-        +collectFeedback(optimization: AppliedOptimization) PerformanceFeedback
-        +analyzeImpact(feedback: PerformanceFeedback) ImpactAnalysis
-        +identifyCorrelations(feedbacks: [PerformanceFeedback]) [Correlation]
-    }
-
-    %% Implementation Layer
-    class OptimizationImplementationLayer {
-        +implementationQueue: OptimizationQueue
-        +rollbackManager: RollbackManager
-        +validationSystem: OptimizationValidationSystem
-        +scheduleOptimization(optimization: PlannedOptimization)
-        +applyOptimization(optimization: PlannedOptimization) ImplementationResult
-        +validateOptimization(result: ImplementationResult) ValidationResult
-        +rollbackOptimization(optimization: AppliedOptimization) RollbackResult
-    }
-
-    class OptimizationQueue {
-        +queuedOptimizations: [QueuedOptimization]
-        +prioritizer: OptimizationPrioritizer
-        +scheduler: OptimizationScheduler
-        +conflictResolver: OptimizationConflictResolver
-        +enqueueOptimization(optimization: PlannedOptimization)
-        +dequeueNextOptimization() PlannedOptimization?
-        +resolvePriorityConflicts() ConflictResolutionResult
-    }
-
-    class RollbackManager {
-        +rollbackStrategies: [RollbackStrategy]
-        +snapshotManager: PerformanceSnapshotManager
-        +changeTracker: OptimizationChangeTracker
-        +createSnapshot(state: PerformanceState) PerformanceSnapshot
-        +rollbackToSnapshot(snapshot: PerformanceSnapshot) RollbackResult
-        +validateRollback(rollbackResult: RollbackResult) Bool
-    }
-
-    %% Performance Metrics and Data Types
-    class PerformanceMetrics {
-        +cpuMetrics: CPUMetrics
-        +memoryMetrics: MemoryMetrics
-        +renderingMetrics: RenderingMetrics
-        +ioMetrics: IOMetrics
-        +networkMetrics: NetworkMetrics
-        +timestamp: Date
-        +aggregatedScore: Double
-    }
-
-    class CPUMetrics {
-        +cpuUsage: Double
-        +coreUtilization: [Double]
-        +instructionsPerSecond: UInt64
-        +cacheHitRatio: Double
-        +thermalState: ThermalState
-    }
-
-    class MemoryMetrics {
-        +totalMemoryUsage: UInt64
-        +peakMemoryUsage: UInt64
-        +memoryPressure: MemoryPressure
-        +allocationRate: UInt64
-        +deallocationRate: UInt64
-        +fragmentationLevel: Double
-    }
-
-    class RenderingMetrics {
-        +frameRate: Double
-        +renderTime: TimeInterval
-        +gpuUtilization: Double
-        +droppedFrames: UInt64
-        +renderingLatency: TimeInterval
+    %% Performance Insights
+    class PerformanceInsights {
+        <<@MainActor>>
+        +status: InsightsPerformanceStatus
+        +issues: [InsightsPerformanceIssue]
+        +recommendations: [InsightsPerformanceRecommendation]
+        +metrics: RealTimeMetrics
+        +generateDetailedReport() async -> DetailedPerformanceReport
+        +configureMonitoring(MonitoringConfiguration)
     }
 
     %% Relationships
-    PerformanceOptimizationPipeline --> PerformanceMonitoringSystem : monitors with
-    PerformanceOptimizationPipeline --> PerformanceAnalysisEngine : analyzes with
-    PerformanceOptimizationPipeline --> OptimizationStrategy : applies
-    PerformanceOptimizationPipeline --> AdaptiveOptimizationSystem : adapts with
-    PerformanceOptimizationPipeline --> OptimizationImplementationLayer : implements with
-
-    PerformanceMonitoringSystem --> MetricsCollector : collects with
-    PerformanceMonitoringSystem --> ContinuousProfiler : profiles with
-    PerformanceMonitoringSystem --> TelemetrySystem : reports with
-
-    PerformanceAnalysisEngine --> BottleneckDetector : detects with
-    PerformanceAnalysisEngine --> PerformancePatternRecognizer : recognizes with
-    PerformanceAnalysisEngine --> PredictivePerformanceAnalyzer : predicts with
-
-    OptimizationStrategy <|-- MemoryOptimizationStrategy : implements
-    OptimizationStrategy <|-- CPUOptimizationStrategy : implements
-    OptimizationStrategy <|-- RenderingOptimizationStrategy : implements
-    OptimizationStrategy <|-- IOOptimizationStrategy : implements
-
-    AdaptiveOptimizationSystem --> DynamicPerformanceAdjuster : adjusts with
-    AdaptiveOptimizationSystem --> PerformanceLearningSystem : learns with
-    AdaptiveOptimizationSystem --> PerformanceFeedbackLoop : feedback with
-
-    OptimizationImplementationLayer --> OptimizationQueue : queues with
-    OptimizationImplementationLayer --> RollbackManager : rollback with
-
-    PerformanceMetrics --> CPUMetrics : includes
-    PerformanceMetrics --> MemoryMetrics : includes  
-    PerformanceMetrics --> RenderingMetrics : includes
-
+    UnifiedPerformanceSystem --> PerformanceMonitor : uses
+    UnifiedPerformanceSystem --> ProductionPerformanceMetrics : integrates
+    UnifiedPerformanceSystem --> PerformanceMetricsActor : coordinates
+    
+    MemoryMonitor --> PlatformMemoryProvider : depends on
+    MemoryMonitor --> CacheCoordinatorActor : manages
+    
+    ViewportManager --> MemoryMonitor : uses
+    ViewportManager --> CacheCoordinatorActor : caches in
+    
+    AdaptivePerformanceMode --> MemoryMonitor : monitors
+    AdaptivePerformanceMode --> PerformanceBudget : applies
+    AdaptivePerformanceMode --> PerformanceBudgetReporter : reports to
+    
+    PerformanceInsights --> MemoryMonitor : observes
+    PerformanceInsights --> PerformanceMonitor : collects from
+    
+    PlatformCapabilities --> MemoryMonitor : configures
+    PlatformCapabilities --> AdaptivePerformanceMode : optimizes
+    
     %% Styling - Dark mode friendly colors
-    classDef pipeline fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef monitoring fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef analysis fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef strategy fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef adaptive fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef implementation fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef metrics fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-
-    class PerformanceOptimizationPipeline pipeline
-    class PerformanceMonitoringSystem monitoring
-    class MetricsCollector monitoring
-    class ContinuousProfiler monitoring
-    class TelemetrySystem monitoring
-    class PerformanceAnalysisEngine analysis
-    class BottleneckDetector analysis
-    class PerformancePatternRecognizer analysis
-    class PredictivePerformanceAnalyzer analysis
-    class OptimizationStrategy strategy
-    class MemoryOptimizationStrategy strategy
-    class CPUOptimizationStrategy strategy
-    class RenderingOptimizationStrategy strategy
-    class IOOptimizationStrategy strategy
-    class AdaptiveOptimizationSystem adaptive
-    class DynamicPerformanceAdjuster adaptive
-    class PerformanceLearningSystem adaptive
-    class PerformanceFeedbackLoop adaptive
-    class OptimizationImplementationLayer implementation
-    class OptimizationQueue implementation
-    class RollbackManager implementation
-    class PerformanceMetrics metrics
-    class CPUMetrics metrics
-    class MemoryMetrics metrics
-    class RenderingMetrics metrics
+    classDef actorClass fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef mainActorClass fill:#34C75920,stroke:#34C759,stroke-width:3px,color:#1D1D1F
+    classDef protocolClass fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef structClass fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef singletonClass fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    
+    class PerformanceMonitor actorClass
+    class ProductionPerformanceMetrics actorClass
+    class PerformanceMetricsActor actorClass
+    class CacheCoordinatorActor actorClass
+    class PerformanceBudgetReporter actorClass
+    class TextProcessingActor actorClass
+    class FileSystemActor actorClass
+    class UnifiedPerformanceSystem mainActorClass
+    class MemoryMonitor mainActorClass
+    class ViewportManager mainActorClass
+    class AdaptivePerformanceMode mainActorClass
+    class PerformanceInsights mainActorClass
+    class PlatformMemoryProvider protocolClass
+    class PerformanceBudget structClass
+    class PlatformCapabilities singletonClass
 ```
 
 ## Performance Optimization Flow
 
 ```mermaid
 sequenceDiagram
-    participant Monitor as Performance Monitor
-    participant Analyzer as Analysis Engine
-    participant Strategy as Optimization Strategy
-    participant Adaptive as Adaptive System
-    participant Impl as Implementation Layer
-    participant System as Target System
+    participant App as Application
+    participant UPS as UnifiedPerformanceSystem
+    participant APM as AdaptivePerformanceMode
+    participant MM as MemoryMonitor
+    participant VM as ViewportManager
+    participant PMA as PerformanceMetricsActor
+    participant PBR as PerformanceBudgetReporter
+    participant INSIGHTS as PerformanceInsights
 
-    loop Continuous Monitoring
-        Monitor->>Monitor: Collect Metrics
-        Monitor->>Monitor: Profile Performance
-        Monitor->>Analyzer: Send Performance Data
-        
-        Analyzer->>Analyzer: Detect Bottlenecks
-        Analyzer->>Analyzer: Recognize Patterns
-        Analyzer->>Analyzer: Predict Issues
-        
-        alt Performance Issue Detected
-            Analyzer->>Strategy: Request Optimization
-            Strategy->>Strategy: Evaluate Applicability
-            Strategy->>Adaptive: Consult Adaptive System
-            Adaptive->>Adaptive: Analyze Historical Data
-            Adaptive-->>Strategy: Provide Recommendations
-            
-            Strategy->>Impl: Queue Optimization
-            Impl->>System: Apply Optimization
-            System-->>Impl: Return Result
-            
-            Impl->>Impl: Validate Optimization
-            
-            alt Validation Successful
-                Impl->>Adaptive: Report Success
-                Adaptive->>Adaptive: Learn from Success
-            else Validation Failed
-                Impl->>System: Rollback Changes
-                Impl->>Adaptive: Report Failure
-                Adaptive->>Adaptive: Learn from Failure
-            end
-            
-            Impl-->>Monitor: Update Monitoring
-        end
+    App->>UPS: track(syntaxHighlighting) operation
+    UPS->>PMA: record(metric)
+    UPS->>PBR: record(operation, duration)
+    
+    par Parallel Monitoring
+        MM->>MM: checkMemoryUsage()
+        MM->>APM: Memory pressure detected
+        and
+        VM->>VM: updateViewport()
+        VM->>VM: performPredictivePrefetching()
+        and
+        PMA->>PMA: updateAggregatedStats()
+        PBR->>PBR: checkBudgetViolations()
     end
+    
+    APM->>APM: determineMode(fileSize, language)
+    APM->>App: Apply performance mode
+    
+    INSIGHTS->>UPS: generateInsights()
+    INSIGHTS->>MM: getMemoryStatistics()
+    INSIGHTS->>PMA: getAllStats()
+    INSIGHTS->>PBR: generateReport()
+    
+    alt Performance Issue Detected
+        INSIGHTS->>APM: recommendOptimization
+        APM->>MM: performCleanup()
+        APM->>VM: adjustPrefetchMultiplier()
+        MM->>App: Cleanup completed
+    else Performance Optimal
+        INSIGHTS->>App: Performance optimal
+    end
+    
+    App->>INSIGHTS: generateDetailedReport()
+    INSIGHTS-->>App: Comprehensive performance report
 ```
 
 ## Key Performance Features
 
-### 1. Comprehensive Monitoring
-- **Real-time Metrics**: Continuous collection of CPU, memory, I/O, and rendering metrics
-- **Continuous Profiling**: Always-on profiling with minimal overhead
-- **Telemetry System**: Privacy-respecting telemetry for performance insights
-- **Alert System**: Proactive alerts for performance degradation
+### 1. Actor-Based Concurrency
+- **Thread-Safe Operations**: All performance monitoring uses Swift actors for safe concurrent access
+- **Isolated State Management**: Performance metrics isolated per actor for data integrity
+- **Background Processing**: Syntax highlighting, text processing, and file operations run on dedicated actors
+- **MainActor Integration**: UI-related performance components properly isolated to main thread
 
-### 2. Advanced Analysis
-- **Bottleneck Detection**: Multi-algorithm bottleneck identification
-- **Pattern Recognition**: ML-powered pattern recognition for performance issues
-- **Predictive Analysis**: Forecast performance problems before they occur
-- **Trend Analysis**: Long-term performance trend identification
+### 2. Adaptive Performance Modes
+- **Dynamic Mode Selection**: Automatically switches between High Quality, Balanced, and Performance modes
+- **File Size Awareness**: Adjusts settings based on document size and language complexity
+- **Memory Pressure Response**: Automatically reduces features when memory is constrained
+- **Cross-Platform Optimization**: Platform-specific performance tuning for macOS, iOS, and Catalyst
 
-### 3. Multi-Strategy Optimization
-- **Memory Optimization**: Advanced memory management and allocation strategies
-- **CPU Optimization**: Algorithm optimization and concurrency improvements
-- **Rendering Optimization**: Graphics pipeline and viewport optimizations
-- **I/O Optimization**: File system and network performance improvements
+### 3. Comprehensive Performance Monitoring
+- **Real-Time Metrics**: Continuous collection of CPU, memory, rendering, and I/O metrics
+- **Performance Budgets**: Predefined thresholds for critical operations with violation tracking
+- **Historical Analysis**: Trend analysis and predictive performance issue detection
+- **Production Telemetry**: Lightweight telemetry system for production performance tracking
 
-### 4. Adaptive Learning
-- **Dynamic Adjustment**: Real-time parameter adjustment based on conditions
-- **Machine Learning**: Reinforcement learning for optimization strategies
-- **Feedback Loop**: Continuous improvement through result analysis
-- **Auto-tuning**: Automatic parameter tuning for optimal performance
+### 4. Intelligent Memory Management
+- **Automatic Cleanup**: Proactive memory cleanup based on configurable thresholds
+- **Cleanup Handlers**: Extensible system for registering custom memory cleanup operations
+- **Memory Pressure Detection**: Platform-specific memory pressure monitoring
+- **Cache Coordination**: Global cache management with LRU eviction policies
 
-### 5. Safe Implementation
-- **Rollback Management**: Safe rollback of failed optimizations
-- **Validation System**: Comprehensive validation of optimization results
-- **Conflict Resolution**: Intelligent resolution of optimization conflicts
-- **Snapshot System**: Performance state snapshots for safe rollback
+### 5. Viewport-Based Optimization
+- **Incremental Rendering**: Only render visible and prefetch areas for large documents
+- **Predictive Prefetching**: Algorithm predicts scroll direction and preloads content
+- **Range Caching**: LRU cache for viewport calculations and text ranges
+- **Scroll Velocity Analysis**: Optimizes prefetching based on user scroll behavior
 
-### 6. Performance Targets
-- **60fps Rendering**: Maintain 60fps during all operations
-- **Sub-100ms Response**: UI responsiveness under 100ms
-- **Memory Efficiency**: Optimal memory usage with minimal fragmentation
-- **Scalability**: Performance scales with document size and complexity
+### 6. Cross-Platform Performance Abstractions
+- **Platform Capabilities**: Runtime detection of hardware acceleration, SIMD support, display refresh rates
+- **Architecture-Specific Optimizations**: Apple Silicon vs Intel optimizations
+- **Memory Profile Classification**: Automatic device memory classification (Low/Medium/High/Ultra)
+- **Battery and Thermal Awareness**: Respects device thermal state and power constraints
 
-## Optimization Strategies
+### 7. Performance Budget Management
+- **Operation Budgets**: Time budgets for syntax highlighting (16ms), scrolling (8ms), text layout (16ms)
+- **Violation Tracking**: Automatic detection and reporting of budget violations
+- **Dynamic Thresholds**: Adaptive thresholds based on file size and device capabilities
+- **Real-Time Alerts**: Immediate notification of performance degradation
 
-### Memory Optimization
-- **Object Pooling**: Reuse objects to reduce allocation overhead
-- **Memory Mapping**: Use memory-mapped files for large documents
-- **Cache Optimization**: Intelligent caching with LRU eviction
-- **Garbage Collection**: Optimize GC timing and frequency
+### 8. Real-Time Analytics & Insights
+- **Performance Status**: Overall health scoring (Optimal/Suboptimal/Degraded/Critical)
+- **Issue Detection**: Automatic detection of slow text layout, high memory usage, low cache hit rates
+- **Smart Recommendations**: Context-aware suggestions for performance improvements
+- **Historical Trends**: Long-term performance trend analysis with confidence scoring
 
-### CPU Optimization  
-- **Algorithm Selection**: Choose optimal algorithms based on data size
-- **Concurrency**: Leverage multi-core processing effectively
-- **Vectorization**: Use SIMD instructions for parallel operations
-- **Load Balancing**: Distribute work across available cores
+## Performance Targets
 
-### Rendering Optimization
-- **Viewport Culling**: Only render visible content
-- **Batching**: Batch rendering operations to reduce overhead
-- **Level of Detail**: Adjust rendering quality based on zoom level
-- **Hardware Acceleration**: Leverage GPU for appropriate operations
+- **60fps Rendering**: Maintain 60fps during scrolling and text editing
+- **<16ms Text Layout**: Text layout operations complete within single frame budget
+- **<8ms Scrolling**: Ultra-smooth scrolling on ProMotion displays
+- **Memory Efficiency**: Automatic cleanup keeps memory usage under configured thresholds
+- **Large File Support**: Optimized for files up to 100MB on high-memory devices
+- **Background Processing**: Non-blocking syntax highlighting and file operations
 
-### I/O Optimization
-- **Asynchronous Operations**: Non-blocking I/O operations
-- **Compression**: Compress data to reduce I/O overhead
-- **Prefetching**: Anticipate and preload required data
-- **Caching**: Cache frequently accessed data
+## Integration Points
+
+### With EditorConfiguration
+```swift
+var config = EditorConfiguration()
+config.actorCoordinator = ActorCoordinator.create()
+config.performance.memoryMonitor = MemoryMonitor()
+let adaptiveMode = AdaptivePerformanceMode(memoryMonitor: config.performance.memoryMonitor)
+```
+
+### With CodeEditorView
+```swift
+CodeEditor(text: $code)
+    .adaptivePerformance(memoryMonitor: memoryMonitor)
+    .environment(\.performanceInsights, insights)
+```
+
+### With Background Processing
+```swift
+// Syntax highlighting actor coordination
+let textProcessor = TextProcessingActor()
+await textProcessor.process(text: content, with: .syntaxHighlighting, priority: .high)
+```
 
 ## Benefits
 
-1. **Continuous Improvement**: Performance automatically improves over time
-2. **Proactive Optimization**: Problems are prevented before they impact users
-3. **Adaptive Behavior**: System learns and adapts to usage patterns
-4. **Safe Optimizations**: Comprehensive validation and rollback capabilities
-5. **Comprehensive Coverage**: Optimizes all aspects of system performance
-6. **Data-Driven Decisions**: Optimization decisions based on real performance data
+1. **Proactive Optimization**: Performance issues prevented before impacting users
+2. **Adaptive Behavior**: System automatically adjusts to device capabilities and usage patterns
+3. **Cross-Platform Consistency**: Unified performance experience across macOS, iOS, and Catalyst
+4. **Actor Safety**: Thread-safe performance monitoring with no data races
+5. **Memory Intelligence**: Smart memory management prevents OOM crashes
+6. **Developer Insights**: Comprehensive performance analytics for optimization decisions
+7. **Production Ready**: Lightweight telemetry suitable for App Store distribution
+8. **Extensible Architecture**: Plugin architecture for custom performance monitoring

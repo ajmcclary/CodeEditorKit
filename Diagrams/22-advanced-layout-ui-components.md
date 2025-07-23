@@ -1,584 +1,583 @@
 # Advanced Layout & UI Components Architecture
 
-This diagram shows the comprehensive layout system and UI component architecture that handles advanced positioning, responsive design, and complex component interactions within the CodeEditorPlugin.
+This diagram shows the comprehensive layout system and UI component architecture that handles advanced positioning, responsive design, and complex component interactions within the CodeEditorPlugin. The architecture emphasizes cross-platform compatibility, actor-based coordination, and modern UI patterns.
 
 ```mermaid
 classDiagram
     direction LR
     
-    %% Row 1 - Core Layout System
-    class AdvancedLayoutSystem {
-        <<layout system>>
-        +layoutEngine LayoutEngine
-        +componentManager UIComponentManager
-        +responsiveManager ResponsiveLayoutManager
-        +animationCoordinator LayoutAnimationCoordinator
-        +initializeLayout()
-        +updateLayout()
-        +performLayout()
-        +optimizeLayout()
+    %% Row 1 - Core Layout Coordination System
+    class LayoutCoordinator {
+        <<@MainActor layout coordinator>>
+        -isPerformingLayout Bool
+        -pendingLayoutOperations [() -> Void]
+        -view PlatformView?
+        +performLayout(_ operation: @escaping () -> Void)
+        +performAnimatedLayout(duration: TimeInterval, options: AnimationOptions)
+        +invalidateLayout()
+        +isLayoutInProgress Bool
+        +cancelPendingLayout()
     }
 
-    class LayoutEngine {
-        <<layout engine>>
-        +layoutAlgorithm LayoutAlgorithm
-        +measurementCache MeasurementCache
-        +layoutTree LayoutTree
-        +performanceTracker LayoutPerformanceTracker
-        +calculateLayout()
-        +measureComponent()
-        +positionComponent()
-        +validateLayout()
+    class AdaptiveLayoutProvider {
+        <<adaptive layout system>>
+        -scaleFactor(for: DynamicTypeSize) CGFloat
+        +sectionSpacing(for: DynamicTypeSize) CGFloat
+        +controlSpacing(for: DynamicTypeSize) CGFloat
+        +horizontalPadding(for: DynamicTypeSize) CGFloat
+        +verticalPadding(for: DynamicTypeSize) CGFloat
+        +fontSize(base: CGFloat, for: DynamicTypeSize) CGFloat
+        +isCompactLayout(for: DynamicTypeSize) Bool
+        +cornerRadius(for: DynamicTypeSize) CGFloat
     }
 
-    class UIComponentManager {
-        <<component manager>>
-        +registeredComponents [String: UIComponent]
-        +componentHierarchy ComponentHierarchy
-        +componentFactory ComponentFactory
-        +lifecycleManager ComponentLifecycleManager
-        +registerComponent()
-        +createComponent()
-        +destroyComponent()
-        +updateComponent()
+    class ContainerViewInitializer {
+        <<container setup coordinator>>
+        +InitializationParameters
+        +ViewComponents
+        +createViews(with: InitializationParameters) ViewComponents
+        +performCommonSetup(for: CodeEditorContainerView, with: ViewComponents)
+        +setupPlatformViews(for: CodeEditorContainerView, with: ViewComponents)
     }
 
-    %% Row 2 - UI Component Management
-    class UIComponent {
-        <<component protocol>>
-        +componentId String
-        +frame CGRect
-        +constraints [LayoutConstraint]
-        +isVisible Bool
-        +render()
-        +measure()
-        +layoutSubcomponents()
-        +handleEvent()
+    %% Row 2 - Modern UI Component Framework
+    class BaseUIComponents {
+        <<component infrastructure>>
+        +ConfigurableUIComponent protocol
+        +ThemeableUIComponent protocol
+        +ReusableUIComponent protocol
+        +BaseConfigurableView<Config, Theme>
+        +BaseReusableTableCellView<Config, Theme>
+        +StandardUITheme
     }
 
-    class CodeEditorComponent {
-        <<editor component>>
-        +textView CodeTextView
-        +gutterView GutterComponent
-        +minimapView MinimapComponent
-        +scrollView ScrollComponent
-        +render()
-        +updateContent()
-        +scrollToLine()
-        +setSelectionRange()
+    class CodeEditorContainerView {
+        <<@MainActor container view>>
+        +textView CodeEditorView
+        +gutterView GutterView
+        +minimapView MinimapView
+        +configuration EditorConfiguration
+        +businessLogicServices BusinessLogicServiceRegistry
+        +layoutViews()
+        +updateTextContainerInsets()
+        +showsLineNumbers Bool
     }
 
-    class GutterComponent {
+    class GutterView {
         <<gutter component>>
-        +lineNumberRenderer LineNumberRenderer
-        +breakpointRenderer BreakpointRenderer
-        +foldingRenderer FoldingRenderer
-        +gutterWidth CGFloat
-        +renderLineNumbers()
-        +renderBreakpoints()
-        +handleGutterClick()
+        +viewModel GutterViewModel
+        +gutterViewRenderer GutterViewRenderer
+        +interactionHandler GutterInteractionHandler
+        +isHidden Bool
+        +setNeedsDisplayLineNumbers()
+        +handlePointerEvents(at: CGPoint)
     }
 
-    class MinimapComponent {
+    class MinimapView {
         <<minimap component>>
-        +minimapRenderer MinimapRenderer
+        +viewModel MinimapViewModel
+        +dataProvider MinimapDataProvider
         +viewportIndicator ViewportIndicator
-        +contentCache MinimapContentCache
-        +scaleFactor CGFloat
+        +frame CGRect
         +updateMinimap()
-        +handleMinimapScroll()
+        +scrollToPosition(CGFloat)
         +syncWithMainView()
     }
 
-    %% Row 3 - Layout Algorithms
-    class FlexboxLayout {
-        <<flexbox layout>>
-        +flexDirection FlexDirection
-        +flexWrap FlexWrap
-        +justifyContent JustifyContent
-        +alignItems AlignItems
-        +calculateFlexLayout()
-        +distributeSpace()
-        +alignComponents()
+    %% Row 3 - Advanced UI Component ViewModels
+    class GutterViewModel {
+        <<@MainActor @Observable view model>>
+        +displayState GutterDisplayState
+        +interactionState GutterInteractionState
+        +visibleLineNumbers [LineNumberDisplayInfo]
+        +configuration EditorConfiguration
+        +businessLogicServices BusinessLogicServiceRegistry
+        +configure(with: CodeEditorView)
+        +updateConfiguration(_ EditorConfiguration)
+        +handlePointerDown(at: CGPoint) Bool
+        +getLineNumberStyle(for: Int) LineNumberStyle
     }
 
-    class GridLayout {
-        <<grid layout>>
-        +templateColumns [GridTrack]
-        +templateRows [GridTrack]
-        +gap GridGap
-        +justifyItems JustifyItems
-        +calculateGridLayout()
-        +placeComponent()
-        +resolveTrackSizes()
+    class MinimapViewModel {
+        <<@MainActor @Observable view model>>
+        +minimapState MinimapState
+        +interaction MinimapInteraction
+        +renderInfo [MinimapRenderInfo]
+        +viewportIndicator ViewportIndicator?
+        +showSyntaxHighlighting Bool
+        +handlePointerDown(at: CGPoint) Bool
+        +scrollToPosition(CGFloat)
+        +getLineNumber(at: CGPoint) Int?
     }
 
-    class AbsoluteLayout {
-        <<absolute layout>>
-        +positioningStrategy PositioningStrategy
-        +zIndexManager ZIndexManager
-        +overflowBehavior OverflowBehavior
-        +calculateAbsoluteLayout()
-        +positionComponent()
-        +handleOverflow()
+    class EditorContainerViewModel {
+        <<@MainActor view model>>
+        +configuration EditorConfiguration
+        +layoutContext LayoutContext
+        +memoryMonitor MemoryMonitor
+        +performanceInsights PerformanceInsights
+        +updateLayout()
+        +applyConfiguration()
     }
 
-    class ScrollComponent {
-        <<scroll component>>
-        +scrollView PlatformScrollView
-        +scrollBehavior ScrollBehavior
-        +elasticBehavior ElasticScrollBehavior
-        +zoomLevel CGFloat
-        +setContentSize()
-        +scrollToPoint()
-        +zoomToRect()
+    class ContentView {
+        <<platform content view>>
+        +editorView CodeEditorView
+        +configuration EditorConfiguration
+        +layoutContext LayoutContext
+        +performanceMetrics PerformanceMetrics
+        +updateContent()
+        +handleLayout()
     }
 
-    %% Row 4 - Responsive System
-    class ResponsiveLayoutManager {
-        <<responsive manager>>
-        +breakpoints [ResponsiveBreakpoint]
-        +adaptiveConstraints [AdaptiveConstraint]
-        +deviceMetrics DeviceMetrics
-        +orientationHandler OrientationChangeHandler
-        +updateLayoutForSize()
-        +handleOrientationChange()
-        +calculateBreakpoint()
-        +adaptConstraints()
+    %% Row 4 - SwiftUI Integration & Adaptive Components
+    class CodeEditor {
+        <<@available SwiftUI view>>
+        @Binding +text String
+        @FocusState +isFocused Bool
+        @Environment +codeEditorEnvironment
+        +initialLanguage Language?
+        +initialTheme CodeEditorSwiftUITheme?
+        +onTextChange (@Sendable (String) -> Void)?
+        +completionProvider (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
+        +textDebounceInterval Duration
     }
 
-    class ResponsiveBreakpoint {
-        <<responsive breakpoint>>
-        +name String
-        +minWidth CGFloat?
-        +maxWidth CGFloat?
-        +deviceType DeviceType
-        +orientation DeviceOrientation?
-        +matches()
+    class AdaptiveVStack {
+        <<adaptive SwiftUI container>>
+        +alignment HorizontalAlignment
+        @Environment +dynamicTypeSize
+        +adaptiveSpacing CGFloat
+        +init(alignment:content:)
     }
 
-    class AdaptiveConstraint {
-        <<adaptive constraint>>
-        +baseConstraint LayoutConstraint
-        +breakpointOverrides [ResponsiveBreakpoint: LayoutConstraint]
-        +priority ConstraintPriority
-        +isActive Bool
-        +getConstraintForBreakpoint()
-        +activateForBreakpoint()
+    class AdaptiveHStack {
+        <<adaptive SwiftUI container>>
+        +alignment VerticalAlignment
+        @Environment +dynamicTypeSize
+        +adaptiveSpacing CGFloat
+        +init(alignment:content:)
     }
 
-    class OverlayManager {
-        <<overlay manager>>
-        +activeOverlays [String: OverlayComponent]
-        +overlayLayers [OverlayLayer]
-        +positionCalculator OverlayPositionCalculator
-        +addOverlay()
-        +removeOverlay()
-        +updateOverlayPosition()
-        +renderOverlays()
+    class AdaptiveSection {
+        <<themed section container>>
+        +title String?
+        @Environment +dynamicTypeSize
+        +adaptiveSpacing CGFloat
+        +adaptivePadding CGFloat
+        +adaptiveCornerRadius CGFloat
     }
 
-    %% Row 5 - Constraint System
-    class ConstraintSolver {
-        <<constraint solver>>
-        +constraints [LayoutConstraint]
-        +constraintGraph ConstraintGraph
-        +solver LinearConstraintSolver
-        +conflictResolver ConstraintConflictResolver
-        +addConstraint()
-        +removeConstraint()
-        +solveConstraints()
-        +detectConflicts()
+    %% Row 5 - Cross-Platform Coordination System
+    class CrossPlatformCoordinator {
+        <<@MainActor observable object>>
+        +capabilities PlatformCapabilities
+        +inputCoordinator InputCoordinator
+        +toolbarCoordinator ToolbarCoordinator
+        +contextMenuCoordinator ContextMenuCoordinator
+        +platformAdjustments PlatformAdjustments
+        +isFeatureAvailable(_ EditorFeature) Bool
+        +optimizeTextView(_ CodeEditorView)
+        +createToolbarItems() [ToolbarItem]
     }
 
-    class LayoutConstraint {
-        <<layout constraint>>
-        +constraintId String
-        +firstItem UIComponent
-        +firstAttribute LayoutAttribute
-        +relation ConstraintRelation
-        +secondItem UIComponent?
-        +multiplier CGFloat
-        +constant CGFloat
-        +priority ConstraintPriority
-        +isActive Bool
+    class LayoutContext {
+        <<layout context>>
+        +bounds CGRect
+        +safeAreaInsets EdgeInsets
+        +configuration EditorConfiguration
+        +isRTL Bool
+        +contentBounds CGRect
+        +init(bounds:safeAreaInsets:configuration:isRTL:)
     }
 
-    class ComponentFactory {
+    class UIComponentFactory {
         <<component factory>>
-        +componentTemplates [ComponentType: ComponentTemplate]
-        +dependencyInjector ComponentDependencyInjector
-        +configurationValidator ComponentConfigurationValidator
-        +createComponent()
-        +cloneComponent()
-        +validateConfiguration()
-        +registerTemplate()
+        @MainActor -themeRegistry [String: Any]
+        +registerTheme<T>(_ theme: T, for: String)
+        +getTheme<T>(for: String, as: T.Type) T?
+        +UISpacing
+        +UIMargins
+        +AccessibilityHelper
     }
 
-    class ComponentLifecycleManager {
-        <<lifecycle manager>>
-        +componentStates [String: ComponentLifecycleState]
-        +lifecycleObservers [ComponentLifecycleObserver]
-        +transitionComponent()
-        +notifyObservers()
-        +cleanupComponent()
-        +validateTransition()
+    class UnifiedEventSystem {
+        <<@MainActor event system>>
+        -eventSubject PassthroughSubject<EditorEvent, Never>
+        +events AnyPublisher<EditorEvent, Never>
+        -eventFilters [EventFilter]
+        -eventHandlers [UUID: EventHandler]
+        +publish(_ EditorEvent)
+        +subscribe<T>(to: T.Type, handler:) AnyCancellable
+        +registerHandler(_ EventHandler) EventHandlerToken
     }
 
-    %% Row 6 - Animation System
-    class LayoutAnimationCoordinator {
-        <<animation coordinator>>
-        +animationEngine AnimationEngine
-        +transitionManager TransitionManager
-        +timingFunctions [TimingFunction]
-        +activeAnimations [String: LayoutAnimation]
-        +animateLayoutChange()
-        +createTransition()
-        +interruptAnimation()
-        +completeAllAnimations()
+    %% Row 6 - Performance & Business Logic Integration
+    class PerformanceInsights {
+        <<@ObservableObject performance monitoring>>
+        +metrics PerformanceMetrics
+        +status PerformanceStatus
+        +issues [InsightsPerformanceIssue]
+        +recommendations [InsightsPerformanceRecommendation]
+        +updateMetrics(_ PerformanceMetrics)
+        +reset()
     }
 
-    class LayoutAnimation {
-        <<layout animation>>
-        +animationId String
-        +targetComponent UIComponent
-        +fromState LayoutState
-        +toState LayoutState
-        +duration TimeInterval
-        +timingFunction TimingFunction
-        +start()
-        +pause()
-        +resume()
-        +cancel()
+    class PerformanceViews {
+        <<SwiftUI performance components>>
+        +PerformanceStatusView
+        +PerformanceInsightsPanel
+        +DetailedPerformanceReportView
+        +MetricRow
+        +IssueRow
+        +RecommendationRow
     }
 
-    class AnimationConfiguration {
-        <<animation config>>
-        +duration TimeInterval
-        +delay TimeInterval
-        +timingFunction TimingFunction
-        +repeatCount Int
-        +autoreverses Bool
-        +fillMode AnimationFillMode
+    class BusinessLogicServiceRegistry {
+        <<service registry>>
+        +lineNumberCalculationService LineNumberCalculationService
+        +gutterSizingService GutterSizingService
+        +codeFoldingCoordinatorService CodeFoldingCoordinatorService
+        +syntaxHighlightingService SyntaxHighlightingService
+        +textEditingService TextEditingService
+        +languageDetectionService LanguageDetectionService
     }
 
-    class AccessibilityLayoutManager {
-        <<accessibility manager>>
-        +accessibilityElements [AccessibilityElement]
-        +focusManager AccessibilityFocusManager
-        +navigationAssistant AccessibilityNavigationAssistant
-        +setupAccessibility()
-        +updateAccessibilityElements()
-        +handleAccessibilityFocus()
-        +provideAccessibilityPath()
+    class MemoryMonitor {
+        <<@ObservableObject memory tracking>>
+        +currentMemoryUsage Double
+        +peakMemoryUsage Double
+        +isMonitoring Bool
+        +startMonitoring()
+        +stopMonitoring()
+        +updateMemoryUsage()
     }
 
-    %% Row 7 - Performance & Optimization
-    class LayoutPerformanceOptimizer {
-        <<performance optimizer>>
-        +layoutCache LayoutCache
-        +measurementBatcher MeasurementBatcher
-        +dirtyRegionTracker DirtyRegionTracker
-        +layoutProfiler LayoutProfiler
-        +optimizeLayoutPass()
-        +batchMeasurements()
-        +trackDirtyRegion()
-        +invalidateCache()
+    %% Row 7 - Advanced Layout Features
+    class InsertionPointView {
+        <<insertion point component>>
+        +insertionPointIndicating InsertionPointIndicating
+        +isVisible Bool
+        +position CGPoint
+        +animate()
+        +hide()
+        +show(at: CGPoint)
     }
 
-    class LayoutCache {
-        <<layout cache>>
-        +measurementCache [String: ComponentMeasurement]
-        +layoutResultCache [String: LayoutResult]
-        +cacheEvictionPolicy CacheEvictionPolicy
-        +hitRate Double
-        +cacheMeasurement()
-        +getCachedMeasurement()
-        +invalidateCache()
-        +clearExpiredEntries()
+    class LineHighlightView {
+        <<line highlight component>>
+        +highlightedRange NSRange
+        +highlightColor PlatformColor
+        +isVisible Bool
+        +updateHighlight(for: NSRange)
+        +clearHighlight()
     }
 
-    class ComponentEventSystem {
-        <<event system>>
-        +eventHandlers [ComponentEventType: ComponentEventHandler]
-        +eventPropagation EventPropagationManager
-        +gestureRecognizers [ComponentGestureRecognizer]
-        +handleEvent()
-        +propagateEvent()
-        +registerGestureRecognizer()
+    class CompletionCellComponents {
+        <<completion UI components>>
+        +CompletionTableViewCell
+        +CompletionHeaderView
+        +CompletionFooterView
+        +iconImageView UIImageView
+        +titleLabel UILabel
+        +detailLabel UILabel
     }
 
-    %% Row 8 - Enumerations
-    class LayoutAlgorithm {
-        <<enumeration>>
-        flexbox
-        grid
-        absolute
-        flow
-        custom
+    %% Row 8 - Supporting Types & Extensions
+    class AnimationOptions {
+        <<OptionSet @Sendable>>
+        +curveEaseIn
+        +curveEaseOut
+        +curveEaseInOut
+        +curveLinear
+        +allowUserInteraction
+        +uiKitOptions UIView.AnimationOptions
     }
 
-    class LayoutAttribute {
-        <<enumeration>>
-        leading
-        trailing
-        top
-        bottom
-        width
-        height
-        centerX
-        centerY
-        baseline
+    class LineNumberStyle {
+        <<styling information>>
+        +font PlatformFont
+        +textColor PlatformColor
+        +backgroundColor PlatformColor
+        +alignment NSTextAlignment
+        +init(font:textColor:backgroundColor:alignment:)
     }
 
-    class ConstraintRelation {
-        <<enumeration>>
-        equal
-        lessThanOrEqual
-        greaterThanOrEqual
+    class ViewportIndicator {
+        <<minimap viewport indicator>>
+        +frame CGRect
+        +isVisible Bool
+        +opacity CGFloat
+        +init(frame:isVisible:opacity:)
     }
 
-    class ComponentLifecycleState {
-        <<enumeration>>
-        created
-        initialized
-        configured
-        rendered
-        visible
-        hidden
-        destroyed
+    class PlatformAbstractions {
+        <<cross-platform types>>
+        +PlatformView
+        +PlatformColor
+        +PlatformFont
+        +PlatformScrollView
+        +PlatformContextMenu
+        +EdgeInsets
     }
 
-    %% Key Relationships
-    AdvancedLayoutSystem --> LayoutEngine : uses
-    AdvancedLayoutSystem --> UIComponentManager : manages
-    AdvancedLayoutSystem --> ResponsiveLayoutManager : adapts with
-    AdvancedLayoutSystem --> LayoutAnimationCoordinator : animates with
-    AdvancedLayoutSystem --> ConstraintSolver : solves with
+    %% Key Relationships - Modern Architecture
+    LayoutCoordinator --> CodeEditorContainerView : coordinates
+    AdaptiveLayoutProvider --> AdaptiveVStack : provides spacing
+    AdaptiveLayoutProvider --> AdaptiveHStack : provides spacing
+    AdaptiveLayoutProvider --> AdaptiveSection : provides styling
+    ContainerViewInitializer --> CodeEditorContainerView : initializes
     
-    LayoutEngine --> LayoutAlgorithm : implements
-    UIComponentManager --> UIComponent : manages
-    UIComponentManager --> ComponentFactory : creates with
-    UIComponent <|-- CodeEditorComponent : specializes to
-    UIComponent <|-- GutterComponent : specializes to
-    UIComponent <|-- MinimapComponent : specializes to
-    UIComponent <|-- ScrollComponent : specializes to
+    BaseUIComponents --> GutterView : implements protocols
+    BaseUIComponents --> MinimapView : implements protocols
+    CodeEditorContainerView --> GutterView : contains
+    CodeEditorContainerView --> MinimapView : contains
+    CodeEditorContainerView --> BusinessLogicServiceRegistry : uses services
     
-    ResponsiveLayoutManager --> ResponsiveBreakpoint : uses
-    ResponsiveLayoutManager --> AdaptiveConstraint : manages
+    GutterView --> GutterViewModel : manages state
+    MinimapView --> MinimapViewModel : manages state
+    GutterViewModel --> BusinessLogicServiceRegistry : accesses services
+    MinimapViewModel --> BusinessLogicServiceRegistry : accesses services
     
-    ConstraintSolver --> LayoutConstraint : solves
-    LayoutConstraint --> LayoutAttribute : references
-    LayoutConstraint --> ConstraintRelation : defines
+    CodeEditor --> CodeEditorContainerView : represents
+    CodeEditor --> MemoryMonitor : monitors memory
+    CodeEditor --> PerformanceInsights : tracks performance
     
-    LayoutAnimationCoordinator --> LayoutAnimation : creates
-    LayoutAnimation --> AnimationConfiguration : configured by
+    CrossPlatformCoordinator --> LayoutContext : provides context
+    CrossPlatformCoordinator --> UnifiedEventSystem : coordinates events
+    UIComponentFactory --> BaseUIComponents : creates components
+    UnifiedEventSystem --> PerformanceInsights : publishes events
     
-    ComponentFactory --> ComponentLifecycleManager : coordinates with
-    ComponentLifecycleManager --> ComponentLifecycleState : manages
+    PerformanceViews --> PerformanceInsights : observes
+    BusinessLogicServiceRegistry --> MemoryMonitor : provides service
+    EditorContainerViewModel --> LayoutContext : uses
+    ContentView --> PerformanceViews : integrates
     
-    LayoutEngine --> FlexboxLayout : can use
-    LayoutEngine --> GridLayout : can use
-    LayoutEngine --> AbsoluteLayout : can use
+    InsertionPointView --> LineHighlightView : coordinates with
+    CompletionCellComponents --> UIComponentFactory : styled by
     
-    LayoutPerformanceOptimizer --> LayoutCache : uses
-    AdvancedLayoutSystem --> AccessibilityLayoutManager : accessibility with
+    GutterViewModel --> LineNumberStyle : produces
+    MinimapViewModel --> ViewportIndicator : manages
+    LayoutCoordinator --> AnimationOptions : uses for animations
+    CrossPlatformCoordinator --> PlatformAbstractions : abstracts platforms
 
-    %% Styling - Dark mode friendly colors
-    classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef engine fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef component fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef responsive fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef constraint fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef animation fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef factory fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef layout fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef performance fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef accessibility fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
-    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    %% Styling - Modern dark mode friendly colors with enhanced contrast
+    classDef coordinator fill:#007AFF25,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef adaptive fill:#34C75925,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef component fill:#AF52DE25,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef viewmodel fill:#FF950025,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef swiftui fill:#007AFF25,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef platform fill:#8E8E9325,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef performance fill:#FF3B3025,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef feature fill:#34C75925,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef support fill:#8E8E9325,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
-    class AdvancedLayoutSystem system
-    class LayoutEngine engine
-    class LayoutPerformanceOptimizer engine
-    class UIComponent component
-    class CodeEditorComponent component
-    class GutterComponent component
-    class MinimapComponent component
-    class ScrollComponent component
-    class OverlayManager component
-    class ResponsiveLayoutManager responsive
-    class ResponsiveBreakpoint responsive
-    class AdaptiveConstraint responsive
-    class ConstraintSolver constraint
-    class LayoutConstraint constraint
-    class LayoutAnimationCoordinator animation
-    class LayoutAnimation animation
-    class AnimationConfiguration animation
-    class ComponentFactory factory
-    class ComponentLifecycleManager factory
-    class FlexboxLayout layout
-    class GridLayout layout
-    class AbsoluteLayout layout
-    class LayoutCache performance
-    class AccessibilityLayoutManager accessibility
-    class ComponentEventSystem accessibility
-    class LayoutAlgorithm enum
-    class LayoutAttribute enum
-    class ConstraintRelation enum
-    class ComponentLifecycleState enum
+    class LayoutCoordinator coordinator
+    class AdaptiveLayoutProvider adaptive
+    class ContainerViewInitializer coordinator
+    class BaseUIComponents component
+    class CodeEditorContainerView component
+    class GutterView component
+    class MinimapView component
+    class GutterViewModel viewmodel
+    class MinimapViewModel viewmodel
+    class EditorContainerViewModel viewmodel
+    class ContentView component
+    class CodeEditor swiftui
+    class AdaptiveVStack swiftui
+    class AdaptiveHStack swiftui
+    class AdaptiveSection swiftui
+    class CrossPlatformCoordinator platform
+    class LayoutContext platform
+    class UIComponentFactory platform
+    class UnifiedEventSystem platform
+    class PerformanceInsights performance
+    class PerformanceViews performance
+    class BusinessLogicServiceRegistry performance
+    class MemoryMonitor performance
+    class InsertionPointView feature
+    class LineHighlightView feature
+    class CompletionCellComponents feature
+    class AnimationOptions support
+    class LineNumberStyle support
+    class ViewportIndicator support
+    class PlatformAbstractions support
 ```
 
-## Layout System Flow
+## Modern Layout System Architecture Flow
 
 ```mermaid
 flowchart TB
-    INIT[Initialize Layout System] --> REGISTER[Register Components]
-    REGISTER --> SETUP[Setup Responsive Breakpoints]
-    SETUP --> CONSTRAINT[Create Constraints]
+    INIT[Initialize Layout System] --> CONFIG[Configure Cross-Platform Coordinator]
+    CONFIG --> SERVICES[Setup Business Logic Services]
+    SERVICES --> COMPONENTS[Create UI Components]
     
-    CONSTRAINT --> MEASURE[Measure Components]
-    MEASURE --> SOLVE[Solve Constraints]
-    SOLVE --> LAYOUT[Calculate Layout]
-    LAYOUT --> POSITION[Position Components]
+    COMPONENTS --> CONTAINER[CodeEditorContainerView]
+    COMPONENTS --> GUTTER[GutterView + ViewModel]
+    COMPONENTS --> MINIMAP[MinimapView + ViewModel]
     
-    POSITION --> RENDER[Render Components]
+    CONTAINER --> LAYOUT[LayoutCoordinator.performLayout]
+    GUTTER --> GUTTERVM[GutterViewModel State Management]
+    MINIMAP --> MINIMAPVM[MinimapViewModel State Management]
+    
+    LAYOUT --> ADAPTIVE[AdaptiveLayoutProvider]
+    ADAPTIVE --> RESPONSIVE[Dynamic Type & Platform Adaptation]
+    
+    subgraph "SwiftUI Integration"
+        SWIFTUI[CodeEditor SwiftUI View]
+        REPRESENT[CodeEditorRepresentable]
+        ENV[Environment Values]
+        BINDINGS[Property Bindings]
+    end
+    
+    subgraph "Performance Monitoring"
+        PERF[PerformanceInsights]
+        MEMORY[MemoryMonitor]
+        METRICS[Real-time Metrics]
+        VIEWS[Performance UI Components]
+    end
+    
+    subgraph "Event Coordination"
+        EVENTS[UnifiedEventSystem]
+        HANDLERS[Event Handlers]
+        FILTERS[Event Filters]
+        PUBLISH[Event Publishing]
+    end
+    
+    subgraph "Actor-based Services"
+        ACTORS[Business Logic Services]
+        LINES[LineNumberCalculationService]
+        SIZING[GutterSizingService]
+        FOLDING[CodeFoldingCoordinatorService]
+        SYNTAX[SyntaxHighlightingService]
+    end
+    
+    RESPONSIVE --> SWIFTUI
+    SWIFTUI --> REPRESENT
+    REPRESENT --> PERF
+    REPRESENT --> EVENTS
+    
+    PERF --> MEMORY
+    MEMORY --> METRICS
+    METRICS --> VIEWS
+    
+    EVENTS --> HANDLERS
+    HANDLERS --> FILTERS
+    FILTERS --> PUBLISH
+    
+    GUTTERVM --> ACTORS
+    MINIMAPVM --> ACTORS
+    ACTORS --> LINES
+    ACTORS --> SIZING
+    ACTORS --> FOLDING
+    ACTORS --> SYNTAX
+    
+    PUBLISH --> UPDATE[Update UI Components]
+    UPDATE --> RENDER[Render with Platform Abstractions]
     RENDER --> READY[Layout Complete]
-    
-    subgraph "Layout Algorithms"
-        FLEX[Flexbox Layout<br/>• Flexible sizing<br/>• Direction control<br/>• Alignment options]
-        GRID[Grid Layout<br/>• Track definitions<br/>• Auto placement<br/>• Gap management]
-        ABS[Absolute Layout<br/>• Fixed positioning<br/>• Z-index layering<br/>• Overflow handling]
-    end
-    
-    subgraph "Responsive Features"
-        BREAK[Breakpoint Detection<br/>• Screen size analysis<br/>• Device type detection<br/>• Orientation handling]
-        ADAPT[Adaptive Constraints<br/>• Conditional constraints<br/>• Priority management<br/>• Dynamic adjustment]
-    end
-    
-    subgraph "Animation System"
-        TRANS[Layout Transitions<br/>• State interpolation<br/>• Timing functions<br/>• Completion callbacks]
-        COORD[Animation Coordination<br/>• Concurrent animations<br/>• Conflict resolution<br/>• Performance optimization]
-    end
-    
-    LAYOUT --> FLEX
-    LAYOUT --> GRID
-    LAYOUT --> ABS
-    
-    READY --> BREAK
-    READY --> ADAPT
-    READY --> TRANS
-    READY --> COORD
-    
-    BREAK --> UPDATE[Update Layout on Change]
-    ADAPT --> UPDATE
-    TRANS --> UPDATE
-    COORD --> UPDATE
-    
-    UPDATE --> MEASURE
 
-    %% Styling - Dark mode friendly colors
-    classDef init fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef algorithm fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef responsive fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef animation fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef result fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    %% Styling with enhanced contrast
+    classDef init fill:#007AFF30,stroke:#007AFF,stroke-width:3px,color:#FFFFFF
+    classDef process fill:#AF52DE30,stroke:#AF52DE,stroke-width:2px,color:#FFFFFF
+    classDef swiftui fill:#34C75930,stroke:#34C759,stroke-width:2px,color:#FFFFFF
+    classDef performance fill:#FF3B3030,stroke:#FF3B30,stroke-width:2px,color:#FFFFFF
+    classDef events fill:#FF950030,stroke:#FF9500,stroke-width:2px,color:#FFFFFF
+    classDef services fill:#8E8E9330,stroke:#8E8E93,stroke-width:2px,color:#FFFFFF
+    classDef result fill:#007AFF30,stroke:#007AFF,stroke-width:2px,color:#FFFFFF
 
     class INIT init
-    class REGISTER init
-    class SETUP init
-    class MEASURE process
-    class SOLVE process
+    class CONFIG init
+    class SERVICES init
+    class COMPONENTS process
+    class CONTAINER process
+    class GUTTER process
+    class MINIMAP process
     class LAYOUT process
-    class POSITION process
-    class RENDER process
-    class UPDATE process
-    class FLEX algorithm
-    class GRID algorithm
-    class ABS algorithm
-    class BREAK responsive
-    class ADAPT responsive
-    class TRANS animation
-    class COORD animation
-    class CONSTRAINT result
+    class GUTTERVM process
+    class MINIMAPVM process
+    class ADAPTIVE process
+    class RESPONSIVE process
+    class SWIFTUI swiftui
+    class REPRESENT swiftui
+    class ENV swiftui
+    class BINDINGS swiftui
+    class PERF performance
+    class MEMORY performance
+    class METRICS performance
+    class VIEWS performance
+    class EVENTS events
+    class HANDLERS events
+    class FILTERS events
+    class PUBLISH events
+    class ACTORS services
+    class LINES services
+    class SIZING services
+    class FOLDING services
+    class SYNTAX services
+    class UPDATE result
+    class RENDER result
     class READY result
 ```
 
-## Key Layout System Features
+## Key Architecture Enhancements
 
-### 1. Advanced Layout Algorithms
-- **Flexbox Layout**: Flexible sizing with direction control and alignment options
-- **Grid Layout**: CSS Grid-inspired layout with track definitions and auto placement
-- **Absolute Layout**: Fixed positioning with z-index layering and overflow handling
-- **Flow Layout**: Traditional flow-based layout for text and inline elements
+### 1. Modern Swift Concurrency Integration
+- **@MainActor Components**: All UI components are properly marked with `@MainActor` for thread safety
+- **Actor-based Services**: Business logic services use Swift's actor model for safe concurrent access
+- **Observable Architecture**: ViewModels use Swift 5.9's `@Observable` macro for efficient state management
+- **Async/Await**: Event handling and updates use modern async patterns
 
-### 2. Responsive Design System
-- **Breakpoint Management**: Screen size and device type responsive breakpoints
-- **Adaptive Constraints**: Conditional constraints that adapt to different screen sizes
-- **Orientation Handling**: Automatic layout adaptation for orientation changes
-- **Device-Specific Optimizations**: Tailored layouts for different device capabilities
+### 2. Cross-Platform Layout Coordination
+- **LayoutCoordinator**: Prevents recursive layout cycles with centralized coordination
+- **Platform Abstractions**: Unified types (`PlatformView`, `PlatformColor`, etc.) for seamless cross-platform support
+- **CrossPlatformCoordinator**: Specialized coordinators for input, toolbar, and context menu handling
+- **Dynamic Adaptation**: Real-time adaptation to platform capabilities and device characteristics
 
-### 3. Advanced Constraint System
-- **Linear Constraint Solver**: Efficient constraint solving with conflict detection
-- **Priority-Based Resolution**: Constraint priority system for conflict resolution
-- **Dynamic Constraints**: Runtime constraint modification and updates
-- **Performance Optimization**: Cached constraint solutions and batch processing
+### 3. Advanced Component Architecture
+- **MVVM with Observable**: Clean separation of UI and business logic using modern MVVM patterns
+- **Protocol-based Components**: Flexible component system with `ConfigurableUIComponent`, `ThemeableUIComponent`, and `ReusableUIComponent` protocols
+- **Dependency Injection**: `BusinessLogicServiceRegistry` provides clean service access without singletons
+- **Component Lifecycle**: Proper initialization, configuration, and cleanup patterns
 
-### 4. Component Architecture
-- **Protocol-Based Components**: Flexible component protocol for extensibility
-- **Lifecycle Management**: Complete component lifecycle from creation to destruction
-- **Factory Pattern**: Configurable component creation with dependency injection
-- **Event System**: Comprehensive event handling and propagation
+### 4. SwiftUI Integration Excellence
+- **Native SwiftUI Components**: `CodeEditor` provides idiomatic SwiftUI API with environment integration
+- **Adaptive Layout System**: Dynamic type size adaptation with consistent spacing and sizing
+- **Declarative Configuration**: Fluent modifier API for easy configuration
+- **Environment-based Settings**: Leverages SwiftUI's environment system for configuration propagation
 
-### 5. Animation and Transitions
-- **Layout Animations**: Smooth transitions between layout states
-- **Timing Functions**: Customizable animation timing and easing
-- **Concurrent Animations**: Multiple simultaneous animations with coordination
-- **Performance Optimization**: Hardware-accelerated animations where possible
+### 5. Performance-Optimized Architecture
+- **Real-time Monitoring**: `PerformanceInsights` and `MemoryMonitor` provide comprehensive performance tracking
+- **SwiftUI Performance Views**: Dedicated UI components for performance visualization
+- **Throttled Updates**: Smart update throttling in ViewModels to prevent excessive redraws
+- **Memory Management**: Proper weak references and cleanup to prevent retain cycles
 
-### 6. Performance Optimizations
-- **Measurement Caching**: Intelligent caching of component measurements
-- **Dirty Region Tracking**: Minimal redraws using dirty region optimization
-- **Batch Processing**: Batched layout calculations for improved performance
-- **Memory Management**: Efficient memory usage and cleanup
+### 6. Event-Driven Coordination
+- **UnifiedEventSystem**: Centralized event handling with filtering and throttling
+- **Type-safe Events**: Strongly-typed event system with compile-time safety
+- **Publisher Integration**: Combine publishers for reactive programming patterns
+- **Event Metrics**: Built-in event system performance monitoring
 
-### 7. Accessibility Integration
-- **Accessibility Elements**: Automatic accessibility element generation
-- **Focus Management**: Keyboard and assistive technology focus handling
-- **Navigation Assistance**: Screen reader navigation support
-- **Dynamic Updates**: Accessibility updates during layout changes
+### 7. Advanced Layout Features
+- **Insertion Point Visualization**: Smooth cursor and insertion point indicators
+- **Line Highlighting**: Dynamic line highlighting with customizable colors
+- **Code Completion UI**: Rich completion interface with icons and detailed information
+- **Minimap Integration**: Interactive minimap with viewport indicators and scroll synchronization
 
-## Editor-Specific Components
+### 8. Accessibility & Internationalization
+- **AccessibilityHelper**: Comprehensive accessibility configuration utilities
+- **Right-to-Left Support**: Native RTL layout support in `LayoutContext`
+- **Dynamic Type**: Full dynamic type support throughout the component hierarchy
+- **Localization Ready**: Architecture supports easy localization integration
 
-### 1. Code Editor Component
-- **Text Rendering**: High-performance text rendering with syntax highlighting
-- **Selection Management**: Text selection with multi-cursor support
-- **Scrolling Integration**: Smooth scrolling with momentum and elastic behavior
-- **Overlay System**: Flexible overlay system for annotations and UI elements
+## Benefits of Modern Architecture
 
-### 2. Gutter Component
-- **Line Numbers**: Efficient line number rendering with customizable formatting
-- **Breakpoint Visualization**: Interactive breakpoint display and management
-- **Code Folding**: Visual code folding indicators with expand/collapse
-- **Annotation Display**: Rich annotation display with hover interactions
+1. **Type Safety**: Swift 6 concurrency and strong typing prevent common UI bugs
+2. **Performance**: Actor-based services and throttled updates ensure 60fps performance
+3. **Maintainability**: Clean separation of concerns with MVVM and dependency injection
+4. **Testability**: Protocol-based architecture enables comprehensive unit testing
+5. **Cross-Platform**: Single codebase with platform-specific optimizations
+6. **Extensibility**: Plugin architecture allows easy feature additions
+7. **Memory Efficiency**: Proper memory management with real-time monitoring
+8. **Developer Experience**: SwiftUI integration provides excellent developer ergonomics
 
-### 3. Minimap Component
-- **Content Overview**: Miniature view of entire document content
-- **Viewport Indicator**: Visual indicator of current viewport position
-- **Navigation Interface**: Click and drag navigation through document
-- **Performance Optimization**: Efficient rendering with content caching
-
-### 4. Scroll Component
-- **Smooth Scrolling**: Hardware-accelerated smooth scrolling
-- **Zoom Support**: Pinch-to-zoom with content scaling
-- **Elastic Behavior**: Natural scrolling behavior with bounce effects
-- **Scroll Indicators**: Customizable scroll bar appearance and behavior
-
-## Benefits
-
-1. **Flexible Layout**: Support for multiple layout algorithms and responsive design
-2. **High Performance**: Optimized layout calculations with caching and batching
-3. **Smooth Animations**: Hardware-accelerated animations with conflict resolution
-4. **Accessibility**: Built-in accessibility support with comprehensive navigation
-5. **Extensible**: Protocol-based architecture allows for custom components
-6. **Cross-Platform**: Consistent behavior across macOS, iOS, and Catalyst
+This architecture represents a sophisticated, production-ready layout system that balances performance, maintainability, and developer experience while supporting the complex requirements of a modern code editor.

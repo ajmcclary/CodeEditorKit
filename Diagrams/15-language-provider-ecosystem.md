@@ -1,6 +1,6 @@
 # Language Provider Complete Ecosystem
 
-This comprehensive diagram shows the complete language provider ecosystem supporting 17+ languages with completion, symbols, folding, and data providers.
+This comprehensive diagram shows the complete language provider ecosystem supporting 20 languages with completion, symbols, folding, and data providers.
 
 ```mermaid
 classDiagram
@@ -22,9 +22,13 @@ classDiagram
         +providers [String: CompletionProvider]
         +symbolProviders [String: SymbolProvider]
         +foldingProviders [String: FoldingProvider]
+        +universalProvider UniversalCompletionProvider
+        +performanceMonitor ProviderPerformanceMonitor
         +registerProvider()
         +getProvider()
+        +validateProvider()
         +getAllSupportedLanguages()
+        +createDynamicProvider()
     }
 
     class LanguageMetadataRegistry {
@@ -231,6 +235,64 @@ classDiagram
         +analyzeSyntax()
     }
 
+    class CSSCompletionProvider {
+        <<css provider>>
+        +cssParser CSSParser
+        +propertyDatabase CSSPropertyDatabase
+        +selectorAnalyzer CSSSelectorAnalyzer
+        +valueResolver CSSValueResolver
+        +provideCompletions()
+        +resolveProperties()
+        +validateValues()
+        +analyzeSelectors()
+    }
+
+    class HTMLCompletionProvider {
+        <<html provider>>
+        +htmlParser HTMLParser
+        +elementDatabase HTML5ElementDatabase
+        +attributeResolver HTMLAttributeResolver
+        +entityResolver HTMLEntityResolver
+        +provideCompletions()
+        +resolveElements()
+        +validateAttributes()
+        +resolveEntities()
+    }
+
+    class SQLCompletionProvider {
+        <<sql provider>>
+        +sqlParser SQLParser
+        +keywordDatabase SQLKeywordDatabase
+        +functionResolver SQLFunctionResolver
+        +schemaAnalyzer SQLSchemaAnalyzer
+        +provideCompletions()
+        +resolveKeywords()
+        +analyzeFunctions()
+        +validateSyntax()
+    }
+
+    class ShellCompletionProvider {
+        <<shell provider>>
+        +shellParser ShellParser
+        +commandDatabase ShellCommandDatabase
+        +pathResolver ShellPathResolver
+        +variableAnalyzer ShellVariableAnalyzer
+        +provideCompletions()
+        +resolveCommands()
+        +expandPaths()
+        +analyzeVariables()
+    }
+
+    class PlainTextCompletionProvider {
+        <<plaintext provider>>
+        +textAnalyzer PlainTextAnalyzer
+        +wordDatabase CommonWordDatabase
+        +contextDetector TextContextDetector
+        +provideCompletions()
+        +suggestWords()
+        +detectContext()
+    }
+
     %% Row 7 - Symbol & Folding Providers
     class SymbolProviderRegistry {
         <<symbol registry>>
@@ -248,6 +310,42 @@ classDiagram
         +fallbackExtractor FallbackSymbolExtractor
         +provideSymbols()
         +extractWithPatterns()
+    }
+
+    class CSSSymbolProvider {
+        <<css symbol>>
+        +ruleExtractor CSSRuleExtractor
+        +selectorAnalyzer CSSSelectorAnalyzer
+        +classIdExtractor CSSClassIdExtractor
+        +extractSymbols()
+        +analyzeSelectors()
+    }
+
+    class HTMLSymbolProvider {
+        <<html symbol>>
+        +elementExtractor HTMLElementExtractor
+        +idClassAnalyzer HTMLIdClassAnalyzer
+        +sectionExtractor HTMLSectionExtractor
+        +extractSymbols()
+        +analyzeStructure()
+    }
+
+    class SQLSymbolProvider {
+        <<sql symbol>>
+        +tableExtractor SQLTableExtractor
+        +procedureAnalyzer SQLProcedureAnalyzer
+        +viewExtractor SQLViewExtractor
+        +extractSymbols()
+        +analyzeSchema()
+    }
+
+    class ShellSymbolProvider {
+        <<shell symbol>>
+        +functionExtractor ShellFunctionExtractor
+        +variableAnalyzer ShellVariableAnalyzer
+        +aliasExtractor ShellAliasExtractor
+        +extractSymbols()
+        +analyzeScope()
     }
 
     class FoldingProviderRegistry {
@@ -283,6 +381,42 @@ classDiagram
         +extractDocComments()
     }
 
+    class RubyFoldingProvider {
+        <<ruby folding>>
+        +blockDetector RubyBlockDetector
+        +classMethodAnalyzer RubyClassMethodAnalyzer
+        +endKeywordMatcher RubyEndKeywordMatcher
+        +detectRubyBlocks()
+        +analyzeClassMethods()
+    }
+
+    class XMLFoldingProvider {
+        <<xml folding>>
+        +tagMatcher XMLTagMatcher
+        +elementAnalyzer XMLElementAnalyzer
+        +nestingDetector XMLNestingDetector
+        +detectXMLElements()
+        +analyzeNesting()
+    }
+
+    class ShellFoldingProvider {
+        <<shell folding>>
+        +functionDetector ShellFunctionDetector
+        +blockAnalyzer ShellBlockAnalyzer
+        +hereDocDetector HereDocDetector
+        +detectShellBlocks()
+        +analyzeHereDocs()
+    }
+
+    class SQLFoldingProvider {
+        <<sql folding>>
+        +procedureDetector SQLProcedureDetector
+        +blockAnalyzer SQLBlockAnalyzer
+        +cteDetector SQLCTEDetector
+        +detectSQLBlocks()
+        +analyzeProcedures()
+    }
+
     %% Row 8 - Shared Infrastructure
     class SharedCompletionBuilder {
         <<shared builder>>
@@ -314,14 +448,28 @@ classDiagram
     CompletionProviderRegistry --> JavaScriptCompletionProvider : contains
     CompletionProviderRegistry --> JavaCompletionProvider : contains
     CompletionProviderRegistry --> JSONCompletionProvider : contains
+    CompletionProviderRegistry --> CSSCompletionProvider : contains
+    CompletionProviderRegistry --> HTMLCompletionProvider : contains
+    CompletionProviderRegistry --> SQLCompletionProvider : contains
+    CompletionProviderRegistry --> ShellCompletionProvider : contains
+    CompletionProviderRegistry --> PlainTextCompletionProvider : contains
     
     CompletionProviderRegistry --> SymbolProviderRegistry : coordinates
     CompletionProviderRegistry --> FoldingProviderRegistry : coordinates
 
     SymbolProviderRegistry --> UniversalSymbolProvider : fallback to
+    SymbolProviderRegistry --> CSSSymbolProvider : contains
+    SymbolProviderRegistry --> HTMLSymbolProvider : contains
+    SymbolProviderRegistry --> SQLSymbolProvider : contains
+    SymbolProviderRegistry --> ShellSymbolProvider : contains
+    
     FoldingProviderRegistry --> BraceFoldingProvider : uses
     FoldingProviderRegistry --> IndentationFoldingProvider : uses
     FoldingProviderRegistry --> CommentFoldingProvider : uses
+    FoldingProviderRegistry --> RubyFoldingProvider : contains
+    FoldingProviderRegistry --> XMLFoldingProvider : contains
+    FoldingProviderRegistry --> ShellFoldingProvider : contains
+    FoldingProviderRegistry --> SQLFoldingProvider : contains
 
     SharedCompletionBuilder --> LanguageMemberCompletions : uses
 
@@ -359,12 +507,25 @@ classDiagram
     class YAMLCompletionProvider data
     class XMLCompletionProvider data
     class MarkdownCompletionProvider data
+    class CSSCompletionProvider data
+    class HTMLCompletionProvider data
+    class SQLCompletionProvider data
+    class ShellCompletionProvider dynamic
+    class PlainTextCompletionProvider shared
     class SymbolProviderRegistry symbol
     class UniversalSymbolProvider symbol
+    class CSSSymbolProvider symbol
+    class HTMLSymbolProvider symbol
+    class SQLSymbolProvider symbol
+    class ShellSymbolProvider symbol
     class FoldingProviderRegistry folding
     class BraceFoldingProvider folding
     class IndentationFoldingProvider folding
     class CommentFoldingProvider folding
+    class RubyFoldingProvider folding
+    class XMLFoldingProvider folding
+    class ShellFoldingProvider folding
+    class SQLFoldingProvider folding
     class SharedCompletionBuilder shared
     class LanguageMemberCompletions shared
 ```
@@ -400,11 +561,19 @@ flowchart TB
         ELIXIR[Elixir<br/>• Mix Projects<br/>• GenServer Patterns<br/>• Protocol Resolution]
     end
 
-    subgraph "Data Formats"
+    subgraph "Data Formats & Web"
         JSON[JSON<br/>• Schema Validation<br/>• Path Completion<br/>• Value Inference]
         YAML[YAML<br/>• Schema Support<br/>• Anchor Resolution<br/>• Indentation Analysis]
         XML[XML<br/>• XSD Validation<br/>• Namespace Resolution<br/>• DTD Support]
         MD[Markdown<br/>• Link Resolution<br/>• Reference Lookup<br/>• Syntax Analysis]
+        CSS[CSS<br/>• Property Completion<br/>• Selector Analysis<br/>• Value Validation]
+        HTML[HTML<br/>• HTML5 Elements<br/>• Attribute Completion<br/>• Entity Resolution]
+    end
+
+    subgraph "System & Database"
+        SQL[SQL<br/>• Keyword Completion<br/>• Function Resolution<br/>• Schema Analysis]
+        SHELL[Shell/Bash<br/>• Command Completion<br/>• Path Resolution<br/>• Variable Analysis]
+        PLAIN[Plain Text<br/>• Word Suggestions<br/>• Context Detection<br/>• Basic Completion]
     end
 
     %% Styling - Dark mode friendly colors
@@ -413,6 +582,8 @@ flowchart TB
     classDef jvm fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef functional fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
     classDef data fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef web fill:#30D15820,stroke:#30D158,stroke-width:2px,color:#1D1D1F
+    classDef system fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
 
     class SWIFT compiled
     class CPP compiled
@@ -433,6 +604,11 @@ flowchart TB
     class YAML data
     class XML data
     class MD data
+    class CSS web
+    class HTML web
+    class SQL system
+    class SHELL system
+    class PLAIN system
 ```
 
 ## Key Ecosystem Features
@@ -444,8 +620,10 @@ flowchart TB
 - **Custom Provider Support**: Plugin architecture for additional languages
 
 ### 2. Comprehensive Language Support
-- **17+ Languages**: Full support for major programming languages
+- **20 Languages**: Full support for major programming languages
+- **Complete Web Stack**: HTML, CSS, JavaScript, TypeScript support
 - **Data Format Support**: JSON, YAML, XML, Markdown completion
+- **System Languages**: Shell/Bash, SQL, Plain Text completion
 - **Domain-Specific**: Specialized providers for different language paradigms
 - **Extensible Architecture**: Easy addition of new language providers
 
@@ -456,9 +634,13 @@ flowchart TB
 - **Context Analysis**: Universal context understanding
 
 ### 4. Advanced Features
-- **Symbol Resolution**: Cross-file symbol navigation
+- **Context-Aware Completion**: CSS rules vs selectors, HTML tag-aware attributes
+- **Symbol Resolution**: Cross-file symbol navigation for all supported languages
 - **Import/Module Resolution**: Automatic dependency resolution
 - **Type Inference**: Intelligent type analysis where applicable
+- **Language Metadata Registry**: Dynamic provider creation and validation
+- **Provider Performance Monitoring**: Real-time performance tracking
+- **Universal Completion Provider**: Fallback completion with language metadata
 - **Documentation Integration**: Inline documentation support
 
 ### 5. Performance Optimizations
@@ -469,9 +651,13 @@ flowchart TB
 
 ## Benefits
 
-1. **Comprehensive Coverage**: Support for virtually any programming language
-2. **Consistent Experience**: Uniform completion behavior across languages
-3. **High Performance**: Optimized for speed and responsiveness
-4. **Extensible**: Easy to add support for new languages
-5. **Maintainable**: Shared infrastructure reduces code duplication
-6. **Scalable**: Handles large codebases and complex projects efficiently
+1. **Complete Language Ecosystem**: Support for all 20 major programming languages
+2. **Full-Stack Development**: Complete web development support (HTML, CSS, JS, TS)
+3. **System Administration**: Shell scripting and SQL database support
+4. **Consistent Experience**: Uniform completion behavior across all languages
+5. **Context-Aware Intelligence**: Language-specific completion with contextual awareness
+6. **High Performance**: Optimized for speed with performance monitoring
+7. **Extensible Architecture**: Easy addition of new languages and providers
+8. **Maintainable Codebase**: Shared infrastructure reduces code duplication
+9. **Scalable Design**: Handles large codebases and complex projects efficiently
+10. **Enhanced Provider Capabilities**: Symbol extraction, folding, and completion for all languages

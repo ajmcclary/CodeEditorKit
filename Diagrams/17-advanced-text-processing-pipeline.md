@@ -1,492 +1,669 @@
 # Advanced Text Processing & Validation Pipeline
 
-This diagram shows the comprehensive text processing and validation system that ensures robust text handling, range validation, and performance optimization.
+This diagram shows the comprehensive text processing and validation system featuring actor-based coordination, TextKit2 integration, Unicode normalization, modern concurrency, sophisticated text transformation capabilities, and memory-efficient processing strategies.
 
 ```mermaid
 classDiagram
     direction LR
     
-    %% Row 1 - Core Text Processing System
-    class AdvancedTextProcessor {
-        <<processor>>
-        +textStorage NSTextStorage
-        +validationSystem TextValidationSystem
-        +rangeManager RangeManager
-        +versioningSystem TextVersioningSystem
-        +styler TextSystemStyler
-        +processTextChange()
-        +validateText()
-        +optimizeTextStorage()
+    %% Row 1 - Core Text Processing Coordination Layer
+    class TextProcessingCoordinator {
+        <<main coordinator>>
+        +actorCoordinator ActorCoordinator
+        +processingPipeline TextProcessingPipeline
+        +textKit2Helper TextKit2PerformanceHelper
+        +memoryMonitor MemoryMonitor
+        +validationContext ValidationContext
+        +processTextAsync()
+        +coordinateActors()
+        +optimizeForTextKit2()
+        +monitorMemoryUsage()
     }
 
-    class TextValidationSystem {
-        <<validation system>>
-        +singlePhaseValidator SinglePhaseRangeValidator
-        +threePhaseValidator ThreePhaseRangeValidator
-        +tokenValidator TokenSystemValidator
-        +contextValidator ValidationContext
-        +hybridValidator HybridSyncAsyncValidator
-        +validateText()
-        +validateRange()
-        +validateTokens()
+    class TextProcessingPipeline {
+        <<modern pipeline>>
+        +operations [TextProcessingOperation]
+        +validators [TextValidator]
+        +transformers [TextTransformer]
+        +configuration PipelineConfiguration
+        +cache PipelineCache
+        +processAsync()
+        +processInBatches()
+        +processWithCaching()
+        +estimateProcessingCost()
     }
 
-    class TextProcessingOptimizer {
-        <<optimizer>>
-        +memoryOptimizer MemoryOptimizer
-        +performanceProfiler TextProcessingProfiler
-        +cacheManager ProcessingCacheManager
-        +asyncProcessor AsyncTextProcessor
-        +optimizeProcessing()
-        +profilePerformance()
-        +manageCache()
+    class ActorCoordinator {
+        <<swift 6 concurrency>>
+        +textProcessor TextProcessingActor
+        +cacheCoordinator CacheCoordinatorActor
+        +fileSystem FileSystemActor
+        +performanceMetrics PerformanceMetricsActor
+        +documentState DocumentStateActor
+        +errorRecovery ErrorRecoveryCoordinator
+        +processText()
+        +trackPerformance()
+        +createOrUpdateDocument()
     }
 
+    class TextKit2PerformanceHelper {
+        <<textkit2 optimizer>>
+        +performanceConfig PerformanceConfiguration
+        +performanceMonitor TextKit2PerformanceMonitor
+        +configureForOptimalPerformance()
+        +enableTextKit2IfBeneficial()
+        +optimizeForRealTimeEditing()  
+        +configureAsyncLayout()
+        +monitorFragmentRecycling()
+    }
 
-    %% Row 2 - Validation Components
-    class SinglePhaseRangeValidator {
-        <<single phase>>
-        +validationRules [ValidationRule]
-        +errorCollector ValidationErrorCollector
-        +performanceMetrics ValidationMetrics
+    %% Row 2 - Specialized Processing Actors
+    class TextProcessingActor {
+        <<actor>>
+        +activeProcessors [TextProcessor]
+        +textBuffers [UUID: String]
+        +errorRecovery ErrorRecoveryCoordinator
+        +processIndentation()
+        +processBracketMatching() 
+        +processLineWrapping()
+        +normalizeWhitespace()
+        +processEncoding()
+    }
+
+    class CacheCoordinatorActor {
+        <<actor>>
+        +caches [String: AnyCacheWrapper] 
+        +cacheStats [String: CacheStatistics]
+        +maxGlobalMemoryMB Double
+        +registerCache()
+        +getValue()
+        +setValue()
+        +performGlobalEviction()
+    }
+
+    class PerformanceMetricsActor {
+        <<actor>>
+        +metrics [String: [SendablePerformanceMetric]]
+        +aggregatedStats [String: AggregatedStats]
+        +record()
+        +getStats()
+        +updateAggregatedStats()
+        +clearMetrics()
+    }
+
+    class DocumentStateActor {
+        <<actor>>
+        +documents [UUID: DocumentState]
+        +documentURLs [URL: UUID]
+        +createDocument()
+        +updateContent()
+        +getDocument()
+        +markSaved()
+        +closeDocument()
+    }
+
+    %% Row 3 - Advanced Text Processing Utilities
+    class TextProcessingUtilities {
+        <<utility hub>>
+        +extractWords()
+        +extractCurrentIdentifier()
+        +splitIntoChunks()
+        +classifyCharacter()
+        +trimWhitespace()
+        +normalizeWhitespace() 
+        +analyzeTextComplexity()
+        +estimateProcessingCost()
+        +findWordBoundaries()
+    }
+
+    class TextParsingUtilities {
+        <<parsing utilities>>
+        +extractTarget()
+        +extractCommentPrefix()
+        +extractTokensMatching()
+        +findWordBoundaries() 
+        +extractLineIndentation()
+        +normalizeLineEndings()
+        +detectLanguageFromContent()
+        +extractStringLiterals()
+        +findMatchingBraces()
+        +parseIntoSyntaxTree()
+    }
+
+    class UnicodeNormalizationProcessor {
+        <<unicode processing>>
+        +normalizeForm NFNormalizationForm
+        +caseFoldingRules CaseFoldingRules
+        +graphemeClusterHandler GraphemeClusterHandler
+        +normalizeUnicode()
+        +performCaseFolding()
+        +processGraphemeClusters()
+        +validateUnicodeConsistency()
+        +handleBidirectionalText()
+    }
+
+    class CrossPlatformTextProcessor {
+        <<platform abstraction>>
+        +platformCapabilities PlatformCapabilities
+        +textKitBridge TextKitBridge
+        +memoryProvider PlatformMemoryProvider
+        +processForPlatform()
+        +optimizeForDevice()
+        +handlePlatformSpecificText()
+        +bridgeTextKitOperations()
+    }
+
+    %% Row 4 - Memory-Efficient Processing Strategies  
+    class MemoryMonitor {
+        <<memory management>>
+        +memoryStats MemoryStatistics
+        +cleanupHandlers [String: CleanupHandler]
+        +memoryThresholdMB Double
+        +isUnderPressure Bool
+        +registerCleanupHandler()
+        +performCleanup()
+        +checkMemoryUsage()
+        +trackPerformance()
+    }
+
+    class StreamingTextProcessor {
+        <<memory efficient>>
+        +chunkSize Int
+        +processedChunks [String]
+        +streamBuffer TextStreamBuffer
+        +processInChunks()
+        +handleLargeDocuments()
+        +optimizeMemoryUsage()
+        +streamProcessing()
+    }
+
+    class TextCacheManager {
+        <<intelligent caching>>
+        +tokenCache SmartTokenCache
+        +processingCache ProcessingCacheManager
+        +lruCache LRUCache
+        +hitRate Double
+        +evictionPolicy EvictionPolicy
+        +cacheResults()
+        +evictStaleEntries()
+        +optimizeCacheSize()
+    }
+
+    %% Row 5 - Processing Operations & Validators
+    class TextProcessingOperation {
+        <<protocol>>
+        +name String
+        +priority OperationPriority
+        +canBeParallelized Bool
+        +execute()
+        +estimateComplexity()
+    }
+
+    class SyntaxHighlightingOperation {
+        <<concrete operation>>
+        +language Language
+        +priority OperationPriority.high
+        +canBeParallelized true
+        +execute()
+        +estimateComplexity()
+    }
+
+    class WhitespaceNormalizationOperation {
+        <<concrete operation>>
+        +priority OperationPriority.low
+        +execute()
+        +estimateComplexity()
+    }
+
+    class LineEndingNormalizationOperation {
+        <<concrete operation>>
+        +format LineEndingType
+        +priority OperationPriority.medium
+        +execute()
+        +estimateComplexity()
+    }
+
+    class UnicodeNormalizationOperation { 
+        <<unicode operation>>
+        +normalizationForm NormalizationForm
+        +priority OperationPriority.high
+        +execute()
+        +processGraphemes()
+        +handleBidirectional()
+    }
+
+    %% Row 6 - Validators & Transformers
+    class TextValidator {
+        <<protocol>>
+        +name String
         +validate()
-        +applyRules()
-        +optimizeValidation()
     }
 
-    class ThreePhaseRangeValidator {
-        <<three phase>>
-        +phase1Validator PreProcessingValidator
-        +phase2Validator CoreValidator
-        +phase3Validator PostProcessingValidator
-        +phaseCoordinator PhaseCoordinator
+    class TextLengthValidator {
+        <<validator>>
+        +maxLength Int
         +validate()
-        +executePhase1()
-        +executePhase2()
-        +executePhase3()
     }
 
-    class TokenSystemValidator {
-        <<token validator>>
-        +tokenizer AdvancedTokenizer
-        +tokenRules [TokenValidationRule]
-        +semanticAnalyzer SemanticTokenAnalyzer
-        +syntaxValidator SyntaxValidator
+    class EncodingValidator {
+        <<validator>>
+        +requiredEncoding String.Encoding
         +validate()
-        +tokenize()
-        +validateSyntax()
-        +analyzeSemantics()
+    } 
+
+    class UnicodeConsistencyValidator {
+        <<unicode validator>>
+        +normalizationForm NormalizationForm
+        +allowedScripts [UnicodeScript]
+        +validate()
+        +checkConsistency()
+    }
+
+    class TextTransformer {
+        <<protocol>>
+        +name String
+        +transform()
+    }
+
+    class TrimWhitespaceTransformer {
+        <<transformer>>
+        +mode TrimmingMode
+        +transform()
+    }
+
+    class CaseTransformer {
+        <<transformer>>
+        +caseStyle CaseStyle
+        +transform()
+        +handleUnicodeCase()
+    }
+
+    %% Row 7 - TextKit2 Integration & Performance
+    class TextKit2RenderingOptimizer {
+        <<textkit2 integration>>
+        +fragmentRecycling Bool
+        +viewportOptimization Bool  
+        +asyncLayoutManager NSTextLayoutManager
+        +performanceMetrics TextKit2PerformanceMonitor
+        +optimizeForFileSize()
+        +enableFragmentRecycling()
+        +configureViewportRendering()
+        +monitorRenderingPerformance()
+    }
+
+    class ModernTextKitHelper {
+        <<textkit bridge>>
+        +textKit2Bridge ModernTextKit2Bridge
+        +lineNumberHelper TextKitLineNumberHelper
+        +ensureTextKit2()
+        +bridgeToTextKit1()
+        +optimizeTextContainer()
+        +handleCrossPlatform()
     }
 
     class ValidationContext {
-        <<context>>
-        +documentContext DocumentContext
-        +languageContext LanguageContext
-        +editContext EditingContext
-        +performanceContext PerformanceContext
-        +createContext()
-        +updateContext()
-        +optimizeForContext()
-    }
-
-    class HybridSyncAsyncValidator {
-        <<hybrid validator>>
-        +syncValidator SynchronousValidator
-        +asyncValidator AsynchronousValidator
-        +validationQueue ValidationQueue
-        +resultMerger ValidationResultMerger
-        +validate()
-        +scheduleSyncValidation()
-        +scheduleAsyncValidation()
-    }
-
-    %% Row 3 - Range Management
-    class RangeManager {
-        <<range manager>>
-        +versionedRanges [VersionedRange]
-        +rangeBuffer RangeInvalidationBuffer
-        +rangeCalculator RangeCalculator
-        +invalidationTracker InvalidationTracker
-        +createRange()
-        +invalidateRange()
-        +updateRanges()
-        +optimizeRanges()
-    }
-
-    class VersionedRange {
-        <<versioned range>>
-        +range NSRange
-        +version Int
-        +isValid Bool
-        +invalidationReason InvalidationReason?
-        +metadata RangeMetadata
-        +updateVersion()
-        +invalidate()
-        +validate()
-    }
-
-    class RangeInvalidationBuffer {
-        <<invalidation buffer>>
-        +pendingInvalidations [PendingInvalidation]
-        +batchProcessor BatchInvalidationProcessor
-        +invalidationScheduler InvalidationScheduler
-        +addInvalidation()
-        +processPendingInvalidations()
-        +batchInvalidations()
-        +flushBuffer()
-    }
-
-    class RangeCalculator {
-        <<calculator>>
-        +textMetrics TextMetricsCalculator
-        +lineIndexer LineIndexer
-        +characterMapper CharacterMapper
-        +calculateRange()
-        +calculateTextPosition()
-        +adjustRangeForChange()
-    }
-
-
-    %% Row 4 - Versioning System
-    class TextVersioningSystem {
-        <<versioning system>>
-        +versions [TextVersion]
-        +currentVersion Int
-        +versionHistory VersionHistory
-        +changeTracker TextChangeTracker
-        +createVersion()
-        +incrementVersion()
-        +rollbackToVersion()
-        +compareVersions()
-    }
-
-    class TextVersion {
-        <<version>>
-        +versionNumber Int
-        +text String
-        +checksum String
-        +timestamp Date
-        +changes [TextChange]
-        +parentVersion Int?
-        +metadata VersionMetadata
-    }
-
-    class VersionedContent {
-        <<versioned content>>
-        +content String
-        +version Int
-        +contentHash String
-        +associatedRanges [VersionedRange]
-        +updateContent()
-        +validateConsistency()
-        +generateDiff()
-    }
-
-
-    %% Row 5 - Text Stylers
-    class TextSystemStyler {
         <<protocol>>
-        +styleText()
-        +updateStyles()
-        +optimizeStyles()
+        +getCurrentVersion()
+        +getCurrentLength()
     }
 
-    class BasicTextSystemStyler {
-        <<basic styler>>
-        +basicStyles [TextStyle]
-        +colorScheme ColorScheme
-        +fontManager FontManager
-        +styleText()
-        +applyBasicStyles()
+    class ValidationContextWrapper {
+        <<actor safe context>>
+        +content VersionedContent
+        +getCurrentVersion()
+        +getCurrentLength()
     }
 
-    class AdvancedTextSystemStyler {
-        <<advanced styler>>
-        +syntaxHighlighter SyntaxHighlighter
-        +semanticAnalyzer SemanticStyleAnalyzer
-        +contextualStyler ContextualStyler
-        +performanceOptimizer StylingOptimizer
-        +styleText()
-        +applySyntaxHighlighting()
-        +applySemanticStyles()
-    }
-
-    class OptimizedTextSystemStyler {
-        <<optimized styler>>
-        +cacheManager StyleCacheManager
-        +incrementalStyler IncrementalStyler
-        +backgroundProcessor BackgroundStylingProcessor
-        +styleText()
-        +incrementalStyle()
-        +scheduleBackgroundStyling()
-    }
-
-    class HybridTextSystemStyler {
-        <<hybrid styler>>
-        +basicStyler BasicTextSystemStyler
-        +advancedStyler AdvancedTextSystemStyler
-        +optimizedStyler OptimizedTextSystemStyler
-        +styleCoordinator StyleCoordinator
-        +styleText()
-        +selectOptimalStyler()
-        +coordiateStyles()
-    }
-
-    %% Row 6 - Validation Results & Types
-    class ValidationResult {
+    %% Row 8 - Supporting Types & Results
+    class ProcessingResult {
         <<result>>
-        +isValid Bool
-        +errors [ValidationError]
-        +warnings [ValidationWarning]
-        +performance ValidationPerformance
-        +suggestions [ValidationSuggestion]
-        +metadata ValidationMetadata
+        +processedText String
+        +metadata ProcessingMetadata
+        +operations [OperationResult]
+        +duration TimeInterval
+        +isSuccess Bool
+        +errors [ProcessingError]
     }
 
-    class ValidationError {
-        <<error>>
+    class TextComplexity {
+        <<analysis>>
+        +lineCount Int
+        +averageLineLength Int
+        +maxLineLength Int
+        +uniqueCharacterCount Int
+        +nestingDepth Int
+        +isASCII Bool
+        +complexityScore Double
+    }
+
+    class ProcessingCost {
+        <<cost analysis>>
+        +estimatedTimeMs Double
+        +memoryRequirementMB Double
+        +cpuIntensity CPUIntensity
+    }
+
+    class TextToken {
+        <<parsed token>>
+        +text String
         +range NSRange
-        +severity ErrorSeverity
-        +message String
-        +errorCode String
-        +suggestions [FixSuggestion]
-        +relatedInformation [RelatedInfo]
+        +type TokenType
+        +language Language?
     }
 
-    class TextChange {
-        <<change>>
+    class SyntaxNode {
+        <<syntax tree>>
+        +type NodeType
         +range NSRange
-        +replacementText String
-        +changeType TextChangeType
-        +timestamp Date
-        +source TextChangeSource
-        +metadata ChangeMetadata
+        +content String
+        +children [SyntaxNode]
     }
 
-    class AsyncTextProcessor {
-        <<async processor>>
-        +processingQueue DispatchQueue
-        +taskScheduler ProcessingTaskScheduler
-        +resultAggregator AsyncResultAggregator
-        +processAsync()
-        +scheduleProcessing()
-        +aggregateResults()
+    class MemoryStatistics {
+        <<memory tracking>>
+        +currentUsageMB Double
+        +peakUsageMB Double
+        +averageUsageMB Double
+        +totalCleanupOperations Int
+        +memoryEfficiency Double
+        +cleanupEffectiveness Double
     }
 
-    %% Row 7 - Enumerations
-    class ValidationMode {
+    %% Row 9 - Enumerations & Configuration
+    class PipelineConfiguration {
+        <<configuration>>
+        +enableCaching Bool
+        +maxCacheSize Int
+        +operationTimeout TimeInterval
+        +memoryLimit Int
+        +enableParallelProcessing Bool
+        +batchSize Int
+    }
+
+    class WordExtractionMode {
         <<enumeration>>
-        singlePhase
-        threePhase
-        token
-        hybrid
-        context
+        standard
+        identifier
+        camelCase
+        snakeCase
+        whitespace
     }
 
-    class TextChangeType {
+    class CharacterClass {
         <<enumeration>>
-        insertion
-        deletion
-        replacement
-        formatting
-        move
-        batch
+        alphanumeric
+        whitespace
+        punctuation
+        symbol
+        digit
+        letter
+        identifier
+        newline
+        tab
+        unknown
     }
 
-    %% Key Relationships
-    AdvancedTextProcessor --> TextValidationSystem : validates with
-    AdvancedTextProcessor --> RangeManager : manages ranges
-    AdvancedTextProcessor --> TextVersioningSystem : versions with
-    AdvancedTextProcessor --> TextSystemStyler : styles with
-    AdvancedTextProcessor --> TextProcessingOptimizer : optimizes with
+    class ProcessingComplexity {
+        <<enumeration>>
+        constant
+        linear
+        quadratic
+        exponential
+    }
 
-    TextValidationSystem --> SinglePhaseRangeValidator : uses
-    TextValidationSystem --> ThreePhaseRangeValidator : uses
-    TextValidationSystem --> TokenSystemValidator : uses
-    TextValidationSystem --> ValidationContext : uses
-    TextValidationSystem --> HybridSyncAsyncValidator : uses
+    class OperationPriority {
+        <<enumeration>>
+        low
+        medium
+        high
+        critical
+    }
 
-    RangeManager --> VersionedRange : manages
-    RangeManager --> RangeInvalidationBuffer : buffers with
-    RangeManager --> RangeCalculator : calculates with
+    %% Key Relationships - Modern Architecture
+    TextProcessingCoordinator --> TextProcessingPipeline : orchestrates
+    TextProcessingCoordinator --> ActorCoordinator : coordinates
+    TextProcessingCoordinator --> TextKit2PerformanceHelper : optimizes with
+    TextProcessingCoordinator --> MemoryMonitor : monitors
 
-    TextVersioningSystem --> TextVersion : creates
-    TextVersioningSystem --> VersionedContent : manages
+    ActorCoordinator --> TextProcessingActor : manages
+    ActorCoordinator --> CacheCoordinatorActor : coordinates
+    ActorCoordinator --> PerformanceMetricsActor : tracks with
+    ActorCoordinator --> DocumentStateActor : manages state
 
-    TextSystemStyler <|-- BasicTextSystemStyler : implements
-    TextSystemStyler <|-- AdvancedTextSystemStyler : implements
-    TextSystemStyler <|-- OptimizedTextSystemStyler : implements
-    TextSystemStyler <|-- HybridTextSystemStyler : implements
+    TextProcessingPipeline --> TextProcessingOperation : executes
+    TextProcessingPipeline --> TextValidator : validates with
+    TextProcessingPipeline --> TextTransformer : transforms with
 
-    HybridTextSystemStyler --> BasicTextSystemStyler : delegates to
-    HybridTextSystemStyler --> AdvancedTextSystemStyler : delegates to
-    HybridTextSystemStyler --> OptimizedTextSystemStyler : delegates to
+    TextProcessingOperation <|-- SyntaxHighlightingOperation : implements
+    TextProcessingOperation <|-- WhitespaceNormalizationOperation : implements
+    TextProcessingOperation <|-- LineEndingNormalizationOperation : implements
+    TextProcessingOperation <|-- UnicodeNormalizationOperation : implements
 
-    ValidationResult --> ValidationError : contains
-    TextProcessingOptimizer --> AsyncTextProcessor : processes async
+    TextValidator <|-- TextLengthValidator : implements
+    TextValidator <|-- EncodingValidator : implements
+    TextValidator <|-- UnicodeConsistencyValidator : implements
 
-    %% Styling - Dark mode friendly colors
-    classDef processor fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
-    classDef validation fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef range fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef version fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef styler fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef result fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    classDef optimizer fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    TextTransformer <|-- TrimWhitespaceTransformer : implements
+    TextTransformer <|-- CaseTransformer : implements
 
-    class AdvancedTextProcessor processor
-    class TextValidationSystem validation
-    class SinglePhaseRangeValidator validation
-    class ThreePhaseRangeValidator validation
-    class TokenSystemValidator validation
+    TextKit2PerformanceHelper --> TextKit2RenderingOptimizer : optimizes with
+    TextKit2PerformanceHelper --> ModernTextKitHelper : bridges with
+
+    TextProcessingUtilities --> TextParsingUtilities : utilizes
+    TextProcessingUtilities --> UnicodeNormalizationProcessor : normalizes with
+    
+    MemoryMonitor --> StreamingTextProcessor : optimizes
+    MemoryMonitor --> TextCacheManager : manages
+
+    ValidationContext <|-- ValidationContextWrapper : implements
+
+    %% Processing Results
+    TextProcessingPipeline --> ProcessingResult : produces
+    ProcessingResult --> TextComplexity : analyzes
+    ProcessingResult --> ProcessingCost : estimates
+
+    %% Styling - Enhanced for modern architecture
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
+    classDef actor fill:#34C75920,stroke:#34C759,stroke-width:3px,color:#1D1D1F
+    classDef pipeline fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef textkit2 fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef utility fill:#007AFF15,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef unicode fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef memory fill:#34C75915,stroke:#34C759,stroke-width:2px,color:#1D1D1F
+    classDef operation fill:#AF52DE15,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef validation fill:#FF950015,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef result fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+    classDef config fill:#8E8E9315,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
+
+    class TextProcessingCoordinator coordinator
+    class TextProcessingPipeline pipeline
+    class ActorCoordinator actor
+    class TextProcessingActor actor
+    class CacheCoordinatorActor actor
+    class PerformanceMetricsActor actor
+    class DocumentStateActor actor
+    class TextKit2PerformanceHelper textkit2
+    class TextKit2RenderingOptimizer textkit2
+    class ModernTextKitHelper textkit2
+    class TextProcessingUtilities utility
+    class TextParsingUtilities utility
+    class CrossPlatformTextProcessor utility
+    class UnicodeNormalizationProcessor unicode
+    class UnicodeNormalizationOperation unicode
+    class UnicodeConsistencyValidator unicode
+    class MemoryMonitor memory
+    class StreamingTextProcessor memory
+    class TextCacheManager memory
+    class TextProcessingOperation operation
+    class SyntaxHighlightingOperation operation
+    class WhitespaceNormalizationOperation operation
+    class LineEndingNormalizationOperation operation
+    class TextValidator validation
+    class TextLengthValidator validation
+    class EncodingValidator validation
+    class TextTransformer validation
+    class TrimWhitespaceTransformer validation
+    class CaseTransformer validation
     class ValidationContext validation
-    class HybridSyncAsyncValidator validation
-    class RangeManager range
-    class VersionedRange range
-    class RangeInvalidationBuffer range
-    class RangeCalculator range
-    class TextVersioningSystem version
-    class TextVersion version
-    class VersionedContent version
-    class TextSystemStyler styler
-    class BasicTextSystemStyler styler
-    class AdvancedTextSystemStyler styler
-    class OptimizedTextSystemStyler styler
-    class HybridTextSystemStyler styler
-    class ValidationResult result
-    class ValidationError result
-    class TextChange result
-    class TextProcessingOptimizer optimizer
-    class AsyncTextProcessor optimizer
-    class ValidationMode enum
-    class TextChangeType enum
+    class ValidationContextWrapper validation
+    class ProcessingResult result
+    class TextComplexity result
+    class ProcessingCost result
+    class TextToken result
+    class SyntaxNode result
+    class MemoryStatistics result
+    class PipelineConfiguration config
+    class WordExtractionMode config
+    class CharacterClass config
+    class ProcessingComplexity config
+    class OperationPriority config
 ```
 
-## Text Processing Flow
+## Modern Text Processing Flow
 
 ```mermaid
 flowchart TB
-    INPUT[Text Input] --> VALIDATE[Validation System]
+    INPUT[Text Input] --> COORD[TextProcessingCoordinator]
+    
+    COORD --> MEMORY{Memory Check}
+    MEMORY -->|OK| PIPELINE[TextProcessingPipeline]
+    MEMORY -->|Pressure| CLEANUP[Memory Cleanup]
+    CLEANUP --> PIPELINE
+    
+    PIPELINE --> ACTOR[ActorCoordinator]
+    ACTOR --> TEXTACTOR[TextProcessingActor]
+    
+    TEXTACTOR --> UNICODE[Unicode Normalization]
+    UNICODE --> VALIDATE[Validation Phase]
     
     VALIDATE --> SINGLE{Single Phase?}
-    SINGLE -->|Yes| SINGLEV[Single Phase Validator]
-    SINGLE -->|No| THREE{Three Phase?}
+    SINGLE -->|Yes| BASIC[Basic Validation]
+    SINGLE -->|No| COMPLEX[Complex Validation]
     
-    THREE -->|Yes| THREEV[Three Phase Validator]
-    THREE -->|No| TOKEN{Token Mode?}
+    BASIC --> TRANSFORM[Transformation Phase]
+    COMPLEX --> TRANSFORM
     
-    TOKEN -->|Yes| TOKENV[Token System Validator]
-    TOKEN -->|No| HYBRID[Hybrid Validator]
+    TRANSFORM --> TEXTKIT2{TextKit2 Available?}
+    TEXTKIT2 -->|Yes| TK2OPT[TextKit2 Optimization]
+    TEXTKIT2 -->|No| LEGACY[Legacy Processing]
     
-    SINGLEV --> RANGE[Range Management]
-    THREEV --> RANGE
-    TOKENV --> RANGE
-    HYBRID --> RANGE
+    TK2OPT --> FRAGMENT[Fragment Recycling]
+    LEGACY --> FRAGMENT
     
-    RANGE --> VERSION[Versioning System]
-    VERSION --> STYLE[Style Selection]
+    FRAGMENT --> STREAM{Large Document?}
+    STREAM -->|Yes| STREAMING[Streaming Processor]
+    STREAM -->|No| BATCH[Batch Processing]
     
-    STYLE --> BASIC{Basic Styling?}
-    BASIC -->|Yes| BASICS[Basic Text Styler]
-    BASIC -->|No| ADVANCED{Advanced?}
+    STREAMING --> CACHE[Cache Results]
+    BATCH --> CACHE
     
-    ADVANCED -->|Yes| ADVS[Advanced Text Styler]
-    ADVANCED -->|No| OPTIM{Optimized?}
-    
-    OPTIM -->|Yes| OPTS[Optimized Text Styler]
-    OPTIM -->|No| HYBS[Hybrid Text Styler]
-    
-    BASICS --> OPTIMIZE[Performance Optimization]
-    ADVS --> OPTIMIZE
-    OPTS --> OPTIMIZE
-    HYBS --> OPTIMIZE
-    
-    OPTIMIZE --> ASYNC{Async Processing?}
-    ASYNC -->|Yes| ASYNCP[Async Text Processor]
-    ASYNC -->|No| RESULT[Processing Result]
-    
-    ASYNCP --> RESULT
+    CACHE --> PERF[Performance Tracking]
+    PERF --> RESULT[Processing Result]
     RESULT --> OUTPUT[Processed Text Output]
 
-    %% Styling - Dark mode friendly colors
+    %% Styling
     classDef input fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
-    classDef process fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef coordinator fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
+    classDef actor fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef decision fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
-    classDef validator fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
-    classDef system fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef styler fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
+    classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
+    classDef textkit2 fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef memory fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef output fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     
     class INPUT input
-    class OUTPUT input
-    class VALIDATE process
-    class OPTIMIZE process
-    class ASYNCP process
+    class OUTPUT output
+    class COORD coordinator
+    class ACTOR actor
+    class TEXTACTOR actor
+    class MEMORY decision
     class SINGLE decision
-    class THREE decision
-    class TOKEN decision
-    class BASIC decision
-    class ADVANCED decision
-    class OPTIM decision
-    class ASYNC decision
-    class SINGLEV validator
-    class THREEV validator
-    class TOKENV validator
-    class HYBRID validator
-    class RANGE system
-    class VERSION system
-    class STYLE styler
-    class BASICS styler
-    class ADVS styler
-    class OPTS styler
-    class HYBS styler
-    class RESULT output
+    class TEXTKIT2 decision
+    class STREAM decision
+    class PIPELINE process
+    class UNICODE process
+    class VALIDATE process
+    class BASIC process
+    class COMPLEX process
+    class TRANSFORM process
+    class CACHE process
+    class PERF process
+    class RESULT process
+    class TK2OPT textkit2
+    class FRAGMENT textkit2
+    class CLEANUP memory
+    class STREAMING memory
+    class BATCH memory
+    class LEGACY process
 ```
 
-## Key Text Processing Features
+## Key Modern Text Processing Features
 
-### 1. Multi-Phase Validation System
-- **Single Phase**: Fast validation for simple text changes
-- **Three Phase**: Comprehensive validation with pre/core/post processing
-- **Token-Based**: Advanced syntax and semantic validation
-- **Hybrid Sync/Async**: Balanced performance and thoroughness
+### 1. Actor-Based Concurrency (Swift 6)
+- **TextProcessingActor**: Isolated text manipulation operations
+- **CacheCoordinatorActor**: Thread-safe cache management
+- **PerformanceMetricsActor**: Concurrent performance tracking
+- **DocumentStateActor**: Safe document state management
+- **Error Recovery**: Automatic error recovery with actors
 
-### 2. Advanced Range Management
-- **Versioned Ranges**: Track range validity across text changes
-- **Invalidation Buffer**: Efficient batch processing of range updates
-- **Smart Recalculation**: Optimize range updates for performance
-- **Metadata Tracking**: Associate custom data with text ranges
+### 2. TextKit2 Integration & Performance
+- **Dynamic Configuration**: Adaptive settings based on file size
+- **Fragment Recycling**: Memory-efficient text fragment reuse
+- **Viewport Optimization**: Render only visible text regions
+- **Async Layout**: Non-blocking layout calculations
+- **Performance Monitoring**: Real-time TextKit2 metrics
 
-### 3. Text Versioning System
-- **Version History**: Complete change tracking and rollback capability
-- **Content Integrity**: Checksum validation and consistency checking
-- **Change Tracking**: Detailed change metadata and analysis
-- **Diff Generation**: Efficient difference calculation between versions
+### 3. Advanced Pipeline Architecture
+- **Modular Operations**: Pluggable text processing operations
+- **Batch Processing**: Efficient handling of large documents
+- **Intelligent Caching**: LRU cache with cost-based eviction
+- **Parallel Processing**: Concurrent operation execution
+- **Result Aggregation**: Comprehensive processing results
 
-### 4. Flexible Styling System
-- **Multiple Styler Types**: Basic, advanced, optimized, and hybrid stylers
-- **Contextual Styling**: Style based on document context and language
-- **Performance Optimization**: Incremental styling and background processing
-- **Cache Management**: Efficient style result caching and invalidation
+### 4. Unicode & Character Processing
+- **Normalization Forms**: NFC, NFD, NFKC, NFKD support
+- **Grapheme Clusters**: Proper Unicode character handling
+- **Bidirectional Text**: RTL/LTR text processing
+- **Case Folding**: Language-aware case transformations
+- **Script Validation**: Unicode script consistency checking
 
-### 5. Performance Optimization
-- **Memory Management**: Efficient memory usage and cleanup
-- **Async Processing**: Non-blocking text processing operations
-- **Smart Caching**: Intelligent caching of processing results
-- **Performance Profiling**: Built-in performance monitoring and optimization
+### 5. Memory-Efficient Processing
+- **Streaming Processor**: Process large files without loading entirely
+- **Memory Monitoring**: Real-time memory usage tracking
+- **Cleanup Handlers**: Automatic resource cleanup
+- **Memory Pressure**: Adaptive behavior under memory constraints
+- **Cost Estimation**: Predict processing resource requirements
 
-### 6. Comprehensive Validation
-- **Multi-Level Errors**: Errors, warnings, hints, and suggestions
-- **Context-Aware**: Validation based on document and language context
-- **Fix Suggestions**: Automatic fix recommendations
-- **Performance Metrics**: Validation performance tracking
+### 6. Cross-Platform Text Processing
+- **Platform Abstraction**: Unified API across macOS/iOS
+- **Capability Detection**: Runtime feature detection
+- **TextKit Bridge**: Seamless TextKit1/TextKit2 integration
+- **Memory Providers**: Platform-specific memory management
+- **Performance Optimization**: Device-specific optimizations
+
+### 7. Sophisticated Parsing & Analysis
+- **Language Detection**: Content-based language identification
+- **Syntax Tree Parsing**: Hierarchical text structure analysis
+- **Token Classification**: Advanced token type detection
+- **Indentation Analysis**: Smart indentation pattern recognition
+- **Complexity Analysis**: Text complexity scoring
+
+### 8. Validation & Transformation Pipeline
+- **Multi-Phase Validation**: Single, three-phase, and token-based
+- **Context-Aware Validation**: Document and language context
+- **Unicode Consistency**: Encoding and normalization validation
+- **Transformation Chain**: Composable text transformations
+- **Error Recovery**: Graceful handling of validation failures
 
 ## Benefits
 
-1. **Robust Text Handling**: Comprehensive validation and error handling
-2. **High Performance**: Optimized for large documents and frequent changes
-3. **Flexible Architecture**: Multiple validation and styling strategies
-4. **Version Control**: Complete text history and change tracking
-5. **Extensible**: Plugin architecture for custom validators and stylers
-6. **Memory Efficient**: Smart caching and memory management
+1. **Modern Concurrency**: Swift 6 actor-based isolation for thread safety
+2. **TextKit2 Integration**: Native support for latest Apple text frameworks
+3. **Memory Efficiency**: Intelligent memory management and cleanup
+4. **Unicode Compliance**: Full Unicode normalization and validation
+5. **Performance Optimization**: Adaptive processing based on content size
+6. **Cross-Platform**: Unified processing across Apple platforms
+7. **Extensible Architecture**: Plugin-based operations and validators
+8. **Real-Time Monitoring**: Comprehensive performance and memory tracking
+9. **Fault Tolerance**: Error recovery and graceful degradation
+10. **Developer Experience**: Rich debugging and profiling capabilities

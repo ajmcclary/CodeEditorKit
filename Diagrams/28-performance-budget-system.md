@@ -1,6 +1,6 @@
 # Performance Budget System
 
-This diagram shows the comprehensive performance budget system that monitors and enforces performance targets across all operations in CodeEditorPlugin.
+This diagram shows the performance budget system implementation in CodeEditorPlugin, which currently focuses on test-driven performance regression detection with planned expansion to production runtime enforcement.
 
 ```mermaid
 classDiagram
@@ -78,85 +78,66 @@ classDiagram
         +testBundleDidFinish()
     }
 
-    %% Pre-defined Budgets
-    class PredefinedBudgets {
-        <<budget catalog>>
-        +syntaxHighlighting Budget
-        +textLayout Budget
-        +scrolling Budget
-        +completionRequest Budget
-        +completionCancellation Budget
-        +fileOpenSmall Budget
-        +fileOpenMedium Budget
-        +fileOpenLarge Budget
-        +findInFile Budget
-        +fuzzySearch Budget
-        +memoryPressureRecovery Budget
-        +contextMenuCreation Budget
-        +lineNumberUpdate Budget
-        +testSetup Budget
-        +testTeardown Budget
+    %% Static Budget Configuration
+    class StaticBudgets {
+        <<static implementation>>
+        +budgets [String: Budget]
+        +budget(for: String) Budget?
+        +checkBudgets([String: TimeInterval]) [BudgetViolation]
+        Note: 14 predefined operations with time thresholds
+        Note: Implemented as static properties in PerformanceBudget
     }
 
-    %% Budget Enforcement
-    class BudgetEnforcement {
-        <<enforcement>>
-        +enforcementLevel EnforcementLevel
-        +onViolation (BudgetViolation) -> Void
-        +shouldFailTest Bool
-        +shouldLogWarning Bool
-        +shouldThrottle Bool
+    %% Test-based Enforcement (Current Implementation)
+    class TestEnforcement {
+        <<test integration only>>
+        +simulatorMultiplier 6.0
+        +failTestOnCritical Bool
+        +logWarningOnExceeded Bool
+        Note: Only enforced in XCTest environment
+        Note: No production enforcement mechanism
     }
 
-    class EnforcementLevel {
-        <<enumeration>>
-        none
-        logging
-        warning
-        strict
-    }
-
-    %% Integration Points
+    %% Integration Status (Not Yet Implemented)
     class PerformanceMonitor {
-        <<existing system>>
-        +budgetReporter PerformanceBudgetReporter
-        +recordMetric()
-        +checkBudgets()
+        <<independent system>>
+        +metrics [String: MonitoringPerformanceMetric]
+        +measure(name, block)
+        Note: No budget integration implemented
     }
 
     class UnifiedPerformanceSystem {
-        <<existing system>>
-        +performanceBudget PerformanceBudget
-        +budgetReporter PerformanceBudgetReporter
-        +enforcePerformanceBudgets()
+        <<independent system>>
+        +track(metricType, operation)
+        +generateInsights()
+        Note: Has own performance tracking, no budget integration
     }
 
     %% Relationships
-    PerformanceBudget --> Budget : contains
-    Budget --> BudgetStatus : evaluates to
+    PerformanceBudget --> Budget : "contains"
+    Budget --> BudgetStatus : "evaluates to"
     
-    PerformanceBudgetReporter --> PerformanceBudget : uses
-    PerformanceBudgetReporter --> PerformanceBudgetReport : generates
-    PerformanceBudgetReporter --> BudgetViolation : reports
+    PerformanceBudgetReporter --> PerformanceBudget : "uses"
+    PerformanceBudgetReporter --> PerformanceBudgetReport : "generates"
+    PerformanceBudgetReporter --> BudgetViolation : "reports"
     
-    PerformanceBudgetReport --> BudgetViolation : contains
-    BudgetViolation --> Budget : references
-    BudgetViolation --> BudgetStatus : has
+    PerformanceBudgetReport --> BudgetViolation : "contains"
+    BudgetViolation --> Budget : "references"
+    BudgetViolation --> BudgetStatus : "has"
     
-    XCTestCaseBudget --> PerformanceBudgetReporter : uses
-    XCTestCaseBudget --> PerformanceBudget : checks against
+    XCTestCaseBudget --> PerformanceBudgetReporter : "uses"
+    XCTestCaseBudget --> PerformanceBudget : "checks against"
     
-    PerformanceBudgetTestObserver --> XCTestCaseBudget : triggers report
+    PerformanceBudgetTestObserver --> XCTestCaseBudget : "triggers report"
     
-    PredefinedBudgets --> Budget : creates
-    PerformanceBudget --> PredefinedBudgets : uses
+    StaticBudgets --> Budget : "contains"
+    PerformanceBudget --> StaticBudgets : "implements"
     
-    BudgetEnforcement --> EnforcementLevel : has
-    BudgetEnforcement --> BudgetViolation : handles
+    TestEnforcement --> BudgetViolation : "handles in tests"
     
-    PerformanceMonitor --> PerformanceBudgetReporter : records to
-    UnifiedPerformanceSystem --> PerformanceBudget : enforces
-    UnifiedPerformanceSystem --> BudgetEnforcement : uses
+    %% Note: Integration relationships are planned but not implemented
+    PerformanceMonitor ..> PerformanceBudgetReporter : "planned integration"
+    UnifiedPerformanceSystem ..> PerformanceBudget : "planned integration"
 
     %% Styling - Dark mode friendly colors
     classDef budget fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
@@ -168,17 +149,16 @@ classDiagram
     
     class PerformanceBudget budget
     class Budget budget
-    class PredefinedBudgets budget
+    class StaticBudgets budget
     class PerformanceBudgetReporter reporter
     class PerformanceBudgetReport reporter
     class BudgetViolation reporter
     class XCTestCaseBudget test
     class PerformanceBudgetTestObserver test
-    class BudgetEnforcement enforcement
+    class TestEnforcement enforcement
     class PerformanceMonitor integration
     class UnifiedPerformanceSystem integration
     class BudgetStatus enum
-    class EnforcementLevel enum
 ```
 
 ## Budget Flow Diagram
@@ -198,16 +178,17 @@ flowchart TD
     STATUS -->|Critical/Exceeded| FAIL[❌ Handle Violation]
     
     WARN --> REPORT[Add to Report]
-    FAIL --> ENFORCE{Enforcement Level?}
+    FAIL --> TEST_ENV{In Test Environment?}
     
-    ENFORCE -->|None| REPORT
-    ENFORCE -->|Logging| LOG_VIOLATION[Log Violation]
-    ENFORCE -->|Warning| ALERT[Alert + Continue]
-    ENFORCE -->|Strict| THROW[Fail Test/Throttle]
+    TEST_ENV -->|Yes| CHECK_SEVERITY{Critical/Exceeded?}
+    TEST_ENV -->|No| LOG_VIOLATION[Log Violation Only]
+    
+    CHECK_SEVERITY -->|Critical/Exceeded| FAIL_TEST[Fail XCTest]
+    CHECK_SEVERITY -->|Warning| LOG_WARNING[Log Warning]
     
     LOG_VIOLATION --> REPORT
-    ALERT --> REPORT
-    THROW --> REPORT
+    LOG_WARNING --> REPORT
+    FAIL_TEST --> REPORT
     
     SUCCESS --> METRICS[Update Metrics]
     LOG --> METRICS
@@ -232,14 +213,15 @@ flowchart TD
     class METRICS process
     class CHECK decision
     class STATUS decision
-    class ENFORCE decision
+    class TEST_ENV decision
+    class CHECK_SEVERITY decision
     class SUCCESS success
     class LOG success
     class WARN warning
-    class ALERT warning
+    class LOG_WARNING warning
     class LOG_VIOLATION warning
     class FAIL error
-    class THROW error
+    class FAIL_TEST error
 ```
 
 ## Pre-defined Performance Budgets
@@ -304,17 +286,18 @@ class MyPerformanceTests: XCTestCase {
 }
 ```
 
-### Enforcement Configuration
+### Test Environment Configuration
 ```swift
-let enforcement = BudgetEnforcement(
-    enforcementLevel: .warning,
-    onViolation: { violation in
-        logger.warning("Performance budget violation: \(violation.description)")
-    },
-    shouldFailTest: false,
-    shouldLogWarning: true,
-    shouldThrottle: false
-)
+// Enforcement is currently only available in test environment
+// Tests automatically apply 6x multiplier for simulator performance
+class PerformanceRegressionTests: XCTestCase {
+    func testSyntaxHighlighting() {
+        // Will fail test if critical/exceeded, log warning otherwise
+        measureAgainstBudget("syntax_highlighting") {
+            performSyntaxHighlighting()
+        }
+    }
+}
 ```
 
 ### Report Generation
@@ -338,19 +321,53 @@ print(report.summary)
 //   text_layout: 0.012s ✅ Within Budget
 ```
 
-## Benefits
+## Benefits (Current Implementation)
 
-1. **Proactive Performance Management**: Catch regressions before they reach production
-2. **Automated Enforcement**: Fail tests when budgets are exceeded
-3. **Comprehensive Reporting**: Detailed insights into performance trends
-4. **Flexible Configuration**: Adjust budgets and enforcement per environment
-5. **Test Integration**: Seamless integration with XCTest framework
-6. **Platform-Aware**: Adjust budgets for simulator vs device testing
+1. **Test-Driven Performance Regression Detection**: Automatically catch performance regressions in test suite
+2. **Simulator Performance Adjustment**: 6x multiplier accounts for simulator overhead
+3. **Detailed Reporting**: Comprehensive performance reports with violation details
+4. **Real-time Logging**: Immediate feedback on budget violations during operations
+5. **XCTest Integration**: Seamless integration with existing test infrastructure
+6. **Static Budget Configuration**: 14 pre-defined operation budgets covering core functionality
 
-## Integration Points
+## Current Integration Status
 
-- **UnifiedPerformanceSystem**: Central performance monitoring
-- **PerformanceMonitor**: Real-time metric collection
-- **XCTest Framework**: Automated test enforcement
-- **CI/CD Pipeline**: Performance regression detection
-- **Development Tools**: Local performance validation
+**✅ Fully Integrated:**
+- **XCTest Framework**: Complete test integration with automatic reporting
+- **Static Budget System**: Pre-defined budgets for all major operations
+- **Logging System**: Real-time budget violation logging
+
+**🔄 Planned Integrations:**
+- **UnifiedPerformanceSystem**: No current integration (separate tracking systems)
+- **PerformanceMonitor**: No current integration (independent metric collection)
+- **Production Enforcement**: No runtime enforcement mechanism implemented
+
+**❌ Missing Components:**
+- **Runtime Budget Enforcement**: Only available in test environment
+- **Adaptive Budget Adjustment**: No dynamic budget modification based on conditions
+- **Cross-Platform Budget Scaling**: Only simulator adjustment implemented
+
+## Current Architecture
+
+The performance budget system is implemented as a focused testing tool with these key characteristics:
+
+### Core Components
+- **PerformanceBudget**: Static struct with 14 predefined operation budgets
+- **PerformanceBudgetReporter**: Actor-based measurement collection and reporting
+- **XCTestCase Extensions**: Test integration with simulator performance adjustments
+
+### Design Decisions
+1. **Test-First Approach**: Primary focus on catching regressions during development
+2. **Static Configuration**: Budgets are compile-time constants for consistency
+3. **Simulator Awareness**: 6x performance multiplier for realistic test expectations
+4. **Immediate Logging**: Real-time feedback for developers during measurement
+
+### Performance Budgets Coverage
+The system tracks 14 critical operations across categories:
+- **Rendering**: syntax_highlighting, text_layout, scrolling, line_number_update
+- **Completion**: completion_request, completion_cancellation  
+- **File Operations**: file_open_small, file_open_medium, file_open_large
+- **Search**: find_in_file, fuzzy_search
+- **Memory**: memory_pressure_recovery
+- **UI**: context_menu_creation
+- **Testing**: test_setup, test_teardown
