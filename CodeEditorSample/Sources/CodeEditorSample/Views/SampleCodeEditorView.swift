@@ -66,7 +66,6 @@ class SampleCodeEditorCoordinator {
 ///
 /// - SeeAlso: ``CodeEditorViewWrapper`` for the underlying wrapper
 /// - SeeAlso: ``AppState`` for state management integration
-/// - SeeAlso: ``EditorConfiguration`` for configuration options
 struct SampleCodeEditorView: View {
     @EnvironmentObject var appState: AppState
     @Binding var text: String
