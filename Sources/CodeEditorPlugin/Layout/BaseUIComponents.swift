@@ -1,43 +1,61 @@
 import Foundation
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
+/// Platform-specific accessibility traits type for AppKit
 public typealias PlatformAccessibilityTraits = NSAccessibility.Role
 #elseif canImport(UIKit)
 import UIKit
+/// Platform-specific accessibility traits type for UIKit
 public typealias PlatformAccessibilityTraits = UIAccessibilityTraits
 #endif
 
 // MARK: - Base UI Component Infrastructure
 
 /// Protocol for configurable UI components
+/// Protocol for UI components that can be configured with data
 @MainActor
 public protocol ConfigurableUIComponent {
+    /// Configuration type for this component
     associatedtype Configuration
+    /// Configures the component with the provided configuration
+    /// - Parameter configuration: Configuration data for the component
     func configure(with configuration: Configuration)
 }
 
 /// Protocol for themeable UI components
+/// Protocol for UI components that support theming
 @MainActor
 public protocol ThemeableUIComponent {
+    /// Theme type for this component
     associatedtype Theme
 
+    /// Current theme applied to the component
     var theme: Theme { get set }
 
+    /// Applies the specified theme to the component
+    /// - Parameter theme: Theme to apply
     func applyTheme(_ theme: Theme)
 }
 
 /// Protocol for reusable UI components that can be reset to initial state
+/// Protocol for UI components that can be reused and reset
 @MainActor
 public protocol ReusableUIComponent {
+    /// Prepares the component for reuse by resetting its state
     func prepareForReuse()
 }
 
-/// Base theme for all UI components
+/// Base theme protocol defining common styling properties
 public protocol BaseUITheme {
+    /// Primary accent color for the theme
     var primaryColor: PlatformColor { get }
+    /// Secondary color for less prominent elements
     var secondaryColor: PlatformColor { get }
+    /// Background color for themed components
     var backgroundColor: PlatformColor { get }
+    /// Text color for themed components
     var textColor: PlatformColor { get }
+    /// Default font for themed components
     var font: PlatformFont { get }
 }
 
@@ -274,10 +292,15 @@ public enum UIComponentFactory {
 
 /// Utility for creating consistent spacing between components
 public enum UISpacing {
+    /// Tiny spacing value (4 points)
     public static let tiny: CGFloat = 4
+    /// Small spacing value (8 points)
     public static let small: CGFloat = 8
+    /// Medium spacing value (12 points)
     public static let medium: CGFloat = 12
+    /// Large spacing value (16 points)
     public static let large: CGFloat = 16
+    /// Extra large spacing value (24 points)
     public static let extraLarge: CGFloat = 24
 
     /// Returns spacing appropriate for the current platform
@@ -290,12 +313,17 @@ public enum UISpacing {
     }
 }
 
-/// Utility for creating consistent margins
+/// Utility for creating consistent margins around components
 public enum UIMargins {
+    /// Tiny margin value (4 points)
     public static let tiny: CGFloat = 4
+    /// Small margin value (8 points)
     public static let small: CGFloat = 8
+    /// Medium margin value (16 points)
     public static let medium: CGFloat = 16
+    /// Large margin value (20 points)
     public static let large: CGFloat = 20
+    /// Extra large margin value (32 points)
     public static let extraLarge: CGFloat = 32
 
     /// Returns margins appropriate for the current platform

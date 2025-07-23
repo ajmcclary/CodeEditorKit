@@ -59,6 +59,9 @@ public protocol CompletionProvider: Sendable {
 // MARK: - Default Implementation
 
 extension CompletionProvider {
+    /// Default trigger characters - empty array for providers that don't require triggers
     public var triggerCharacters: [String] { [] }
+
+    /// Default snippet support - false for providers that don't support snippets
     public var supportsSnippets: Bool { false }
 }

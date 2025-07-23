@@ -49,8 +49,15 @@ public protocol SyntaxHighlighter {
 
 // Default implementation
 extension SyntaxHighlighter {
+    /// Whether the highlighter supports incremental highlighting
     public var supportsIncrementalHighlighting: Bool { false }
 
+    /// Perform incremental highlighting for a changed range
+    ///
+    /// - Parameters:
+    ///   - source: The complete source text
+    ///   - changeRange: The range that changed in the source
+    /// - Returns: Array of highlighted tokens for the changed range
     public func highlightIncremental(source: String, changeRange _: NSRange) -> [HighlightedToken] {
         // Fall back to full highlighting
         highlight(source: source)

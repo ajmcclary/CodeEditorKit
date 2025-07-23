@@ -36,6 +36,9 @@ import SwiftUI
 /// ```
 @resultBuilder
 public enum ConfigurationBuilder {
+    /// Builds an editor configuration from a collection of configuration components
+    /// - Parameter components: The configuration components to combine
+    /// - Returns: A complete editor configuration with all components applied
     public static func buildBlock(_ components: ConfigurationComponent...) -> EditorConfiguration {
         var config = EditorConfiguration()
 
@@ -51,13 +54,19 @@ public enum ConfigurationBuilder {
 
 /// Protocol for DSL components that can modify a configuration
 public protocol ConfigurationComponent {
+    /// Applies this component's configuration changes to the provided editor configuration
+    /// - Parameter configuration: The configuration to modify
     func apply(to configuration: inout EditorConfiguration)
 }
 
 // MARK: - Display Components
 
+/// Result builder for creating display configuration components
 @resultBuilder
 public enum DisplayBuilder {
+    /// Builds a collection of display components
+    /// - Parameter components: Display components to combine
+    /// - Returns: Array of display components
     public static func buildBlock(_ components: DisplayComponent...) -> [DisplayComponent] {
         components
     }
@@ -77,7 +86,10 @@ public struct Display: ConfigurationComponent {
     }
 }
 
+/// Protocol for components that modify display configuration
 public protocol DisplayComponent {
+    /// Applies this component's changes to the display configuration
+    /// - Parameter display: The display configuration to modify
     func apply(to display: inout EditorConfiguration.Display)
 }
 
@@ -134,8 +146,12 @@ public struct ShowMinimap: DisplayComponent {
 
 // MARK: - Layout Components
 
+/// Result builder for creating layout configuration components
 @resultBuilder
 public enum LayoutBuilder {
+    /// Builds a collection of layout components
+    /// - Parameter components: Layout components to combine
+    /// - Returns: Array of layout components
     public static func buildBlock(_ components: LayoutComponent...) -> [LayoutComponent] {
         components
     }
@@ -155,7 +171,10 @@ public struct Layout: ConfigurationComponent {
     }
 }
 
+/// Protocol for components that modify layout configuration
 public protocol LayoutComponent {
+    /// Applies this component's changes to the layout configuration
+    /// - Parameter layout: The layout configuration to modify
     func apply(to layout: inout EditorConfiguration.Layout)
 }
 
@@ -209,8 +228,12 @@ public struct GutterWidth: LayoutComponent {
 
 // MARK: - Behavior Components
 
+/// Result builder for creating behavior configuration components
 @resultBuilder
 public enum BehaviorBuilder {
+    /// Builds a collection of behavior components
+    /// - Parameter components: Behavior components to combine
+    /// - Returns: Array of behavior components
     public static func buildBlock(_ components: BehaviorComponent...) -> [BehaviorComponent] {
         components
     }
@@ -230,7 +253,10 @@ public struct Behavior: ConfigurationComponent {
     }
 }
 
+/// Protocol for components that modify behavior configuration
 public protocol BehaviorComponent {
+    /// Applies this component's changes to the behavior configuration
+    /// - Parameter behavior: The behavior configuration to modify
     func apply(to behavior: inout EditorConfiguration.Behavior)
 }
 
@@ -272,8 +298,12 @@ public struct CodeCompletion: BehaviorComponent {
 
 // MARK: - Performance Components
 
+/// Result builder for creating performance configuration components
 @resultBuilder
 public enum PerformanceBuilder {
+    /// Builds a collection of performance components
+    /// - Parameter components: Performance components to combine
+    /// - Returns: Array of performance components
     public static func buildBlock(_ components: PerformanceComponent...) -> [PerformanceComponent] {
         components
     }
@@ -293,7 +323,10 @@ public struct Performance: ConfigurationComponent {
     }
 }
 
+/// Protocol for components that modify performance configuration
 public protocol PerformanceComponent {
+    /// Applies this component's changes to the performance configuration
+    /// - Parameter performance: The performance configuration to modify
     func apply(to performance: inout EditorConfiguration.Performance)
 }
 

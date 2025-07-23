@@ -173,8 +173,11 @@ public enum ConfigurationComposer {
 
     /// Platform enumeration for configuration targeting
     public enum Platform {
+        /// iOS platform configuration
         case iOS
+        /// macOS platform configuration
         case macOS
+        /// Mac Catalyst platform configuration
         case catalyst
     }
 }

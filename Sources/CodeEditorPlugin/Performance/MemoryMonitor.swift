@@ -539,20 +539,29 @@ public struct CleanupOperation: Sendable, Identifiable {
 /// Memory usage statistics
 @MainActor
 public struct MemoryStatistics {
+    /// Current memory usage in megabytes.
     public var currentUsageMB: Double = 0
+    /// Peak memory usage in megabytes.
     public var peakUsageMB: Double = 0
+    /// Average memory usage in megabytes.
     public var averageUsageMB: Double = 0
+    /// Total number of cleanup operations performed.
     public var totalCleanupOperations: Int = 0
+    /// Total amount of memory freed in megabytes.
     public var totalMemoryFreed: Double = 0
+    /// Timestamp of the last statistics update.
     public var lastUpdateTime = Date()
 
+    /// History of memory usage measurements.
     public var usageHistory: [Double] = []
 
+    /// Memory efficiency metric (0-1, higher is better).
     public var memoryEfficiency: Double {
         guard peakUsageMB > 0 else { return 0 }
         return 1.0 - (averageUsageMB / peakUsageMB)
     }
 
+    /// Average memory freed per cleanup operation.
     public var cleanupEffectiveness: Double {
         guard totalCleanupOperations > 0 else { return 0 }
         return totalMemoryFreed / Double(totalCleanupOperations)

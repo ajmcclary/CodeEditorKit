@@ -21,10 +21,10 @@ public final class AsyncSyntaxHighlighter {
     // Smart cache for highlight results
     internal var tokenCache = SmartTokenCache()
 
-    // Enable background highlighting for large files
+    /// Enable background highlighting for large files
     public var enableBackgroundHighlighting: Bool = true
 
-    // File size threshold for background highlighting
+    /// File size threshold for background highlighting
     public var backgroundHighlightingThreshold: Int = 10_000
 
     // Memory monitor for managing cache memory
@@ -35,6 +35,12 @@ public final class AsyncSyntaxHighlighter {
 
     // MARK: - Initialization
 
+    /// Creates a new asynchronous syntax highlighter.
+    ///
+    /// - Parameters:
+    ///   - memoryMonitor: Memory monitor for tracking resource usage
+    ///   - debounceInterval: Time to wait before processing highlighting requests
+    ///   - enablePeriodicOptimization: Whether to enable periodic cache optimization
     public init(memoryMonitor: MemoryMonitor, debounceInterval: Duration = .milliseconds(300), enablePeriodicOptimization: Bool = true) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)

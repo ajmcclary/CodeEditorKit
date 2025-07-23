@@ -16,15 +16,32 @@ import UIKit
 public final class EditorContainerViewModel {
     // MARK: - Types
 
+    /// Represents the current state of the editor
     public struct EditorState {
+        /// Whether the editor is currently in editing mode
         public var isEditing: Bool
+        /// Whether there are unsaved changes in the editor
         public var hasUnsavedChanges: Bool
+        /// Total number of lines in the document
         public var lineCount: Int
+        /// Total number of characters in the document
         public var characterCount: Int
+        /// Currently selected text range
         public var selectedRange: NSRange
+        /// Currently visible text range in the editor
         public var visibleRange: NSRange
+        /// Current scroll position of the editor
         public var scrollPosition: CGPoint
 
+        /// Initializes editor state with default values
+        /// - Parameters:
+        ///   - isEditing: Whether the editor is currently in editing mode
+        ///   - hasUnsavedChanges: Whether there are unsaved changes
+        ///   - lineCount: Number of lines in the document
+        ///   - characterCount: Number of characters in the document
+        ///   - selectedRange: Currently selected text range
+        ///   - visibleRange: Currently visible text range
+        ///   - scrollPosition: Current scroll position
         public init(
             isEditing: Bool = false,
             hasUnsavedChanges: Bool = false,
@@ -44,13 +61,26 @@ public final class EditorContainerViewModel {
         }
     }
 
+    /// Controls visibility of various editor components
     public struct ComponentVisibility {
+        /// Whether to show the line number gutter
         public var showGutter: Bool
+        /// Whether to show the minimap component
         public var showMinimap: Bool
+        /// Whether to show scrollbars
         public var showScrollbar: Bool
+        /// Whether to show the status bar
         public var showStatusBar: Bool
+        /// Whether to show the code completion popup
         public var showCompletionPopup: Bool
 
+        /// Initializes component visibility settings
+        /// - Parameters:
+        ///   - showGutter: Whether to show the line number gutter
+        ///   - showMinimap: Whether to show the minimap
+        ///   - showScrollbar: Whether to show scrollbars
+        ///   - showStatusBar: Whether to show the status bar
+        ///   - showCompletionPopup: Whether to show the completion popup
         public init(
             showGutter: Bool = true,
             showMinimap: Bool = false,
@@ -68,14 +98,21 @@ public final class EditorContainerViewModel {
 
     // MARK: - Published Properties
 
+    /// Current state of the editor
     public var editorState: EditorState
+    /// Visibility settings for editor components
     public var componentVisibility: ComponentVisibility
+    /// Current editor configuration
     public var configuration: EditorConfiguration
+    /// Current layout frames for editor components
     public var layoutFrames: EditorLayoutService.ComponentFrames?
 
     // Error and status states
+    /// Current error message, if any
     public var errorMessage: String?
+    /// Whether the editor is currently in a loading state
     public var isLoading: Bool = false
+    /// Current status text displayed to the user
     public var statusText: String = "Ready"
 
     // MARK: - Private Properties
@@ -98,6 +135,10 @@ public final class EditorContainerViewModel {
 
     // MARK: - Initialization
 
+    /// Initializes the editor container view model
+    /// - Parameters:
+    ///   - businessLogicServices: Registry of business logic services
+    ///   - configuration: Initial editor configuration
     public init(
         businessLogicServices: BusinessLogicServiceRegistry,
         configuration: EditorConfiguration = EditorConfiguration()
@@ -223,6 +264,7 @@ public final class EditorContainerViewModel {
         completionViewModel?.showPopup(at: location)
     }
 
+    /// Hides the completion popup
     public func hideCompletionPopup() {
         componentVisibility.showCompletionPopup = false
         completionViewModel?.hidePopup()
@@ -235,6 +277,7 @@ public final class EditorContainerViewModel {
         logger.error("Error shown: \(message)")
     }
 
+    /// Clears the current error state
     public func clearError() {
         errorMessage = nil
         statusText = "Ready"
@@ -248,14 +291,20 @@ public final class EditorContainerViewModel {
 
     // MARK: - Child View Model Access
 
+    /// Gets the gutter view model instance
+    /// - Returns: The gutter view model, if available
     public func getGutterViewModel() -> GutterViewModel? {
         gutterViewModel
     }
 
+    /// Gets the completion view model instance
+    /// - Returns: The completion view model, if available
     public func getCompletionViewModel() -> CompletionViewModel? {
         completionViewModel
     }
 
+    /// Gets the minimap view model instance
+    /// - Returns: The minimap view model, if available
     public func getMinimapViewModel() -> MinimapViewModel? {
         minimapViewModel
     }
@@ -407,6 +456,8 @@ extension EditorContainerViewModel {
 @available(iOS 17.0, macOS 14.0, *)
 extension EditorContainerViewModel {
     /// Creates bindings for SwiftUI integration
+    /// Creates a SwiftUI binding for the editor configuration
+    /// - Returns: A binding that updates the configuration when changed
     public var configurationBinding: Binding<EditorConfiguration> {
         Binding(
             get: { self.configuration },
@@ -414,6 +465,8 @@ extension EditorContainerViewModel {
         )
     }
 
+    /// Creates a SwiftUI binding for the error message
+    /// - Returns: A binding that clears the error when set to nil
     public var errorBinding: Binding<String?> {
         Binding(
             get: { self.errorMessage },
@@ -421,6 +474,8 @@ extension EditorContainerViewModel {
         )
     }
 
+    /// Creates a SwiftUI binding for the loading state
+    /// - Returns: A binding that updates the loading state
     public var loadingBinding: Binding<Bool> {
         Binding(
             get: { self.isLoading },

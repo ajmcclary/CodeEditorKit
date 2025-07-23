@@ -40,16 +40,26 @@ public final class SyntaxHighlightingPerformanceTracker {
         case critical = "🔴"
     }
 
+    /// Aggregated performance metrics across multiple operations
     public struct AggregatedMetrics {
+        /// Average total time across all operations
         public let averageTotalTime: TimeInterval
+        /// 50th percentile (median) total time
         public let p50TotalTime: TimeInterval
+        /// 95th percentile total time
         public let p95TotalTime: TimeInterval
+        /// 99th percentile total time
         public let p99TotalTime: TimeInterval
+        /// Cache hit rate as a fraction (0.0 to 1.0)
         public let cacheHitRate: Double
+        /// Total number of operations tracked
         public let totalOperations: Int
+        /// Number of operations that exceeded critical threshold
         public let criticalOperations: Int
+        /// Average tokens processed per second
         public let averageTokensPerSecond: Double
 
+        /// Overall performance score from 0-100 based on time, cache, and critical operations
         public var performanceScore: Double {
             let timeScore = max(0, 1 - (averageTotalTime / 0.1)) * 0.4
             let cacheScore = cacheHitRate * 0.3
@@ -78,11 +88,22 @@ public final class SyntaxHighlightingPerformanceTracker {
 
     /// Track highlighting operation - convenience struct for timing data
     public struct OperationTiming {
+        /// Time spent tokenizing the source text
         public let tokenizationTime: TimeInterval
+        /// Time spent checking the cache for existing results
         public let cacheCheckTime: TimeInterval
+        /// Time spent performing syntax highlighting
         public let highlightingTime: TimeInterval
+        /// Time spent applying attributes to the text storage
         public let applyAttributesTime: TimeInterval
 
+        /// Creates a new operation timing record
+        ///
+        /// - Parameters:
+        ///   - tokenizationTime: Time spent tokenizing
+        ///   - cacheCheckTime: Time spent checking cache
+        ///   - highlightingTime: Time spent highlighting
+        ///   - applyAttributesTime: Time spent applying attributes
         public init(
             tokenizationTime: TimeInterval,
             cacheCheckTime: TimeInterval,

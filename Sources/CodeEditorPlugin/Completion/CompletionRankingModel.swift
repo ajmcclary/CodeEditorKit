@@ -19,6 +19,7 @@ public final class CompletionRankingModel {
 
     // MARK: - Initialization
 
+    /// Creates a new completion ranking model with default settings
     public init() {}
 
     // MARK: - Public Methods

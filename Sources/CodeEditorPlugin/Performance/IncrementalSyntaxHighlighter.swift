@@ -50,6 +50,8 @@ public final class IncrementalSyntaxHighlighter {
 
     // MARK: - Initialization
 
+    /// Creates a new incremental syntax highlighter.
+    /// - Parameter memoryMonitor: The memory monitor for tracking usage
     public init(memoryMonitor: MemoryMonitor) {
         self.memoryMonitor = memoryMonitor
         self.baseHighlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)

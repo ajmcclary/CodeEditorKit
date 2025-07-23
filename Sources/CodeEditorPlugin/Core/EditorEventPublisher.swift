@@ -55,6 +55,10 @@ import UIKit
 public actor EditorEventPublisher {
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
 
+    /// Creates a new event publisher.
+    /// 
+    /// The publisher starts with no subscribers and is ready to receive
+    /// event subscriptions and publish events immediately.
     public init() {}
 
     /// Subscribe to editor events.

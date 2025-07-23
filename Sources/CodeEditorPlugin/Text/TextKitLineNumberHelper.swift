@@ -19,6 +19,8 @@ public final class TextKitLineNumberHelper {
 
     // MARK: - Initialization
 
+    /// Creates a new TextKit line number helper for the specified text view.
+    /// - Parameter textView: The code editor view to provide line number support for
     public init(textView: CodeEditorView) {
         self.textView = textView
         self.textKitBridge = TextKitBridge(textView: textView)

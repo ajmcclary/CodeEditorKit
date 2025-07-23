@@ -6,7 +6,7 @@ import AppKit
 import UIKit
 #endif
 
-// Use centralized platform color type
+/// Type alias for platform-specific color type used in regex highlighting
 public typealias RegexHighlighterColor = PlatformColor
 
 // MARK: - Language Definition Types

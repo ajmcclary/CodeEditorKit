@@ -1,5 +1,6 @@
 import Foundation
 
+/// A text system styler that provides single-phase styling operations for text interfaces.
 @MainActor
 @preconcurrency
 public final class TextSystemStyler<Interface: TextSystemInterface> {
@@ -7,6 +8,10 @@ public final class TextSystemStyler<Interface: TextSystemInterface> {
     private let tokenProvider: TokenProvider
     private let validator: SinglePhaseRangeValidator<Interface.Content>
 
+    /// Creates a new text system styler with the specified interface and token provider.
+    /// - Parameters:
+    ///   - textSystem: The text system interface to style
+    ///   - tokenProvider: Provider for generating styling tokens
     public init(textSystem: Interface, tokenProvider: TokenProvider) {
         self.textSystem = textSystem
         self.tokenProvider = tokenProvider
@@ -42,10 +47,14 @@ public final class TextSystemStyler<Interface: TextSystemInterface> {
         await validator.contentChanged(in: range, delta: delta)
     }
 
+    /// Invalidates styling for the specified range target.
+    /// - Parameter target: The range target to invalidate
     public func invalidate(_ target: RangeTarget) async {
         await validator.invalidate(target)
     }
 
+    /// Validates styling for the specified range target.
+    /// - Parameter target: The range target to validate (defaults to all content)
     public func validate(_ target: RangeTarget = .all) async {
         await validator.validate(target)
     }

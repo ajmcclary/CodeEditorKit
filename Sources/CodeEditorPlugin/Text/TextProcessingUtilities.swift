@@ -7,24 +7,41 @@ import Foundation
 public enum TextProcessingUtilities {
     // MARK: - Supporting Types
 
+    /// Modes for extracting words from text with different boundary detection strategies.
     public enum WordExtractionMode {
-        case standard           // Standard word boundaries (alphanumeric + underscore)
-        case identifier         // Programming identifiers (includes $ for JavaScript)
-        case camelCase         // Split on camelCase boundaries
-        case snakeCase         // Split on snake_case boundaries
-        case whitespace        // Split only on whitespace
+        /// Standard word boundaries using alphanumeric characters and underscores.
+        case standard
+        /// Programming identifiers including $ for JavaScript support.
+        case identifier
+        /// Split words on camelCase boundaries for compound identifiers.
+        case camelCase
+        /// Split words on snake_case boundaries.
+        case snakeCase
+        /// Split only on whitespace characters, preserving all other text.
+        case whitespace
     }
 
+    /// Classification categories for individual characters in text processing.
     public enum CharacterClass {
+        /// Alphanumeric characters (letters and digits).
         case alphanumeric
+        /// Whitespace characters including spaces and tabs.
         case whitespace
+        /// Punctuation marks and symbols used in writing.
         case punctuation
+        /// Mathematical and other symbolic characters.
         case symbol
+        /// Numeric digit characters.
         case digit
+        /// Alphabetic letter characters.
         case letter
-        case identifier        // Valid for programming identifiers
+        /// Characters valid in programming language identifiers.
+        case identifier
+        /// Newline characters for line termination.
         case newline
+        /// Tab characters for indentation.
         case tab
+        /// Characters that don't fit other categories.
         case unknown
     }
 
@@ -36,21 +53,34 @@ public enum TextProcessingUtilities {
         case all              // Remove all whitespace
     }
 
+    /// Line ending format options for text normalization operations.
     public enum LineEndingFormat {
-        case unix              // \n
-        case windows           // \r\n
-        case classic           // \r
-        case mixed             // Keep original format
+        /// Unix-style line endings using LF (\n).
+        case unix
+        /// Windows-style line endings using CRLF (\r\n).
+        case windows
+        /// Classic Mac-style line endings using CR (\r).
+        case classic
+        /// Preserve existing mixed line ending formats.
+        case mixed
     }
 
+    /// Analysis results for text complexity measurement and processing cost estimation.
     public struct TextComplexity {
+        /// Total number of lines in the text.
         public let lineCount: Int
+        /// Average character count per line.
         public let averageLineLength: Int
+        /// Maximum character count in any single line.
         public let maxLineLength: Int
+        /// Count of unique characters used in the text.
         public let uniqueCharacterCount: Int
+        /// Maximum nesting depth of brackets, braces, and parentheses.
         public let nestingDepth: Int
+        /// Whether the text contains only ASCII characters.
         public let isASCII: Bool
 
+        /// Calculated complexity score from 0.0 to 1.0+ based on various text metrics.
         public var complexityScore: Double {
             let factors = [
                 Double(lineCount) / 1_000.0,
@@ -72,13 +102,31 @@ public enum TextProcessingUtilities {
         }
     }
 
+    /// A token extracted from text with type classification and position information.
     public struct TextToken {
+        /// The actual text content of this token.
         public let text: String
+        /// The range of this token within the source text.
         public let range: NSRange
+        /// The classification type of this token.
         public let type: TokenType
 
+        /// Categories for classifying extracted text tokens.
         public enum TokenType {
-            case word, identifier, number, string, comment, `operator`, whitespace
+            /// Regular word tokens composed of letters.
+            case word
+            /// Programming language identifiers.
+            case identifier
+            /// Numeric literal tokens.
+            case number
+            /// String literal tokens.
+            case string
+            /// Comment tokens.
+            case comment
+            /// Operator and punctuation tokens.
+            case `operator`
+            /// Whitespace tokens including spaces and tabs.
+            case whitespace
         }
     }
 
@@ -352,12 +400,19 @@ public enum TextProcessingUtilities {
 
 // MARK: - Processing Operation Types
 
+/// Types of text processing operations with different performance characteristics.
 public enum TextProcessingOperationType {
+    /// Syntax highlighting operations for code display.
     case syntaxHighlighting
+    /// Code completion and suggestion operations.
     case completion
+    /// Text validation and error checking operations.
     case validation
+    /// Text search and pattern matching operations.
     case searching
+    /// Text formatting and beautification operations.
     case formatting
+    /// Text parsing and structure analysis operations.
     case parsing
 
     func estimateCost(textSize: Int, complexity: TextProcessingUtilities.TextComplexity) -> (timeMs: Double, memoryMB: Double, intensity: TextProcessingUtilities.ProcessingCost.CPUIntensity) {

@@ -1,14 +1,22 @@
 import Foundation
 
+/// An actor that manages three-phase range validation with primary, fallback, and secondary validation stages.
+/// This validator provides comprehensive validation workflows with different performance characteristics.
 public actor ThreePhaseRangeValidator<Content: VersionedContent> {
+    /// Type alias for the primary single-phase validator used in the first validation stage.
     public typealias PrimaryValidator = SinglePhaseRangeValidator<Content>
     private typealias InternalValidator = RangeValidator<Content>
 
+    /// Type alias for validation completion handlers.
     public typealias ValidationHandler = @Sendable (NSRange) -> Void
 
+    /// Type alias for content ranges with version information.
     public typealias ContentRange = RangeValidator<Content>.ContentRange
+    /// Type alias for the validation provider used by the primary validator.
     public typealias Provider = PrimaryValidator.Provider
+    /// Type alias for fallback validation handlers that provide immediate results.
     public typealias FallbackHandler = @Sendable (NSRange) -> Void
+    /// Type alias for secondary validation providers that perform background validation.
     public typealias SecondaryValidationProvider = @Sendable (ContentRange) async -> Validation
 
     private typealias Sequence = AsyncStream<ContentRange>
@@ -40,8 +48,13 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
     private let secondaryValidator: InternalValidator?
     private var task: Task<Void, Error>?
 
+    /// The configuration used by this validator, accessible from any isolation context.
     public nonisolated let configuration: Configuration
 
+    /// Creates a new three-phase range validator with the specified configuration and actor isolation.
+    /// - Parameters:
+    ///   - configuration: The configuration for this validator
+    ///   - isolation: The actor context for isolation
     public init(configuration: Configuration, isolation: isolated(any Actor)) {
         self.configuration = configuration
         primaryValidator = PrimaryValidator(
@@ -68,6 +81,8 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
         }
     }
 
+    /// Creates a new three-phase range validator on the main actor.
+    /// - Parameter configuration: The configuration for this validator
     @MainActor
     @preconcurrency
     public init(configuration: Configuration) {
@@ -87,6 +102,10 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
         await secondaryValidator?.invalidate(target)
     }
 
+    /// Validates the specified target range with external actor isolation.
+    /// - Parameters:
+    ///   - target: The range target to validate
+    ///   - isolation: The actor context for isolation
     public func validate(_ target: RangeTarget, isolation: isolated (any Actor)) async {
         let action = await primaryValidator.validate(target, isolation: isolation)
 
@@ -99,6 +118,8 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
         }
     }
 
+    /// Validates the specified target range on the main actor.
+    /// - Parameter target: The range target to validate
     @MainActor
     @preconcurrency
     public func validate(_ target: RangeTarget) async {
@@ -144,12 +165,15 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
         task?.cancel()
     }
 
+    /// The name of this validator instance for debugging and identification purposes.
     public var name: String? {
         get async {
             await primaryValidator.name
         }
     }
 
+    /// Sets the name of this validator instance.
+    /// - Parameter newValue: The name to assign to this validator
     public func setName(_ newValue: String?) async {
         await primaryValidator.setName(newValue)
     }

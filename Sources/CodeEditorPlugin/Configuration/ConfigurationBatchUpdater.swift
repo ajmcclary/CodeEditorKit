@@ -103,10 +103,16 @@ public struct LazyComputed<Value> {
     private var storage: Value?
     private let compute: () -> Value
 
+    /// Creates a new lazy computed property wrapper
+    /// - Parameter compute: An autoclosure that computes the value when first accessed
     public init(wrappedValue compute: @autoclosure @escaping () -> Value) {
         self.compute = compute
     }
 
+    /// The computed value, lazily evaluated on first access
+    /// 
+    /// The getter computes the value on first access and caches it for subsequent calls.
+    /// The setter allows direct assignment of a new value, replacing any cached computation.
     public var wrappedValue: Value {
         mutating get {
             if let value = storage {
@@ -121,6 +127,10 @@ public struct LazyComputed<Value> {
         }
     }
 
+    /// Resets the cached value, forcing recomputation on next access
+    /// 
+    /// After calling this method, the next access to `wrappedValue` will trigger
+    /// the computation closure again rather than returning a cached value.
     public mutating func reset() {
         storage = nil
     }

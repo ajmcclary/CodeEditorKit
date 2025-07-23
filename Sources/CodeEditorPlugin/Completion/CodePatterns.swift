@@ -75,6 +75,7 @@ public struct FunctionCallPattern: CodePattern {
 public struct CodePatternRegistry {
     private var patterns: [CodePattern] = []
 
+    /// Creates a new code pattern registry with default patterns
     public init() {
         // Register default patterns
         patterns = [

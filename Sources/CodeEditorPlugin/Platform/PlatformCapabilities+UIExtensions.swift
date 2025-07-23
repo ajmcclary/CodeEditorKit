@@ -10,21 +10,38 @@ import AppKit
 extension PlatformCapabilities {
     /// User interface capabilities and features
     public struct UICapabilities {
+        /// Whether minimap view is supported and practical
         public let supportsMinimap: Bool
+
+        /// Whether multiple windows can be opened simultaneously
         public let supportsMultipleWindows: Bool
+
+        /// Whether Touch Bar is available (macOS with Touch Bar only)
         public let supportsTouchBar: Bool
+
+        /// Whether context menus are supported
         public let supportsContextMenus: Bool
+
+        /// Whether vibrant/translucent materials are available
         public let supportsVibrantMaterials: Bool
+
+        /// Whether floating panels/windows are supported
         public let supportsFloatingPanels: Bool
+
+        /// Recommended layout style for the current platform
         public let recommendedLayoutStyle: LayoutStyle
     }
 
     /// Recommended layout styles for different platforms
     public enum LayoutStyle {
-        case desktop      // Full desktop with multiple panels
-        case tablet       // Tablet-optimized with sidebars
-        case mobile       // Mobile-first single-pane
-        case adaptive     // Adaptive layout based on size class
+        /// Full desktop with multiple panels and advanced features
+        case desktop
+        /// Tablet-optimized with sidebars and touch-friendly controls  
+        case tablet
+        /// Mobile-first single-pane with simplified interface
+        case mobile
+        /// Adaptive layout that changes based on size class
+        case adaptive
     }
 
     /// Get comprehensive UI capabilities
@@ -350,6 +367,7 @@ extension PlatformCapabilities {
         /// Whether to enable hybrid mouse/touch interaction (Catalyst)
         public var enableHybridInteraction: Bool = false
 
+        /// Creates default UI configuration for the current platform
         public init() {}
     }
 

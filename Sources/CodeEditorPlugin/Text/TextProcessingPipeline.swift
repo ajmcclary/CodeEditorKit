@@ -88,20 +88,31 @@ public struct TextProcessingPipeline {
 
     // MARK: - Configuration
 
+    /// Configuration options for customizing pipeline behavior and performance characteristics.
     public struct PipelineConfiguration {
+        /// Whether to enable caching of operation results to improve performance.
         public var enableCaching: Bool = true
+        /// Maximum number of cached results to maintain in memory.
         public var maxCacheSize: Int = 100
+        /// Timeout in seconds for individual operations before they are cancelled.
         public var operationTimeout: TimeInterval = 30.0
-        public var memoryLimit: Int = 100 // MB
+        /// Memory limit in megabytes for pipeline operations.
+        public var memoryLimit: Int = 100
+        /// Whether to enable parallel processing of operations when possible.
         public var enableParallelProcessing: Bool = true
+        /// Default batch size for processing large text inputs.
         public var batchSize: Int = 10_000
+        /// Whether to enable verbose logging for debugging purposes.
         public var logVerbose: Bool = false
 
+        /// Creates a new pipeline configuration with default settings.
         public init() {}
     }
 
     // MARK: - Initialization
 
+    /// Creates a new text processing pipeline with the specified configuration.
+    /// - Parameter configuration: Configuration options for the pipeline (uses defaults if not specified)
     public init(configuration: PipelineConfiguration = PipelineConfiguration()) {
         self.configuration = configuration
     }

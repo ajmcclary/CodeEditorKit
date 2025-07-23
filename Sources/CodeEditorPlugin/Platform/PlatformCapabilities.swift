@@ -63,6 +63,7 @@ import AppKit
 /// - SeeAlso: ``EditorConfiguration``, ``EditorFeature``, ``FeatureAvailability``
 @MainActor
 public final class PlatformCapabilities {
+    /// Shared singleton instance for platform capability detection
     public static let shared = PlatformCapabilities()
 
     /// Cached platform value since it's determined at compile time
@@ -110,10 +111,12 @@ public final class PlatformCapabilities {
         }
     }
 
+    /// The current runtime platform (macOS, iOS, or Mac Catalyst)
     public var currentPlatform: Platform {
         _currentPlatform
     }
 
+    /// The current operating system version as a string
     public var systemVersion: String {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return ProcessInfo.processInfo.operatingSystemVersionString
@@ -124,6 +127,7 @@ public final class PlatformCapabilities {
         #endif
     }
 
+    /// The current operating system version broken down into major, minor, and patch components
     public var systemVersionComponents: (major: Int, minor: Int, patch: Int) {
         let version = ProcessInfo.processInfo.operatingSystemVersion
         return (version.majorVersion, version.minorVersion, version.patchVersion)
@@ -195,6 +199,7 @@ public final class PlatformCapabilities {
 
     // MARK: - Debug Information
 
+    /// Comprehensive debug information about platform capabilities
     public var debugDescription: String {
         let perf = performanceCapabilities
         let textKit = textKitCapabilities
@@ -519,53 +524,89 @@ extension PlatformCapabilities {
     /// - `pencilSupport`: Apple Pencil support
     public enum EditorFeature {
         // Core features
+        /// Syntax highlighting and colorization
         case syntaxHighlighting
+        /// Code completion and IntelliSense
         case codeCompletion
+        /// Line number display in gutter
         case lineNumbers
+        /// Code folding and outlining
         case codeFolding
+        /// Document minimap overview
         case minimap
 
         // Editing features
+        /// Multiple cursor editing
         case multipleCursors
+        /// Automatic bracket matching and insertion
         case smartBrackets
+        /// Automatic code indentation
         case autoIndent
+        /// Find and replace functionality
         case findReplace
+        /// Column/block selection mode
         case columnSelection
 
         // Navigation features
+        /// Symbol navigation and outline
         case symbolNavigation
+        /// File path breadcrumbs
         case breadcrumbs
+        /// Go to definition/declaration
         case goToDefinition
+        /// Quick file/symbol opening
         case quickOpen
 
         // Performance features
+        /// Hardware-accelerated rendering
         case hardwareAcceleration
+        /// Virtual scrolling for large files
         case virtualScrolling
+        /// Incremental parsing and analysis
         case incrementalParsing
+        /// Background processing support
         case backgroundProcessing
 
         // Integration features
+        /// Language Server Protocol support
         case languageServerProtocol
+        /// Local language server integration
         case localLSP
+        /// Remote language server support
         case remoteLSP
+        /// Plugin system architecture
         case pluginSystem
+        /// External tool integration
         case externalTools
+        /// File system watching
         case fileWatching
 
         // UI features
+        /// Split view/pane support
         case splitView
+        /// Tab interface for multiple files
         case tabs
+        /// Collapsible sidebars
         case sidebars
+        /// Floating panel windows
         case floatingPanels
+        /// Context menu support
         case contextMenus
+        /// Toolbar interface
         case toolbars
+        /// macOS Touch Bar support
         case touchBarSupport
 
         // Input features
+        /// Keyboard shortcut support
         case keyboardShortcuts
+        /// Mouse interaction support
         case mouseSupport
+        /// Touch gesture support
         case touchSupport
+        /// Gesture-based navigation
         case gestureNavigation
+        /// Apple Pencil support
         case pencilSupport
     }
 }

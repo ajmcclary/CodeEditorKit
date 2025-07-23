@@ -1,5 +1,6 @@
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 @preconcurrency import AppKit
+/// Cross-platform text movement type alias for macOS
 public typealias PlatformTextMovement = NSTextMovement
 #endif
 #if canImport(UIKit)

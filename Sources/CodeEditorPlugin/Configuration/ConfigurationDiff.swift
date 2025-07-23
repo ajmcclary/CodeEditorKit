@@ -63,10 +63,14 @@ public enum ConfigurationDiff {
 
 /// Represents a change between configurations
 public struct ConfigurationChange {
+    /// The configuration path that changed (e.g., "display.fontSize")
     public let path: String
+    /// The previous value before the change
     public let oldValue: Any
+    /// The new value after the change
     public let newValue: Any
 
+    /// A human-readable description of the configuration change
     public var description: String {
         "\(path): \(oldValue) → \(newValue)"
     }

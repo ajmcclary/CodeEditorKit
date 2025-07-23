@@ -64,6 +64,33 @@ extension CodeEditorView {
     #if canImport(UIKit)
     #else
     // On macOS, implement the protocol requirement
+    /// Inserts text at the current cursor position.
+    ///
+    /// This method provides a simplified interface for text insertion, automatically
+    /// inserting the text at the current cursor position or replacing the current selection.
+    ///
+    /// ## Behavior
+    ///
+    /// - If no text is selected: Inserts text at cursor position
+    /// - If text is selected: Replaces selected text with new text
+    /// - Triggers syntax highlighting updates if enabled
+    /// - Respects editor configuration settings
+    ///
+    /// ## Parameters
+    ///
+    /// - Parameter text: The text to insert
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // Insert text at cursor
+    /// editor.insertText("func newFunction() {}")
+    ///
+    /// // This will replace any selected text
+    /// editor.insertText("replacement text")
+    /// ```
+    ///
+    /// - Note: This method is only available on macOS as part of CodeEditorAPI conformance
     public func insertText(_ text: String) {
         self.insertText(text as Any, replacementRange: selectedRange)
     }

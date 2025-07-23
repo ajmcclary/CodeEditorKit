@@ -7,10 +7,15 @@ import Foundation
 
 /// Debug session
 public class DebugSession {
+    /// Unique identifier for this debug session
     public let id: String
+    /// The launch configuration used to start this session
     public let configuration: LaunchConfiguration
+    /// The debug adapter handling communication with the debugger
     public let adapter: DebugAdapter
+    /// Current state of the debug session
     public var state: SessionState = .initializing
+    /// The currently active thread ID
     public var currentThreadId: Int = 1
 
     init(id: String, configuration: LaunchConfiguration, adapter: DebugAdapter) {
@@ -19,10 +24,15 @@ public class DebugSession {
         self.adapter = adapter
     }
 
+    /// The possible states of a debug session
     public enum SessionState {
+        /// Session is being initialized
         case initializing
+        /// Session is running normally
         case running
+        /// Session is paused at a breakpoint or step
         case paused
+        /// Session has been terminated
         case terminated
     }
 

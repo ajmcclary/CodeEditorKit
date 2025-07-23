@@ -7,9 +7,16 @@ extension PlatformServiceLayer {
     // MARK: - Quick Device Checks
 
     /// Quick access to device type without accessing deviceService directly
+    /// Returns `true` if the current device is an iPad
     public var isIPad: Bool { deviceService.isIPad }
+
+    /// Returns `true` if the current device is an iPhone
     public var isIPhone: Bool { deviceService.isIPhone }
+
+    /// Returns `true` if the current platform is macOS
     public var isMacOS: Bool { deviceService.isMacOS }
+
+    /// Returns `true` if the current platform is Mac Catalyst
     public var isMacCatalyst: Bool { deviceService.isMacCatalyst }
 
     /// Combined mobile check (iPhone or iPad, but not Mac Catalyst)
@@ -117,11 +124,25 @@ extension PlatformServiceLayer {
 
 // MARK: - Platform Spacing
 
+/// Platform-appropriate spacing values for different UI elements
+///
+/// Provides standardized spacing values that adapt to platform conventions
+/// and device characteristics for consistent UI appearance.
 public struct PlatformSpacing {
+    /// Small spacing value (typically 6-12pt)
     public let small: CGFloat
+
+    /// Medium spacing value (typically 12-20pt)
     public let medium: CGFloat
+
+    /// Large spacing value (typically 20-32pt)
     public let large: CGFloat
 
+    /// Creates platform spacing with custom values
+    /// - Parameters:
+    ///   - small: Small spacing value
+    ///   - medium: Medium spacing value
+    ///   - large: Large spacing value
     public init(small: CGFloat, medium: CGFloat, large: CGFloat) {
         self.small = small
         self.medium = medium
@@ -186,14 +207,37 @@ extension PlatformDeviceService {
 
 // MARK: - Editor Configuration Hints
 
+/// Platform-optimized editor configuration recommendations
+///
+/// Provides sensible defaults for editor configuration based on
+/// platform capabilities and user interface conventions.
 public struct EditorConfigurationHints {
+    /// Whether line numbers should be displayed
     public let showLineNumbers: Bool
+
+    /// Whether the minimap should be shown
     public let showMinimap: Bool
+
+    /// Whether word wrapping should be enabled
     public let enableWordWrap: Bool
+
+    /// Recommended font size for the platform
     public let fontSize: CGFloat
+
+    /// Recommended tab width in spaces
     public let tabWidth: Int
+
+    /// Whether invisible characters should be displayed
     public let showInvisibleCharacters: Bool
 
+    /// Creates editor configuration hints with specified values
+    /// - Parameters:
+    ///   - showLineNumbers: Whether to show line numbers
+    ///   - showMinimap: Whether to show minimap
+    ///   - enableWordWrap: Whether to enable word wrap
+    ///   - fontSize: Font size to use
+    ///   - tabWidth: Tab width in spaces
+    ///   - showInvisibleCharacters: Whether to show invisible characters
     public init(
         showLineNumbers: Bool,
         showMinimap: Bool,

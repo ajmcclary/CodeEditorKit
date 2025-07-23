@@ -13,11 +13,22 @@ import AppKit
 extension PlatformCapabilities {
     /// Input method support information
     public struct InputCapabilities {
+        /// Whether keyboard shortcuts are supported and functional
         public let supportsKeyboardShortcuts: Bool
+
+        /// Whether Apple Pencil input is supported (iPad only)
         public let supportsPencilInput: Bool
+
+        /// Whether trackpad gestures are supported
         public let supportsTrackpad: Bool
+
+        /// Whether haptic feedback is available
         public let supportsHapticFeedback: Bool
+
+        /// Whether gesture recognizers can be used
         public let supportsGestureRecognizers: Bool
+
+        /// Set of preferred input methods for the current platform
         public let preferredInputMethods: Set<InputMethod>
     }
 
@@ -297,6 +308,7 @@ extension PlatformCapabilities {
         /// Apple Pencil pressure sensitivity (0.0 - 1.0)
         public var pencilSensitivity: CGFloat = 1.0
 
+        /// Creates default input configuration for the current platform
         public init() {}
     }
 

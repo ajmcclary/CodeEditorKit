@@ -319,6 +319,12 @@ private actor DebouncedState<T: Sendable> {
     }
 }
 
+/// Creates a debounced async function that delays execution until after delay time has elapsed
+/// - Parameters:
+///   - delay: Time interval to wait before executing
+///   - maxConcurrentOperations: Maximum number of concurrent operations
+///   - operation: The operation to perform
+/// - Returns: Debounced function that can be called with input
 public func debouncedAsync<T: Sendable>(
     delay: TimeInterval,
     maxConcurrentOperations: Int = 1,
@@ -384,6 +390,9 @@ private actor ThrottledState {
     }
 }
 
+/// Creates a throttled async function that limits execution frequency
+/// - Parameters:
+///   - interval: Minimum time interval between executions
 public func throttledAsync<T: Sendable>(
     interval: TimeInterval,
     maxConcurrentOperations: Int = 1,

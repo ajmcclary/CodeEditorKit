@@ -16,6 +16,10 @@ public final class LanguageDetectionService {
 
     // MARK: - Initialization
 
+    /// Creates a new language detection service.
+    ///
+    /// The service initializes with cached common file extensions for
+    /// improved performance on subsequent language detection calls.
     public init() {
         // Preload common extensions into cache
         preloadCommonExtensions()
@@ -254,15 +258,41 @@ public final class LanguageDetectionService {
 
 // MARK: - Supporting Types
 
+/// Information about a programming language.
+///
+/// `LanguageInfo` provides comprehensive details about a programming language,
+/// including its identifier, display name, and supported file extensions.
+///
+/// ## Example
+///
+/// ```swift
+/// let swiftInfo = LanguageInfo(
+///     identifier: "swift",
+///     displayName: "Swift",
+///     fileExtensions: ["swift"],
+///     primaryExtension: "swift"
+/// )
+/// ```
 public struct LanguageInfo {
+    /// Unique identifier for the language (e.g., "swift", "python")
     public let identifier: String
+    /// Human-readable display name (e.g., "Swift", "Python")
     public let displayName: String
+    /// All supported file extensions for this language
     public let fileExtensions: [String]
+    /// The most common/primary file extension
     public let primaryExtension: String
 }
 
+/// Validation result for language changes.
+///
+/// `LanguageChangeValidation` indicates the type of change when switching
+/// between programming languages, helping optimize editor behavior.
 public enum LanguageChangeValidation {
+    /// No language change occurred
     case noChange
-    case similar    // Languages in the same family
-    case different  // Completely different languages
+    /// Languages are in the same family (e.g., JavaScript ↔ TypeScript)
+    case similar
+    /// Completely different languages (e.g., Swift ↔ Python)
+    case different
 }

@@ -60,6 +60,11 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
     // MARK: - Initialization
 
+    /// Creates a new optimized syntax highlighting coordinator.
+    ///
+    /// - Parameters:
+    ///   - memoryMonitor: Memory monitor for tracking resource usage
+    ///   - configuration: Highlighting configuration with optimization settings
     public init(
         memoryMonitor: MemoryMonitor,
         configuration: HighlightingConfiguration = .default

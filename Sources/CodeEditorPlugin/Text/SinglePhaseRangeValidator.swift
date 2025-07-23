@@ -1,7 +1,11 @@
 import Foundation
 
+/// An actor that manages single-phase range validation operations for versioned content.
+/// This validator handles both synchronous and asynchronous validation workflows.
 public actor SinglePhaseRangeValidator<Content: VersionedContent> {
+    /// Type alias for content ranges with version information.
     public typealias ContentRange = RangeValidator<Content>.ContentRange
+    /// Type alias for the validation provider used by this validator.
     public typealias Provider = HybridSyncAsyncValueProvider<ContentRange, Validation, Never>
 
     private struct ValidationOperation: Sendable {
@@ -25,14 +29,21 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
     private let primaryValidator: RangeValidator<Content>
     private var eventQueue: AwaitableQueue<ValidationOperation>
 
+    /// The configuration used by this validator, accessible from any isolation context.
     public nonisolated let configuration: Configuration
+    /// Handler called when validation operations complete with range and completion status.
     public var validationHandler: @Sendable (NSRange, Bool) -> Void = { _, _ in }
+    /// Optional name for this validator instance for debugging purposes.
     public var name: String?
 
+    /// Sets the name of this validator instance.
+    /// - Parameter newValue: The name to assign to this validator
     public func setName(_ newValue: String?) {
         self.name = newValue
     }
 
+    /// Sets the validation completion handler.
+    /// - Parameter handler: Handler called when validation operations complete
     public func setValidationHandler(_ handler: @escaping @Sendable (NSRange, Bool) -> Void) {
         self.validationHandler = handler
     }
@@ -41,6 +52,8 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         eventQueue.handlePendingWaiters()
     }
 
+    /// Creates a new single-phase range validator with the specified configuration.
+    /// - Parameter configuration: The configuration for this validator
     public init(configuration: Configuration) {
         self.configuration = configuration
         primaryValidator = RangeValidator<Content>(content: configuration.versionedContent)
@@ -59,6 +72,9 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
     }
 
     // Actor-isolated version without isolation parameter
+    /// Validates the specified target range within the actor's isolation context.
+    /// - Parameter target: The range target to validate
+    /// - Returns: The validation action that was performed
     @discardableResult
     public func validateOnActor(_ target: RangeTarget) async -> RangeValidator<Content>.Action {
         // capture this first, because we're about to start one
@@ -91,6 +107,11 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         }
     }
 
+    /// Validates the specified target range with external actor isolation.
+    /// - Parameters:
+    ///   - target: The range target to validate
+    ///   - isolation: The actor context for isolation
+    /// - Returns: The validation action that was performed
     @discardableResult
     public func validate(
         _ target: RangeTarget,
@@ -239,6 +260,9 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         }
     }
 
+    /// Validates the specified target range on the main actor.
+    /// - Parameter target: The range target to validate
+    /// - Returns: The validation action that was performed
     @MainActor
     @preconcurrency
     @discardableResult
@@ -265,7 +289,8 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         await primaryValidator.contentChanged(in: range, delta: delta)
     }
 
-    // This needs to be an actor-isolated method to mutate eventQueue
+    /// Notifies the validator that validation processing has completed.
+    /// This method must be called from within the actor's isolation context.
     public func validationCompleted() async {
         await eventQueue.processingCompleted(isolation: self)
     }

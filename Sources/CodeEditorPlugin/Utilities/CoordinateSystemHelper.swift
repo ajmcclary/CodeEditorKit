@@ -553,8 +553,10 @@ struct DrawingContext {
 
 // Note: Platform type aliases are defined in PlatformImports.swift
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+/// Platform-specific window type for macOS
 public typealias PlatformWindow = NSWindow
 #else
+/// Platform-specific window type for iOS
 public typealias PlatformWindow = UIWindow
 #endif
 

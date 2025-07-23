@@ -5,13 +5,32 @@ import SwiftUI
 
 /// State management for the completion popup UI
 public struct CompletionPopupState {
+    /// Whether the completion popup is currently visible
     public var isVisible: Bool
+
+    /// Current position of the completion popup
     public var position: CGPoint
+
+    /// Size of the completion popup
     public var size: CGSize
+
+    /// Index of the currently selected completion item
     public var selectedIndex: Int
+
+    /// Whether completion items are currently being loaded
     public var isLoading: Bool
+
+    /// Duration for popup animations
     public var animationDuration: TimeInterval
 
+    /// Creates a new completion popup state with the specified parameters
+    /// - Parameters:
+    ///   - isVisible: Whether the popup should be visible initially
+    ///   - position: Initial position of the popup
+    ///   - size: Size of the popup
+    ///   - selectedIndex: Initially selected item index
+    ///   - isLoading: Whether to show loading state initially
+    ///   - animationDuration: Duration for popup animations
     public init(
         isVisible: Bool = false,
         position: CGPoint = .zero,
@@ -106,10 +125,21 @@ public struct CompletionItem: Identifiable, Hashable {
 
 /// Direction for moving selection in completion popup
 public enum SelectionDirection {
+    /// Move selection up by one item
     case up
+
+    /// Move selection down by one item
     case down
+
+    /// Move selection up by one page
     case pageUp
+
+    /// Move selection down by one page
     case pageDown
+
+    /// Move selection to the first item
     case first
+
+    /// Move selection to the last item
     case last
 }

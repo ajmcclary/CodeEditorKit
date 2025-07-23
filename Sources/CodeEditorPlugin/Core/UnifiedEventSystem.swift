@@ -221,6 +221,9 @@ public final class UnifiedEventSystem: ObservableObject {
 
 /// Protocol for event filtering
 public protocol EventFilter {
+    /// Determines if an event should be allowed through the filter
+    /// - Parameter event: The event to evaluate
+    /// - Returns: True if the event should be allowed, false otherwise
     func shouldAllow(_ event: EditorEvent) -> Bool
 }
 
@@ -291,7 +294,12 @@ public final class PerformanceEventFilter: EventFilter {
 
 /// Protocol for handling events
 public protocol EventHandler {
+    /// Checks if this handler can process the given event
+    /// - Parameter event: The event to check
+    /// - Returns: True if this handler can process the event
     func canHandle(_ event: EditorEvent) -> Bool
+    /// Handles the given event
+    /// - Parameter event: The event to handle
     func handle(_ event: EditorEvent)
 }
 
@@ -300,6 +308,10 @@ public struct EventHandlerToken {
     let id: UUID
     weak var system: UnifiedEventSystem?
 
+    /// Unregisters this event handler from the system
+    /// 
+    /// This method removes the event handler from the unified event system.
+    /// After calling this method, the handler will no longer receive events.
     @MainActor
     public func unregister() {
         system?.unregisterHandler(with: id)
@@ -310,10 +322,14 @@ public struct EventHandlerToken {
 
 /// Metrics for the event system
 public struct EventMetrics {
+    /// Number of events published through the system
     public var publishedCount: Int = 0
+    /// Number of events filtered out
     public var filteredCount: Int = 0
+    /// Timestamp of the last event processed
     public var lastEventTime: Date?
 
+    /// Calculated events per second based on recent activity
     public var eventsPerSecond: Double {
         guard let lastTime = lastEventTime else { return 0 }
         let timeSinceLastEvent = Date().timeIntervalSince(lastTime)

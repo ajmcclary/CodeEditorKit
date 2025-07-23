@@ -10,21 +10,40 @@ import AppKit
 extension PlatformCapabilities {
     /// Performance characteristics and optimization recommendations
     public struct PerformanceCapabilities {
+        /// Whether hardware-accelerated rendering is available
         public let supportsHardwareAcceleration: Bool
+
+        /// Whether background processing queues are supported
         public let supportsBackgroundProcessing: Bool
+
+        /// Whether smooth scrolling animations are supported
         public let supportsSmoothScrolling: Bool
+
+        /// Whether CADisplayLink is available for frame-rate synchronization
         public let supportsCADisplayLink: Bool
+
+        /// Recommended cache size in bytes for optimal performance
         public let recommendedCacheSize: Int
+
+        /// Maximum recommended file size in bytes for smooth operation
         public let maxRecommendedFileSize: Int
+
+        /// The processor architecture of the current device
         public let processorArchitecture: ProcessorArchitecture
+
+        /// The memory profile classification for the current device
         public let memoryProfile: MemoryProfile
     }
 
     /// Processor architecture types
     public enum ProcessorArchitecture {
-        case intel64        // Intel x86_64
-        case appleSilicon   // Apple M-series
-        case arm64          // ARM64 (iOS devices)
+        /// Intel x86_64 architecture
+        case intel64
+        /// Apple Silicon (M-series) processors
+        case appleSilicon
+        /// ARM64 architecture (iOS devices)
+        case arm64
+        /// Unknown or unsupported architecture
         case unknown
 
         /// Whether this architecture supports advanced SIMD operations
@@ -43,10 +62,14 @@ extension PlatformCapabilities {
 
     /// Memory profile for performance tuning
     public enum MemoryProfile {
-        case low        // < 4GB
-        case medium     // 4-8GB
-        case high       // 8-16GB
-        case ultra      // > 16GB
+        /// Low memory devices (< 4GB)
+        case low
+        /// Medium memory devices (4-8GB)
+        case medium
+        /// High memory devices (8-16GB)
+        case high
+        /// Ultra high memory devices (> 16GB)
+        case ultra
 
         /// Recommended cache multiplier for this memory profile
         public var cacheMultiplier: Double {
@@ -385,6 +408,7 @@ extension PlatformCapabilities {
         /// Maximum memory usage for caches (in bytes)
         public var maxCacheMemoryUsage: Int = 50 * 1_024 * 1_024
 
+        /// Creates default performance optimization settings
         public init() {}
     }
 
@@ -410,10 +434,19 @@ extension PlatformCapabilities {
 
     /// Current system performance metrics
     public struct PerformanceMetrics {
+        /// Total physical memory in bytes
         public let physicalMemory: UInt64
+
+        /// Number of active processor cores
         public let activeProcessorCount: Int
+
+        /// Current thermal state of the device
         public let thermalState: ThermalState
+
+        /// Whether low power mode is enabled
         public let lowPowerMode: Bool
+
+        /// Current battery level (0.0-1.0), nil if unavailable
         public let batteryLevel: Float?
 
         /// Whether the system is under performance pressure
@@ -424,9 +457,13 @@ extension PlatformCapabilities {
 
     /// System thermal state
     public enum ThermalState {
+        /// Normal operating temperature
         case nominal
+        /// Slightly elevated temperature
         case fair
+        /// High temperature, performance may be reduced
         case serious
+        /// Critical temperature, significant performance reduction
         case critical
     }
 

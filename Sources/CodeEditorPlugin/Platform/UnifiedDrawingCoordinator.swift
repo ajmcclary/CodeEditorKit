@@ -372,8 +372,13 @@ extension UnifiedDrawingCoordinator {
 
 /// A wrapper that provides a consistent drawing context interface across platforms
 public struct UnifiedDrawingContext {
+    /// The Core Graphics context for drawing operations
     public let cgContext: CGContext
+
+    /// The bounds rectangle for the drawing area
     public let bounds: CGRect
+
+    /// Whether the coordinate system is flipped (true on UIKit, varies on AppKit)
     public let isFlipped: Bool
 
     @MainActor

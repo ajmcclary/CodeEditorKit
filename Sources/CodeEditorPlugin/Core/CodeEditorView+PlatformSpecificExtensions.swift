@@ -165,6 +165,33 @@ extension CodeEditorView {
 
     // MARK: - CompletionViewControllerDelegate
 
+    /// Handles completion item selection from the completion view controller.
+    ///
+    /// This method is called when a user selects a completion item from the completion popup.
+    /// It extracts the appropriate text to insert and performs the text insertion at the
+    /// current cursor position, then hides the completion popup.
+    ///
+    /// ## Implementation Details
+    ///
+    /// - Extracts insert text from `CompletionItemAdapter` models
+    /// - Falls back to empty string for unrecognized item types
+    /// - Only inserts non-empty text to prevent unnecessary changes
+    /// - Automatically hides the completion popup after insertion
+    ///
+    /// ## Parameters
+    ///
+    /// - Parameter controller: The completion view controller (unused)
+    /// - Parameter item: The selected completion item containing text to insert
+    /// - Parameter movement: The text movement that triggered completion (unused)
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// // This method is typically called automatically by the completion system
+    /// // when users select items from the completion popup
+    /// ```
+    ///
+    /// - SeeAlso: `CompletionItemAdapter`, `hideCompletionPopup()`
     public func completionViewController(
         _: some CompletionViewControllerRepresentable,
         complete item: any CompletionItemView,

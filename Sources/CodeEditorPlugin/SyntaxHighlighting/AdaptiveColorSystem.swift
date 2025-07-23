@@ -191,9 +191,27 @@ public enum AdaptiveColorSystem {
         }
     }
 
+    /// Represents the severity level of code annotations for adaptive color selection
+    ///
+    /// Used by the adaptive color system to determine appropriate colors for different
+    /// types of code annotations, diagnostics, and user feedback elements.
     public enum AnnotationSeverity {
+        /// Informational annotation level
+        ///
+        /// Used for general information, hints, or non-critical notifications
+        /// that don't require immediate attention.
         case info
+
+        /// Warning annotation level
+        ///
+        /// Used for potential issues, deprecated usage, or situations that
+        /// may cause problems but don't prevent code execution.
         case warning
+
+        /// Error annotation level
+        ///
+        /// Used for critical issues, compilation errors, or problems that
+        /// prevent proper code execution and require immediate attention.
         case error
     }
 }

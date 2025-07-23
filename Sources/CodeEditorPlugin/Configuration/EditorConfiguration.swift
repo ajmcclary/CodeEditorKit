@@ -316,6 +316,9 @@ extension EditorConfiguration {
         // eventSystem is intentionally excluded from serialization
     }
 
+    /// Initializes an EditorConfiguration from a decoder
+    /// - Parameter decoder: The decoder to read configuration data from
+    /// - Throws: DecodingError if the configuration cannot be decoded
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.layout = try container.decode(Layout.self, forKey: .layout)
@@ -325,6 +328,9 @@ extension EditorConfiguration {
         self.eventSystem = nil // Always nil when decoding
     }
 
+    /// Encodes the EditorConfiguration to an encoder
+    /// - Parameter encoder: The encoder to write configuration data to
+    /// - Throws: EncodingError if the configuration cannot be encoded
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(layout, forKey: .layout)

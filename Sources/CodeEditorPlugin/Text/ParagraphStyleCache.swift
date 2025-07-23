@@ -32,6 +32,8 @@ public final class ParagraphStyleCache {
 
     // MARK: - Initialization
 
+    /// Creates a new paragraph style cache with the specified capacity.
+    /// - Parameter capacity: Maximum number of paragraph styles to cache (defaults to 50)
     public init(capacity: Int = 50) {
         self.capacity = capacity
     }

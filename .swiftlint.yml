@@ -35,7 +35,6 @@ disabled_rules:
   - function_body_length                    # Allow longer function bodies
   - large_tuple                            # Sometimes needed for state
   - line_length                            # Long lines sometimes needed
-  - missing_docs                           # Documentation is optional for internal code
   - multiple_closures_with_trailing_closure # Common SwiftUI pattern
   - override_in_extension                   # Platform-specific extensions require overrides
   - required_deinit                        # Only add when cleanup is needed
@@ -179,6 +178,9 @@ opt_in_rules:
   # Localization
   - nslocalizedstring_key
   - nslocalizedstring_require_bundle
+  
+  # Documentation
+  - missing_docs
 
 # ===========================
 # MARK: - Rule Configurations

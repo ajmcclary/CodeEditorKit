@@ -1,7 +1,9 @@
 import Foundation
 
 // Text provider types for predicate support
+/// Provides text content for a given range and context
 public typealias TextProvider = (NSRange, Any?) -> String?
+/// Provides snapshot of text content for a given range and context
 public typealias TextSnapshotProvider = (NSRange, Any?) -> String?
 
 extension String {

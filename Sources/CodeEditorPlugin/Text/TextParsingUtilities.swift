@@ -7,12 +7,18 @@ import Foundation
 public enum TextParsingUtilities {
     // MARK: - Supporting Types
 
+    /// Types of notation patterns for extracting programming language constructs.
     public enum NotationType {
-        case dot              // object.property
-        case bracket          // object[property]
-        case arrow            // object->property
-        case doubleColon      // namespace::property
-        case generic          // Type<Generic>
+        /// Dot notation for object property access (object.property).
+        case dot
+        /// Bracket notation for array or object access (object[property]).
+        case bracket
+        /// Arrow notation for pointer dereferencing (object->property).
+        case arrow
+        /// Double colon notation for namespace access (namespace::property).
+        case doubleColon
+        /// Generic type notation (Type<Generic>).
+        case generic
     }
 
     public enum LineEndingType: Sendable {
@@ -28,59 +34,99 @@ public enum TextParsingUtilities {
         }
     }
 
+    /// Detailed information about indentation patterns in a line of text.
     public struct IndentationInfo {
+        /// Number of space characters used for indentation.
         public let spaces: Int
+        /// Number of tab characters used for indentation.
         public let tabs: Int
+        /// Whether the line uses mixed indentation (both spaces and tabs).
         public let mixed: Bool
+        /// Calculated indentation level based on the style.
         public let level: Int
+        /// The detected indentation style for this line.
         public let indentationStyle: IndentationStyle
 
+        /// Indentation style categories for consistent formatting.
         public enum IndentationStyle {
+            /// Space-based indentation with specified width per level.
             case spaces(width: Int)
+            /// Tab-based indentation.
             case tabs
+            /// Mixed indentation using both spaces and tabs.
             case mixed
         }
 
+        /// Total indentation width assuming 4-space tab equivalents.
         public var totalIndentation: Int {
-            spaces + (tabs * 4) // Assume 4-space tab width
+            spaces + (tabs * 4)
         }
     }
 
+    /// A parsed token from text with type classification and language context.
     public struct TextToken {
+        /// The actual text content of this token.
         public let text: String
+        /// The location and length of this token in the source text.
         public let range: NSRange
+        /// The classification type of this token.
         public let type: TokenType
+        /// The programming language context, if applicable.
         public let language: Language?
 
+        /// Categories for classifying text tokens based on their syntactic role.
         public enum TokenType {
+            /// Programming language identifiers and variable names.
             case identifier
+            /// Language keywords and reserved words.
             case keyword
+            /// String literals and quoted text.
             case string
+            /// Numeric literals and constants.
             case number
+            /// Comments and documentation.
             case comment
+            /// Operators and special symbols.
             case `operator`
+            /// Punctuation marks and delimiters.
             case punctuation
+            /// Space and tab characters.
             case whitespace
+            /// Line break characters.
             case newline
         }
     }
 
+    /// A hierarchical node in a parsed syntax tree with type information and content.
     public struct SyntaxNode {
+        /// The classification type of this syntax node.
         public let type: NodeType
+        /// The range of this node within the source text.
         public let range: NSRange
+        /// The actual text content of this node.
         public let content: String
+        /// Child nodes contained within this node.
         public let children: [Self]
 
+        /// Categories for different types of syntax nodes in parsed text.
         public enum NodeType {
+            /// String literals with their delimiter character.
             case string(delimiter: Character)
+            /// Comments with style information.
             case comment(style: CommentStyle)
+            /// Block structures with opening and closing characters.
             case block(openChar: Character, closeChar: Character)
+            /// Programming language identifiers.
             case identifier
 
+            /// Different styles of comments found in programming languages.
             public enum CommentStyle {
-                case line(prefix: String)      // // or #
-                case block(start: String, end: String)  // /* */
-                case documentation(prefix: String)      // /// or ##
+                /// Single-line comments with prefix (// or #).
+                case line(prefix: String)
+                /// Multi-line block comments with start and end delimiters (/* */).
+                case block(start: String, end: String)
+                /// Documentation comments with special prefix (/// or ##).
+                case documentation(prefix: String)
             }
         }
     }
@@ -178,10 +224,14 @@ public enum TextParsingUtilities {
         return boundaries
     }
 
+    /// Different modes for detecting word boundaries in text.
     public enum BoundaryMode {
-        case standard       // Standard word boundaries
-        case camelCase     // Include camelCase boundaries
-        case programming   // Programming-specific boundaries
+        /// Standard word boundaries using whitespace and punctuation.
+        case standard
+        /// Include boundaries at camelCase transitions.
+        case camelCase
+        /// Programming-specific boundaries including underscores and operators.
+        case programming
     }
 
     /// Extracts line indentation with detailed analysis

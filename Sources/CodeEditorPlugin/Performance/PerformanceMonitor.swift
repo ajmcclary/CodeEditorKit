@@ -54,6 +54,7 @@ public actor PerformanceMonitor {
 
     // MARK: - Singleton (Deprecated)
 
+    /// Shared instance of the performance monitor (deprecated).
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern. Create an instance with PerformanceMonitor() and pass it to components that need it.")
     public static let shared = PerformanceMonitor()
 
@@ -65,6 +66,7 @@ public actor PerformanceMonitor {
 
     // MARK: - Initialization
 
+    /// Creates a new performance monitor instance.
     public init() {
         // Start periodic cleanup task
         Task {

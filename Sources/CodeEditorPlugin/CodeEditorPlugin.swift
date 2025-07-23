@@ -109,5 +109,7 @@ public struct CodeEditorPlugin {
 // MARK: - Essential Type Aliases
 
 // Main text view types (for backward compatibility)
+/// Legacy type alias for CodeEditorView
 public typealias CodeEditorTextView = CodeEditorView
+/// Legacy type alias for CodeEditorViewDelegate
 public typealias CodeEditorDelegate = CodeEditorViewDelegate

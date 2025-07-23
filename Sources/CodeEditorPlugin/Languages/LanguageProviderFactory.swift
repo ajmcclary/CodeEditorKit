@@ -247,18 +247,31 @@ public struct LanguageMetadata {
 
 /// Protocol for language-specific member completions
 public protocol LanguageMemberCompletions {
+    /// Creates member completion suggestions for a specific type
+    /// - Parameters:
+    ///   - targetType: The type to get completions for
+    ///   - filter: Filter string to narrow results
+    /// - Returns: Array of completion items
     func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel]
 }
 
 /// Universal context analysis result
 public struct UniversalContextAnalysisResult {
+    /// Type of completion being suggested
     public enum CompletionType {
+        /// Language keyword completion
         case keyword
+        /// Type name completion
         case type
+        /// Function or method completion
         case function
+        /// Literal value completion
         case literal
+        /// Member access completion
         case member
+        /// Parameter completion
         case parameter
+        /// General purpose completion
         case general
     }
 

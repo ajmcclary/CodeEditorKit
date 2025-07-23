@@ -57,6 +57,13 @@ public final class CompletionManager {
     /// Completion request statistics
     public private(set) var statistics = CompletionStatistics()
 
+    /// Creates a new completion manager with the specified configuration
+    /// - Parameters:
+    ///   - memoryMonitor: Memory monitor for tracking resource usage
+    ///   - cacheSize: Maximum number of cached completion results
+    ///   - cacheExpirationTime: Time before cached results expire (seconds)
+    ///   - enableCaching: Whether to enable result caching
+    ///   - debouncer: Optional debouncer for throttling completion requests
     public init(
         memoryMonitor: MemoryMonitor,
         cacheSize: Int = 100,
@@ -353,15 +360,25 @@ public final class CompletionManager {
 /// - SeeAlso: ``CompletionManager``
 @MainActor
 public final class CompletionStatistics {
+    /// Total number of completion requests processed
     public private(set) var totalRequests: Int = 0
+
+    /// Number of requests served from cache
     public private(set) var totalCacheHits: Int = 0
+
+    /// Number of requests that missed the cache
     public private(set) var totalCacheMisses: Int = 0
+
+    /// Average processing time for completion requests
     public private(set) var averageProcessingTime: TimeInterval = 0
+
+    /// Timestamp of the most recent completion request
     public private(set) var lastRequestTime: Date?
 
     private var processingTimes: [TimeInterval] = []
     private let maxProcessingTimeSamples = 100
 
+    /// Percentage of requests served from cache (0.0 to 1.0)
     public var cacheHitRate: Double {
         let totalCacheRequests = totalCacheHits + totalCacheMisses
         return totalCacheRequests > 0 ? Double(totalCacheHits) / Double(totalCacheRequests) : 0
@@ -393,6 +410,7 @@ public final class CompletionStatistics {
         totalCacheMisses = 0
     }
 
+    /// Resets all completion statistics to their initial values
     public func reset() {
         totalRequests = 0
         totalCacheHits = 0

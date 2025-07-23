@@ -18,6 +18,8 @@ public final class LayoutCoordinator {
 
     // MARK: - Initialization
 
+    /// Initializes a layout coordinator
+    /// - Parameter view: Optional view to coordinate layout for
     public init(view: PlatformView? = nil) {
         self.view = view
     }
@@ -156,17 +158,29 @@ public struct AnimationOptions: OptionSet, Sendable {
 
 /// Context information for layout operations
 public struct LayoutContext {
+    /// The bounds rectangle for layout calculations
     public let bounds: CGRect
+    /// Safe area insets to account for in layout
     public let safeAreaInsets: EdgeInsets
+    /// Editor configuration affecting layout
     public let configuration: EditorConfiguration
+    /// Whether the layout is right-to-left
     public let isRTL: Bool
 
     #if canImport(UIKit)
+    /// Platform-specific edge insets type for UIKit
     public typealias EdgeInsets = UIEdgeInsets
     #else
+    /// Platform-specific edge insets type for AppKit
     public typealias EdgeInsets = NSEdgeInsets
     #endif
 
+    /// Initializes a layout context
+    /// - Parameters:
+    ///   - bounds: The bounds rectangle for layout calculations
+    ///   - safeAreaInsets: Safe area insets to account for in layout
+    ///   - configuration: Editor configuration affecting layout
+    ///   - isRTL: Whether the layout is right-to-left
     public init(
         bounds: CGRect,
         safeAreaInsets: EdgeInsets = EdgeInsets(),
@@ -198,6 +212,7 @@ extension UIEdgeInsets {
 }
 #else
 extension NSEdgeInsets {
+    /// Zero edge insets constant for AppKit
     public static let zero = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
 }
 #endif

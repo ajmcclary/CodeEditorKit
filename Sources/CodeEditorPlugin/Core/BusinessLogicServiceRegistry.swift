@@ -211,13 +211,18 @@ public final class BusinessLogicServiceRegistry {
 /// Protocol for services that support cache management
 @MainActor
 public protocol CacheableService {
+    /// Clears all cached data to free up memory
     func clearCache()
 }
 
 /// Protocol for services that support state persistence
 @MainActor
 public protocol PersistentService {
+    /// Saves the current service state to a dictionary
+    /// - Returns: Dictionary containing the serialized state
     func saveState() -> [String: Any]
+    /// Restores service state from a dictionary
+    /// - Parameter data: Dictionary containing the serialized state
     func restoreState(from data: [String: Any])
 }
 
@@ -312,41 +317,49 @@ extension BusinessLogicServiceRegistry {
 /// - Note: Consider injecting services directly instead of using this global accessor
 @MainActor
 public enum BusinessLogic {
+    /// Shared service registry instance (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var services: BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry.shared
     }
 
+    /// Direct access to line number calculation service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var lineNumbers: LineNumberCalculationService {
         services.lineNumberCalculationService
     }
 
+    /// Direct access to gutter sizing service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var gutterSizing: GutterSizingService {
         services.gutterSizingService
     }
 
+    /// Direct access to code folding service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var codeFolding: CodeFoldingCoordinatorService {
         services.codeFoldingCoordinatorService
     }
 
+    /// Direct access to editor layout service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var layout: EditorLayoutService {
         services.editorLayoutService
     }
 
+    /// Direct access to syntax highlighting service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var syntaxHighlighting: SyntaxHighlightingService {
         services.syntaxHighlightingService
     }
 
+    /// Direct access to language detection service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var languageDetection: LanguageDetectionService {
         services.languageDetectionService
     }
 
+    /// Direct access to text editing service (deprecated)
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var textEditing: TextEditingService {
         services.textEditingService

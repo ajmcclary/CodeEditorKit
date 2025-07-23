@@ -16,13 +16,26 @@ import UIKit
 public final class GutterViewModel {
     // MARK: - Types
 
+    /// Represents the current display state of the gutter
     public struct GutterDisplayState {
+        /// Current width of the gutter in points
         public var currentWidth: CGFloat
+        /// Recommended width based on content and configuration
         public var recommendedWidth: CGFloat
+        /// Whether width changes should be animated
         public var shouldAnimate: Bool
+        /// Whether the gutter is currently visible
         public var isVisible: Bool
+        /// Whether the gutter needs to be redrawn
         public var needsRedraw: Bool
 
+        /// Initializes gutter display state with default values
+        /// - Parameters:
+        ///   - currentWidth: Current width of the gutter
+        ///   - recommendedWidth: Recommended width based on content
+        ///   - shouldAnimate: Whether width changes should be animated
+        ///   - isVisible: Whether the gutter is visible
+        ///   - needsRedraw: Whether the gutter needs to be redrawn
         public init(
             currentWidth: CGFloat = 0,
             recommendedWidth: CGFloat = 0,
@@ -38,15 +51,32 @@ public final class GutterViewModel {
         }
     }
 
+    /// Information needed to display a line number in the gutter
     public struct LineNumberDisplayInfo {
+        /// The line number to display
         public let lineNumber: Int
+        /// Y position of the line number in gutter coordinates
         public let yPosition: CGFloat
+        /// Whether the line number is currently visible
         public let isVisible: Bool
+        /// Whether the line is currently selected
         public let isSelected: Bool
+        /// Whether the line has a breakpoint set
         public let hasBreakpoint: Bool
+        /// Whether the line has an error or diagnostic
         public let hasError: Bool
+        /// Optional fold control layout information
         public let foldControlLayout: CodeFoldingCoordinatorService.FoldControlLayout?
 
+        /// Initializes line number display information
+        /// - Parameters:
+        ///   - lineNumber: The line number to display
+        ///   - yPosition: Y position in gutter coordinates
+        ///   - isVisible: Whether the line number is currently visible
+        ///   - isSelected: Whether the line is selected
+        ///   - hasBreakpoint: Whether the line has a breakpoint
+        ///   - hasError: Whether the line has an error
+        ///   - foldControlLayout: Optional fold control layout information
         public init(
             lineNumber: Int,
             yPosition: CGFloat,
@@ -66,12 +96,23 @@ public final class GutterViewModel {
         }
     }
 
+    /// Tracks user interaction state with the gutter
     public struct GutterInteractionState {
+        /// Line number currently being hovered over
         public var hoveredLineNumber: Int?
+        /// Set of currently selected line numbers
         public var selectedLineNumbers: Set<Int>
+        /// Whether the user is currently dragging in the gutter
         public var isDragging: Bool
+        /// Location of the last click event in the gutter
         public var lastClickLocation: CGPoint?
 
+        /// Initializes gutter interaction state
+        /// - Parameters:
+        ///   - hoveredLineNumber: Line number currently being hovered
+        ///   - selectedLineNumbers: Set of selected line numbers
+        ///   - isDragging: Whether the user is currently dragging
+        ///   - lastClickLocation: Location of the last click
         public init(
             hoveredLineNumber: Int? = nil,
             selectedLineNumbers: Set<Int> = [],
@@ -87,10 +128,15 @@ public final class GutterViewModel {
 
     // MARK: - Published Properties
 
+    /// Current display state of the gutter
     public var displayState: GutterDisplayState
+    /// Current user interaction state with the gutter
     public var interactionState: GutterInteractionState
+    /// Array of currently visible line number display information
     public var visibleLineNumbers: [LineNumberDisplayInfo] = []
+    /// Current editor configuration settings
     public var configuration: EditorConfiguration
+    /// Current frame of the gutter view
     public var frame: CGRect = .zero
 
     // MARK: - Private Properties
@@ -133,6 +179,10 @@ public final class GutterViewModel {
 
     // MARK: - Initialization
 
+    /// Initializes the gutter view model
+    /// - Parameters:
+    ///   - configuration: Editor configuration
+    ///   - businessLogicServices: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
         businessLogicServices: BusinessLogicServiceRegistry
@@ -344,12 +394,23 @@ public final class GutterViewModel {
 
 // MARK: - Supporting Types
 
+/// Styling information for line number display
 public struct LineNumberStyle {
+    /// Font used for displaying line numbers
     public let font: PlatformFont
+    /// Text color for line numbers
     public let textColor: PlatformColor
+    /// Background color for line number area
     public let backgroundColor: PlatformColor
+    /// Text alignment for line numbers
     public let alignment: NSTextAlignment
 
+    /// Initializes line number style
+    /// - Parameters:
+    ///   - font: Font to use for line numbers
+    ///   - textColor: Color for line number text
+    ///   - backgroundColor: Background color for line numbers
+    ///   - alignment: Text alignment for line numbers
     public init(
         font: PlatformFont,
         textColor: PlatformColor,
@@ -482,6 +543,7 @@ extension GutterViewModel {
     // MARK: - Debugging Support
 
     /// Sets breakpoints for debugging integration
+    /// - Parameter lines: Set of line numbers that have breakpoints
     public func setBreakpoints(_ lines: Set<Int>) {
         breakpoints = lines
         updateVisibleLineNumbers()

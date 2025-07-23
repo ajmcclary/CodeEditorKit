@@ -16,14 +16,26 @@ import UIKit
 public final class CompletionViewModel {
     // MARK: - Published Properties
 
+    /// Current state of the completion popup
     public var popupState: CompletionPopupState
+
+    /// All available completion items
     public var completionItems: [CompletionItemModel] = []
+
+    /// Completion items after applying current filter
     public var filteredItems: [CompletionItemModel] = []
+
+    /// Current completion context information
     public var currentContext: CompletionContext?
+
+    /// Editor configuration settings
     public var configuration: EditorConfiguration
 
     // Filter and search state
+    /// Current filter text for narrowing completion results
     public var filterText: String = ""
+
+    /// Whether to show detailed completion information
     public var showDetailedView: Bool = false
 
     // MARK: - Private Properties
@@ -54,6 +66,10 @@ public final class CompletionViewModel {
 
     // MARK: - Initialization
 
+    /// Creates a new completion view model
+    /// - Parameters:
+    ///   - configuration: Editor configuration settings
+    ///   - businessLogicServices: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
         businessLogicServices: BusinessLogicServiceRegistry

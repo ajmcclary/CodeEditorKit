@@ -12,17 +12,27 @@ import UIKit
 @MainActor
 public protocol UnifiedTextViewProtocol {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// The text storage associated with this text view
     var textStorage: NSTextStorage? { get }
+    /// The layout manager responsible for text layout
     var layoutManager: NSLayoutManager? { get }
+    /// The text container that defines the text layout area
     var textContainer: NSTextContainer? { get }
+    /// The origin point of the text container
     var textContainerOrigin: NSPoint { get }
+    /// The currently visible rectangle of the text view
     var visibleRect: NSRect { get }
     #else
     // For UIKit, these are non-optional, but we'll handle them differently
+    /// The text storage associated with this text view
     var textStorage: NSTextStorage { get }
+    /// The layout manager responsible for text layout
     var layoutManager: NSLayoutManager { get }
+    /// The text container that defines the text layout area
     var textContainer: NSTextContainer { get }
+    /// The content offset for scrolling
     var contentOffset: CGPoint { get }
+    /// The bounds of the text view
     var bounds: CGRect { get }
     #endif
 }

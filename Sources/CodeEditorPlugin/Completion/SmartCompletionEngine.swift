@@ -539,27 +539,49 @@ public struct CompletionSelection: Sendable {
 
 /// Smart completion settings
 public struct SmartCompletionSettings {
+    /// Maximum number of completions to show
     public var maxCompletions: Int = 50
+
+    /// Maximum number of smart suggestions to provide
     public var maxSmartSuggestions: Int = 10
+
+    /// Time before cached completions expire (in seconds)
     public var cacheExpirationTime: TimeInterval = 300 // 5 minutes
+
+    /// Minimum frequency threshold for promoting suggestions
     public var frequencyThreshold: Int = 3
+
+    /// Whether to enable machine learning features
     public var enableMachineLearning: Bool = true
+
+    /// Whether to enable pattern analysis
     public var enablePatternAnalysis: Bool = true
 }
 
 /// Completion metrics
 public struct CompletionMetrics {
+    /// Total number of completion requests made
     public var totalRequests: Int = 0
+
+    /// Total number of completions selected by user
     public var totalSelections: Int = 0
+
+    /// Number of times cache provided results
     public var cacheHits: Int = 0
+
+    /// Number of times cache was empty
     public var cacheMisses: Int = 0
+
+    /// Average time to generate completions
     public var averageCompletionTime: TimeInterval = 0
 
+    /// Percentage of requests served from cache
     public var cacheHitRate: Double {
         let total = cacheHits + cacheMisses
         return total > 0 ? Double(cacheHits) / Double(total) : 0
     }
 
+    /// Percentage of completions that were selected
     public var selectionRate: Double {
         totalRequests > 0 ? Double(totalSelections) / Double(totalRequests) : 0
     }

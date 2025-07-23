@@ -225,10 +225,28 @@ public struct FindOptions: OptionSet, Sendable {
 /// Default implementations for common functionality
 @MainActor
 extension CodeEditorAPI {
+    /// Subscribe to editor events with the default implementation.
+    ///
+    /// This default implementation provides a convenient way to subscribe
+    /// to events using the synchronous API of the event publisher.
+    ///
+    /// - Parameter handler: The event handler to subscribe
+    ///
+    /// - Note: This is a default implementation. Types conforming to `CodeEditorAPI`
+    ///   can override this method if they need custom subscription behavior.
     public func subscribe(_ handler: EditorEventHandler) {
         eventPublisher.subscribeSync(handler)
     }
 
+    /// Unsubscribe from editor events with the default implementation.
+    ///
+    /// This default implementation provides a convenient way to unsubscribe
+    /// from events using the synchronous API of the event publisher.
+    ///
+    /// - Parameter handler: The event handler to unsubscribe
+    ///
+    /// - Note: This is a default implementation. Types conforming to `CodeEditorAPI`
+    ///   can override this method if they need custom unsubscription behavior.
     public func unsubscribe(_ handler: EditorEventHandler) {
         eventPublisher.unsubscribeSync(handler)
     }

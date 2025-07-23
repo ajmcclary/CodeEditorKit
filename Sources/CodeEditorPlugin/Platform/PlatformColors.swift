@@ -172,6 +172,7 @@ public enum PlatformColors {
 
     // MARK: - Basic Colors
 
+    /// Pure black color
     public static var black: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.black
@@ -180,6 +181,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// Pure white color
     public static var white: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.white
@@ -188,6 +190,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// Fully transparent color
     public static var clear: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.clear
@@ -198,6 +201,7 @@ public enum PlatformColors {
 
     // MARK: - System Colors
 
+    /// System red color that adapts to appearance changes
     public static var systemRed: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemRed
@@ -206,6 +210,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System blue color that adapts to appearance changes
     public static var systemBlue: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemBlue
@@ -214,6 +219,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System green color that adapts to appearance changes
     public static var systemGreen: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemGreen
@@ -222,6 +228,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System purple color that adapts to appearance changes
     public static var systemPurple: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemPurple
@@ -230,6 +237,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System orange color that adapts to appearance changes
     public static var systemOrange: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemOrange
@@ -238,6 +246,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System teal color that adapts to appearance changes
     public static var systemTeal: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemTeal
@@ -246,6 +255,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System indigo color that adapts to appearance changes
     public static var systemIndigo: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemIndigo
@@ -254,6 +264,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System pink color that adapts to appearance changes
     public static var systemPink: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemPink
@@ -262,6 +273,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System brown color that adapts to appearance changes
     public static var systemBrown: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemBrown
@@ -270,6 +282,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System yellow color that adapts to appearance changes
     public static var systemYellow: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemYellow
@@ -278,6 +291,7 @@ public enum PlatformColors {
         #endif
     }
 
+    /// System gray color that adapts to appearance changes
     public static var systemGray: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemGray

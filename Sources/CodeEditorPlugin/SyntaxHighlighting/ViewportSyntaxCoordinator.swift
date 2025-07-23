@@ -248,7 +248,9 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
 
 /// Direction for preloading highlighting
 public enum ScrollDirection {
+    /// Scrolling upward (toward beginning of document)
     case up
+    /// Scrolling downward (toward end of document)
     case down
 }
 

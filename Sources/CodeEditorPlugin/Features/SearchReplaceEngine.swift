@@ -420,23 +420,37 @@ public class SearchReplaceEngine: ObservableObject {
 
 /// Search result information
 public struct SearchResult {
+    /// The zero-based index of this search result in the results array
     public let index: Int
+    /// The range in the document where this match was found
     public var range: NSRange
+    /// The actual text that matched the search query
     public let matchedText: String
+    /// The one-based line number where this match was found
     public let lineNumber: Int
+    /// The surrounding context text for this match
     public let context: String
 }
 
 /// Search options configuration
 public struct SearchOptions {
+    /// Whether to perform case-sensitive matching
     public var caseSensitive = false
+    /// Whether to match whole words only
     public var wholeWord = false
+    /// Whether to use regular expression patterns
     public var useRegularExpression = false
+    /// Whether to wrap around to the beginning when reaching the end
     public var wrapAround = true
+    /// Whether to search backwards from the current position
     public var searchBackward = false
+    /// Whether to highlight all search results in the editor
     public var highlightResults = true
+    /// Whether to flash the current search result briefly
     public var flashResult = true
+    /// The color used to highlight search results
     public var highlightColor = PlatformColor.yellow.withAlphaComponent(0.3)
+    /// The color used to flash the current search result
     public var flashColor = PlatformColor.systemBlue.withAlphaComponent(0.5)
 
     var searchOptions: String.CompareOptions {
@@ -460,10 +474,15 @@ public struct SearchOptions {
 
 /// Search statistics
 public struct SearchStatistics {
+    /// The total number of matches found in the search
     public var totalMatches = 0
+    /// The number of lines that contain at least one match
     public var linesWithMatches = 0
+    /// The line number of the first match (1-based)
     public var firstMatchLine = 0
+    /// The line number of the last match (1-based)
     public var lastMatchLine = 0
+    /// The timestamp when the search was performed
     public var searchTime = Date()
 }
 

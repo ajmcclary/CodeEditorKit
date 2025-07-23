@@ -379,9 +379,13 @@ public enum TextMetricsCalculator {
 
 // MARK: - Supporting Types
 
+/// Represents the rendering complexity of text content
 public enum RenderingComplexity {
+    /// Simple text with minimal formatting
     case low
+    /// Moderate complexity with some formatting
     case medium
+    /// Complex text with rich formatting and attributes
     case high
 }
 
@@ -417,8 +421,12 @@ extension PlatformFont {
     }
 }
 
+/// Metrics information for a font
 public struct FontMetrics {
+    /// Height of a single line in this font
     public let lineHeight: CGFloat
+    /// Average width of characters in this font
     public let averageCharacterWidth: CGFloat
+    /// Whether this is a monospace font
     public let isMonospace: Bool
 }

@@ -10,9 +10,16 @@ import AppKit
 extension PlatformCapabilities {
     /// TextKit version and feature support
     public struct TextKitCapabilities {
+        /// Whether TextKit 2 is available on this platform/OS version
         public let supportsTextKit2: Bool
+
+        /// Whether TextKit 2 is the preferred text rendering system
         public let preferTextKit2: Bool
+
+        /// Whether TextKit 2 layout fragments are supported
         public let supportsTextLayoutFragments: Bool
+
+        /// Whether advanced rendering attributes are supported
         public let supportsRenderingAttributes: Bool
     }
 
@@ -180,6 +187,7 @@ extension PlatformCapabilities {
         /// Whether to enable background text parsing
         public var enableBackgroundParsing: Bool = true
 
+        /// Creates default text rendering optimization settings
         public init() {}
     }
 }

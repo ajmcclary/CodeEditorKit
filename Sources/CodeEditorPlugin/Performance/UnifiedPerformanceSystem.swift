@@ -7,6 +7,7 @@ public final class UnifiedPerformanceSystem {
 
     // MARK: - Singleton
 
+    /// Shared instance of the unified performance system.
     public static let shared = UnifiedPerformanceSystem()
 
     private init() {}
@@ -436,6 +437,7 @@ public enum PerformanceMetricType: String, CaseIterable {
     }
 }
 
+/// Represents a single performance metric measurement.
 public struct PerformanceMetric {
     let id: UUID
     let type: PerformanceMetricType
@@ -446,6 +448,7 @@ public struct PerformanceMetric {
     let errorDescription: String?
 }
 
+/// Information about an active performance operation.
 public struct OperationInfo {
     let id: UUID
     let type: PerformanceMetricType
@@ -453,6 +456,7 @@ public struct OperationInfo {
     let startMemory: UInt64
 }
 
+/// Analysis of collected metrics for a specific metric type.
 public struct MetricAnalysis {
     let count: Int
     let averageDuration: TimeInterval
@@ -463,6 +467,7 @@ public struct MetricAnalysis {
     let memoryImpact: Int64
 }
 
+/// Comprehensive performance insights and analysis.
 public struct UnifiedPerformanceInsights {
     var metricAnalyses: [PerformanceMetricType: MetricAnalysis] = [:]
     var issues: [PerformanceIssue] = []
@@ -470,6 +475,7 @@ public struct UnifiedPerformanceInsights {
     var overallHealth: Double = 100.0
 }
 
+/// Represents a performance issue that needs attention.
 public struct PerformanceIssue {
     let type: PerformanceMetricType
     let severity: PerformanceIssueSeverity
@@ -477,12 +483,17 @@ public struct PerformanceIssue {
     let metric: String
 }
 
+/// Severity levels for performance issues.
 public enum PerformanceIssueSeverity {
+    /// Informational issue that doesn't require immediate action.
     case info
+    /// Warning issue that should be addressed.
     case warning
+    /// Critical issue that requires immediate attention.
     case critical
 }
 
+/// A recommendation for improving performance.
 public struct PerformanceRecommendation {
     let title: String
     let description: String
@@ -490,17 +501,27 @@ public struct PerformanceRecommendation {
     let priority: RecommendationPriority
 }
 
+/// Actions that can be taken to address performance recommendations.
 public enum RecommendationAction {
+    /// Configure a specific feature with the given parameters.
     case configureFeature(String, Any)
+    /// Enable a specific feature.
     case enableFeature(String)
+    /// Disable a specific feature.
     case disableFeature(String)
+    /// Apply a performance profile.
     case applyProfile(PerformanceProfile)
 }
 
+/// Priority levels for performance recommendations.
 public enum RecommendationPriority {
+    /// Low priority recommendation.
     case low
+    /// Medium priority recommendation.
     case medium
+    /// High priority recommendation.
     case high
+    /// Critical priority recommendation.
     case critical
 }
 
@@ -529,6 +550,7 @@ public struct PerformanceProfile: Sendable {
     }
 }
 
+/// Current status of the performance system.
 public struct PerformanceStatus {
     let activeOperations: Int
     let healthScore: Double

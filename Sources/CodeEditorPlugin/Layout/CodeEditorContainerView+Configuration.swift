@@ -10,6 +10,8 @@ import UIKit
 extension CodeEditorContainerView {
     // MARK: - Configuration
 
+    /// Applies the current configuration to all editor components
+    /// Updates text view, gutter, minimap, and other UI elements based on configuration changes
     public func applyConfiguration() {
         // Prevent re-entrant calls
         guard !isApplyingConfiguration else { return }

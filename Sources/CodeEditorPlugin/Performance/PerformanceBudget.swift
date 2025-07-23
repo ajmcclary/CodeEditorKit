@@ -212,6 +212,7 @@ public actor PerformanceBudgetReporter {
         category: "Budget"
     )
 
+    /// Creates a new performance budget instance.
     public init() {}
 
     /// Record a measurement

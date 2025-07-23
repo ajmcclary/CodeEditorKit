@@ -13,13 +13,30 @@ import UIKit
 public final class GutterSizingService {
     // MARK: - Types
 
+    /// Result of gutter width calculation.
+    ///
+    /// `SizingResult` provides comprehensive information about the calculated
+    /// gutter dimensions, including optimal, minimum, and maximum widths.
     public struct SizingResult {
+        /// The calculated optimal width for the gutter
         public let optimalWidth: CGFloat
+        /// The minimum acceptable gutter width
         public let minimumWidth: CGFloat
+        /// The maximum allowable gutter width
         public let maximumWidth: CGFloat
+        /// The recommended width after applying optimizations
         public let recommendedWidth: CGFloat
+        /// Whether the gutter width should be updated
         public let shouldUpdate: Bool
 
+        /// Creates a new sizing result.
+        ///
+        /// - Parameters:
+        ///   - optimalWidth: The calculated optimal width
+        ///   - minimumWidth: The minimum acceptable width
+        ///   - maximumWidth: The maximum allowable width
+        ///   - recommendedWidth: The recommended width after optimizations
+        ///   - shouldUpdate: Whether the width should be updated
         public init(
             optimalWidth: CGFloat,
             minimumWidth: CGFloat,
@@ -35,13 +52,30 @@ public final class GutterSizingService {
         }
     }
 
+    /// Constraints for gutter sizing calculations.
+    ///
+    /// `SizingConstraints` defines the parameters and limits used when
+    /// calculating gutter dimensions, allowing customization of sizing behavior.
     public struct SizingConstraints {
+        /// Minimum number of digits to display (ensures consistent width)
         public let minimumDigits: Int
+        /// Maximum number of digits to accommodate
         public let maximumDigits: Int
+        /// Base padding around line numbers
         public let basePadding: CGFloat
+        /// Additional padding for special cases
         public let extraPadding: CGFloat
+        /// Whether the gutter can resize dynamically
         public let allowDynamicResizing: Bool
 
+        /// Creates new sizing constraints.
+        ///
+        /// - Parameters:
+        ///   - minimumDigits: Minimum digits to display (default: 3)
+        ///   - maximumDigits: Maximum digits to accommodate (default: 10)
+        ///   - basePadding: Base padding around numbers (default: 16.0)
+        ///   - extraPadding: Additional padding (default: 0.0)
+        ///   - allowDynamicResizing: Enable dynamic resizing (default: true)
         public init(
             minimumDigits: Int = 3,
             maximumDigits: Int = 10,
@@ -71,6 +105,9 @@ public final class GutterSizingService {
 
     // MARK: - Initialization
 
+    /// Creates a new gutter sizing service.
+    ///
+    /// - Parameter lineNumberCalculationService: Service for line number calculations
     public init(lineNumberCalculationService: LineNumberCalculationService) {
         self.lineNumberCalculationService = lineNumberCalculationService
     }
@@ -240,11 +277,20 @@ public final class GutterSizingService {
 
 // MARK: - Supporting Types
 
+/// Types of content that affect gutter sizing.
+///
+/// `ContentType` categorizes different types of text content, allowing
+/// the gutter sizing service to optimize dimensions based on content characteristics.
 public enum ContentType {
+    /// Source code content (requires standard gutter)
     case code
+    /// Markdown content (typically fewer visible line numbers)
     case markdown
+    /// JSON content (may be deeply nested)
     case json
+    /// Log file content (can have many lines)
     case log
+    /// Plain text content (minimal gutter needs)
     case plainText
 }
 

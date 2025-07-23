@@ -319,22 +319,35 @@ private final class PerformanceAlertManager {
 
 /// Performance summary data
 public struct PerformanceSummary {
+    /// Average time taken for processing operations.
     public let averageProcessingTime: TimeInterval
+    /// Peak processing time recorded.
     public let peakProcessingTime: TimeInterval
+    /// Total number of operations performed.
     public let totalOperations: Int
+    /// Cache hit rate as a percentage (0-1).
     public let cacheHitRate: Double
+    /// Total number of errors encountered.
     public let errorCount: Int
 }
 
 /// Detailed performance report
 public struct DetailedPerformanceReport {
+    /// Timestamp when this report was generated.
     public let timestamp: Date
+    /// Overall performance status assessment.
     public let overallStatus: InsightsPerformanceStatus
+    /// Detailed performance metrics.
     public let performanceMetrics: PerformanceReport
+    /// TextKit-specific performance metrics.
     public let textKitMetrics: PerformanceSummary
+    /// Current memory usage statistics.
     public let memoryStatus: MemoryStatistics
+    /// List of currently active performance issues.
     public let activeIssues: [InsightsPerformanceIssue]
+    /// Recommendations for improving performance.
     public let recommendations: [InsightsPerformanceRecommendation]
+    /// Historical performance trends.
     public let historicalTrends: [PerformanceTrend]
 }
 

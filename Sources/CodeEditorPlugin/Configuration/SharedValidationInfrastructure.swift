@@ -9,6 +9,7 @@ public enum ConfigurationValidationEngine {
 
     /// Alias for validation results from ConfigurationValidationUtilities
     public typealias ValidationResult<T> = ConfigurationValidationUtilities.ValidationResult<T>
+    /// Alias for validation issues from ConfigurationValidationUtilities
     public typealias ValidationIssue = ConfigurationValidationUtilities.ValidationIssue
 
     // MARK: - Validation Delegation
@@ -191,16 +192,23 @@ public enum CodableValidationHelpers {
 
 /// Shared builder pattern infrastructure to reduce boilerplate across configuration builders
 public protocol ConfigurationBuilderProtocol {
+    /// The configuration type that this builder manages
     associatedtype ConfigurationType
 
+    /// The configuration instance being built
     var configuration: ConfigurationType { get set }
 
     /// Applies a mutation to the configuration and returns self for chaining
+    /// - Parameter mutation: A closure that modifies the configuration
+    /// - Returns: Self for method chaining
     func with(_ mutation: (inout ConfigurationType) -> Void) -> Self
 }
 
 /// Default implementation of configuration builder pattern
 extension ConfigurationBuilderProtocol {
+    /// Default implementation of the builder pattern with method
+    /// - Parameter mutation: A closure that modifies the configuration
+    /// - Returns: Self for method chaining
     @discardableResult
     public func with(_ mutation: (inout ConfigurationType) -> Void) -> Self {
         var copy = self

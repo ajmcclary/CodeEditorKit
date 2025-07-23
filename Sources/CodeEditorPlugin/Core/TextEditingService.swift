@@ -18,6 +18,7 @@ public final class TextEditingService {
 
     // MARK: - Initialization
 
+    /// Creates a new text editing service
     public init() {}
 
     // MARK: - Text Validation
@@ -295,13 +296,20 @@ public final class TextEditingService {
 
 // MARK: - Supporting Types
 
+/// Result of text validation operation
 public enum TextValidationResult {
+    /// Text is valid and safe to use
     case valid(sanitizedText: String)
+    /// Text is invalid for the given reason
     case invalid(reason: TextValidationError)
 }
 
+/// Reasons why text validation might fail
 public enum TextValidationError {
+    /// Text contains binary content that cannot be displayed
     case binaryContent
+    /// Text exceeds the maximum allowed length
     case exceedsMaxLength(Int)
+    /// Text has invalid encoding
     case invalidEncoding
 }

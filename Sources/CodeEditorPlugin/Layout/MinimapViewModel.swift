@@ -16,15 +16,32 @@ import UIKit
 public final class MinimapViewModel {
     // MARK: - Types
 
+    /// Represents the current display state of the minimap
     public struct MinimapState {
+        /// Whether the minimap is currently visible
         public var isVisible: Bool
+        /// Current frame of the minimap view
         public var frame: CGRect
+        /// Size of the minimap content area
         public var contentSize: CGSize
+        /// Currently visible range of text in the minimap
         public var visibleRange: NSRange
+        /// Current vertical scroll position
         public var scrollPosition: CGFloat
+        /// Whether the minimap needs to be redrawn
         public var needsRedraw: Bool
+        /// Scale factor for minimap rendering
         public var scale: CGFloat
 
+        /// Initializes minimap state with default values
+        /// - Parameters:
+        ///   - isVisible: Whether the minimap is visible
+        ///   - frame: Current frame of the minimap
+        ///   - contentSize: Size of the minimap content
+        ///   - visibleRange: Currently visible text range
+        ///   - scrollPosition: Current scroll position
+        ///   - needsRedraw: Whether the minimap needs to be redrawn
+        ///   - scale: Scale factor for minimap rendering
         public init(
             isVisible: Bool = false,
             frame: CGRect = .zero,
@@ -44,14 +61,29 @@ public final class MinimapViewModel {
         }
     }
 
+    /// Information needed to render a single line in the minimap
     public struct MinimapRenderInfo {
+        /// The line number being rendered
         public let lineNumber: Int
+        /// Y position of the line in minimap coordinates
         public let yPosition: CGFloat
+        /// Height of the line in the minimap
         public let height: CGFloat
+        /// Text content of the line
         public let content: String
+        /// Optional highlight color for the line
         public let highlightColor: PlatformColor?
+        /// Whether the line is currently visible
         public let isVisible: Bool
 
+        /// Initializes minimap render information for a line
+        /// - Parameters:
+        ///   - lineNumber: The line number to render
+        ///   - yPosition: Y position in minimap coordinates
+        ///   - height: Height of the line in the minimap
+        ///   - content: Text content of the line
+        ///   - highlightColor: Optional highlight color for the line
+        ///   - isVisible: Whether the line is currently visible
         public init(
             lineNumber: Int,
             yPosition: CGFloat,
@@ -69,12 +101,23 @@ public final class MinimapViewModel {
         }
     }
 
+    /// Tracks user interaction state with the minimap
     public struct MinimapInteraction {
+        /// Whether the user is currently dragging in the minimap
         public var isDragging: Bool
+        /// Starting position of a drag gesture
         public var dragStartPosition: CGPoint?
+        /// Current hover position in the minimap
         public var hoveredPosition: CGFloat?
+        /// Whether the minimap is currently being hovered
         public var isHovered: Bool
 
+        /// Initializes minimap interaction state
+        /// - Parameters:
+        ///   - isDragging: Whether the user is currently dragging
+        ///   - dragStartPosition: Starting position of a drag gesture
+        ///   - hoveredPosition: Current hover position
+        ///   - isHovered: Whether the minimap is currently hovered
         public init(
             isDragging: Bool = false,
             dragStartPosition: CGPoint? = nil,
@@ -88,11 +131,20 @@ public final class MinimapViewModel {
         }
     }
 
+    /// Represents the viewport indicator in the minimap
     public struct ViewportIndicator {
+        /// Frame of the viewport indicator overlay
         public let frame: CGRect
+        /// Whether the viewport indicator is visible
         public let isVisible: Bool
+        /// Opacity level of the viewport indicator
         public let opacity: CGFloat
 
+        /// Initializes a viewport indicator
+        /// - Parameters:
+        ///   - frame: Frame of the viewport indicator
+        ///   - isVisible: Whether the indicator is visible
+        ///   - opacity: Opacity of the indicator
         public init(frame: CGRect, isVisible: Bool = true, opacity: CGFloat = 0.3) {
             self.frame = frame
             self.isVisible = isVisible
@@ -102,15 +154,23 @@ public final class MinimapViewModel {
 
     // MARK: - Published Properties
 
+    /// Current state of the minimap display
     public var minimapState: MinimapState
+    /// Current user interaction state with the minimap
     public var interaction: MinimapInteraction
+    /// Array of render information for visible lines
     public var renderInfo: [MinimapRenderInfo] = []
+    /// Optional viewport indicator showing current visible area
     public var viewportIndicator: ViewportIndicator?
+    /// Current editor configuration settings
     public var configuration: EditorConfiguration
 
     // Rendering preferences
+    /// Whether to show syntax highlighting in the minimap
     public var showSyntaxHighlighting: Bool = true
+    /// Whether to show the viewport indicator overlay
     public var showViewportIndicator: Bool = true
+    /// Whether to animate scrolling transitions
     public var animateScrolling: Bool = true
 
     // MARK: - Private Properties
@@ -146,6 +206,10 @@ public final class MinimapViewModel {
 
     // MARK: - Initialization
 
+    /// Initializes the minimap view model
+    /// - Parameters:
+    ///   - configuration: Editor configuration
+    ///   - businessLogicServices: Registry of business logic services
     public init(
         configuration: EditorConfiguration,
         businessLogicServices: BusinessLogicServiceRegistry

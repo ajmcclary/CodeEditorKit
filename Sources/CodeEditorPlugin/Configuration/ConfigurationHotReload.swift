@@ -33,6 +33,12 @@ public final class ConfigurationHotReload: ObservableObject {
 
     // MARK: - Initialization
 
+    /// Creates a new configuration hot reload instance
+    /// 
+    /// Initializes the hot reload system with the specified configuration and sets up
+    /// default validation rules for common configuration constraints.
+    /// 
+    /// - Parameter configuration: The initial configuration to use (defaults to `.default`)
     public init(configuration: EditorConfiguration = .default) {
         self.configuration = configuration
         addToHistory(configuration)
@@ -41,7 +47,13 @@ public final class ConfigurationHotReload: ObservableObject {
 
     // MARK: - Configuration Updates
 
-    /// Update configuration
+    /// Updates the current configuration with validation and change notification
+    /// 
+    /// This method validates the new configuration against all registered validation rules,
+    /// calculates the changes from the current configuration, and notifies all observers.
+    /// If validation fails, the configuration is not updated and observers are notified of the failure.
+    /// 
+    /// - Parameter configuration: The new configuration to apply
     public func update(_ configuration: EditorConfiguration) {
         // Validate configuration
         if let error = validate(configuration) {
@@ -61,7 +73,12 @@ public final class ConfigurationHotReload: ObservableObject {
         notifyObservers(of: .configurationChanged(old: oldConfig, new: configuration, changes: changes))
     }
 
-    /// Update specific configuration properties
+    /// Updates specific configuration properties without replacing the entire configuration
+    /// 
+    /// This method allows for granular updates of configuration sections while preserving
+    /// other settings. Only the specified properties will be updated.
+    /// 
+    /// - Parameter updates: The configuration updates containing the properties to change
     public func updateProperties(_ updates: ConfigurationUpdates) {
         var newConfig = configuration
 
@@ -88,7 +105,12 @@ public final class ConfigurationHotReload: ObservableObject {
         update(newConfig)
     }
 
-    /// Batch multiple changes together
+    /// Batches multiple configuration changes into a single update operation
+    /// 
+    /// This method allows for efficient batching of multiple configuration changes,
+    /// ensuring that validation and observer notifications happen only once for all changes.
+    /// 
+    /// - Parameter block: A closure that receives a mutable configuration to modify
     public func batchUpdate(_ block: (inout EditorConfiguration) -> Void) {
         var newConfig = configuration
         block(&newConfig)
@@ -97,12 +119,21 @@ public final class ConfigurationHotReload: ObservableObject {
 
     // MARK: - Pending Changes
 
-    /// Add a pending change that will be applied later
+    /// Adds a configuration change to the pending changes queue
+    /// 
+    /// Pending changes are stored and can be applied later using `applyPendingChanges()`.
+    /// This is useful for accumulating changes that should be applied atomically.
+    /// 
+    /// - Parameter change: The configuration change to add to the pending queue
     public func addPendingChange(_ change: HotReloadConfigurationChange) {
         pendingChanges.append(change)
     }
 
-    /// Apply all pending changes
+    /// Applies all pending configuration changes in a single batch operation
+    /// 
+    /// This method applies all changes that have been added to the pending queue
+    /// using `addPendingChange(_:)`. The changes are applied atomically and the
+    /// pending queue is cleared after successful application.
     public func applyPendingChanges() {
         guard !pendingChanges.isEmpty else { return }
 
@@ -115,14 +146,21 @@ public final class ConfigurationHotReload: ObservableObject {
         pendingChanges.removeAll()
     }
 
-    /// Clear pending changes without applying
+    /// Clears all pending configuration changes without applying them
+    /// 
+    /// This method discards all changes that have been added to the pending queue
+    /// without applying them to the current configuration.
     public func clearPendingChanges() {
         pendingChanges.removeAll()
     }
 
     // MARK: - History Management
 
-    /// Undo the last configuration change
+    /// Undoes the last configuration change by navigating back in history
+    /// 
+    /// This method restores the previous configuration from the history stack.
+    /// Use `canUndo` to check if undo is available before calling this method.
+    /// Observers are notified of the history navigation.
     public func undo() {
         guard canUndo else { return }
 
@@ -133,7 +171,11 @@ public final class ConfigurationHotReload: ObservableObject {
         notifyObservers(of: .historyNavigated(configuration: config, isUndo: true))
     }
 
-    /// Redo the last undone configuration change
+    /// Redoes the last undone configuration change by navigating forward in history
+    /// 
+    /// This method restores the next configuration from the history stack.
+    /// Use `canRedo` to check if redo is available before calling this method.
+    /// Observers are notified of the history navigation.
     public func redo() {
         guard canRedo else { return }
 
@@ -144,17 +186,24 @@ public final class ConfigurationHotReload: ObservableObject {
         notifyObservers(of: .historyNavigated(configuration: config, isUndo: false))
     }
 
-    /// Check if undo is available
+    /// Indicates whether an undo operation is available
+    /// 
+    /// Returns `true` if there are previous configurations in the history that can be restored.
     public var canUndo: Bool {
         historyIndex > 0
     }
 
-    /// Check if redo is available
+    /// Indicates whether a redo operation is available
+    /// 
+    /// Returns `true` if there are forward configurations in the history that can be restored.
     public var canRedo: Bool {
         historyIndex < configurationHistory.count - 1
     }
 
-    /// Clear configuration history
+    /// Clears the configuration history, keeping only the current configuration
+    /// 
+    /// This method resets the history stack to contain only the current configuration,
+    /// making undo and redo operations unavailable until new changes are made.
     public func clearHistory() {
         configurationHistory = [configuration]
         historyIndex = 0
@@ -162,7 +211,13 @@ public final class ConfigurationHotReload: ObservableObject {
 
     // MARK: - Observers
 
-    /// Add a configuration observer
+    /// Adds a configuration observer to receive change notifications
+    /// 
+    /// The observer will be notified of all configuration changes, validation failures,
+    /// and history navigation events. Use the returned token to remove the observer later.
+    /// 
+    /// - Parameter observer: The observer to add
+    /// - Returns: A token that can be used to remove the observer
     @discardableResult
     public func addObserver(_ observer: ConfigurationObserver) -> ObserverToken {
         let id = UUID()
@@ -170,19 +225,32 @@ public final class ConfigurationHotReload: ObservableObject {
         return ObserverToken(id: id, hotReloadRef: WeakReference(self))
     }
 
-    /// Remove an observer
+    /// Removes a configuration observer using its unique identifier
+    /// 
+    /// - Parameter id: The unique identifier of the observer to remove
     public func removeObserver(with id: UUID) {
         observers.removeValue(forKey: id)
     }
 
     // MARK: - Validation
 
-    /// Add a validation rule
+    /// Adds a validation rule that will be applied to all configuration updates
+    /// 
+    /// Validation rules are functions that take a configuration and return an error if
+    /// the configuration is invalid. All rules are checked before any configuration update.
+    /// 
+    /// - Parameter rule: The validation rule to add
     public func addValidationRule(_ rule: @escaping ConfigurationValidationRule) {
         validationRules.append(rule)
     }
 
-    /// Validate a configuration
+    /// Validates a configuration against all registered validation rules
+    /// 
+    /// This method runs all validation rules against the provided configuration
+    /// and returns the first error encountered, or `nil` if the configuration is valid.
+    /// 
+    /// - Parameter configuration: The configuration to validate
+    /// - Returns: The first validation error encountered, or `nil` if valid
     public func validate(_ configuration: EditorConfiguration) -> ConfigurationError? {
         let rules = Array(validationRules) // Create a copy to avoid escaping issues
         for rule in rules {
@@ -195,7 +263,13 @@ public final class ConfigurationHotReload: ObservableObject {
 
     // MARK: - Presets
 
-    /// Apply a configuration preset
+    /// Applies a predefined configuration preset
+    /// 
+    /// This method replaces the current configuration with one of the predefined presets.
+    /// The preset configurations are designed for common use cases and provide
+    /// well-tested combinations of settings.
+    /// 
+    /// - Parameter preset: The preset to apply
     public func applyPreset(_ preset: ConfigurationPreset) {
         let config: EditorConfiguration
 
@@ -306,13 +380,30 @@ public final class ConfigurationHotReload: ObservableObject {
 
 // MARK: - Supporting Types
 
-/// Configuration updates structure
+/// A structure for specifying partial configuration updates
+/// 
+/// This structure allows you to update specific sections of the configuration
+/// without affecting other sections. Only non-nil properties will be applied.
 public struct ConfigurationUpdates {
+    /// Display configuration updates (font, colors, etc.)
     public var display: EditorConfiguration.Display?
+
+    /// Layout configuration updates (line numbers, gutters, etc.)
     public var layout: EditorConfiguration.Layout?
+
+    /// Behavior configuration updates (editing behavior, shortcuts, etc.)
     public var behavior: EditorConfiguration.Behavior?
+
+    /// Performance configuration updates (caching, limits, etc.)
     public var performance: EditorConfiguration.Performance?
 
+    /// Creates a new configuration updates structure
+    /// 
+    /// - Parameters:
+    ///   - display: Optional display configuration updates
+    ///   - layout: Optional layout configuration updates
+    ///   - behavior: Optional behavior configuration updates
+    ///   - performance: Optional performance configuration updates
     public init(
         display: EditorConfiguration.Display? = nil,
         layout: EditorConfiguration.Layout? = nil,
@@ -326,14 +417,29 @@ public struct ConfigurationUpdates {
     }
 }
 
-/// Configuration change types for hot reload
+/// Represents specific types of configuration changes for hot reload functionality
+/// 
+/// This enum captures the different types of configuration changes that can occur,
+/// allowing for targeted updates and efficient change tracking.
 public enum HotReloadConfigurationChange {
+    /// A change to the display configuration (fonts, colors, themes)
     case display(old: EditorConfiguration.Display, new: EditorConfiguration.Display)
+
+    /// A change to the layout configuration (line numbers, gutters, spacing)
     case layout(old: EditorConfiguration.Layout, new: EditorConfiguration.Layout)
+
+    /// A change to the behavior configuration (editing behavior, shortcuts)
     case behavior(old: EditorConfiguration.Behavior, new: EditorConfiguration.Behavior)
+
+    /// A change to the performance configuration (caching, limits, optimizations)
     case performance(old: EditorConfiguration.Performance, new: EditorConfiguration.Performance)
 
-    /// Apply this change to a configuration
+    /// Applies this configuration change to a mutable configuration
+    /// 
+    /// This method updates the appropriate section of the configuration
+    /// with the new values contained in this change.
+    /// 
+    /// - Parameter config: The configuration to modify
     func apply(to config: inout EditorConfiguration) {
         switch self {
         case .display(_, let new):
@@ -351,23 +457,47 @@ public enum HotReloadConfigurationChange {
     }
 }
 
-/// Configuration observer protocol
+/// Protocol for observing configuration changes
+/// 
+/// Implement this protocol to receive notifications about configuration changes,
+/// validation failures, and history navigation events.
 public protocol ConfigurationObserver {
+    /// Called when a configuration event occurs
+    /// 
+    /// - Parameter event: The configuration event that occurred
     func configurationDidChange(_ event: ConfigurationEvent)
 }
 
-/// Configuration events
+/// Events that can occur during configuration management
+/// 
+/// This enum represents the different types of events that configuration observers
+/// can receive, including changes, history navigation, and validation failures.
 public enum ConfigurationEvent {
+    /// The configuration was successfully changed
     case configurationChanged(old: EditorConfiguration, new: EditorConfiguration, changes: [HotReloadConfigurationChange])
+
+    /// The configuration history was navigated (undo/redo)
     case historyNavigated(configuration: EditorConfiguration, isUndo: Bool)
+
+    /// Configuration validation failed
     case validationFailed(ConfigurationError)
 }
 
-/// Observer token for removing observers
+/// A token representing a configuration observer registration
+/// 
+/// Use this token to remove observers from the configuration hot reload system.
+/// The token maintains a weak reference to avoid retain cycles.
 public struct ObserverToken: Sendable {
+    /// The unique identifier for this observer
     let id: UUID
+
+    /// Weak reference to the hot reload instance
     internal let hotReloadRef: WeakReference<ConfigurationHotReload>
 
+    /// Removes the observer associated with this token
+    /// 
+    /// After calling this method, the observer will no longer receive
+    /// configuration change notifications.
     public func remove() {
         Task { @MainActor in
             hotReloadRef.value?.removeObserver(with: id)
@@ -388,16 +518,33 @@ internal final class WeakReference<T: AnyObject>: @unchecked Sendable {
     }
 }
 
-/// Configuration validation rule
+/// A function type for validating configuration settings
+/// 
+/// Validation rules take a configuration and return an error if the configuration
+/// is invalid, or `nil` if the configuration is valid.
 public typealias ConfigurationValidationRule = @Sendable (EditorConfiguration) -> ConfigurationError?
 
-/// Configuration errors
+/// Errors that can occur during configuration validation or updates
+/// 
+/// These errors provide specific information about what went wrong during
+/// configuration validation, making it easier to provide user-friendly error messages.
 public enum ConfigurationError: Error, LocalizedError {
+    /// The specified font size is outside the valid range (8-72)
     case invalidFontSize(CGFloat)
+
+    /// The specified tab width is outside the valid range (1-16)
     case invalidTabWidth(Int)
+
+    /// A performance setting has an invalid value
     case invalidPerformanceSetting(String)
+
+    /// Multiple settings are incompatible with each other
     case incompatibleSettings(String)
 
+    /// A localized description of the configuration error
+    /// 
+    /// This property provides user-friendly error messages that can be displayed
+    /// in the UI to help users understand and fix configuration problems.
     public var errorDescription: String? {
         switch self {
         case .invalidFontSize(let size):
@@ -415,20 +562,40 @@ public enum ConfigurationError: Error, LocalizedError {
     }
 }
 
-/// Configuration presets
+/// Predefined configuration presets for common use cases
+/// 
+/// These presets provide well-tested combinations of settings optimized
+/// for specific scenarios like presentations, markdown editing, or minimal interfaces.
 public enum ConfigurationPreset {
+    /// The default configuration with balanced settings
     case `default`
+
+    /// A minimal configuration with reduced UI elements
     case minimal
+
+    /// A read-only configuration that prevents editing
     case readOnly
+
+    /// A configuration optimized for markdown editing
     case markdown
+
+    /// A configuration optimized for presentations (large fonts, minimal UI)
     case presentation
+
+    /// A custom configuration provided by the user
     case custom(EditorConfiguration)
 }
 
 // MARK: - Integration with CodeEditorView
 
 extension CodeEditorView {
-    /// Setup hot reload for this editor view
+    /// Sets up hot reload functionality for this editor view
+    /// 
+    /// This method establishes a connection between the editor view and the hot reload system,
+    /// automatically updating the view's configuration whenever the hot reload configuration changes.
+    /// 
+    /// - Parameter hotReload: The hot reload instance to connect to
+    /// - Returns: A cancellable that manages the connection lifecycle
     public func setupHotReload(with hotReload: ConfigurationHotReload) -> AnyCancellable {
         hotReload.$configuration
             .removeDuplicates()
@@ -444,7 +611,12 @@ extension CodeEditorView {
 import SwiftUI
 
 extension ConfigurationHotReload {
-    /// Create a SwiftUI binding for the configuration
+    /// Creates a SwiftUI binding for the configuration
+    /// 
+    /// This binding allows SwiftUI views to read and write the configuration directly,
+    /// with changes automatically triggering validation and observer notifications.
+    /// 
+    /// - Returns: A binding that provides read/write access to the configuration
     public var configurationBinding: Binding<EditorConfiguration> {
         Binding(
             get: { self.configuration },

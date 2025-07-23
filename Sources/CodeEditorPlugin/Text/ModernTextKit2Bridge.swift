@@ -388,16 +388,23 @@ extension ModernTextKit2Bridge: @preconcurrency NSTextViewportLayoutControllerDe
 
 // MARK: - Supporting Types
 
+/// Represents a single line fragment in the text layout with position and content information.
 public struct LineFragment {
+    /// The text range covered by this line fragment.
     public let range: NSTextRange
+    /// The bounding rectangle of this line fragment in the coordinate system.
     public let bounds: CGRect
+    /// The usage bounds that indicate the actual content area.
     public let usageBounds: CGRect
+    /// The individual text line fragments that make up this line.
     public let textLineFragments: [NSTextLineFragment]
 
+    /// The height of this line fragment.
     public var lineHeight: CGFloat {
         bounds.height
     }
 
+    /// The baseline offset for text alignment within this line fragment.
     public var baselineOffset: CGFloat {
         textLineFragments.first?.typographicBounds.minY ?? 0
     }

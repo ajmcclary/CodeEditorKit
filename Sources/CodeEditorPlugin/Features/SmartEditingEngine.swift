@@ -589,10 +589,18 @@ public struct TextCursor: Identifiable {
 
 /// Bracket pair definition for smart editing
 public struct SmartEditingBracketPair {
+    /// The opening bracket or quote character
     public let open: String
+    /// The closing bracket or quote character
     public let close: String
+    /// Whether this pair represents quote characters
     public let isQuote: Bool
 
+    /// Creates a new bracket pair definition
+    /// - Parameters:
+    ///   - open: The opening bracket or quote character
+    ///   - close: The closing bracket or quote character
+    ///   - isQuote: Whether this pair represents quote characters
     public init(open: String, close: String, isQuote: Bool = false) {
         self.open = open
         self.close = close
@@ -602,13 +610,20 @@ public struct SmartEditingBracketPair {
 
 /// Auto-indent rule
 public struct AutoIndentRule {
+    /// The trigger character or pattern that activates this rule
     public let trigger: String
+    /// The indentation action to perform when triggered
     public let action: IndentAction
 
+    /// Actions that can be performed for auto-indentation
     public enum IndentAction {
+        /// Increase the indentation level for the current line
         case increaseIndent
+        /// Decrease the indentation level for the current line
         case decreaseIndent
+        /// Increase the indentation level for the next line
         case increaseIndentNext
+        /// Maintain the current indentation level
         case maintainIndent
     }
 }
@@ -616,33 +631,50 @@ public struct AutoIndentRule {
 /// Smart editing configuration
 public struct SmartEditingConfiguration {
     // Auto-bracket insertion
+    /// Whether to automatically insert closing brackets
     public var autoInsertBrackets = true
+    /// Whether to automatically insert closing quotes
     public var autoInsertQuotes = true
+    /// Whether to wrap selected text with brackets or quotes
     public var wrapSelection = true
 
     // Multi-cursor
+    /// Whether multi-cursor editing is enabled
     public var enableMultiCursor = true
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// The modifier key used for multi-cursor operations on macOS
     public var multiCursorModifierKey: NSEvent.ModifierFlags = .option
     #else
+    /// The modifier key used for multi-cursor operations on iOS
     public var multiCursorModifierKey: UIKeyModifierFlags = .alternate
     #endif
 
     // Auto-indentation
+    /// Whether automatic indentation is enabled
     public var autoIndent = true
+    /// Whether to insert spaces instead of tab characters
     public var insertSpacesForTabs = true
+    /// The number of spaces per tab level
     public var tabWidth = 4
+    /// Whether to automatically detect indentation style from existing content
     public var detectIndentation = true
 
     // Smart selection
+    /// Whether smart selection expansion is enabled
     public var enableSmartSelection = true
+    /// The sequence of selection expansion stops
     public var expandSelectionStops: [SelectionStop] = [.word, .line, .scope, .all]
 
+    /// Selection expansion stops for smart selection
     public enum SelectionStop {
+        /// Expand to the current word
         case word
+        /// Expand to the current line
         case line
+        /// Expand to the current scope (brackets, braces, etc.)
         case scope
+        /// Expand to select all content
         case all
     }
 }

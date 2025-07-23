@@ -44,8 +44,11 @@ import AppKit
 ///
 /// - SeeAlso: `CodeEditorView.addAnnotation(_:)`, `AnnotationsDataSource`
 public struct Annotation {
+    /// Unique identifier for this annotation
     public let id: String
+    /// Text range where the annotation appears
     public let range: NSTextRange
+    /// Content of the annotation
     public let content: String
 
     /// Creates a new annotation.

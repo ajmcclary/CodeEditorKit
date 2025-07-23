@@ -12,6 +12,7 @@ public actor TextProcessingActor {
     private var textBuffers: [UUID: String] = [:]
     private let errorRecovery = ErrorRecoveryCoordinator()
 
+    /// Configuration for text processing operations
     public struct TextProcessor {
         let id: UUID
         let type: ProcessorType
@@ -152,11 +153,17 @@ public actor CacheCoordinatorActor {
     private let maxGlobalMemoryMB: Double = 200.0
     private var currentMemoryUsageMB: Double = 0.0
 
+    /// Statistics for cache performance monitoring
     public struct CacheStatistics {
+        /// Number of cache hits
         public let hits: Int
+        /// Number of cache misses
         public let misses: Int
+        /// Number of cache evictions performed
         public let evictions: Int
+        /// Current memory usage in megabytes
         public let memoryUsageMB: Double
+        /// Last time this cache was accessed
         public let lastAccessTime: Date
     }
 

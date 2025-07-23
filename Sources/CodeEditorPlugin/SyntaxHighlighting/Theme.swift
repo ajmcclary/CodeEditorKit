@@ -52,11 +52,18 @@ import UIKit
 public struct Theme {
     // MARK: - Props
 
+    /// The color scheme for syntax highlighting tokens
     public let colors: Colors
+    /// The font configuration for syntax highlighting tokens
     public let fonts: Fonts
 
     // MARK: - Lifecycle
 
+    /// Creates a new theme with the specified colors and fonts.
+    ///
+    /// - Parameters:
+    ///   - colors: Color configuration for different token types
+    ///   - fonts: Font configuration for different token types
     public init(colors: Colors, fonts: Fonts) {
         self.colors = colors
         self.fonts = fonts
@@ -77,19 +84,33 @@ public struct Theme {
         colors.color(forToken: tokenName)
     }
 
+    /// Returns the font for a specific token type.
+    ///
+    /// - Parameter tokenName: The token type to get the font for
+    /// - Returns: The font for the token, or nil if not defined
     public func font(forToken tokenName: TokenName) -> PlatformFont? {
         fonts.font(forToken: tokenName)
     }
 
+    /// Color configuration for syntax highlighting tokens
     public struct Colors {
+        /// Dictionary mapping token names to their colors
         public let colors: [TokenName: PlatformColor]
 
+        /// Creates a color configuration from a string-to-color dictionary.
+        ///
+        /// - Parameter colors: Dictionary mapping token type names to colors
         public init(colors: [String: PlatformColor]) {
             self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in
                 (TokenName(key), value)
             })
         }
 
+        /// Creates a color configuration by loading colors from an asset catalog.
+        ///
+        /// - Parameters:
+        ///   - bundle: Bundle containing the color assets
+        ///   - name: Name prefix for the color assets in the catalog
         public init(bundle: Bundle, name: String) {
             // Use platform abstraction for named color loading
             let tokenTypes = [
@@ -165,20 +186,34 @@ public struct Theme {
             }
         }
 
+        /// Returns the color for a specific token type.
+        ///
+        /// - Parameter tokenName: The token type to get the color for
+        /// - Returns: The color for the token, or nil if not defined
         public func color(forToken tokenName: TokenName) -> PlatformColor? {
             colors[tokenName]
         }
     }
 
+    /// Font configuration for syntax highlighting tokens
     public struct Fonts {
+        /// Dictionary mapping token names to their fonts
         public let fonts: [TokenName: PlatformFont]
 
+        /// Creates a font configuration from a string-to-font dictionary.
+        ///
+        /// - Parameter fonts: Dictionary mapping token type names to fonts
         public init(fonts: [String: PlatformFont]) {
             self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in
                 (TokenName(key), value)
             })
         }
 
+        /// Creates a font configuration by loading fonts from an asset catalog.
+        ///
+        /// - Parameters:
+        ///   - bundle: Bundle containing the font assets (currently unused)
+        ///   - name: Name prefix for the font assets (currently unused)
         public init(bundle _: Bundle, name _: String) {
             // Use platform abstraction for font creation
             let regularFont = PlatformFonts.monospacedSystemFont(ofSize: 0, weight: .regular)
@@ -208,6 +243,10 @@ public struct Theme {
             ]
         }
 
+        /// Returns the font for a specific token type.
+        ///
+        /// - Parameter tokenName: The token type to get the font for
+        /// - Returns: The font for the token, or nil if not defined
         public func font(forToken tokenName: TokenName) -> PlatformFont? {
             fonts[tokenName]
         }

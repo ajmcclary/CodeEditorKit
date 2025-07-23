@@ -7,6 +7,11 @@ import UIKit
 
 // MARK: - Cross-Platform Font Helpers
 
+/// Cross-platform font utilities that provide consistent font creation
+/// across macOS and iOS platforms.
+/// 
+/// This enum provides static methods for creating commonly used fonts
+/// with appropriate platform-specific implementations.
 public enum PlatformFonts {
     /// Creates a monospaced system font with the specified size and weight
     public static func monospacedSystemFont(ofSize size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {

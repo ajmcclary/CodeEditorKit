@@ -5,11 +5,16 @@ import SwiftUI
 
 /// Performance status levels for insights
 public enum InsightsPerformanceStatus {
+    /// Performance is operating at optimal levels.
     case optimal
+    /// Performance has minor issues but is still acceptable.
     case suboptimal
+    /// Performance is noticeably degraded.
     case degraded
+    /// Performance has critical issues requiring immediate attention.
     case critical
 
+    /// The color associated with this performance status.
     public var color: Color {
         switch self {
         case .optimal: return .green
@@ -19,6 +24,7 @@ public enum InsightsPerformanceStatus {
         }
     }
 
+    /// A human-readable description of the performance status.
     public var description: String {
         switch self {
         case .optimal: return "Performance is optimal"
@@ -218,23 +224,41 @@ public enum InsightsPerformanceRecommendation: Identifiable {
 
 /// Real-time performance metrics
 public struct RealTimeMetrics {
+    /// Current CPU usage percentage (0-100).
     public var cpuUsage: Double = 0
+    /// Current memory usage in MB.
     public var memoryUsage: Double = 0
+    /// Current frames per second.
     public var currentFPS: Int = 60
+    /// Number of currently active operations.
     public var activeOperations: Int = 0
+    /// Average response time in seconds.
     public var averageResponseTime: Double = 0
 
+    /// Creates a new real-time metrics instance with default values.
     public init() {}
 }
 
 /// Performance thresholds
 public struct PerformanceThresholds {
+    /// Maximum acceptable layout time in seconds.
     public let maxLayoutTime: TimeInterval
+    /// Maximum acceptable memory usage in GB.
     public let maxMemoryUsageGB: Double
+    /// Minimum acceptable cache hit rate (0-1).
     public let minCacheHitRate: Double
+    /// Minimum acceptable frames per second.
     public let minFPS: Int
+    /// Maximum acceptable response time in seconds.
     public let maxResponseTime: TimeInterval
 
+    /// Creates performance thresholds with specified values.
+    /// - Parameters:
+    ///   - maxLayoutTime: Maximum layout time (default: 0.05s)
+    ///   - maxMemoryUsageGB: Maximum memory usage in GB (default: 2.0)
+    ///   - minCacheHitRate: Minimum cache hit rate (default: 0.7)
+    ///   - minFPS: Minimum frames per second (default: 30)
+    ///   - maxResponseTime: Maximum response time (default: 0.1s)
     public init(
         maxLayoutTime: TimeInterval = 0.05, // 50ms
         maxMemoryUsageGB: Double = 2.0,
@@ -252,11 +276,21 @@ public struct PerformanceThresholds {
 
 /// Monitoring configuration
 public struct MonitoringConfiguration {
+    /// Whether to enable real-time metrics collection.
     public var enableRealTimeMetrics: Bool
+    /// Whether to enable performance alerts.
     public var enableAlerts: Bool
+    /// Severity threshold for triggering alerts.
     public var alertThreshold: IssueSeverity
+    /// Update interval for metrics collection in seconds.
     public var updateInterval: TimeInterval
 
+    /// Creates monitoring configuration with specified settings.
+    /// - Parameters:
+    ///   - enableRealTimeMetrics: Enable real-time metrics (default: true)
+    ///   - enableAlerts: Enable alerts (default: true)
+    ///   - alertThreshold: Alert threshold (default: .warning)
+    ///   - updateInterval: Update interval (default: 1.0s)
     public init(
         enableRealTimeMetrics: Bool = true,
         enableAlerts: Bool = true,
@@ -274,12 +308,24 @@ public struct MonitoringConfiguration {
 
 /// Performance data point for history tracking
 public struct PerformanceDataPoint {
+    /// Timestamp when this data point was recorded.
     public let timestamp: Date
+    /// CPU usage percentage at this point.
     public let cpuUsage: Double
+    /// Memory usage in MB at this point.
     public let memoryUsage: Double
+    /// Frames per second at this point.
     public let fps: Int
+    /// Response time in seconds at this point.
     public let responseTime: Double
 
+    /// Creates a performance data point.
+    /// - Parameters:
+    ///   - timestamp: When this data point was recorded
+    ///   - cpuUsage: CPU usage percentage
+    ///   - memoryUsage: Memory usage in MB
+    ///   - fps: Frames per second
+    ///   - responseTime: Response time in seconds
     public init(
         timestamp: Date,
         cpuUsage: Double,
@@ -297,11 +343,21 @@ public struct PerformanceDataPoint {
 
 /// Performance trend analysis
 public struct PerformanceTrend {
+    /// The metric being analyzed.
     public let metric: String
-    public let changeRate: Double // Percentage change per time unit
+    /// Percentage change per time unit.
+    public let changeRate: Double
+    /// Whether the trend is increasing.
     public let isIncreasing: Bool
-    public let confidence: Double // 0-1 confidence in the trend
+    /// Confidence in the trend analysis (0-1).
+    public let confidence: Double
 
+    /// Creates a performance trend analysis.
+    /// - Parameters:
+    ///   - metric: The metric being analyzed
+    ///   - changeRate: Percentage change per time unit
+    ///   - isIncreasing: Whether the trend is increasing
+    ///   - confidence: Confidence in the analysis (0-1)
     public init(metric: String, changeRate: Double, isIncreasing: Bool, confidence: Double) {
         self.metric = metric
         self.changeRate = changeRate
@@ -316,8 +372,11 @@ public final class PerformanceHistory {
     private var dataPoints: [PerformanceDataPoint] = []
     private let maxDataPoints = 300 // 5 minutes at 1 second intervals
 
+    /// Creates a new performance history tracker.
     public init() {}
 
+    /// Records a new performance data point.
+    /// - Parameter metrics: The real-time metrics to record
     public func record(_ metrics: RealTimeMetrics) {
         let dataPoint = PerformanceDataPoint(
             timestamp: Date(),
@@ -335,11 +394,19 @@ public final class PerformanceHistory {
         }
     }
 
+    /// Gets performance history for a specified duration.
+    /// - Parameters:
+    ///   - metric: The metric name (unused in current implementation)
+    ///   - duration: Duration in seconds to look back
+    /// - Returns: Array of performance data points within the duration
     public func getHistory(for _: String, duration: TimeInterval) -> [PerformanceDataPoint] {
         let cutoff = Date().addingTimeInterval(-duration)
         return dataPoints.filter { $0.timestamp >= cutoff }
     }
 
+    /// Analyzes the trend for a specific metric.
+    /// - Parameter metric: The metric to analyze ("cpu", "memory", "fps", "response")
+    /// - Returns: Performance trend analysis or nil if insufficient data
     public func analyzeTrend(for metric: String) -> PerformanceTrend? {
         guard dataPoints.count >= 10 else { return nil }
 
@@ -386,6 +453,7 @@ public final class PerformanceHistory {
         )
     }
 
+    /// Clears all performance history data.
     public func clear() {
         dataPoints.removeAll()
     }

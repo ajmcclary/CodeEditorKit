@@ -178,13 +178,34 @@ extension View {
 
 // MARK: - Result Builder
 
+/// A result builder for constructing code editor environments in a declarative manner.
+///
+/// This result builder allows you to create `CodeEditorEnvironment` instances using a block-based syntax,
+/// making it easier to configure multiple environment properties in a clean, readable way.
+///
+/// ## Usage
+/// ```swift
+/// .codeEditorEnvironment {
+///     CodeEditorEnvironment(
+///         language: .swift,
+///         theme: .dark,
+///         configuration: myConfig
+///     )
+/// }
+/// ```
 @available(macOS 12.0, iOS 16.0, *)
 @resultBuilder
 public enum CodeEditorEnvironmentBuilder {
+    /// Builds a block of environment values.
+    /// - Parameter environment: The environment to build
+    /// - Returns: The built environment
     public static func buildBlock(_ environment: CodeEditorEnvironment) -> CodeEditorEnvironment {
         environment
     }
 
+    /// Builds an expression of environment values.
+    /// - Parameter environment: The environment expression
+    /// - Returns: The built environment
     public static func buildExpression(_ environment: CodeEditorEnvironment) -> CodeEditorEnvironment {
         environment
     }

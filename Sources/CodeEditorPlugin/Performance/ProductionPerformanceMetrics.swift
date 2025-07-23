@@ -7,6 +7,7 @@ import os.log
 public actor ProductionPerformanceMetrics {
     // MARK: - Singleton
 
+    /// Shared instance of the production performance metrics system.
     public static let shared = ProductionPerformanceMetrics()
 
     // MARK: - Properties

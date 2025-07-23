@@ -7,9 +7,11 @@ import Foundation
 public final class CompletionProviderRegistry {
     // MARK: - Singleton
 
+    /// Shared instance for convenience (deprecated)
     @available(*, deprecated, message: "Use dependency injection instead of singleton pattern. Create your own CompletionProviderRegistry instance.")
     public static let shared = CompletionProviderRegistry()
 
+    /// Creates a new completion provider registry
     public init() {
         loadBuiltInProviders()
     }
@@ -219,11 +221,16 @@ public final class CompletionProviderRegistry {
 
 // MARK: - Provider Statistics
 
+/// Statistics about completion providers in the registry
 public struct ProviderStatistics {
+    /// Total number of registered providers
     public let totalProviders: Int
+    /// Number of languages with at least one provider
     public let supportedLanguages: Int
+    /// Number of providers per language
     public let languageCoverage: [Language: Int]
 
+    /// Human-readable description of the statistics
     public var description: String {
         let coverageDescription = languageCoverage.map { "\($0.key): \($0.value)" }.joined(separator: ", ")
         return "Providers: \(totalProviders), Languages: \(supportedLanguages), Coverage: [\(coverageDescription)]"

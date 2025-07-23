@@ -12,6 +12,7 @@ import UIKit
 public enum CompletionCellConfigurator {
     // MARK: - Configuration Data
 
+    /// Configuration data for completion cell presentation
     public struct CellConfiguration {
         let iconText: String
         let titleText: String
@@ -27,6 +28,10 @@ public enum CompletionCellConfigurator {
         let iconWidth: CGFloat
         let spacing: CGFloat
 
+        /// Creates a cell configuration from a completion item
+        /// - Parameters:
+        ///   - item: The completion item to configure for
+        ///   - platform: Target platform for styling (defaults to current platform)
         public init(from item: CompletionItemModel, platform: Platform = .current) {
             self.iconText = item.kind.icon
             self.titleText = item.label
@@ -56,10 +61,15 @@ public enum CompletionCellConfigurator {
         }
     }
 
+    /// Supported platforms for completion cell styling
     public enum Platform {
+        /// macOS platform with Cocoa styling
         case macOS
+
+        /// iOS platform with UIKit styling
         case iOS
 
+        /// Returns the current platform based on available frameworks
         public static var current: Self {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             return .macOS
@@ -78,10 +88,16 @@ public enum CompletionCellConfigurator {
 
     // MARK: - Font Creation
 
+    /// Creates the appropriate font for completion item icons
+    /// - Parameter config: Cell configuration containing font size settings
+    /// - Returns: Platform-appropriate font for icons
     public static func iconFont(for config: CellConfiguration) -> PlatformFont {
         PlatformFonts.systemFont(ofSize: config.iconFontSize)
     }
 
+    /// Creates the appropriate font for completion item titles
+    /// - Parameter config: Cell configuration containing font size and deprecation status
+    /// - Returns: Platform-appropriate font for titles (lighter weight if deprecated)
     public static func titleFont(for config: CellConfiguration) -> PlatformFont {
         if config.isDeprecated {
             return PlatformFonts.systemFont(ofSize: config.titleFontSize, weight: .light)
@@ -90,12 +106,18 @@ public enum CompletionCellConfigurator {
         }
     }
 
+    /// Creates the appropriate font for completion item detail text
+    /// - Parameter config: Cell configuration containing font size settings
+    /// - Returns: Platform-appropriate font for detail text
     public static func detailFont(for config: CellConfiguration) -> PlatformFont {
         PlatformFonts.systemFont(ofSize: config.detailFontSize)
     }
 
     // MARK: - Color Selection
 
+    /// Returns the appropriate color for completion item titles
+    /// - Parameter config: Cell configuration containing deprecation status
+    /// - Returns: Platform-appropriate color (dimmed if deprecated)
     public static func titleColor(for config: CellConfiguration) -> PlatformColor {
         if config.isDeprecated {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -108,10 +130,14 @@ public enum CompletionCellConfigurator {
         }
     }
 
+    /// Returns the standard color for completion item icons
+    /// - Returns: Platform-appropriate secondary label color
     public static func iconColor() -> PlatformColor {
         PlatformColors.secondaryLabel
     }
 
+    /// Returns the standard color for completion item detail text
+    /// - Returns: Platform-appropriate secondary label color
     public static func detailColor() -> PlatformColor {
         PlatformColors.secondaryLabel
     }
@@ -159,6 +185,7 @@ open class CompletionCellBaseView: PlatformView {
 
 // MARK: - Layout Constraints Helper
 
+/// Utility for creating Auto Layout constraints for completion cells
 public enum CompletionCellConstraints {
     /// Create standard constraints for completion cell subviews
     @MainActor

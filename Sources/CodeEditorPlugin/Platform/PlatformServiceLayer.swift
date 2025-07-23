@@ -16,6 +16,7 @@ import AppKit
 public final class PlatformServiceLayer {
     // MARK: - Singleton
 
+    /// Shared singleton instance providing centralized platform services
     public static let shared = PlatformServiceLayer()
 
     private init() {}
@@ -66,6 +67,7 @@ public final class PlatformServiceLayer {
 /// Centralized device detection service that replaces scattered UIDevice.current checks
 @MainActor
 public final class PlatformDeviceService {
+    /// Shared singleton instance for device detection
     public static let shared = PlatformDeviceService()
 
     private init() {}
@@ -223,27 +225,72 @@ public final class PlatformDeviceService {
 
 // MARK: - Platform Menu Service Protocol
 
+/// Service protocol for platform-specific menu operations
+/// 
+/// This protocol defines the interface for creating and displaying context menus
+/// across different platforms (macOS, iOS, iPadOS).
 @MainActor
 public protocol PlatformMenuService {
+    /// Creates a context menu from a menu descriptor
+    /// - Parameter descriptor: The menu configuration
+    /// - Returns: Platform-specific menu instance, or nil if creation fails
     func createContextMenu(from descriptor: MenuDescriptor) -> PlatformServiceMenu?
+
+    /// Shows a context menu at a specific location
+    /// - Parameters:
+    ///   - menu: The menu to display
+    ///   - point: Screen coordinate for menu placement
+    ///   - view: The view that will host the menu
     func showContextMenu(_ menu: PlatformServiceMenu, at point: CGPoint, in view: PlatformServiceView)
 }
 
 // MARK: - Platform Input Service Protocol
 
+/// Platform-specific input handling service protocol
+/// Provides abstractions for handling user input across different Apple platforms
 @MainActor
 public protocol PlatformInputService {
+    /// Handles key input events
+    /// - Parameters:
+    ///   - key: The key that was pressed
+    ///   - modifiers: Modifier keys held during press
+    ///   - view: The view that received the input
+    /// - Returns: `true` if the input was handled, `false` otherwise
     func handleKeyInput(key: String, modifiers: ModifierFlags, in view: PlatformServiceView) -> Bool
+
+    /// Registers a keyboard shortcut with an action
+    /// - Parameters:
+    ///   - shortcut: The keyboard shortcut to register
+    ///   - action: The action to perform when shortcut is triggered
     func registerPlatformKeyboardShortcut(_ shortcut: PlatformKeyboardShortcut, action: @escaping () -> Void)
+
+    /// Unregisters a previously registered keyboard shortcut
+    /// - Parameter shortcut: The shortcut to unregister
     func unregisterPlatformKeyboardShortcut(_ shortcut: PlatformKeyboardShortcut)
 }
 
 // MARK: - Platform Layout Service Protocol
 
+/// Platform-specific layout service protocol
+/// Provides abstractions for view layout calculations across different Apple platforms
 @MainActor
 public protocol PlatformLayoutService {
+    /// Calculates the preferred size for a view given constraints
+    /// - Parameters:
+    ///   - view: The view to measure
+    ///   - size: The fitting size constraints
+    /// - Returns: The preferred size for the view
     func calculatePreferredSize(for view: PlatformServiceView, fitting size: CGSize) -> CGSize
+
+    /// Performs layout of subviews within a container
+    /// - Parameter container: The container view to layout
     func layoutSubviews(in container: PlatformServiceView)
+
+    /// Animates layout changes with the specified duration
+    /// - Parameters:
+    ///   - duration: Animation duration in seconds
+    ///   - animations: Animation block to execute
+    ///   - completion: Optional completion handler
     func animateLayoutChanges(duration: TimeInterval, animations: @escaping () -> Void, completion: (@Sendable (Bool) -> Void)?)
 }
 
@@ -297,12 +344,18 @@ public struct ModifierFlags: OptionSet, Sendable {
 // MARK: - Platform Type Aliases
 
 #if canImport(UIKit)
+/// Platform-specific view type (UIView on iOS)
 public typealias PlatformServiceView = UIView
+/// Platform-specific menu type (UIMenu on iOS)
 public typealias PlatformServiceMenu = UIMenu
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+/// Platform-specific view type (NSView on macOS)
 public typealias PlatformServiceView = NSView
+/// Platform-specific menu type (NSMenu on macOS)
 public typealias PlatformServiceMenu = NSMenu
 #else
+/// Fallback view type for unsupported platforms
 public typealias PlatformServiceView = Any
+/// Fallback menu type for unsupported platforms
 public typealias PlatformServiceMenu = Any
 #endif

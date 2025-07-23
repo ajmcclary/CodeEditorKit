@@ -4,6 +4,7 @@ import Foundation
 public struct FuzzyMatcher {
     // MARK: - Configuration
 
+    /// Configuration settings for fuzzy matching behavior
     public struct Configuration {
         /// Weight for consecutive character matches
         public var consecutiveBonus: Double = 15.0
@@ -29,6 +30,7 @@ public struct FuzzyMatcher {
         /// Maximum results to return
         public var maxResults: Int = 100
 
+        /// Creates a new configuration with default values
         public init() {}
     }
 
@@ -36,10 +38,20 @@ public struct FuzzyMatcher {
 
     /// Result of fuzzy matching
     public struct MatchResult {
+        /// The matched string item
         public let item: String
+
+        /// Match quality score (higher is better)
         public let score: Double
+
+        /// Character ranges that matched the pattern
         public let matchedRanges: [NSRange]
 
+        /// Creates a new match result
+        /// - Parameters:
+        ///   - item: The matched string
+        ///   - score: Quality score of the match
+        ///   - matchedRanges: Character ranges that matched
         public init(item: String, score: Double, matchedRanges: [NSRange]) {
             self.item = item
             self.score = score
@@ -61,6 +73,8 @@ public struct FuzzyMatcher {
 
     // MARK: - Initialization
 
+    /// Creates a new fuzzy matcher with the specified configuration
+    /// - Parameter configuration: Matching behavior configuration (uses defaults if not provided)
     public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
     }

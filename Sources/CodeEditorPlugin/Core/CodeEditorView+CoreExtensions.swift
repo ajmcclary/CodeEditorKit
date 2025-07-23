@@ -10,9 +10,44 @@ import AppKit
 // MARK: - Core Properties
 
 extension CodeEditorView {
-    // CodeEditorViewProtocol conformance  
+    // CodeEditorViewProtocol conformance
+    /// Platform-independent color type for cross-platform compatibility.
+    ///
+    /// This type alias provides a unified interface for colors across different Apple platforms,
+    /// automatically resolving to `NSColor` on macOS and `UIColor` on iOS/iPadOS.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let textColor: CodeEditorView.Color = .label
+    /// let backgroundColor: CodeEditorView.Color = .systemBackground
+    /// ```
     public typealias Color = PlatformColor
+
+    /// Platform-independent font type for cross-platform compatibility.
+    ///
+    /// This type alias provides a unified interface for fonts across different Apple platforms,
+    /// automatically resolving to `NSFont` on macOS and `UIFont` on iOS/iPadOS.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let codeFont: CodeEditorView.Font = .monospacedSystemFont(ofSize: 14, weight: .regular)
+    /// ```
     public typealias Font = PlatformFont
+
+    /// The delegate type for receiving editor events and customizing behavior.
+    ///
+    /// This type alias provides a consistent interface for the delegate protocol across platforms,
+    /// allowing for editor customization and event handling.
+    ///
+    /// ## Usage
+    ///
+    /// ```swift
+    /// class MyEditorDelegate: CodeEditorView.Delegate {
+    ///     // Implement delegate methods
+    /// }
+    /// ```
     public typealias Delegate = CodeEditorViewDelegate
 
     // MARK: - Properties

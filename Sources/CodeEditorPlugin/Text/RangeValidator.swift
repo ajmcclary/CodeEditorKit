@@ -7,9 +7,11 @@ public enum Validation: Sendable, Hashable {
 
 // MARK: - RangeValidator
 
-/// A type that manages the validation of range-based content.
+/// A type that manages the validation of range-based content with version tracking.
 public actor RangeValidator<Content: VersionedContent> {
+    /// Type alias for content ranges that include version information for change tracking.
     public typealias ContentRange = VersionedRange<Content.Version>
+    /// Type alias for validation providers that support both sync and async operations.
     public typealias ValidationProvider = HybridSyncAsyncValueProvider<ContentRange, Validation, Never>
 
     public enum Action: Sendable, Equatable {
@@ -23,12 +25,16 @@ public actor RangeValidator<Content: VersionedContent> {
     private var pendingSet = IndexSet()
     private var pendingRequests = 0
 
+    /// The versioned content being validated by this validator.
     public let content: Content
 
+    /// Creates a new range validator for the specified versioned content.
+    /// - Parameter content: The versioned content to validate
     public init(content: Content) {
         self.content = content
     }
 
+    /// Whether this validator has any pending validation operations in progress.
     public var hasOutstandingValidations: Bool {
         pendingRequests > 0
     }
@@ -89,6 +95,9 @@ public actor RangeValidator<Content: VersionedContent> {
         }
     }
 
+    /// Checks whether the specified range target has been validated and is current.
+    /// - Parameter target: The range target to check for validity
+    /// - Returns: True if the target is fully validated, false otherwise
     public func isValid(_ target: RangeTarget) -> Bool {
         switch target {
         case .all:

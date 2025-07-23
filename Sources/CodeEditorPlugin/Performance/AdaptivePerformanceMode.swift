@@ -233,6 +233,7 @@ private struct AdaptivePerformanceModeKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
+    /// The current adaptive performance mode, if any.
     public var adaptivePerformanceMode: AdaptivePerformanceMode? {
         get { self[AdaptivePerformanceModeKey.self] }
         set { self[AdaptivePerformanceModeKey.self] = newValue }

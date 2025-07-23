@@ -9,12 +9,21 @@ import Foundation
 public final class ActorCoordinator {
     // MARK: - Singleton (for convenience, but DI is preferred)
 
+    /// Shared instance for convenience access.
+    ///
+    /// - Warning: This singleton is deprecated. Use dependency injection instead
+    ///   by passing an `ActorCoordinator` instance through `EditorConfiguration.actorCoordinator`.
+    ///
+    /// - SeeAlso: ``create()`` for creating new instances
     @available(*, deprecated, message: "Use dependency injection instead. Pass ActorCoordinator through EditorConfiguration.")
     public static let shared = ActorCoordinator()
 
     // MARK: - Actors
 
-    /// Text processing actor for text manipulation operations
+    /// Text processing actor for text manipulation operations.
+    ///
+    /// Handles background text processing tasks like formatting, validation,
+    /// and other computationally intensive text operations.
     public let textProcessor: TextProcessingActor
 
     /// Cache coordinator for managing all caches
@@ -34,6 +43,19 @@ public final class ActorCoordinator {
 
     // MARK: - Initialization
 
+    /// Creates a new actor coordinator with all specialized actors.
+    ///
+    /// This initializer creates instances of all specialized actors needed
+    /// for editor operations. Each actor is isolated and thread-safe.
+    ///
+    /// ## Actors Created
+    ///
+    /// - ``TextProcessingActor``: For text manipulation operations
+    /// - ``CacheCoordinatorActor``: For managing all caches
+    /// - ``FileSystemActor``: For file operations
+    /// - ``PerformanceMetricsActor``: For tracking performance
+    /// - ``DocumentStateActor``: For document lifecycle management
+    /// - ``ErrorRecoveryCoordinator``: For error handling
     public init() {
         self.textProcessor = TextProcessingActor()
         self.cacheCoordinator = CacheCoordinatorActor()

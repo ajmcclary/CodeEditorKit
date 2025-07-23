@@ -19,6 +19,10 @@ public final class SyntaxHighlightingService {
 
     // MARK: - Initialization
 
+    /// Creates a new syntax highlighting service.
+    ///
+    /// - Parameter syntaxHighlighter: The coordinator to use for highlighting.
+    ///   If `nil`, a new coordinator will be created.
     public init(syntaxHighlighter: SyntaxHighlightingCoordinator? = nil) {
         self.syntaxHighlighter = syntaxHighlighter ?? SyntaxHighlightingCoordinator()
     }
@@ -191,10 +195,18 @@ public final class SyntaxHighlightingService {
 
 // MARK: - Supporting Types
 
+/// Highlighting performance modes.
+///
+/// `HighlightingMode` determines the extent and performance characteristics
+/// of syntax highlighting based on document size and editor configuration.
 public enum HighlightingMode {
+    /// Syntax highlighting is completely disabled
     case disabled
+    /// Only highlight the visible viewport area
     case viewportOnly
+    /// Gradually highlight the document in chunks
     case progressive
+    /// Highlight the entire document at once
     case full
 }
 

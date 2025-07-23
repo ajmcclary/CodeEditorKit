@@ -7,41 +7,66 @@ import Foundation
 public enum TextRangeUtilities {
     // MARK: - Supporting Types
 
+    /// Results of range validation operations with detailed error information.
     public enum RangeValidationResult {
+        /// The range is valid and can be used safely.
         case valid
+        /// The range is invalid with a specific reason for the failure.
         case invalid(reason: ValidationFailureReason)
+        /// The range was corrected to fit within valid bounds.
         case corrected(originalRange: NSRange, correctedRange: NSRange)
 
+        /// Specific reasons why range validation might fail.
         public enum ValidationFailureReason {
+            /// The range location is negative.
             case negativeLocation
+            /// The range length is negative.
             case negativeLength
+            /// The range extends beyond the text boundaries.
             case exceedsTextBounds(textLength: Int)
+            /// The range location is beyond the text length.
             case invalidLocation(location: Int, textLength: Int)
+            /// The range has zero length (may be valid in some contexts).
             case emptyRange
         }
     }
 
+    /// Detailed information about how two ranges overlap or relate to each other.
     public struct RangeOverlapInfo {
+        /// The range of overlap between two ranges, if any.
         public let overlapRange: NSRange?
+        /// The length of the overlapping region.
         public let overlapLength: Int
+        /// The type of overlap relationship between the ranges.
         public let overlapType: OverlapType
 
+        /// Categories describing how two ranges relate to each other.
         public enum OverlapType {
+            /// The ranges do not overlap at all.
             case noOverlap
+            /// The ranges partially overlap.
             case partial
-            case complete       // One range completely contains the other
+            /// One range completely contains the other.
+            case complete
+            /// The ranges are identical.
             case identical
         }
 
+        /// Whether the ranges have any overlap.
         public var hasOverlap: Bool {
             overlapType != .noOverlap
         }
     }
 
+    /// Information about a batch range for processing large text efficiently.
     public struct BatchRange {
+        /// The range of text covered by this batch.
         public let range: NSRange
+        /// The sequential index of this batch in the processing order.
         public let batchIndex: Int
+        /// Whether this is the final batch in the sequence.
         public let isLastBatch: Bool
+        /// Estimated time required to process this batch.
         public let estimatedProcessingTime: TimeInterval
     }
 

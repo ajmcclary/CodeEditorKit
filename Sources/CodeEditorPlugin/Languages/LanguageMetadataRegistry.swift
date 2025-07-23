@@ -7,8 +7,10 @@ import Foundation
 public final class LanguageMetadataRegistry {
     // MARK: - Singleton
 
+    /// Shared instance for global language metadata access
     public static let shared = LanguageMetadataRegistry()
 
+    /// Private initializer for singleton pattern
     private init() {}
 
     // MARK: - Extended Language Metadata
@@ -179,7 +181,9 @@ public struct ExtendedLanguageMetadata {
 
 // MARK: - Snippet Collections
 
+/// Collection of Swift code snippets
 public enum SwiftSnippets {
+    /// All available Swift snippets
     public static let all: [SnippetTemplate] = [
         SnippetTemplate(
             label: "func",
@@ -234,7 +238,9 @@ public enum SwiftSnippets {
     ]
 }
 
+/// Collection of TypeScript code snippets
 public enum TypeScriptSnippets {
+    /// All available TypeScript snippets
     public static let all: [SnippetTemplate] = [
         SnippetTemplate(
             label: "interface",
@@ -269,7 +275,9 @@ public enum TypeScriptSnippets {
     ]
 }
 
+/// Collection of Go code snippets
 public enum GoSnippets {
+    /// All available Go snippets
     public static let all: [SnippetTemplate] = [
         SnippetTemplate(
             label: "func",

@@ -420,12 +420,18 @@ public struct Viewport: Equatable, Sendable {
 
 /// Viewport performance metrics
 public struct ViewportMetrics {
+    /// Total number of viewport updates performed.
     public var updateCount: Int = 0
+    /// Average time taken for viewport updates.
     public var averageUpdateTime: TimeInterval = 0
+    /// Number of cache hits during viewport operations.
     public var cacheHits: Int = 0
+    /// Number of cache misses during viewport operations.
     public var cacheMisses: Int = 0
+    /// Number of cache invalidations performed.
     public var cacheInvalidations: Int = 0
 
+    /// Cache hit rate as a percentage (0-1).
     public var cacheHitRate: Double {
         let total = cacheHits + cacheMisses
         return total > 0 ? Double(cacheHits) / Double(total) : 0

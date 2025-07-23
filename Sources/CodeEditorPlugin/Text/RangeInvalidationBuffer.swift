@@ -2,7 +2,10 @@ import Foundation
 
 // MARK: - RangeInvalidationBuffer
 
+/// A buffer that manages range invalidation events with support for nested buffering operations.
+/// This class allows efficient batching of invalidation operations to avoid excessive handler calls.
 public final class RangeInvalidationBuffer {
+    /// Handler type that processes range invalidation targets.
     public typealias Handler = (RangeTarget) -> Void
 
     private enum State: Hashable {
@@ -11,6 +14,7 @@ public final class RangeInvalidationBuffer {
     }
 
     private var state = State.idle
+    /// The handler called when invalidation events are processed.
     public var invalidationHandler: Handler = { _ in }
 
     private var isEmpty: Bool {
@@ -20,10 +24,13 @@ public final class RangeInvalidationBuffer {
         return true
     }
 
+    /// Creates a new range invalidation buffer.
     public init() {}
 
     // MARK: - Public Methods
 
+    /// Begins a buffering operation to collect invalidation events.
+    /// Multiple calls to this method can be nested, with each requiring a matching `endBuffering()` call.
     public func beginBuffering() {
         switch state {
         case .idle:
@@ -34,6 +41,8 @@ public final class RangeInvalidationBuffer {
         }
     }
 
+    /// Ends a buffering operation and processes collected invalidation events if this is the final nesting level.
+    /// This method must be called once for each corresponding `beginBuffering()` call.
     public func endBuffering() {
         switch state {
         case .idle:
@@ -49,6 +58,9 @@ public final class RangeInvalidationBuffer {
         }
     }
 
+    /// Invalidates the specified range target.
+    /// If buffering is active, the invalidation is collected; otherwise it's processed immediately.
+    /// - Parameter target: The range target to invalidate.
     public func invalidate(_ target: RangeTarget) {
         switch state {
         case .idle:

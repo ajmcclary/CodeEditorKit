@@ -13,12 +13,27 @@ import UIKit
 public final class LineNumberCalculationService {
     // MARK: - Types
 
+    /// Position information for a line of text.
+    ///
+    /// `LinePosition` contains all the positioning data needed to render
+    /// line numbers and interact with text at a specific line.
     public struct LinePosition {
+        /// The line number (1-based)
         public let lineNumber: Int
+        /// The Y coordinate of the line's top edge
         public let yPosition: CGFloat
+        /// The height of this line in points
         public let lineHeight: CGFloat
+        /// The character range this line spans in the text
         public let characterRange: NSRange
 
+        /// Creates a new line position.
+        ///
+        /// - Parameters:
+        ///   - lineNumber: The line number (1-based)
+        ///   - yPosition: The Y coordinate of the line's top edge
+        ///   - lineHeight: The height of the line in points
+        ///   - characterRange: The character range this line spans
         public init(lineNumber: Int, yPosition: CGFloat, lineHeight: CGFloat, characterRange: NSRange) {
             self.lineNumber = lineNumber
             self.yPosition = yPosition
@@ -27,11 +42,24 @@ public final class LineNumberCalculationService {
         }
     }
 
+    /// Information about visible lines in the editor viewport.
+    ///
+    /// `VisibleLineRange` provides details about which lines are currently
+    /// visible in the editor and their positions, enabling efficient rendering.
     public struct VisibleLineRange {
+        /// The first visible line number
         public let startLine: Int
+        /// The last visible line number
         public let endLine: Int
+        /// Position information for all visible lines
         public let positions: [LinePosition]
 
+        /// Creates a new visible line range.
+        ///
+        /// - Parameters:
+        ///   - startLine: The first visible line number
+        ///   - endLine: The last visible line number
+        ///   - positions: Position information for visible lines
         public init(startLine: Int, endLine: Int, positions: [LinePosition]) {
             self.startLine = startLine
             self.endLine = endLine
@@ -39,12 +67,27 @@ public final class LineNumberCalculationService {
         }
     }
 
+    /// Metrics for gutter sizing and layout.
+    ///
+    /// `GutterMetrics` contains calculated dimensions and spacing
+    /// information needed to properly size and render the line number gutter.
     public struct GutterMetrics {
+        /// The total width required for the gutter
         public let requiredWidth: CGFloat
+        /// The number of digits needed for the highest line number
         public let lineNumberDigits: Int
+        /// The width of a single character in the gutter font
         public let characterWidth: CGFloat
+        /// The total padding around line numbers
         public let padding: CGFloat
 
+        /// Creates new gutter metrics.
+        ///
+        /// - Parameters:
+        ///   - requiredWidth: The total width required for the gutter
+        ///   - lineNumberDigits: Number of digits for the highest line number
+        ///   - characterWidth: Width of a single character
+        ///   - padding: Total padding around line numbers
         public init(requiredWidth: CGFloat, lineNumberDigits: Int, characterWidth: CGFloat, padding: CGFloat) {
             self.requiredWidth = requiredWidth
             self.lineNumberDigits = lineNumberDigits
@@ -64,6 +107,10 @@ public final class LineNumberCalculationService {
 
     // MARK: - Initialization
 
+    /// Creates a new line number calculation service.
+    ///
+    /// The service initializes with empty caches and is ready to perform
+    /// line number calculations immediately.
     public init() {
         // Service initialization
     }

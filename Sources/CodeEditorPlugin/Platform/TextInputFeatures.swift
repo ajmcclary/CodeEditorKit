@@ -84,6 +84,10 @@ public struct AppKitTextInputFeatures: TextInputFeatures {
     }
 }
 
+/// Platform-specific text input features implementation for the current platform
+/// 
+/// On macOS, this resolves to `AppKitTextInputFeatures` which provides full
+/// support for spelling, grammar checking, smart quotes, and text replacement.
 public typealias PlatformTextInputFeatures = AppKitTextInputFeatures
 
 #elseif canImport(UIKit)
@@ -123,6 +127,10 @@ public struct UIKitTextInputFeatures: TextInputFeatures {
     }
 }
 
+/// Platform-specific text input features implementation for the current platform
+/// 
+/// On iOS, this resolves to `UIKitTextInputFeatures` which provides support
+/// for spelling correction and smart quotes, with limited grammar checking.
 public typealias PlatformTextInputFeatures = UIKitTextInputFeatures
 
 #endif

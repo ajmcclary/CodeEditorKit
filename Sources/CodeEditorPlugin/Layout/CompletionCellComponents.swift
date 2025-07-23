@@ -9,12 +9,24 @@ import UIKit
 
 /// Unified completion cell configuration that works across platforms
 public struct CompletionCellConfiguration {
+    /// Icon identifier for the completion item
     public let icon: String
+    /// Title text for the completion item
     public let title: String
+    /// Optional detail text for the completion item
     public let detail: String?
+    /// Whether the completion item is deprecated
     public let isDeprecated: Bool
+    /// Theme configuration for the cell
     public let theme: CompletionCellTheme
 
+    /// Initializes a completion cell configuration
+    /// - Parameters:
+    ///   - icon: Icon identifier for the completion item
+    ///   - title: Title text for the completion item
+    ///   - detail: Optional detail text for the completion item
+    ///   - isDeprecated: Whether the completion item is deprecated
+    ///   - theme: Theme configuration for the cell
     public init(icon: String, title: String, detail: String? = nil, isDeprecated: Bool = false, theme: CompletionCellTheme = .default) {
         self.icon = icon
         self.title = title
@@ -62,17 +74,35 @@ public struct CompletionCellTheme: @unchecked Sendable {
 }
 
 /// Protocol for platform-agnostic completion cell components
+/// Protocol for creating platform-specific completion cell components
 @MainActor
 public protocol CompletionCellComponentProvider {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Platform-specific label type for NSTextField on AppKit
     associatedtype LabelType = NSTextField
     #elseif canImport(UIKit)
+    /// Platform-specific label type for UILabel on UIKit
     associatedtype LabelType = UILabel
     #endif
 
+    /// Creates an icon label with the specified theme
+    /// - Parameter theme: Theme configuration for the label
+    /// - Returns: Configured label for displaying icons
     static func createIconLabel(theme: CompletionCellTheme) -> LabelType
+    /// Creates a title label with the specified theme
+    /// - Parameter theme: Theme configuration for the label
+    /// - Returns: Configured label for displaying titles
     static func createTitleLabel(theme: CompletionCellTheme) -> LabelType
+    /// Creates a detail label with the specified theme
+    /// - Parameter theme: Theme configuration for the label
+    /// - Returns: Configured label for displaying details
     static func createDetailLabel(theme: CompletionCellTheme) -> LabelType
+    /// Configures a label with text and theme
+    /// - Parameters:
+    ///   - label: The label to configure
+    ///   - text: Text to display in the label
+    ///   - theme: Theme configuration
+    ///   - isDeprecated: Whether to apply deprecated styling
     static func configureLabel(_ label: LabelType, with text: String, theme: CompletionCellTheme, isDeprecated: Bool)
 }
 
@@ -128,8 +158,16 @@ public enum CompletionCellLayout {
         #endif
     }
 
-    /// Updates label appearance for deprecated state (AppKit)
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Updates the appearance of a label for deprecated items on AppKit
+    /// 
+    /// This method applies visual styling to indicate deprecated completion items,
+    /// such as strikethrough text and dimmed colors.
+    /// 
+    /// - Parameters:
+    ///   - label: The NSTextField to update
+    ///   - isDeprecated: Whether to apply deprecated styling
+    ///   - theme: Theme configuration
     @MainActor
     public static func updateDeprecatedAppearance(
         label: NSTextField,
@@ -358,10 +396,18 @@ public final class UnifiedCompletionTableViewCell: UITableViewCell {
 /// Factory for creating completion cells across platforms
 public enum CompletionCellFactory {
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Creates a completion cell view for AppKit
+    /// - Parameter theme: Theme configuration for the cell
+    /// - Returns: Configured completion cell view
     @MainActor public static func createCellView(theme: CompletionCellTheme = .default) -> UnifiedCompletionCellView {
         UnifiedCompletionCellView(theme: theme)
     }
     #elseif canImport(UIKit)
+    /// Creates a completion table view cell for UIKit
+    /// - Parameters:
+    ///   - reuseIdentifier: Reuse identifier for the cell
+    ///   - theme: Theme configuration for the cell
+    /// - Returns: Configured completion table view cell
     @MainActor public static func createTableViewCell(reuseIdentifier: String?, theme: CompletionCellTheme = .default) -> UnifiedCompletionTableViewCell {
         UnifiedCompletionTableViewCell(reuseIdentifier: reuseIdentifier, theme: theme)
     }

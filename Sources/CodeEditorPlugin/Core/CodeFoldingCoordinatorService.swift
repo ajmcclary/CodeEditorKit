@@ -13,14 +13,47 @@ import UIKit
 public final class CodeFoldingCoordinatorService {
     // MARK: - Types
 
+    /// Represents a foldable region in the editor text.
+    ///
+    /// `FoldingRegion` defines a contiguous range of lines that can be collapsed
+    /// or expanded in the editor. It tracks the folding state and provides
+    /// necessary information for UI rendering and text manipulation.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// let region = FoldingRegion(
+    ///     startLine: 10,
+    ///     endLine: 25,
+    ///     level: 1,
+    ///     isFolded: false,
+    ///     canBeFolded: true,
+    ///     foldingRange: NSRange(location: 200, length: 150)
+    /// )
+    /// ```
     public struct FoldingRegion {
+        /// The starting line number of the foldable region (1-based)
         public let startLine: Int
+        /// The ending line number of the foldable region (1-based, inclusive)
         public let endLine: Int
+        /// The nesting level of the fold (0 = top level, higher = more nested)
         public let level: Int
+        /// Whether this region is currently folded
         public let isFolded: Bool
+        /// Whether this region can be folded
         public let canBeFolded: Bool
+        /// The character range in the text covered by this folding region
         public let foldingRange: NSRange
 
+        /// Creates a new folding region.
+        ///
+        /// - Parameters:
+        ///   - startLine: The starting line number (1-based)
+        ///   - endLine: The ending line number (1-based, inclusive)
+        ///   - level: The nesting level (0 = top level)
+        ///   - isFolded: Whether the region is currently folded
+        ///   - canBeFolded: Whether the region can be folded
+        ///   - foldingRange: The character range covered by this region
         public init(
             startLine: Int,
             endLine: Int,
@@ -38,12 +71,27 @@ public final class CodeFoldingCoordinatorService {
         }
     }
 
+    /// Layout information for rendering fold controls in the gutter.
+    ///
+    /// `FoldControlLayout` contains the positioning and visual state information
+    /// needed to render fold controls (expand/collapse indicators) in the editor gutter.
     public struct FoldControlLayout {
+        /// The rectangle where the fold control should be drawn
         public let controlRect: CGRect
+        /// The line number this control is associated with
         public let lineNumber: Int
+        /// Whether the control is currently visible in the viewport
         public let isVisible: Bool
+        /// The type of control to display
         public let controlType: FoldControlType
 
+        /// Creates a new fold control layout.
+        ///
+        /// - Parameters:
+        ///   - controlRect: The rectangle where the control should be drawn
+        ///   - lineNumber: The associated line number
+        ///   - isVisible: Whether the control is visible
+        ///   - controlType: The type of control to display
         public init(controlRect: CGRect, lineNumber: Int, isVisible: Bool, controlType: FoldControlType) {
             self.controlRect = controlRect
             self.lineNumber = lineNumber
@@ -52,17 +100,37 @@ public final class CodeFoldingCoordinatorService {
         }
     }
 
+    /// The type of fold control to display.
+    ///
+    /// `FoldControlType` determines the visual appearance and interaction
+    /// behavior of fold controls in the gutter.
     public enum FoldControlType {
-        case expandable    // Can be folded (triangle pointing down)
-        case collapsed     // Is folded (triangle pointing right)
-        case unavailable   // No folding available
+        /// Region can be folded (typically shown as down-pointing triangle)
+        case expandable
+        /// Region is currently folded (typically shown as right-pointing triangle)
+        case collapsed
+        /// No folding is available for this line
+        case unavailable
     }
 
+    /// Complete folding state for the editor.
+    ///
+    /// `FoldingState` provides a snapshot of all folding regions and their
+    /// current state in the editor, useful for persistence and UI updates.
     public struct FoldingState {
+        /// All folding regions in the editor
         public let regions: [FoldingRegion]
+        /// Layout information for all fold controls
         public let controlLayouts: [FoldControlLayout]
+        /// Total number of lines currently hidden by folding
         public let totalFoldedLines: Int
 
+        /// Creates a new folding state snapshot.
+        ///
+        /// - Parameters:
+        ///   - regions: All folding regions
+        ///   - controlLayouts: Layout information for fold controls
+        ///   - totalFoldedLines: Number of lines hidden by folding
         public init(regions: [FoldingRegion], controlLayouts: [FoldControlLayout], totalFoldedLines: Int) {
             self.regions = regions
             self.controlLayouts = controlLayouts

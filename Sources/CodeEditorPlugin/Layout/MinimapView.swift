@@ -11,8 +11,11 @@ import UIKit
 
 // Use centralized platform types from PlatformImports
 // PlatformView, PlatformColor, and PlatformFont are imported from PlatformImports.swift
+/// Platform-agnostic view type for minimap components
 public typealias MinimapPlatformView = PlatformView
+/// Platform-agnostic rectangle type for minimap coordinate calculations
 public typealias MinimapPlatformRect = CGRect
+/// Platform-agnostic point type for minimap interaction handling
 public typealias MinimapPlatformPoint = CGPoint
 
 // MARK: - Minimap Configuration
@@ -114,16 +117,32 @@ public struct MinimapData: Sendable {
 
 /// Shared minimap rendering logic
 public enum MinimapRenderer {
+    /// Calculates character metrics for the given font
+    /// - Parameter font: The font to calculate metrics for
+    /// - Returns: A tuple containing character width and line height
     @MainActor
     public static func calculateCharacterMetrics(font: PlatformFont) -> (width: CGFloat, height: CGFloat) {
         let metrics = font.metrics
         return (metrics.averageCharacterWidth, metrics.lineHeight)
     }
 
+    /// Calculates the total content height for the minimap
+    /// - Parameters:
+    ///   - lineCount: Number of lines in the document
+    ///   - lineHeight: Height of each line in the minimap
+    /// - Returns: Total content height
     public static func calculateContentHeight(lineCount: Int, lineHeight: CGFloat) -> CGFloat {
         CGFloat(lineCount) * lineHeight
     }
 
+    /// Calculates the viewport indicator rectangle in minimap coordinates
+    /// - Parameters:
+    ///   - visibleRange: The currently visible line range in the editor
+    ///   - lineHeight: Height of each line in the minimap
+    ///   - minimapWidth: Width of the minimap view
+    ///   - totalLines: Total number of lines in the document
+    ///   - minimapHeight: Height of the minimap view
+    /// - Returns: Rectangle representing the viewport indicator
     public static func viewportRect(
         for visibleRange: Range<Int>,
         lineHeight: CGFloat,
@@ -143,6 +162,13 @@ public enum MinimapRenderer {
         #endif
     }
 
+    /// Calculates the line number at a given point in the minimap
+    /// - Parameters:
+    ///   - point: The point in minimap coordinates
+    ///   - lineHeight: Height of each line in the minimap
+    ///   - totalLines: Total number of lines in the document
+    ///   - minimapHeight: Height of the minimap view
+    /// - Returns: The corresponding line number (0-based)
     public static func lineNumber(
         at point: MinimapPlatformPoint,
         lineHeight: CGFloat,
@@ -335,6 +361,7 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     }
 }
 
+/// Platform-specific minimap view type alias for AppKit
 public typealias MinimapView = AppKitMinimapView
 
 #elseif canImport(UIKit)
@@ -471,6 +498,7 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
     }
 }
 
+/// Platform-specific minimap view type alias for UIKit
 public typealias MinimapView = UIKitMinimapView
 
 #endif
@@ -482,6 +510,10 @@ public typealias MinimapView = UIKitMinimapView
     private weak var textView: CodeEditorView?
     private let configuration: MinimapConfiguration
 
+    /// Initializes a minimap data provider
+    /// - Parameters:
+    ///   - textView: The text view to provide minimap data for
+    ///   - configuration: Configuration for minimap appearance and behavior
     public init(textView: CodeEditorView, configuration: MinimapConfiguration = MinimapConfiguration()) {
         self.textView = textView
         self.configuration = configuration

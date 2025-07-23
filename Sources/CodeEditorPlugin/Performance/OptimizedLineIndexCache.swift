@@ -36,6 +36,7 @@ public actor OptimizedLineIndexCache {
 
     // MARK: - Public Interface
 
+    /// Creates a new optimized line index cache.
     public init() {}
 
     /// Builds the index from text content

@@ -286,11 +286,22 @@ public struct ContextAnalysisResult {
 
 /// Type of completion context
 public enum CompletionContextType {
+    /// Keywords and language constructs
     case keyword
+
+    /// Type names and type annotations
     case type
+
+    /// Function and method calls
     case function
+
+    /// Member access (properties, methods)
     case member
+
+    /// Function parameters and arguments
     case parameter
+
+    /// General code completion context
     case general
 }
 
