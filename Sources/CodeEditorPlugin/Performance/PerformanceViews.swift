@@ -131,7 +131,7 @@ public struct PerformanceInsightsPanel: View {
 // MARK: - Helper Views
 
 private struct IssueRow: View {
-    let issue: PerformanceIssue
+    let issue: InsightsPerformanceIssue
 
     var body: some View {
         HStack {
@@ -147,7 +147,7 @@ private struct IssueRow: View {
 }
 
 private struct RecommendationRow: View {
-    let recommendation: PerformanceRecommendation
+    let recommendation: InsightsPerformanceRecommendation
 
     var body: some View {
         HStack {
