@@ -742,7 +742,8 @@ enum FeatureDemo: String, CaseIterable {
                             // Update UI
                         }
                     } catch {
-                        CrossPlatformLogger.logger(subsystem: "Sample", category: "Networking").error("Error loading data: \\(error)")
+                        CrossPlatformLogger.logger(subsystem: "Sample", category: "Networking")
+                            .error("Error loading data: \\(error)")
                     }
                 }
                 

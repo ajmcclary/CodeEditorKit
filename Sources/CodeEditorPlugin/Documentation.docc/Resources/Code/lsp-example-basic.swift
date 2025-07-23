@@ -1,5 +1,4 @@
 import SwiftUI
-import CodeEditorPlugin
 
 /// Example demonstrating LSP integration with workspace root configuration
 struct LSPExampleView: View {
@@ -12,7 +11,9 @@ struct LSPExampleView: View {
     }
     
     func greet(person: Person) {
-        print("Hello, \\(person.name)!")
+        // In a real app, you would log this
+        // CrossPlatformLogger.logger().debug("Hello, \\(person.name)!")
+        _ = person // Suppress unused warning
     }
     
     let john = Person(name: "John", age: 30)
@@ -54,9 +55,8 @@ struct LSPExampleView: View {
     
     private func setupConfiguration() {
         // Enable features that benefit from LSP
-        configuration.behavior.autoCompletion = true
-        configuration.behavior.showCompletionOnTyping = true
-        configuration.display.syntaxHighlighting = true
+        configuration.behavior.enableCodeCompletion = true
+        configuration.display.enableSyntaxHighlighting = true
         
         // Set workspace root for LSP
         configuration.workspaceRoot = getProjectRoot()
@@ -65,7 +65,7 @@ struct LSPExampleView: View {
     private func getProjectRoot() -> URL? {
         // In a real app, this would be the project directory
         // For this example, we'll use the current directory
-        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     }
 }
 

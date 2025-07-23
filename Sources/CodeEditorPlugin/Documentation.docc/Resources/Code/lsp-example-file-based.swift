@@ -1,5 +1,4 @@
 import SwiftUI
-import CodeEditorPlugin
 
 /// Example demonstrating LSP integration with file-based editing
 struct LSPFileExampleView: View {
@@ -16,7 +15,7 @@ struct LSPFileExampleView: View {
                     showFileImporter = true
                 }
                 
-                if let fileURL = fileURL {
+                if let fileURL {
                     Text(fileURL.lastPathComponent)
                         .font(.headline)
                         .padding(.horizontal)
@@ -39,6 +38,7 @@ struct LSPFileExampleView: View {
             
             // Editor
             CodeEditor(text: $code)
+                .codeLanguage(detectLanguage(for: fileURL) ?? .plainText)
                 .environment(\.codeEditorConfiguration, configuration)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -52,8 +52,11 @@ struct LSPFileExampleView: View {
                 if let url = urls.first {
                     loadFile(url: url)
                 }
+
             case .failure(let error):
-                print("Error selecting file: \(error)")
+                // In a real app, you would log this
+                // CrossPlatformLogger.logger().debug("Error selecting file: \(error)")
+                _ = error // Suppress unused warning
             }
         }
     }
@@ -69,21 +72,18 @@ struct LSPFileExampleView: View {
             let workspaceRoot = findWorkspaceRoot(for: url)
             configuration.workspaceRoot = workspaceRoot
             
-            // Update language based on file extension
-            if let language = detectLanguage(for: url) {
-                configuration.display.language = language
-            }
+            // Language is set via the CodeEditor modifier, not configuration
             
             // Enable LSP features
-            configuration.behavior.autoCompletion = true
-            configuration.behavior.showCompletionOnTyping = true
+            configuration.behavior.enableCodeCompletion = true
             
-            print("Loaded file: \(url.path)")
-            print("Workspace root: \(workspaceRoot?.path ?? "None")")
-            print("Language: \(configuration.display.language)")
-            
+            // In a real app, you would log this information
+            // CrossPlatformLogger.logger().debug("Loaded file: \(url.path)")
+            // CrossPlatformLogger.logger().debug("Workspace root: \(workspaceRoot?.path ?? "None")")
         } catch {
-            print("Error loading file: \(error)")
+            // In a real app, you would log this
+            // CrossPlatformLogger.logger().debug("Error loading file: \(error)")
+            _ = error // Suppress unused warning
         }
     }
     
