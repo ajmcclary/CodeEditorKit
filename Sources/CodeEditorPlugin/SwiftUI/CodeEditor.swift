@@ -143,36 +143,36 @@ extension View {
 @available(macOS 13.0, iOS 16.0, *)
 public struct CodeEditor: View {
     // MARK: - Properties
-    
+
     @Binding private var text: String
-    
+
     // Focus management
     @FocusState private var isFocused: Bool
-    
+
     // Search
     @State private var searchText = ""
     @State private var isSearching = false
-    
+
     // Environment - Using consolidated environment
     @Environment(\.codeEditorEnvironment) private var environment
-    
+
     // Default memory monitor created on MainActor
     @State private var defaultMemoryMonitor = MemoryMonitor()
-    
+
     // Initial values from convenience initializers
     private var initialLanguage: Language?
     private var initialTheme: CodeEditorSwiftUITheme?
-    
+
     // Callbacks
     internal var onTextChange: (@Sendable (String) -> Void)?
     internal var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
     internal var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
-    
+
     // Debouncing
     private let textDebounceInterval: Duration
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new code editor with text binding and optional debouncing.
     ///
     /// - Parameters:
@@ -200,7 +200,7 @@ public struct CodeEditor: View {
         self.initialLanguage = nil
         self.initialTheme = nil
     }
-    
+
     /// Creates a new code editor with text binding, language, and theme.
     ///
     /// This convenience initializer allows you to specify the language and theme
@@ -236,25 +236,25 @@ public struct CodeEditor: View {
         self.initialLanguage = language
         self.initialTheme = theme
     }
-    
+
     // MARK: - Body
-    
+
     public var body: some View {
         let effectiveLanguage = initialLanguage ?? environment.language
         let effectiveTheme = initialTheme ?? environment.theme
         let effectiveMemoryMonitor = environment.memoryMonitor ?? defaultMemoryMonitor
-        
+
         // Update configuration with event system if provided
         var effectiveConfiguration = environment.configuration
         if let eventSystem = environment.eventSystem {
             effectiveConfiguration.eventSystem = eventSystem
         }
-        
+
         // Use configuration's debounce interval if not overridden
-        let effectiveDebounceInterval = textDebounceInterval == .milliseconds(100) 
-            ? effectiveConfiguration.performance.textChangeDebounceInterval 
+        let effectiveDebounceInterval = textDebounceInterval == .milliseconds(100)
+            ? effectiveConfiguration.performance.textChangeDebounceInterval
             : textDebounceInterval
-        
+
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly
             language: effectiveLanguage,
@@ -288,21 +288,21 @@ public struct CodeEditor: View {
             }
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func handleTextChange(_ newText: String) {
         // The coordinator will handle this, so this can be simplified
         // The text binding is updated directly by the coordinator
         onTextChange?(newText)
     }
-    
+
     private func handleSelectionChange(_ selection: NSRange) {
         // Convert NSRange to Range<String.Index>
         guard let range = Range(selection, in: text) else { return }
         onSelectionChange?(range)
     }
-    
+
     // View modifiers have been moved to CodeEditor+Modifiers.swift
 }
 

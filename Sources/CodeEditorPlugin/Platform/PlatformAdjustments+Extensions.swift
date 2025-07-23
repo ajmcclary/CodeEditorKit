@@ -12,41 +12,41 @@ import AppKit
 /// an optimal experience on each platform.
 public struct PlatformAdjustments: Sendable {
     // MARK: - Font Adjustments
-    
+
     /// Default font size for the platform
     public let defaultFontSize: CGFloat
-    
+
     // MARK: - Spacing Adjustments
-    
+
     /// Line spacing multiplier
     public let lineSpacing: CGFloat
-    
+
     /// Width of the line number gutter
     public let gutterWidth: CGFloat
-    
+
     // MARK: - Touch Adjustments
-    
+
     /// Minimum size for touch targets
     public let minimumTouchTargetSize: CGFloat
-    
+
     // MARK: - Performance Adjustments
-    
+
     /// Maximum file size to process (in bytes)
     public let maxFileSize: Int
-    
+
     /// Maximum text length for syntax highlighting
     public let maxSyntaxHighlightingLength: Int
-    
+
     // MARK: - UI Adjustments
-    
+
     /// Whether to show the minimap
     public let showMinimap: Bool
-    
+
     /// Whether to enable multi-cursor editing
     public let enableMultiCursor: Bool
-    
+
     // MARK: - Initialization
-    
+
     /// Create default platform adjustments
     public init() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -71,7 +71,7 @@ public struct PlatformAdjustments: Sendable {
         self.enableMultiCursor = false // Simplified for iOS
         #endif
     }
-    
+
     /// Create custom platform adjustments
     public init(
         defaultFontSize: CGFloat,
@@ -92,14 +92,14 @@ public struct PlatformAdjustments: Sendable {
         self.showMinimap = showMinimap
         self.enableMultiCursor = enableMultiCursor
     }
-    
+
     // MARK: - Device-Specific Adjustments
-    
+
     /// Create adjustments optimized for the current device
     @MainActor
     public static func forCurrentDevice() -> Self {
         let adjustments = Self()
-        
+
         #if canImport(UIKit)
         // Further customize for specific iOS devices
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -128,7 +128,7 @@ public struct PlatformAdjustments: Sendable {
             )
         }
         #endif
-        
+
         return adjustments
     }
 }

@@ -9,23 +9,23 @@ import AppKit
 @MainActor
 enum ContainerViewHelper {
     // MARK: - Text Navigation
-    
+
     /// Navigate to a specific line number in the text view
     static func navigateToLine(_ lineNumber: Int, in textView: CodeEditorView) {
         let text = getText(from: textView)
         let lines = text.components(separatedBy: CharacterSet.newlines)
-        
+
         guard lineNumber < lines.count else { return }
-        
+
         // Calculate character position for the line
         let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
         let targetPosition = lineNumber > 0 ? lineStart + 1 : 0
-        
+
         performNavigation(to: targetPosition, in: textView)
     }
-    
+
     // MARK: - Platform-Specific Navigation
-    
+
     private static func getText(from textView: CodeEditorView) -> String {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return textView.string
@@ -33,12 +33,12 @@ enum ContainerViewHelper {
         return textView.text ?? ""
         #endif
     }
-    
+
     private static func performNavigation(to position: Int, in textView: CodeEditorView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS navigation
         textView.setSelectedRange(NSRange(location: position, length: 0))
-        
+
         // Only scroll if autoScrollToCursor is enabled
         if textView.configuration.behavior.autoScrollToCursor {
             textView.scrollRangeToVisible(NSRange(location: position, length: 0))
@@ -47,10 +47,10 @@ enum ContainerViewHelper {
         // iOS navigation
         if let position = textView.position(from: textView.beginningOfDocument, offset: position) {
             let textRange = textView.textRange(from: position, to: position)
-            
+
             // Use the new method that respects autoScrollToCursor configuration
             textView.setSelectedTextRangeWithoutScrolling(textRange)
-            
+
             // Only scroll if autoScrollToCursor is enabled
             if textView.configuration.behavior.autoScrollToCursor {
                 let rect = textView.caretRect(for: position)
@@ -59,14 +59,14 @@ enum ContainerViewHelper {
         }
         #endif
     }
-    
+
     // MARK: - View Configuration
-    
+
     /// Configure the text view for scrolling behavior
     static func configureTextViewScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
         configurePlatformScrolling(textView, wrapLines: wrapLines)
     }
-    
+
     private static func configurePlatformScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.isVerticallyResizable = true
@@ -74,7 +74,7 @@ enum ContainerViewHelper {
         textView.textContainer?.widthTracksTextView = wrapLines
         textView.textContainer?.heightTracksTextView = false
         textView.autoresizingMask = [.width, .height]
-        
+
         // Set container width for non-wrapping mode
         if !wrapLines {
             textView.textContainer?.containerSize = NSSize(
@@ -86,11 +86,11 @@ enum ContainerViewHelper {
         // iOS configuration
         textView.alwaysBounceVertical = true
         textView.isScrollEnabled = true
-        
+
         // Configure text container for word wrapping
         let textContainer = textView.textContainer
         textContainer.maximumNumberOfLines = 0
-        
+
         if wrapLines {
             // Enable word wrapping
             textContainer.lineBreakMode = .byWordWrapping
@@ -99,7 +99,7 @@ enum ContainerViewHelper {
             textContainer.size = CGSize(width: containerWidth, height: CGFloat.greatestFiniteMagnitude)
             textView.alwaysBounceHorizontal = false
             textView.showsHorizontalScrollIndicator = false
-            
+
             // Ensure width tracks text view for proper wrapping
             textContainer.widthTracksTextView = true
         } else {
@@ -111,20 +111,20 @@ enum ContainerViewHelper {
             textContainer.widthTracksTextView = false
             textView.alwaysBounceHorizontal = true
             textView.showsHorizontalScrollIndicator = true
-            
+
             // Force UITextView to recalculate its content size for horizontal scrolling
             textView.setNeedsLayout()
             textView.layoutIfNeeded()
-            
+
             // Force content size update without accessing layoutManager
             // This avoids triggering TextKit1 compatibility mode
             textView.invalidateIntrinsicContentSize()
         }
         #endif
     }
-    
+
     // MARK: - Background Configuration
-    
+
     /// Set the background color for the container view
     static func setContainerBackground(_ view: PlatformView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -135,9 +135,9 @@ enum ContainerViewHelper {
         view.backgroundColor = PlatformColors.systemBackground
         #endif
     }
-    
+
     // MARK: - Notification Names
-    
+
     /// Get the appropriate text change notification name for the platform
     static var textDidChangeNotificationName: Notification.Name {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -146,9 +146,9 @@ enum ContainerViewHelper {
         return UITextView.textDidChangeNotification
         #endif
     }
-    
+
     // MARK: - Frame Calculations
-    
+
     /// Calculate the visible text rect for the text view
     static func calculateVisibleTextRect(for textView: CodeEditorView, in containerBounds: CGRect) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -164,9 +164,9 @@ enum ContainerViewHelper {
         )
         #endif
     }
-    
+
     // MARK: - Layout Updates
-    
+
     /// Mark a view as needing layout update
     static func setNeedsLayout(_ view: PlatformView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -175,22 +175,22 @@ enum ContainerViewHelper {
         view.setNeedsLayout()
         #endif
     }
-    
+
     // MARK: - Layout Frame Calculations
-    
+
     /// Calculate the height for gutter and minimap views
     static func calculateSideViewHeight(bounds: CGRect, textView: CodeEditorView) -> CGFloat {
         platformCalculateSideViewHeight(bounds: bounds, textView: textView)
     }
-    
+
     // MARK: - Text Container Insets
-    
+
     /// Update text container insets for gutter width
     static func updateTextContainerInsets(textView: CodeEditorView, gutterWidth: CGFloat, padding: CGFloat) {
         let leftInset = gutterWidth + padding
         updatePlatformInsets(textView, leftInset: leftInset)
     }
-    
+
     private static func updatePlatformInsets(_ textView: CodeEditorView, leftInset: CGFloat) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let currentInsets = textView.textContainerInset

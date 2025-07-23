@@ -38,26 +38,26 @@ import Combine
 @MainActor
 public final class CrossPlatformCoordinator: ObservableObject {
     // MARK: - Properties
-    
+
     internal let logger = CrossPlatformLogger.logger()
     internal let capabilities: PlatformCapabilities
-    
+
     /// Specialized coordinators for focused responsibilities
     public let inputCoordinator: InputCoordinator
     public let toolbarCoordinator: ToolbarCoordinator
     public let contextMenuCoordinator: ContextMenuCoordinator
-    
+
     /// Platform-specific adjustments
     @Published internal var platformAdjustments = PlatformAdjustments()
-    
+
     /// Thread-safe observer storage
     private let observerStore = ObserverStore()
-    
+
     /// Weak reference to associated text view for toolbar actions
     internal weak var associatedTextView: CodeEditorView?
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new instance with specified dependencies
     /// - Parameters:
     ///   - capabilities: Platform capabilities provider (defaults to shared instance)
@@ -74,11 +74,11 @@ public final class CrossPlatformCoordinator: ObservableObject {
         self.inputCoordinator = inputCoordinator ?? InputCoordinator()
         self.toolbarCoordinator = toolbarCoordinator ?? ToolbarCoordinator()
         self.contextMenuCoordinator = contextMenuCoordinator ?? ContextMenuCoordinator()
-        
+
         adjustFeaturesForPlatform()
         setupPlatformSpecificObservers()
     }
-    
+
     /// Private initializer for the deprecated singleton
     private convenience init() {
         // Create new instances with shared capabilities for backward compatibility
@@ -90,32 +90,32 @@ public final class CrossPlatformCoordinator: ObservableObject {
             contextMenuCoordinator: ContextMenuCoordinator(capabilities: sharedCapabilities)
         )
     }
-    
+
     deinit {
         // Additional cleanup for any observers not tracked in the array
         NotificationCenter.default.removeObserver(self)
         // Note: ObserverStore will clean up automatically in its own deinit
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Check if a specific feature is available on the current platform
     /// This method now fully delegates to PlatformCapabilities for unified capability detection
     public func isFeatureAvailable(_ feature: PlatformCapabilities.EditorFeature) -> Bool {
         capabilities.isFeatureAvailable(feature)
     }
-    
+
     /// Get feature availability level (full, partial, or unavailable)
     public func getFeatureAvailability(_ feature: PlatformCapabilities.EditorFeature) -> PlatformCapabilities.FeatureAvailability {
         capabilities.getFeatureAvailability(feature)
     }
-    
+
     /// Get recommended configuration for current platform
     public func recommendedConfiguration() -> EditorConfiguration {
         // Delegate to PlatformCapabilities for unified capability detection
         PlatformCapabilities.shared.recommendedConfiguration()
     }
-    
+
     /// Apply platform-specific optimizations to a text view
     public func optimizeTextView(_ textView: CodeEditorView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -124,7 +124,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         optimizeForIOS(textView)
         #endif
     }
-    
+
     /// Create platform-appropriate toolbar items
     ///
     /// Delegates to the specialized ``ToolbarCoordinator`` for consistent toolbar management.
@@ -133,7 +133,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     public func createToolbarItems() -> [ToolbarItem] {
         toolbarCoordinator.createToolbarItems()
     }
-    
+
     /// Handle platform-specific input events
     ///
     /// Delegates to the specialized ``InputCoordinator`` for consistent input handling.
@@ -145,7 +145,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     public func handlePlatformInput(_ event: PlatformInputEvent, in textView: CodeEditorView) -> Bool {
         inputCoordinator.handleInput(event, in: textView)
     }
-    
+
     /// Create cross-platform context menu using modern action-based API
     ///
     /// Delegates to the specialized ``ContextMenuCoordinator`` for consistent menu management.
@@ -157,13 +157,13 @@ public final class CrossPlatformCoordinator: ObservableObject {
     public func createContextMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
         contextMenuCoordinator.createContextMenu(for: range, in: textView)
     }
-    
+
     // MARK: - Private Methods
-    
+
     internal func adjustFeaturesForPlatform() {
         // Platform-specific adjustments are now handled by PlatformCapabilities
         // This method maintains runtime adjustments only
-        
+
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         // Update platform adjustments based on runtime checks
         // Skip this for Mac Catalyst to keep default values
@@ -173,59 +173,59 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }
         #endif
     }
-    
+
     private func setupPlatformSpecificObservers() {
         // Remove any existing observers first
         removeObservers()
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         setupMacOSNotifications()
         #elseif canImport(UIKit)
         setupIOSNotifications()
         #endif
     }
-    
+
     private func removeObservers() {
         observerStore.removeAllObservers()
     }
-    
+
     /// Add observer to the thread-safe store
     internal func addObserver(_ observer: NSObjectProtocol) {
         observerStore.addObserver(observer)
     }
-    
+
     // Platform-specific optimization is now in extensions:
     // - CrossPlatformCoordinator+AppKit.swift for macOS
     // - CrossPlatformCoordinator+UIKit.swift for iOS
-    
+
     // Input handling is now delegated to InputCoordinator
-    
+
     // MARK: - Helper Methods
-    
+
     /// Update platform adjustments - internal method for extensions
     internal func updatePlatformAdjustments(_ update: (inout PlatformAdjustments) -> Void) {
         update(&platformAdjustments)
     }
-    
+
     // iOS-specific helper methods moved to CrossPlatformCoordinator+UIKit.swift
-    
+
     // MARK: - Common Actions
-    
+
     #if canImport(UIKit)
     @objc func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     #endif
-    
+
     // Context menu actions are now handled by ContextMenuCoordinator
-    
+
     /// Show context menu at default location
     ///
     /// - Parameter textView: The target text view
     internal func showContextMenu(in textView: CodeEditorView) {
         showContextMenu(at: CGPoint.zero, in: textView)
     }
-    
+
     /// Show context menu at specified location
     ///
     /// Delegates to the specialized ``ContextMenuCoordinator`` for consistent menu handling.
@@ -237,11 +237,11 @@ public final class CrossPlatformCoordinator: ObservableObject {
         let menu = contextMenuCoordinator.createContextMenu(for: NSRange(), in: textView)
         contextMenuCoordinator.showContextMenu(menu, at: location, in: textView)
     }
-    
+
     internal func startSelection(at _: CGPoint, in _: CodeEditorView) {
         // Start selection at location
     }
-    
+
     /// Configure input handling for a text view
     ///
     /// Delegates to the specialized ``InputCoordinator`` for consistent input setup.
@@ -250,9 +250,9 @@ public final class CrossPlatformCoordinator: ObservableObject {
     private func configureInputHandling(for textView: CodeEditorView) {
         inputCoordinator.configureGestures(for: textView)
     }
-    
+
     // MARK: - Shared Context Menu Actions
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @objc func handleSharedMenuAction(_ menuItem: NSMenuItem) {
         if let action = menuItem.representedObject as? () -> Void {
@@ -260,41 +260,41 @@ public final class CrossPlatformCoordinator: ObservableObject {
         }
     }
     #endif
-    
+
     // MARK: - Shared Editing Actions
-    
+
     /// Toggle comment for selected lines in the text view
     /// - Parameter textView: The text view to operate on
     internal func toggleComment(in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         let language = textView.language
-        
+
         let selectedRange = textView.selectedRange
-        
+
         // Get the comment syntax for the current language
         let commentPrefix = getCommentPrefix(for: language)
-        
+
         // Convert to String.Index for line boundary calculations
         guard let startIndex = text.index(text.startIndex, offsetBy: selectedRange.location, limitedBy: text.endIndex) else { return }
-        
+
         // Find line boundaries for the selection
         let lineRange = text.lineRange(for: startIndex..<startIndex)
-        
+
         // Extract the line text
         let lineText = String(text[lineRange])
         let trimmedLine = lineText.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         if trimmedLine.hasPrefix(commentPrefix) {
             // Remove comment
             let uncommentedLine = lineText.replacingOccurrences(of: commentPrefix + " ", with: "")
                 .replacingOccurrences(of: commentPrefix, with: "")
-            
+
             // Build new text
             let beforeLine = String(text[..<lineRange.lowerBound])
             let afterLine = String(text[lineRange.upperBound...])
             let newText = beforeLine + uncommentedLine + afterLine
             textView.text = newText
-            
+
             // Adjust selection
             let adjustment = lineText.count - uncommentedLine.count
             textView.selectedRange = NSRange(location: selectedRange.location - adjustment, length: selectedRange.length)
@@ -302,19 +302,19 @@ public final class CrossPlatformCoordinator: ObservableObject {
             // Add comment
             let leadingWhitespace = lineText.prefix { $0.isWhitespace }
             let commentedLine = leadingWhitespace + commentPrefix + " " + lineText.dropFirst(leadingWhitespace.count)
-            
+
             // Build new text
             let beforeLine = String(text[..<lineRange.lowerBound])
             let afterLine = String(text[lineRange.upperBound...])
             let newText = beforeLine + commentedLine + afterLine
             textView.text = newText
-            
+
             // Adjust selection
             let adjustment = commentedLine.count - lineText.count
             textView.selectedRange = NSRange(location: selectedRange.location + adjustment, length: selectedRange.length)
         }
     }
-    
+
     /// Get the comment prefix for a language
     /// - Parameter language: The language to get comment prefix for
     /// - Returns: The comment prefix string

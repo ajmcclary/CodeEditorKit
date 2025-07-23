@@ -38,14 +38,14 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         // Web Components
         "slot", "template"
     ]
-    
+
     // Common attributes
     private let globalAttributes = [
         "id", "class", "style", "title", "lang", "dir", "tabindex", "accesskey",
         "contenteditable", "spellcheck", "draggable", "hidden", "translate",
         "data-", "aria-", "role", "itemscope", "itemprop", "itemref", "itemtype"
     ]
-    
+
     // Element-specific attributes
     private let elementAttributes: [String: [String]] = [
         "a": ["href", "target", "rel", "download", "ping", "type"],
@@ -61,7 +61,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         "audio": ["src", "controls", "autoplay", "loop", "muted", "preload"],
         "iframe": ["src", "width", "height", "loading", "sandbox", "allow", "allowfullscreen"]
     ]
-    
+
     // HTML entities
     private let entities = [
         "&lt;", "&gt;", "&amp;", "&quot;", "&apos;", "&nbsp;", "&copy;", "&reg;",
@@ -69,7 +69,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         "&micro;", "&para;", "&sect;", "&divide;", "&times;", "&not;", "&shy;",
         "&mdash;", "&ndash;", "&hellip;", "&laquo;", "&raquo;", "&ldquo;", "&rdquo;"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
@@ -182,7 +182,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     public init() {
         super.init(
             id: "html-builtin",
@@ -191,35 +191,35 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Overrides for HTML-specific completion
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeHTMLContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .tag:
             items.append(contentsOf: createTagCompletions(filter: analysisResult.filter))
-            
+
         case .attribute:
             items.append(contentsOf: createAttributeCompletions(for: analysisResult.targetTag, filter: analysisResult.filter))
-            
+
         case .attributeValue:
             items.append(contentsOf: createAttributeValueCompletions(for: analysisResult.targetTag, attribute: analysisResult.targetAttribute, filter: analysisResult.filter))
-            
+
         case .entity:
             items.append(contentsOf: createEntityCompletions(filter: analysisResult.filter))
-            
+
         case .closeTag:
             if let tagToClose = analysisResult.targetTag {
                 items.append(createCloseTagCompletion(for: tagToClose))
             }
-            
+
         case .general:
             items.append(contentsOf: createTagCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createEntityCompletions(filter: analysisResult.filter))
@@ -227,9 +227,9 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -237,41 +237,41 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         if text.hasSuffix("&") {
             return "&"
         }
-        
+
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-&")).inverted)
         return components.last ?? ""
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeHTMLContext(_ context: CompletionContextModel) -> HTMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         // let afterCursor = String(context.text.suffix(from: context.text.index(context.text.startIndex, offsetBy: context.cursorPosition)))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for entity context
         if beforeCursor.hasSuffix("&") || (filter.hasPrefix("&") && !filter.hasSuffix(";")) {
             return HTMLContextAnalysisResult(type: .entity, filter: filter)
         }
-        
+
         // Check for closing tag
         if beforeCursor.hasSuffix("</") {
             let openTag = findUnclosedTag(in: beforeCursor)
             return HTMLContextAnalysisResult(type: .closeTag, filter: filter, targetTag: openTag)
         }
-        
+
         // Check for opening tag
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">") && isInTag(beforeCursor)) {
             return HTMLContextAnalysisResult(type: .tag, filter: filter)
         }
-        
+
         // Check for attribute context
         if let tagContext = getCurrentTagContext(from: beforeCursor) {
             // Check if we're in attribute value
@@ -283,10 +283,10 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 return HTMLContextAnalysisResult(type: .attribute, filter: filter, targetTag: tagContext)
             }
         }
-        
+
         return HTMLContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     private func getCurrentTagContext(from text: String) -> String? {
         // Find the most recent unclosed tag
         let pattern = #"<(\w+)(?:\s+[^>]*)?$"#
@@ -297,7 +297,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func getCurrentAttributeContext(from text: String) -> String? {
         // Find the current attribute being edited
         let pattern = #"(\w+)\s*=\s*[\"']?[^\"']*$"#
@@ -308,15 +308,15 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func findUnclosedTag(in text: String) -> String? {
         // Simple approach: find the most recent opening tag without a closing tag
         var tagStack: [String] = []
         let tagPattern = #"<(/)?(\w+)[^>]*>"#
-        
+
         if let regex = try? NSRegularExpression(pattern: tagPattern) {
             let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
-            
+
             for match in matches {
                 if let closeRange = Range(match.range(at: 1), in: text),
                    let tagRange = Range(match.range(at: 2), in: text) {
@@ -338,29 +338,29 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 }
             }
         }
-        
+
         return tagStack.last
     }
-    
+
     private func isInTag(_ text: String) -> Bool {
         let lastOpenBracket = text.lastIndex(of: "<") ?? text.startIndex
         let lastCloseBracket = text.lastIndex(of: ">") ?? text.startIndex
         return lastOpenBracket > lastCloseBracket
     }
-    
+
     private func isInAttributePosition(_ text: String) -> Bool {
         // Check if we're inside a tag and after the tag name
         guard isInTag(text) else { return false }
-        
+
         let pattern = #"<\w+\s+[^>]*$"#
         if let regex = try? NSRegularExpression(pattern: pattern) {
             return regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
         }
         return false
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createTagCompletions(filter: String) -> [CompletionItemModel] {
         elements
             .filter { element in
@@ -369,7 +369,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
             .map { element in
                 let isSelfClosing = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"].contains(element)
                 let insertText = isSelfClosing ? "\(element) $0/>" : "\(element)>$0</\(element)>"
-                
+
                 return CompletionItemModel(
                     label: element,
                     insertText: insertText,
@@ -380,21 +380,21 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createAttributeCompletions(for tag: String?, filter: String) -> [CompletionItemModel] {
         var attributes = globalAttributes
-        
+
         if let tag, let tagSpecificAttrs = elementAttributes[tag] {
             attributes += tagSpecificAttrs
         }
-        
+
         return attributes
             .filter { attribute in
                 filter.isEmpty || attribute.localizedCaseInsensitiveContains(filter)
             }
             .map { attribute in
                 let insertText = attribute.hasSuffix("-") ? "\(attribute)$0" : "\(attribute)=\"$0\""
-                
+
                 return CompletionItemModel(
                     label: attribute,
                     insertText: insertText,
@@ -404,42 +404,42 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createAttributeValueCompletions(for tag: String?, attribute: String?, filter: String) -> [CompletionItemModel] {
         guard let tag, let attribute else { return [] }
-        
+
         var values: [String] = []
-        
+
         // Provide common values based on attribute
         switch attribute {
         case "type" where tag == "input":
             values = ["text", "password", "email", "number", "tel", "url", "date", "time", "datetime-local", "month", "week", "color", "checkbox", "radio", "file", "submit", "reset", "button", "hidden", "search", "range"]
-            
+
         case "method" where tag == "form":
             values = ["get", "post", "dialog"]
-            
+
         case "target":
             values = ["_blank", "_self", "_parent", "_top"]
-            
+
         case "rel" where tag == "a" || tag == "link":
             values = ["noopener", "noreferrer", "nofollow", "stylesheet", "icon", "preconnect", "dns-prefetch", "preload", "prefetch"]
-            
+
         case "loading" where tag == "img" || tag == "iframe":
             values = ["lazy", "eager"]
-            
+
         case "decoding" where tag == "img":
             values = ["async", "sync", "auto"]
-            
+
         case "autocomplete":
             values = ["on", "off", "name", "email", "username", "current-password", "new-password", "one-time-code"]
-            
+
         case "inputmode":
             values = ["none", "text", "decimal", "numeric", "tel", "search", "email", "url"]
-            
+
         default:
             break
         }
-        
+
         return values
             .filter { value in
                 filter.isEmpty || value.localizedCaseInsensitiveContains(filter)
@@ -454,7 +454,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createEntityCompletions(filter: String) -> [CompletionItemModel] {
         entities
             .filter { entity in
@@ -471,7 +471,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCloseTagCompletion(for tag: String) -> CompletionItemModel {
         CompletionItemModel(
             label: tag,
@@ -495,12 +495,12 @@ private struct HTMLContextAnalysisResult {
         case closeTag
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetTag: String?
     let targetAttribute: String?
-    
+
     init(type: CompletionType, filter: String, targetTag: String? = nil, targetAttribute: String? = nil) {
         self.type = type
         self.filter = filter

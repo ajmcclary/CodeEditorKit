@@ -18,7 +18,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             "var", "yield", "record", "sealed", "permits", "non-sealed"
         ]
     }
-    
+
     // Built-in types and classes
     override public var types: [String] {
         [
@@ -31,7 +31,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             "List", "Set", "Map", "Queue", "Deque", "Stack", "Vector"
         ]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
@@ -141,7 +141,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     // Common annotations
     private let annotations = [
         "@Override", "@Deprecated", "@SuppressWarnings", "@FunctionalInterface",
@@ -151,7 +151,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         "@RequestMapping", "@GetMapping", "@PostMapping", "@PutMapping",
         "@DeleteMapping", "@PathVariable", "@RequestParam", "@RequestBody"
     ]
-    
+
     // Common packages
     private let packages = [
         "java.lang", "java.util", "java.io", "java.nio", "java.net", "java.time",
@@ -159,7 +159,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         "java.util.function", "java.util.regex", "javax.swing", "javafx",
         "org.springframework", "org.junit", "org.apache", "com.google"
     ]
-    
+
     public init() {
         super.init(
             id: "java-builtin",
@@ -168,16 +168,16 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Completion Provider Override
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Handle Java-specific contexts
         if analysisResult.targetType == "import" {
             items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
@@ -187,9 +187,9 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             // Use base class implementation for standard contexts
             return try await super.completions(for: context)
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -197,51 +197,51 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis Overrides
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for import statements
         if lineText.hasPrefix("import ") {
             return ContextAnalysisResult(type: .general, filter: filter, targetType: "import")
         }
-        
+
         // Check for annotation context
         if beforeCursor.hasSuffix("@") || filter.hasPrefix("@") {
             return ContextAnalysisResult(type: .general, filter: filter, targetType: "annotation")
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for type context
         if lineText.contains(" ") && !lineText.contains("=") && !lineText.contains("(") {
             // Likely a variable declaration
             return ContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Check for method declaration
         if lineText.contains("(") && !lineText.contains(")") {
             return ContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
@@ -252,9 +252,9 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Method Overrides
-    
+
     override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
@@ -271,13 +271,13 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParams = [
             "String str", "int n", "int i", "boolean flag", "Object obj",
             "List<?> list", "Map<?, ?> map", "Exception e", "T value"
         ]
-        
+
         return commonParams
             .filter { param in
                 filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
@@ -292,34 +292,34 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide common member completions based on type
         switch targetType.lowercased() {
         case "string":
             return createStringMemberCompletions(filter: filter)
-            
+
         case "list", "arraylist", "linkedlist":
             return createListMemberCompletions(filter: filter)
-            
+
         case "map", "hashmap", "treemap":
             return createMapMemberCompletions(filter: filter)
-            
+
         case "system":
             return createSystemMemberCompletions(filter: filter)
-            
+
         case "math":
             return createMathMemberCompletions(filter: filter)
-            
+
         default:
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     // MARK: - Java-Specific Completion Methods
-    
+
     private func createAnnotationCompletions(filter: String) -> [CompletionItemModel] {
         annotations
             .filter { annotation in
@@ -336,7 +336,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createImportCompletions(filter: String) -> [CompletionItemModel] {
         packages
             .filter { pkg in
@@ -352,9 +352,9 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length()", "method", "Get string length"),
@@ -373,10 +373,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("equals()", "method", "Check equality"),
             ("compareTo()", "method", "Compare strings")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("size()", "method", "Get list size"),
@@ -393,10 +393,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("sort()", "method", "Sort list"),
             ("stream()", "method", "Get stream")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("size()", "method", "Get map size"),
@@ -412,10 +412,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("entrySet()", "method", "Get entries"),
             ("forEach()", "method", "Iterate entries")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createSystemMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("out", "property", "Standard output"),
@@ -429,10 +429,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("getenv()", "method", "Get environment"),
             ("gc()", "method", "Garbage collection")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMathMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("PI", "constant", "Pi constant"),
@@ -451,10 +451,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("tan()", "method", "Tangent"),
             ("log()", "method", "Logarithm")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("toString()", "method", "Convert to string"),
@@ -465,10 +465,10 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             ("notifyAll()", "method", "Notify all threads"),
             ("wait()", "method", "Wait for notification")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
         members
             .filter { name, _, _ in

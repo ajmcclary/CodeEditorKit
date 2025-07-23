@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class SwiftCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
-    
+
     override public var keywords: [String] {
         [
             "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
@@ -17,7 +17,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             "weak", "unowned", "inout", "async", "await", "actor", "nonisolated"
         ]
     }
-    
+
     override public var types: [String] {
         [
             "String", "Int", "Double", "Float", "Bool", "Array", "Dictionary", "Set",
@@ -25,11 +25,11 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             "NSMutableArray", "NSMutableDictionary", "NSObject", "Any", "AnyObject"
         ]
     }
-    
+
     override public var literals: [String] {
         ["true", "false", "nil", "self", "super", "Self"]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
@@ -104,9 +104,9 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "swift-builtin",
@@ -115,38 +115,38 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Context Analysis Override
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Determine completion type based on context
         if lineText.contains("func ") && !lineText.contains("{") {
             return ContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         if lineText.hasPrefix("import ") || lineText.contains(": ") {
             return ContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     // MARK: - Member Completions Override
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide common member completions based on type
         switch targetType.lowercased() {
         case "string":
@@ -162,12 +162,12 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     // MARK: - Parameter Completions Override
-    
+
     override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["completion", "handler", "delegate", "error", "result", "value", "index"]
-        
+
         return commonParameters
             .filter { param in
                 filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
@@ -183,9 +183,9 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of characters"),
@@ -197,7 +197,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("hasSuffix(_:)", "method", "Check if has suffix"),
             ("replacingOccurrences(of:with:)", "method", "Replace occurrences")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -213,7 +213,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of elements"),
@@ -227,7 +227,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("map(_:)", "method", "Transform elements"),
             ("forEach(_:)", "method", "Iterate over elements")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -243,7 +243,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createDictionaryMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of key-value pairs"),
@@ -255,7 +255,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("filter(_:)", "method", "Filter key-value pairs"),
             ("map(_:)", "method", "Transform key-value pairs")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -271,14 +271,14 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("description", "property", "String representation"),
             ("debugDescription", "property", "Debug string representation"),
             ("hashValue", "property", "Hash value for Hashable types")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)

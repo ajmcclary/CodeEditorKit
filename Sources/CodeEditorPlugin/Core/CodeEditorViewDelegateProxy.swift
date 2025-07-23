@@ -136,7 +136,7 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
         guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
-        
+
         // Try to convert NSRange to NSTextRange
         if let textLayoutManager = codeEditorView.textLayoutManager,
            let textContentManager = textLayoutManager.textContentManager,
@@ -144,7 +144,7 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
             // Forward to the CodeEditorView delegate method with proper NSTextRange
             return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: replacementString) ?? true
         }
-        
+
         // Fallback: allow the change if we can't convert the range
         return true
     }
@@ -162,12 +162,12 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
         guard let codeEditorView = textView as? CodeEditorView else {
             return true
         }
-        
+
         // UITextView doesn't have TextKit2 support, so we'll create a simple NSTextRange
         if let textRange = NSTextRange(range) {
             return source?.textView(codeEditorView, shouldChangeTextIn: textRange, replacementString: text) ?? true
         }
-        
+
         // Fallback: allow the change if we can't convert the range
         return true
     }

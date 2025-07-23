@@ -11,7 +11,7 @@ internal struct FoldableRegion: Identifiable {
     internal var level: Int = 0
     internal var parentId: UUID?
     internal var foldedText: String?
-    
+
     init(range: NSRange, title: String, type: FoldingType) {
         self.range = range
         self.title = title
@@ -42,9 +42,9 @@ internal struct CodeFoldingConfiguration {
     internal var hidesFoldedContent = true
     internal var minimumLineCount = 3
     internal var foldedIndicator = " ⋯ "
-    
+
     internal var indicatorColor = PlatformColors.secondaryLabel
-    
+
     internal var animatesFolding = true
     internal var saveFoldState = true
     internal var enableIncrementalUpdates = true

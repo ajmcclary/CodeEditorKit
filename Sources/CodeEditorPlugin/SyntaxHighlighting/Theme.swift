@@ -85,7 +85,7 @@ public struct Theme {
         public let colors: [TokenName: PlatformColor]
 
         public init(colors: [String: PlatformColor]) {
-            self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in 
+            self.colors = Dictionary(uniqueKeysWithValues: colors.map { key, value in
                 (TokenName(key), value)
             })
         }
@@ -99,9 +99,9 @@ public struct Theme {
                 "string", "text.literal", "text.title", "type",
                 "variable.builtin", "variable"
             ]
-            
+
             var colorDict: [String: PlatformColor] = [:]
-            
+
             for tokenType in tokenTypes {
                 let colorName = "\(name)/\(tokenType)"
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -120,46 +120,46 @@ public struct Theme {
                 }
                 #endif
             }
-            
+
             self.init(colors: colorDict)
         }
-        
+
         /// Provides semantic fallback colors when theme colors are not available
         private static func semanticFallbackColor(for tokenType: String) -> PlatformColor {
             switch tokenType {
             case "plain", "text.literal":
                 return PlatformColors.label
-                
+
             case "comment":
                 return PlatformColors.secondaryLabel
-                
+
             case "keyword", "keyword.function", "keyword.return":
                 return PlatformColors.systemPurple
-                
+
             case "string":
                 return PlatformColors.systemRed
-                
+
             case "number", "boolean":
                 return PlatformColors.systemBlue
-                
+
             case "type", "constructor":
                 return PlatformColors.systemGreen
-                
+
             case "function.call", "method":
                 return PlatformColors.systemTeal
-                
+
             case "operator", "punctuation.special":
                 return PlatformColors.systemOrange
-                
+
             case "parameter", "variable", "variable.builtin":
                 return PlatformColors.systemIndigo
-                
+
             case "include":
                 return PlatformColors.systemPink
-                
+
             case "text.title":
                 return PlatformColors.label
-                
+
             default:
                 return PlatformColors.label
             }
@@ -174,7 +174,7 @@ public struct Theme {
         public let fonts: [TokenName: PlatformFont]
 
         public init(fonts: [String: PlatformFont]) {
-            self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in 
+            self.fonts = Dictionary(uniqueKeysWithValues: fonts.map { key, value in
                 (TokenName(key), value)
             })
         }
@@ -183,7 +183,7 @@ public struct Theme {
             // Use platform abstraction for font creation
             let regularFont = PlatformFonts.monospacedSystemFont(ofSize: 0, weight: .regular)
             let mediumFont = PlatformFonts.monospacedSystemFont(ofSize: 0, weight: .medium)
-            
+
             fonts = [
                 "plain": regularFont,
                 "boolean": regularFont,

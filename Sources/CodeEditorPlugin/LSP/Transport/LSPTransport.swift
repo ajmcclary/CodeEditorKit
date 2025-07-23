@@ -38,25 +38,25 @@ import Foundation
 public protocol LSPTransport: Actor {
     /// Current connection state
     var isConnected: Bool { get }
-    
+
     /// Connect to the LSP server
     /// - Throws: Transport-specific connection errors
     func connect() async throws
-    
+
     /// Disconnect from the LSP server
     func disconnect() async
-    
+
     /// Send data to the LSP server
     /// - Parameter data: The data to send
     /// - Throws: Transport-specific send errors
     func send(_ data: Data) async throws
-    
+
     /// Receive data from the LSP server
     /// - Returns: The received data
     /// - Throws: Transport-specific receive errors
     /// - Note: This method should block until data is available
     func receive() async throws -> Data
-    
+
     /// Set a handler for incoming data
     /// - Parameter handler: Closure called when data is received
     /// - Note: Some transports may push data asynchronously
@@ -71,7 +71,7 @@ public enum LSPTransportError: LocalizedError {
     case receiveFailed(underlying: Error?)
     case invalidData
     case transportSpecific(message: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .notConnected:
@@ -99,22 +99,22 @@ public enum LSPTransportError: LocalizedError {
 public struct LSPTransportConfiguration: Sendable, Codable {
     /// Timeout for connection attempts
     public let connectionTimeout: TimeInterval
-    
+
     /// Timeout for read operations
     public let readTimeout: TimeInterval
-    
+
     /// Timeout for write operations  
     public let writeTimeout: TimeInterval
-    
+
     /// Whether to automatically reconnect on disconnection
     public let autoReconnect: Bool
-    
+
     /// Maximum number of reconnection attempts
     public let maxReconnectAttempts: Int
-    
+
     /// Delay between reconnection attempts
     public let reconnectDelay: TimeInterval
-    
+
     public init(
         connectionTimeout: TimeInterval = 30.0,
         readTimeout: TimeInterval = 60.0,

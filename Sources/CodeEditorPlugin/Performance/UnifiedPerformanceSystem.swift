@@ -4,31 +4,31 @@ import Foundation
 @MainActor
 public final class UnifiedPerformanceSystem {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "UnifiedPerformanceSystem")
-    
+
     // MARK: - Singleton
-    
+
     public static let shared = UnifiedPerformanceSystem()
-    
+
     private init() {}
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
-    
+
     // MARK: - Performance Metrics Storage
-    
+
     private var metrics: [PerformanceMetricType: [PerformanceMetric]] = [:]
     private var activeOperations: [UUID: OperationInfo] = [:]
     private var performanceProfiles: [String: PerformanceProfile] = [:]
-    
+
     // MARK: - Configuration
-    
+
     private var retentionPeriod: TimeInterval = 3_600 // 1 hour
     private var maxMetricsPerType = 1_000
     private var enableAutoOptimization = true
-    
+
     // MARK: - Public API
-    
+
     /// Track a performance metric
     public func track<T>(
         _ metricType: PerformanceMetricType,
@@ -37,7 +37,7 @@ public final class UnifiedPerformanceSystem {
         let operationId = UUID()
         let startTime = CFAbsoluteTimeGetCurrent()
         let startMemory = getMemoryUsage()
-        
+
         // Record operation start
         activeOperations[operationId] = OperationInfo(
             id: operationId,
@@ -45,27 +45,27 @@ public final class UnifiedPerformanceSystem {
             startTime: startTime,
             startMemory: startMemory
         )
-        
+
         do {
             let result = try await operation()
-            
+
             // Record success
             let endTime = CFAbsoluteTimeGetCurrent()
             let endMemory = getMemoryUsage()
-            
+
             await recordMetric(
                 type: metricType,
                 duration: endTime - startTime,
                 memoryDelta: Int64(endMemory) - Int64(startMemory),
                 success: true
             )
-            
+
             activeOperations.removeValue(forKey: operationId)
             return result
         } catch {
             // Record failure
             let endTime = CFAbsoluteTimeGetCurrent()
-            
+
             await recordMetric(
                 type: metricType,
                 duration: endTime - startTime,
@@ -73,47 +73,47 @@ public final class UnifiedPerformanceSystem {
                 success: false,
                 error: error
             )
-            
+
             activeOperations.removeValue(forKey: operationId)
             throw error
         }
     }
-    
+
     /// Generate performance insights
     public func generateInsights() -> UnifiedPerformanceInsights {
         cleanupOldMetrics()
-        
+
         var insights = UnifiedPerformanceInsights()
-        
+
         // Analyze each metric type
         for (metricType, metricList) in metrics {
             guard !metricList.isEmpty else { continue }
-            
+
             let analysis = analyzeMetrics(metricList, type: metricType)
             insights.metricAnalyses[metricType] = analysis
-            
+
             // Check for issues
             let issues = detectIssues(analysis, type: metricType)
             if !issues.isEmpty {
                 insights.issues.append(contentsOf: issues)
             }
         }
-        
+
         // Generate recommendations
         insights.recommendations = generateRecommendations(from: insights.issues)
-        
+
         // Calculate overall health
         insights.overallHealth = calculateHealthScore(from: insights)
-        
+
         return insights
     }
-    
+
     /// Apply performance optimizations based on current profile
     public func applyOptimizations(basedOn profile: PerformanceProfile) {
         guard enableAutoOptimization else { return }
-        
+
         logger.info("Applying performance optimizations for profile: \(profile.name)")
-        
+
         // Apply configuration changes based on profile
         switch profile.type {
         case .lowMemory:
@@ -128,15 +128,15 @@ public final class UnifiedPerformanceSystem {
         case .balanced:
             applyBalancedOptimizations()
         }
-        
+
         // Store the active profile
         performanceProfiles[profile.name] = profile
     }
-    
+
     /// Get current performance status
     public func getCurrentStatus() -> PerformanceStatus {
         let insights = generateInsights()
-        
+
         return PerformanceStatus(
             activeOperations: activeOperations.count,
             healthScore: insights.overallHealth,
@@ -144,9 +144,9 @@ public final class UnifiedPerformanceSystem {
             currentProfile: getCurrentProfile()
         )
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func recordMetric(
         type: PerformanceMetricType,
         duration: TimeInterval,
@@ -163,37 +163,37 @@ public final class UnifiedPerformanceSystem {
             success: success,
             errorDescription: error?.localizedDescription
         )
-        
+
         if metrics[type] == nil {
             metrics[type] = []
         }
-        
+
         metrics[type]?.append(metric)
-        
+
         // Limit stored metrics
         if let count = metrics[type]?.count, count > maxMetricsPerType {
             let removeCount = count - maxMetricsPerType
             metrics[type]?.removeFirst(removeCount)
         }
-        
+
         // Log significant issues
         if !success || duration > type.warningThreshold {
             logger.warning("Performance issue detected: \(type.rawValue) took \(duration)s")
         }
     }
-    
+
     private func cleanupOldMetrics() {
         let cutoffDate = Date().addingTimeInterval(-retentionPeriod)
-        
+
         for (type, metricList) in metrics {
             metrics[type] = metricList.filter { $0.timestamp > cutoffDate }
         }
     }
-    
+
     private func analyzeMetrics(_ metricList: [PerformanceMetric], type _: PerformanceMetricType) -> MetricAnalysis {
         let successfulMetrics = metricList.filter { $0.success }
         let durations = successfulMetrics.map { $0.duration }
-        
+
         return MetricAnalysis(
             count: metricList.count,
             averageDuration: durations.isEmpty ? 0 : durations.reduce(0, +) / Double(durations.count),
@@ -204,10 +204,10 @@ public final class UnifiedPerformanceSystem {
             memoryImpact: calculateAverageMemoryImpact(metricList)
         )
     }
-    
+
     private func detectIssues(_ analysis: MetricAnalysis, type: PerformanceMetricType) -> [PerformanceIssue] {
         var issues: [PerformanceIssue] = []
-        
+
         // Check for slow operations
         if analysis.averageDuration > type.warningThreshold {
             issues.append(PerformanceIssue(
@@ -217,7 +217,7 @@ public final class UnifiedPerformanceSystem {
                 metric: "Average duration: \(String(format: "%.2f", analysis.averageDuration))s"
             ))
         }
-        
+
         // Check for low success rate
         if analysis.successRate < 0.95 {
             issues.append(PerformanceIssue(
@@ -227,7 +227,7 @@ public final class UnifiedPerformanceSystem {
                 metric: "Success rate: \(String(format: "%.0f", analysis.successRate * 100))%"
             ))
         }
-        
+
         // Check for memory issues
         if analysis.memoryImpact > 10 * 1_024 * 1_024 { // 10MB
             issues.append(PerformanceIssue(
@@ -237,26 +237,26 @@ public final class UnifiedPerformanceSystem {
                 metric: "Average memory impact: \(ByteCountFormatter.string(fromByteCount: analysis.memoryImpact, countStyle: .binary))"
             ))
         }
-        
+
         return issues
     }
-    
+
     private func generateRecommendations(from issues: [PerformanceIssue]) -> [PerformanceRecommendation] {
         var recommendations: [PerformanceRecommendation] = []
-        
+
         // Group issues by type
         let issuesByType = Dictionary(grouping: issues) { $0.type }
-        
+
         for (type, typeIssues) in issuesByType {
             let criticalCount = typeIssues.filter { $0.severity == .critical }.count
-            
+
             if criticalCount > 0 {
                 recommendations.append(contentsOf: type.criticalRecommendations)
             } else {
                 recommendations.append(contentsOf: type.warningRecommendations)
             }
         }
-        
+
         // Add general recommendations based on overall issues
         if issues.count > 5 {
             recommendations.append(PerformanceRecommendation(
@@ -266,13 +266,13 @@ public final class UnifiedPerformanceSystem {
                 priority: .high
             ))
         }
-        
+
         return recommendations
     }
-    
+
     private func calculateHealthScore(from insights: UnifiedPerformanceInsights) -> Double {
         var score = 100.0
-        
+
         // Deduct for issues
         for issue in insights.issues {
             switch issue.severity {
@@ -286,15 +286,15 @@ public final class UnifiedPerformanceSystem {
                 score -= 5
             }
         }
-        
+
         // Ensure score stays in bounds
         return max(0, min(100, score))
     }
-    
+
     private func getMemoryUsage() -> UInt64 {
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-        
+
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
                 task_info(
@@ -305,32 +305,32 @@ public final class UnifiedPerformanceSystem {
                 )
             }
         }
-        
+
         return result == KERN_SUCCESS ? info.resident_size : 0
     }
-    
+
     private func calculatePercentile(_ values: [Double], percentile: Double) -> Double {
         guard !values.isEmpty else { return 0 }
-        
+
         let sorted = values.sorted()
         let index = Int(Double(sorted.count - 1) * percentile)
         return sorted[index]
     }
-    
+
     private func calculateAverageMemoryImpact(_ metrics: [PerformanceMetric]) -> Int64 {
         guard !metrics.isEmpty else { return 0 }
-        
+
         let totalImpact = metrics.reduce(0) { $0 + abs($1.memoryDelta) }
         return totalImpact / Int64(metrics.count)
     }
-    
+
     private func getCurrentProfile() -> PerformanceProfile {
         // Return the most recently applied profile or default
         performanceProfiles.values.max { $0.appliedAt < $1.appliedAt } ?? .balanced
     }
-    
+
     // MARK: - Optimization Methods
-    
+
     private func applyLowMemoryOptimizations() {
         // Reduce cache sizes
         NotificationCenter.default.post(
@@ -339,7 +339,7 @@ public final class UnifiedPerformanceSystem {
             userInfo: ["optimization": "lowMemory"]
         )
     }
-    
+
     private func applyHighLatencyOptimizations() {
         // Increase timeouts and batch sizes
         NotificationCenter.default.post(
@@ -348,7 +348,7 @@ public final class UnifiedPerformanceSystem {
             userInfo: ["optimization": "highLatency"]
         )
     }
-    
+
     private func applyCPUOptimizations() {
         // Reduce concurrent operations
         NotificationCenter.default.post(
@@ -357,7 +357,7 @@ public final class UnifiedPerformanceSystem {
             userInfo: ["optimization": "cpuIntensive"]
         )
     }
-    
+
     private func applyBalancedOptimizations() {
         // Reset to default settings
         NotificationCenter.default.post(
@@ -379,7 +379,7 @@ public enum PerformanceMetricType: String, CaseIterable {
     case search
     case rangeProcessing
     case viewportUpdate
-    
+
     var warningThreshold: TimeInterval {
         switch self {
         case .syntaxHighlighting: return 0.5
@@ -392,11 +392,11 @@ public enum PerformanceMetricType: String, CaseIterable {
         case .viewportUpdate: return 0.05
         }
     }
-    
+
     var criticalThreshold: TimeInterval {
         warningThreshold * 2
     }
-    
+
     var warningRecommendations: [PerformanceRecommendation] {
         switch self {
         case .syntaxHighlighting:
@@ -423,7 +423,7 @@ public enum PerformanceMetricType: String, CaseIterable {
             return []
         }
     }
-    
+
     var criticalRecommendations: [PerformanceRecommendation] {
         warningRecommendations + [
             PerformanceRecommendation(
@@ -508,19 +508,19 @@ public struct PerformanceProfile: Sendable {
     let name: String
     let type: ProfileType
     let appliedAt: Date
-    
+
     static let balanced = Self(
         name: "Balanced",
         type: .balanced,
         appliedAt: Date()
     )
-    
+
     static let performance = Self(
         name: "Performance",
         type: .cpuIntensive,
         appliedAt: Date()
     )
-    
+
     enum ProfileType {
         case lowMemory
         case highLatency

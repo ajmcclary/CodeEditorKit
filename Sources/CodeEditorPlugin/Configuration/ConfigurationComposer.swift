@@ -4,7 +4,7 @@ import Foundation
 /// by providing base configurations and functional composition methods.
 public enum ConfigurationComposer {
     // MARK: - Base Configuration Builders
-    
+
     /// Creates a base configuration with common settings
     /// - Parameters:
     ///   - fontSize: The font size for the editor (default: 13.0)
@@ -21,21 +21,21 @@ public enum ConfigurationComposer {
         tabWidth: Int = 4
     ) -> EditorConfiguration {
         var config = EditorConfiguration()
-        
+
         // Display settings
         config.display.fontSize = fontSize
         config.display.isLineNumbersEnabled = lineNumbers
         config.display.enableSyntaxHighlighting = syntaxHighlighting
-        
+
         // Behavior settings
         config.behavior.isEditable = editable
-        
+
         // Layout settings
         config.layout.tabWidth = tabWidth
-        
+
         return config
     }
-    
+
     /// Creates a base configuration optimized for mobile platforms
     /// - Parameters:
     ///   - fontSize: The font size (default: 16.0 for better touch readability)
@@ -51,7 +51,7 @@ public enum ConfigurationComposer {
         config.performance.smoothScrolling = true
         return config
     }
-    
+
     /// Creates a base configuration optimized for read-only viewing
     /// - Parameter fontSize: The font size for the viewer
     /// - Returns: A read-only optimized configuration
@@ -67,9 +67,9 @@ public enum ConfigurationComposer {
         config.behavior.isAutomaticTextCompletionEnabled = false
         return config
     }
-    
+
     // MARK: - Composition Methods
-    
+
     /// Applies minimal UI settings to a configuration
     /// - Parameter config: The configuration to modify
     /// - Returns: The modified configuration
@@ -82,7 +82,7 @@ public enum ConfigurationComposer {
         modified.display.showFoldingControls = false
         return modified
     }
-    
+
     /// Applies performance optimizations for large files
     /// - Parameters:
     ///   - config: The configuration to modify
@@ -97,7 +97,7 @@ public enum ConfigurationComposer {
         modified.performance.useHardwareAcceleration = true
         return modified
     }
-    
+
     /// Applies markdown-specific settings
     /// - Parameter config: The configuration to modify
     /// - Returns: The modified configuration
@@ -110,7 +110,7 @@ public enum ConfigurationComposer {
         modified.display.enableCodeFolding = false
         return modified
     }
-    
+
     /// Applies presentation mode settings
     /// - Parameters:
     ///   - config: The configuration to modify
@@ -130,9 +130,9 @@ public enum ConfigurationComposer {
         modified.behavior.enableCodeCompletion = false
         return modified
     }
-    
+
     // MARK: - Platform-Specific Compositions
-    
+
     /// Creates a configuration by composing platform-specific optimizations
     /// - Parameters:
     ///   - base: The base configuration to start from
@@ -148,7 +148,7 @@ public enum ConfigurationComposer {
                 to: mobileBaseConfiguration(),
                 maxHighlightingLength: 100_000
             )
-            
+
         case .catalyst:
             var config = baseConfiguration(fontSize: 14.0)
             config.layout.gutterWidth = 45.0
@@ -158,7 +158,7 @@ public enum ConfigurationComposer {
                 to: config,
                 maxHighlightingLength: 250_000
             )
-            
+
         case .macOS:
             var config = baseConfiguration()
             config.layout.gutterWidth = 40.0  // Standard macOS gutter width
@@ -170,7 +170,7 @@ public enum ConfigurationComposer {
             )
         }
     }
-    
+
     /// Platform enumeration for configuration targeting
     public enum Platform {
         case iOS
@@ -190,7 +190,7 @@ extension EditorConfiguration {
         transform(&copy)
         return copy
     }
-    
+
     /// Composes multiple transformations
     /// - Parameter transforms: The transformations to apply in order
     /// - Returns: The transformed configuration
@@ -214,12 +214,12 @@ extension ConfigurationComposer {
                 config.behavior.enableCodeCompletion = false
             }
     }
-    
+
     /// Creates the read-only preset using composition
     public static func createReadOnlyPreset() -> EditorConfiguration {
         readOnlyBaseConfiguration()
     }
-    
+
     /// Creates the markdown preset using composition
     public static func createMarkdownPreset() -> EditorConfiguration {
         baseConfiguration()
@@ -227,7 +227,7 @@ extension ConfigurationComposer {
                 config = applyMarkdownSettings(to: config)
             }
     }
-    
+
     /// Creates the presentation preset using composition
     public static func createPresentationPreset() -> EditorConfiguration {
         readOnlyBaseConfiguration()

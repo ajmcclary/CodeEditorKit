@@ -10,7 +10,7 @@ public enum ConfigurationDiff {
         _ config2: EditorConfiguration
     ) -> [ConfigurationChange] {
         var changes: [ConfigurationChange] = []
-        
+
         // Compare display settings
         if config1.display.fontSize != config2.display.fontSize {
             changes.append(ConfigurationChange(
@@ -19,7 +19,7 @@ public enum ConfigurationDiff {
                 newValue: config2.display.fontSize
             ))
         }
-        
+
         if config1.display.isLineNumbersEnabled != config2.display.isLineNumbersEnabled {
             changes.append(ConfigurationChange(
                 path: "display.isLineNumbersEnabled",
@@ -27,7 +27,7 @@ public enum ConfigurationDiff {
                 newValue: config2.display.isLineNumbersEnabled
             ))
         }
-        
+
         // Compare layout settings
         if config1.layout.tabWidth != config2.layout.tabWidth {
             changes.append(ConfigurationChange(
@@ -36,7 +36,7 @@ public enum ConfigurationDiff {
                 newValue: config2.layout.tabWidth
             ))
         }
-        
+
         // Compare behavior settings
         if config1.behavior.isEditable != config2.behavior.isEditable {
             changes.append(ConfigurationChange(
@@ -45,7 +45,7 @@ public enum ConfigurationDiff {
                 newValue: config2.behavior.isEditable
             ))
         }
-        
+
         // Compare performance settings
         if config1.performance.useHardwareAcceleration != config2.performance.useHardwareAcceleration {
             changes.append(ConfigurationChange(
@@ -54,9 +54,9 @@ public enum ConfigurationDiff {
                 newValue: config2.performance.useHardwareAcceleration
             ))
         }
-        
+
         // Add more comparisons as needed...
-        
+
         return changes
     }
 }
@@ -66,7 +66,7 @@ public struct ConfigurationChange {
     public let path: String
     public let oldValue: Any
     public let newValue: Any
-    
+
     public var description: String {
         "\(path): \(oldValue) → \(newValue)"
     }

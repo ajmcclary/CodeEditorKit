@@ -13,7 +13,7 @@ actor HighlightingActor {
     ) async throws -> [HighlightedToken] {
         try Task.checkCancellation()
         _ = maxConcurrentOperations // Reserved for future use
-        
+
         // Use task priority based on highlighting priority
         if let taskPriority = priority.taskPriority {
             return await Task(priority: taskPriority) {
@@ -25,11 +25,11 @@ actor HighlightingActor {
             }.value
         }
     }
-    
+
     private func createBasicHighlighting(for text: String, language: Language) -> [HighlightedToken] {
         // Simple keyword-based highlighting that doesn't require MainActor
         var tokens: [HighlightedToken] = []
-        
+
         let keywords: [String]
         switch language {
         case .swift:
@@ -56,20 +56,20 @@ actor HighlightingActor {
         default:
             keywords = ["function", "var", "if", "else", "for", "while", "return"]
         }
-        
+
         // swiftlint:disable:next legacy_objc_type
         let nsString = NSString(string: text)
-        
+
         for keyword in keywords {
             var searchRange = NSRange(location: 0, length: nsString.length)
-            
+
             while searchRange.location < nsString.length {
                 let foundRange = nsString.range(of: keyword, options: [.caseInsensitive], range: searchRange)
-                
+
                 if foundRange.location == NSNotFound {
                     break
                 }
-                
+
                 // Create a token for the keyword
                 let token = HighlightedToken(
                     range: foundRange,
@@ -77,13 +77,13 @@ actor HighlightingActor {
                     text: nsString.substring(with: foundRange)
                 )
                 tokens.append(token)
-                
+
                 // Update search range to continue after this match
                 searchRange.location = foundRange.location + foundRange.length
                 searchRange.length = nsString.length - searchRange.location
             }
         }
-        
+
         return tokens
     }
 }

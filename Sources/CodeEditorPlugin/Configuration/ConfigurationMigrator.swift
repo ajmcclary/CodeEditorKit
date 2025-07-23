@@ -5,60 +5,60 @@ import Foundation
 /// Migrator for updating configurations between versions
 public struct ConfigurationMigrator {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ConfigurationMigrator")
-    
+
     /// Current configuration version
     public static let currentVersion = "2.0"
-    
+
     /// Migrate a configuration from an older version
     public func migrate(
         from configuration: [String: Any],
         version: String
     ) -> Result<EditorConfiguration, MigrationError> {
         logger.info("Migrating configuration from version \(version) to \(Self.currentVersion)")
-        
+
         var migrated = configuration
-        
+
         // Apply migrations in sequence
         if version < "1.1" {
             migrated = migrateFrom1_0To1_1(migrated)
         }
-        
+
         if version < "1.2" {
             migrated = migrateFrom1_1To1_2(migrated)
         }
-        
+
         if version < "2.0" {
             migrated = migrateFrom1_2To2_0(migrated)
         }
-        
+
         // Ensure all required sections exist
         migrated = ensureRequiredSections(migrated)
-        
+
         // Decode the migrated configuration
         do {
             let data = try JSONSerialization.data(withJSONObject: migrated)
             let decoder = JSONDecoder()
             let config = try decoder.decode(EditorConfiguration.self, from: data)
-            
+
             // Validate the migrated configuration
             let validator = ConfigurationValidator()
             let issues = validator.validate(config)
-            
+
             if issues.contains(where: { $0.severity == .error }) {
                 throw MigrationError.validationFailed(issues)
             }
-            
+
             return .success(config)
         } catch {
             return .failure(.decodingFailed(error))
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func ensureRequiredSections(_ config: [String: Any]) -> [String: Any] {
         var migrated = config
-        
+
         // Ensure all required top-level sections exist
         if migrated["display"] == nil {
             migrated["display"] = [:]
@@ -72,15 +72,15 @@ public struct ConfigurationMigrator {
         if migrated["performance"] == nil {
             migrated["performance"] = [:]
         }
-        
+
         return migrated
     }
-    
+
     // MARK: - Version Migrations
-    
+
     private func migrateFrom1_0To1_1(_ config: [String: Any]) -> [String: Any] {
         var migrated = config
-        
+
         // Migrate flat structure to nested structure
         if let fontSize = config["fontSize"] as? Double {
             migrated.removeValue(forKey: "fontSize")
@@ -88,20 +88,20 @@ public struct ConfigurationMigrator {
             display["fontSize"] = fontSize
             migrated["display"] = display
         }
-        
+
         if let showLineNumbers = config["showLineNumbers"] as? Bool {
             migrated.removeValue(forKey: "showLineNumbers")
             var display = migrated["display"] as? [String: Any] ?? [:]
             display["showLineNumbers"] = showLineNumbers
             migrated["display"] = display
         }
-        
+
         return migrated
     }
-    
+
     private func migrateFrom1_1To1_2(_ config: [String: Any]) -> [String: Any] {
         var migrated = config
-        
+
         // Add performance section if missing
         if migrated["performance"] == nil {
             migrated["performance"] = [
@@ -110,13 +110,13 @@ public struct ConfigurationMigrator {
                 "largeFileThreshold": 1_000_000
             ]
         }
-        
+
         return migrated
     }
-    
+
     private func migrateFrom1_2To2_0(_ config: [String: Any]) -> [String: Any] {
         var migrated = config
-        
+
         // Rename deprecated keys
         if var behavior = migrated["behavior"] as? [String: Any] {
             if let autoComplete = behavior["autoComplete"] as? Bool {
@@ -125,7 +125,7 @@ public struct ConfigurationMigrator {
                 migrated["behavior"] = behavior
             }
         }
-        
+
         // Add new display options
         if var display = migrated["display"] as? [String: Any] {
             if display["enableAnnotations"] == nil {
@@ -133,7 +133,7 @@ public struct ConfigurationMigrator {
             }
             migrated["display"] = display
         }
-        
+
         return migrated
     }
 }
@@ -145,7 +145,7 @@ public enum MigrationError: LocalizedError {
     case validationFailed([ValidationIssue])
     case missingRequiredField(String)
     case migrationFailed(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .unsupportedVersion(let version):
@@ -160,7 +160,7 @@ public enum MigrationError: LocalizedError {
 
         case .missingRequiredField(let field):
             return "Missing required field: \(field)"
-            
+
         case .migrationFailed(let reason):
             return "Migration failed: \(reason)"
         }

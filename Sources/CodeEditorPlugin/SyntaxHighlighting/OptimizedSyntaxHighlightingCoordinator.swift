@@ -9,7 +9,7 @@ import AppKit
 @MainActor
 public final class OptimizedSyntaxHighlightingCoordinator {
     // MARK: - Types
-    
+
     private struct PerformanceData {
         let tokenizationTime: TimeInterval
         let cacheCheckTime: TimeInterval
@@ -21,7 +21,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         let textLength: Int
         let totalStartTime: TimeInterval
     }
-    
+
     public struct HighlightingConfiguration: Sendable {
         public var enableViewportOptimization: Bool = true
         public var viewportPadding: Int = 500 // Characters before/after visible range
@@ -29,9 +29,9 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         public var enableIncrementalHighlighting: Bool = true
         public var cacheWarmingEnabled: Bool = true
         public var circuitBreakerThreshold: TimeInterval = 0.1 // 100ms
-        
+
         public static let `default` = Self()
-        
+
         public static let performance = Self(
             enableViewportOptimization: true,
             viewportPadding: 200,
@@ -41,25 +41,25 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             circuitBreakerThreshold: 0.05
         )
     }
-    
+
     // MARK: - Properties
-    
+
     private let coordinator: SyntaxHighlightingCoordinator
     private let tokenCache: SmartTokenCache
     private let performanceTracker: SyntaxHighlightingPerformanceTracker
     private let memoryMonitor: MemoryMonitor
     private var configuration: HighlightingConfiguration
-    
+
     // Circuit breaker state
     private var circuitBreakerTrips = 0
     private var lastCircuitBreakerReset = Date()
-    
+
     // Incremental state
     private var lastHighlightedText: String?
     private var lastHighlightedTokens: [HighlightedToken] = []
-    
+
     // MARK: - Initialization
-    
+
     public init(
         memoryMonitor: MemoryMonitor,
         configuration: HighlightingConfiguration = .default
@@ -69,7 +69,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         self.performanceTracker = SyntaxHighlightingPerformanceTracker()
         self.memoryMonitor = memoryMonitor
         self.configuration = configuration
-        
+
         // Warm cache for common languages if enabled
         if configuration.cacheWarmingEnabled {
             Task {
@@ -77,9 +77,9 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             }
         }
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Highlight text with optimizations
     public func highlight(
         text: String,
@@ -87,12 +87,12 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         visibleRange: NSRange? = nil
     ) async -> [HighlightedToken] {
         let startTime = CFAbsoluteTimeGetCurrent()
-        
+
         // Check circuit breaker
         if shouldTripCircuitBreaker() {
             return [] // Return empty tokens to prevent further delays
         }
-        
+
         // For plain text, return immediately
         if language == .plainText {
             trackPerformance(PerformanceData(
@@ -108,15 +108,15 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             ))
             return []
         }
-        
+
         // Check cache
         let cacheCheckStart = CFAbsoluteTimeGetCurrent()
         let cacheKey = SmartTokenCache.CacheKey(text: text, language: language, version: 0)
-        
+
         let cachedTokens = await tokenCache.getCachedTokens(for: cacheKey, viewportRange: visibleRange)
         if !cachedTokens.isEmpty {
             let cacheCheckTime = CFAbsoluteTimeGetCurrent() - cacheCheckStart
-            
+
             trackPerformance(PerformanceData(
                 tokenizationTime: 0,
                 cacheCheckTime: cacheCheckTime,
@@ -128,15 +128,15 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 textLength: text.count,
                 totalStartTime: startTime
             ))
-            
+
             return cachedTokens
         }
-        
+
         let cacheCheckTime = CFAbsoluteTimeGetCurrent() - cacheCheckStart
-        
+
         // Determine highlighting strategy
         let tokens: [HighlightedToken]
-        
+
         if configuration.enableViewportOptimization && visibleRange != nil && text.count > 10_000 {
             tokens = await highlightViewport(
                 text: text,
@@ -160,7 +160,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 totalStartTime: startTime
             )
         }
-        
+
         // Cache the result
         let totalTime = CFAbsoluteTimeGetCurrent() - startTime
         await tokenCache.setCachedTokens(
@@ -169,14 +169,14 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             computationTime: Duration.seconds(totalTime),
             viewportRange: visibleRange
         )
-        
+
         // Update incremental state
         lastHighlightedText = text
         lastHighlightedTokens = tokens
-        
+
         return tokens
     }
-    
+
     /// Apply highlighting to attributed string with performance tracking
     public func applyHighlighting(
         to attributedString: NSMutableAttributedString,
@@ -184,18 +184,18 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         progressHandler: ((Double) -> Void)? = nil
     ) async {
         let startTime = CFAbsoluteTimeGetCurrent()
-        
+
         // Remove existing highlighting
         let range = NSRange(location: 0, length: attributedString.length)
         attributedString.removeAttribute(.foregroundColor, range: range)
-        
+
         // Apply in chunks for better responsiveness
         let chunkSize = 500
         for (index, token) in tokens.enumerated() {
             if index.isMultiple(of: chunkSize) {
                 await Task.yield()
                 progressHandler?(Double(index) / Double(tokens.count))
-                
+
                 // Check circuit breaker
                 let elapsed = CFAbsoluteTimeGetCurrent() - startTime
                 if elapsed > configuration.circuitBreakerThreshold {
@@ -203,29 +203,29 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                     break
                 }
             }
-            
+
             guard token.range.location + token.range.length <= attributedString.length else {
                 continue
             }
-            
+
             attributedString.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
-        
+
         progressHandler?(1.0)
     }
-    
+
     /// Get performance report
     public func getPerformanceReport() -> String {
         performanceTracker.generateReport()
     }
-    
+
     /// Update configuration
     public func updateConfiguration(_ configuration: HighlightingConfiguration) {
         self.configuration = configuration
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func highlightViewport(
         text: String,
         language: Language,
@@ -238,7 +238,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             location: max(0, visibleRange.location - configuration.viewportPadding),
             length: min(text.count - visibleRange.location, visibleRange.length + 2 * configuration.viewportPadding)
         )
-        
+
         // Extract viewport text
         let start = text.index(text.startIndex, offsetBy: expandedRange.location)
         let end = text.index(start, offsetBy: expandedRange.length)
@@ -246,11 +246,11 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         guard !viewportText.isEmpty else {
             return []
         }
-        
+
         let highlightStart = CFAbsoluteTimeGetCurrent()
         var tokens = await coordinator.highlightAsync(source: viewportText, language: language)
         let highlightTime = CFAbsoluteTimeGetCurrent() - highlightStart
-        
+
         // Adjust token ranges to match original text
         tokens = tokens.map { token in
             HighlightedToken(
@@ -262,7 +262,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 text: token.text
             )
         }
-        
+
         trackPerformance(PerformanceData(
             tokenizationTime: 0,
             cacheCheckTime: cacheCheckTime,
@@ -274,10 +274,10 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             textLength: viewportText.count,
             totalStartTime: totalStartTime
         ))
-        
+
         return tokens
     }
-    
+
     private func highlightIncrementally(
         text: String,
         language: Language,
@@ -293,7 +293,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             totalStartTime: totalStartTime
         )
     }
-    
+
     private func highlightFull(
         text: String,
         language: Language,
@@ -301,25 +301,25 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         totalStartTime: TimeInterval
     ) async -> [HighlightedToken] {
         let highlightStart = CFAbsoluteTimeGetCurrent()
-        
+
         // Use chunking for large texts
         if text.count > configuration.maxChunkSize {
             var allTokens: [HighlightedToken] = []
             var offset = 0
-            
+
             while offset < text.count {
                 let chunkLength = min(configuration.maxChunkSize, text.count - offset)
                 _ = NSRange(location: offset, length: chunkLength)
-                
+
                 let chunkStart = text.index(text.startIndex, offsetBy: offset)
                 let chunkEnd = text.index(chunkStart, offsetBy: chunkLength)
                 let chunk = String(text[chunkStart..<chunkEnd])
                 guard !chunk.isEmpty else {
                     break
                 }
-                
+
                 let chunkTokens = await coordinator.highlightAsync(source: chunk, language: language)
-                
+
                 // Adjust token ranges
                 let adjustedTokens = chunkTokens.map { token in
                     HighlightedToken(
@@ -331,16 +331,16 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                         text: token.text
                     )
                 }
-                
+
                 allTokens.append(contentsOf: adjustedTokens)
                 offset += chunkLength
-                
+
                 // Yield to prevent blocking
                 await Task.yield()
             }
-            
+
             let highlightTime = CFAbsoluteTimeGetCurrent() - highlightStart
-            
+
             trackPerformance(PerformanceData(
                 tokenizationTime: 0,
                 cacheCheckTime: cacheCheckTime,
@@ -352,12 +352,12 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 textLength: text.count,
                 totalStartTime: totalStartTime
             ))
-            
+
             return allTokens
         } else {
             let tokens = await coordinator.highlightAsync(source: text, language: language)
             let highlightTime = CFAbsoluteTimeGetCurrent() - highlightStart
-            
+
             trackPerformance(PerformanceData(
                 tokenizationTime: 0,
                 cacheCheckTime: cacheCheckTime,
@@ -369,37 +369,37 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 textLength: text.count,
                 totalStartTime: totalStartTime
             ))
-            
+
             return tokens
         }
     }
-    
+
     private func canUseIncrementalHighlighting(text: String) -> Bool {
         guard let lastText = lastHighlightedText else { return false }
-        
+
         // Simple heuristic: use incremental if texts are similar in length
         let lengthDiff = abs(text.count - lastText.count)
         return lengthDiff < 1_000 && lengthDiff < lastText.count / 10
     }
-    
+
     private func shouldTripCircuitBreaker() -> Bool {
         // Reset circuit breaker after 1 minute
         if Date().timeIntervalSince(lastCircuitBreakerReset) > 60 {
             circuitBreakerTrips = 0
             lastCircuitBreakerReset = Date()
         }
-        
+
         return circuitBreakerTrips > 5
     }
-    
+
     private func tripCircuitBreaker() {
         circuitBreakerTrips += 1
         CrossPlatformLogger.logger().warning("Syntax highlighting circuit breaker tripped (\(circuitBreakerTrips) trips)")
     }
-    
+
     private func trackPerformance(_ data: PerformanceData) {
         let totalTime = CFAbsoluteTimeGetCurrent() - data.totalStartTime
-        
+
         let metrics = SyntaxHighlightingPerformanceTracker.PerformanceMetrics(
             tokenizationTime: data.tokenizationTime,
             cacheCheckTime: data.cacheCheckTime,
@@ -411,9 +411,9 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             language: data.language.name,
             textLength: data.textLength
         )
-        
+
         performanceTracker.trackOperation(metrics: metrics)
-        
+
         // Log slow operations
         if totalTime > 0.1 {
             CrossPlatformLogger.logger().warning(
@@ -421,7 +421,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             )
         }
     }
-    
+
     private func warmCache() async {
         // Warm cache with common code snippets
         let commonSnippets = [
@@ -431,7 +431,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             ("def example():", Language.python),
             ("function example() { }", Language.javascript)
         ]
-        
+
         for (snippet, language) in commonSnippets {
             _ = await highlight(text: snippet, language: language)
         }

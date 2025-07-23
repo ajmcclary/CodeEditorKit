@@ -6,28 +6,28 @@ import Foundation
 internal struct XMLFoldingProvider: CodeFoldingProvider {
     func detectFoldableRegions(in text: String) async -> [FoldableRegion] {
         var regions: [FoldableRegion] = []
-        
+
         // Simple XML tag matching
         let tagPattern = "<([^/>\\s]+)[^>]*>"
         let closeTagPattern = "</([^>]+)>"
-        
+
         guard let tagRegex = try? NSRegularExpression(pattern: tagPattern),
               let closeTagRegex = try? NSRegularExpression(pattern: closeTagPattern) else {
             return regions
         }
-        
+
         let range = NSRange(location: 0, length: text.utf16.count)
-        
+
         let openTags = tagRegex.matches(in: text, range: range)
         let closeTags = closeTagRegex.matches(in: text, range: range)
-        
+
         // Match opening and closing tags
         for openMatch in openTags {
             let tagNameRange = openMatch.range(at: 1)
             guard let startIndex = text.index(text.startIndex, offsetBy: tagNameRange.location, limitedBy: text.endIndex),
                   let endIndex = text.index(startIndex, offsetBy: tagNameRange.length, limitedBy: text.endIndex) else { continue }
             let tagName = String(text[startIndex..<endIndex])
-            
+
             // Find corresponding close tag
             if let closeMatch = closeTags.first(where: { closeMatch in
                 let closeNameRange = closeMatch.range(at: 1)
@@ -40,7 +40,7 @@ internal struct XMLFoldingProvider: CodeFoldingProvider {
                     location: openMatch.range.location,
                     length: NSMaxRange(closeMatch.range) - openMatch.range.location
                 )
-                
+
                 regions.append(FoldableRegion(
                     range: foldRange,
                     title: "<\(tagName)>",
@@ -48,7 +48,7 @@ internal struct XMLFoldingProvider: CodeFoldingProvider {
                 ))
             }
         }
-        
+
         return regions
     }
 }

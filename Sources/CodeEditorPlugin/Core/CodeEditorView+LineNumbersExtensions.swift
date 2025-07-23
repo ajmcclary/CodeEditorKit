@@ -10,7 +10,7 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Gutter Management
-    
+
     internal func updateGutterVisibility() {
         #if canImport(AppKit)
         // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in the container's scroll view
@@ -30,7 +30,7 @@ extension CodeEditorView {
         guard gutterViewStorage == nil else {
             return
         }
-        
+
         #if canImport(AppKit)
         // On macOS and Mac Catalyst, gutters should not be created
         return
@@ -38,7 +38,7 @@ extension CodeEditorView {
         // First update text container inset to make room for gutter
         let gutterWidth = configuration.layout.gutterWidth
         let padding = configuration.layout.lineNumberPadding
-        
+
         textContainerInset = UIEdgeInsets(top: textContainerInset.top, left: gutterWidth + padding, bottom: textContainerInset.bottom, right: textContainerInset.right)
 
         let gutter = GutterView()
@@ -57,7 +57,7 @@ extension CodeEditorView {
     internal func removeGutter() {
         gutterViewStorage?.removeFromSuperview()
         gutterViewStorage = nil
-        
+
         // Reset text container inset when gutter is removed
         let padding = configuration.layout.lineNumberPadding
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -71,7 +71,7 @@ extension CodeEditorView {
         guard let gutter = gutterViewStorage else {
             return
         }
-        
+
         #if canImport(AppKit)
         // On macOS and Mac Catalyst, gutters should not exist
         return
@@ -80,7 +80,7 @@ extension CodeEditorView {
             // Use configuration values instead of magic numbers
             let gutterWidth = self.configuration.layout.gutterWidth
             _ = self.configuration.layout.lineNumberPadding
-            
+
             // For iOS, the gutter should be positioned fixed and not scroll with content
             // It should be tall enough to show all visible line numbers
             gutter.frame = CGRect(

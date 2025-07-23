@@ -78,14 +78,14 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineNumbers() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, line numbers are handled by NSRulerView in the container view
         // When using CodeEditorView standalone, the configuration property stores the preference
         // but the text view itself never creates a GutterView
         XCTAssertTrue(textView.isLineNumbersEnabled)  // Default is true
         XCTAssertNil(textView.gutterView, "CodeEditorView should not have a GutterView on macOS")
-        
+
         // Note: On macOS, when using CodeEditorView directly without a container,
         // the line numbers configuration may not change as expected because
         // line numbers are meant to be handled by the container's NSRulerView
@@ -175,13 +175,13 @@ final class CodeEditorViewTests: XCTestCase {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.textContainer?.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
-        
+
         textView.textContainer?.widthTracksTextView = false
         XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         #else
         textView.textContainer.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer.widthTracksTextView)
-        
+
         textView.textContainer.widthTracksTextView = false
         XCTAssertFalse(textView.textContainer.widthTracksTextView)
         #endif
@@ -193,13 +193,13 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has wrapLines = false, so horizontally resizable = true
         XCTAssertTrue(textView.isHorizontallyResizable)
-        
+
         // Test changing wrap lines setting
         var config = textView.configuration
         config.layout.wrapLines = true
         textView.configuration = config
         XCTAssertFalse(textView.isHorizontallyResizable)
-        
+
         config.layout.wrapLines = false
         textView.configuration = config
         XCTAssertTrue(textView.isHorizontallyResizable)
@@ -263,7 +263,7 @@ final class CodeEditorViewTests: XCTestCase {
             location: MockTextLocation(offset: 0),
             end: MockTextLocation(offset: textView.text?.count ?? 0)
         )!
-        
+
         let annotation1 = Annotation(range: range1, content: "First annotation", id: "test1")
         let annotation2 = Annotation(range: range2, content: "Second annotation", id: "test2")
 
@@ -295,9 +295,9 @@ final class CodeEditorViewTests: XCTestCase {
             let annotation = Annotation(range: range, content: "Annotation \(index)", id: "test\(index)")
             textView.addAnnotation(annotation)
         }
-        
+
         XCTAssertEqual(textView.allAnnotations.count, 5)
-        
+
         // Remove all annotations
         textView.removeAllAnnotations()
         XCTAssertEqual(textView.allAnnotations.count, 0)
@@ -307,11 +307,11 @@ final class CodeEditorViewTests: XCTestCase {
     func testAnnotationDataSource() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let mockDataSource = MockAnnotationDataSource()
-        
+
         textView.annotationsDataSource = mockDataSource
         XCTAssertNotNil(textView.annotationsDataSource)
         XCTAssertTrue(textView.annotationsDataSource === mockDataSource)
-        
+
         // Test weak reference
         textView.annotationsDataSource = nil
         XCTAssertNil(textView.annotationsDataSource)
@@ -321,15 +321,15 @@ final class CodeEditorViewTests: XCTestCase {
     func testAnnotationWithTextKit1() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Implement this feature\nlet x = 42"
-        
+
         // Skip layout forcing to prevent hangs in tests
         // The text storage setup is sufficient for verification
-        
+
         // Verify text layout manager setup
         XCTAssertNotNil(textView.textStorage)
         XCTAssertNotNil(textView.layoutManager)
         XCTAssertNotNil(textView.textContainer)
-        
+
         // Verify text content
         let text = textView.text ?? ""
         XCTAssertTrue(text.contains("TODO"))
@@ -341,14 +341,14 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         let testText = "Line 1\nLine 2 with TODO\nLine 3"
         textView.text = testText
-        
+
         // Skip layout forcing to prevent hangs in tests
-        
+
         // Find TODO range manually
         let todoRange = testText.range(of: "TODO").map { NSRange($0, in: testText) } ?? NSRange(location: NSNotFound, length: 0)
         XCTAssertNotEqual(todoRange.location, NSNotFound)
         XCTAssertEqual(todoRange.length, 4)
-        
+
         // Verify range is within text bounds
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textView.textStorage?.length ?? 0
@@ -362,10 +362,10 @@ final class CodeEditorViewTests: XCTestCase {
     func testAnnotationPositioning() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         textView.text = "// TODO: Test annotation positioning"
-        
+
         // Simplified test - avoid window creation which can cause hangs
         // Just verify basic text setup
-        
+
         // Verify that text was set
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textView.textStorage?.length ?? 0
@@ -373,16 +373,16 @@ final class CodeEditorViewTests: XCTestCase {
         let textLength = textView.textStorage.length
         #endif
         XCTAssertGreaterThan(textLength, 0, "Text should have content")
-        
+
         // Verify text storage is properly configured
         XCTAssertNotNil(textView.textStorage)
         XCTAssertNotNil(textView.textContainer)
-        
+
         // Basic text content verification
         let text = textView.text ?? ""
         XCTAssertTrue(text.contains("TODO"))
         XCTAssertEqual(text, "// TODO: Test annotation positioning")
-        
+
         // This test originally tested annotation positioning which required complex window setup
         // We've simplified it to just verify text setup is working correctly
         // The actual annotation tests are in AnnotationTests.swift
@@ -476,7 +476,7 @@ final class CodeEditorViewTests: XCTestCase {
         // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in the container's scroll view
         // The text view itself should never have a gutter view
         XCTAssertNil(textView.gutterView, "On macOS/Mac Catalyst, CodeEditorView should not have a GutterView")
-        
+
         // Test configuration changes without triggering gutter creation which can hang
         let oldValue = textView.isLineNumbersEnabled
         textView.isLineNumbersEnabled = false
@@ -505,7 +505,7 @@ final class CodeEditorViewTests: XCTestCase {
         measure(options: Self.standardMeasureOptions) {
             textView.text = largeText
         }
-        
+
         // Verify the text was set correctly
         XCTAssertEqual(textView.text, largeText)
     }
@@ -545,18 +545,18 @@ class MockCodeEditorViewDelegate: NSObject, CodeEditorViewDelegate {
 class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource {
     var mockAnnotations: [Annotation] = []
     var viewCreationCallCount = 0
-    
+
     deinit {
         // Cleanup if needed
     }
-    
+
     func annotations(for textRange: NSTextRange) -> [Annotation] {
         // Return annotations that intersect with the given range
         mockAnnotations.filter { annotation in
             annotation.range.intersects(textRange)
         }
     }
-    
+
     var textViewAnnotations: [CodeEditorViewAnnotation] {
         mockAnnotations.compactMap { annotation in
             CodeEditorViewAnnotation(
@@ -566,7 +566,7 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
             )
         }
     }
-    
+
     func textView(
         _: CodeEditorView,
         viewForLineAnnotation _: CodeEditorViewAnnotation,
@@ -574,7 +574,7 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         proposedViewFrame: CGRect
     ) -> PlatformView? {
         viewCreationCallCount += 1
-        
+
         // Create a simple test view
         let view = PlatformView(frame: proposedViewFrame)
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -585,15 +585,15 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         view.backgroundColor = UIColor.blue
         view.layer.cornerRadius = proposedViewFrame.width / 2
         #endif
-        
+
         return view
     }
-    
+
     func addMockAnnotation(range: NSTextRange, content: String, id: String) {
         let annotation = Annotation(range: range, content: content, id: id)
         mockAnnotations.append(annotation)
     }
-    
+
     func clearMockAnnotations() {
         mockAnnotations.removeAll()
         viewCreationCallCount = 0

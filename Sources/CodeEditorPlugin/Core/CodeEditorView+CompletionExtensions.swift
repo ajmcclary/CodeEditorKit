@@ -10,7 +10,7 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Completion Triggering
-    
+
     /// Check if completion should be triggered after text editing
     internal func checkForCompletionTrigger(at editedRange: NSRange) {
         guard isCodeCompletionEnabled,
@@ -18,7 +18,7 @@ extension CodeEditorView {
         else {
             return
         }
-        
+
         // Get current cursor position
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let cursorPosition = selectedRange.location
@@ -27,21 +27,21 @@ extension CodeEditorView {
         let cursorPosition = selectedRange.location
         let text = self.text ?? ""
         #endif
-        
+
         // Check if we just typed a trigger character
         if cursorPosition > 0 && cursorPosition <= text.count {
             let index = text.index(text.startIndex, offsetBy: cursorPosition - 1)
             let typedChar = text[index]
-            
+
             if completionTriggerCharacters.contains(typedChar) {
                 // Trigger completion with character trigger
                 requestCompletion(triggerKind: .character, triggerCharacter: String(typedChar))
             }
         }
     }
-    
+
     // MARK: - Request Completion
-    
+
     /// Request code completion at the current cursor position
     /// Requests code completion at the current cursor position.
     ///
@@ -73,7 +73,7 @@ extension CodeEditorView {
     /// - SeeAlso: `hideCompletionPopup()`, `isCodeCompletionEnabled`, `CompletionProvider`
     public func requestCompletion(triggerKind: CompletionTriggerKind = .manual, triggerCharacter: String? = nil) {
         guard isCodeCompletionEnabled else { return }
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let cursorPosition = selectedRange.location
         let text = string
@@ -81,11 +81,11 @@ extension CodeEditorView {
         let cursorPosition = selectedRange.location
         let text = self.text ?? ""
         #endif
-        
+
         // Extract current line text
         let lineRange = currentLineRange(at: cursorPosition)
         let lineText = String(text[lineRange])
-        
+
         // Create completion context
         let context = CompletionContextModel(
             text: text,
@@ -96,7 +96,7 @@ extension CodeEditorView {
             lineText: lineText,
             wordRange: currentWordRange(at: cursorPosition)
         )
-        
+
         // Request completions asynchronously
         Task { @MainActor in
             do {
@@ -109,17 +109,17 @@ extension CodeEditorView {
             }
         }
     }
-    
+
     // MARK: - Show Completion Popup
-    
+
     /// Show completion popup with the given items
     private func showCompletionPopup(with items: [CompletionItemModel], at position: Int) {
         // Cancel any existing completion
         hideCompletionPopup()
-        
+
         // Get completion view controller from delegate or create default
         let completionVC = textDelegate?.textViewCompletionViewController(self) ?? CompletionViewController()
-        
+
         // Set up completion view controller
         completionViewController = completionVC
         if let modernVC = completionVC as? CompletionViewController {
@@ -129,20 +129,20 @@ extension CodeEditorView {
             // Handle legacy completion view controllers
             // Modern completion items need to be set through the protocol
         }
-        
+
         // Position and show completion popup
         let cursorRect = cursorRectForPosition(position)
         showCompletionWindow(with: completionVC, at: cursorRect)
-        
+
         isCompletionActive = true
     }
-    
+
     /// Get cursor rectangle for positioning completion popup
     private func cursorRectForPosition(_ position: Int) -> CGRect {
         let textKitBridge = TextKitBridge(textView: self)
         return textKitBridge.cursorRect(at: position) ?? CGRect(x: 0, y: 0, width: 1, height: 16)
     }
-    
+
     /// Show completion window/popover at the specified rectangle
     private func showCompletionWindow(with viewController: any CompletionViewControllerRepresentable, at rect: CGRect) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -153,13 +153,13 @@ extension CodeEditorView {
             backing: .buffered,
             defer: false
         )
-        
+
         window.contentViewController = viewController as PlatformViewController
         window.level = .floating
         window.isOpaque = false
         window.backgroundColor = PlatformColors.clear
         window.hasShadow = true
-        
+
         // Position window relative to text view
         if let textWindow = self.window {
             let screenRect = textWindow.convertToScreen(convert(rect, to: nil))
@@ -171,35 +171,35 @@ extension CodeEditorView {
             )
             window.setFrame(windowRect, display: true)
         }
-        
+
         completionWindow = window
         window.orderFront(nil)
-        
+
         // Announce code completion availability
         announceChange("Code completion suggestions available")
         #else
         // iOS popover presentation
         guard let presentingVC = findViewController() else { return }
-        
+
         let popoverVC = viewController
         popoverVC.modalPresentationStyle = .popover
-        
+
         if let popover = popoverVC.popoverPresentationController {
             popover.sourceView = self
             popover.sourceRect = rect
             popover.permittedArrowDirections = [.up, .down]
         }
-        
+
         completionPopover = popoverVC
         presentingVC.present(popoverVC, animated: true)
-        
+
         // Announce code completion availability
         announceChange("Code completion suggestions available")
         #endif
     }
-    
+
     // MARK: - Hide Completion
-    
+
     /// Hide the completion popup
     /// Dismisses the currently visible completion popup.
     ///
@@ -224,7 +224,7 @@ extension CodeEditorView {
     /// - SeeAlso: `requestCompletion(triggerKind:triggerCharacter:)`
     public func hideCompletionPopup() {
         guard isCompletionActive else { return }
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         completionWindow?.close()
         completionWindow = nil
@@ -232,16 +232,16 @@ extension CodeEditorView {
         completionPopover?.dismiss(animated: true)
         completionPopover = nil
         #endif
-        
+
         completionViewController = nil
         isCompletionActive = false
-        
+
         // Announce completion dismissal
         announceChange("Code completion dismissed")
     }
-    
+
     // MARK: - Keyboard Handling
-    
+
     /// Handle keyboard input for completion navigation
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func keyDown(with event: NSEvent) {
@@ -271,13 +271,13 @@ extension CodeEditorView {
                 break
             }
         }
-        
+
         super.keyDown(with: event)
     }
     #endif
-    
+
     // MARK: - Helper Methods
-    
+
     /// Get current line range at position
     private func currentLineRange(at position: Int) -> Range<String.Index> {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -285,12 +285,12 @@ extension CodeEditorView {
         #else
         let text = self.text ?? ""
         #endif
-        
+
         let pos = min(position, text.count)
         let textIndex = text.index(text.startIndex, offsetBy: pos)
         return text.lineRange(for: textIndex..<textIndex)
     }
-    
+
     /// Get current word range at position
     private func currentWordRange(at position: Int) -> NSRange? {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -298,21 +298,21 @@ extension CodeEditorView {
         #else
         let text = self.text ?? ""
         #endif
-        
+
         guard position <= text.count else { return nil }
-        
+
         let textIndex = text.index(text.startIndex, offsetBy: position)
         let wordRange = text.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted, options: .backwards, range: text.startIndex..<textIndex)
-        
+
         if let range = wordRange {
             let start = text.distance(from: text.startIndex, to: range.upperBound)
             let end = position
             return NSRange(location: start, length: end - start)
         }
-        
+
         return nil
     }
-    
+
     #if canImport(UIKit)
     /// Find the presenting view controller for iOS popover
     private func findViewController() -> UIViewController? {

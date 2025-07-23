@@ -15,27 +15,27 @@ import AppKit
 
 final class CrossPlatformCoordinatorTests: XCTestCase {
     // MARK: - Properties
-    
+
     // Tests create their own coordinator instances as needed
-    
+
     // MARK: - Initialization Tests
-    
+
     @MainActor
     func testDefaultInitialization() {
         // Test default initialization creates proper instances
         let coordinator = CrossPlatformCoordinator()
-        
+
         // Verify all components are initialized
         XCTAssertNotNil(coordinator.capabilities)
         XCTAssertNotNil(coordinator.inputCoordinator)
         XCTAssertNotNil(coordinator.toolbarCoordinator)
         XCTAssertNotNil(coordinator.contextMenuCoordinator)
-        
+
         // Verify coordinator works correctly
         XCTAssertNotNil(coordinator.platformAdjustments)
         XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
     }
-    
+
     @MainActor
     func testDependencyInjection() {
         // Create custom dependencies
@@ -43,7 +43,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let customInputCoordinator = InputCoordinator(capabilities: customCapabilities)
         let customToolbarCoordinator = ToolbarCoordinator(capabilities: customCapabilities)
         let customContextMenuCoordinator = ContextMenuCoordinator(capabilities: customCapabilities)
-        
+
         // Create coordinator with dependency injection
         let coordinator = CrossPlatformCoordinator(
             capabilities: customCapabilities,
@@ -51,22 +51,22 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             toolbarCoordinator: customToolbarCoordinator,
             contextMenuCoordinator: customContextMenuCoordinator
         )
-        
+
         // Verify dependencies are used
         XCTAssertTrue(coordinator.inputCoordinator === customInputCoordinator)
         XCTAssertTrue(coordinator.toolbarCoordinator === customToolbarCoordinator)
         XCTAssertTrue(coordinator.contextMenuCoordinator === customContextMenuCoordinator)
-        
+
         // Verify coordinator works correctly
         XCTAssertNotNil(coordinator.platformAdjustments)
         XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
     }
-    
+
     @MainActor
     func testPlatformAdjustments() {
         let coordinator = CrossPlatformCoordinator()
         let adjustments = coordinator.platformAdjustments
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(adjustments.defaultFontSize, 12.0)
         XCTAssertEqual(adjustments.lineSpacing, 1.2)
@@ -118,18 +118,18 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         #endif
         #endif
     }
-    
+
     // MARK: - Feature Availability Tests
-    
+
     @MainActor
     func testFeatureAvailability() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
-        
+
         // Test common features
         XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
         XCTAssertTrue(coordinator.isFeatureAvailable(.lineNumbers))
-        
+
         // Test platform-specific features
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(coordinator.isFeatureAvailable(.multipleCursors))
@@ -139,14 +139,14 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.isFeatureAvailable(.minimap))
         #endif
     }
-    
+
     @MainActor
     func testFeatureAvailabilityLevel() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let goToDefAvailability = coordinator.getFeatureAvailability(.goToDefinition)
         let symbolNavAvailability = coordinator.getFeatureAvailability(.symbolNavigation)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(goToDefAvailability, .full)
         XCTAssertEqual(symbolNavAvailability, .full)
@@ -163,39 +163,39 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         }
         #endif
     }
-    
+
     // MARK: - Configuration Tests
-    
+
     @MainActor
     func testRecommendedConfiguration() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let config = coordinator.recommendedConfiguration()
-        
+
         XCTAssertNotNil(config)
         XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.performance.useHardwareAcceleration)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Platform-specific values are set by PlatformCapabilities
         #else
         // Platform-specific values are set by PlatformCapabilities
         #endif
     }
-    
+
     // MARK: - Toolbar Items Tests
-    
+
     @MainActor
     func testCreateToolbarItems() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let items = coordinator.createToolbarItems()
-        
+
         XCTAssertFalse(items.isEmpty)
-        
+
         // All platforms should have find
         XCTAssertTrue(items.contains { $0.id == "find" })
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS should have full toolbar
         XCTAssertTrue(items.contains { $0.id == "replace" })
@@ -213,17 +213,17 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         }
         #endif
     }
-    
+
     // MARK: - Text View Optimization Tests
-    
+
     @MainActor
     func testOptimizeTextView() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        
+
         coordinator.optimizeTextView(textView)
-        
+
         #if canImport(UIKit)
         XCTAssertTrue(textView.isSelectable)
         XCTAssertTrue(textView.isEditable)
@@ -233,20 +233,20 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(textView.smartQuotesType, .no)
         #endif
     }
-    
+
     // MARK: - Platform Input Tests
-    
+
     @MainActor
     func testHandleKeyInput() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        
+
         let handled = coordinator.handlePlatformInput(
             .keyDown(key: "d", modifiers: .command),
             in: textView
         )
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(handled)
         #elseif targetEnvironment(macCatalyst)
@@ -257,18 +257,18 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(handled, coordinator.isExternalKeyboardConnected())
         #endif
     }
-    
+
     @MainActor
     func testHandleMouseInput() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        
+
         let handled = coordinator.handlePlatformInput(
             .mouse(location: CGPoint(x: 100, y: 100), type: .rightClick),
             in: textView
         )
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(handled)
         #elseif targetEnvironment(macCatalyst)
@@ -281,26 +281,26 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertFalse(handled) // Right click not handled on iOS
         #endif
     }
-    
+
     // MARK: - Context Menu Tests
-    
+
     @MainActor
     func testCreateContextMenu() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        
+
         // Add some text content so selection actions are available
         textView.text = "Hello, World! This is a test."
-        
+
         // Set a valid selection range within the text
         let range = NSRange(location: 0, length: 5) // Select "Hello"
         textView.selectedRange = range
-        
+
         let menu = coordinator.createContextMenu(for: range, in: textView)
-        
+
         XCTAssertNotNil(menu)
-        
+
         // All platforms should have basic editing actions
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS returns NSMenu
@@ -313,26 +313,26 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(menu.children.count, 3)
         #endif
     }
-    
+
     // MARK: - Performance Tests
-    
+
     @MainActor
     func testFeatureCheckPerformance() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
-        
+
         measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = coordinator.isFeatureAvailable(.syntaxHighlighting)
             }
         }
     }
-    
+
     @MainActor
     func testToolbarCreationPerformance() {
         // Use instance property instead of deprecated singleton
         let coordinator = CrossPlatformCoordinator()
-        
+
         measure(options: Self.standardMeasureOptions) {
             for _ in 0..<100 {
                 _ = coordinator.createToolbarItems()

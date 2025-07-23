@@ -26,7 +26,7 @@ extension CodeEditor {
             .environment(\.codeEditorLanguage, language)
             .environment(\.codeEditorTheme, theme)
     }
-    
+
     /// Creates a code editor with the specified configuration.
     ///
     /// This factory method ensures the environment values are properly set for the

@@ -55,21 +55,21 @@ import Foundation
 @MainActor
 open class BaseCompletionProvider: CompletionProvider {
     // MARK: - Properties
-    
+
     public let id: String
     public let supportedLanguages: [Language]
     public let triggerCharacters: [String]
     public let supportsSnippets: Bool
-    
+
     // Language elements - to be overridden by subclasses
     open var keywords: [String] { [] }
     open var types: [String] { [] }
     open var literals: [String] { [] }
     open var functions: [String] { [] }
     open var snippets: [SnippetTemplate] { [] }
-    
+
     // MARK: - Initialization
-    
+
     public init(
         id: String,
         supportedLanguages: [Language],
@@ -81,30 +81,30 @@ open class BaseCompletionProvider: CompletionProvider {
         self.triggerCharacters = triggerCharacters
         self.supportsSnippets = supportsSnippets
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .type:
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
+
         case .function:
             items.append(contentsOf: createFunctionCompletions(filter: analysisResult.filter))
-            
+
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
@@ -113,13 +113,13 @@ open class BaseCompletionProvider: CompletionProvider {
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
-            
+
         case .parameter:
             items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -127,32 +127,32 @@ open class BaseCompletionProvider: CompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis (Override Points)
-    
+
     /// Analyze the context to determine what kind of completions to provide
     open func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Default to general context
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     /// Extract the current word being typed
     open func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.inverted)
         return components.last ?? ""
     }
-    
+
     /// Extract the target type for member completions
     open func extractTargetType(from text: String) -> String? {
         let words = text.components(separatedBy: .whitespacesAndNewlines)
@@ -161,9 +161,9 @@ open class BaseCompletionProvider: CompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     /// Create keyword completions
     open func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
@@ -181,7 +181,7 @@ open class BaseCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
+
     /// Create type completions
     open func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
@@ -199,7 +199,7 @@ open class BaseCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
+
     /// Create literal completions
     open func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
         literals
@@ -217,7 +217,7 @@ open class BaseCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
+
     /// Create function completions
     open func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
@@ -235,7 +235,7 @@ open class BaseCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
+
     /// Create snippet completions
     open func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
@@ -254,14 +254,14 @@ open class BaseCompletionProvider: CompletionProvider {
                 )
             }
     }
-    
+
     /// Create member completions (override for language-specific behavior)
     open func createMemberCompletions(for _: String?, filter _: String) -> [CompletionItemModel] {
         // Default: no member completions
         // Subclasses should override for language-specific member access
         []
     }
-    
+
     /// Create parameter completions (override for language-specific behavior)
     open func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         // Default: suggest types for parameters
@@ -276,7 +276,7 @@ public struct ContextAnalysisResult {
     let type: CompletionContextType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionContextType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter
@@ -299,7 +299,7 @@ public struct SnippetTemplate: Sendable {
     public let label: String
     public let insertText: String
     public let description: String
-    
+
     public init(label: String, insertText: String, description: String) {
         self.label = label
         self.insertText = insertText

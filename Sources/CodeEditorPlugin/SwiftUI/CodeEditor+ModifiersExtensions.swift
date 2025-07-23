@@ -21,7 +21,7 @@ extension View {
     public func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
         environment(\.codeEditorTheme, theme)
     }
-    
+
     /// Sets the programming language for syntax highlighting.
     ///
     /// - Parameter language: The programming language to use for syntax highlighting
@@ -46,7 +46,7 @@ extension View {
     public func codeLanguage(_ language: Language) -> some View {
         environment(\.codeEditorLanguage, language)
     }
-    
+
     /// Sets the workspace root URL for LSP and file operations.
     ///
     /// - Parameter url: The workspace root URL
@@ -66,7 +66,7 @@ extension View {
             config.workspaceRoot = url
         }
     }
-    
+
     /// Configures the visibility of line numbers in the gutter.
     ///
     /// - Parameter visible: Whether to show line numbers (default: true)
@@ -84,7 +84,7 @@ extension View {
             config.display.isLineNumbersEnabled = visible
         }
     }
-    
+
     /// Requests that the code editor become the first responder (keyboard focus).
     ///
     /// This is a more intuitive API than using the environment key directly.
@@ -108,7 +108,7 @@ extension View {
     public func becomeFirstResponder() -> some View {
         environment(\.codeEditorBecomeFirstResponder, true)
     }
-    
+
     /// Requests the code editor to become (or resign) first responder with an explicit state.
     ///
     /// Use this modifier to programmatically control when the editor gains or loses focus
@@ -160,7 +160,7 @@ extension CodeEditor {
             config.display.highlightSelectedLine = highlight
         }
     }
-    
+
     /// Configures whether the editor text is editable.
     ///
     /// - Parameter isEditable: Whether the editor should be editable (default: true)
@@ -180,7 +180,7 @@ extension CodeEditor {
             config.behavior.isEditable = isEditable
         }
     }
-    
+
     /// Adds a text change handler with optional debouncing.
     ///
     /// - Parameters:
@@ -214,7 +214,7 @@ extension CodeEditor {
         // This avoids recreating the view and losing other modifier state
         return copy
     }
-    
+
     /// Adds a selection change handler.
     ///
     /// - Parameter action: Closure called when the text selection changes
@@ -243,7 +243,7 @@ extension CodeEditor {
         copy.onSelectionChange = action
         return copy
     }
-    
+
     /// Configures a custom code completion provider.
     ///
     /// - Parameter provider: Async closure that returns completion items
@@ -278,7 +278,7 @@ extension CodeEditor {
         copy.completionProvider = provider
         return copy
     }
-    
+
     /// Configures the font size for the editor text.
     ///
     /// - Parameter size: Font size in points
@@ -297,7 +297,7 @@ extension CodeEditor {
             config.display.fontSize = size
         }
     }
-    
+
     /// Configures the tab width in spaces.
     ///
     /// - Parameter width: Number of spaces per tab
@@ -316,7 +316,7 @@ extension CodeEditor {
             config.layout.tabWidth = width
         }
     }
-    
+
     /// Configures the visibility of invisible characters.
     ///
     /// - Parameter show: Whether to show invisible characters (default: true)
@@ -337,7 +337,7 @@ extension CodeEditor {
             config.display.showInvisibleCharacters = show
         }
     }
-    
+
     /// Configures the visibility of the minimap.
     ///
     /// - Parameter show: Whether to show the minimap (default: true)
@@ -358,7 +358,7 @@ extension CodeEditor {
             config.display.showMinimap = show
         }
     }
-    
+
     /// Configures automatic scrolling to cursor position.
     ///
     /// - Parameter enable: Whether to automatically scroll to cursor (default: false)
@@ -380,7 +380,7 @@ extension CodeEditor {
             config.behavior.autoScrollToCursor = enable
         }
     }
-    
+
     /// Configures code folding behavior.
     ///
     /// - Parameter enable: Whether to enable code folding (default: true)
@@ -402,7 +402,7 @@ extension CodeEditor {
             config.display.enableCodeFolding = enable
         }
     }
-    
+
     /// Configures the visibility of folding controls in the gutter.
     ///
     /// - Parameter show: Whether to show fold/unfold controls in the gutter (default: true)
@@ -423,7 +423,7 @@ extension CodeEditor {
             config.display.showFoldingControls = show
         }
     }
-    
+
     /// Sets the minimum number of lines required for a code region to be foldable.
     ///
     /// - Parameter lineCount: The minimum line count for foldable regions (default: 3)
@@ -444,7 +444,7 @@ extension CodeEditor {
             config.display.minimumFoldableLines = max(1, lineCount)
         }
     }
-    
+
     /// Configures code folding animation behavior.
     ///
     /// - Parameter animate: Whether to animate code folding operations (default: true)
@@ -465,7 +465,7 @@ extension CodeEditor {
             config.performance.animateCodeFolding = animate
         }
     }
-    
+
     /// Requests that the code editor become the first responder (keyboard focus).
     ///
     /// This is a more intuitive API than using the environment key directly.
@@ -486,7 +486,7 @@ extension CodeEditor {
     ///
     /// - Note: On iOS, the keyboard will appear when the editor gains focus.
     ///         On macOS, the editor will receive keyboard input.
-    
+
     /// Configures a custom memory monitor for the editor.
     ///
     /// - Parameter monitor: The memory monitor instance to use
@@ -523,7 +523,7 @@ extension CodeEditor {
     public func memoryMonitor(_ monitor: MemoryMonitor) -> some View {
         environment(\.codeEditorMemoryMonitor, monitor)
     }
-    
+
     /// Sets a custom event system for publishing and subscribing to editor events.
     ///
     /// By default, CodeEditor does not publish events unless an event system is provided.

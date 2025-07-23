@@ -11,7 +11,7 @@ public enum AnnotationKind: String, CaseIterable, Sendable {
     case fixme = "FIXME"
     case warning = "WARNING"
     case error = "ERROR"
-    
+
     /// The color associated with this annotation type
     public var color: PlatformColor {
         switch self {
@@ -28,7 +28,7 @@ public enum AnnotationKind: String, CaseIterable, Sendable {
             return PlatformColors.systemRed
         }
     }
-    
+
     /// The SF Symbol icon name for this annotation type
     public var iconName: String {
         switch self {
@@ -48,7 +48,7 @@ public enum AnnotationKind: String, CaseIterable, Sendable {
             return "xmark.circle"
         }
     }
-    
+
     /// Initialize from a MessageLineAnnotation.AnnotationKind
     public init(from messageKind: MessageLineAnnotation.AnnotationKind) {
         switch messageKind {
@@ -62,11 +62,11 @@ public enum AnnotationKind: String, CaseIterable, Sendable {
             self = .error
         }
     }
-    
+
     /// Infer annotation kind from message content
     public static func infer(from message: String) -> Self {
         let lowercased = message.lowercased()
-        
+
         if lowercased.contains("todo") {
             return .todo
         } else if lowercased.contains("fixme") {

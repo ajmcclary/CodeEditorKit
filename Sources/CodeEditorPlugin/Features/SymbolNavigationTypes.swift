@@ -11,7 +11,7 @@ public struct DocumentSymbol: Identifiable {
     public var selectionRange: NSRange
     public var detail: String?
     public var children: [Self] = []
-    
+
     public init(
         name: String,
         kind: DocumentSymbolKind,
@@ -55,7 +55,7 @@ public enum DocumentSymbolKind: String, CaseIterable {
     case event
     case `operator`
     case typeParameter
-    
+
     var icon: String {
         switch self {
         case .file: return "📄"
@@ -86,7 +86,7 @@ public enum DocumentSymbolKind: String, CaseIterable {
         case .typeParameter: return "𝑇"
         }
     }
-    
+
     var canContainSymbols: Bool {
         switch self {
         case .file, .module, .namespace, .package, .class,

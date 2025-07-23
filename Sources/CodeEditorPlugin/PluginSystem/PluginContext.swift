@@ -9,31 +9,31 @@ import Foundation
 public final class PluginContext {
     /// Language registry for registering syntax highlighters
     public let languageRegistry: LanguageRegistry
-    
+
     /// Completion provider registry
     public let completionRegistry: CompletionProviderRegistry
-    
+
     /// Access to editor configuration
     public let configuration: EditorConfiguration
-    
+
     /// Event system for subscribing to editor events
     public let eventSystem: UnifiedEventSystem
-    
+
     /// Logger for plugin-specific logging
     public let logger: CrossPlatformLogger.Logger
-    
+
     /// Plugin's granted permissions
     public let permissions: Set<PluginPermission>
-    
+
     /// Plugin's identifier
     public let pluginIdentifier: String
-    
+
     /// Workspace for plugin-specific storage
     public let workspace: PluginWorkspace
-    
+
     /// Reference to the plugin manager (weak to avoid cycles)
     private weak var pluginManager: PluginManager?
-    
+
     /// Create a new plugin context
     internal init(
         pluginIdentifier: String,
@@ -57,7 +57,7 @@ public final class PluginContext {
         )
         self.workspace = PluginWorkspace(pluginIdentifier: pluginIdentifier)
     }
-    
+
     /// Request a permission that wasn't initially granted
     /// - Parameter permission: The permission to request
     /// - Returns: Whether the permission was granted
@@ -65,14 +65,14 @@ public final class PluginContext {
         guard let pluginManager else { return false }
         return await pluginManager.requestPermission(permission, for: pluginIdentifier)
     }
-    
+
     /// Check if a permission is granted
     /// - Parameter permission: The permission to check
     /// - Returns: Whether the permission is granted
     public func hasPermission(_ permission: PluginPermission) -> Bool {
         permissions.contains(permission)
     }
-    
+
     /// Register a command that can be invoked by the user
     /// - Parameters:
     ///   - command: The command to register
@@ -81,21 +81,21 @@ public final class PluginContext {
         guard hasPermission(.commands) else {
             throw PluginError.securityViolation("Plugin does not have permission to register commands")
         }
-        
+
         guard let pluginManager else {
             throw PluginError.activationFailed(reason: "Plugin manager not available")
         }
-        
+
         await pluginManager.registerCommand(command, for: pluginIdentifier, handler: handler)
     }
-    
+
     /// Register a theme provider
     /// - Parameter provider: The theme provider to register
     public func registerThemeProvider(_ provider: any ThemeProvider) async throws {
         guard hasPermission(.themes) else {
             throw PluginError.securityViolation("Plugin does not have permission to register themes")
         }
-        
+
         // Theme registration would be implemented here
         logger.info("Registered theme provider: \(provider)")
     }
@@ -107,32 +107,32 @@ public final class PluginContext {
 @available(macOS 13.0, iOS 16.0, *)
 public struct PluginPermission: Hashable, Sendable, Codable, RawRepresentable {
     public let rawValue: String
-    
+
     public init(rawValue: String) {
         self.rawValue = rawValue
     }
-    
+
     /// Access to language registry
     public static let languages = Self(rawValue: "languages")
-    
+
     /// Access to completion providers
     public static let completion = Self(rawValue: "completion")
-    
+
     /// Access to register commands
     public static let commands = Self(rawValue: "commands")
-    
+
     /// Access to register themes
     public static let themes = Self(rawValue: "themes")
-    
+
     /// Access to file system (sandboxed)
     public static let fileSystem = Self(rawValue: "fileSystem")
-    
+
     /// Access to network (for language servers)
     public static let network = Self(rawValue: "network")
-    
+
     /// Access to editor configuration
     public static let configuration = Self(rawValue: "configuration")
-    
+
     /// Access to diagnostics
     public static let diagnostics = Self(rawValue: "diagnostics")
 }
@@ -144,7 +144,7 @@ public struct PluginPermission: Hashable, Sendable, Codable, RawRepresentable {
 public final class PluginWorkspace: @unchecked Sendable {
     private let pluginIdentifier: String
     private let fileManager = FileManager.default
-    
+
     /// Base directory for plugin storage
     public var baseDirectory: URL {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -153,16 +153,16 @@ public final class PluginWorkspace: @unchecked Sendable {
             .appendingPathComponent("Plugins")
             .appendingPathComponent(pluginIdentifier)
     }
-    
+
     init(pluginIdentifier: String) {
         self.pluginIdentifier = pluginIdentifier
         setupDirectories()
     }
-    
+
     private func setupDirectories() {
         try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
     }
-    
+
     /// Read data from plugin storage
     /// - Parameter filename: Name of the file to read
     /// - Returns: File data if it exists
@@ -170,7 +170,7 @@ public final class PluginWorkspace: @unchecked Sendable {
         let url = baseDirectory.appendingPathComponent(filename)
         return try Data(contentsOf: url)
     }
-    
+
     /// Write data to plugin storage
     /// - Parameters:
     ///   - data: Data to write
@@ -179,14 +179,14 @@ public final class PluginWorkspace: @unchecked Sendable {
         let url = baseDirectory.appendingPathComponent(filename)
         try data.write(to: url)
     }
-    
+
     /// Delete a file from plugin storage
     /// - Parameter filename: Name of the file to delete
     public func deleteFile(filename: String) async throws {
         let url = baseDirectory.appendingPathComponent(filename)
         try fileManager.removeItem(at: url)
     }
-    
+
     /// List files in plugin storage
     /// - Returns: Array of filenames
     public func listFiles() async throws -> [String] {
@@ -201,19 +201,19 @@ public final class PluginWorkspace: @unchecked Sendable {
 public struct PluginCommand: Hashable, Sendable {
     /// Unique identifier for the command
     public let identifier: String
-    
+
     /// Display title for the command
     public let title: String
-    
+
     /// Optional keyboard shortcut
     public let keyboardShortcut: KeyboardShortcut?
-    
+
     /// Category for organizing commands
     public let category: String
-    
+
     /// Whether the command is enabled
     public let isEnabled: Bool
-    
+
     public init(
         identifier: String,
         title: String,
@@ -234,7 +234,7 @@ public struct PluginCommand: Hashable, Sendable {
 public struct KeyboardShortcut: Hashable, Sendable {
     public let key: String
     public let modifiers: KeyboardModifiers
-    
+
     public init(key: String, modifiers: KeyboardModifiers = []) {
         self.key = key
         self.modifiers = modifiers
@@ -245,11 +245,11 @@ public struct KeyboardShortcut: Hashable, Sendable {
 @available(macOS 13.0, iOS 16.0, *)
 public struct KeyboardModifiers: OptionSet, Hashable, Sendable {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     public static let command = Self(rawValue: 1 << 0)
     public static let shift = Self(rawValue: 1 << 1)
     public static let option = Self(rawValue: 1 << 2)
@@ -263,7 +263,7 @@ public struct KeyboardModifiers: OptionSet, Hashable, Sendable {
 public protocol ThemeProvider: Sendable {
     /// Available themes from this provider
     var themes: [EditorTheme] { get }
-    
+
     /// Provider name
     var name: String { get }
 }

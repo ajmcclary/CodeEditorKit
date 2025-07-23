@@ -116,10 +116,10 @@ import AppKit
 @objc @MainActor
 open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEditorAPI, CompletionViewControllerDelegate {
     // MARK: - Static Properties
-    
+
     /// Logger instance for CodeEditorView
     internal static let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "CodeEditorView")
-    
+
     // This file contains the core class definition with all stored properties.
     // All methods have been moved to focused extension files:
     //
@@ -135,28 +135,28 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     // - CodeEditorView+Performance.swift - Performance optimization and memory management
     // - CodeEditorView+CodeFolding.swift - Code folding API
     // - CodeEditorView+PlatformSpecific.swift - Platform-specific methods
-    
+
     // MARK: - Stored Properties
-    
+
     /// Proxy for delegate calls
     internal let delegateProxy = CodeEditorViewDelegateProxy(source: nil)
-    
+
     /// Event publisher for unified event handling
     public let eventPublisher = EditorEventPublisher()
-    
+
     /// Layout coordinator to prevent recursive layout
     internal lazy var layoutCoordinator = LayoutCoordinator(view: self)
-    
+
     /// Flag to prevent recursive configuration updates
     internal var isApplyingConfiguration = false
-    
+
     #if targetEnvironment(macCatalyst)
     /// Track word wrap state to prevent TextKit1 compatibility mode from resetting it
     internal var preservedWordWrapState: Bool = false
     /// Flag to indicate if we have captured the initial word wrap state
     internal var hasPreservedWordWrapState: Bool = false
     #endif
-    
+
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
@@ -168,11 +168,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                 // This ensures backward compatibility while alerting developers
                 Self.logger.warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
             }
-            
+
             // Apply configuration if it changed OR if the memory monitor changed OR if workspace root changed
             // (memoryMonitor and workspaceRoot are excluded from EditorConfiguration equality)
-            if !isApplyingConfiguration && 
-               (configuration != oldValue || 
+            if !isApplyingConfiguration &&
+               (configuration != oldValue ||
                 configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor ||
                 configuration.workspaceRoot != oldValue.workspaceRoot) {
                 isApplyingConfiguration = true
@@ -181,36 +181,36 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
             }
         }
     }
-    
+
     /// The syntax highlighting coordinator
     internal let syntaxHighlighter = SyntaxHighlightingCoordinator()
-    
+
     /// Async syntax highlighter with debouncing
     internal lazy var asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
-    
+
     /// TextKit2 rendering optimizer for large files
     internal lazy var renderingOptimizer = memoryCoordinator.createRenderingOptimizer()
-    
+
     /// TextKit2 performance monitor
     internal let performanceMonitor = TextKit2PerformanceMonitor()
-    
+
     /// LSP manager for language server integration
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
     #endif
-    
+
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
-    
+
     /// Business logic service registry for dependency injection
     internal lazy var businessLogicServices = BusinessLogicServiceRegistry()
-    
+
     /// Adaptive performance mode manager
     internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
-    
+
     /// Line index cache for optimized line number calculations
     internal let lineIndexCache = LineIndexCache()
-    
+
     /// Memory monitor for tracking and managing memory usage
     /// 
     /// Set this property to provide a custom memory monitor instance or to share
@@ -236,12 +236,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         didSet {
             // Only update if the monitor actually changed
             guard memoryMonitor !== oldValue else { return }
-            
+
             // Update memory coordinator with new monitor
             memoryCoordinator.updateMemoryMonitor(memoryMonitor)
         }
     }
-    
+
     /// The current programming language used for syntax highlighting and code completion.
     /// 
     /// When the language is changed:
@@ -254,92 +254,92 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         didSet {
             let languageService = businessLogicServices.languageDetectionService
             let validation = languageService.validateLanguageChange(from: oldValue, to: language)
-            
+
             if validation != .noChange {
                 applySyntaxHighlighting()
                 updateCompletionTriggerCharacters()
             }
         }
     }
-    
+
     /// Gutter view for line numbers
     internal var gutterViewStorage: GutterView?
-    
+
     /// Line highlight view
     internal var lineHighlightView: PlatformView?
-    
+
     /// Weak reference to the container view to avoid fragile superview traversal
     internal weak var containerView: CodeEditorContainerView?
-    
+
     /// The current annotations displayed in the editor
     public private(set) var annotations: [Annotation] = []
-    
+
     // Internal methods for modifying annotations from extensions
     internal func updateAnnotations(_ newAnnotations: [Annotation]) {
         annotations = newAnnotations
     }
-    
+
     internal func appendAnnotation(_ annotation: Annotation) {
         annotations.append(annotation)
     }
-    
+
     internal func removeAnnotation(where predicate: (Annotation) -> Bool) {
         annotations.removeAll(where: predicate)
     }
-    
+
     internal func clearAnnotations() {
         annotations.removeAll()
     }
-    
+
     /// Annotation views mapping
     internal var annotationViews: [String: PlatformView] = [:]
-    
+
     /// The data source for providing custom annotations
     public weak var annotationsDataSource: AnnotationsDataSource?
-    
+
     // MARK: - Completion System
-    
+
     /// Completion manager for handling multiple completion providers
     internal lazy var completionManager = memoryCoordinator.createCompletionManager()
-    
+
     /// Current completion view controller
     internal var completionViewController: (any CompletionViewControllerRepresentable)?
-    
+
     /// Completion popup window/container
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     internal var completionWindow: NSWindow?
     #else
     internal var completionPopover: PlatformViewController?
     #endif
-    
+
     /// Whether completion is currently active
     internal var isCompletionActive: Bool = false
-    
+
     /// Completion trigger characters for the current language
     internal var completionTriggerCharacters: Set<Character> = [".", "(", "[", "<", " "]
-    
+
     /// Memory management coordinator
     internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
-    
+
     // MARK: - Initialization
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
     }
-    
+
     override public init(frame frameRect: NSRect) {
         // Use default NSTextView initialization - don't create custom text container
         // The custom text container creation was breaking text rendering
         Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
-        
+
         // Use default NSTextView initialization
         // NSTextView should automatically use TextKit2 on supported systems
         super.init(frame: frameRect)
         setupTextView()
     }
-    
+
     /// Initializes CodeEditorView with a custom memory monitor
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
@@ -348,7 +348,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
     }
-    
+
     /// Initializes CodeEditorView with custom services for dependency injection
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
@@ -370,13 +370,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
     }
-    
+
     public convenience init(frame frameRect: CGRect) {
         // Use default UITextView initialization
         Self.logger.debug("CodeEditorView init: frame = \(String(describing: frameRect))")
         self.init(frame: frameRect, textContainer: nil)
     }
-    
+
     /// Initializes CodeEditorView with a custom memory monitor
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
@@ -385,7 +385,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         self.init(frame: frameRect)
         self.memoryMonitor = memoryMonitor
     }
-    
+
     /// Initializes CodeEditorView with custom services for dependency injection
     /// - Parameters:
     ///   - frameRect: The frame rectangle for the view
@@ -403,51 +403,51 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
     }
     #endif
-    
+
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupTextView()
     }
-    
+
     override public func removeFromSuperview() {
         // Perform synchronous cleanup before removing from superview
         // The async highlighter will handle its own cleanup in deinit if needed
         asyncHighlighter.cleanup()
         unregisterFromMemoryMonitor()
-        
+
         // Cancel any pending layout operations
         layoutCoordinator.cancelPendingLayout()
-        
+
         // Cancel any pending completion requests
         completionManager.cancelCurrentRequest()
-        
+
         // Clean up code folding - no cleanup method available
-        
+
         // Clean up syntax highlighting
         Task {
             await syntaxHighlighter.cancelHighlighting()
         }
-        
+
         // Remove any gutter view
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         gutterViewStorage?.removeFromSuperview()
         #endif
-        
+
         // Clear delegate to break potential retain cycles
         delegate = nil
-        
+
         super.removeFromSuperview()
     }
-    
+
     deinit {
         // Remove notification observers
         NotificationCenter.default.removeObserver(self)
-        
+
         // Note: Memory monitor cleanup is now handled in removeFromSuperview
         // to avoid creating tasks in deinit
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Updates memory monitor references in all dependent components
 }

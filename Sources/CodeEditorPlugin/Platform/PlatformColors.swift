@@ -41,7 +41,7 @@ import AppKit
 /// - SeeAlso: <doc:Platform-Adaptation> for color manipulation utilities
 public enum PlatformColors {
     // MARK: - Basic Platform Colors
-    
+
     /// Primary label color (adapts to light/dark mode)
     public static var label: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -50,7 +50,7 @@ public enum PlatformColors {
         return UIColor.label
         #endif
     }
-    
+
     /// Secondary label color (dimmed)
     public static var secondaryLabel: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -59,7 +59,7 @@ public enum PlatformColors {
         return UIColor.secondaryLabel
         #endif
     }
-    
+
     /// Tertiary label color (further dimmed)
     public static var tertiaryLabel: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -68,7 +68,7 @@ public enum PlatformColors {
         return UIColor.tertiaryLabel
         #endif
     }
-    
+
     /// Primary system background color
     public static var systemBackground: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -77,7 +77,7 @@ public enum PlatformColors {
         return UIColor.systemBackground
         #endif
     }
-    
+
     /// Secondary system background color
     public static var secondarySystemBackground: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -86,7 +86,7 @@ public enum PlatformColors {
         return UIColor.secondarySystemBackground
         #endif
     }
-    
+
     /// Control background color
     public static var controlBackground: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -95,7 +95,7 @@ public enum PlatformColors {
         return UIColor.systemGray6
         #endif
     }
-    
+
     /// Separator line color
     public static var separator: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -104,7 +104,7 @@ public enum PlatformColors {
         return UIColor.separator
         #endif
     }
-    
+
     /// Disabled control text color
     public static var disabledControlText: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -113,7 +113,7 @@ public enum PlatformColors {
         return UIColor.tertiaryLabel
         #endif
     }
-    
+
     /// System accent/tint color
     public static var tintColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -122,7 +122,7 @@ public enum PlatformColors {
         return UIColor.tintColor
         #endif
     }
-    
+
     /// Control accent color (same as tint on iOS, dedicated property on macOS)
     public static var controlAccentColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -131,7 +131,7 @@ public enum PlatformColors {
         return UIColor.systemBlue
         #endif
     }
-    
+
     /// Text background color (for text fields, editors)
     public static var textBackgroundColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -140,7 +140,7 @@ public enum PlatformColors {
         return UIColor.systemBackground
         #endif
     }
-    
+
     /// Placeholder text color
     public static var placeholderTextColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -149,7 +149,7 @@ public enum PlatformColors {
         return UIColor.placeholderText
         #endif
     }
-    
+
     /// Selected text color
     public static var selectedTextColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -160,7 +160,7 @@ public enum PlatformColors {
         }
         #endif
     }
-    
+
     /// Selected text background color
     public static var selectedTextBackgroundColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -169,9 +169,9 @@ public enum PlatformColors {
         return UIColor.tintColor.withAlphaComponent(0.3)
         #endif
     }
-    
+
     // MARK: - Basic Colors
-    
+
     public static var black: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.black
@@ -179,7 +179,7 @@ public enum PlatformColors {
         return UIColor.black
         #endif
     }
-    
+
     public static var white: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.white
@@ -187,7 +187,7 @@ public enum PlatformColors {
         return UIColor.white
         #endif
     }
-    
+
     public static var clear: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.clear
@@ -195,9 +195,9 @@ public enum PlatformColors {
         return UIColor.clear
         #endif
     }
-    
+
     // MARK: - System Colors
-    
+
     public static var systemRed: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemRed
@@ -205,7 +205,7 @@ public enum PlatformColors {
         return UIColor.systemRed
         #endif
     }
-    
+
     public static var systemBlue: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemBlue
@@ -213,7 +213,7 @@ public enum PlatformColors {
         return UIColor.systemBlue
         #endif
     }
-    
+
     public static var systemGreen: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemGreen
@@ -221,7 +221,7 @@ public enum PlatformColors {
         return UIColor.systemGreen
         #endif
     }
-    
+
     public static var systemPurple: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemPurple
@@ -229,7 +229,7 @@ public enum PlatformColors {
         return UIColor.systemPurple
         #endif
     }
-    
+
     public static var systemOrange: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemOrange
@@ -237,7 +237,7 @@ public enum PlatformColors {
         return UIColor.systemOrange
         #endif
     }
-    
+
     public static var systemTeal: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemTeal
@@ -245,7 +245,7 @@ public enum PlatformColors {
         return UIColor.systemTeal
         #endif
     }
-    
+
     public static var systemIndigo: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemIndigo
@@ -253,7 +253,7 @@ public enum PlatformColors {
         return UIColor.systemIndigo
         #endif
     }
-    
+
     public static var systemPink: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemPink
@@ -261,7 +261,7 @@ public enum PlatformColors {
         return UIColor.systemPink
         #endif
     }
-    
+
     public static var systemBrown: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemBrown
@@ -269,7 +269,7 @@ public enum PlatformColors {
         return UIColor.systemBrown
         #endif
     }
-    
+
     public static var systemYellow: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemYellow
@@ -277,7 +277,7 @@ public enum PlatformColors {
         return UIColor.systemYellow
         #endif
     }
-    
+
     public static var systemGray: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor.systemGray
@@ -295,7 +295,7 @@ extension PlatformColors {
     public static var selectedLineHighlight: PlatformColor {
         tintColor.withAlphaComponent(0.15)
     }
-    
+
     /// Returns an appropriate color for code editor background
     public static var codeBackground: PlatformColor {
         #if canImport(UIKit)
@@ -304,7 +304,7 @@ extension PlatformColors {
         return textBackgroundColor
         #endif
     }
-    
+
     /// Returns an appropriate color for gutter background
     public static var gutterBackground: PlatformColor {
         #if canImport(UIKit)
@@ -313,42 +313,42 @@ extension PlatformColors {
         return controlBackground
         #endif
     }
-    
+
     /// Returns an appropriate color for line numbers
     public static var lineNumberColor: PlatformColor {
         tertiaryLabel
     }
-    
+
     /// Returns an appropriate color for syntax highlighting keywords
     public static var keywordColor: PlatformColor {
         systemPurple
     }
-    
+
     /// Returns an appropriate color for syntax highlighting strings
     public static var stringColor: PlatformColor {
         systemRed
     }
-    
+
     /// Returns an appropriate color for syntax highlighting comments
     public static var commentColor: PlatformColor {
         systemGreen
     }
-    
+
     /// Returns an appropriate color for syntax highlighting numbers
     public static var numberColor: PlatformColor {
         systemBlue
     }
-    
+
     /// Returns an appropriate color for syntax highlighting functions
     public static var functionColor: PlatformColor {
         systemTeal
     }
-    
+
     /// Returns an appropriate color for syntax highlighting types
     public static var typeColor: PlatformColor {
         systemIndigo
     }
-    
+
     /// Returns an appropriate color for syntax highlighting attributes
     public static var attributeColor: PlatformColor {
         systemOrange

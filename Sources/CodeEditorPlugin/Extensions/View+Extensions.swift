@@ -54,7 +54,7 @@ extension View {
             self.onChange(of: value, perform: action)
         }
     }
-    
+
     /// A cross-platform onChange modifier for when you don't need the new value.
     ///
     /// This variant is useful when you only need to know that a change occurred,

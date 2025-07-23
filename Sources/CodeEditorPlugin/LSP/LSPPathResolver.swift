@@ -42,7 +42,7 @@ import Foundation
 @available(macOS 10.15, iOS 13.0, *)
 public struct LSPPathResolver: Sendable {
     // MARK: - Configuration
-    
+
     /// Common installation directories to search for language servers
     private static let commonInstallationPaths: [String] = [
         "/usr/local/bin",
@@ -58,9 +58,9 @@ public struct LSPPathResolver: Sendable {
         System.getenv("HOME").map { "\($0)/.cargo/bin" } ?? "", // Rust installs
         System.getenv("HOME").map { "\($0)/go/bin" } ?? "" // Go installs
     ].filter { !$0.isEmpty }
-    
+
     // MARK: - Public Methods
-    
+
     /// Resolve the full path to a language server executable
     ///
     /// This method uses a multi-step resolution process:
@@ -76,25 +76,25 @@ public struct LSPPathResolver: Sendable {
         if serverPath.hasPrefix("/") {
             return FileManager.default.isExecutableFile(atPath: serverPath) ? serverPath : nil
         }
-        
+
         // Step 2: Check for environment variable override
         if let envPath = resolveFromEnvironment(serverPath) {
             return envPath
         }
-        
+
         // Step 3: Search in system PATH
         if let pathResult = findExecutableInPath(serverPath) {
             return pathResult
         }
-        
+
         // Step 4: Search common installation directories
         if let commonPath = findInCommonLocations(serverPath) {
             return commonPath
         }
-        
+
         return nil
     }
-    
+
     /// Get all available paths for a given executable name
     ///
     /// This method returns all locations where the executable is found,
@@ -104,12 +104,12 @@ public struct LSPPathResolver: Sendable {
     /// - Returns: Array of absolute paths where the executable was found
     public func findAllPaths(for executableName: String) -> [String] {
         var foundPaths: [String] = []
-        
+
         // Check environment variable
         if let envPath = resolveFromEnvironment(executableName) {
             foundPaths.append(envPath)
         }
-        
+
         // Check all PATH directories
         let pathDirectories = getPathDirectories()
         for directory in pathDirectories {
@@ -118,7 +118,7 @@ public struct LSPPathResolver: Sendable {
                 foundPaths.append(fullPath)
             }
         }
-        
+
         // Check common installation directories
         for directory in Self.commonInstallationPaths {
             let fullPath = "\(directory)/\(executableName)"
@@ -126,10 +126,10 @@ public struct LSPPathResolver: Sendable {
                 foundPaths.append(fullPath)
             }
         }
-        
+
         return foundPaths
     }
-    
+
     /// Check if a language server executable is available
     ///
     /// - Parameter serverPath: Either an absolute path or executable name
@@ -137,9 +137,9 @@ public struct LSPPathResolver: Sendable {
     public func isAvailable(_ serverPath: String) -> Bool {
         resolvePath(serverPath) != nil
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Resolve path from environment variable
     ///
     /// Checks for environment variables in the format: LSP_<EXECUTABLE>_PATH
@@ -154,31 +154,31 @@ public struct LSPPathResolver: Sendable {
     /// - Returns: Path from environment variable if found and executable
     private func resolveFromEnvironment(_ executableName: String) -> String? {
         let envVarName = "LSP_\(executableName.uppercased().replacingOccurrences(of: "-", with: "_"))_PATH"
-        
+
         guard let envPath = ProcessInfo.processInfo.environment[envVarName] else {
             return nil
         }
-        
+
         return FileManager.default.isExecutableFile(atPath: envPath) ? envPath : nil
     }
-    
+
     /// Find executable in system PATH
     ///
     /// - Parameter executableName: Name of the executable to find
     /// - Returns: First matching path found in PATH directories
     private func findExecutableInPath(_ executableName: String) -> String? {
         let pathDirectories = getPathDirectories()
-        
+
         for directory in pathDirectories {
             let fullPath = "\(directory)/\(executableName)"
             if FileManager.default.isExecutableFile(atPath: fullPath) {
                 return fullPath
             }
         }
-        
+
         return nil
     }
-    
+
     /// Find executable in common installation locations
     ///
     /// - Parameter executableName: Name of the executable to find
@@ -190,10 +190,10 @@ public struct LSPPathResolver: Sendable {
                 return fullPath
             }
         }
-        
+
         return nil
     }
-    
+
     /// Get directories from system PATH environment variable
     ///
     /// - Returns: Array of directory paths from PATH
@@ -230,12 +230,12 @@ extension FileManager {
         guard fileExists(atPath: path, isDirectory: &isDirectory) else {
             return false
         }
-        
+
         // Must be a file, not a directory
         guard !isDirectory.boolValue else {
             return false
         }
-        
+
         // Check execute permissions using POSIX access()
         return access(path, X_OK) == 0
     }

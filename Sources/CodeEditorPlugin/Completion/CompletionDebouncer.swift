@@ -176,7 +176,7 @@ public final class CompletionDebouncer: ObservableObject {
             do {
                 guard let self else { return }
                 try await Task.sleep(for: .seconds(self.debounceDelay))
-                
+
                 await MainActor.run { [weak self] in
                     self?.processDebouncedRequests()
                 }

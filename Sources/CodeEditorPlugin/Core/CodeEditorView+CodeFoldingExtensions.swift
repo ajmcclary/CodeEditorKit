@@ -27,10 +27,10 @@ extension CodeEditorView {
     /// ```
     public func toggleFold(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
-        
+
         return codeFoldingEngine.toggleFold(at: lineNumber)
     }
-    
+
     /// Fold a code region at the specified line number.
     ///
     /// This method folds a foldable code region that starts at or contains the specified line.
@@ -49,13 +49,13 @@ extension CodeEditorView {
     /// ```
     public func fold(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
-        
+
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
             return codeFoldingEngine.fold(region)
         }
         return false
     }
-    
+
     /// Unfold a code region at the specified line number.
     ///
     /// This method unfolds a previously folded code region at the specified line.
@@ -73,13 +73,13 @@ extension CodeEditorView {
     /// ```
     public func unfold(at lineNumber: Int) -> Bool {
         guard configuration.display.enableCodeFolding else { return false }
-        
+
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
             return codeFoldingEngine.unfold(region)
         }
         return false
     }
-    
+
     /// Check if a line contains a foldable code region.
     ///
     /// Use this method to determine if folding controls should be shown for a specific line
@@ -100,7 +100,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return false }
         return codeFoldingEngine.isStartOfFoldableRegion(lineNumber)
     }
-    
+
     /// Check if a line is currently folded.
     ///
     /// - Parameter lineNumber: The line number to check (1-based)
@@ -117,7 +117,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return false }
         return codeFoldingEngine.isLineFolded(lineNumber)
     }
-    
+
     /// Fold all regions of a specific type.
     ///
     /// This method folds all foldable regions of the specified type throughout the document.
@@ -139,13 +139,13 @@ extension CodeEditorView {
     /// ```
     internal func foldAll(type: FoldingType) {
         guard configuration.display.enableCodeFolding else { return }
-        
+
         let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
         for region in regionsToFold {
             codeFoldingEngine.fold(region)
         }
     }
-    
+
     /// Unfold all currently folded regions.
     ///
     /// This method expands all folded code regions in the document, making all text visible.
@@ -160,7 +160,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return }
         codeFoldingEngine.unfoldAll()
     }
-    
+
     /// Get all foldable regions in the document.
     ///
     /// Returns an array of all detected foldable regions, useful for building custom
@@ -180,7 +180,7 @@ extension CodeEditorView {
         guard configuration.display.enableCodeFolding else { return [] }
         return codeFoldingEngine.foldableRegions
     }
-    
+
     /// Get all currently folded regions.
     ///
     /// - Returns: Array of currently folded regions

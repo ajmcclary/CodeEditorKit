@@ -10,17 +10,17 @@ import Foundation
 
 public class MockTextLocation: NSObject, NSTextLocation {
     public let offset: Int
-    
+
     public init(offset: Int) {
         self.offset = offset
         super.init()
     }
-    
+
     public func compare(_ other: NSTextLocation) -> ComparisonResult {
         guard let otherMock = other as? Self else {
             return .orderedSame
         }
-        
+
         if offset < otherMock.offset {
             return .orderedAscending
         } else if offset > otherMock.offset {
@@ -29,7 +29,7 @@ public class MockTextLocation: NSObject, NSTextLocation {
             return .orderedSame
         }
     }
-    
+
     deinit {
         // Cleanup
     }

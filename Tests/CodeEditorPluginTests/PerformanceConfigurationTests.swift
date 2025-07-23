@@ -9,7 +9,7 @@ import XCTest
 /// Fixed performance configuration tests that avoid hanging issues
 final class PerformanceConfigurationTests: XCTestCase {
     deinit {}
-    
+
     override func setUp() {
         super.setUp()
         // Clean environment before each test
@@ -17,7 +17,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
         }
     }
-    
+
     override func tearDown() {
         super.tearDown()
         // Force cleanup to prevent memory issues between tests
@@ -25,15 +25,15 @@ final class PerformanceConfigurationTests: XCTestCase {
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
         }
     }
-    
+
     // MARK: - Performance Tests
-    
+
     @MainActor
     func testLargeTextPerformanceWithLineNumbers() {
         let textView = CodeEditorView(frame: .zero)
         // Reduced from 10,000 to 1,000 lines
         let largeText = String(repeating: "This is a line of text.\n", count: 1_000)
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
@@ -46,13 +46,13 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testLargeTextPerformanceWithoutLineNumbers() {
         let textView = CodeEditorView(frame: .zero)
         // Reduced from 10,000 to 1,000 lines
         let largeText = String(repeating: "This is a line of text.\n", count: 1_000)
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
@@ -65,13 +65,13 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testSyntaxHighlightingPerformance() {
         let textView = CodeEditorView(frame: .zero)
         let swiftCode = """
         import Foundation
-        
+
         class Example {
             func doSomething() {
                 for i in 0..<1000 {
@@ -82,7 +82,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         """
         // Reduced from 100 to 20 repetitions
         let largeCode = String(repeating: swiftCode + "\n", count: 20)
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeCode
@@ -91,7 +91,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testScrollingPerformanceWithLargeText() {
         let textView = CodeEditorView(frame: .zero)
@@ -103,7 +103,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         #else
         textView.textContainer.widthTracksTextView = true
         #endif
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Simulate scrolling by changing the visible rect
@@ -113,7 +113,7 @@ final class PerformanceConfigurationTests: XCTestCase {
                 #else
                 textView.scrollRectToVisible(visibleRect, animated: false)
                 #endif
-                
+
                 // Force layout to ensure scrolling performance is measured
                 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
                 textView.needsDisplay = true
@@ -123,13 +123,13 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testConfigurationChangePerformance() {
         let textView = CodeEditorView(frame: .zero)
         let sampleText = "Sample text for configuration testing"
         textView.text = sampleText
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Toggle only the most essential configurations
@@ -139,7 +139,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testThemeSwitchingPerformance() {
         let textView = CodeEditorView(frame: .zero)
@@ -152,7 +152,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = sampleCode
         textView.language = .swift
         textView.isSyntaxHighlightingEnabled = true
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
             (.white, .black, NSColor.selectedTextBackgroundColor),
@@ -164,7 +164,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             (.black, .white, UIColor.systemGray4.withAlphaComponent(0.3))
         ]
         #endif
-        
+
         measure(options: Self.standardMeasureOptions) {
             autoreleasepool {
                 for scheme in colorSchemes {
@@ -177,13 +177,13 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testSpellCheckingPerformanceImpact() throws {
         // Skip this test as spell checking can cause hanging issues
         throw XCTSkip("Skipping spell checking performance test due to system-level timing issues")
     }
-    
+
     @MainActor
     func testTextSubstitutionPerformance() {
         let textView = CodeEditorView(frame: .zero)
@@ -194,7 +194,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         """
         // Reduced from 100 to 20 repetitions
         let largeText = String(repeating: textWithSubstitutions + "\n", count: 20)
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
@@ -210,58 +210,58 @@ final class PerformanceConfigurationTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testHardwareAccelerationImpact() {
         let textView = CodeEditorView(frame: .zero)
         // Reduced from 5,000 to 500 lines
         let largeText = String(repeating: "This is a line of text.\n", count: 500)
         textView.text = largeText
-        
+
         // Test that hardware acceleration features can be configured
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         textView.wantsLayer = true
         XCTAssertTrue(textView.wantsLayer, "Hardware acceleration should be enabled")
         XCTAssertNotNil(textView.layer, "Layer should be created for hardware acceleration")
-        
+
         // Configure layer for async drawing
         textView.layer?.drawsAsynchronously = true
         XCTAssertTrue(textView.layer?.drawsAsynchronously ?? false, "Asynchronous drawing should be enabled")
-        
+
         // Test that rendering works with hardware acceleration
         textView.needsDisplay = true
-        
+
         // Verify that the text view maintains its content with hardware acceleration
         XCTAssertEqual(textView.text, largeText, "Text content should remain unchanged with hardware acceleration")
-        
+
         // Test disabling async drawing
         textView.layer?.drawsAsynchronously = false
         XCTAssertFalse(textView.layer?.drawsAsynchronously ?? true, "Asynchronous drawing should be disabled")
         #elseif canImport(UIKit)
         // UIKit always uses layers
         XCTAssertNotNil(textView.layer, "Layer should always exist in UIKit")
-        
+
         // Configure layer for async drawing
         textView.layer.drawsAsynchronously = true
         XCTAssertTrue(textView.layer.drawsAsynchronously, "Asynchronous drawing should be enabled")
-        
+
         // Test that rendering works with hardware acceleration
         textView.setNeedsDisplay()
-        
+
         // Verify that the text view maintains its content with hardware acceleration
         XCTAssertEqual(textView.text, largeText, "Text content should remain unchanged with hardware acceleration")
-        
+
         // Test disabling async drawing
         textView.layer.drawsAsynchronously = false
         XCTAssertFalse(textView.layer.drawsAsynchronously, "Asynchronous drawing should be disabled")
         #endif
     }
-    
+
     @MainActor
     func testMemoryUsageWithLargeConfiguration() {
         // Create multiple text views with full configuration
         var textViews: [CodeEditorView] = []
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Reduced from 10 to 3 text views
@@ -275,13 +275,13 @@ final class PerformanceConfigurationTests: XCTestCase {
                     tv.language = .swift
                     textViews.append(tv)
                 }
-                
+
                 // Clean up
                 textViews.removeAll()
             }
         }
     }
-    
+
     @MainActor
     func testLayoutPerformanceWithComplexConfiguration() {
         let textView = CodeEditorView(frame: .zero)
@@ -295,7 +295,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         }
         // FIXME: Another comment
         """
-        
+
         // Reduced from 50 to 10 repetitions
         textView.text = String(repeating: complexText + "\n", count: 10)
         textView.isLineNumbersEnabled = true
@@ -310,7 +310,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         #elseif canImport(UIKit)
         textView.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         #endif
-        
+
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Force layout using TextKit2-compatible method

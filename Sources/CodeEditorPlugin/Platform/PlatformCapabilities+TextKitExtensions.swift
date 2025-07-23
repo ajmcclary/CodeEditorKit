@@ -15,7 +15,7 @@ extension PlatformCapabilities {
         public let supportsTextLayoutFragments: Bool
         public let supportsRenderingAttributes: Bool
     }
-    
+
     /// Get comprehensive TextKit capabilities
     ///
     /// This computed property provides a complete overview of TextKit support
@@ -44,7 +44,7 @@ extension PlatformCapabilities {
             supportsRenderingAttributes: supportsRenderingAttributes
         )
     }
-    
+
     /// Whether TextKit2 is supported on the current platform
     ///
     /// TextKit2 provides improved performance and features but requires
@@ -69,7 +69,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether TextKit2 is preferred over TextKit1
     ///
     /// While TextKit2 may be supported, it might not be recommended
@@ -93,7 +93,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether TextKit2 text layout fragments are supported
     ///
     /// Text layout fragments provide improved performance for large documents
@@ -103,7 +103,7 @@ extension PlatformCapabilities {
     public var supportsTextLayoutFragments: Bool {
         supportsTextKit2
     }
-    
+
     /// Whether TextKit2 rendering attributes are supported
     ///
     /// Advanced rendering attributes allow for more sophisticated text
@@ -113,7 +113,7 @@ extension PlatformCapabilities {
     public var supportsRenderingAttributes: Bool {
         supportsTextKit2
     }
-    
+
     /// Get recommended TextKit configuration for optimal performance
     ///
     /// This method provides platform-specific recommendations for TextKit
@@ -128,58 +128,58 @@ extension PlatformCapabilities {
     /// - Returns: Recommended TextKit configuration
     public func recommendedTextKitConfiguration() -> TextKitConfiguration {
         var config = TextKitConfiguration()
-        
+
         // Base TextKit version decision
         config.useTextKit2 = preferTextKit2
         config.enableLayoutFragments = supportsTextLayoutFragments && preferTextKit2
-        
+
         // Performance tuning based on platform
         switch currentPlatform {
         case .macOS:
             config.maxRenderingLength = 1_000_000 // 1MB
             config.incrementalRendering = true
             config.enableBackgroundParsing = true
-            
+
         case .iOS:
             // More conservative on iOS
             config.maxRenderingLength = 500_000 // 500KB
             config.incrementalRendering = true
             config.enableBackgroundParsing = supportsBackgroundProcessing
-            
+
         case .catalyst:
             // Balanced approach for Catalyst
             config.maxRenderingLength = 750_000 // 750KB
             config.incrementalRendering = true
             config.enableBackgroundParsing = true
         }
-        
+
         // Memory-based adjustments
         let physicalMemory = ProcessInfo.processInfo.physicalMemory
         if physicalMemory < 4 * 1_024 * 1_024 * 1_024 { // < 4GB
             config.maxRenderingLength /= 2
             config.enableBackgroundParsing = false
         }
-        
+
         return config
     }
-    
+
     /// Configuration for TextKit features and performance
     public struct TextKitConfiguration {
         /// Whether to use TextKit2 instead of TextKit1
         public var useTextKit2: Bool = false
-        
+
         /// Whether to enable TextKit2 layout fragments
         public var enableLayoutFragments: Bool = false
-        
+
         /// Maximum document length for full syntax highlighting
         public var maxRenderingLength: Int = 500_000
-        
+
         /// Whether to use incremental rendering updates
         public var incrementalRendering: Bool = true
-        
+
         /// Whether to enable background text parsing
         public var enableBackgroundParsing: Bool = true
-        
+
         public init() {}
     }
 }

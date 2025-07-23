@@ -24,7 +24,7 @@ extension EditorConfigurationBuilder {
     wrapLines: false,
     enableSpellCheck: false
   )
-  
+
   /// Base language settings for document languages
   internal static let baseDocumentSettings = LanguageSettings(
     syntaxHighlighting: true,
@@ -35,34 +35,34 @@ extension EditorConfigurationBuilder {
     wrapLines: true,
     enableSpellCheck: true
   )
-  
+
   /// Override values for language settings
   internal struct LanguageSettingsOverride {
     var tabWidth: Int?
     var insertSpacesForTabs: BooleanOverride = .inherit
     var syntaxHighlighting: BooleanOverride = .inherit
   }
-  
+
   /// Enum to represent boolean overrides without using optional Bool
   internal enum BooleanOverride {
     case inherit
     case enable
     case disable
-    
+
     func value(or defaultValue: Bool) -> Bool {
       switch self {
       case .inherit:
         return defaultValue
-        
+
       case .enable:
         return true
-        
+
       case .disable:
         return false
       }
     }
   }
-  
+
   /// Helper to create language settings with custom overrides
   internal static func createSettings(
     base: LanguageSettings,
@@ -78,33 +78,33 @@ extension EditorConfigurationBuilder {
       enableSpellCheck: base.enableSpellCheck
     )
   }
-  
+
   /// Default language configurations
   internal static let languageSettings: [Language: LanguageSettings] = {
     var settings: [Language: LanguageSettings] = [:]
-    
+
     // Standard 4-space languages with spaces
     let fourSpaceLanguages: [Language] = [.swift, .python, .java, .sql, .ruby, .php, .shell]
     for language in fourSpaceLanguages {
       settings[language] = baseCodeSettings
     }
-    
+
     // 2-space languages
     let twoSpaceLanguages: [Language] = [.javascript, .typescript, .html, .css, .xml, .json, .yaml]
     for language in twoSpaceLanguages {
       settings[language] = createSettings(base: baseCodeSettings, overrides: LanguageSettingsOverride(tabWidth: 2))
     }
-    
+
     // Tab languages
     let tabLanguages: [Language] = [.go, .rust, .c, .cpp]
     for language in tabLanguages {
       settings[language] = createSettings(base: baseCodeSettings, overrides: LanguageSettingsOverride(insertSpacesForTabs: .disable))
     }
-    
+
     // Document languages
     settings[.markdown] = baseDocumentSettings
     settings[.plainText] = createSettings(base: baseDocumentSettings, overrides: LanguageSettingsOverride(syntaxHighlighting: .disable))
-    
+
     return settings
   }()
 

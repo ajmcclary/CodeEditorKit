@@ -10,16 +10,16 @@ import XCTest
 
 final class PlatformCapabilitiesTests: XCTestCase {
     // MARK: - Properties
-    
+
     // We'll create a fresh instance for each test since PlatformCapabilities is MainActor-isolated
-    
+
     // MARK: - Platform Detection Tests
-    
+
     @MainActor
     func testPlatformDetection() {
         let capabilities = PlatformCapabilities.shared
         let platform = capabilities.currentPlatform
-        
+
         #if targetEnvironment(macCatalyst)
         XCTAssertEqual(platform, .catalyst)
         #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -28,13 +28,13 @@ final class PlatformCapabilitiesTests: XCTestCase {
         XCTAssertEqual(platform, .iOS)
         #endif
     }
-    
+
     @MainActor
     func testPlatformDisplayName() {
         let capabilities = PlatformCapabilities.shared
         let platform = capabilities.currentPlatform
         let displayName = platform.name
-        
+
         switch platform {
         case .macOS:
             XCTAssertEqual(displayName, "macOS")
@@ -46,21 +46,21 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertEqual(displayName, "Mac Catalyst")
         }
     }
-    
+
     // MARK: - Feature Availability Tests
-    
+
     @MainActor
     func testTextKit2Support() {
         let capabilities = PlatformCapabilities.shared
         XCTAssertTrue(capabilities.supportsTextKit2)
     }
-    
+
     @MainActor
     func testMultipleCursorsSupport() {
         let capabilities = PlatformCapabilities.shared
         let isAvailable = capabilities.isFeatureAvailable(.multipleCursors)
         let platform = capabilities.currentPlatform
-        
+
         switch platform {
         case .macOS:
             XCTAssertTrue(isAvailable)
@@ -69,14 +69,14 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertFalse(isAvailable)
         }
     }
-    
+
     @MainActor
     func testMinimapSupport() {
         let capabilities = PlatformCapabilities.shared
         let isAvailable = capabilities.isFeatureAvailable(.minimap)
         // supportsMinimap is true for iOS and Catalyst, false for macOS
         let platform = capabilities.currentPlatform
-        
+
         switch platform {
         case .macOS:
             XCTAssertFalse(capabilities.supportsMinimap)
@@ -87,19 +87,19 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertTrue(isAvailable)
         }
     }
-    
+
     @MainActor
     func testCodeFoldingSupport() {
         let capabilities = PlatformCapabilities.shared
         // Code folding should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.codeFolding))
     }
-    
+
     @MainActor
     func testLSPSupport() {
         let capabilities = PlatformCapabilities.shared
         let isAvailable = capabilities.isFeatureAvailable(.languageServerProtocol)
-        
+
         // LSP requires process spawning, only available on macOS
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(isAvailable)
@@ -107,22 +107,22 @@ final class PlatformCapabilitiesTests: XCTestCase {
         XCTAssertFalse(isAvailable)
         #endif
     }
-    
+
     @MainActor
     func testHardwareAcceleration() {
         let capabilities = PlatformCapabilities.shared
         // Hardware acceleration should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.hardwareAcceleration))
     }
-    
+
     // MARK: - Feature Availability Level Tests
-    
+
     @MainActor
     func testGoToDefinitionAvailability() {
         let capabilities = PlatformCapabilities.shared
         let availability = capabilities.getFeatureAvailability(.goToDefinition)
         let platform = capabilities.currentPlatform
-        
+
         switch platform {
         case .macOS:
             XCTAssertEqual(availability, .full)
@@ -143,31 +143,31 @@ final class PlatformCapabilitiesTests: XCTestCase {
             #endif
         }
     }
-    
+
     @MainActor
     func testFindReplaceAvailability() {
         let capabilities = PlatformCapabilities.shared
         let availability = capabilities.getFeatureAvailability(.findReplace)
-        
+
         // Find/Replace should be available on all platforms
         XCTAssertNotEqual(availability, .unavailable)
     }
-    
+
     @MainActor
     func testCodeCompletionAvailability() {
         let capabilities = PlatformCapabilities.shared
         let availability = capabilities.getFeatureAvailability(.codeCompletion)
-        
+
         // Code completion should be at least partially available on all platforms
         XCTAssertNotEqual(availability, .unavailable)
     }
-    
+
     @MainActor
     func testSymbolNavigationAvailability() {
         let capabilities = PlatformCapabilities.shared
         let availability = capabilities.getFeatureAvailability(.symbolNavigation)
         let platform = capabilities.currentPlatform
-        
+
         switch platform {
         case .macOS:
             XCTAssertEqual(availability, .full)
@@ -181,20 +181,20 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertEqual(availability, .partial)
         }
     }
-    
+
     // MARK: - Recommended Configuration Tests
-    
+
     @MainActor
     func testRecommendedConfiguration() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
         let platform = capabilities.currentPlatform
-        
+
         // Common expectations
         XCTAssertNotNil(config)
         XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.display.highlightSelectedLine)
-        
+
         // Platform-specific expectations
         switch platform {
         case .macOS:
@@ -224,15 +224,15 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertEqual(config.layout.gutterWidth, 45.0)
         }
     }
-    
+
     @MainActor
     func testRecommendedPerformanceConfiguration() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
-        
+
         // Performance configuration should always be optimized
         XCTAssertTrue(config.performance.useHardwareAcceleration)
-        
+
         // Smooth scrolling might be disabled on some configurations (e.g., low memory)
         #if targetEnvironment(macCatalyst)
         // On Catalyst, smooth scrolling depends on device type and memory
@@ -250,22 +250,22 @@ final class PlatformCapabilitiesTests: XCTestCase {
         #else
         XCTAssertTrue(config.performance.smoothScrolling)
         #endif
-        
+
         XCTAssertGreaterThan(config.performance.maxSyntaxHighlightingLength, 0)
     }
-    
+
     // MARK: - Feature Detection Tests
-    
+
     @MainActor
     func testIsFeatureAvailable() {
         let capabilities = PlatformCapabilities.shared
         // Test a feature that should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.syntaxHighlighting))
         XCTAssertTrue(capabilities.isFeatureAvailable(.lineNumbers))
-        
+
         // Test platform-specific features
         let platform = capabilities.currentPlatform
-        
+
         switch platform {
         case .macOS:
             XCTAssertTrue(capabilities.isFeatureAvailable(.multipleCursors))
@@ -276,9 +276,9 @@ final class PlatformCapabilitiesTests: XCTestCase {
             XCTAssertTrue(capabilities.isFeatureAvailable(.minimap))
         }
     }
-    
+
     // MARK: - Performance Tests
-    
+
     @MainActor
     func testPlatformDetectionPerformance() {
         let capabilities = PlatformCapabilities.shared
@@ -288,7 +288,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testFeatureAvailabilityPerformance() {
         let capabilities = PlatformCapabilities.shared
@@ -299,7 +299,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
             }
         }
     }
-    
+
     @MainActor
     func testRecommendedConfigurationPerformance() {
         let capabilities = PlatformCapabilities.shared
@@ -309,17 +309,17 @@ final class PlatformCapabilitiesTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Additional Tests for Review Feedback
-    
+
     @MainActor
     func testRecommendedConfigurationMemoryAdjustments() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
-        
+
         // Check that memory-based adjustments are applied
         let memoryInGB = ProcessInfo.processInfo.physicalMemory / (1_024 * 1_024 * 1_024)
-        
+
         if memoryInGB < 4 {
             // Low memory devices should have reduced syntax highlighting length
             XCTAssertLessThanOrEqual(
@@ -336,13 +336,13 @@ final class PlatformCapabilitiesTests: XCTestCase {
             )
         }
     }
-    
+
     @MainActor
     func testRecommendedConfigurationDeviceSpecific() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
         let deviceType = capabilities.deviceType
-        
+
         // Verify device-specific settings are applied
         switch deviceType {
         case .mac:
@@ -355,12 +355,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
                 XCTAssertEqual(config.display.fontSize, 14.0, "Mac should use 14pt font")
                 XCTAssertEqual(config.layout.gutterWidth, 50.0, "Mac should use 50pt gutter")
             }
-            
+
         case .iPhone:
             XCTAssertEqual(config.display.fontSize, 16.0, "iPhone should use 16pt font")
             XCTAssertEqual(config.layout.gutterWidth, 50.0, "iPhone should use 50pt gutter")
             XCTAssertFalse(config.display.showMinimap, "iPhone should not show minimap")
-            
+
         case .iPad:
             // Catalyst on iPad has different settings than native iPad
             if capabilities.currentPlatform == .catalyst {
@@ -373,25 +373,25 @@ final class PlatformCapabilitiesTests: XCTestCase {
                 // iPad configuration enables minimap since it has enough screen space
                 XCTAssertTrue(config.display.showMinimap, "iPad should show minimap")
             }
-            
+
         default:
             // Other device types use their default configurations
             break
         }
     }
-    
+
     @MainActor
     func testRecommendedConfigurationPerformanceCapabilities() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
         let perfCaps = capabilities.performanceCapabilities
-        
+
         // Verify performance capabilities are respected
         if !perfCaps.supportsHardwareAcceleration {
             XCTAssertFalse(config.performance.useHardwareAcceleration,
                          "Hardware acceleration should be disabled when not supported")
         }
-        
+
         // Performance config should always exist
         XCTAssertNotNil(config.performance, "Performance config should exist")
         XCTAssertGreaterThan(
@@ -400,11 +400,11 @@ final class PlatformCapabilitiesTests: XCTestCase {
             "Max syntax highlighting length should be positive"
         )
     }
-    
+
     @MainActor
     func testAllFeaturesHaveAvailabilityLevel() {
         let capabilities = PlatformCapabilities.shared
-        
+
         // Test all known features
         let features: [PlatformCapabilities.EditorFeature] = [
             .syntaxHighlighting, .lineNumbers, .codeFolding, .minimap,
@@ -412,7 +412,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
             .findReplace, .codeCompletion, .symbolNavigation,
             .hardwareAcceleration, .autoIndent
         ]
-        
+
         for feature in features {
             let availability = capabilities.getFeatureAvailability(feature)
             // Every feature should have a defined availability level
@@ -420,12 +420,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
                         "Feature \(feature) should have valid availability level")
         }
     }
-    
+
     @MainActor
     func testInputCapabilities() {
         let capabilities = PlatformCapabilities.shared
         let inputCaps = capabilities.inputCapabilities
-        
+
         // Basic validation of input capabilities based on platform
         #if targetEnvironment(macCatalyst)
         // Catalyst supports keyboard, mouse, and touch
@@ -446,19 +446,19 @@ final class PlatformCapabilitiesTests: XCTestCase {
         XCTAssertFalse(inputCaps.preferredInputMethods.contains(.keyboard), "iOS should not prefer keyboard")
         #endif
     }
-    
+
     // MARK: - Mac Catalyst-specific Tests
-    
+
     @MainActor
     func testCADisplayLinkSupportOnCatalyst() {
         let capabilities = PlatformCapabilities.shared
         let perfCaps = capabilities.performanceCapabilities
-        
+
         #if targetEnvironment(macCatalyst)
         // Mac Catalyst should follow macOS availability for CADisplayLink (14.0+)
         let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
         if systemVersion.majorVersion >= 14 {
-            XCTAssertTrue(perfCaps.supportsCADisplayLink, 
+            XCTAssertTrue(perfCaps.supportsCADisplayLink,
                          "Mac Catalyst on macOS 14+ should support CADisplayLink")
         } else {
             XCTAssertFalse(perfCaps.supportsCADisplayLink,
@@ -480,12 +480,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
                      "iOS should always support CADisplayLink")
         #endif
     }
-    
+
     @MainActor
     func testCatalystPerformanceCapabilities() {
         let capabilities = PlatformCapabilities.shared
         let perfCaps = capabilities.performanceCapabilities
-        
+
         #if targetEnvironment(macCatalyst)
         // Catalyst-specific performance capability checks
         XCTAssertTrue(perfCaps.supportsHardwareAcceleration,
@@ -494,7 +494,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
                      "Mac Catalyst should support background processing")
         XCTAssertTrue(perfCaps.supportsSmoothScrolling,
                      "Mac Catalyst should support smooth scrolling")
-        
+
         // Catalyst should be treated as desktop-class for memory
         let memoryProfile = perfCaps.memoryProfile
         XCTAssertNotEqual(
@@ -504,14 +504,14 @@ final class PlatformCapabilitiesTests: XCTestCase {
         )
         #endif
     }
-    
+
     @MainActor
     func testCatalystFeatureAvailability() {
         let capabilities = PlatformCapabilities.shared
-        
+
         #if targetEnvironment(macCatalyst)
         // Test Catalyst-specific feature availability
-        
+
         // Features that should be available on Catalyst
         XCTAssertTrue(capabilities.isFeatureAvailable(.syntaxHighlighting),
                      "Catalyst should support syntax highlighting")
@@ -523,7 +523,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
                      "Catalyst should support find/replace")
         XCTAssertTrue(capabilities.isFeatureAvailable(.hardwareAcceleration),
                      "Catalyst should support hardware acceleration")
-        
+
         // Features with partial availability on Catalyst
         XCTAssertEqual(
             capabilities.getFeatureAvailability(.goToDefinition),
@@ -535,26 +535,26 @@ final class PlatformCapabilitiesTests: XCTestCase {
             .partial,
             "Catalyst should have partial symbol navigation support"
         )
-        
+
         // Features that should NOT be available on Catalyst
         XCTAssertFalse(capabilities.isFeatureAvailable(.languageServerProtocol),
                       "Catalyst should not support LSP (no process spawning)")
         XCTAssertFalse(capabilities.isFeatureAvailable(.multipleCursors),
                       "Catalyst should not support multiple cursors")
-        
+
         // Minimap support (should be available on Catalyst)
         XCTAssertTrue(capabilities.isFeatureAvailable(.minimap),
                      "Catalyst should support minimap")
         #endif
     }
-    
+
     @MainActor
     func testCatalystRecommendedConfiguration() {
         let capabilities = PlatformCapabilities.shared
-        
+
         #if targetEnvironment(macCatalyst)
         let config = capabilities.recommendedConfiguration()
-        
+
         // Catalyst should use desktop-optimized settings
         XCTAssertTrue(config.display.isLineNumbersEnabled,
                      "Catalyst should show line numbers by default")
@@ -562,12 +562,12 @@ final class PlatformCapabilitiesTests: XCTestCase {
                      "Catalyst should highlight selected line")
         XCTAssertTrue(config.performance.useHardwareAcceleration,
                      "Catalyst should use hardware acceleration")
-        
+
         // Font size varies based on device type in Catalyst
         // Base Catalyst uses 14.0, iPad Catalyst uses 15.0
         XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0,
                      "Catalyst should use 14pt or 15pt font size")
-        
+
         // Gutter width should be optimized for Catalyst
         XCTAssertEqual(
             config.layout.gutterWidth,

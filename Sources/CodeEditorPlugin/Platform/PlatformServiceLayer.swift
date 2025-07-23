@@ -15,18 +15,18 @@ import AppKit
 @MainActor
 public final class PlatformServiceLayer {
     // MARK: - Singleton
-    
+
     public static let shared = PlatformServiceLayer()
 
     private init() {}
-    
+
     // MARK: - Device Detection Service
-    
+
     /// Centralized device and platform detection
     public var deviceService: PlatformDeviceService {
         PlatformDeviceService.shared
     }
-    
+
     /// Platform-specific menu service
     public var menuService: PlatformMenuService {
         #if canImport(UIKit)
@@ -37,7 +37,7 @@ public final class PlatformServiceLayer {
         return MockMenuService()
         #endif
     }
-    
+
     /// Platform-specific input handling service
     public var inputService: PlatformInputService {
         #if canImport(UIKit)
@@ -48,7 +48,7 @@ public final class PlatformServiceLayer {
         return MockInputService()
         #endif
     }
-    
+
     /// Platform-specific layout service
     public var layoutService: PlatformLayoutService {
         #if canImport(UIKit)
@@ -69,9 +69,9 @@ public final class PlatformDeviceService {
     public static let shared = PlatformDeviceService()
 
     private init() {}
-    
+
     // MARK: - Device Type Detection
-    
+
     /// Whether the current device is an iPad
     public var isIPad: Bool {
         #if canImport(UIKit)
@@ -80,7 +80,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the current device is an iPhone
     public var isIPhone: Bool {
         #if canImport(UIKit)
@@ -89,7 +89,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the app is running on Mac Catalyst
     public var isMacCatalyst: Bool {
         #if targetEnvironment(macCatalyst)
@@ -98,7 +98,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the current platform is macOS (native)
     public var isMacOS: Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -107,7 +107,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the current platform is iOS (including iPhone and iPad)
     public var isIOS: Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
@@ -116,9 +116,9 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     // MARK: - Capability Detection
-    
+
     /// Whether the device supports hover interactions
     public var supportsHover: Bool {
         #if canImport(UIKit)
@@ -132,7 +132,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the device supports keyboard shortcuts
     public var supportsPlatformKeyboardShortcuts: Bool {
         #if canImport(UIKit)
@@ -143,7 +143,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the device supports multiple windows
     public var supportsMultipleWindows: Bool {
         #if canImport(UIKit)
@@ -157,7 +157,7 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     /// Whether the device supports external displays
     public var supportsExternalDisplay: Bool {
         #if canImport(UIKit)
@@ -168,9 +168,9 @@ public final class PlatformDeviceService {
         return false
         #endif
     }
-    
+
     // MARK: - Screen Properties
-    
+
     /// Main screen scale factor
     public var screenScale: CGFloat {
         #if canImport(UIKit)
@@ -181,7 +181,7 @@ public final class PlatformDeviceService {
         return 1.0
         #endif
     }
-    
+
     /// Main screen bounds
     public var screenBounds: CGRect {
         #if canImport(UIKit)
@@ -192,9 +192,9 @@ public final class PlatformDeviceService {
         return .zero
         #endif
     }
-    
+
     // MARK: - Device-Specific Preferences
-    
+
     /// Preferred text size for the platform
     public var preferredTextSize: CGFloat {
         if isIPhone {
@@ -205,12 +205,12 @@ public final class PlatformDeviceService {
             return 13.0 // macOS default
         }
     }
-    
+
     /// Whether to use compact UI elements
     public var prefersCompactUI: Bool {
         isIPhone
     }
-    
+
     /// Recommended touch target size
     public var recommendedTouchTargetSize: CGFloat {
         if isIOS {
@@ -251,7 +251,7 @@ public protocol PlatformLayoutService {
 
 public struct MenuDescriptor: Sendable {
     let items: [MenuItem]
-    
+
     public init(items: [MenuItem]) {
         self.items = items
     }
@@ -262,7 +262,7 @@ public struct MenuItem: Sendable {
     let action: @Sendable () -> Void
     let shortcut: PlatformKeyboardShortcut?
     let isEnabled: Bool
-    
+
     public init(title: String, action: @escaping @Sendable () -> Void, shortcut: PlatformKeyboardShortcut? = nil, isEnabled: Bool = true) {
         self.title = title
         self.action = action
@@ -274,7 +274,7 @@ public struct MenuItem: Sendable {
 public struct PlatformKeyboardShortcut: Sendable {
     let key: String
     let modifiers: ModifierFlags
-    
+
     public init(key: String, modifiers: ModifierFlags) {
         self.key = key
         self.modifiers = modifiers
@@ -283,11 +283,11 @@ public struct PlatformKeyboardShortcut: Sendable {
 
 public struct ModifierFlags: OptionSet, Sendable {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     public static let command = Self(rawValue: 1 << 0)
     public static let option = Self(rawValue: 1 << 1)
     public static let control = Self(rawValue: 1 << 2)

@@ -12,46 +12,46 @@ extension CodeEditorView {
             objc_setAssociatedObject(self, &kPluginManagerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
-    
+
     /// Initialize plugin system for this editor
     @MainActor
     public func initializePluginSystem() {
         guard pluginManager == nil else { return }
-        
+
         // Create a default event system if none exists in configuration
         let eventSystem = configuration.eventSystem ?? UnifiedEventSystem()
-        
+
         // Use registry from service registry or create new ones
         // Note: LanguageRegistry is created fresh as it's not shared in service registry
         let languageRegistry = LanguageRegistry()
         let completionRegistry = businessLogicServices.completionProviderRegistry
-        
+
         let manager = PluginManager(
             configuration: configuration,
             languageRegistry: languageRegistry,
             completionRegistry: completionRegistry,
             eventSystem: eventSystem
         )
-        
+
         self.pluginManager = manager
-        
+
         Task {
             // Register built-in plugins
             await registerBuiltInPlugins(manager)
-            
+
             // Load plugins
             await manager.loadPlugins()
         }
     }
-    
+
     /// Register built-in plugins
     private func registerBuiltInPlugins(_ manager: PluginManager) async {
         do {
             // Register Markdown plugin
             try await manager.registerPlugin(MarkdownPlugin.self)
-            
+
             // Register other built-in plugins here as they're created
-            
+
         } catch {
             CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "Plugins")
                 .error("Failed to register built-in plugins: \(error)")
@@ -73,7 +73,7 @@ extension View {
             // through the environment or view model
         }
     }
-    
+
     /// Configure allowed plugins
     public func codeEditorAllowedPlugins(_ identifiers: Set<String>) -> some View {
         self.environment(\.allowedPlugins, identifiers)
@@ -103,9 +103,9 @@ extension EnvironmentValues {
 public struct PluginDiscoveryView: View {
     @StateObject private var viewModel = PluginDiscoveryViewModel()
     @Environment(\.dismiss) private var dismiss
-    
+
     public init() {}
-    
+
     public var body: some View {
         NavigationStack {
             List {
@@ -142,7 +142,7 @@ public struct PluginDiscoveryView: View {
 private struct PluginRow: View {
     let plugin: PluginInfo
     let onToggle: () async -> Void
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
@@ -152,9 +152,9 @@ private struct PluginRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Toggle("", isOn: .constant(plugin.isEnabled))
                 .labelsHidden()
                 .accessibilityAddTraits(.isButton)
@@ -176,10 +176,10 @@ private final class PluginDiscoveryViewModel: ObservableObject {
     @Published var availablePlugins: [PluginInfo] = []
     private let loader = PluginLoader()
     private var pluginManager: PluginManager?
-    
+
     func loadPlugins() async {
         let bundles = await loader.discoverPlugins()
-        
+
         availablePlugins = bundles.map { bundle in
             PluginInfo(
                 identifier: bundle.metadata.identifier,
@@ -192,13 +192,13 @@ private final class PluginDiscoveryViewModel: ObservableObject {
             )
         }
     }
-    
+
     func togglePlugin(_ plugin: PluginInfo) async {
         if let index = availablePlugins.firstIndex(where: { $0.id == plugin.id }) {
             availablePlugins[index].isEnabled.toggle()
         }
     }
-    
+
     func applyChanges() async {
         // Apply plugin state changes
         // This would interact with the actual plugin manager
@@ -214,7 +214,7 @@ private struct PluginInfo: Identifiable {
     let author: String
     var isEnabled: Bool
     let bundle: PluginBundle
-    
+
     var id: String { identifier }
 }
 

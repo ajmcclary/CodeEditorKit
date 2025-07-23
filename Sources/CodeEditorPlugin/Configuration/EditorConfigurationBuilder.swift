@@ -79,7 +79,7 @@ public struct EditorConfigurationBuilder: Sendable {
   public init(base: EditorConfiguration) {
     self.configuration = base
   }
-  
+
   /// Creates a configuration builder starting from a preset configuration.
   ///
   /// This is a convenience initializer that uses shared base configurations
@@ -173,10 +173,10 @@ public struct EditorConfigurationBuilder: Sendable {
     var finalConfig = configuration
     let validator = ConfigurationValidator()
     _ = validator.autoFix(&finalConfig)
-    
+
     return finalConfig
   }
-  
+
   /// Build the configuration with validation feedback.
   /// 
   /// This method returns a Result type containing either the validated configuration
@@ -187,7 +187,7 @@ public struct EditorConfigurationBuilder: Sendable {
   public func buildWithValidation() -> Result<EditorConfiguration, ConfigurationValidationError> {
     let validator = ConfigurationValidator()
     let issues = validator.validate(configuration)
-    
+
     if issues.isEmpty {
       return .success(configuration)
     } else {
@@ -202,7 +202,7 @@ public struct EditorConfigurationBuilder: Sendable {
       }
     }
   }
-  
+
   /// Build the configuration with detailed validation report.
   /// 
   /// This method returns both the configuration and a validation report containing
@@ -212,23 +212,23 @@ public struct EditorConfigurationBuilder: Sendable {
   public func buildWithReport() -> (configuration: EditorConfiguration, report: ValidationReport) {
     let validator = ConfigurationValidator()
     var finalConfig = configuration
-    
+
     // Get initial issues
     let issues = validator.validate(configuration)
-    
+
     // Apply auto-fixes
     let fixes = validator.autoFix(&finalConfig)
-    
+
     // Create report
     let report = ValidationReport(
       originalIssues: issues,
       appliedFixes: fixes,
       finalConfiguration: finalConfig
     )
-    
+
     return (finalConfig, report)
   }
-  
+
   ///
   /// This method returns both the final configuration and any validation fixes that were applied.
   /// Use this when you need to know if any configuration values were adjusted during validation.
@@ -253,7 +253,7 @@ public struct EditorConfigurationBuilder: Sendable {
     var finalConfig = configuration
     let validator = ConfigurationValidator()
     let fixes = validator.autoFix(&finalConfig)
-    
+
     return (finalConfig, fixes)
   }
 }

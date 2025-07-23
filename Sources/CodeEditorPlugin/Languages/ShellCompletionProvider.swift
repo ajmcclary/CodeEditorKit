@@ -7,7 +7,7 @@ import Foundation
 public final class ShellCompletionProvider: BaseCompletionProvider {
     // Shell-specific context (stored for use in completions method)
     private var shellContext = ShellContextAnalysisResult(type: .general, filter: "")
-    
+
     // Shell built-in commands
     private let builtinCommands = [
         // Bash builtins
@@ -22,7 +22,7 @@ public final class ShellCompletionProvider: BaseCompletionProvider {
         "if", "then", "else", "elif", "fi", "case", "esac", "for", "while",
         "until", "do", "done", "function", "select", "time", "in"
     ]
-    
+
     // Common Unix/Linux commands
     private let systemCommands = [
         // File operations
@@ -65,7 +65,7 @@ public final class ShellCompletionProvider: BaseCompletionProvider {
         "iostat", "vmstat", "sar", "mpstat", "pidstat", "iotop", "nethogs",
         "iftop", "tcpdump", "wireshark", "strace", "ltrace", "gdb", "valgrind"
     ]
-    
+
     // Common environment variables
     private let environmentVariables = [
         "$HOME", "$PATH", "$USER", "$PWD", "$OLDPWD", "$SHELL", "$TERM",
@@ -78,7 +78,7 @@ public final class ShellCompletionProvider: BaseCompletionProvider {
         "$MAIL", "$MAILCHECK", "$MAILPATH", "$CDPATH", "$GLOBIGNORE",
         "$HISTFILE", "$HISTSIZE", "$HISTFILESIZE", "$HISTCONTROL", "$HISTIGNORE"
     ]
-    
+
     // Common command-line options/flags
     private let commonOptions = [
         // Universal options
@@ -99,14 +99,14 @@ public final class ShellCompletionProvider: BaseCompletionProvider {
         // Process options
         "-e", "-f", "-u", "-p", "-t", "-o", "-k", "-9", "-TERM", "-KILL", "-HUP"
     ]
-    
+
     // Shell operators and special characters
     private let operators = [
         "&&", "||", "|", "&", ";", "(", ")", "[", "]", "[[", "]]", "{", "}",
         "<", ">", "<<", ">>", "<&", ">&", "<>", "2>", "2>>", "2>&1", "&>",
         "$", "${", "$(", "`", "\"", "'", "\\", "*", "?", "~", "!"
     ]
-    
+
     private let shellSnippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "if",
@@ -307,9 +307,9 @@ fi
             description: "Redirect output and errors"
         )
     ]
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "shell-builtin",
@@ -318,52 +318,52 @@ fi
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - BaseCompletionProvider Overrides
-    
+
     override public var keywords: [String] {
         // Shell keywords and built-in commands
         builtinCommands
     }
-    
+
     override public var functions: [String] {
         // System commands as functions
         systemCommands
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         shellSnippets
     }
-    
+
     // MARK: - Completions Override
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         _ = analyzeContext(context) // This will populate shellContext
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on Shell-specific context
         switch shellContext.type {
         case .command:
             items.append(contentsOf: createCommandCompletions(filter: shellContext.filter))
-            
+
         case .variable:
             items.append(contentsOf: createVariableCompletions(filter: shellContext.filter))
-            
+
         case .option:
             items.append(contentsOf: createOptionCompletions(for: shellContext.command, filter: shellContext.filter))
-            
+
         case .path:
             items.append(contentsOf: createPathCompletions(filter: shellContext.filter))
-            
+
         case .shellOperator:
             items.append(contentsOf: createOperatorCompletions(filter: shellContext.filter))
-            
+
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: shellContext.filter))
-            
+
         case .general:
             items.append(contentsOf: createCommandCompletions(filter: shellContext.filter))
             items.append(contentsOf: createKeywordCompletions(filter: shellContext.filter))
@@ -371,9 +371,9 @@ fi
                 items.append(contentsOf: createSnippetCompletions(filter: shellContext.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -381,18 +381,18 @@ fi
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis Override
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Store Shell-specific context for later use
         shellContext = analyzeShellContext(context)
-        
+
         // Map Shell context to base context types
         switch shellContext.type {
         case .command:
@@ -409,111 +409,111 @@ fi
             return ContextAnalysisResult(type: .general, filter: filter)
         }
     }
-    
+
     // MARK: - Shell-Specific Context Analysis
-    
+
     private func analyzeShellContext(_ context: CompletionContextModel) -> ShellContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
             return ShellContextAnalysisResult(type: .variable, filter: filter)
         }
-        
+
         // Check for option context (starts with -)
         if filter.hasPrefix("-") {
             let command = extractCurrentCommand(from: lineText)
             return ShellContextAnalysisResult(type: .option, filter: filter, command: command)
         }
-        
+
         // Check for path context (contains / or ~)
         if filter.contains("/") || filter.hasPrefix("~") || filter.hasPrefix(".") {
             return ShellContextAnalysisResult(type: .path, filter: filter)
         }
-        
+
         // Check for operator context
         if isOperatorContext(beforeCursor) {
             return ShellContextAnalysisResult(type: .shellOperator, filter: filter)
         }
-        
+
         // Check for keyword context (control structures)
         if isKeywordContext(lineText, filter: filter) {
             return ShellContextAnalysisResult(type: .keyword, filter: filter)
         }
-        
+
         // Check if we're at the start of a command
         if isAtCommandPosition(lineText, beforeCursor) {
             return ShellContextAnalysisResult(type: .command, filter: filter)
         }
-        
+
         return ShellContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         // Handle special cases for shell
         if text.hasSuffix("$") {
             return "$"
         }
-        
+
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-.$~/")).inverted)
         return components.last ?? ""
     }
-    
+
     private func extractCurrentCommand(from lineText: String) -> String? {
         // Extract the command at the beginning of the line
         let words = lineText.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
         return words.first
     }
-    
+
     private func isOperatorContext(_ text: String) -> Bool {
         let operatorChars = ["&", "|", ";", "(", ")", "[", "]", "<", ">", "`"]
         return operatorChars.contains { text.hasSuffix($0) }
     }
-    
+
     private func isKeywordContext(_ lineText: String, filter: String) -> Bool {
         // Check if we're in a context where keywords are expected
         let keywordTriggers = ["if", "then", "else", "elif", "fi", "for", "while", "do", "done", "case", "esac"]
-        
+
         // Check if the line starts with or contains keyword triggers
         for keyword in keywordTriggers {
             if lineText.hasPrefix(keyword) || lineText.contains(" \(keyword) ") {
                 return true
             }
         }
-        
+
         // Check if the filter itself looks like a keyword
         return builtinCommands.contains { $0.hasPrefix(filter.lowercased()) }
     }
-    
+
     private func isAtCommandPosition(_ lineText: String, _ beforeCursor: String) -> Bool {
         // We're at command position if:
         // 1. Line is empty or starts with the current word
         // 2. We're after a command separator (;, &&, ||, |)
         // 3. We're after a newline or opening parenthesis
-        
+
         if lineText.isEmpty {
             return true
         }
-        
+
         let separators = [";", "&&", "||", "|", "(", "\n"]
         for separator in separators {
             if beforeCursor.hasSuffix(separator + " ") || beforeCursor.hasSuffix(separator) {
                 return true
             }
         }
-        
+
         // Check if we're at the beginning of the line (after whitespace)
         let trimmed = lineText.trimmingCharacters(in: .whitespaces)
         let words = trimmed.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
         return words.count <= 1
     }
-    
+
     // MARK: - Override Keyword Completions
-    
+
     override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
@@ -521,28 +521,28 @@ fi
             }
             .map { keyword in
                 let insertText: String
-                
+
                 // Add common patterns for certain keywords
                 switch keyword {
                 case "if":
                     insertText = "if [[ $0 ]]; then"
-                    
+
                 case "for":
                     insertText = "for \(keyword) in $0; do"
-                    
+
                 case "while":
                     insertText = "while [[ $0 ]]; do"
-                    
+
                 case "function":
                     insertText = "function $0() {"
-                    
+
                 case "case":
                     insertText = "case $0 in"
-                    
+
                 default:
                     insertText = keyword
                 }
-                
+
                 return CompletionItemModel(
                     label: keyword,
                     insertText: insertText,
@@ -553,12 +553,12 @@ fi
                 )
             }
     }
-    
+
     // MARK: - Shell-Specific Completion Creation Methods
-    
+
     private func createCommandCompletions(filter: String) -> [CompletionItemModel] {
         let allCommands = builtinCommands + systemCommands
-        
+
         return allCommands
             .filter { command in
                 filter.isEmpty || command.localizedCaseInsensitiveContains(filter)
@@ -566,7 +566,7 @@ fi
             .map { command in
                 let priority = builtinCommands.contains(command) ? 85 : 75
                 let detail = builtinCommands.contains(command) ? "Built-in command" : "System command"
-                
+
                 return CompletionItemModel(
                     label: command,
                     insertText: command,
@@ -577,7 +577,7 @@ fi
                 )
             }
     }
-    
+
     private func createVariableCompletions(filter: String) -> [CompletionItemModel] {
         environmentVariables
             .filter { variable in
@@ -594,7 +594,7 @@ fi
                 )
             }
     }
-    
+
     private func createOptionCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
         // For now, return common options
         // In a real implementation, this could be command-specific
@@ -612,7 +612,7 @@ fi
                 )
             }
     }
-    
+
     private func createPathCompletions(filter: String) -> [CompletionItemModel] {
         // Basic path completions - in a real implementation, this would
         // scan the filesystem based on the current path
@@ -621,7 +621,7 @@ fi
             "/etc", "/var", "/var/log", "/tmp", "/home", "/opt", "/dev", "/proc",
             "~", "~/", "../", "./", ".", ".."
         ]
-        
+
         return commonPaths
             .filter { path in
                 filter.isEmpty || path.localizedCaseInsensitiveContains(filter)
@@ -636,7 +636,7 @@ fi
                 )
             }
     }
-    
+
     private func createOperatorCompletions(filter: String) -> [CompletionItemModel] {
         operators
             .filter { op in
@@ -678,7 +678,7 @@ fi
                 default:
                     detail = "Shell operator"
                 }
-                
+
                 return CompletionItemModel(
                     label: op,
                     insertText: op,
@@ -688,7 +688,7 @@ fi
                 )
             }
     }
-    
+
     override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
@@ -719,11 +719,11 @@ private struct ShellContextAnalysisResult {
         case keyword
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let command: String?
-    
+
     init(type: CompletionType, filter: String, command: String? = nil) {
         self.type = type
         self.filter = filter

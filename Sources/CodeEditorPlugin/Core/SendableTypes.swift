@@ -21,7 +21,7 @@ public struct SendableEditorEvent: Sendable {
     public let id: UUID
     public let timestamp: Date
     public let type: EventType
-    
+
     public enum EventType: Sendable {
         case textChanged(newText: String, range: NSRange)
         case selectionChanged(newRange: NSRange)
@@ -31,7 +31,7 @@ public struct SendableEditorEvent: Sendable {
         case annotationRemoved(id: String)
         case scrollPositionChanged(visibleRange: NSRange)
     }
-    
+
     public init(type: EventType) {
         self.id = UUID()
         self.timestamp = Date()
@@ -49,7 +49,7 @@ public struct SendableCompletionContext: Sendable {
     public let columnNumber: Int
     public let precedingText: String
     public let followingText: String
-    
+
     public init(
         text: String,
         cursorPosition: Int,
@@ -74,14 +74,14 @@ public struct SendableCompletionContext: Sendable {
 public enum SendableResult<Success: Sendable, Failure: Error>: Sendable where Failure: Sendable {
     case success(Success)
     case failure(Failure)
-    
+
     public var value: Success? {
         switch self {
         case .success(let value): return value
         case .failure: return nil
         }
     }
-    
+
     public var error: Failure? {
         switch self {
         case .success: return nil
@@ -98,12 +98,12 @@ public struct SendableProgress: Sendable {
     public let total: Int
     public let message: String?
     public let isIndeterminate: Bool
-    
+
     public var percentage: Double {
         guard total > 0 else { return 0 }
         return Double(current) / Double(total)
     }
-    
+
     public init(
         current: Int,
         total: Int,
@@ -116,7 +116,7 @@ public struct SendableProgress: Sendable {
         self.message = message
         self.isIndeterminate = isIndeterminate
     }
-    
+
     public static func indeterminate(message: String? = nil) -> Self {
         Self(current: 0, total: 0, message: message, isIndeterminate: true)
     }
@@ -128,7 +128,7 @@ public struct SendableCacheKey: Hashable, Sendable {
     public let identifier: String
     public let version: Int
     public let metadata: [String: String]
-    
+
     public init(
         identifier: String,
         version: Int = 0,
@@ -147,7 +147,7 @@ public struct SendablePerformanceMetric: Sendable {
     public let duration: Duration
     public let metadata: [String: String]
     public let timestamp: Date
-    
+
     public init(
         name: String,
         duration: Duration,
@@ -172,7 +172,7 @@ public struct SendableConfigurationChange: Sendable {
     public let oldValue: String?
     public let newValue: String?
     public let timestamp: Date
-    
+
     public init(
         keyPath: String,
         oldValue: String?,
@@ -194,11 +194,11 @@ public struct FileChangeNotification: Sendable {
         case deleted
         case renamed(from: String, to: String)
     }
-    
+
     public let path: String
     public let changeType: ChangeType
     public let timestamp: Date
-    
+
     public init(path: String, changeType: ChangeType) {
         self.path = path
         self.changeType = changeType

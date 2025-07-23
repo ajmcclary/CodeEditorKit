@@ -60,7 +60,7 @@ final class UTF16TextLocation: NSObject, NSTextLocation {
     init(value: Int) {
         self.value = value
     }
-    
+
     deinit {
         // Required by SwiftLint
     }

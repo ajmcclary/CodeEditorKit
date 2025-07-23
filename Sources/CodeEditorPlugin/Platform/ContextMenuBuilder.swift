@@ -25,7 +25,7 @@ enum SharedContextMenuBuilder {
         coordinator: CrossPlatformCoordinator
     ) -> ContextMenuDescriptor {
         var items: [ContextMenuItem] = []
-        
+
         // Standard editing actions
         items.append(.action(
             title: "Cut",
@@ -34,7 +34,7 @@ enum SharedContextMenuBuilder {
         ) {
             textView.cut(nil)
         })
-        
+
         items.append(.action(
             title: "Copy",
             icon: "doc.on.doc",
@@ -42,7 +42,7 @@ enum SharedContextMenuBuilder {
         ) {
             textView.copy(nil)
         })
-        
+
         items.append(.action(
             title: "Paste",
             icon: "doc.on.clipboard",
@@ -50,9 +50,9 @@ enum SharedContextMenuBuilder {
         ) {
             textView.paste(nil)
         })
-        
+
         items.append(.separator)
-        
+
         // Code-specific actions submenu
         let codeMenuItems: [ContextMenuItem] = [
             .action(
@@ -88,13 +88,13 @@ enum SharedContextMenuBuilder {
                 // Implementation will be added in future updates
             }
         ]
-        
+
         items.append(.submenu(
             title: "Code",
             icon: "chevron.left.forwardslash.chevron.right",
             items: codeMenuItems
         ))
-        
+
         return ContextMenuDescriptor(items: items)
     }
 }
@@ -106,7 +106,7 @@ extension SharedContextMenuBuilder {
     /// Convert shared menu descriptor to macOS NSMenu
     static func buildNSMenu(from descriptor: ContextMenuDescriptor, target: CrossPlatformCoordinator) -> NSMenu {
         let menu = NSMenu()
-        
+
         for item in descriptor.items {
             switch item {
             case let .action(title, _, keyEquivalent, action):
@@ -118,14 +118,14 @@ extension SharedContextMenuBuilder {
                 menuItem.target = target
                 menuItem.representedObject = action
                 menu.addItem(menuItem)
-                
+
             case .separator:
                 menu.addItem(NSMenuItem.separator())
-                
+
             case let .submenu(title, _, subItems):
                 let submenuItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
                 let submenu = NSMenu()
-                
+
                 for subItem in subItems {
                     switch subItem {
                     case let .action(subTitle, _, subKeyEquivalent, subAction):
@@ -137,30 +137,30 @@ extension SharedContextMenuBuilder {
                         subMenuItem.target = target
                         subMenuItem.representedObject = subAction
                         submenu.addItem(subMenuItem)
-                        
+
                     case .separator:
                         submenu.addItem(NSMenuItem.separator())
-                        
+
                     case .submenu:
                         // Nested submenus not implemented for simplicity
                         break
                     }
                 }
-                
+
                 submenuItem.submenu = submenu
                 menu.addItem(submenuItem)
             }
         }
-        
+
         return menu
     }
     #endif
-    
+
     #if canImport(UIKit)
     /// Convert shared menu descriptor to iOS UIMenu
     static func buildUIMenu(from descriptor: ContextMenuDescriptor) -> UIMenu {
         var elements: [UIMenuElement] = []
-        
+
         for item in descriptor.items {
             switch item {
             case let .action(title, icon, _, action):
@@ -171,14 +171,14 @@ extension SharedContextMenuBuilder {
                     action()
                 }
                 elements.append(uiAction)
-                
+
             case .separator:
                 // UIMenu doesn't support explicit separators, but groups provide visual separation
                 continue
-                
+
             case let .submenu(title, icon, subItems):
                 var subElements: [UIMenuElement] = []
-                
+
                 for subItem in subItems {
                     switch subItem {
                     case let .action(subTitle, subIcon, _, subAction):
@@ -189,13 +189,13 @@ extension SharedContextMenuBuilder {
                             subAction()
                         }
                         subElements.append(subUIAction)
-                        
+
                     case .separator, .submenu:
                         // Skip separators and nested submenus in UIKit
                         continue
                     }
                 }
-                
+
                 let submenu = UIMenu(
                     title: title,
                     image: icon.flatMap { UIImage(systemName: $0) },
@@ -204,7 +204,7 @@ extension SharedContextMenuBuilder {
                 elements.append(submenu)
             }
         }
-        
+
         return UIMenu(children: elements)
     }
     #endif

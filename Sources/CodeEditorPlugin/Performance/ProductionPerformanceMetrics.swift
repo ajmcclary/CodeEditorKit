@@ -6,24 +6,24 @@ import os.log
 /// Central system for tracking performance metrics in production
 public actor ProductionPerformanceMetrics {
     // MARK: - Singleton
-    
+
     public static let shared = ProductionPerformanceMetrics()
-    
+
     // MARK: - Properties
-    
+
     private let logger = Logger(subsystem: "com.codeeditor.plugin", category: "Performance")
-    
+
     /// Current performance thresholds
     private var thresholds = ProductionThresholds()
-    
+
     /// Aggregated metrics
     private var metrics = AggregatedMetrics()
-    
+
     /// Performance event handlers
     private var eventHandlers: [PerformanceEventHandler] = []
-    
+
     // MARK: - Public API
-    
+
     /// Track syntax highlighting performance
     public func trackHighlighting(
         duration: TimeInterval,
@@ -38,15 +38,15 @@ public actor ProductionPerformanceMetrics {
             cacheHit: cacheHit,
             timestamp: Date()
         )
-        
+
         processMetric(metric)
-        
+
         // Alert if performance degrades
         if duration > thresholds.highlightingThreshold(for: fileSize) {
             notifyPerformanceDegradation(.highlighting, metric: metric)
         }
     }
-    
+
     /// Track scrolling performance
     public func trackScrolling(
         frameRate: Double,
@@ -59,15 +59,15 @@ public actor ProductionPerformanceMetrics {
             fileSize: fileSize,
             timestamp: Date()
         )
-        
+
         processMetric(metric)
-        
+
         // Alert if frame rate drops
         if frameRate < thresholds.minimumFrameRate {
             notifyPerformanceDegradation(.scrolling, metric: metric)
         }
     }
-    
+
     /// Track memory usage
     public func trackMemoryUsage(
         currentUsage: Double,
@@ -80,15 +80,15 @@ public actor ProductionPerformanceMetrics {
             fileSize: fileSize,
             timestamp: Date()
         )
-        
+
         processMetric(metric)
-        
+
         // Alert if memory usage is high
         if peakUsage > thresholds.memoryThreshold(for: fileSize) {
             notifyPerformanceDegradation(.memory, metric: metric)
         }
     }
-    
+
     /// Track code folding performance
     public func trackCodeFolding(
         duration: TimeInterval,
@@ -101,10 +101,10 @@ public actor ProductionPerformanceMetrics {
             fileSize: fileSize,
             timestamp: Date()
         )
-        
+
         processMetric(metric)
     }
-    
+
     /// Get current performance report
     public func generateReport() -> ProductionPerformanceReport {
         ProductionPerformanceReport(
@@ -113,28 +113,28 @@ public actor ProductionPerformanceMetrics {
             timestamp: Date()
         )
     }
-    
+
     /// Register performance event handler
     public func registerEventHandler(_ handler: PerformanceEventHandler) {
         eventHandlers.append(handler)
     }
-    
+
     /// Configure performance thresholds
     public func configureThresholds(_ thresholds: ProductionThresholds) {
         self.thresholds = thresholds
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func processMetric(_ metric: any ProductionMetric) {
         updateAggregatedMetrics(with: metric)
-        
+
         // Log in debug builds
         #if DEBUG
         logger.debug("Performance metric: \(String(describing: metric))")
         #endif
     }
-    
+
     private func updateAggregatedMetrics(with metric: any ProductionMetric) {
         switch metric {
         case let highlighting as HighlightingMetric:
@@ -143,42 +143,42 @@ public actor ProductionPerformanceMetrics {
             if metrics.highlighting.count > 1_000 {
                 metrics.highlighting = Array(metrics.highlighting.suffix(1_000))
             }
-            
+
         case let scrolling as ScrollingMetric:
             metrics.scrolling.append(scrolling)
             if metrics.scrolling.count > 1_000 {
                 metrics.scrolling = Array(metrics.scrolling.suffix(1_000))
             }
-            
+
         case let memory as MemoryMetric:
             metrics.memory.append(memory)
             if metrics.memory.count > 1_000 {
                 metrics.memory = Array(metrics.memory.suffix(1_000))
             }
-            
+
         case let folding as CodeFoldingMetric:
             metrics.codeFolding.append(folding)
             if metrics.codeFolding.count > 1_000 {
                 metrics.codeFolding = Array(metrics.codeFolding.suffix(1_000))
             }
-            
+
         default:
             break
         }
     }
-    
+
     private func notifyPerformanceDegradation(
         _ type: PerformanceDegradationType,
         metric: any ProductionMetric
     ) {
         logger.warning("Performance degradation detected: \(type.rawValue)")
-        
+
         let event = PerformanceEvent(
             type: type,
             metric: metric,
             timestamp: Date()
         )
-        
+
         // Notify all handlers
         eventHandlers.forEach { handler in
             handler.handlePerformanceEvent(event)
@@ -229,7 +229,7 @@ public struct CodeFoldingMetric: ProductionMetric {
 /// Performance thresholds configuration
 public struct ProductionThresholds: Sendable {
     public var minimumFrameRate: Double = 50.0
-    
+
     public func highlightingThreshold(for fileSize: Int) -> TimeInterval {
         switch fileSize {
         case 0..<10_000:
@@ -240,7 +240,7 @@ public struct ProductionThresholds: Sendable {
             return 1.0  // 1s for large files
         }
     }
-    
+
     public func memoryThreshold(for fileSize: Int) -> Double {
         // Allow ~50MB per MB of file
         Double(fileSize) / 1_000_000 * 50.0
@@ -280,7 +280,7 @@ public struct ProductionPerformanceReport: Sendable {
     public let metrics: AggregatedMetrics
     public let thresholds: ProductionThresholds
     public let timestamp: Date
-    
+
     public var summary: String {
         let highlightingP95 = calculateP95(
             metrics.highlighting.map { $0.duration }
@@ -289,7 +289,7 @@ public struct ProductionPerformanceReport: Sendable {
             metrics.scrolling.map { $0.frameRate }
         )
         let peakMemory = metrics.memory.map { $0.peakUsage }.max() ?? 0
-        
+
         return """
         Performance Report (\(timestamp))
         ================================
@@ -299,14 +299,14 @@ public struct ProductionPerformanceReport: Sendable {
         Total Samples: \(metrics.highlighting.count + metrics.scrolling.count)
         """
     }
-    
+
     private func calculateP95(_ values: [Double]) -> Double {
         guard !values.isEmpty else { return 0 }
         let sorted = values.sorted()
         let index = Int(Double(sorted.count) * 0.95)
         return sorted[min(index, sorted.count - 1)]
     }
-    
+
     private func calculateAverage(_ values: [Double]) -> Double {
         guard !values.isEmpty else { return 0 }
         return values.reduce(0, +) / Double(values.count)

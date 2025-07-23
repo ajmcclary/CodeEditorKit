@@ -4,9 +4,9 @@ import Foundation
 @available(macOS 13.0, iOS 16.0, *)
 public final class MarkdownPlugin: Plugin {
     public static let identifier = "com.codeeditorplugin.markdown"
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "MarkdownPlugin")
-    
+
     public var metadata: PluginMetadata {
         PluginMetadata(
             identifier: Self.identifier,
@@ -21,13 +21,13 @@ public final class MarkdownPlugin: Plugin {
             enabledByDefault: true
         )
     }
-    
+
     // Use a class to wrap mutable state to maintain Sendability
     private final class InternalState: @unchecked Sendable {
         private let lock = NSLock()
         private var _completionProvider: PluginMarkdownCompletionProvider?
         private var _savedSnippets: [String: String] = [:]
-        
+
         var completionProvider: PluginMarkdownCompletionProvider? {
             get {
                 lock.lock()
@@ -40,7 +40,7 @@ public final class MarkdownPlugin: Plugin {
                 _completionProvider = newValue
             }
         }
-        
+
         var savedSnippets: [String: String] {
             get {
                 lock.lock()
@@ -54,57 +54,57 @@ public final class MarkdownPlugin: Plugin {
             }
         }
     }
-    
+
     private let state = InternalState()
-    
+
     public init() {}
-    
+
     @MainActor
     public func activate(context: PluginContext) async throws {
         logger.info("Activating Markdown plugin")
-        
+
         // Register enhanced Markdown completion provider
         if context.hasPermission(.completion) {
             let provider = PluginMarkdownCompletionProvider()
             state.completionProvider = provider
             context.completionRegistry.register(provider)
         }
-        
+
         // Register Markdown commands
         if context.hasPermission(.commands) {
             try await registerCommands(context: context)
         }
-        
+
         // Subscribe to text changes for live preview
         // Note: This would need to be connected to actual text change events from the editor
     }
-    
+
     @MainActor
     public func deactivate(context: PluginContext) async throws {
         logger.info("Deactivating Markdown plugin")
-        
+
         // Unregister completion provider
         if state.completionProvider != nil {
             context.completionRegistry.unregister(providerId: "plugin-markdown")
             state.completionProvider = nil
         }
-        
+
         // Note: Event system unsubscription would be handled if we were subscribed
     }
-    
+
     public func saveState() async -> PluginState {
         PluginState(
             strings: state.savedSnippets,
             doubles: ["lastActivated": Date().timeIntervalSince1970]
         )
     }
-    
+
     public func restoreState(_ state: PluginState) async {
         self.state.savedSnippets = state.strings
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func registerCommands(context: PluginContext) async throws {
         // Bold command
         let boldCommand = PluginCommand(
@@ -116,7 +116,7 @@ public final class MarkdownPlugin: Plugin {
         try await context.registerCommand(boldCommand) { [weak self] in
             await self?.insertBold()
         }
-        
+
         // Italic command
         let italicCommand = PluginCommand(
             identifier: "markdown.italic",
@@ -127,7 +127,7 @@ public final class MarkdownPlugin: Plugin {
         try await context.registerCommand(italicCommand) { [weak self] in
             await self?.insertItalic()
         }
-        
+
         // Link command
         let linkCommand = PluginCommand(
             identifier: "markdown.link",
@@ -138,7 +138,7 @@ public final class MarkdownPlugin: Plugin {
         try await context.registerCommand(linkCommand) { [weak self] in
             await self?.insertLink()
         }
-        
+
         // Code block command
         let codeBlockCommand = PluginCommand(
             identifier: "markdown.codeblock",
@@ -150,32 +150,32 @@ public final class MarkdownPlugin: Plugin {
             await self?.insertCodeBlock()
         }
     }
-    
+
     private func handleTextChange(_ affectedRange: NSRange, replacementText _: String, context _: PluginContext) async {
         // This could trigger live preview updates
         logger.debug("Text changed in range: \(affectedRange)")
     }
-    
+
     // MARK: - Command Implementations
-    
+
     @MainActor
     private func insertBold() async {
         // Would interact with the text view to insert **bold** markers
         logger.debug("Inserting bold markers")
     }
-    
+
     @MainActor
     private func insertItalic() async {
         // Would interact with the text view to insert *italic* markers
         logger.debug("Inserting italic markers")
     }
-    
+
     @MainActor
     private func insertLink() async {
         // Would show a dialog and insert [text](url)
         logger.debug("Inserting link")
     }
-    
+
     @MainActor
     private func insertCodeBlock() async {
         // Would insert ```language\n\n```
@@ -195,13 +195,13 @@ private final class PluginMarkdownCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let lines = beforeCursor.components(separatedBy: .newlines)
         let currentLine = lines.last ?? ""
         let prefix = currentLine.trimmingCharacters(in: .whitespaces)
-        
+
         // Determine the context type based on the prefix
         if prefix.hasPrefix("#") {
             return ContextAnalysisResult(type: .keyword, filter: prefix)
@@ -213,11 +213,11 @@ private final class PluginMarkdownCompletionProvider: BaseCompletionProvider {
             return ContextAnalysisResult(type: .general, filter: prefix)
         }
     }
-    
+
     override var keywords: [String] {
         ["#", "##", "###", "####", "#####", "######"]
     }
-    
+
     override var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
@@ -226,13 +226,13 @@ private final class PluginMarkdownCompletionProvider: BaseCompletionProvider {
                 description: "First level header"
             ),
             SnippetTemplate(
-                label: "## Header 2", 
+                label: "## Header 2",
                 insertText: "## $0",
                 description: "Second level header"
             ),
             SnippetTemplate(
                 label: "### Header 3",
-                insertText: "### $0", 
+                insertText: "### $0",
                 description: "Third level header"
             ),
             SnippetTemplate(

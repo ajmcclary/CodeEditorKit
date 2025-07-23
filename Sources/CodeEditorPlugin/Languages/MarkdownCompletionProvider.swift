@@ -13,12 +13,12 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
     private let emojiShortcuts = MarkdownCompletionData.emojiShortcuts
     private let mathSymbols = MarkdownCompletionData.mathSymbols
     private let linkPatterns = MarkdownCompletionData.linkPatterns
-    
+
     // Override snippets property
     override public var snippets: [SnippetTemplate] {
         MarkdownCompletionData.snippets
     }
-    
+
     public init() {
         super.init(
             id: "markdown-builtin",
@@ -27,60 +27,60 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Overrides for Markdown Completions
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeMarkdownContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .heading:
             items.append(contentsOf: createHeadingCompletions(filter: analysisResult.filter))
-            
+
         case .link:
             items.append(contentsOf: createLinkCompletions(filter: analysisResult.filter))
-            
+
         case .image:
             items.append(contentsOf: createImageCompletions(filter: analysisResult.filter))
-            
+
         case .emphasis:
             items.append(contentsOf: createEmphasisCompletions(filter: analysisResult.filter))
-            
+
         case .list:
             items.append(contentsOf: createListCompletions(filter: analysisResult.filter))
-            
+
         case .table:
             items.append(contentsOf: createTableCompletions(filter: analysisResult.filter))
-            
+
         case .codeBlock:
             items.append(contentsOf: createCodeBlockCompletions(filter: analysisResult.filter))
-            
+
         case .htmlTag:
             items.append(contentsOf: createHtmlTagCompletions(filter: analysisResult.filter))
-            
+
         case .htmlAttribute:
             items.append(contentsOf: createHtmlAttributeCompletions(for: analysisResult.htmlTag, filter: analysisResult.filter))
-            
+
         case .emoji:
             items.append(contentsOf: createEmojiCompletions(filter: analysisResult.filter))
-            
+
         case .math:
             items.append(contentsOf: createMathCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createSyntaxCompletions(filter: analysisResult.filter))
             if supportsSnippets {
                 items.append(contentsOf: super.createSnippetCompletions(filter: analysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -88,46 +88,46 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeMarkdownContext(_ context: CompletionContextModel) -> MarkdownContextAnalysisResult {
         let lineText = context.lineText
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractMarkdownWord(from: beforeCursor)
-        
+
         // Check for math context
         if beforeCursor.contains("$") && !beforeCursor.hasSuffix("$") {
             return MarkdownContextAnalysisResult(type: .math, filter: filter)
         }
-        
+
         // Check for emoji context
         if beforeCursor.hasSuffix(":") || (filter.hasPrefix(":") && !filter.hasSuffix(":")) {
             return MarkdownContextAnalysisResult(type: .emoji, filter: filter)
         }
-        
+
         // Check for heading context
         if lineText.hasPrefix("#") {
             return MarkdownContextAnalysisResult(type: .heading, filter: filter)
         }
-        
+
         // Check for link context
         if beforeCursor.hasSuffix("[") || isInLinkContext(beforeCursor) {
             return MarkdownContextAnalysisResult(type: .link, filter: filter)
         }
-        
+
         // Check for image context
         if beforeCursor.hasSuffix("![") || (beforeCursor.contains("![") && !beforeCursor.contains("](")) {
             return MarkdownContextAnalysisResult(type: .image, filter: filter)
         }
-        
+
         // Check for code block context
         if beforeCursor.hasSuffix("```") {
             return MarkdownContextAnalysisResult(type: .codeBlock, filter: filter)
         }
-        
+
         // Check for HTML tag context
         if beforeCursor.hasSuffix("<") || isInHtmlTag(beforeCursor) {
             let htmlTag = extractCurrentHtmlTag(from: beforeCursor)
@@ -137,54 +137,54 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 return MarkdownContextAnalysisResult(type: .htmlTag, filter: filter)
             }
         }
-        
+
         // Check for table context
         if lineText.contains("|") || beforeCursor.hasSuffix("|") {
             return MarkdownContextAnalysisResult(type: .table, filter: filter)
         }
-        
+
         // Check for list context
         if isInListContext(lineText) {
             return MarkdownContextAnalysisResult(type: .list, filter: filter)
         }
-        
+
         // Check for emphasis context
         if isInEmphasisContext(beforeCursor) {
             return MarkdownContextAnalysisResult(type: .emphasis, filter: filter)
         }
-        
+
         return MarkdownContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     private func extractMarkdownWord(from text: String) -> String {
         if text.hasSuffix(":") {
             return ":"
         }
-        
+
         if text.hasSuffix("[") || text.hasSuffix("![") {
             return ""
         }
-        
+
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-:#")).inverted)
         return components.last ?? ""
     }
-    
+
     private func isInLinkContext(_ text: String) -> Bool {
         // Check if we're inside [] brackets for link text
         let openBrackets = text.components(separatedBy: "[").count - 1
         let closeBrackets = text.components(separatedBy: "]").count - 1
         return openBrackets > closeBrackets && !text.hasSuffix("![")
     }
-    
+
     private func isInHtmlTag(_ text: String) -> Bool {
         let lastOpen = text.lastIndex(of: "<") ?? text.startIndex
         let lastClose = text.lastIndex(of: ">") ?? text.startIndex
         return lastOpen > lastClose
     }
-    
+
     private func isInHtmlAttribute(_ text: String) -> Bool {
         guard isInHtmlTag(text) else { return false }
-        
+
         // Check if we're after a space and before the closing >
         let pattern = #"<\w+\s+[^>]*$"#
         if let regex = try? NSRegularExpression(pattern: pattern) {
@@ -192,7 +192,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
         }
         return false
     }
-    
+
     private func extractCurrentHtmlTag(from text: String) -> String? {
         let pattern = #"<(\w+)[^>]*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -202,22 +202,22 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func isInListContext(_ lineText: String) -> Bool {
         let trimmed = lineText.trimmingCharacters(in: .whitespaces)
         return trimmed.hasPrefix("- ") || trimmed.hasPrefix("+ ") || trimmed.hasPrefix("* ") ||
                trimmed.hasPrefix("1. ") || trimmed.hasPrefix("- [ ]") || trimmed.hasPrefix("- [x]")
     }
-    
+
     private func isInEmphasisContext(_ text: String) -> Bool {
         text.hasSuffix("*") || text.hasSuffix("_") || text.hasSuffix("**") || text.hasSuffix("__")
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createHeadingCompletions(filter: String) -> [CompletionItemModel] {
         let headings = ["# ", "## ", "### ", "#### ", "##### ", "###### "]
-        
+
         return headings
             .filter { heading in
                 filter.isEmpty || heading.localizedCaseInsensitiveContains(filter)
@@ -234,10 +234,10 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createLinkCompletions(filter: String) -> [CompletionItemModel] {
         var items: [CompletionItemModel] = []
-        
+
         // Link syntax completion
         items.append(CompletionItemModel(
             label: "[text](url)",
@@ -247,12 +247,12 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             priority: 90,
             snippetSupport: true
         ))
-        
+
         // Common URL patterns
         let patterns = linkPatterns.filter { pattern in
             filter.isEmpty || pattern.localizedCaseInsensitiveContains(filter)
         }
-        
+
         items.append(contentsOf: patterns.map { pattern in
             CompletionItemModel(
                 label: pattern,
@@ -262,10 +262,10 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 priority: 75
             )
         })
-        
+
         return items
     }
-    
+
     private func createImageCompletions(filter _: String) -> [CompletionItemModel] {
         [
             CompletionItemModel(
@@ -286,7 +286,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     private func createEmphasisCompletions(filter: String) -> [CompletionItemModel] {
         let emphasisPatterns = [
             ("*italic*", "*${1:text}*", "Italic text"),
@@ -297,7 +297,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             ("_italic_", "_${1:text}_", "Italic text (underscore)"),
             ("__bold__", "__${1:text}__", "Bold text (underscore)")
         ]
-        
+
         return emphasisPatterns
             .filter { label, _, _ in
                 filter.isEmpty || label.localizedCaseInsensitiveContains(filter)
@@ -313,7 +313,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createListCompletions(filter: String) -> [CompletionItemModel] {
         let listTypes = [
             ("- ", "- ${1:item}", "Bullet list item"),
@@ -323,7 +323,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             ("- [ ] ", "- [ ] ${1:task}", "Unchecked task"),
             ("- [x] ", "- [x] ${1:completed task}", "Checked task")
         ]
-        
+
         return listTypes
             .filter { label, _, _ in
                 filter.isEmpty || label.localizedCaseInsensitiveContains(filter)
@@ -339,7 +339,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createTableCompletions(filter _: String) -> [CompletionItemModel] {
         [
             CompletionItemModel(
@@ -360,7 +360,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     private func createCodeBlockCompletions(filter: String) -> [CompletionItemModel] {
         let languages = [
             "javascript", "typescript", "python", "java", "swift", "rust", "go",
@@ -371,7 +371,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             "haskell", "elm", "clojure", "erlang", "elixir", "fsharp",
             "objective-c", "assembly", "fortran", "cobol", "ada"
         ]
-        
+
         return languages
             .filter { language in
                 filter.isEmpty || language.localizedCaseInsensitiveContains(filter)
@@ -387,7 +387,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createHtmlTagCompletions(filter: String) -> [CompletionItemModel] {
         htmlTags
             .filter { tag in
@@ -396,13 +396,13 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             .map { tag in
                 let insertText: String
                 let selfClosing = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"]
-                
+
                 if selfClosing.contains(tag) {
                     insertText = "\(tag)$0 />"
                 } else {
                     insertText = "\(tag)$0>\n${1:content}\n</\(tag)>"
                 }
-                
+
                 return CompletionItemModel(
                     label: tag,
                     insertText: insertText,
@@ -413,7 +413,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createHtmlAttributeCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
         htmlAttributes
             .filter { attribute in
@@ -421,7 +421,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
             }
             .map { attribute in
                 let insertText = "\(attribute)=\"${1:value}\""
-                
+
                 return CompletionItemModel(
                     label: attribute,
                     insertText: insertText,
@@ -432,7 +432,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createEmojiCompletions(filter: String) -> [CompletionItemModel] {
         emojiShortcuts
             .filter { emoji in
@@ -449,7 +449,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createMathCompletions(filter: String) -> [CompletionItemModel] {
         mathSymbols
             .filter { symbol in
@@ -465,7 +465,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createSyntaxCompletions(filter: String) -> [CompletionItemModel] {
         markdownSyntax
             .filter { syntax in
@@ -500,11 +500,11 @@ private struct MarkdownContextAnalysisResult {
         case math
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let htmlTag: String?
-    
+
     init(type: CompletionType, filter: String, htmlTag: String? = nil) {
         self.type = type
         self.filter = filter

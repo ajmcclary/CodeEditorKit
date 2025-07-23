@@ -17,12 +17,12 @@ import AppKit
 /// Actor for managing highlighting tasks with thread safety
 private actor HighlightingTaskManager {
     private var currentTask: Task<[HighlightedToken], Never>?
-    
+
     func setCurrentTask(_ task: Task<[HighlightedToken], Never>?) {
         currentTask?.cancel()
         currentTask = task
     }
-    
+
     func cancelCurrent() {
         currentTask?.cancel()
         currentTask = nil
@@ -40,7 +40,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     private let regexHighlighter: RegexSyntaxHighlighter
     private let fastJSONTokenizer: FastJSONTokenizer
     private let performanceMonitor: PerformanceMonitor
-    
+
     // Use an actor for managing mutable state
     private let taskManager = HighlightingTaskManager()
 
@@ -65,23 +65,23 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         switch language {
         case .swift:
             return swiftHighlighter.highlight(source: source)
-            
+
         case .json:
             // Use specialized JSON tokenizer for better performance and stability
             let tokens = fastJSONTokenizer.tokenize(source)
             let colorScheme = SyntaxColorScheme.default
             let attributes = fastJSONTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
-            
+
             // Convert to HighlightedToken format
             return attributes.map { range, attrs in
                 let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
                 let type = TokenType.fromColor(color, scheme: colorScheme)
                 return HighlightedToken(range: range, type: type, text: "")
             }
-            
+
         case .plainText:
             return []
-            
+
         default:
             // Use regex highlighter for all other languages
             if let languageDefinition = regexHighlighter.languageDefinition(for: language) {
@@ -90,40 +90,40 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
             return []
         }
     }
-    
+
     /// Highlight source code asynchronously with cancellation support
     public func highlightAsync(source: String, language: Language) async -> [HighlightedToken] {
         // Cancel any existing highlighting task
         await taskManager.cancelCurrent()
-        
+
         // Capture highlighters explicitly
         let swiftHL = swiftHighlighter
         let regexHL = regexHighlighter
         let jsonTokenizer = fastJSONTokenizer
-        
+
         // Create new task for highlighting
         let task = Task<[HighlightedToken], Never> {
             // Perform highlighting directly without performance monitoring in async context
             switch language {
             case .swift:
                 return swiftHL.highlight(source: source)
-                
+
             case .json:
                 // Use specialized JSON tokenizer for better performance and stability
                 let tokens = jsonTokenizer.tokenize(source)
                 let colorScheme = SyntaxColorScheme.default
                 let attributes = jsonTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
-                
+
                 // Convert to HighlightedToken format
                 return attributes.map { range, attrs in
                     let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
                     let type = TokenType.fromColor(color, scheme: colorScheme)
                     return HighlightedToken(range: range, type: type, text: "")
                 }
-                
+
             case .plainText:
                 return []
-                
+
             default:
                 // Use regex highlighter for all other languages
                 if let languageDefinition = regexHL.languageDefinition(for: language) {
@@ -132,7 +132,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
                 return []
             }
         }
-        
+
         await taskManager.setCurrentTask(task)
         return await task.value
     }
@@ -147,11 +147,11 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         // Remove existing syntax highlighting
         let range = NSRange(location: 0, length: attributedString.length)
         attributedString.removeAttribute(.foregroundColor, range: range)
-        
+
         // Apply new highlighting with adaptive colors in batches for responsiveness
         let batchSize = 100
         let totalTokens = tokens.count
-        
+
         for (index, token) in tokens.enumerated() {
             // Check for cancellation periodically
             if index.isMultiple(of: batchSize) {
@@ -159,15 +159,15 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
                 await Task.yield()
                 progressHandler?(Double(index) / Double(totalTokens))
             }
-            
+
             guard token.range.location + token.range.length <= attributedString.length else {
                 continue
             }
-            
+
             // Use adaptive color system that works with macOS 26 Liquid Glass design
             attributedString.addAttribute(.foregroundColor, value: token.type.color, range: token.range)
         }
-        
+
         progressHandler?(1.0)
     }
 
@@ -184,7 +184,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     public func cancelHighlighting() async {
         await taskManager.cancelCurrent()
     }
-    
+
     deinit {
         // Note: Cannot perform async cleanup in deinit
         // The task manager will clean up its own resources
@@ -272,7 +272,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     case php
     case shell
     case plainText = "plaintext"
-    
+
     /// The human-readable display name for the language.
     ///
     /// Use this property to show language names in UI elements like
@@ -308,7 +308,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .plainText: "Plain Text"
         }
     }
-    
+
     /// The file extensions associated with this language.
     ///
     /// Returns an array of common file extensions (without dots) that are
@@ -344,7 +344,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .plainText: ["txt", "text", "log"]
         }
     }
-    
+
     /// The Language Server Protocol identifier for the language.
     ///
     /// This identifier is used when communicating with Language Server Protocol (LSP) servers.
@@ -385,7 +385,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .plainText: "plaintext"
         }
     }
-    
+
     /// Initialize from file extension
     public init?(fileExtension: String) {
         let lowercased = fileExtension.lowercased()
@@ -404,7 +404,7 @@ extension Language {
     public var identifier: String {
         rawValue
     }
-    
+
     /// Get language from identifier
     public init?(identifier: String) {
         self.init(rawValue: identifier)
@@ -460,40 +460,40 @@ extension Language {
 public enum TokenType: String, CaseIterable, Sendable {
     /// Language keywords (if, for, while, class, struct, func, etc.)
     case keyword
-    
+
     /// Variable, constant, and other identifier names
     case identifier
-    
+
     /// String literals, including interpolated strings
     case string
-    
+
     /// Numeric literals (integers, floats, hex, binary, etc.)
     case number
-    
+
     /// Comments, both single-line (//) and multi-line (/* */)
     case comment
-    
+
     /// Type names and type annotations
     case type
-    
+
     /// Function and method names at declaration or call sites
     case function
-    
+
     /// Property, field, and member names
     case property
-    
+
     /// Operators (+, -, *, /, ==, &&, ||, etc.)
     case `operator`
-    
+
     /// Punctuation marks (., ,, ;, :, {, }, [, ], etc.)
     case punctuation
-    
+
     /// Whitespace characters (spaces, tabs, newlines)
     case whitespace
-    
+
     /// Preprocessor directives and compiler annotations
     case preprocessor
-    
+
     /// Tokens that don't match any other category
     case unknown
 
@@ -517,7 +517,7 @@ public enum TokenType: String, CaseIterable, Sendable {
         defaultColor
         #endif
     }
-    
+
     /// Legacy color property - use adaptiveColor for macOS compatibility.
     ///
     /// This property is maintained for backward compatibility but
@@ -527,7 +527,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     @MainActor public var color: PlatformColor {
         adaptiveColor
     }
-    
+
     #if canImport(UIKit)
     /// Default colors for iOS
     @MainActor public var defaultColor: PlatformColor {
@@ -565,7 +565,7 @@ public enum TokenType: String, CaseIterable, Sendable {
         if color == scheme.error { return .unknown }
         return .identifier // Default
     }
-    
+
     /// Convert from SwiftSyntax token type
     init(fromSwiftType swiftType: SwiftTokenType) {
         switch swiftType {
@@ -659,12 +659,12 @@ public struct HighlightedToken: Sendable {
     /// This range is relative to the full source string and uses
     /// `NSRange` for compatibility with `NSTextStorage`.
     public let range: NSRange
-    
+
     /// The syntactic type of the token.
     ///
     /// Determines how the token should be colored and styled.
     public let type: TokenType
-    
+
     /// The actual text content of the token.
     ///
     /// This is the substring of the source code that this token represents.

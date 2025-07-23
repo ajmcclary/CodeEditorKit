@@ -28,7 +28,7 @@ public enum SwiftTokenType: String, CaseIterable {
     case punctuation
     case whitespace
     case unknown
-    
+
     /// Returns the appropriate color for this token type
     public var color: PlatformColor {
         switch self {
@@ -77,13 +77,13 @@ public enum SwiftTokenType: String, CaseIterable {
 /// A pure Swift syntax highlighter for Swift code using Apple's SwiftSyntax
 public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
-    
+
     /// Optimized keyword lookup set for O(1) performance (shared with fallback implementation)
     static let keywords = SwiftHighlightingUtilities.keywords
-    
+
     /// Optimized operator character set
     static let operators: Set<Character> = ["+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "~", "?", ":"]
-    
+
     /// Optimized punctuation character set
     static let punctuation: Set<Character> = ["(", ")", "{", "}", "[", "]", ",", ".", ";", ":"]
 
@@ -192,7 +192,7 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
 
         tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
-    
+
     // MARK: - Token Classification (Performance optimized inline)
 
     // MARK: - Visitor Methods
@@ -308,10 +308,10 @@ extension NSRange {
 // Mac Catalyst fallback - provide compatible interface
 public final class SwiftSyntaxHighlighter: Sendable {
     public init() {}
-    
+
     // Use shared SwiftTokenType instead of duplicating
     public typealias TokenType = SwiftTokenType
-    
+
     public func highlight(source: String) -> [HighlightedToken] {
         // Fallback to basic keyword-based highlighting on Mac Catalyst
         // Use shared utilities for consistent behavior

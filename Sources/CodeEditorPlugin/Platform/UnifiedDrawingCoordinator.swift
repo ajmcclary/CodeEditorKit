@@ -13,49 +13,49 @@ import UIKit
 @MainActor
 public enum UnifiedDrawingCoordinator {
     // MARK: - Drawing Context
-    
+
     /// Get the current graphics context in a platform-agnostic way
     public static func currentContext() -> CGContext? {
         getCurrentContextPlatformSpecific()
     }
-    
+
     /// Save the graphics state
     public static func saveGraphicsState() {
         saveGraphicsStatePlatformSpecific()
     }
-    
+
     /// Restore the graphics state
     public static func restoreGraphicsState() {
         restoreGraphicsStatePlatformSpecific()
     }
-    
+
     // MARK: - Display Updates
-    
+
     /// Request a display update for a view
     public static func setNeedsDisplay(for view: PlatformView) {
         setNeedsDisplayPlatformSpecific(for: view)
     }
-    
+
     /// Request a display update for a specific rectangle
     public static func setNeedsDisplay(for view: PlatformView, in rect: CGRect) {
         setNeedsDisplayPlatformSpecific(for: view, in: rect)
     }
-    
+
     // MARK: - Coordinate System
-    
+
     /// Convert a point from view coordinates to drawing coordinates
     /// Handles flipped coordinate systems automatically
     public static func convertToDrawingCoordinates(_ point: CGPoint, in view: PlatformView, bounds: CGRect) -> CGPoint {
         convertPointToDrawingCoordinates(point, in: view, bounds: bounds)
     }
-    
+
     /// Convert a rect from view coordinates to drawing coordinates
     public static func convertToDrawingCoordinates(_ rect: CGRect, in view: PlatformView, bounds: CGRect) -> CGRect {
         convertRectToDrawingCoordinates(rect, in: view, bounds: bounds)
     }
-    
+
     // MARK: - Text Drawing
-    
+
     /// Draw a string at the specified point with attributes
     public static func drawString(
         _ string: String,
@@ -68,7 +68,7 @@ public enum UnifiedDrawingCoordinator {
         string.draw(at: point, withAttributes: attributes)
         #endif
     }
-    
+
     /// Draw an attributed string at the specified point
     public static func drawAttributedString(
         _ attributedString: NSAttributedString,
@@ -76,7 +76,7 @@ public enum UnifiedDrawingCoordinator {
     ) {
         attributedString.draw(at: point)
     }
-    
+
     /// Draw a string in a rectangle with attributes
     public static func drawString(
         _ string: String,
@@ -85,33 +85,33 @@ public enum UnifiedDrawingCoordinator {
     ) {
         string.draw(in: rect, withAttributes: attributes)
     }
-    
+
     // MARK: - Fill and Stroke
-    
+
     /// Fill a rectangle with a color
     public static func fillRect(_ rect: CGRect, with color: PlatformColor) {
         fillRectPlatformSpecific(rect, with: color)
     }
-    
+
     /// Stroke a rectangle with a color
     public static func strokeRect(_ rect: CGRect, with color: PlatformColor, lineWidth: CGFloat = 1.0) {
         strokeRectPlatformSpecific(rect, with: color, lineWidth: lineWidth)
     }
-    
+
     /// Draw a line between two points
     public static func drawLine(from start: CGPoint, to end: CGPoint, color: PlatformColor, lineWidth: CGFloat = 1.0) {
         drawLinePlatformSpecific(from: start, to: end, color: color, lineWidth: lineWidth)
     }
-    
+
     // MARK: - Clipping
-    
+
     /// Clip drawing to a rectangle
     public static func clipToRect(_ rect: CGRect) {
         clipToRectPlatformSpecific(rect)
     }
-    
+
     // MARK: - Focus Ring (macOS only)
-    
+
     /// Draw a focus ring around a rectangle (no-op on iOS)
     public static func drawFocusRing(around rect: CGRect) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -121,9 +121,9 @@ public enum UnifiedDrawingCoordinator {
         #endif
         // No-op on iOS
     }
-    
+
     // MARK: - Layer Backing
-    
+
     /// Ensure a view is layer-backed for better performance
     public static func ensureLayerBacked(_ view: PlatformView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -131,7 +131,7 @@ public enum UnifiedDrawingCoordinator {
         #endif
         // UIView is always layer-backed on iOS
     }
-    
+
     /// Set the background color of a view's layer
     public static func setLayerBackgroundColor(_ color: PlatformColor?, for view: PlatformView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -142,9 +142,9 @@ public enum UnifiedDrawingCoordinator {
         view.layer.backgroundColor = color?.cgColor
         #endif
     }
-    
+
     // MARK: - Text Editor Drawing
-    
+
     /// Draw line numbers in the gutter area
     public static func drawLineNumber(
         _ lineNumber: Int,
@@ -159,17 +159,17 @@ public enum UnifiedDrawingCoordinator {
             .font: font,
             .foregroundColor: color
         ]
-        
+
         var drawPoint = point
-        
+
         if alignment == .right, let maxWidth {
             let textSize = text.size(withAttributes: attributes)
             drawPoint.x = maxWidth - textSize.width
         }
-        
+
         drawString(text, at: drawPoint, withAttributes: attributes)
     }
-    
+
     /// Draw minimap text line with performance optimizations
     public static func drawMinimapLine(
         _ text: String,
@@ -183,7 +183,7 @@ public enum UnifiedDrawingCoordinator {
             .font: font,
             .foregroundColor: color
         ]
-        
+
         // Quick check if text fits
         let textSize = text.size(withAttributes: attributes)
         if textSize.width <= maxWidth {
@@ -198,7 +198,7 @@ public enum UnifiedDrawingCoordinator {
             }
         }
     }
-    
+
     /// Draw viewport indicator for minimap
     public static func drawViewportIndicator(
         in rect: CGRect,
@@ -208,11 +208,11 @@ public enum UnifiedDrawingCoordinator {
     ) {
         // Fill background
         fillRect(rect, with: backgroundColor)
-        
+
         // Draw border
         strokeRect(rect, with: borderColor, lineWidth: borderWidth)
     }
-    
+
     /// Calculate visible text area for a text view
     public static func calculateVisibleTextRect(for textView: CodeEditorView) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -239,7 +239,7 @@ extension UnifiedDrawingCoordinator {
         return UIGraphicsGetCurrentContext()
         #endif
     }
-    
+
     /// Platform-specific implementation for saving graphics state
     private static func saveGraphicsStatePlatformSpecific() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -250,7 +250,7 @@ extension UnifiedDrawingCoordinator {
         }
         #endif
     }
-    
+
     /// Platform-specific implementation for restoring graphics state
     private static func restoreGraphicsStatePlatformSpecific() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -261,7 +261,7 @@ extension UnifiedDrawingCoordinator {
         }
         #endif
     }
-    
+
     /// Platform-specific implementation for setting needs display
     private static func setNeedsDisplayPlatformSpecific(for view: PlatformView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -270,7 +270,7 @@ extension UnifiedDrawingCoordinator {
         view.setNeedsDisplay()
         #endif
     }
-    
+
     /// Platform-specific implementation for setting needs display in rect
     private static func setNeedsDisplayPlatformSpecific(for view: PlatformView, in rect: CGRect) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -279,7 +279,7 @@ extension UnifiedDrawingCoordinator {
         view.setNeedsDisplay(rect)
         #endif
     }
-    
+
     /// Platform-specific implementation for converting point to drawing coordinates
     private static func convertPointToDrawingCoordinates(_ point: CGPoint, in view: PlatformView, bounds: CGRect) -> CGPoint {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -294,7 +294,7 @@ extension UnifiedDrawingCoordinator {
         return point
         #endif
     }
-    
+
     /// Platform-specific implementation for converting rect to drawing coordinates
     private static func convertRectToDrawingCoordinates(_ rect: CGRect, in view: PlatformView, bounds: CGRect) -> CGRect {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -312,7 +312,7 @@ extension UnifiedDrawingCoordinator {
         return rect
         #endif
     }
-    
+
     /// Platform-specific implementation for filling rectangle
     private static func fillRectPlatformSpecific(_ rect: CGRect, with color: PlatformColor) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -323,7 +323,7 @@ extension UnifiedDrawingCoordinator {
         UIBezierPath(rect: rect).fill()
         #endif
     }
-    
+
     /// Platform-specific implementation for stroking rectangle
     private static func strokeRectPlatformSpecific(_ rect: CGRect, with color: PlatformColor, lineWidth: CGFloat) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -338,7 +338,7 @@ extension UnifiedDrawingCoordinator {
         path.stroke()
         #endif
     }
-    
+
     /// Platform-specific implementation for drawing line
     private static func drawLinePlatformSpecific(from start: CGPoint, to end: CGPoint, color: PlatformColor, lineWidth: CGFloat) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -357,7 +357,7 @@ extension UnifiedDrawingCoordinator {
         path.stroke()
         #endif
     }
-    
+
     /// Platform-specific implementation for clipping to rectangle
     private static func clipToRectPlatformSpecific(_ rect: CGRect) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -375,20 +375,20 @@ public struct UnifiedDrawingContext {
     public let cgContext: CGContext
     public let bounds: CGRect
     public let isFlipped: Bool
-    
+
     @MainActor
     init?(for view: PlatformView) {
         guard let context = UnifiedDrawingCoordinator.currentContext() else { return nil }
         self.cgContext = context
         self.bounds = view.bounds
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         self.isFlipped = view.isFlipped
         #else
         self.isFlipped = true // UIKit is always flipped
         #endif
     }
-    
+
     /// Convert a point to drawing coordinates
     public func convertPoint(_ point: CGPoint) -> CGPoint {
         if isFlipped {
@@ -397,7 +397,7 @@ public struct UnifiedDrawingContext {
             return CGPoint(x: point.x, y: bounds.height - point.y)
         }
     }
-    
+
     /// Convert a rect to drawing coordinates
     public func convertRect(_ rect: CGRect) -> CGRect {
         if isFlipped {

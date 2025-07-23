@@ -12,19 +12,19 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
     private let kubernetesKeys = YAMLCompletionData.kubernetesKeys
     private let ansibleKeys = YAMLCompletionData.ansibleKeys
     private let circleciKeys = YAMLCompletionData.circleciKeys
-    
+
     // MARK: - Overridden Properties
-    
+
     override public var keywords: [String] {
         YAMLCompletionData.keywords
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         YAMLCompletionData.snippets
     }
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "yaml-builtin",
@@ -33,39 +33,39 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Override BaseCompletionProvider Methods
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let yamlAnalysisResult = analyzeYAMLContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch yamlAnalysisResult.type {
         case .key:
             items.append(contentsOf: createKeyCompletions(for: yamlAnalysisResult.fileType, parentKey: yamlAnalysisResult.parentKey, filter: yamlAnalysisResult.filter))
-            
+
         case .value:
             items.append(contentsOf: createValueCompletions(for: yamlAnalysisResult.key, fileType: yamlAnalysisResult.fileType, filter: yamlAnalysisResult.filter))
-            
+
         case .listItem:
             items.append(contentsOf: createListItemCompletions(filter: yamlAnalysisResult.filter))
-            
+
         case .reference:
             items.append(contentsOf: createReferenceCompletions(filter: yamlAnalysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createYAMLKeywordCompletions(filter: yamlAnalysisResult.filter))
             if supportsSnippets {
                 items.append(contentsOf: createYAMLSnippetCompletions(filter: yamlAnalysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -73,92 +73,92 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-*&")).inverted)
         return components.last ?? ""
     }
-    
+
     // MARK: - YAML-Specific Context Analysis
-    
+
     private func analyzeYAMLContext(_ context: CompletionContextModel) -> YAMLContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check if we're at the start of a list item
         if lineText.hasPrefix("-") && lineText.count > 1 {
             return YAMLContextAnalysisResult(type: .listItem, filter: filter, fileType: fileType)
         }
-        
+
         // Check if we're in a reference context (& or *)
         if beforeCursor.hasSuffix("&") || beforeCursor.hasSuffix("*") || filter.hasPrefix("*") {
             return YAMLContextAnalysisResult(type: .reference, filter: filter, fileType: fileType)
         }
-        
+
         // Check if we're in a key position
         if isInKeyPosition(lineText, beforeCursor) {
             let parentKey = findParentKey(in: beforeCursor)
             return YAMLContextAnalysisResult(type: .key, filter: filter, fileType: fileType, parentKey: parentKey)
         }
-        
+
         // Check if we're in a value position
         if let currentKey = getCurrentKey(from: lineText) {
             return YAMLContextAnalysisResult(type: .value, filter: filter, fileType: fileType, key: currentKey)
         }
-        
+
         return YAMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
-    
+
     private func detectFileType(from text: String) -> YAMLFileType {
         // GitHub Actions
         if text.contains("on:") && text.contains("jobs:") && text.contains("steps:") {
             return .githubActions
         }
-        
+
         // Docker Compose
         if text.contains("version:") && text.contains("services:") {
             return .dockerCompose
         }
-        
+
         // Kubernetes
         if text.contains("apiVersion:") && text.contains("kind:") {
             return .kubernetes
         }
-        
+
         // Ansible
         if text.contains("hosts:") || text.contains("tasks:") || text.contains("- name:") {
             return .ansible
         }
-        
+
         // CircleCI
         if text.contains("version:") && (text.contains("orbs:") || text.contains("workflows:")) {
             return .circleci
         }
-        
+
         return .generic
     }
-    
+
     private func isInKeyPosition(_ lineText: String, _: String) -> Bool {
         // Check indentation to determine if we're at a key position
         let trimmedLine = lineText.trimmingCharacters(in: .whitespaces)
-        
+
         // Empty line or just started typing
         if trimmedLine.isEmpty || !trimmedLine.contains(":") {
             return true
         }
-        
+
         // After a list item dash
         if trimmedLine.hasPrefix("- ") && !trimmedLine.dropFirst(2).contains(":") {
             return true
         }
-        
+
         return false
     }
-    
+
     private func getCurrentKey(from lineText: String) -> String? {
         // Extract key from current line
         let trimmed = lineText.trimmingCharacters(in: .whitespaces)
@@ -168,17 +168,17 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func findParentKey(in text: String) -> String? {
         // Find parent key based on indentation
         let lines = text.components(separatedBy: .newlines)
         var currentIndent = Int.max
-        
+
         // Find current line's indentation
         if let lastLine = lines.last {
             currentIndent = lastLine.prefix { $0 == " " }.count
         }
-        
+
         // Search backwards for a line with less indentation that has a key
         for line in lines.reversed() {
             let indent = line.prefix { $0 == " " }.count
@@ -188,15 +188,15 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 }
             }
         }
-        
+
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createKeyCompletions(for fileType: YAMLFileType, parentKey: String?, filter: String) -> [CompletionItemModel] {
         var keys: [String] = []
-        
+
         switch fileType {
         case .githubActions:
             if parentKey == "on" {
@@ -206,14 +206,14 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             } else {
                 keys = githubActionsKeys
             }
-            
+
         case .dockerCompose:
             if parentKey == "services" {
                 keys = dockerComposeKeys.filter { !["version", "services", "networks", "volumes"].contains($0) }
             } else {
                 keys = dockerComposeKeys
             }
-            
+
         case .kubernetes:
             if parentKey == "spec" {
                 keys = ["replicas", "selector", "template", "containers", "ports", "volumes"]
@@ -222,26 +222,26 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             } else {
                 keys = kubernetesKeys
             }
-            
+
         case .ansible:
             if parentKey == "tasks" || parentKey == "handlers" {
                 keys = ansibleKeys.filter { !["hosts", "tasks", "handlers", "vars", "roles"].contains($0) }
             } else {
                 keys = ansibleKeys
             }
-            
+
         case .circleci:
             if parentKey == "steps" {
                 keys = ["run", "checkout", "save_cache", "restore_cache", "store_artifacts", "store_test_results"]
             } else {
                 keys = circleciKeys
             }
-            
+
         case .generic:
             // No specific keys for generic YAML
             break
         }
-        
+
         return keys
             .filter { key in
                 filter.isEmpty || key.localizedCaseInsensitiveContains(filter)
@@ -256,18 +256,18 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createValueCompletions(for key: String?, fileType: YAMLFileType, filter: String) -> [CompletionItemModel] {
         guard let key else { return [] }
-        
+
         var items: [CompletionItemModel] = []
-        
+
         // Add boolean values for common boolean keys
         let booleanKeys = ["continue-on-error", "fail-fast", "required", "become", "gather_facts", "ignore_errors", "run_once"]
         if booleanKeys.contains(key) {
             items.append(contentsOf: createYAMLKeywordCompletions(filter: filter).filter { ["true", "false", "yes", "no"].contains($0.label) })
         }
-        
+
         // Add specific values based on key and file type
         switch fileType {
         case .githubActions:
@@ -276,29 +276,29 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             } else if key == "shell" {
                 items.append(contentsOf: createShellCompletions(filter: filter))
             }
-            
+
         case .dockerCompose:
             if key == "restart" {
                 items.append(contentsOf: createRestartPolicyCompletions(filter: filter))
             }
-            
+
         case .kubernetes:
             if key == "kind" {
                 items.append(contentsOf: createKubernetesKindCompletions(filter: filter))
             } else if key == "imagePullPolicy" {
                 items.append(contentsOf: createImagePullPolicyCompletions(filter: filter))
             }
-            
+
         default:
             break
         }
-        
+
         // Always add keywords
         items.append(contentsOf: createYAMLKeywordCompletions(filter: filter))
-        
+
         return items
     }
-    
+
     private func createListItemCompletions(filter _: String) -> [CompletionItemModel] {
         // Context-aware list item suggestions
         [
@@ -311,10 +311,10 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             )
         ]
     }
-    
+
     private func createReferenceCompletions(filter: String) -> [CompletionItemModel] {
         var items: [CompletionItemModel] = []
-        
+
         // Anchor
         if filter.hasPrefix("&") || filter.isEmpty {
             items.append(CompletionItemModel(
@@ -325,7 +325,7 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 priority: 85
             ))
         }
-        
+
         // Alias
         if filter.hasPrefix("*") || filter.isEmpty {
             items.append(CompletionItemModel(
@@ -336,7 +336,7 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 priority: 85
             ))
         }
-        
+
         // Merge
         items.append(CompletionItemModel(
             label: "<<",
@@ -345,10 +345,10 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
             detail: "YAML merge",
             priority: 80
         ))
-        
+
         return items
     }
-    
+
     private func createYAMLKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
@@ -364,14 +364,14 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createRunsOnCompletions(filter: String) -> [CompletionItemModel] {
         let runners = [
             "ubuntu-latest", "ubuntu-22.04", "ubuntu-20.04",
             "windows-latest", "windows-2022", "windows-2019",
             "macos-latest", "macos-13", "macos-12", "macos-11"
         ]
-        
+
         return runners
             .filter { runner in
                 filter.isEmpty || runner.localizedCaseInsensitiveContains(filter)
@@ -386,10 +386,10 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createShellCompletions(filter: String) -> [CompletionItemModel] {
         let shells = ["bash", "pwsh", "python", "sh", "cmd", "powershell"]
-        
+
         return shells
             .filter { shell in
                 filter.isEmpty || shell.localizedCaseInsensitiveContains(filter)
@@ -404,10 +404,10 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createRestartPolicyCompletions(filter: String) -> [CompletionItemModel] {
         let policies = ["no", "always", "on-failure", "unless-stopped"]
-        
+
         return policies
             .filter { policy in
                 filter.isEmpty || policy.localizedCaseInsensitiveContains(filter)
@@ -422,14 +422,14 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createKubernetesKindCompletions(filter: String) -> [CompletionItemModel] {
         let kinds = [
             "Pod", "Service", "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob",
             "ConfigMap", "Secret", "Ingress", "PersistentVolume", "PersistentVolumeClaim",
             "Namespace", "ServiceAccount", "Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding"
         ]
-        
+
         return kinds
             .filter { kind in
                 filter.isEmpty || kind.localizedCaseInsensitiveContains(filter)
@@ -444,10 +444,10 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createImagePullPolicyCompletions(filter: String) -> [CompletionItemModel] {
         let policies = ["Always", "Never", "IfNotPresent"]
-        
+
         return policies
             .filter { policy in
                 filter.isEmpty || policy.localizedCaseInsensitiveContains(filter)
@@ -462,7 +462,7 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createYAMLSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
@@ -491,13 +491,13 @@ private struct YAMLContextAnalysisResult {
         case reference
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let fileType: YAMLFileType
     let key: String?
     let parentKey: String?
-    
+
     init(type: CompletionType, filter: String, fileType: YAMLFileType, key: String? = nil, parentKey: String? = nil) {
         self.type = type
         self.filter = filter

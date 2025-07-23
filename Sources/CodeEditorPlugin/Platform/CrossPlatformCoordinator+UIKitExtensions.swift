@@ -8,11 +8,11 @@ extension CrossPlatformCoordinator {
     func optimizeForIOS(_ textView: CodeEditorView) {
         // Store weak reference for toolbar actions
         self.associatedTextView = textView
-        
+
         // Configure for touch
         textView.isSelectable = true
         textView.isEditable = true
-        
+
         // Adjust content insets for safe area
         if let window = textView.window {
             let safeArea = window.safeAreaInsets
@@ -24,24 +24,24 @@ extension CrossPlatformCoordinator {
             )
             textView.setUnifiedTextContainerInsets(insets)
         }
-        
+
         // Configure keyboard
         textView.keyboardType = .default
         textView.autocorrectionType = .no
         textView.autocapitalizationType = .none
         textView.smartDashesType = .no
         textView.smartQuotesType = .no
-        
+
         // Add input accessory view for iPad
         if UIDevice.current.userInterfaceIdiom == .pad {
             textView.inputAccessoryView = createInputAccessoryView()
         }
     }
-    
+
     func createInputAccessoryView() -> UIView {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
-        
+
         let items = [
             UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), style: .plain, target: self, action: #selector(undo)),
             UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), style: .plain, target: self, action: #selector(redo)),
@@ -49,11 +49,11 @@ extension CrossPlatformCoordinator {
             UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(find)),
             UIBarButtonItem(image: UIImage(systemName: "keyboard.chevron.compact.down"), style: .plain, target: self, action: #selector(dismissKeyboard))
         ]
-        
+
         toolbar.items = items
         return toolbar
     }
-    
+
     func setupIOSNotifications() {
         // Keyboard notifications
         let keyboardObserver = NotificationCenter.default.addObserver(
@@ -64,13 +64,13 @@ extension CrossPlatformCoordinator {
             // Extract values outside the Task to avoid actor isolation issues
             let keyboardInfo = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
             let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double
-            
+
             Task { @MainActor in
                 self?.handleKeyboardWillShow(keyboardInfo: keyboardInfo, duration: duration)
             }
         }
         addObserver(keyboardObserver)
-        
+
         // Orientation change notifications
         let orientationObserver = NotificationCenter.default.addObserver(
             forName: UIDevice.orientationDidChangeNotification,
@@ -83,7 +83,7 @@ extension CrossPlatformCoordinator {
         }
         addObserver(orientationObserver)
     }
-    
+
     func handleIOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         // Limited keyboard support on iOS
         if isExternalKeyboardConnected() && modifiers.contains(.command) {
@@ -95,7 +95,7 @@ extension CrossPlatformCoordinator {
         }
         return false
     }
-    
+
     func handleIOSTouchInput(touches: Set<AnyHashable>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
         // Handle multi-touch gestures
         if touches.count == 2 {
@@ -107,7 +107,7 @@ extension CrossPlatformCoordinator {
         }
         return false
     }
-    
+
     func handleIOSMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
         // Limited mouse support on iOS
         if isPointingDeviceConnected() {
@@ -115,14 +115,14 @@ extension CrossPlatformCoordinator {
             case .rightClick:
                 showContextMenu(at: location, in: textView)
                 return true
-                
+
             default:
                 return false
             }
         }
         return false
     }
-    
+
     func handleIOSPencilInput(location: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in textView: CodeEditorView) -> Bool {
         // Handle Apple Pencil input
         if pressure > 0.5 {
@@ -132,34 +132,34 @@ extension CrossPlatformCoordinator {
         }
         return false
     }
-    
+
     // MARK: - IOS Context Menu
-    
+
     func createIOSContextMenu(for textView: CodeEditorView, at _: CGPoint) -> UIMenu {
         let descriptor = SharedContextMenuBuilder.createStandardCodeEditorMenu(for: textView, coordinator: self)
         return SharedContextMenuBuilder.buildUIMenu(from: descriptor)
     }
-    
+
     // MARK: - IOS Keyboard Management
-    
+
     @MainActor
     private func handleKeyboardWillShow(keyboardInfo: CGRect?, duration: Double?) {
         guard keyboardInfo != nil,
               let duration else {
             return
         }
-        
+
         // Update keyboard height
         logger.debug("Keyboard shown")
-        
+
         // Animate adjustment
         UIView.animate(withDuration: duration) {
             self.objectWillChange.send()
         }
     }
-    
+
     // MARK: - IOS Specific Helpers
-    
+
     func isExternalKeyboardConnected() -> Bool {
         #if targetEnvironment(macCatalyst)
         return true
@@ -171,36 +171,36 @@ extension CrossPlatformCoordinator {
         return false
         #endif
     }
-    
+
     // MARK: - IOS Gesture Setup
-    
+
     func setupIOSGestures(for textView: CodeEditorView) {
         // Long press for context menu
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressUIKit(_:)))
         textView.addGestureRecognizer(longPress)
-        
+
         // Two-finger tap for quick actions
         let twoFingerTap = UITapGestureRecognizer(target: self, action: #selector(handleTwoFingerTap(_:)))
         twoFingerTap.numberOfTouchesRequired = 2
         textView.addGestureRecognizer(twoFingerTap)
     }
-    
+
     @objc private func handleLongPressUIKit(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let textView = gesture.view as? CodeEditorView else { return }
-        
+
         let location = gesture.location(in: textView)
         showContextMenu(at: location, in: textView)
     }
-    
+
     @objc private func handleTwoFingerTap(_ gesture: UITapGestureRecognizer) {
         guard gesture.view is CodeEditorView else { return }
         logger.debug("Two-finger tap detected")
         // Could trigger quick actions menu
     }
-    
+
     // MARK: - IOS Device Detection
-    
+
     func isPointingDeviceConnected() -> Bool {
         // Check if mouse/trackpad is connected
         if #available(iOS 13.4, *) {
@@ -208,15 +208,15 @@ extension CrossPlatformCoordinator {
         }
         return false
     }
-    
+
     private func keyboardDidConnect() {
         adjustFeaturesForPlatform()
     }
-    
+
     internal func orientationDidChange() {
         // Adjust UI for new orientation
         let orientation = UIDevice.current.orientation
-        
+
         // Update platform adjustments based on orientation
         if orientation.isLandscape {
             // In landscape, recreate adjustments with appropriate touch target size
@@ -243,13 +243,13 @@ extension CrossPlatformCoordinator {
                 enableMultiCursor: platformAdjustments.enableMultiCursor
             )
         }
-        
+
         // Notify observers of the change
         objectWillChange.send()
     }
-    
+
     // MARK: - IOS Toolbar Actions
-    
+
     @objc private func undo() {
         guard let textView = associatedTextView else {
             logger.warning("No associated text view for undo action")
@@ -257,7 +257,7 @@ extension CrossPlatformCoordinator {
         }
         textView.undoManager?.undo()
     }
-    
+
     @objc private func redo() {
         guard let textView = associatedTextView else {
             logger.warning("No associated text view for redo action")
@@ -265,7 +265,7 @@ extension CrossPlatformCoordinator {
         }
         textView.undoManager?.redo()
     }
-    
+
     @objc private func find() {
         guard let textView = associatedTextView else {
             logger.warning("No associated text view for find action")
@@ -273,39 +273,39 @@ extension CrossPlatformCoordinator {
         }
         showFind(in: textView)
     }
-    
+
     private func showFind(in textView: CodeEditorView) {
         // Create a simple find interface
         let alert = UIAlertController(title: "Find", message: nil, preferredStyle: .alert)
-        
+
         alert.addTextField { textField in
             textField.placeholder = "Search text..."
             textField.autocapitalizationType = .none
             textField.autocorrectionType = .no
         }
-        
+
         let findAction = UIAlertAction(title: "Find", style: .default) { [weak alert] _ in
             if let searchText = alert?.textFields?.first?.text,
                !searchText.isEmpty {
                 self.findText(searchText, in: textView)
             }
         }
-        
+
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        
+
         alert.addAction(findAction)
         alert.addAction(cancelAction)
-        
+
         if let viewController = textView.window?.rootViewController {
             viewController.present(alert, animated: true)
         }
     }
-    
+
     private func findText(_ searchText: String, in textView: CodeEditorView) {
         guard let text = textView.text else { return }
-        
+
         let searchRange = NSRange(location: textView.selectedRange.upperBound, length: text.count - textView.selectedRange.upperBound)
-        
+
         // swiftlint:disable:next legacy_objc_type
         let foundRange = (text as NSString).range(of: searchText, options: .caseInsensitive, range: searchRange)
         if foundRange.location != NSNotFound {
@@ -322,7 +322,7 @@ extension CrossPlatformCoordinator {
             }
         }
     }
-    
+
     // toggleComment is now implemented in the main CrossPlatformCoordinator class
 }
 #endif

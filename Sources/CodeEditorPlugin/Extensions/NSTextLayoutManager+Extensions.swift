@@ -287,21 +287,21 @@ extension NSTextLayoutManager {
 
         if reversed {
             location = documentRange.endLocation
-            
+
             if rect.maxY <= viewportBounds.maxY {
                 location = viewportRange.endLocation
             }
-            
+
             if rect.maxY <= viewportBounds.minY {
                 location = viewportRange.location
             }
         } else {
             location = documentRange.location
-            
+
             if rect.minY >= viewportBounds.minY {
                 location = viewportRange.location
             }
-            
+
             if rect.minY >= viewportBounds.maxY {
                 location = viewportRange.endLocation
             }
@@ -369,7 +369,7 @@ extension NSTextLayoutManager {
             }
 
             let beforeEnd = fragmentRange.endLocation.compare(end) == .orderedAscending
-            
+
             return stop == false && beforeEnd
         }
     }

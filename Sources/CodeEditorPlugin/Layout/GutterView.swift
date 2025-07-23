@@ -17,7 +17,7 @@ import UIKit
 @MainActor
 public protocol GutterViewProtocol: AnyObject {
     var textView: CodeEditorView? { get set }
-    
+
     func setNeedsDisplayLineNumbers()
 }
 
@@ -27,7 +27,7 @@ public protocol GutterViewProtocol: AnyObject {
 @MainActor
 public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Properties
-    
+
     public weak var textView: CodeEditorView? {
         didSet {
             // Set up interaction handler when text view is assigned
@@ -38,38 +38,38 @@ public class GutterView: PlatformView, GutterViewProtocol {
             }
         }
     }
-    
+
     /// Array to store notification observer tokens for proper cleanup
     internal var observers: [NSObjectProtocol] = []
-    
+
     /// The renderer responsible for drawing line numbers
     private let renderer = GutterViewRenderer()
-    
+
     /// The interaction handler for clicks/taps
     private var interactionHandler: GutterInteractionHandler?
-    
+
     #if canImport(UIKit)
     private nonisolated(unsafe) var displayLink: CADisplayLink?
     private var lastContentOffset: CGPoint = .zero
     private var pauseTask: Task<Void, Never>?
     #endif
-    
+
     // MARK: - Initialization
-    
+
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
         setupAccessibility()
     }
-    
+
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
         setupAccessibility()
     }
-    
+
     // MARK: - Setup
-    
+
     private func setup() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         wantsLayer = true
@@ -80,19 +80,19 @@ public class GutterView: PlatformView, GutterViewProtocol {
         backgroundColor = PlatformColors.clear
         setupDisplayLink()
         #endif
-        
+
         // Set up click handling for folding controls
         setupClickHandling()
     }
-    
+
     /// Set up click/tap handling for folding controls
     private func setupClickHandling() {
         // Interaction handling is set up when textView is assigned
         // See the textView property didSet
     }
-    
+
     // MARK: - Display Updates
-    
+
     public func setNeedsDisplayLineNumbers() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Force a complete redraw on macOS to ensure line numbers are visible
@@ -101,65 +101,65 @@ public class GutterView: PlatformView, GutterViewProtocol {
         UnifiedDrawingCoordinator.setNeedsDisplay(for: self)
         #endif
     }
-    
+
     // MARK: - Drawing
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func draw(_ dirtyRect: NSRect) {
         // On macOS, GutterView should not be used - line numbers are handled by NSRulerView
         // Only draw if we're actually in the view hierarchy (which shouldn't happen on macOS)
         guard superview != nil else { return }
-        
+
         super.draw(dirtyRect)
         // Always draw the full bounds to ensure line numbers are visible when scrolling
         drawLineNumbers(in: bounds)
     }
-    
+
     /// Text views need a flipped coordinate system on macOS
     nonisolated override public var isFlipped: Bool { true }
     #else
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
-        
+
         // On Mac Catalyst, force clearing the entire bounds before drawing
         #if targetEnvironment(macCatalyst)
         if let context = UIGraphicsGetCurrentContext() {
             // Clear the entire bounds, not just the dirty rect
             context.clear(bounds)
-            
+
             // Set the fill color to clear/transparent
             context.setFillColor(UIColor.clear.cgColor)
             context.fill(bounds)
         }
         #endif
-        
+
         // Always redraw the full bounds to ensure line numbers are visible
         // Use bounds instead of rect to force full redraw
         drawLineNumbers(in: bounds)
     }
     #endif
-    
+
     // MARK: - Platform-Specific Setup
-    
+
     #if canImport(UIKit)
     private func setupDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(displayLinkFired))
         displayLink?.add(to: .main, forMode: .common)
         displayLink?.isPaused = true
     }
-    
+
     @objc private func displayLinkFired() {
         guard let scrollView = textView?.crossPlatformEnclosingScrollView else { return }
         let currentOffset = scrollView.contentOffset
-        
+
         if currentOffset != lastContentOffset {
             lastContentOffset = currentOffset
             setNeedsDisplay()
         }
-        
+
         // Cancel any existing pause task
         pauseTask?.cancel()
-        
+
         // Schedule a new pause task
         pauseTask = Task { @MainActor [weak self] in
             do {
@@ -175,9 +175,9 @@ public class GutterView: PlatformView, GutterViewProtocol {
         }
     }
     #endif
-    
+
     // MARK: - Cleanup
-    
+
     deinit {
         #if canImport(UIKit)
         pauseTask?.cancel()
@@ -185,9 +185,9 @@ public class GutterView: PlatformView, GutterViewProtocol {
         displayLink?.invalidate()
         displayLink = nil
         #endif
-        
+
         // Observer cleanup is handled by NotificationCenter automatically on deallocation
-        
+
         // Legacy cleanup for any selector-based observers
         NotificationCenter.default.removeObserver(self)
     }
@@ -199,16 +199,16 @@ extension GutterView {
     /// Common line number drawing implementation
     func drawLineNumbers(in rect: CGRect) {
         guard let textView else { return }
-        
+
         // Get the graphics context
         guard let context = UnifiedDrawingCoordinator.currentContext() else { return }
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let fillBackground = false // AppKit doesn't need background fill
         #else
         let fillBackground = true // UIKit needs background fill
         #endif
-        
+
         // Use the renderer to draw line numbers
         renderer.draw(
             in: rect,
@@ -217,7 +217,7 @@ extension GutterView {
             gutterBounds: bounds,
             fillBackground: fillBackground
         )
-        
+
         // Update accessibility elements for visible lines
         #if canImport(UIKit)
         updateAccessibilityElements()
@@ -235,12 +235,12 @@ extension GutterView {
         if let handled = interactionHandler?.handleMouseDown(with: event), handled {
             return
         }
-        
+
         // Pass through to default handling
         super.mouseDown(with: event)
     }
     #endif
-    
+
     // Click handling logic has been moved to GutterInteractionHandler
     // The following method is kept for backward compatibility but will be removed
     @available(*, deprecated, message: "Use GutterInteractionHandler instead")
@@ -250,49 +250,49 @@ extension GutterView {
               textView.configuration.display.showFoldingControls else {
             return false
         }
-        
+
         // Find which line was clicked
         guard let clickedLineNumber = findLineNumber(at: point, in: textView) else {
             return false
         }
-        
+
         // Check if click was on a folding control
         if isFoldingControlClick(at: point, for: clickedLineNumber, in: textView) {
             // Toggle folding for this line
             let wasToggled = textView.toggleFold(at: clickedLineNumber)
-            
+
             if wasToggled {
                 // Trigger display update
                 setNeedsDisplayLineNumbers()
-                
+
                 // Provide haptic feedback on iOS
                 #if canImport(UIKit)
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
                 #endif
             }
-            
+
             return wasToggled
         }
-        
+
         return false
     }
-    
+
     /// Find the line number at the given point
     private func findLineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
         // Use TextKitLineNumberHelper to avoid forcing TextKit 1
         let helper = TextKitLineNumberHelper(textView: textView)
         return helper.lineNumber(at: point)
     }
-    
+
     /// Check if the click was on a folding control
     private func isFoldingControlClick(at point: CGPoint, for lineNumber: Int, in textView: CodeEditorView) -> Bool {
         // Check if this line is foldable
         guard textView.isFoldable(at: lineNumber) else { return false }
-        
+
         let controlSize = textView.configuration.layout.foldingControlSize
         let controlPadding = textView.configuration.layout.foldingControlPadding
-        
+
         // Calculate the folding control rect for this line
         // Note: This calculation should match the one in GutterViewRenderer.drawFoldingControl
         let controlRect = CGRect(
@@ -301,7 +301,7 @@ extension GutterView {
             width: controlSize,
             height: controlSize
         )
-        
+
         return controlRect.contains(point)
     }
 }
@@ -312,19 +312,19 @@ extension GutterView {
     /// Track text view changes
     func observeTextView() {
         guard let textView else { return }
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, GutterView is not used - line numbers are handled by NSRulerView
         // So we don't need to observe anything
         return
         #else
-        
+
         // Clear any existing observers first
         removeTextViewObservers()
-        
+
         // Observe text changes
         let notificationName = UITextView.textDidChangeNotification
-        
+
         let textObserver = NotificationCenter.default.addObserver(
             forName: notificationName,
             object: textView,
@@ -335,25 +335,25 @@ extension GutterView {
             }
         }
         observers.append(textObserver)
-        
+
         // For UIKit, scrolling is handled via the container's UIScrollViewDelegate
         // The container will forward scroll events to us, so we don't set delegate here
         // This avoids conflicts with other components that need the delegate
         #endif
     }
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Observe scroll view changes (macOS only)
     func observeScrollView(_ scrollView: NSScrollView) {
         // Guard against early calls
         guard scrollView.contentView.bounds.width > 0 else { return }
-        
+
         // Remove any existing scroll observers
         observers = observers.filter { _ in
             // Keep non-scroll observers
             true
         }
-        
+
         // Observe scrolling via the content view's bounds changes
         let scrollObserver = NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
@@ -365,7 +365,7 @@ extension GutterView {
             }
         }
         observers.append(scrollObserver)
-        
+
         // Also observe the clipView's bounds changes as a backup
         let clipView = scrollView.contentView
         let clipObserver = NotificationCenter.default.addObserver(
@@ -380,7 +380,7 @@ extension GutterView {
         observers.append(clipObserver)
     }
     #endif
-    
+
     /// Remove all text view observers
     func removeTextViewObservers() {
         observers.forEach { NotificationCenter.default.removeObserver($0) }
@@ -395,19 +395,19 @@ extension GutterView: UITextViewDelegate {
     @objc public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // Activate display link for smooth updates during scrolling
         displayLink?.isPaused = false
-        
+
         // Store the current offset
         lastContentOffset = scrollView.contentOffset
-        
+
         // Force immediate redraw
         setNeedsDisplay()
         layer.setNeedsDisplay()
-        
+
         // On Catalyst, we need to force the display update more aggressively
         #if targetEnvironment(macCatalyst)
         // Mark the entire bounds as needing display
         setNeedsDisplay(bounds)
-        
+
         // Force Core Animation to update immediately
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -415,12 +415,12 @@ extension GutterView: UITextViewDelegate {
         CATransaction.commit()
         #endif
     }
-    
+
     @objc public func scrollViewWillBeginDragging(_: UIScrollView) {
         // Start display link when scrolling begins
         displayLink?.isPaused = false
     }
-    
+
     public func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
         if !decelerate {
             // Pause display link when scrolling stops without deceleration
@@ -429,7 +429,7 @@ extension GutterView: UITextViewDelegate {
             setNeedsDisplay()
         }
     }
-    
+
     public func scrollViewDidEndDecelerating(_: UIScrollView) {
         // Pause display link when scrolling completely stops
         displayLink?.isPaused = true

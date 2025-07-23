@@ -8,12 +8,12 @@ struct ContentView: View {
     // - Editing disabled
     // - Selection allowed for copying
     // - All viewing features enabled
-    
+
     struct APIResponse: Codable {
         let status: Int
         let message: String
         let data: [String: Any]
-        
+
         func validate() throws {
             guard status == 200 else {
                 throw APIError.invalidStatus(status)
@@ -21,20 +21,20 @@ struct ContentView: View {
         }
     }
     """
-    
+
     // Use the read-only preset
     @State private var config = EditorConfiguration.readOnly
-    
+
     var body: some View {
         VStack {
             Text("Read-Only Editor Preset")
                 .font(.headline)
                 .padding()
-            
+
             Text("Perfect for documentation, tutorials, and code reviews")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             // Note: Using .constant for read-only binding
             CodeEditor(text: .constant(code))
                 .codeLanguage(.swift)

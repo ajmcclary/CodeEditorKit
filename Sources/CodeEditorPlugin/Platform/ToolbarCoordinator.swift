@@ -47,21 +47,21 @@ public final class ToolbarCoordinator: ObservableObject {
     /// - Warning: This property is deprecated. Use dependency injection instead.
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = ToolbarCoordinator()
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ToolbarCoordinator")
     private let capabilities: PlatformCapabilities
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new ToolbarCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
         self.capabilities = capabilities ?? PlatformCapabilities.shared
         logger.debug("ToolbarCoordinator initialized")
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Create platform-appropriate toolbar items
     ///
     /// This method returns a default set of toolbar items optimized for the current platform.
@@ -77,7 +77,7 @@ public final class ToolbarCoordinator: ObservableObject {
         return createIOSToolbar()
         #endif
     }
-    
+
     /// Configure a toolbar item with platform-specific attributes
     ///
     /// - Parameters:
@@ -86,7 +86,7 @@ public final class ToolbarCoordinator: ObservableObject {
     /// - Returns: Configured toolbar item
     public func configureToolbarItem(_ item: ToolbarItem, for view: PlatformView? = nil) -> ToolbarItem {
         let configuredItem = item
-        
+
         // Platform-specific configuration
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS supports full keyboard shortcuts
@@ -96,16 +96,16 @@ public final class ToolbarCoordinator: ObservableObject {
             // Adjust for compact space on iPhone
         }
         #endif
-        
+
         return configuredItem
     }
-    
+
     /// Create editing-focused toolbar items
     ///
     /// - Returns: Array of essential editing toolbar items
     public func createEditingToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
-        
+
         // Universal editing actions
         items.append(ToolbarItem(
             title: "Undo",
@@ -113,21 +113,21 @@ public final class ToolbarCoordinator: ObservableObject {
             action: .custom(id: "undo"),
             id: "undo"
         ))
-        
+
         items.append(ToolbarItem(
-            title: "Redo", 
+            title: "Redo",
             icon: "arrow.uturn.forward",
             action: .custom(id: "redo"),
             id: "redo"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Find",
             icon: "magnifyingglass",
             action: .find,
             id: "find"
         ))
-        
+
         // Platform-specific additions
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         items.append(ToolbarItem(
@@ -147,30 +147,30 @@ public final class ToolbarCoordinator: ObservableObject {
             ))
         }
         #endif
-        
+
         return items
     }
-    
+
     /// Create navigation-focused toolbar items
     ///
     /// - Returns: Array of navigation toolbar items
     public func createNavigationToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
-        
+
         items.append(ToolbarItem(
             title: "Symbols",
             icon: "list.bullet.indent",
             action: .showSymbols,
             id: "symbols"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Format",
             icon: "text.alignleft",
             action: .format,
             id: "format"
         ))
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS gets additional development tools
         items.append(ToolbarItem(
@@ -179,7 +179,7 @@ public final class ToolbarCoordinator: ObservableObject {
             action: .custom(id: "console"),
             id: "console"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Debugger",
             icon: "ladybug",
@@ -187,23 +187,23 @@ public final class ToolbarCoordinator: ObservableObject {
             id: "debugger"
         ))
         #endif
-        
+
         return items
     }
-    
+
     /// Create view customization toolbar items
     ///
     /// - Returns: Array of view customization toolbar items
     public func createViewToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
-        
+
         items.append(ToolbarItem(
             title: "Toggle Line Numbers",
             icon: "number",
             action: .toggleLineNumbers,
             id: "toggle-line-numbers"
         ))
-        
+
         if capabilities.isFeatureAvailable(.minimap) {
             items.append(ToolbarItem(
                 title: "Toggle Minimap",
@@ -212,10 +212,10 @@ public final class ToolbarCoordinator: ObservableObject {
                 id: "toggle-minimap"
             ))
         }
-        
+
         return items
     }
-    
+
     /// Validate if a toolbar action is available on the current platform
     ///
     /// - Parameter action: The toolbar action to validate
@@ -224,7 +224,7 @@ public final class ToolbarCoordinator: ObservableObject {
         switch action {
         case .find:
             return true // Available on all platforms
-            
+
         case .replace:
             #if canImport(UIKit)
             // Replace is available on iPad and Mac Catalyst
@@ -232,29 +232,29 @@ public final class ToolbarCoordinator: ObservableObject {
             #else
             return true
             #endif
-            
+
         case .showSymbols:
             return capabilities.isFeatureAvailable(.symbolNavigation)
-            
+
         case .format:
             return capabilities.isFeatureAvailable(.autoIndent)
-            
+
         case .toggleLineNumbers:
             return true
-            
+
         case .toggleMinimap:
             return capabilities.isFeatureAvailable(.minimap)
-            
+
         case .custom:
             return true
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func createMacOSToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
-        
+
         // Full toolbar on macOS
         items.append(ToolbarItem(
             title: "Find",
@@ -262,28 +262,28 @@ public final class ToolbarCoordinator: ObservableObject {
             action: .find,
             id: "find"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Replace",
             icon: "arrow.left.arrow.right",
             action: .replace,
             id: "replace"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Symbols",
             icon: "list.bullet.indent",
             action: .showSymbols,
             id: "symbol"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Format",
             icon: "text.alignleft",
             action: .format,
             id: "format"
         ))
-        
+
         // Additional macOS-specific items
         items.append(ToolbarItem(
             title: "Minimap",
@@ -291,21 +291,21 @@ public final class ToolbarCoordinator: ObservableObject {
             action: .custom(id: "minimap"),
             id: "minimap"
         ))
-        
+
         items.append(ToolbarItem(
             title: "Navigator",
             icon: "sidebar.left",
             action: .custom(id: "navigator"),
             id: "navigator"
         ))
-        
+
         return items
     }
-    
+
     #if canImport(UIKit)
     private func createIOSToolbar() -> [ToolbarItem] {
         var items: [ToolbarItem] = []
-        
+
         // Essential items for all iOS devices
         items.append(ToolbarItem(
             title: "Find",
@@ -313,7 +313,7 @@ public final class ToolbarCoordinator: ObservableObject {
             action: .find,
             id: "find"
         ))
-        
+
         // iPad gets more items
         if UIDevice.current.userInterfaceIdiom == .pad {
             items.append(ToolbarItem(
@@ -322,14 +322,14 @@ public final class ToolbarCoordinator: ObservableObject {
                 action: .replace,
                 id: "replace"
             ))
-            
+
             items.append(ToolbarItem(
                 title: "Symbols",
                 icon: "list.bullet.indent",
                 action: .showSymbols,
                 id: "symbol"
             ))
-            
+
             items.append(ToolbarItem(
                 title: "Format",
                 icon: "text.alignleft",
@@ -337,7 +337,7 @@ public final class ToolbarCoordinator: ObservableObject {
                 id: "format"
             ))
         }
-        
+
         // iPhone gets compact toolbar
         if UIDevice.current.userInterfaceIdiom == .phone {
             items.append(ToolbarItem(
@@ -347,17 +347,17 @@ public final class ToolbarCoordinator: ObservableObject {
                 id: "share"
             ))
         }
-        
+
         return items
     }
-    
+
     private func createCatalystToolbar() -> [ToolbarItem] {
         // Mac Catalyst gets a hybrid approach
         // Similar to macOS but respects iOS constraints
         createMacOSToolbar()
     }
     #endif
-    
+
     /// Create a custom toolbar item
     ///
     /// - Parameters:
@@ -375,7 +375,7 @@ public final class ToolbarCoordinator: ObservableObject {
         // Note: The action closure parameter is not used since ToolbarItem.ToolbarAction
         // uses an id-based system. The actual action handling is done in executeAction.
         _ = action
-        
+
         return ToolbarItem(
             title: title,
             icon: icon,
@@ -383,7 +383,7 @@ public final class ToolbarCoordinator: ObservableObject {
             id: id
         )
     }
-    
+
     /// Create a spacer toolbar item
     /// - Returns: Fixed space toolbar item
     public func createSpacerItem() -> ToolbarItem {
@@ -394,7 +394,7 @@ public final class ToolbarCoordinator: ObservableObject {
             id: "spacer"
         )
     }
-    
+
     /// Create a flexible space toolbar item
     /// - Returns: Flexible space toolbar item
     public func createFlexibleSpaceItem() -> ToolbarItem {
@@ -420,33 +420,33 @@ extension ToolbarCoordinator {
         case .find:
             // Trigger find UI
             logger.debug("Find action triggered")
-            
+
         case .replace:
             // Trigger replace UI
             logger.debug("Replace action triggered")
-            
+
         case .showSymbols:
             // Show symbol navigator
             logger.debug("Show symbols action triggered")
-            
+
         case .format:
             // Format code
             logger.debug("Format action triggered")
-            
+
         case .toggleLineNumbers:
             // Toggle line numbers
             var config = textView.configuration
             config.display.isLineNumbersEnabled.toggle()
             textView.configuration = config
             logger.debug("Toggle line numbers action triggered")
-            
+
         case .toggleMinimap:
             // Toggle minimap
             var config = textView.configuration
             config.display.showMinimap.toggle()
             textView.configuration = config
             logger.debug("Toggle minimap action triggered")
-            
+
         case let .custom(id):
             // Handle custom action
             logger.debug("Custom action triggered: \(id)")

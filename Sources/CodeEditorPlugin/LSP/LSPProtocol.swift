@@ -10,7 +10,7 @@ public struct InitializeParams: Codable, Sendable {
     public let rootUri: String?
     public let capabilities: ClientCapabilities
     public let workspaceFolders: [WorkspaceFolder]
-    
+
     public init(
         processId: Int32?,
         rootUri: String?,
@@ -28,7 +28,7 @@ public struct InitializeParams: Codable, Sendable {
 public struct InitializeResult: Codable, Sendable {
     public let capabilities: ServerCapabilities
     public let serverInfo: ServerInfo?
-    
+
     public init(capabilities: ServerCapabilities, serverInfo: ServerInfo? = nil) {
         self.capabilities = capabilities
         self.serverInfo = serverInfo
@@ -39,7 +39,7 @@ public struct InitializeResult: Codable, Sendable {
 public struct ServerInfo: Codable, Sendable {
     public let name: String
     public let version: String?
-    
+
     public init(name: String, version: String? = nil) {
         self.name = name
         self.version = version
@@ -51,7 +51,7 @@ public struct ServerInfo: Codable, Sendable {
 /// Parameters for textDocument/didOpen notification
 public struct DidOpenTextDocumentParams: Codable, Sendable {
     public let textDocument: TextDocumentItem
-    
+
     public init(textDocument: TextDocumentItem) {
         self.textDocument = textDocument
     }
@@ -61,7 +61,7 @@ public struct DidOpenTextDocumentParams: Codable, Sendable {
 public struct DidChangeTextDocumentParams: Codable, Sendable {
     public let textDocument: VersionedTextDocumentIdentifier
     public let contentChanges: [TextDocumentContentChangeEvent]
-    
+
     public init(
         textDocument: VersionedTextDocumentIdentifier,
         contentChanges: [TextDocumentContentChangeEvent]
@@ -74,7 +74,7 @@ public struct DidChangeTextDocumentParams: Codable, Sendable {
 /// Parameters for textDocument/didClose notification
 public struct DidCloseTextDocumentParams: Codable, Sendable {
     public let textDocument: TextDocumentIdentifier
-    
+
     public init(textDocument: TextDocumentIdentifier) {
         self.textDocument = textDocument
     }
@@ -87,7 +87,7 @@ public struct CompletionParams: Codable, Sendable {
     public let textDocument: TextDocumentIdentifier
     public let position: Position
     public let context: LSPCompletionContext?
-    
+
     public init(
         textDocument: TextDocumentIdentifier,
         position: Position,
@@ -103,7 +103,7 @@ public struct CompletionParams: Codable, Sendable {
 public struct LSPCompletionContext: Codable, Sendable {
     public let triggerKind: LSPCompletionTriggerKind
     public let triggerCharacter: String?
-    
+
     public init(triggerKind: LSPCompletionTriggerKind, triggerCharacter: String? = nil) {
         self.triggerKind = triggerKind
         self.triggerCharacter = triggerCharacter
@@ -121,7 +121,7 @@ public enum LSPCompletionTriggerKind: Int, Codable, Sendable {
 public struct CompletionList: Codable, Sendable {
     public let isIncomplete: Bool
     public let items: [LSPCompletionItem]
-    
+
     public init(isIncomplete: Bool, items: [LSPCompletionItem]) {
         self.isIncomplete = isIncomplete
         self.items = items
@@ -142,7 +142,7 @@ public struct LSPCompletionItem: Codable, Sendable {
     public let additionalTextEdits: [LSPTextEdit]
     public let commitCharacters: [String]
     public let data: AnyCodable?
-    
+
     public init(
         label: String,
         kind: LSPCompletionItemKind? = nil,
@@ -205,7 +205,7 @@ public enum LSPCompletionItemKind: Int, Codable, Sendable {
 public enum CompletionItemDocumentation: Codable, Sendable {
     case string(String)
     case markupContent(MarkupContent)
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let stringValue = try? container.decode(String.self) {
@@ -222,7 +222,7 @@ public enum CompletionItemDocumentation: Codable, Sendable {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -245,7 +245,7 @@ public enum InsertTextFormat: Int, Codable, Sendable {
 public struct LSPTextEdit: Codable, Sendable {
     public let range: LSPRange
     public let newText: String
-    
+
     public init(range: LSPRange, newText: String) {
         self.range = range
         self.newText = newText
@@ -258,7 +258,7 @@ public struct LSPTextEdit: Codable, Sendable {
 public struct HoverParams: Codable, Sendable {
     public let textDocument: TextDocumentIdentifier
     public let position: Position
-    
+
     public init(textDocument: TextDocumentIdentifier, position: Position) {
         self.textDocument = textDocument
         self.position = position
@@ -269,7 +269,7 @@ public struct HoverParams: Codable, Sendable {
 public struct Hover: Codable, Sendable {
     public let contents: HoverContents
     public let range: LSPRange?
-    
+
     public init(contents: HoverContents, range: LSPRange? = nil) {
         self.contents = contents
         self.range = range
@@ -281,10 +281,10 @@ public enum HoverContents: Codable, Sendable {
     case string(String)
     case markupContent(MarkupContent)
     case markedStrings([MarkedString])
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
+
         if let stringValue = try? container.decode(String.self) {
             self = .string(stringValue)
         } else if let markupValue = try? container.decode(MarkupContent.self) {
@@ -301,7 +301,7 @@ public enum HoverContents: Codable, Sendable {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -321,10 +321,10 @@ public enum HoverContents: Codable, Sendable {
 public enum MarkedString: Codable, Sendable {
     case string(String)
     case codeBlock(language: String, value: String)
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
+
         if let stringValue = try? container.decode(String.self) {
             self = .string(stringValue)
         } else {
@@ -341,7 +341,7 @@ public enum MarkedString: Codable, Sendable {
             self = .codeBlock(language: language, value: value)
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -360,7 +360,7 @@ public enum MarkedString: Codable, Sendable {
 public struct DefinitionParams: Codable, Sendable {
     public let textDocument: TextDocumentIdentifier
     public let position: Position
-    
+
     public init(textDocument: TextDocumentIdentifier, position: Position) {
         self.textDocument = textDocument
         self.position = position
@@ -372,7 +372,7 @@ public struct DefinitionParams: Codable, Sendable {
 /// Parameters for textDocument/documentSymbol request
 public struct DocumentSymbolParams: Codable, Sendable {
     public let textDocument: TextDocumentIdentifier
-    
+
     public init(textDocument: TextDocumentIdentifier) {
         self.textDocument = textDocument
     }
@@ -387,7 +387,7 @@ public struct LSPDocumentSymbol: Codable, Sendable {
     public let range: LSPRange
     public let selectionRange: LSPRange
     public let children: [Self]
-    
+
     public init(
         name: String,
         kind: SymbolKind,
@@ -449,7 +449,7 @@ public struct PublishDiagnosticsParams: Codable, Sendable {
     public let uri: String
     public let version: Int?
     public let diagnostics: [LSPDiagnostic]
-    
+
     public init(uri: String, diagnostics: [LSPDiagnostic], version: Int? = nil) {
         self.uri = uri
         self.version = version
@@ -471,7 +471,7 @@ public enum MessageType: Int, Codable, Sendable {
 public struct LogMessageParams: Codable, Sendable {
     public let type: MessageType
     public let message: String
-    
+
     public init(type: MessageType, message: String) {
         self.type = type
         self.message = message
@@ -482,7 +482,7 @@ public struct LogMessageParams: Codable, Sendable {
 public struct ShowMessageParams: Codable, Sendable {
     public let type: MessageType
     public let message: String
-    
+
     public init(type: MessageType, message: String) {
         self.type = type
         self.message = message
@@ -501,7 +501,7 @@ public enum LSPError: Error, LocalizedError, Sendable {
     case decodingError(String)
     case connectionFailed(String)
     case timeout
-    
+
     public var errorDescription: String? {
         switch self {
         case .notConnected:

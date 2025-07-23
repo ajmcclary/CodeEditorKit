@@ -40,27 +40,27 @@ import Foundation
 public protocol Plugin: AnyObject, Sendable {
     /// Unique identifier for the plugin (reverse DNS recommended)
     static var identifier: String { get }
-    
+
     /// Plugin metadata including version, author, and capabilities
     var metadata: PluginMetadata { get }
-    
+
     /// Required initializer for plugin instantiation
     init()
-    
+
     /// Called when the plugin is activated
     /// - Parameter context: The plugin context providing access to editor APIs
     /// - Throws: Any errors during activation
     func activate(context: PluginContext) async throws
-    
+
     /// Called when the plugin is deactivated
     /// - Parameter context: The plugin context for cleanup
     /// - Throws: Any errors during deactivation
     func deactivate(context: PluginContext) async throws
-    
+
     /// Called when the plugin should save its state
     /// - Returns: Dictionary of state to persist
     func saveState() async -> PluginState
-    
+
     /// Called when the plugin should restore its state
     /// - Parameter state: Previously saved state dictionary
     func restoreState(_ state: PluginState) async
@@ -74,7 +74,7 @@ extension Plugin {
     public func saveState() async -> PluginState {
         PluginState()
     }
-    
+
     /// Default implementation does nothing
     public func restoreState(_: PluginState) async {
         // No-op by default
@@ -88,37 +88,37 @@ extension Plugin {
 public struct PluginMetadata: Sendable, Codable {
     /// Unique identifier (reverse DNS recommended)
     public let identifier: String
-    
+
     /// Human-readable name
     public let name: String
-    
+
     /// Semantic version string (e.g., "1.0.0")
     public let version: String
-    
+
     /// Plugin author or organization
     public let author: String
-    
+
     /// Brief description of the plugin's functionality
     public let description: String
-    
+
     /// Plugin capabilities
     public let capabilities: Set<PluginCapability>
-    
+
     /// Minimum CodeEditorPlugin version required
     public let minimumHostVersion: String?
-    
+
     /// Other plugins this plugin depends on
     public let dependencies: [PluginDependency]
-    
+
     /// Platform requirements
     public let platforms: Set<PluginPlatform>
-    
+
     /// URL for more information
     public let infoURL: URL?
-    
+
     /// Whether the plugin is enabled by default
     public let enabledByDefault: Bool
-    
+
     public init(
         identifier: String,
         name: String,
@@ -152,32 +152,32 @@ public struct PluginMetadata: Sendable, Codable {
 @available(macOS 13.0, iOS 16.0, *)
 public struct PluginCapability: Hashable, Sendable, Codable, RawRepresentable {
     public let rawValue: String
-    
+
     public init(rawValue: String) {
         self.rawValue = rawValue
     }
-    
+
     /// Plugin provides syntax highlighting
     public static let syntaxHighlighting = Self(rawValue: "syntaxHighlighting")
-    
+
     /// Plugin provides code completion
     public static let codeCompletion = Self(rawValue: "codeCompletion")
-    
+
     /// Plugin provides code formatting
     public static let codeFormatting = Self(rawValue: "codeFormatting")
-    
+
     /// Plugin provides code folding
     public static let codeFolding = Self(rawValue: "codeFolding")
-    
+
     /// Plugin provides error diagnostics
     public static let diagnostics = Self(rawValue: "diagnostics")
-    
+
     /// Plugin provides custom themes
     public static let theming = Self(rawValue: "theming")
-    
+
     /// Plugin provides custom commands
     public static let commands = Self(rawValue: "commands")
-    
+
     /// Plugin provides language server protocol support
     public static let languageServer = Self(rawValue: "languageServer")
 }
@@ -189,13 +189,13 @@ public struct PluginCapability: Hashable, Sendable, Codable, RawRepresentable {
 public struct PluginDependency: Sendable, Codable {
     /// Identifier of the required plugin
     public let identifier: String
-    
+
     /// Minimum version required (nil means any version)
     public let minimumVersion: String?
-    
+
     /// Whether the dependency is optional
     public let optional: Bool
-    
+
     public init(identifier: String, minimumVersion: String? = nil, optional: Bool = false) {
         self.identifier = identifier
         self.minimumVersion = minimumVersion
@@ -209,11 +209,11 @@ public struct PluginDependency: Sendable, Codable {
 @available(macOS 13.0, iOS 16.0, *)
 public struct PluginPlatform: Hashable, Sendable, Codable, RawRepresentable {
     public let rawValue: String
-    
+
     public init(rawValue: String) {
         self.rawValue = rawValue
     }
-    
+
     public static let macOS = Self(rawValue: "macOS")
     public static let iOS = Self(rawValue: "iOS")
     public static let catalyst = Self(rawValue: "catalyst")
@@ -227,25 +227,25 @@ public struct PluginPlatform: Hashable, Sendable, Codable, RawRepresentable {
 public struct PluginState: Sendable, Codable {
     /// String key-value pairs
     public var strings: [String: String]
-    
+
     /// Boolean key-value pairs
     public var booleans: [String: Bool]
-    
+
     /// Integer key-value pairs
     public var integers: [String: Int]
-    
+
     /// Double key-value pairs
     public var doubles: [String: Double]
-    
+
     /// Data key-value pairs
     public var data: [String: Data]
-    
+
     /// Array of string arrays
     public var stringArrays: [String: [String]]
-    
+
     /// Last saved timestamp
     public let lastSaved: Date
-    
+
     public init(
         strings: [String: String] = [:],
         booleans: [String: Bool] = [:],
@@ -279,7 +279,7 @@ public enum PluginError: Error, LocalizedError {
     case alreadyRegistered(identifier: String)
     case notFound(identifier: String)
     case securityViolation(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case let .incompatibleVersion(required, current):

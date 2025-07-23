@@ -9,31 +9,31 @@ import Foundation
 public enum PresetConfiguration: String, CaseIterable, Sendable {
     /// Default configuration with standard settings
     case `default` = "default"
-    
+
     /// Minimal configuration for lightweight editing
     case minimal = "minimal"
-    
+
     /// Read-only configuration for viewing code
     case readOnly = "readOnly"
-    
+
     /// Configuration optimized for Markdown editing
     case markdown = "markdown"
-    
+
     /// Configuration for presentation/demo mode
     case presentation = "presentation"
-    
+
     /// Configuration optimized for iOS devices
     case iOS = "iOS"
-    
+
     /// Configuration optimized for Mac Catalyst
     case catalyst = "catalyst"
-    
+
     /// Configuration optimized for macOS
     case macOS = "macOS"
-    
+
     /// Automatically selects the best configuration for the current platform
     case platformOptimized = "platformOptimized"
-    
+
     /// Human-readable description of the preset
     public var description: String {
         switch self {

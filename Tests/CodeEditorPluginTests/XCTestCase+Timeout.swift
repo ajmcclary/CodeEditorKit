@@ -4,16 +4,16 @@ import XCTest
 extension XCTestCase {
     /// Default timeout for regular tests
     static let defaultTimeout: TimeInterval = 10.0
-    
+
     /// Timeout for performance tests
     static let performanceTimeout: TimeInterval = 30.0
-    
+
     /// Timeout for integration tests
     static let integrationTimeout: TimeInterval = 60.0
-    
+
     /// Timeout for stress tests
     static let stressTestTimeout: TimeInterval = 120.0
-    
+
     /// Execute an async test with a timeout
     /// - Parameters:
     ///   - timeout: The maximum time to wait
@@ -25,7 +25,7 @@ extension XCTestCase {
         _ block: @escaping @Sendable () async throws -> Void
     ) async throws {
         let expectation = XCTestExpectation(description: description)
-        
+
         Task {
             do {
                 try await block()
@@ -35,10 +35,10 @@ extension XCTestCase {
                 expectation.fulfill()
             }
         }
-        
+
         await fulfillment(of: [expectation], timeout: timeout)
     }
-    
+
     /// Execute a test with a timeout using a continuation
     /// - Parameters:
     ///   - timeout: The maximum time to wait
@@ -50,14 +50,14 @@ extension XCTestCase {
         _ block: @escaping (@escaping () -> Void) -> Void
     ) {
         let expectation = XCTestExpectation(description: description)
-        
+
         block {
             expectation.fulfill()
         }
-        
+
         wait(for: [expectation], timeout: timeout)
     }
-    
+
     /// Assert that an async operation completes within a timeout
     /// - Parameters:
     ///   - timeout: The maximum time to wait
@@ -67,11 +67,11 @@ extension XCTestCase {
         operation: @escaping () async throws -> Void
     ) async {
         let start = Date()
-        
+
         do {
             try await operation()
             let elapsed = Date().timeIntervalSince(start)
-            
+
             XCTAssertLessThanOrEqual(
                 elapsed,
                 timeout,
@@ -81,7 +81,7 @@ extension XCTestCase {
             XCTFail("Operation failed with error: \(error)")
         }
     }
-    
+
     /// Assert that a MainActor async operation completes within a timeout
     /// - Parameters:
     ///   - timeout: The maximum time to wait
@@ -92,11 +92,11 @@ extension XCTestCase {
         operation: @escaping @MainActor () async throws -> Void
     ) async {
         let start = Date()
-        
+
         do {
             try await operation()
             let elapsed = Date().timeIntervalSince(start)
-            
+
             XCTAssertLessThanOrEqual(
                 elapsed,
                 timeout,
@@ -106,7 +106,7 @@ extension XCTestCase {
             XCTFail("Operation failed with error: \(error)")
         }
     }
-    
+
     /// Create a timeout expectation that fails if not fulfilled
     /// - Parameters:
     ///   - timeout: The timeout duration
@@ -119,17 +119,17 @@ extension XCTestCase {
         let expectation = XCTestExpectation(description: description)
         expectation.isInverted = false
         expectation.assertForOverFulfill = true
-        
+
         // Schedule a timeout failure
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
             if expectation.expectedFulfillmentCount > 0 {
                 XCTFail("Test timed out after \(timeout) seconds: \(description)")
             }
         }
-        
+
         return expectation
     }
-    
+
     /// Measure performance with a timeout
     /// - Parameters:
     ///   - timeout: Maximum time for the performance test
@@ -140,7 +140,7 @@ extension XCTestCase {
     ) {
         measure {
             let expectation = XCTestExpectation(description: "Performance measurement")
-            
+
             DispatchQueue.global().async {
                 do {
                     try block()
@@ -150,7 +150,7 @@ extension XCTestCase {
                     expectation.fulfill()
                 }
             }
-            
+
             wait(for: [expectation], timeout: timeout)
         }
     }
@@ -160,14 +160,14 @@ extension XCTestCase {
 enum TestTimeoutConfiguration {
     /// Timeout multiplier for CI environments
     static let ciMultiplier: Double = 2.0
-    
+
     /// Check if running in CI environment
     static var isCI: Bool {
         ProcessInfo.processInfo.environment["CI"] != nil ||
         ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil ||
         ProcessInfo.processInfo.environment["JENKINS"] != nil
     }
-    
+
     /// Get adjusted timeout for current environment
     static func adjustedTimeout(_ base: TimeInterval) -> TimeInterval {
         isCI ? base * ciMultiplier : base
@@ -178,7 +178,7 @@ enum TestTimeoutConfiguration {
 protocol TimeoutConfigurable {
     /// The timeout duration for this test class
     static var testTimeout: TimeInterval { get }
-    
+
     /// The timeout for individual test methods
     var methodTimeout: TimeInterval { get }
 }
@@ -188,7 +188,7 @@ extension TimeoutConfigurable {
     static var testTimeout: TimeInterval {
         TestTimeoutConfiguration.adjustedTimeout(60.0)
     }
-    
+
     var methodTimeout: TimeInterval {
         TestTimeoutConfiguration.adjustedTimeout(10.0)
     }

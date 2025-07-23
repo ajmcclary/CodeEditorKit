@@ -15,11 +15,11 @@ public struct PluginLifecycleEvent: PluginEvent {
         case deactivated(pluginId: String)
         case failed(pluginId: String, error: Error)
     }
-    
+
     public let type: EventType
     public let eventId = UUID()
     public let eventTimestamp = Date()
-    
+
     public init(type: EventType) {
         self.type = type
     }
@@ -33,7 +33,7 @@ public struct PluginDiscoveryEvent: PluginEvent {
     public let failed: [String: Error]
     public let eventId = UUID()
     public let eventTimestamp = Date()
-    
+
     public init(discovered: [String], loaded: [String], failed: [String: Error]) {
         self.discovered = discovered
         self.loaded = loaded
@@ -49,11 +49,11 @@ public struct PluginCommandEvent: PluginEvent {
         case executed(pluginId: String, commandId: String)
         case failed(pluginId: String, commandId: String, error: Error)
     }
-    
+
     public let type: EventType
     public let eventId = UUID()
     public let eventTimestamp = Date()
-    
+
     public init(type: EventType) {
         self.type = type
     }
@@ -66,7 +66,7 @@ public struct PluginDiagnosticEvent: PluginEvent {
     public let diagnostics: [PluginDiagnostic]
     public let eventId = UUID()
     public let eventTimestamp = Date()
-    
+
     public init(pluginId: String, diagnostics: [PluginDiagnostic]) {
         self.pluginId = pluginId
         self.diagnostics = diagnostics
@@ -82,13 +82,13 @@ public struct PluginDiagnostic: Sendable {
         case info = 3
         case hint = 4
     }
-    
+
     public let range: NSRange
     public let severity: Severity
     public let message: String
     public let code: String?
     public let source: String?
-    
+
     public init(
         range: NSRange,
         severity: Severity,

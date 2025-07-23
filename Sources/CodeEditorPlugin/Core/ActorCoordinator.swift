@@ -8,32 +8,32 @@ import Foundation
 @MainActor
 public final class ActorCoordinator {
     // MARK: - Singleton (for convenience, but DI is preferred)
-    
+
     @available(*, deprecated, message: "Use dependency injection instead. Pass ActorCoordinator through EditorConfiguration.")
     public static let shared = ActorCoordinator()
-    
+
     // MARK: - Actors
-    
+
     /// Text processing actor for text manipulation operations
     public let textProcessor: TextProcessingActor
-    
+
     /// Cache coordinator for managing all caches
     public let cacheCoordinator: CacheCoordinatorActor
-    
+
     /// File system actor for file operations
     public let fileSystem: FileSystemActor
-    
+
     /// Performance metrics actor for tracking performance
     public let performanceMetrics: PerformanceMetricsActor
-    
+
     /// Document state actor for managing document lifecycle
     public let documentState: DocumentStateActor
-    
+
     /// Error recovery coordinator for handling errors
     public let errorRecovery: ErrorRecoveryCoordinator
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         self.textProcessor = TextProcessingActor()
         self.cacheCoordinator = CacheCoordinatorActor()
@@ -42,9 +42,9 @@ public final class ActorCoordinator {
         self.documentState = DocumentStateActor()
         self.errorRecovery = ErrorRecoveryCoordinator()
     }
-    
+
     // MARK: - Convenience Methods
-    
+
     /// Process text with automatic error recovery
     public func processText(
         _ text: String,
@@ -71,7 +71,7 @@ public final class ActorCoordinator {
             throw error
         }
     }
-    
+
     /// Track performance metric with automatic aggregation
     public func trackPerformance(
         name: String,
@@ -85,7 +85,7 @@ public final class ActorCoordinator {
         )
         await performanceMetrics.record(metric)
     }
-    
+
     /// Create or update a document with state tracking
     @discardableResult
     public func createOrUpdateDocument(
@@ -133,7 +133,7 @@ extension CodeEditorView {
         configuration.actorCoordinator = newCoordinator
         return newCoordinator
     }
-    
+
     /// Process text using the integrated actor system
     public func processText(
         with processorType: TextProcessingActor.TextProcessor.ProcessorType,
@@ -144,13 +144,13 @@ extension CodeEditorView {
         #else
         let currentText = text ?? ""
         #endif
-        
+
         let processedText = try await actorCoordinator.processText(
             currentText,
             processorType: processorType,
             priority: priority
         )
-        
+
         // Update text on main actor
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         string = processedText
@@ -165,7 +165,7 @@ extension CodeEditorView {
 /// Extension to make SmartTokenCache work with CacheCoordinatorActor
 extension SmartTokenCache: CacheProtocol {
     public typealias Value = [HighlightedToken]
-    
+
     // swiftlint:disable:next discouraged_optional_collection
     public func getValue(for key: String) async -> [HighlightedToken]? {
         // Convert string key to CacheKey
@@ -173,18 +173,18 @@ extension SmartTokenCache: CacheProtocol {
         let tokens = getCachedTokens(for: cacheKey)
         return tokens.isEmpty ? nil : tokens
     }
-    
+
     public func setValue(_ value: [HighlightedToken], for key: String, cost _: Int) async {
         guard let cacheKey = CacheKey(fromString: key) else { return }
         setCachedTokens(value, for: cacheKey, computationTime: .zero)
     }
-    
+
     public func contains(key: String) async -> Bool {
         guard let cacheKey = CacheKey(fromString: key) else { return false }
         let tokens = getCachedTokens(for: cacheKey)
         return !tokens.isEmpty
     }
-    
+
     public func clear() async {
         clearCache()
     }
@@ -196,7 +196,7 @@ extension SmartTokenCache.CacheKey {
         // Simple parsing - in production would be more robust
         let components = string.split(separator: "|")
         guard components.count >= 2 else { return nil }
-        
+
         // Create a dummy text to generate the cache key
         let dummyText = String(components[0])
         self.init(
@@ -205,7 +205,7 @@ extension SmartTokenCache.CacheKey {
             version: components.count > 2 ? Int(components[2]) ?? 0 : 0
         )
     }
-    
+
     /// Convert cache key to string representation
     var stringRepresentation: String {
         "\(textHash)|\(language.rawValue)|\(version)"

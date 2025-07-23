@@ -11,19 +11,19 @@ import AppKit
 @MainActor
 public final class LayoutCoordinator {
     // MARK: - Properties
-    
+
     private var isPerformingLayout = false
     private var pendingLayoutOperations: [() -> Void] = []
     private weak var view: PlatformView?
-    
+
     // MARK: - Initialization
-    
+
     public init(view: PlatformView? = nil) {
         self.view = view
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Perform a layout operation safely, preventing recursive calls
     public func performLayout(_ operation: @escaping () -> Void) {
         guard !isPerformingLayout else {
@@ -31,16 +31,16 @@ public final class LayoutCoordinator {
             pendingLayoutOperations.append(operation)
             return
         }
-        
+
         isPerformingLayout = true
         defer {
             isPerformingLayout = false
             processPendingOperations()
         }
-        
+
         operation()
     }
-    
+
     /// Perform layout with animation
     public func performAnimatedLayout(
         duration: TimeInterval = 0.25,
@@ -68,11 +68,11 @@ public final class LayoutCoordinator {
             #endif
         }
     }
-    
+
     /// Invalidate layout for the associated view
     public func invalidateLayout() {
         guard let view else { return }
-        
+
         performLayout {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             view.needsLayout = true
@@ -83,25 +83,25 @@ public final class LayoutCoordinator {
             #endif
         }
     }
-    
+
     /// Check if currently performing layout
     public var isLayoutInProgress: Bool {
         isPerformingLayout
     }
-    
+
     /// Cancel all pending layout operations
     public func cancelPendingLayout() {
         pendingLayoutOperations.removeAll()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func processPendingOperations() {
         guard !pendingLayoutOperations.isEmpty else { return }
-        
+
         let operations = pendingLayoutOperations
         pendingLayoutOperations.removeAll()
-        
+
         // Process pending operations
         for operation in operations {
             performLayout(operation)
@@ -114,23 +114,23 @@ public final class LayoutCoordinator {
 /// Cross-platform animation options
 public struct AnimationOptions: OptionSet, Sendable {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     public static let curveEaseIn = Self(rawValue: 1 << 0)
     public static let curveEaseOut = Self(rawValue: 1 << 1)
     public static let curveEaseInOut = Self(rawValue: 1 << 2)
     public static let curveLinear = Self(rawValue: 1 << 3)
     public static let allowUserInteraction = Self(rawValue: 1 << 4)
-    
+
     public static let `default`: AnimationOptions = .curveEaseInOut
-    
+
     #if canImport(UIKit)
     var uiKitOptions: UIView.AnimationOptions {
         var options: UIView.AnimationOptions = []
-        
+
         if contains(.curveEaseIn) {
             options.insert(.curveEaseIn)
         }
@@ -146,7 +146,7 @@ public struct AnimationOptions: OptionSet, Sendable {
         if contains(.allowUserInteraction) {
             options.insert(.allowUserInteraction)
         }
-        
+
         return options
     }
     #endif
@@ -160,13 +160,13 @@ public struct LayoutContext {
     public let safeAreaInsets: EdgeInsets
     public let configuration: EditorConfiguration
     public let isRTL: Bool
-    
+
     #if canImport(UIKit)
     public typealias EdgeInsets = UIEdgeInsets
     #else
     public typealias EdgeInsets = NSEdgeInsets
     #endif
-    
+
     public init(
         bounds: CGRect,
         safeAreaInsets: EdgeInsets = EdgeInsets(),
@@ -178,7 +178,7 @@ public struct LayoutContext {
         self.configuration = configuration
         self.isRTL = isRTL
     }
-    
+
     /// Available content bounds after accounting for safe area
     public var contentBounds: CGRect {
         CGRect(

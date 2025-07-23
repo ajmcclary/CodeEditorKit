@@ -5,7 +5,7 @@ import Foundation
 /// Static data constants for Markdown completion provider
 public enum MarkdownCompletionData {
     // MARK: - Markdown Syntax Elements
-    
+
     static let markdownSyntax = [
         "**bold**", "*italic*", "_italic_", "__bold__", "~~strikethrough~~",
         "`inline code`", "```code block```", "[link](url)", "![image](url)",
@@ -14,17 +14,17 @@ public enum MarkdownCompletionData {
         "> blockquote", "- list item", "+ list item", "* list item",
         "1. numbered list", "| table |", "<!-- comment -->", "<br>", "<hr>"
     ]
-    
+
     // MARK: - Common Markdown Elements
-    
+
     static let elements = [
         "heading", "paragraph", "blockquote", "list", "table", "code", "link",
         "image", "emphasis", "strong", "strikethrough", "horizontal-rule",
         "line-break", "comment", "footnote", "definition-list", "task-list"
     ]
-    
+
     // MARK: - HTML Tags
-    
+
     static let htmlTags = [
         "div", "span", "p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6",
         "strong", "em", "b", "i", "u", "s", "del", "ins", "mark", "sub", "sup",
@@ -34,9 +34,9 @@ public enum MarkdownCompletionData {
         "a", "img", "figure", "figcaption", "picture", "source", "video", "audio",
         "iframe", "embed", "object", "param", "details", "summary", "dialog"
     ]
-    
+
     // MARK: - HTML Attributes
-    
+
     static let htmlAttributes = [
         "id", "class", "style", "title", "lang", "dir", "hidden", "tabindex",
         "accesskey", "contenteditable", "draggable", "spellcheck", "translate",
@@ -44,9 +44,9 @@ public enum MarkdownCompletionData {
         "src", "alt", "width", "height", "loading", "sizes", "srcset",
         "colspan", "rowspan", "headers", "scope", "data-*", "aria-*"
     ]
-    
+
     // MARK: - Emoji Shortcuts
-    
+
     static let emojiShortcuts = [
         ":smile:", ":grin:", ":laughing:", ":wink:", ":smirk:", ":heart_eyes:",
         ":kissing_heart:", ":relaxed:", ":satisfied:", ":grinning:", ":innocent:",
@@ -59,9 +59,9 @@ public enum MarkdownCompletionData {
         ":fire:", ":star:", ":star2:", ":sparkles:", ":zap:", ":boom:", ":collision:",
         ":dizzy:", ":sweat_drops:", ":dash:", ":droplet:", ":ocean:", ":snowflake:"
     ]
-    
+
     // MARK: - LaTeX Math Symbols
-    
+
     static let mathSymbols = [
         "\\alpha", "\\beta", "\\gamma", "\\delta", "\\epsilon", "\\zeta", "\\eta",
         "\\theta", "\\iota", "\\kappa", "\\lambda", "\\mu", "\\nu", "\\xi",
@@ -71,16 +71,16 @@ public enum MarkdownCompletionData {
         "\\supset", "\\subseteq", "\\supseteq", "\\in", "\\notin", "\\emptyset",
         "\\infty", "\\partial", "\\nabla", "\\exists", "\\forall", "\\therefore", "\\because"
     ]
-    
+
     // MARK: - Link Patterns
-    
+
     static let linkPatterns = [
         "http://", "https://", "ftp://", "mailto:", "tel:", "sms:", "file://",
         "www.", ".com", ".org", ".net", ".edu", ".gov", ".io", ".co", ".me"
     ]
-    
+
     // MARK: - Snippet Templates
-    
+
     static let snippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "link",
@@ -226,17 +226,17 @@ tags: [${3:tag1, tag2}]
             description: "Abbreviation definition"
         )
     ]
-    
+
     // MARK: - GitHub Flavored Markdown Elements
-    
+
     static let gfmElements = [
         "@mention", "#issue", "task list", "table", "strikethrough",
         "emoji", "syntax highlighting", "footnote", "heading ID",
         "definition list", "highlight", "subscript", "superscript"
     ]
-    
+
     // MARK: - Common Markdown File Extensions
-    
+
     static let markdownExtensions = [
         ".md", ".markdown", ".mdown", ".mkdn", ".mkd", ".mdwn",
         ".mdtxt", ".mdtext", ".text", ".Rmd"

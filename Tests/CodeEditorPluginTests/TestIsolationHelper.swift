@@ -10,20 +10,20 @@ enum TestIsolationHelper {
             let monitor = PerformanceMonitor()
             await monitor.clearMetrics()
         }
-        
+
         // Reset EditorConfiguration validation cache  
         // Note: clearValidationCache is public but may not be visible in tests
         // TODO: Add a test-specific reset method if needed
-        
+
         // Note: SyntaxHighlightingCoordinator and MemoryMonitor don't have
         // static clearCache methods. They manage their own instance-level state.
-        
+
         // Force garbage collection (best effort)
         for _ in 0..<3 {
             autoreleasepool { }
         }
     }
-    
+
     /// Run a test in isolation with state reset
     static func runInIsolation<T: Sendable>(
         _: String = #function,
@@ -32,22 +32,22 @@ enum TestIsolationHelper {
     ) async throws -> T {
         // Reset before test
         resetSharedState()
-        
+
         // Small delay to ensure cleanup completes
         try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
-        
+
         // Run the test with timeout using XCTest extension
         let testCase = XCTestCase()
         let result = try await testCase.withTimeout(seconds: timeout) {
             try await block()
         }
-        
+
         // Reset after test
         resetSharedState()
-        
+
         return result
     }
-    
+
     /// Measure time taken by a block and log if it exceeds threshold
     @MainActor
     static func measureTime<T>(
@@ -58,12 +58,12 @@ enum TestIsolationHelper {
         let start = CFAbsoluteTimeGetCurrent()
         let result = try await block()
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         if elapsed > warningThreshold {
             let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "TestIsolation")
             logger.warning("⚠️ SLOW TEST: \(operation) took \(String(format: "%.3f", elapsed))s")
         }
-        
+
         return result
     }
 }
@@ -75,12 +75,12 @@ open class IsolatedTestCase: XCTestCase {
         super.setUp()
         TestIsolationHelper.resetSharedState()
     }
-    
+
     override open func tearDown() {
         TestIsolationHelper.resetSharedState()
         super.tearDown()
     }
-    
+
     /// Run an isolated async test
     func runIsolatedTest<T: Sendable>(
         timeout: TimeInterval = 60,
@@ -106,12 +106,12 @@ extension XCTestCase {
             group.addTask {
                 try await operation()
             }
-            
+
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
                 throw TimeoutError()
             }
-            
+
             let result = try await group.next()!
             group.cancelAll()
             return result

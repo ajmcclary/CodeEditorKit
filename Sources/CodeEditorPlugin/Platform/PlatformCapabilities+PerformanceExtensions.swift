@@ -19,14 +19,14 @@ extension PlatformCapabilities {
         public let processorArchitecture: ProcessorArchitecture
         public let memoryProfile: MemoryProfile
     }
-    
+
     /// Processor architecture types
     public enum ProcessorArchitecture {
         case intel64        // Intel x86_64
         case appleSilicon   // Apple M-series
         case arm64          // ARM64 (iOS devices)
         case unknown
-        
+
         /// Whether this architecture supports advanced SIMD operations
         public var supportsAdvancedSIMD: Bool {
             switch self {
@@ -40,14 +40,14 @@ extension PlatformCapabilities {
             }
         }
     }
-    
+
     /// Memory profile for performance tuning
     public enum MemoryProfile {
         case low        // < 4GB
         case medium     // 4-8GB
         case high       // 8-16GB
         case ultra      // > 16GB
-        
+
         /// Recommended cache multiplier for this memory profile
         public var cacheMultiplier: Double {
             switch self {
@@ -58,7 +58,7 @@ extension PlatformCapabilities {
             }
         }
     }
-    
+
     /// Get comprehensive performance capabilities
     ///
     /// This computed property provides a complete overview of performance
@@ -97,7 +97,7 @@ extension PlatformCapabilities {
             memoryProfile: memoryProfile
         )
     }
-    
+
     /// Whether hardware acceleration is supported
     ///
     /// Hardware acceleration uses GPU resources for rendering and
@@ -120,7 +120,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether background processing is supported
     ///
     /// Background processing allows for syntax highlighting, parsing,
@@ -136,7 +136,7 @@ extension PlatformCapabilities {
         // All platforms support GCD/async-await
         true
     }
-    
+
     /// Whether smooth scrolling is supported
     ///
     /// Smooth scrolling provides fluid, high-framerate scrolling
@@ -163,7 +163,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether CADisplayLink is supported for frame synchronization
     ///
     /// CADisplayLink provides precise frame timing for smooth animations
@@ -184,7 +184,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Current processor architecture
     ///
     /// Identifies the processor architecture for architecture-specific
@@ -204,7 +204,7 @@ extension PlatformCapabilities {
         return .unknown
         #endif
     }
-    
+
     /// Current memory profile classification
     ///
     /// Classifies available system memory for performance tuning
@@ -214,7 +214,7 @@ extension PlatformCapabilities {
     public var memoryProfile: MemoryProfile {
         let physicalMemory = ProcessInfo.processInfo.physicalMemory
         let memoryGB = Double(physicalMemory) / (1_024 * 1_024 * 1_024)
-        
+
         if memoryGB > 16 {
             return .ultra
         } else if memoryGB > 8 {
@@ -225,7 +225,7 @@ extension PlatformCapabilities {
             return .low
         }
     }
-    
+
     /// Recommended cache size based on available memory
     ///
     /// Calculates optimal cache size considering system memory,
@@ -240,10 +240,10 @@ extension PlatformCapabilities {
     public var recommendedCacheSize: Int {
         let baseSize = 50 * 1_024 * 1_024 // 50MB base
         let multiplier = memoryProfile.cacheMultiplier
-        
+
         return Int(Double(baseSize) * multiplier)
     }
-    
+
     /// Maximum recommended file size for optimal performance
     ///
     /// Determines the largest file size that can be efficiently
@@ -268,7 +268,7 @@ extension PlatformCapabilities {
             return 10 * 1_024 * 1_024 // 10MB
         }
     }
-    
+
     /// Whether Apple Silicon-specific optimizations are available
     ///
     /// Apple Silicon processors offer unique optimization opportunities
@@ -278,7 +278,7 @@ extension PlatformCapabilities {
     public var isAppleSilicon: Bool {
         processorArchitecture == .appleSilicon
     }
-    
+
     /// Get performance optimization recommendations
     ///
     /// This method provides comprehensive performance tuning recommendations
@@ -293,7 +293,7 @@ extension PlatformCapabilities {
     /// - Returns: Recommended performance configuration
     public func recommendedPerformanceConfiguration() -> PerformanceConfiguration {
         var config = PerformanceConfiguration()
-        
+
         // Base configuration from memory profile
         switch memoryProfile {
         case .low:
@@ -301,95 +301,95 @@ extension PlatformCapabilities {
             config.enableBackgroundSyntaxHighlighting = false
             config.syntaxHighlightingBatchSize = 1_000
             config.enableIncrementalParsing = true
-            
+
         case .medium:
             config.maxConcurrentOperations = 4
             config.enableBackgroundSyntaxHighlighting = true
             config.syntaxHighlightingBatchSize = 2_000
             config.enableIncrementalParsing = true
-            
+
         case .high:
             config.maxConcurrentOperations = 6
             config.enableBackgroundSyntaxHighlighting = true
             config.syntaxHighlightingBatchSize = 5_000
             config.enableIncrementalParsing = true
-            
+
         case .ultra:
             config.maxConcurrentOperations = 8
             config.enableBackgroundSyntaxHighlighting = true
             config.syntaxHighlightingBatchSize = 10_000
             config.enableIncrementalParsing = true
         }
-        
+
         // Hardware acceleration
         config.enableHardwareAcceleration = supportsHardwareAcceleration
-        
+
         // Architecture-specific optimizations
         if processorArchitecture.supportsAdvancedSIMD {
             config.enableSIMDOptimizations = true
         }
-        
+
         // Platform-specific adjustments
         switch currentPlatform {
         case .macOS:
             // macOS can handle more aggressive optimizations
             config.enableAgressiveOptimizations = true
-            
+
         case .iOS:
             // iOS needs to be more conservative for battery life
             config.enableAgressiveOptimizations = false
             config.respectBatteryState = true
-            
+
         case .catalyst:
             // Catalyst can use desktop-class optimizations
             config.enableAgressiveOptimizations = true
         }
-        
+
         // Display-specific optimizations
         if supportsSmoothScrolling {
             config.enableHighRefreshRateOptimizations = true
         }
-        
+
         return config
     }
-    
+
     /// Configuration for performance optimization
     public struct PerformanceConfiguration {
         /// Maximum number of concurrent background operations
         public var maxConcurrentOperations: Int = 4
-        
+
         /// Whether to enable hardware acceleration
         public var enableHardwareAcceleration: Bool = false
-        
+
         /// Whether to enable background syntax highlighting
         public var enableBackgroundSyntaxHighlighting: Bool = true
-        
+
         /// Whether to enable incremental parsing
         public var enableIncrementalParsing: Bool = true
-        
+
         /// Whether to enable SIMD optimizations
         public var enableSIMDOptimizations: Bool = false
-        
+
         /// Whether to enable aggressive optimizations
         public var enableAgressiveOptimizations: Bool = false
-        
+
         /// Whether to respect battery state on mobile devices
         public var respectBatteryState: Bool = true
-        
+
         /// Whether to enable high refresh rate optimizations
         public var enableHighRefreshRateOptimizations: Bool = false
-        
+
         /// Batch size for syntax highlighting operations
         public var syntaxHighlightingBatchSize: Int = 2_000
-        
+
         /// Maximum memory usage for caches (in bytes)
         public var maxCacheMemoryUsage: Int = 50 * 1_024 * 1_024
-        
+
         public init() {}
     }
-    
+
     // MARK: - Runtime Performance Monitoring
-    
+
     /// Get current system performance metrics
     ///
     /// Provides real-time performance information for adaptive
@@ -398,7 +398,7 @@ extension PlatformCapabilities {
     /// - Returns: Current performance metrics
     public func currentPerformanceMetrics() -> PerformanceMetrics {
         let processInfo = ProcessInfo.processInfo
-        
+
         return PerformanceMetrics(
             physicalMemory: processInfo.physicalMemory,
             activeProcessorCount: processInfo.activeProcessorCount,
@@ -407,7 +407,7 @@ extension PlatformCapabilities {
             batteryLevel: getBatteryLevel()
         )
     }
-    
+
     /// Current system performance metrics
     public struct PerformanceMetrics {
         public let physicalMemory: UInt64
@@ -415,13 +415,13 @@ extension PlatformCapabilities {
         public let thermalState: ThermalState
         public let lowPowerMode: Bool
         public let batteryLevel: Float?
-        
+
         /// Whether the system is under performance pressure
         public var isUnderPressure: Bool {
             thermalState != .nominal || lowPowerMode
         }
     }
-    
+
     /// System thermal state
     public enum ThermalState {
         case nominal
@@ -429,12 +429,12 @@ extension PlatformCapabilities {
         case serious
         case critical
     }
-    
+
     // MARK: - Private Helper Methods
-    
+
     private func getThermalState() -> ThermalState {
         let state = ProcessInfo.processInfo.thermalState
-        
+
         switch state {
         case .nominal:
             return .nominal
@@ -452,7 +452,7 @@ extension PlatformCapabilities {
             return .nominal
         }
     }
-    
+
     private func isLowPowerModeEnabled() -> Bool {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         return ProcessInfo.processInfo.isLowPowerModeEnabled
@@ -460,7 +460,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     private func getBatteryLevel() -> Float? {
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         UIDevice.current.isBatteryMonitoringEnabled = true

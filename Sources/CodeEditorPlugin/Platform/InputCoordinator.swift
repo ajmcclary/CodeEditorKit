@@ -47,21 +47,21 @@ public final class InputCoordinator: ObservableObject {
     /// - Warning: This property is deprecated. Use dependency injection instead.
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = InputCoordinator()
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "InputCoordinator")
     private let capabilities: PlatformCapabilities
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new InputCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
         self.capabilities = capabilities ?? PlatformCapabilities.shared
         logger.debug("InputCoordinator initialized")
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Handle platform-specific input events
     ///
     /// This method processes input events from any platform and translates them
@@ -75,18 +75,18 @@ public final class InputCoordinator: ObservableObject {
         switch event {
         case let .keyDown(key, modifiers):
             return handleKeyInput(key: key, modifiers: modifiers, in: textView)
-            
+
         case let .touch(touches, phase):
             return handleTouchInput(touches: touches, phase: phase, in: textView)
-            
+
         case let .mouse(location, type):
             return handleMouseInput(location: location, type: type, in: textView)
-            
+
         case let .pencil(location, pressure, azimuth):
             return handlePencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
         }
     }
-    
+
     /// Configure platform-appropriate gestures for a text view
     ///
     /// This method sets up gesture recognizers based on the current platform
@@ -100,7 +100,7 @@ public final class InputCoordinator: ObservableObject {
         configureMacOSGestures(for: textView)
         #endif
     }
-    
+
     /// Remove all configured gestures from a text view
     ///
     /// - Parameter textView: The text view to clean up
@@ -109,9 +109,9 @@ public final class InputCoordinator: ObservableObject {
         textView.gestureRecognizers?.removeAll()
         #endif
     }
-    
+
     // MARK: - Platform-Specific Input Handling
-    
+
     private func handleKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSKeyInput(key: key, modifiers: modifiers, in: textView)
@@ -122,7 +122,7 @@ public final class InputCoordinator: ObservableObject {
         return handleIOSKeyInput(key: key, modifiers: modifiers, in: textView)
         #endif
     }
-    
+
     private func handleTouchInput(touches: Set<TouchInfo>, phase: PlatformTouchPhase, in textView: CodeEditorView) -> Bool {
         #if canImport(UIKit)
         return handleIOSTouchInput(touches: touches, phase: phase, in: textView)
@@ -130,7 +130,7 @@ public final class InputCoordinator: ObservableObject {
         return false // macOS doesn't have touch input
         #endif
     }
-    
+
     private func handleMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSMouseInput(location: location, type: type, in: textView)
@@ -141,7 +141,7 @@ public final class InputCoordinator: ObservableObject {
         return handleIOSMouseInput(location: location, type: type, in: textView)
         #endif
     }
-    
+
     private func handlePencilInput(location: CGPoint, pressure: CGFloat, azimuth: CGFloat, in textView: CodeEditorView) -> Bool {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return handleMacOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
@@ -149,13 +149,13 @@ public final class InputCoordinator: ObservableObject {
         return handleIOSPencilInput(location: location, pressure: pressure, azimuth: azimuth, in: textView)
         #endif
     }
-    
+
     // MARK: - MacOS Input Implementation
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func handleMacOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         logger.debug("Handling macOS key input: \(key) with modifiers: \(modifiers.rawValue)")
-        
+
         // Handle common keyboard shortcuts
         if modifiers.contains(.command) {
             switch key.lowercased() {
@@ -195,13 +195,13 @@ public final class InputCoordinator: ObservableObject {
                 break
             }
         }
-        
+
         return false
     }
-    
+
     private func handleMacOSMouseInput(location: CGPoint, type: PlatformMouseEventType, in _: CodeEditorView) -> Bool {
         logger.debug("Handling macOS mouse input at \(String(describing: location))")
-        
+
         switch type {
         case .down:
             // Set cursor position
@@ -219,25 +219,25 @@ public final class InputCoordinator: ObservableObject {
             return false
         }
     }
-    
+
     private func handleMacOSPencilInput(location _: CGPoint, pressure: CGFloat, azimuth _: CGFloat, in _: CodeEditorView) -> Bool {
         // macOS doesn't typically have pencil input, but we can handle pressure-sensitive input devices
         logger.debug("Handling macOS pressure input at location: pressure=\(pressure)")
         return false
     }
-    
+
     private func configureMacOSGestures(for _: CodeEditorView) {
         logger.debug("Configuring macOS gestures")
         // macOS uses built-in NSResponder methods rather than gesture recognizers
     }
     #endif
-    
+
     // MARK: - IOS Input Implementation
-    
+
     #if canImport(UIKit)
     private func handleIOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         logger.debug("Handling iOS key input: \(key) with modifiers: \(modifiers.rawValue)")
-        
+
         // Handle external keyboard shortcuts
         if modifiers.contains(.command) {
             switch key.lowercased() {
@@ -265,13 +265,13 @@ public final class InputCoordinator: ObservableObject {
                 break
             }
         }
-        
+
         return false
     }
-    
+
     private func handleIOSTouchInput(touches: Set<TouchInfo>, phase: PlatformTouchPhase, in _: CodeEditorView) -> Bool {
         logger.debug("Handling iOS touch input: \(touches.count) touches, phase: \(String(describing: phase))")
-        
+
         switch phase {
         case .began:
             // Start selection or cursor positioning
@@ -293,10 +293,10 @@ public final class InputCoordinator: ObservableObject {
             return false
         }
     }
-    
+
     private func handleIOSMouseInput(location: CGPoint, type: PlatformMouseEventType, in _: CodeEditorView) -> Bool {
         logger.debug("Handling iOS mouse input at \(String(describing: location))")
-        
+
         // Handle trackpad/mouse on iOS (iPad with trackpad)
         switch type {
         case .down:
@@ -310,11 +310,11 @@ public final class InputCoordinator: ObservableObject {
             return false
         }
     }
-    
+
     #if targetEnvironment(macCatalyst)
     private func handleDesktopKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         logger.debug("Handling Mac Catalyst key input: \(key) with modifiers: \(modifiers.rawValue)")
-        
+
         // Mac Catalyst supports full desktop keyboard functionality like macOS
         if modifiers.contains(.command) {
             switch key.lowercased() {
@@ -354,13 +354,13 @@ public final class InputCoordinator: ObservableObject {
                 break
             }
         }
-        
+
         return false
     }
-    
+
     private func handleDesktopMouseInput(location: CGPoint, type: PlatformMouseEventType, in _: CodeEditorView) -> Bool {
         logger.debug("Handling Mac Catalyst mouse input at \(String(describing: location))")
-        
+
         // Mac Catalyst supports full desktop mouse functionality
         switch type {
         case .down:
@@ -380,76 +380,76 @@ public final class InputCoordinator: ObservableObject {
         }
     }
     #endif
-    
+
     private func handleIOSPencilInput(location _: CGPoint, pressure: CGFloat, azimuth: CGFloat, in _: CodeEditorView) -> Bool {
         logger.debug("Handling iOS pencil input: pressure=\(pressure), azimuth=\(azimuth)")
-        
+
         // Handle Apple Pencil input for annotations or selection
         if capabilities.supportsPencilInput {
             // Use pressure and azimuth for advanced input
             return true
         }
-        
+
         return false
     }
-    
+
     private func configureIOSGestures(for textView: CodeEditorView) {
         logger.debug("Configuring iOS gestures")
-        
+
         // Tap gesture for cursor positioning
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         textView.addGestureRecognizer(tapGesture)
-        
+
         // Long press for selection
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         longPressGesture.minimumPressDuration = 0.5
         textView.addGestureRecognizer(longPressGesture)
-        
+
         // Pan gesture for scrolling and selection
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         textView.addGestureRecognizer(panGesture)
-        
+
         // Pinch gesture for zooming
         if capabilities.isFeatureAvailable(.gestureNavigation) {
             let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
             textView.addGestureRecognizer(pinchGesture)
         }
     }
-    
+
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard let textView = gesture.view as? CodeEditorView else { return }
         let location = gesture.location(in: textView)
         logger.debug("Tap gesture at (\(location.x), \(location.y))")
-        
+
         // Position cursor at tap location
         // Implementation would convert location to text position
     }
-    
+
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let textView = gesture.view as? CodeEditorView else { return }
-        
+
         let location = gesture.location(in: textView)
         logger.debug("Long press gesture at (\(location.x), \(location.y))")
-        
+
         // Start text selection or show context menu
         // Implementation would handle selection logic
     }
-    
+
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let textView = gesture.view as? CodeEditorView else { return }
         let translation = gesture.translation(in: textView)
         logger.debug("Pan gesture with translation (\(translation.x), \(translation.y))")
-        
+
         // Handle scrolling or text selection
         // Implementation would update scroll position or selection
     }
-    
+
     @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
         guard gesture.view is CodeEditorView else { return }
         let scale = gesture.scale
         logger.debug("Pinch gesture with scale \(scale)")
-        
+
         // Handle text scaling/zooming
         // Implementation would adjust font size
     }
@@ -463,17 +463,17 @@ extension InputCoordinator {
     public static func keyboardEvent(key: String, modifiers: PlatformModifierFlags = []) -> PlatformInputEvent {
         .keyDown(key: key, modifiers: modifiers)
     }
-    
+
     /// Create a mouse input event
     public static func mouseEvent(at location: CGPoint, type: PlatformMouseEventType) -> PlatformInputEvent {
         .mouse(location: location, type: type)
     }
-    
+
     /// Create a touch input event
     public static func touchEvent(touches: Set<TouchInfo>, phase: PlatformTouchPhase) -> PlatformInputEvent {
         .touch(touches: touches, phase: phase)
     }
-    
+
     /// Create a pencil input event
     public static func pencilEvent(at location: CGPoint, pressure: CGFloat, azimuth: CGFloat) -> PlatformInputEvent {
         .pencil(location: location, pressure: pressure, azimuth: azimuth)

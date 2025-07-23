@@ -9,7 +9,7 @@ public enum DomainError: LocalizedError, Sendable {
     case textKit(TextKitDomainError)
     case performance(PerformanceDomainError)
     case platform(PlatformDomainError)
-    
+
     public var errorDescription: String? {
         switch self {
         case .configuration(let error):
@@ -34,7 +34,7 @@ public enum DomainError: LocalizedError, Sendable {
             return "Platform Error: \(error.localizedDescription)"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .configuration(let error):
@@ -70,7 +70,7 @@ public enum ConfigurationDomainError: LocalizedError, Sendable {
     case missingRequiredProperty(property: String)
     case presetNotFound(name: String)
     case validationFailed(errors: [String])
-    
+
     public var errorDescription: String? {
         switch self {
         case let .invalidValue(property, value, reason):
@@ -89,7 +89,7 @@ public enum ConfigurationDomainError: LocalizedError, Sendable {
             return "Configuration validation failed: \(errors.joined(separator: ", "))"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .invalidValue(let property, _, _):
@@ -120,7 +120,7 @@ public enum SyntaxDomainError: LocalizedError, Sendable {
     case treeSitterError(message: String)
     case swiftSyntaxError(message: String)
     case cacheCorrupted
-    
+
     public var errorDescription: String? {
         switch self {
         case .languageNotSupported(let language):
@@ -142,7 +142,7 @@ public enum SyntaxDomainError: LocalizedError, Sendable {
             return "Syntax highlighting cache is corrupted"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .languageNotSupported:
@@ -172,7 +172,7 @@ public enum CompletionDomainError: LocalizedError, Sendable {
     case lspConnectionFailed(server: String, reason: String)
     case timeoutExceeded(operation: String)
     case invalidCompletionContext
-    
+
     public var errorDescription: String? {
         switch self {
         case .providerNotAvailable(let type):
@@ -191,7 +191,7 @@ public enum CompletionDomainError: LocalizedError, Sendable {
             return "Invalid context for code completion"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .providerNotAvailable:
@@ -220,7 +220,7 @@ public enum MemoryDomainError: LocalizedError, Sendable {
     case allocationFailed(size: Int)
     case cacheOverflow(cacheType: String)
     case cleanupFailed(reason: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case let .memoryLimitExceeded(limit, current):
@@ -236,7 +236,7 @@ public enum MemoryDomainError: LocalizedError, Sendable {
             return "Memory cleanup failed: \(reason)"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .memoryLimitExceeded:
@@ -263,7 +263,7 @@ public enum TextKitDomainError: LocalizedError, Sendable {
     case textStorageCorrupted
     case invalidTextRange(range: NSRange, length: Int)
     case renderingFailed(reason: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .textKit2NotAvailable:
@@ -282,7 +282,7 @@ public enum TextKitDomainError: LocalizedError, Sendable {
             return "Text rendering failed: \(reason)"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .textKit2NotAvailable:
@@ -311,7 +311,7 @@ public enum PerformanceDomainError: LocalizedError, Sendable {
     case operationTimeout(operation: String, duration: TimeInterval)
     case resourceExhausted(resource: String)
     case throttled(reason: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case let .frameRateTooLow(current, target):
@@ -327,7 +327,7 @@ public enum PerformanceDomainError: LocalizedError, Sendable {
             return "Performance throttled: \(reason)"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .frameRateTooLow:
@@ -352,7 +352,7 @@ public enum PlatformDomainError: LocalizedError, Sendable {
     case featureNotSupported(feature: String, platform: String)
     case osVersionTooOld(required: String, current: String)
     case platformMismatch(expected: String, actual: String)
-    
+
     public var errorDescription: String? {
         switch self {
         case let .featureNotSupported(feature, platform):
@@ -365,7 +365,7 @@ public enum PlatformDomainError: LocalizedError, Sendable {
             return "Platform mismatch: expected \(expected), got \(actual)"
         }
     }
-    
+
     public var recoverySuggestion: String? {
         switch self {
         case .featureNotSupported:

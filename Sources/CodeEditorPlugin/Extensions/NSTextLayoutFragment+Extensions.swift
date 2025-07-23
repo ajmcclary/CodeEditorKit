@@ -89,7 +89,7 @@ extension NSTextLayoutFragment {
     ) {
         enumerateLineFragments(with: provider, reverse: reverse) { lineFragment, frame, elementRange, offset in
             // This enumeration is unconditional, but some line fragments might not be within our range
-            
+
             if reverse {
                 // For reverse enumeration, we could add range checking logic here if needed
             } else {

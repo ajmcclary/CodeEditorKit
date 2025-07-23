@@ -8,7 +8,7 @@ public struct PerformanceBudget: Sendable {
         public let targetTime: TimeInterval
         public let warningTime: TimeInterval
         public let criticalTime: TimeInterval
-        
+
         public init(
             operation: String,
             targetTime: TimeInterval,
@@ -20,7 +20,7 @@ public struct PerformanceBudget: Sendable {
             self.warningTime = warningTime ?? targetTime * 1.5
             self.criticalTime = criticalTime ?? targetTime * 2.0
         }
-        
+
         /// Check if a duration meets the budget
         public func check(_ duration: TimeInterval) -> BudgetStatus {
             if duration <= targetTime {
@@ -34,19 +34,19 @@ public struct PerformanceBudget: Sendable {
             }
         }
     }
-    
+
     /// Budget check status
     public enum BudgetStatus: String, Sendable {
         case withinBudget = "✅ Within Budget"
         case warning = "⚠️ Warning"
         case critical = "❌ Critical"
         case exceeded = "🚨 Exceeded"
-        
+
         public var isAcceptable: Bool {
             self == .withinBudget || self == .warning
         }
     }
-    
+
     /// Pre-defined performance budgets
     public static let budgets: [String: Budget] = [
         // Core operations
@@ -68,7 +68,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 0.016, // 60fps
             criticalTime: 0.033
         ),
-        
+
         // Completion operations
         "completion_request": Budget(
             operation: "Completion Request",
@@ -82,7 +82,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 0.05,
             criticalTime: 0.1
         ),
-        
+
         // File operations
         "file_open_small": Budget(
             operation: "Open Small File (<10KB)",
@@ -102,7 +102,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 5.0,
             criticalTime: 10.0
         ),
-        
+
         // Search operations
         "find_in_file": Budget(
             operation: "Find in File",
@@ -116,7 +116,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 0.2,
             criticalTime: 0.5
         ),
-        
+
         // Memory operations
         "memory_pressure_recovery": Budget(
             operation: "Memory Pressure Recovery",
@@ -124,7 +124,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 1.0,
             criticalTime: 2.0
         ),
-        
+
         // UI operations
         "context_menu_creation": Budget(
             operation: "Context Menu Creation",
@@ -138,7 +138,7 @@ public struct PerformanceBudget: Sendable {
             warningTime: 0.033,
             criticalTime: 0.1
         ),
-        
+
         // Test operations
         "test_setup": Budget(
             operation: "Test Setup",
@@ -153,16 +153,16 @@ public struct PerformanceBudget: Sendable {
             criticalTime: 1.0
         )
     ]
-    
+
     /// Get budget for an operation
     public static func budget(for operation: String) -> Budget? {
         budgets[operation]
     }
-    
+
     /// Check all budgets and return violations
     public static func checkBudgets(_ measurements: [String: TimeInterval]) -> [BudgetViolation] {
         var violations: [BudgetViolation] = []
-        
+
         for (operation, duration) in measurements {
             if let budget = budgets[operation] {
                 let status = budget.check(duration)
@@ -176,7 +176,7 @@ public struct PerformanceBudget: Sendable {
                 }
             }
         }
-        
+
         return violations
     }
 }
@@ -187,11 +187,11 @@ public struct BudgetViolation: Sendable {
     public let budget: PerformanceBudget.Budget
     public let actualTime: TimeInterval
     public let status: PerformanceBudget.BudgetStatus
-    
+
     public var percentageOverBudget: Double {
         ((actualTime - budget.targetTime) / budget.targetTime) * 100.0
     }
-    
+
     public var description: String {
         String(
             format: "%@ %@: %.3fs (%.1f%% over budget of %.3fs)",
@@ -211,20 +211,20 @@ public actor PerformanceBudgetReporter {
         subsystem: "com.codeeditor.performance",
         category: "Budget"
     )
-    
+
     public init() {}
-    
+
     /// Record a measurement
     public func record(operation: String, duration: TimeInterval) {
         if measurements[operation] == nil {
             measurements[operation] = []
         }
         measurements[operation]?.append(duration)
-        
+
         // Check budget immediately
         if let budget = PerformanceBudget.budget(for: operation) {
             let status = budget.check(duration)
-            
+
             switch status {
             case .withinBudget:
                 logger.debug("\(operation): \(String(format: "%.3f", duration))s ✅")
@@ -240,31 +240,31 @@ public actor PerformanceBudgetReporter {
             }
         }
     }
-    
+
     /// Get average measurements
     public func averageMeasurements() -> [String: TimeInterval] {
         var averages: [String: TimeInterval] = [:]
-        
+
         for (operation, times) in measurements where !times.isEmpty {
             let average = times.reduce(0, +) / Double(times.count)
             averages[operation] = average
         }
-        
+
         return averages
     }
-    
+
     /// Generate performance report
     public func generateReport() -> PerformanceBudgetReport {
         let averages = averageMeasurements()
         let violations = PerformanceBudget.checkBudgets(averages)
-        
+
         return PerformanceBudgetReport(
             measurements: measurements,
             averages: averages,
             violations: violations
         )
     }
-    
+
     /// Clear all measurements
     public func reset() {
         measurements.removeAll()
@@ -276,16 +276,16 @@ public struct PerformanceBudgetReport: Sendable {
     public let measurements: [String: [TimeInterval]]
     public let averages: [String: TimeInterval]
     public let violations: [BudgetViolation]
-    
+
     public var summary: String {
         var lines: [String] = ["Performance Budget Report"]
         lines.append("=" * 50)
-        
+
         // Summary stats
         lines.append("Total Operations: \(measurements.count)")
         lines.append("Total Violations: \(violations.count)")
         lines.append("")
-        
+
         // Violations
         if !violations.isEmpty {
             lines.append("Violations:")
@@ -294,7 +294,7 @@ public struct PerformanceBudgetReport: Sendable {
             }
             lines.append("")
         }
-        
+
         // All measurements
         lines.append("All Measurements (Average):")
         for (operation, average) in averages.sorted(by: { $0.key < $1.key }) {
@@ -305,7 +305,7 @@ public struct PerformanceBudgetReport: Sendable {
                 lines.append("  \(operation): \(String(format: "%.3f", average))s")
             }
         }
-        
+
         return lines.joined(separator: "\n")
     }
 }

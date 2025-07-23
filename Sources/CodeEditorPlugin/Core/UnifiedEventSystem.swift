@@ -9,36 +9,36 @@ import Combine
 @MainActor
 public final class UnifiedEventSystem: ObservableObject {
     // MARK: - Properties
-    
+
     /// Main event publisher
     private let eventSubject = PassthroughSubject<EditorEvent, Never>()
-    
+
     /// Event publisher for external subscribers
     public var events: AnyPublisher<EditorEvent, Never> {
         eventSubject.eraseToAnyPublisher()
     }
-    
+
     /// Typed event publishers
     @Published public private(set) var lastTextChangeEvent: String?
     @Published public private(set) var lastSelectionChangeEvent: NSRange?
     @Published public private(set) var lastCompletionContext: CompletionContext?
     @Published public private(set) var lastPerformanceWarning: String?
     @Published public private(set) var lastError: Error?
-    
+
     /// Event filters
     private var eventFilters: [EventFilter] = []
-    
+
     /// Event handlers
     private var eventHandlers: [UUID: EventHandler] = [:]
-    
+
     /// Event history (for debugging)
     private var eventHistory = CircularBuffer<EditorEvent>(capacity: 100)
-    
+
     /// Performance metrics
     private var eventMetrics = EventMetrics()
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new UnifiedEventSystem with optional configuration
     /// - Parameter enableDefaultFilters: Whether to setup default filters (default: true)
     public init(enableDefaultFilters: Bool = true) {
@@ -46,9 +46,9 @@ public final class UnifiedEventSystem: ObservableObject {
             setupDefaultFilters()
         }
     }
-    
+
     // MARK: - Event Publishing
-    
+
     /// Publish an event to the system
     public func publish(_ event: EditorEvent) {
         // Apply filters
@@ -57,33 +57,33 @@ public final class UnifiedEventSystem: ObservableObject {
             eventMetrics.filteredCount += 1
             return
         }
-        
+
         // Update metrics
         eventMetrics.publishedCount += 1
         eventMetrics.lastEventTime = Date()
-        
+
         // Add to history
         eventHistory.append(event)
-        
+
         // Update typed event properties
         updateTypedEvents(event)
-        
+
         // Publish to main subject
         eventSubject.send(event)
-        
+
         // Call registered handlers
         notifyHandlers(of: event)
     }
-    
+
     /// Publish multiple events as a batch
     public func publishBatch(_ events: [EditorEvent]) {
         for event in events {
             publish(event)
         }
     }
-    
+
     // MARK: - Event Subscription
-    
+
     /// Subscribe to specific event types
     public func subscribe<T: EditorEventType>(
         to eventType: T.Type,
@@ -95,7 +95,7 @@ public final class UnifiedEventSystem: ObservableObject {
             }
             .sink(receiveValue: handler)
     }
-    
+
     /// Register an event handler
     @discardableResult
     public func registerHandler(_ handler: EventHandler) -> EventHandlerToken {
@@ -103,32 +103,32 @@ public final class UnifiedEventSystem: ObservableObject {
         eventHandlers[id] = handler
         return EventHandlerToken(id: id, system: self)
     }
-    
+
     /// Unregister an event handler
     public func unregisterHandler(with id: UUID) {
         eventHandlers.removeValue(forKey: id)
     }
-    
+
     // MARK: - Event Filtering
-    
+
     /// Add an event filter
     public func addFilter(_ filter: EventFilter) {
         eventFilters.append(filter)
     }
-    
+
     /// Remove all filters
     public func clearFilters() {
         eventFilters = []
         setupDefaultFilters()
     }
-    
+
     // MARK: - Event History
-    
+
     /// Get recent events
     public func getRecentEvents(count: Int = 10) -> [EditorEvent] {
         Array(eventHistory.suffix(count))
     }
-    
+
     /// Get events of specific type from history
     public func getEvents<T: EditorEventType>(
         ofType type: T.Type,
@@ -142,48 +142,48 @@ public final class UnifiedEventSystem: ObservableObject {
                 .suffix(limit)
         )
     }
-    
+
     /// Clear event history
     public func clearHistory() {
         eventHistory.clear()
     }
-    
+
     /// Configure event throttling rate
     /// - Parameter maxEventsPerSecond: Maximum number of events per second for each event type
     public func configureThrottling(maxEventsPerSecond: Int) {
         // Remove existing performance filter
         eventFilters.removeAll { $0 is PerformanceEventFilter }
-        
+
         // Add new filter with updated rate
         let performanceFilter = PerformanceEventFilter(
             maxEventsPerSecond: maxEventsPerSecond
         )
         eventFilters.append(performanceFilter)
     }
-    
+
     // MARK: - Metrics
-    
+
     /// Get event system metrics
     public func getMetrics() -> EventMetrics {
         eventMetrics
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func setupDefaultFilters() {
         // Add platform-specific filters
         let platformFilter = PlatformEventFilter(
             allowedPlatforms: [PlatformCapabilities.shared.currentPlatform]
         )
         eventFilters.append(platformFilter)
-        
+
         // Add performance filter to throttle high-frequency events
         let performanceFilter = PerformanceEventFilter(
             maxEventsPerSecond: 60  // Default throttle rate
         )
         eventFilters.append(performanceFilter)
     }
-    
+
     private func updateTypedEvents(_ event: EditorEvent) {
         switch event {
         case .textDidChange(let text):
@@ -205,13 +205,13 @@ public final class UnifiedEventSystem: ObservableObject {
             break // Other events don't have typed properties
         }
     }
-    
+
     private func notifyHandlers(of event: EditorEvent) {
         for handler in eventHandlers.values where handler.canHandle(event) {
             handler.handle(event)
         }
     }
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
@@ -227,7 +227,7 @@ public protocol EventFilter {
 /// Filter events by platform
 public struct PlatformEventFilter: EventFilter {
     let allowedPlatforms: Set<PlatformCapabilities.Platform>
-    
+
     public func shouldAllow(_: EditorEvent) -> Bool {
         // For now, allow all events since we don't have platform-specific events in the current EditorEvent
         true
@@ -238,11 +238,11 @@ public struct PlatformEventFilter: EventFilter {
 public final class PerformanceEventFilter: EventFilter {
     private let maxEventsPerSecond: Int
     private var eventCounts: [String: (count: Int, resetTime: Date)] = [:]
-    
+
     init(maxEventsPerSecond: Int) {
         self.maxEventsPerSecond = maxEventsPerSecond
     }
-    
+
     public func shouldAllow(_ event: EditorEvent) -> Bool {
         // Create a simple key for the event type
         let eventKey: String
@@ -259,9 +259,9 @@ public final class PerformanceEventFilter: EventFilter {
         case .performanceWarning: eventKey = "performanceWarning"
         case .error: eventKey = "error"
         }
-        
+
         let now = Date()
-        
+
         if let (count, resetTime) = eventCounts[eventKey] {
             if now.timeIntervalSince(resetTime) >= 1.0 {
                 // Reset counter
@@ -281,7 +281,7 @@ public final class PerformanceEventFilter: EventFilter {
             return true
         }
     }
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
@@ -299,7 +299,7 @@ public protocol EventHandler {
 public struct EventHandlerToken {
     let id: UUID
     weak var system: UnifiedEventSystem?
-    
+
     @MainActor
     public func unregister() {
         system?.unregisterHandler(with: id)
@@ -313,7 +313,7 @@ public struct EventMetrics {
     public var publishedCount: Int = 0
     public var filteredCount: Int = 0
     public var lastEventTime: Date?
-    
+
     public var eventsPerSecond: Double {
         guard let lastTime = lastEventTime else { return 0 }
         let timeSinceLastEvent = Date().timeIntervalSince(lastTime)
@@ -331,35 +331,35 @@ private struct CircularBuffer<T: Sendable>: Sendable {
     private var writeIndex = 0
     private var count = 0
     let capacity: Int
-    
+
     init(capacity: Int) {
         self.capacity = capacity
         self.buffer = Array(repeating: nil, count: capacity)
     }
-    
+
     mutating func append(_ element: T) {
         buffer[writeIndex] = element
         writeIndex = (writeIndex + 1) % capacity
         count = Swift.min(count + 1, capacity)
     }
-    
+
     mutating func clear() {
         buffer = Array(repeating: nil, count: capacity)
         writeIndex = 0
         count = 0
     }
-    
+
     func suffix(_ maxLength: Int) -> [T] {
         let suffixCount = Swift.min(maxLength, count)
         var result: [T] = []
-        
+
         for offset in 0..<suffixCount {
             let index = (writeIndex - suffixCount + offset + capacity) % capacity
             if let element = buffer[index] {
                 result.append(element)
             }
         }
-        
+
         return result
     }
 }
@@ -383,7 +383,7 @@ extension CodeEditorView {
     public func publishEvent(_ event: EditorEvent) {
         // Publish to the local event publisher
         eventPublisher.publishSync(event)
-        
+
         // Publish to the unified system if available
         // Only use the injected event system from configuration
         if let eventSystem = configuration.eventSystem {

@@ -16,7 +16,7 @@ public enum PlatformFonts {
         return UIFont.monospacedSystemFont(ofSize: size, weight: weight)
         #endif
     }
-    
+
     /// Creates a system font with the specified size and weight
     public static func systemFont(ofSize size: CGFloat, weight: PlatformFont.Weight = .regular) -> PlatformFont {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -25,7 +25,7 @@ public enum PlatformFonts {
         return UIFont.systemFont(ofSize: size, weight: weight)
         #endif
     }
-    
+
     /// Returns the standard system font size for the current platform
     public static var systemFontSize: CGFloat {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

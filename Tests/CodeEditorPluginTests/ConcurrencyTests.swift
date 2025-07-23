@@ -5,11 +5,11 @@ import XCTest
 @MainActor
 final class ConcurrencyTests: XCTestCase {
     // MARK: - Basic Actor Isolation Tests
-    
+
     func testMainActorIsolationBoundaries() async throws {
         let editorView = CodeEditorView()
         editorView.text = "func test() {}"
-        
+
         // Verify that UI updates only happen on MainActor
         await withTaskGroup(of: Void.self) { group in
             group.addTask { @MainActor in
@@ -17,7 +17,7 @@ final class ConcurrencyTests: XCTestCase {
                 editorView.language = .swift
                 XCTAssertEqual(editorView.language, .swift)
             }
-            
+
             group.addTask { @MainActor in
                 // Test configuration updates
                 var config = EditorConfiguration.default
@@ -27,12 +27,12 @@ final class ConcurrencyTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Memory Management Tests
-    
+
     func testMemoryMonitorActorSafety() async throws {
         let monitor = MemoryMonitor()
-        
+
         // Test concurrent registration/unregistration
         await withTaskGroup(of: Void.self) { group in
             for index in 0..<10 {
@@ -44,19 +44,19 @@ final class ConcurrencyTests: XCTestCase {
                     ) { @MainActor in
                         CleanupResult(memoryFreedMB: 1.0, description: "Test cleanup \(index)")
                     }
-                    
+
                     // Immediately unregister to test concurrent access
                     monitor.unregisterCleanupHandler(identifier: identifier)
                 }
             }
         }
     }
-    
+
     // MARK: - Configuration Thread Safety Tests
-    
+
     func testConfigurationConcurrentUpdates() async throws {
         let editorView = CodeEditorView()
-        
+
         await withTaskGroup(of: Void.self) { group in
             // Test concurrent configuration updates
             for index in 0..<10 {
@@ -68,15 +68,15 @@ final class ConcurrencyTests: XCTestCase {
                 }
             }
         }
-        
+
         // Verify final state is consistent
         let finalConfig = editorView.configuration
         XCTAssertGreaterThanOrEqual(finalConfig.display.fontSize, 12.0)
         XCTAssertGreaterThanOrEqual(finalConfig.layout.tabWidth, 2)
     }
-    
+
     // MARK: - Task Cancellation Tests
-    
+
     func testTaskCancellationHandling() async throws {
         // Create a task that we'll cancel
         let task = Task { @MainActor in
@@ -85,17 +85,17 @@ final class ConcurrencyTests: XCTestCase {
             editorView.text = longText
             return editorView.text?.count ?? 0
         }
-        
+
         // Cancel immediately
         task.cancel()
-        
+
         // The task should handle cancellation gracefully or complete normally
         let result = await task.value
         XCTAssertGreaterThanOrEqual(result, 0)
     }
-    
+
     // MARK: - Concurrent Editor Creation
-    
+
     func testConcurrentEditorViewCreation() async throws {
         await withTaskGroup(of: String?.self) { group in
             for index in 0..<5 {
@@ -106,23 +106,23 @@ final class ConcurrencyTests: XCTestCase {
                     return editorView.text
                 }
             }
-            
+
             var texts: [String] = []
             for await text in group {
                 if let text {
                     texts.append(text)
                 }
             }
-            
+
             XCTAssertEqual(texts.count, 5)
             for text in texts {
                 XCTAssertTrue(text.contains("test"))
             }
         }
     }
-    
+
     // MARK: - Error Handling in Concurrent Context
-    
+
     func testConcurrentErrorHandling() async throws {
         await withTaskGroup(of: Void.self) { group in
             // Test error handling with invalid configurations
@@ -132,7 +132,7 @@ final class ConcurrencyTests: XCTestCase {
                     // Intentionally set invalid values to test error handling
                     config.display.fontSize = -1.0  // Invalid
                     config.layout.tabWidth = -1     // Invalid
-                    
+
                     // The configuration system should handle this gracefully
                     let errors = config.validate()
                     XCTAssertFalse(errors.isEmpty, "Should detect validation errors")
@@ -140,14 +140,14 @@ final class ConcurrencyTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Sendable Compliance Tests
-    
+
     func testSendableTypeCompliance() async throws {
         // Test that our key types can be safely passed across actor boundaries
         let config = EditorConfiguration.default
         let language = Language.swift
-        
+
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 // These should compile without warnings since they're Sendable
@@ -156,12 +156,12 @@ final class ConcurrencyTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Performance Under Concurrency
-    
+
     func testConcurrentPerformance() async throws {
         let startTime = Date()
-        
+
         await withTaskGroup(of: Void.self) { group in
             for index in 0..<20 {
                 group.addTask { @MainActor in
@@ -171,31 +171,31 @@ final class ConcurrencyTests: XCTestCase {
                 }
             }
         }
-        
+
         let duration = Date().timeIntervalSince(startTime)
-        
+
         // Should complete within reasonable time (adjust based on performance requirements)
         XCTAssertLessThan(duration, 5.0, "Concurrent editor creation should be efficient")
     }
-    
+
     // MARK: - Multiple Editor Views Concurrency
-    
+
     func testMultipleEditorViewsConcurrency() async throws {
         let editorViews = (0..<5).map { _ in CodeEditorView() }
-        
+
         await withTaskGroup(of: Void.self) { group in
             for (index, editorView) in editorViews.enumerated() {
                 group.addTask { @MainActor in
                     editorView.text = "func editor\(index)Test() {}"
                     editorView.language = .swift
-                    
+
                     var config = EditorConfiguration.default
                     config.display.fontSize = CGFloat(14 + index)
                     editorView.configuration = config
                 }
             }
         }
-        
+
         // Verify all editors were configured correctly
         for (index, editorView) in editorViews.enumerated() {
             XCTAssertTrue(editorView.text?.contains("editor\(index)Test") ?? false)
@@ -215,7 +215,7 @@ extension ConcurrencyTests {
         view.text = "func testFunction() {}"
         return view
     }
-    
+
     /// Helper to generate test code of specific length
     private func generateTestCode(length: Int) -> String {
         let baseCode = "func test() { print(\"hello\") }\n"

@@ -64,10 +64,10 @@ import AppKit
 @MainActor
 public final class PlatformCapabilities {
     public static let shared = PlatformCapabilities()
-    
+
     /// Cached platform value since it's determined at compile time
     private let _currentPlatform: Platform
-    
+
     private init() {
         // Cache the platform since it's compile-time determined
         #if targetEnvironment(macCatalyst)
@@ -78,26 +78,26 @@ public final class PlatformCapabilities {
         self._currentPlatform = .iOS
         #endif
     }
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
-    
+
     // MARK: - Platform Detection
-    
+
     /// Platform type enumeration.
     ///
     /// Represents the current runtime platform with user-friendly names.
     public enum Platform {
         /// Native macOS application
         case macOS
-        
+
         /// iOS application (iPhone or iPad)
         case iOS
-        
+
         /// Mac Catalyst (iOS app running on Mac)
         case catalyst
-        
+
         /// Human-readable platform name.
         ///
         /// Returns "macOS", "iOS", or "Mac Catalyst".
@@ -109,11 +109,11 @@ public final class PlatformCapabilities {
             }
         }
     }
-    
+
     public var currentPlatform: Platform {
         _currentPlatform
     }
-    
+
     public var systemVersion: String {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return ProcessInfo.processInfo.operatingSystemVersionString
@@ -123,46 +123,46 @@ public final class PlatformCapabilities {
         return "Unknown"
         #endif
     }
-    
+
     public var systemVersionComponents: (major: Int, minor: Int, patch: Int) {
         let version = ProcessInfo.processInfo.operatingSystemVersion
         return (version.majorVersion, version.minorVersion, version.patchVersion)
     }
-    
+
     // MARK: - TextKit Capabilities
     // Moved to PlatformCapabilities+TextKit.swift
-    
+
     // MARK: - UI Capabilities
     // Moved to PlatformCapabilities+UI.swift
-    
+
     // MARK: - Performance Capabilities
     // Moved to PlatformCapabilities+Performance.swift
-    
+
     // MARK: - Rendering Capabilities
     // Moved to PlatformCapabilities+UI.swift and PlatformCapabilities+Performance.swift
-    
+
     // MARK: - Input Capabilities
     // Moved to PlatformCapabilities+Input.swift
-    
+
     // MARK: - Device Capabilities
-    
+
     // Device capabilities moved to PlatformCapabilities+Performance.swift
-    
+
     /// The current device type
     public var deviceType: DeviceType {
         DeviceType.current
     }
-    
+
     /// Legacy string-based device type for backward compatibility
     @available(*, deprecated, message: "Use deviceType property which returns DeviceType enum instead")
     public var deviceTypeString: String {
         deviceType.rawValue
     }
-    
+
     // hasNotch moved to PlatformCapabilities+UI.swift
-    
+
     // MARK: - Feature Recommendations
-    
+
     /// Returns a runtime-optimized configuration based on current device capabilities.
     ///
     /// This method analyzes the current device's actual capabilities (CPU cores, memory,
@@ -192,13 +192,13 @@ public final class PlatformCapabilities {
         // Delegate to the new PlatformConfigurations system
         PlatformConfigurations.recommended()
     }
-    
+
     // MARK: - Debug Information
-    
+
     public var debugDescription: String {
         let perf = performanceCapabilities
         let textKit = textKitCapabilities
-        
+
         return """
         Platform Capabilities:
         - Platform: \(currentPlatform.name)
@@ -238,7 +238,7 @@ extension PlatformCapabilities {
             return true // Software feature
         case .minimap:
             return supportsMinimap
-            
+
         // Editing features
         case .multipleCursors:
             return currentPlatform == .macOS
@@ -249,7 +249,7 @@ extension PlatformCapabilities {
             return true // Basic version available everywhere
         case .columnSelection:
             return currentPlatform == .macOS
-            
+
         // Navigation features
         case .symbolNavigation, .breadcrumbs:
             return true // Software features with platform-specific UI
@@ -265,14 +265,14 @@ extension PlatformCapabilities {
 
         case .quickOpen:
             return currentPlatform == .macOS || currentPlatform == .catalyst
-            
+
         // Performance features
         case .hardwareAcceleration:
             return supportsHardwareAcceleration
 
         case .virtualScrolling, .incrementalParsing, .backgroundProcessing:
             return true // Software optimizations
-            
+
         // Integration features
         case .languageServerProtocol:
             // For backward compatibility, this refers to local LSP support
@@ -290,7 +290,7 @@ extension PlatformCapabilities {
 
         case .fileWatching:
             return true // Available via GCD/FSEvents
-            
+
         // UI features
         case .splitView:
             return currentPlatform == .macOS || (currentPlatform == .iOS && isIPad)
@@ -311,7 +311,7 @@ extension PlatformCapabilities {
             return true // Different implementations per platform
         case .touchBarSupport:
             return supportsTouchBar
-            
+
         // Input features
         case .keyboardShortcuts:
             // Check for partial support on iPad
@@ -333,23 +333,23 @@ extension PlatformCapabilities {
             return supportsPencilInput
         }
     }
-    
+
     /// Get feature availability level (full, partial, or unavailable)
     public func getFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability {
         // Check input features first
         if let availability = getInputFeatureAvailability(feature) {
             return availability
         }
-        
+
         // Check UI features
         if let availability = getUIFeatureAvailability(feature) {
             return availability
         }
-        
+
         // All other features are either fully available or not
         return isFeatureAvailable(feature) ? .full : .unavailable
     }
-    
+
     /// Get availability for input-related features
     private func getInputFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
@@ -361,7 +361,7 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable
             }
-            
+
         case .mouseSupport:
             if currentPlatform == .macOS {
                 return .full
@@ -370,7 +370,7 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable
             }
-            
+
         case .touchSupport:
             if currentPlatform == .iOS {
                 return .full
@@ -379,18 +379,18 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable
             }
-            
+
         default:
             return nil
         }
     }
-    
+
     /// Get availability for UI-related features
     private func getUIFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
         case .findReplace, .symbolNavigation, .breadcrumbs, .toolbars:
             return currentPlatform == .macOS ? .full : .partial
-            
+
         case .goToDefinition:
             if currentPlatform == .macOS {
                 return .full
@@ -399,12 +399,12 @@ extension PlatformCapabilities {
             } else {
                 return .unavailable // iPhone doesn't support go to definition
             }
-            
+
         default:
             return nil
         }
     }
-    
+
     private var isIPad: Bool {
         #if canImport(UIKit)
         return UIDevice.current.userInterfaceIdiom == .pad
@@ -412,7 +412,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Feature availability level.
     ///
     /// Indicates whether a feature is fully supported, partially supported,
@@ -434,20 +434,20 @@ extension PlatformCapabilities {
     public enum FeatureAvailability {
         /// Feature is fully supported with all capabilities
         case full
-        
+
         /// Feature is partially supported with limited capabilities
         case partial
-        
+
         /// Feature is not available on this platform
         case unavailable
-        
+
         /// Whether the feature is available at any level.
         ///
         /// Returns `true` for both full and partial availability.
         public var isAvailable: Bool {
             self != .unavailable
         }
-        
+
         /// Whether the feature is fully available.
         ///
         /// Returns `true` only for full availability.
@@ -455,7 +455,7 @@ extension PlatformCapabilities {
             self == .full
         }
     }
-    
+
     /// Editor features that may have platform-specific availability.
     ///
     /// Represents all features that can be queried for availability
@@ -524,26 +524,26 @@ extension PlatformCapabilities {
         case lineNumbers
         case codeFolding
         case minimap
-        
+
         // Editing features
         case multipleCursors
         case smartBrackets
         case autoIndent
         case findReplace
         case columnSelection
-        
+
         // Navigation features
         case symbolNavigation
         case breadcrumbs
         case goToDefinition
         case quickOpen
-        
+
         // Performance features
         case hardwareAcceleration
         case virtualScrolling
         case incrementalParsing
         case backgroundProcessing
-        
+
         // Integration features
         case languageServerProtocol
         case localLSP
@@ -551,7 +551,7 @@ extension PlatformCapabilities {
         case pluginSystem
         case externalTools
         case fileWatching
-        
+
         // UI features
         case splitView
         case tabs
@@ -560,7 +560,7 @@ extension PlatformCapabilities {
         case contextMenus
         case toolbars
         case touchBarSupport
-        
+
         // Input features
         case keyboardShortcuts
         case mouseSupport

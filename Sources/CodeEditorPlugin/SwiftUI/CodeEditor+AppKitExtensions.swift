@@ -15,7 +15,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     let textDebounceInterval: Duration
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
-    
+
     func makeNSView(context: Context) -> CodeEditorContainerView {
         let parameters = CodeEditorRepresentableHelper.ContainerParameters(
             text: text,
@@ -26,13 +26,13 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange
         )
-        
+
         return CodeEditorRepresentableHelper.createAndSetupContainer(
             parameters: parameters,
             coordinator: context.coordinator
         )
     }
-    
+
     func updateNSView(_ nsView: CodeEditorContainerView, context: Context) {
         let parameters = CodeEditorRepresentableHelper.UpdateParameters(
             text: text,
@@ -41,18 +41,18 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             configuration: configuration,
             environment: context.environment
         )
-        
+
         CodeEditorRepresentableHelper.updateContainer(
             nsView,
             parameters: parameters,
             coordinator: context.coordinator
         )
     }
-    
+
     static func dismantleNSView(_: CodeEditorContainerView, coordinator: CodeEditorCoordinator) {
         CodeEditorRepresentableHelper.dismantle(coordinator: coordinator)
     }
-    
+
     @available(macOS 13.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: CodeEditorContainerView, context _: Context) -> CGSize? {
         CodeEditorRepresentableHelper.calculateSize(
@@ -61,7 +61,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             configuration: configuration
         )
     }
-    
+
     func makeCoordinator() -> CodeEditorCoordinator {
         CodeEditorRepresentableHelper.makeCoordinator(
             text: $text,
@@ -70,7 +70,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             textDebounceInterval: textDebounceInterval
         )
     }
-    
+
     typealias Coordinator = CodeEditorCoordinator
 }
 

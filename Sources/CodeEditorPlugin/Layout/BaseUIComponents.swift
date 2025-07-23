@@ -48,7 +48,7 @@ public struct StandardUITheme: BaseUITheme, @unchecked Sendable {
     public let backgroundColor: PlatformColor
     public let textColor: PlatformColor
     public let font: PlatformFont
-    
+
     public static let `default` = Self(
         primaryColor: PlatformColors.systemBlue,
         secondaryColor: PlatformColors.secondaryLabel,
@@ -56,7 +56,7 @@ public struct StandardUITheme: BaseUITheme, @unchecked Sendable {
         textColor: PlatformColors.label,
         font: PlatformFonts.systemFont(ofSize: 14)
     )
-    
+
     public static let compact = Self(
         primaryColor: PlatformColors.systemBlue,
         secondaryColor: PlatformColors.secondaryLabel,
@@ -73,7 +73,7 @@ public struct StandardUITheme: BaseUITheme, @unchecked Sendable {
 /// Base configurable view for AppKit
 open class BaseConfigurableView<Config, Theme: BaseUITheme>: NSView, ConfigurableUIComponent, ThemeableUIComponent {
     public typealias Configuration = Config
-    
+
     private var _theme: Theme
     public var theme: Theme {
         get { _theme }
@@ -82,29 +82,29 @@ open class BaseConfigurableView<Config, Theme: BaseUITheme>: NSView, Configurabl
             applyTheme(newValue)
         }
     }
-    
+
     public init(theme: Theme) {
         self._theme = theme
         super.init(frame: .zero)
         setupView()
         applyTheme(theme)
     }
-    
+
     @available(*, unavailable)
     public required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     /// Override to setup view hierarchy and constraints
     open func setupView() {
         // Override in subclasses
     }
-    
+
     /// Override to configure the view with data
     open func configure(with _: Config) {
         // Override in subclasses
     }
-    
+
     /// Override to apply theme changes
     open func applyTheme(_: Theme) {
         // Override in subclasses
@@ -114,7 +114,7 @@ open class BaseConfigurableView<Config, Theme: BaseUITheme>: NSView, Configurabl
 /// Base reusable table cell view for AppKit
 open class BaseReusableTableCellView<Config, Theme: BaseUITheme>: NSTableCellView, ConfigurableUIComponent, ThemeableUIComponent, ReusableUIComponent {
     public typealias Configuration = Config
-    
+
     private var _theme: Theme
     public var theme: Theme {
         get { _theme }
@@ -123,29 +123,29 @@ open class BaseReusableTableCellView<Config, Theme: BaseUITheme>: NSTableCellVie
             applyTheme(newValue)
         }
     }
-    
+
     public init(theme: Theme) {
         self._theme = theme
         super.init(frame: .zero)
         setupView()
         applyTheme(theme)
     }
-    
+
     @available(*, unavailable)
     public required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     /// Override to setup view hierarchy and constraints
     open func setupView() {
         // Override in subclasses
     }
-    
+
     /// Override to configure the view with data
     open func configure(with _: Config) {
         // Override in subclasses
     }
-    
+
     /// Override to apply theme changes
     open func applyTheme(_: Theme) {
         // Override in subclasses
@@ -157,7 +157,7 @@ open class BaseReusableTableCellView<Config, Theme: BaseUITheme>: NSTableCellVie
 /// Base configurable view for UIKit
 open class BaseConfigurableView<Config, Theme: BaseUITheme>: UIView, ConfigurableUIComponent, ThemeableUIComponent {
     public typealias Configuration = Config
-    
+
     private var _theme: Theme
     public var theme: Theme {
         get { _theme }
@@ -166,29 +166,29 @@ open class BaseConfigurableView<Config, Theme: BaseUITheme>: UIView, Configurabl
             applyTheme(newValue)
         }
     }
-    
+
     public init(theme: Theme) {
         self._theme = theme
         super.init(frame: .zero)
         setupView()
         applyTheme(theme)
     }
-    
+
     @available(*, unavailable)
     public required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     /// Override to setup view hierarchy and constraints
     open func setupView() {
         // Override in subclasses
     }
-    
+
     /// Override to configure the view with data
     open func configure(with _: Config) {
         // Override in subclasses
     }
-    
+
     /// Override to apply theme changes
     open func applyTheme(_ theme: Theme) {
         backgroundColor = theme.backgroundColor
@@ -198,7 +198,7 @@ open class BaseConfigurableView<Config, Theme: BaseUITheme>: UIView, Configurabl
 /// Base reusable table cell view for UIKit
 open class BaseReusableTableViewCell<Config, Theme: BaseUITheme>: UITableViewCell, ConfigurableUIComponent, ThemeableUIComponent, ReusableUIComponent {
     public typealias Configuration = Config
-    
+
     private var _theme: Theme
     public var theme: Theme {
         get { _theme }
@@ -207,29 +207,29 @@ open class BaseReusableTableViewCell<Config, Theme: BaseUITheme>: UITableViewCel
             applyTheme(newValue)
         }
     }
-    
+
     public init(theme: Theme, reuseIdentifier: String?) {
         self._theme = theme
         super.init(style: .default, reuseIdentifier: reuseIdentifier)
         setupView()
         applyTheme(theme)
     }
-    
+
     @available(*, unavailable)
     public required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     /// Override to setup view hierarchy and constraints
     open func setupView() {
         // Override in subclasses
     }
-    
+
     /// Override to configure the view with data
     open func configure(with _: Config) {
         // Override in subclasses
     }
-    
+
     /// Override to apply theme changes
     open func applyTheme(_ theme: Theme) {
         backgroundColor = theme.backgroundColor
@@ -246,19 +246,19 @@ public enum UIComponentFactory {
     /// Theme registry for component themes
     @MainActor
     private static var themeRegistry: [String: Any] = [:]
-    
+
     /// Registers a theme for a component type
     @MainActor
     public static func registerTheme<T>(_ theme: T, for componentType: String) {
         themeRegistry[componentType] = theme
     }
-    
+
     /// Gets a registered theme for a component type
     @MainActor
     public static func getTheme<T>(for componentType: String, as _: T.Type) -> T? {
         themeRegistry[componentType] as? T
     }
-    
+
     /// Creates a themed component
     @available(*, unavailable)
     public static func createComponent<Component, Theme>(
@@ -279,7 +279,7 @@ public enum UISpacing {
     public static let medium: CGFloat = 12
     public static let large: CGFloat = 16
     public static let extraLarge: CGFloat = 24
-    
+
     /// Returns spacing appropriate for the current platform
     public static func platformDefault() -> CGFloat {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -297,7 +297,7 @@ public enum UIMargins {
     public static let medium: CGFloat = 16
     public static let large: CGFloat = 20
     public static let extraLarge: CGFloat = 32
-    
+
     /// Returns margins appropriate for the current platform
     public static func platformDefault() -> CGFloat {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -335,7 +335,7 @@ public enum AccessibilityHelper {
         }
         #endif
     }
-    
+
     /// Configures accessibility for a button
     @MainActor
     public static func configureButton<T: PlatformView>(
@@ -350,7 +350,7 @@ public enum AccessibilityHelper {
         configureControl(view, label: label, hint: hint, traits: .button)
         #endif
     }
-    
+
     /// Configures accessibility for a text field
     @MainActor
     public static func configureTextField<T: PlatformView>(

@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class SQLCompletionProvider: BaseCompletionProvider {
     // MARK: - Override Properties
-    
+
     override public var keywords: [String] {
         // SQL keywords (standard SQL)
         [
@@ -41,7 +41,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
             "WITH", "RECURSIVE", "TEMPORARY", "CASCADE", "RESTRICT"
         ] + mysqlKeywords + postgresKeywords
     }
-    
+
     override public var functions: [String] {
         // SQL functions
         [
@@ -69,7 +69,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
             "JSON_TYPE", "JSON_SEARCH", "JSON_CONTAINS", "JSON_KEYS"
         ]
     }
-    
+
     override public var types: [String] {
         // SQL data types
         [
@@ -79,7 +79,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
             "ARRAY", "JSONB", "UUID", "INET", "CIDR", "MACADDR"
         ]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
@@ -212,7 +212,7 @@ SELECT * FROM ${1:cte_name};
             )
         ]
     }
-    
+
     // Common table and column name patterns
     private let commonTables = [
         "users", "user", "accounts", "account", "customers", "customer",
@@ -222,7 +222,7 @@ SELECT * FROM ${1:cte_name};
         "transactions", "transaction", "payments", "payment", "invoices", "invoice",
         "settings", "config", "logs", "log", "sessions", "session"
     ]
-    
+
     private let commonColumns = [
         "id", "uuid", "name", "title", "description", "email", "username",
         "password", "created_at", "updated_at", "deleted_at", "status",
@@ -230,22 +230,22 @@ SELECT * FROM ${1:cte_name};
         "quantity", "date", "time", "timestamp", "user_id", "order_id",
         "product_id", "category_id", "parent_id", "sort_order", "position"
     ]
-    
+
     // Database-specific keywords
     private let mysqlKeywords = [
         "AUTO_INCREMENT", "UNSIGNED", "ZEROFILL", "BINARY", "COLLATE",
         "CHARACTER SET", "ENGINE", "InnoDB", "MyISAM", "SHOW", "DESCRIBE",
         "EXPLAIN", "USE", "DELIMITER", "SOURCE"
     ]
-    
+
     private let postgresKeywords = [
         "SERIAL", "BIGSERIAL", "SMALLSERIAL", "RETURNING", "VACUUM", "ANALYZE",
         "EXPLAIN ANALYZE", "COPY", "DO", "PERFORM", "RAISE", "EXCEPTION",
         "ARRAY", "JSONB", "UUID", "INET", "CIDR", "MACADDR"
     ]
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "sql-builtin",
@@ -254,52 +254,52 @@ SELECT * FROM ${1:cte_name};
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.uppercased().trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition)).uppercased()
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: String(context.text.prefix(context.cursorPosition)))
-        
+
         // Check for function context
         if beforeCursor.hasSuffix("(") || isInFunctionContext(beforeCursor) {
             return ContextAnalysisResult(type: .function, filter: filter)
         }
-        
+
         // Check for table context (after FROM, JOIN, UPDATE, INSERT INTO, etc.)
         // For SQL, we'll treat tables as types
         if isInTableContext(beforeCursor) {
             return ContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Check for column context (after SELECT, WHERE, ORDER BY, etc.)
         // For SQL, we'll treat columns as members
         if isInColumnContext(beforeCursor) {
             let tableName = extractTableName(from: beforeCursor)
             return ContextAnalysisResult(type: .member, filter: filter, targetType: tableName)
         }
-        
+
         // Check for data type context (in CREATE TABLE or ALTER TABLE)
         if isInDataTypeContext(beforeCursor) {
             return ContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Default to keyword context for SQL statements
         if lineText.isEmpty || startsNewStatement(lineText) {
             return ContextAnalysisResult(type: .keyword, filter: filter)
         }
-        
+
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
-    
+
     private func isInFunctionContext(_ text: String) -> Bool {
         // Check if we're inside parentheses
         var parenCount = 0
@@ -312,10 +312,10 @@ SELECT * FROM ${1:cte_name};
         }
         return parenCount > 0
     }
-    
+
     private func isInTableContext(_ text: String) -> Bool {
         let tableKeywords = ["FROM", "JOIN", "INTO", "UPDATE", "TABLE"]
-        
+
         // Check if the last keyword before cursor is a table keyword
         for keyword in tableKeywords {
             if let range = text.range(of: " \(keyword) ", options: [.backwards, .caseInsensitive]) {
@@ -328,26 +328,26 @@ SELECT * FROM ${1:cte_name};
                 }
             }
         }
-        
+
         return false
     }
-    
+
     private func isInColumnContext(_ text: String) -> Bool {
         let columnKeywords = ["SELECT", "WHERE", "SET", "ORDER BY", "GROUP BY", "ON"]
-        
+
         for keyword in columnKeywords where text.contains(keyword) {
             // Make sure we're not in a subquery or after another major keyword
             return true
         }
-        
+
         return false
     }
-    
+
     private func isInDataTypeContext(_ text: String) -> Bool {
         // Check if we're in a CREATE TABLE or ALTER TABLE context
         text.contains("CREATE TABLE") || text.contains("ALTER TABLE")
     }
-    
+
     private func extractTableName(from text: String) -> String? {
         // Try to extract table name from FROM clause
         if let fromMatch = text.range(of: #"FROM\s+(\w+)"#, options: [.regularExpression, .caseInsensitive]) {
@@ -357,17 +357,17 @@ SELECT * FROM ${1:cte_name};
                 return components[1].lowercased()
             }
         }
-        
+
         return nil
     }
-    
+
     private func startsNewStatement(_ text: String) -> Bool {
         let statementStarters = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP", "WITH"]
         return statementStarters.contains { text.hasPrefix($0) }
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
@@ -375,7 +375,7 @@ SELECT * FROM ${1:cte_name};
             }
             .map { keyword in
                 let insertText: String
-                
+
                 // Add common patterns for certain keywords
                 switch keyword {
                 case "SELECT":
@@ -402,7 +402,7 @@ SELECT * FROM ${1:cte_name};
                 default:
                     insertText = keyword
                 }
-                
+
                 return CompletionItemModel(
                     label: keyword,
                     insertText: insertText,
@@ -413,7 +413,7 @@ SELECT * FROM ${1:cte_name};
                 )
             }
     }
-    
+
     override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
@@ -429,11 +429,11 @@ SELECT * FROM ${1:cte_name};
                 )
             }
     }
-    
+
     override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         // For SQL context, types can be either data types or table names
         let dataTypeCompletions = super.createTypeCompletions(filter: filter)
-        
+
         // Add table completions when in appropriate context
         let tableCompletions = commonTables
             .filter { table in
@@ -448,10 +448,10 @@ SELECT * FROM ${1:cte_name};
                     priority: 70
                 )
             }
-        
+
         return dataTypeCompletions + tableCompletions
     }
-    
+
     override public func createMemberCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
         // In SQL, members are column names
         // In a real implementation, this would query schema information based on the table name

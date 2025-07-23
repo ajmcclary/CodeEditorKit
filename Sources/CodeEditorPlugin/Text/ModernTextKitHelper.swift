@@ -12,33 +12,33 @@ enum ModernTextKitHelper {
     static var shouldUseTextKit2: Bool {
         PlatformCapabilities.shared.preferTextKit2
     }
-    
+
     /// Check if we can opt into TextKit2 for a specific text view
     static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
         // Basic requirement checks
         guard textView.textContainer != nil else { return false }
-        
+
         // Only opt into TextKit2 on macOS 13+ where it's more stable
         guard PlatformCapabilities.shared.preferTextKit2 else {
             return false
         }
-        
+
         // Additional checks can be added here for specific compatibility requirements
         return true
     }
-    
+
     /// Force TextKit2 initialization if possible and beneficial
     static func ensureTextKit2(for textView: NSTextView) -> Bool {
         // Check if TextKit2 is already active
         if textView.textLayoutManager != nil {
             return true
         }
-        
+
         // Only attempt to force TextKit2 on compatible systems
         guard canOptIntoTextKit2(for: textView) else {
             return false
         }
-        
+
         // TextKit2 should be default on macOS 13+
         // If it's not active, there might be a specific reason
         if PlatformCapabilities.shared.preferTextKit2 {
@@ -46,7 +46,7 @@ enum ModernTextKitHelper {
             os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
                 .debug("TextKit2 not active, using TextKit1 fallback")
         }
-        
+
         return false
     }
 
@@ -83,7 +83,7 @@ enum ModernTextKitHelper {
 
     private static func configureForModernMacOS(_ textView: NSTextView) {
         // macOS 14+ specific optimizations
-        
+
         // Use adaptive colors for better appearance
         textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
         textView.insertionPointColor = PlatformColors.controlAccentColor
@@ -96,7 +96,7 @@ enum ModernTextKitHelper {
 
         // Enhanced text smoothing for high-resolution displays
         textView.allowsDocumentBackgroundColorChange = false
-        
+
         // Optimize for performance
         textView.isAutomaticTextCompletionEnabled = false
         textView.usesAdaptiveColorMappingForDarkAppearance = true
@@ -104,18 +104,18 @@ enum ModernTextKitHelper {
 
     private static func configureForMacOS13(_ textView: NSTextView) {
         // macOS 13 Ventura specific settings
-        
+
         // Basic TextKit2 optimizations
         textView.allowsDocumentBackgroundColorChange = false
         textView.usesAdaptiveColorMappingForDarkAppearance = true
-        
+
         // Performance tuning
         textView.isAutomaticTextCompletionEnabled = false
     }
 
     private static func configureForLegacyMacOS(_ textView: NSTextView) {
         // macOS 12 and earlier
-        
+
         // Legacy performance optimizations
         textView.isAutomaticTextCompletionEnabled = false
     }
@@ -124,11 +124,11 @@ enum ModernTextKitHelper {
 
     private static func configureTextKit2Features(_ textView: NSTextView) {
         guard let textLayoutManager = textView.textLayoutManager else { return }
-        
+
         // Configure TextKit2 specific features
         // Note: TextKit2 configuration is handled automatically by the system
         // Additional configuration can be added here as needed
-        
+
         // Ensure layout manager is properly configured
         _ = textLayoutManager.usageBoundsForTextContainer
     }
@@ -154,10 +154,10 @@ enum ModernTextKitHelper {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.isGrammarCheckingEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
-        
+
         // Skip layout manager configuration to avoid triggering TextKit1 compatibility mode
         // TextKit2 handles these optimizations automatically
-        
+
         // Configure text container
         if let textContainer = textView.textContainer {
             textContainer.containerSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
@@ -172,7 +172,7 @@ enum ModernTextKitHelper {
     static func applyAdaptiveColors(to textView: NSTextView) {
         textView.backgroundColor = AdaptiveColorSystem.textBackgroundColor
         textView.insertionPointColor = PlatformColors.controlAccentColor
-        
+
         // Configure selection colors
         textView.selectedTextAttributes = [
             .backgroundColor: AdaptiveColorSystem.selectionColor,
@@ -181,7 +181,7 @@ enum ModernTextKitHelper {
     }
 
     // MARK: - Layout Region Support
-    
+
     // NOTE: Layout region API support has been removed as it was based on
     // speculative future macOS versions. This functionality can be added
     // when/if such APIs become available in future macOS releases.
@@ -194,9 +194,9 @@ enum ModernTextKitHelper {
 /// iOS stub for ModernTextKitHelper
 enum ModernTextKitHelper {
     static var shouldUseTextKit2: Bool { false }
-    
+
     static func canOptIntoTextKit2(for _: Any) -> Bool { false }
-    
+
     static func ensureTextKit2(for _: Any) -> Bool { false }
 }
 

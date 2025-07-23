@@ -6,26 +6,26 @@ import Foundation
 /// across configuration extensions without conflicting with existing implementations
 public enum ConfigurationValidationUtilities {
     // MARK: - Validation Result Types
-    
+
     /// Result of a validation operation
     public enum ValidationResult<T> {
         case valid(T)
         case invalid(T, issues: [ValidationIssue])
         case fixable(T, fixed: T, issues: [ValidationIssue])
     }
-    
+
     /// Validation issue with optional auto-fix capability
     public struct ValidationIssue {
         public let property: String
         public let message: String
         public let severity: Severity
         public let suggestedFix: String?
-        
+
         public enum Severity {
             case warning
             case error
         }
-        
+
         public init(property: String, message: String, severity: Severity, suggestedFix: String? = nil) {
             self.property = property
             self.message = message
@@ -33,9 +33,9 @@ public enum ConfigurationValidationUtilities {
             self.suggestedFix = suggestedFix
         }
     }
-    
+
     // MARK: - Generic Range Validation
-    
+
     /// Generic range validator that consolidates all the duplicate range checking logic
     /// Used for font size, tab width, line height, gutter width, etc.
     public static func validateRange<T: Comparable & CustomStringConvertible>(
@@ -47,7 +47,7 @@ public enum ConfigurationValidationUtilities {
         guard range.contains(value) else {
             let message: String
             let suggestedValue: T
-            
+
             if value < range.lowerBound {
                 suggestedValue = range.lowerBound
                 message = "\(property) value \(value) is below minimum \(range.lowerBound)"
@@ -55,26 +55,26 @@ public enum ConfigurationValidationUtilities {
                 suggestedValue = range.upperBound
                 message = "\(property) value \(value) is above maximum \(range.upperBound)"
             }
-            
+
             let issue = ValidationIssue(
                 property: property,
                 message: message,
                 severity: .error,
                 suggestedFix: "Use \(suggestedValue) instead"
             )
-            
+
             if autoFix {
                 return .fixable(value, fixed: suggestedValue, issues: [issue])
             } else {
                 return .invalid(value, issues: [issue])
             }
         }
-        
+
         return .valid(value)
     }
-    
+
     // MARK: - Specific Validators
-    
+
     /// Validates font size using platform-specific constraints
     public static func validateFontSize(_ fontSize: CGFloat, autoFix: Bool = false) -> ValidationResult<CGFloat> {
         validateRange(
@@ -84,7 +84,7 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     /// Validates tab width using platform-specific constraints  
     public static func validateTabWidth(_ tabWidth: Int, autoFix: Bool = false) -> ValidationResult<Int> {
         validateRange(
@@ -94,7 +94,7 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     /// Validates line height multiplier
     public static func validateLineHeightMultiple(_ lineHeight: CGFloat, autoFix: Bool = false) -> ValidationResult<CGFloat> {
         validateRange(
@@ -104,7 +104,7 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     /// Validates gutter width
     public static func validateGutterWidth(_ gutterWidth: CGFloat, autoFix: Bool = false) -> ValidationResult<CGFloat> {
         validateRange(
@@ -114,7 +114,7 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     /// Validates syntax highlighting max length
     public static func validateHighlightingLength(_ length: Int, autoFix: Bool = false) -> ValidationResult<Int> {
         validateRange(
@@ -124,7 +124,7 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     /// Validates debounce interval
     public static func validateDebounceInterval(_ interval: TimeInterval, autoFix: Bool = false) -> ValidationResult<TimeInterval> {
         validateRange(
@@ -134,9 +134,9 @@ public enum ConfigurationValidationUtilities {
             autoFix: autoFix
         )
     }
-    
+
     // MARK: - Error Generation Helpers
-    
+
     /// Creates a standard configuration error message
     public static func createValidationError(
         for property: String,
@@ -150,7 +150,7 @@ public enum ConfigurationValidationUtilities {
         }
         return message
     }
-    
+
     /// Creates a configuration warning message
     public static func createValidationWarning(
         for property: String,
@@ -175,7 +175,7 @@ public enum ConfigurationCodableHelpers {
     ) throws -> T where T: Decodable {
         try container.decodeIfPresent(type, forKey: key) ?? defaultValue
     }
-    
+
     /// Decodes with validation and auto-correction if needed
     public static func decodeWithValidation<T, Key>(
         _ type: T.Type,
@@ -185,7 +185,7 @@ public enum ConfigurationCodableHelpers {
         validator: (T) -> ConfigurationValidationUtilities.ValidationResult<T>
     ) throws -> T where T: Decodable {
         let rawValue = try decodeWithDefault(type, from: container, forKey: key, defaultValue: defaultValue)
-        
+
         switch validator(rawValue) {
         case .valid(let value):
             return value
@@ -232,7 +232,7 @@ public enum ConfigurationBuilderHelpers {
             return fixed
         }
     }
-    
+
     /// Standard documentation template for builder methods
     public static func createDocumentation(
         for property: String,
@@ -263,7 +263,7 @@ public enum ConfigurationMigrationHelpers {
             return false
         }
     }
-    
+
     /// Maps old validation methods to new shared utilities
     @available(*, deprecated, message: "Use ConfigurationValidationUtilities.validateTabWidth instead")
     public static func legacyValidateTabWidth(_ tabWidth: Int) -> Bool {

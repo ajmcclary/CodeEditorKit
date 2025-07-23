@@ -8,26 +8,26 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         var value: Value
         var prev: Node?
         var next: Node?
-        
+
         init(key: Key, value: Value) {
             self.key = key
             self.value = value
         }
     }
-    
+
     private var capacity: Int
     private var cache: [Key: Node] = [:]
     private var head: Node?
     private var tail: Node?
     private let cacheId = UUID().uuidString
     private let memoryMonitor: MemoryMonitor
-    
+
     /// Total number of items currently in cache
     public var count: Int { cache.count }
-    
+
     /// Maximum capacity of the cache
     public var maxCapacity: Int { capacity }
-    
+
     /// Creates a new LRU cache with the specified capacity
     /// - Parameters:
     ///   - capacity: Maximum number of items to store
@@ -35,27 +35,27 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     public init(capacity: Int, memoryMonitor: MemoryMonitor) {
         self.capacity = max(1, capacity)
         self.memoryMonitor = memoryMonitor
-        
+
         // Register with memory monitor for cleanup
         registerWithMemoryMonitor()
     }
-    
+
     /// Check if the cache is empty
     public var isEmpty: Bool {
         cache.isEmpty
     }
-    
+
     /// Gets a value from the cache, moving it to most recently used
     /// - Parameter key: The key to look up
     /// - Returns: The cached value, or nil if not found
     public func get(_ key: Key) -> Value? {
         guard let node = cache[key] else { return nil }
-        
+
         // Move to head (most recently used)
         moveToHead(node)
         return node.value
     }
-    
+
     /// Sets a value in the cache
     /// - Parameters:
     ///   - value: The value to store
@@ -70,7 +70,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
             let newNode = Node(key: key, value: value)
             cache[key] = newNode
             addToHead(newNode)
-            
+
             // Remove least recently used if over capacity
             if cache.count > capacity {
                 if let removedNode = removeTail() {
@@ -79,7 +79,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
             }
         }
     }
-    
+
     /// Removes a value from the cache
     /// - Parameter key: The key to remove
     /// - Returns: The removed value, or nil if not found
@@ -89,21 +89,21 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         removeNode(node)
         return node.value
     }
-    
+
     /// Removes all items from the cache
     public func removeAll() {
         cache.removeAll()
         head = nil
         tail = nil
     }
-    
+
     /// Checks if the cache contains a value for the given key
     /// - Parameter key: The key to check
     /// - Returns: true if the key exists in the cache
     public func contains(_ key: Key) -> Bool {
         cache[key] != nil
     }
-    
+
     /// Returns all keys in the cache, ordered from most to least recently used
     public var allKeys: [Key] {
         var keys: [Key] = []
@@ -114,7 +114,7 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         }
         return keys
     }
-    
+
     /// Returns statistics about the cache
     public var statistics: CacheStatistics {
         CacheStatistics(
@@ -123,52 +123,52 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
             utilizationPercentage: Double(count) / Double(capacity) * 100
         )
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func addToHead(_ node: Node) {
         node.prev = nil
         node.next = head
         head?.prev = node
         head = node
-        
+
         // If this is the first node, also set it as tail
         if tail == nil {
             tail = node
         }
     }
-    
+
     private func removeNode(_ node: Node) {
         // Update head if needed
         if node === head {
             head = node.next
         }
-        
+
         // Update tail if needed
         if node === tail {
             tail = node.prev
         }
-        
+
         // Update neighbor connections
         node.prev?.next = node.next
         node.next?.prev = node.prev
-        
+
         // Clear node's references
         node.prev = nil
         node.next = nil
     }
-    
+
     private func moveToHead(_ node: Node) {
         removeNode(node)
         addToHead(node)
     }
-    
+
     private func removeTail() -> Node? {
         guard let lastNode = tail else { return nil }
         removeNode(lastNode)
         return lastNode
     }
-    
+
     /// Register with memory monitor for automatic cleanup
     private func registerWithMemoryMonitor() {
         let id = cacheId
@@ -176,10 +176,10 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
                 guard let self else {
                     return CleanupResult(memoryFreedMB: 0, description: "Cache deallocated")
                 }
-                
+
                 let beforeCount = self.count
                 let itemsToRemove = max(1, beforeCount / 4) // Remove 25% of items
-                
+
                 for _ in 0..<itemsToRemove {
                     if !self.isEmpty {
                         if let removedNode = self.removeTail() {
@@ -189,19 +189,19 @@ public final class LRUCache<Key: Hashable & Sendable, Value: Sendable> {
                         break
                     }
                 }
-                
+
                 let afterCount = self.count
                 let itemsRemoved = beforeCount - afterCount
-                
+
                 // Estimate memory freed (rough approximation)
                 let estimatedMemoryMB = Double(itemsRemoved) * 0.001 // 1KB per item estimate
-                
+
                 return CleanupResult(
                     memoryFreedMB: estimatedMemoryMB,
                     description: "Removed \(itemsRemoved) cache items"
                 )
         }
-        
+
         Task { @MainActor in
             self.memoryMonitor.registerCleanupHandler(
                 identifier: "lru-cache-\(id)",
@@ -217,11 +217,11 @@ public struct CacheStatistics: Sendable {
     public let currentSize: Int
     public let maxSize: Int
     public let utilizationPercentage: Double
-    
+
     public var isFull: Bool {
         currentSize >= maxSize
     }
-    
+
     public var availableSpace: Int {
         maxSize - currentSize
     }
@@ -236,13 +236,13 @@ public struct CompletionCacheKey: Hashable, Sendable {
     public let languageIdentifier: String
     public let triggerCharacter: String?
     public let contextHash: Int
-    
+
     public init(context: CompletionContextModel) {
         self.text = String(context.text.suffix(min(context.text.count, 100))) // Only cache last 100 chars
         self.cursorPosition = context.cursorPosition
         self.languageIdentifier = context.language.identifier
         self.triggerCharacter = context.triggerCharacter
-        
+
         // Create a hash from relevant context information
         var hasher = Hasher()
         hasher.combine(text)
@@ -259,13 +259,13 @@ public struct CachedCompletionResult: Sendable {
     public let result: CompletionResult
     public let timestamp: Date
     public let expirationTime: TimeInterval
-    
+
     public init(result: CompletionResult, expirationTime: TimeInterval = 300) { // 5 minutes default
         self.result = result
         self.timestamp = Date()
         self.expirationTime = expirationTime
     }
-    
+
     public var isExpired: Bool {
         Date().timeIntervalSince(timestamp) > expirationTime
     }

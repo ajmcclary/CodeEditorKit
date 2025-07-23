@@ -5,7 +5,7 @@ import Foundation
 public struct PythonMemberCompletions: LanguageMemberCompletions {
     public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         switch targetType.lowercased() {
         case "str", "string":
             return createStringMemberCompletions(filter: filter)
@@ -23,7 +23,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("upper()", "method", "Return uppercase string"),
@@ -44,7 +44,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("append()", "method", "Add element to end"),
@@ -61,7 +61,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createDictMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("get()", "method", "Get value for key with default"),
@@ -77,7 +77,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createSetMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("add()", "method", "Add element to set"),
@@ -95,7 +95,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("__str__()", "method", "String representation"),
@@ -114,7 +114,7 @@ public struct PythonMemberCompletions: LanguageMemberCompletions {
 public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
     public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         switch targetType.lowercased() {
         case "console":
             return createConsoleMemberCompletions(filter: filter)
@@ -138,7 +138,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createConsoleMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("log()", "method", "Log message to console"),
@@ -156,7 +156,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "Number of elements"),
@@ -183,7 +183,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "Number of characters"),
@@ -210,7 +210,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createObjectMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("assign()", "method", "Copy properties"),
@@ -234,7 +234,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createPromiseMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("then()", "method", "Handle resolved value"),
@@ -249,7 +249,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMathMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("PI", "property", "Pi constant"),
@@ -270,7 +270,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("toString()", "method", "Convert to string"),
@@ -287,7 +287,7 @@ public struct JavaScriptMemberCompletions: LanguageMemberCompletions {
 public struct RustMemberCompletions: LanguageMemberCompletions {
     public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         switch targetType.lowercased() {
         case "string", "str":
             return createStringMemberCompletions(filter: filter)
@@ -308,7 +308,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "method", "Get string length"),
@@ -329,7 +329,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createVecMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "method", "Get vector length"),
@@ -350,7 +350,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createOptionMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("is_some()", "method", "Check if Some"),
@@ -371,7 +371,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createResultMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("is_ok()", "method", "Check if Ok"),
@@ -392,7 +392,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createStdModuleCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("io", "module", "I/O operations"),
@@ -412,7 +412,7 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("clone()", "method", "Clone value"),

@@ -38,11 +38,11 @@ import SwiftUI
 public enum ConfigurationBuilder {
     public static func buildBlock(_ components: ConfigurationComponent...) -> EditorConfiguration {
         var config = EditorConfiguration()
-        
+
         for component in components {
             component.apply(to: &config)
         }
-        
+
         return config
     }
 }
@@ -65,11 +65,11 @@ public enum DisplayBuilder {
 
 public struct Display: ConfigurationComponent {
     private let components: [DisplayComponent]
-    
+
     public init(@DisplayBuilder _ builder: () -> [DisplayComponent]) {
         self.components = builder()
     }
-    
+
     public func apply(to configuration: inout EditorConfiguration) {
         for component in components {
             component.apply(to: &configuration.display)
@@ -83,11 +83,11 @@ public protocol DisplayComponent {
 
 public struct FontSize: DisplayComponent {
     private let size: CGFloat
-    
+
     public init(_ size: CGFloat) {
         self.size = size
     }
-    
+
     public func apply(to display: inout EditorConfiguration.Display) {
         display.fontSize = size
     }
@@ -95,11 +95,11 @@ public struct FontSize: DisplayComponent {
 
 public struct LineNumbers: DisplayComponent {
     private let enabled: Bool
-    
+
     public init(_ enabled: Bool) {
         self.enabled = enabled
     }
-    
+
     public func apply(to display: inout EditorConfiguration.Display) {
         display.isLineNumbersEnabled = enabled
     }
@@ -107,11 +107,11 @@ public struct LineNumbers: DisplayComponent {
 
 public struct SyntaxHighlighting: DisplayComponent {
     private let enabled: Bool
-    
+
     public init(_ enabled: Bool) {
         self.enabled = enabled
     }
-    
+
     public func apply(to display: inout EditorConfiguration.Display) {
         display.enableSyntaxHighlighting = enabled
     }
@@ -122,11 +122,11 @@ public struct SyntaxHighlighting: DisplayComponent {
 
 public struct ShowMinimap: DisplayComponent {
     private let show: Bool
-    
+
     public init(_ show: Bool) {
         self.show = show
     }
-    
+
     public func apply(to display: inout EditorConfiguration.Display) {
         display.showMinimap = show
     }
@@ -143,11 +143,11 @@ public enum LayoutBuilder {
 
 public struct Layout: ConfigurationComponent {
     private let components: [LayoutComponent]
-    
+
     public init(@LayoutBuilder _ builder: () -> [LayoutComponent]) {
         self.components = builder()
     }
-    
+
     public func apply(to configuration: inout EditorConfiguration) {
         for component in components {
             component.apply(to: &configuration.layout)
@@ -161,11 +161,11 @@ public protocol LayoutComponent {
 
 public struct TabWidth: LayoutComponent {
     private let width: Int
-    
+
     public init(_ width: Int) {
         self.width = width
     }
-    
+
     public func apply(to layout: inout EditorConfiguration.Layout) {
         layout.tabWidth = width
     }
@@ -173,11 +173,11 @@ public struct TabWidth: LayoutComponent {
 
 public struct WrapLines: LayoutComponent {
     private let wrap: Bool
-    
+
     public init(_ wrap: Bool) {
         self.wrap = wrap
     }
-    
+
     public func apply(to layout: inout EditorConfiguration.Layout) {
         layout.wrapLines = wrap
     }
@@ -185,11 +185,11 @@ public struct WrapLines: LayoutComponent {
 
 public struct LineHeight: LayoutComponent {
     private let multiple: CGFloat
-    
+
     public init(_ multiple: CGFloat) {
         self.multiple = multiple
     }
-    
+
     public func apply(to layout: inout EditorConfiguration.Layout) {
         layout.lineHeightMultiple = multiple
     }
@@ -197,11 +197,11 @@ public struct LineHeight: LayoutComponent {
 
 public struct GutterWidth: LayoutComponent {
     private let width: CGFloat
-    
+
     public init(_ width: CGFloat) {
         self.width = width
     }
-    
+
     public func apply(to layout: inout EditorConfiguration.Layout) {
         layout.gutterWidth = width
     }
@@ -218,11 +218,11 @@ public enum BehaviorBuilder {
 
 public struct Behavior: ConfigurationComponent {
     private let components: [BehaviorComponent]
-    
+
     public init(@BehaviorBuilder _ builder: () -> [BehaviorComponent]) {
         self.components = builder()
     }
-    
+
     public func apply(to configuration: inout EditorConfiguration) {
         for component in components {
             component.apply(to: &configuration.behavior)
@@ -236,11 +236,11 @@ public protocol BehaviorComponent {
 
 public struct Editable: BehaviorComponent {
     private let editable: Bool
-    
+
     public init(_ editable: Bool) {
         self.editable = editable
     }
-    
+
     public func apply(to behavior: inout EditorConfiguration.Behavior) {
         behavior.isEditable = editable
     }
@@ -248,11 +248,11 @@ public struct Editable: BehaviorComponent {
 
 public struct AutoIndent: BehaviorComponent {
     private let enabled: Bool
-    
+
     public init(_ enabled: Bool) {
         self.enabled = enabled
     }
-    
+
     public func apply(to behavior: inout EditorConfiguration.Behavior) {
         behavior.autoIndent = enabled
     }
@@ -260,11 +260,11 @@ public struct AutoIndent: BehaviorComponent {
 
 public struct CodeCompletion: BehaviorComponent {
     private let enabled: Bool
-    
+
     public init(_ enabled: Bool) {
         self.enabled = enabled
     }
-    
+
     public func apply(to behavior: inout EditorConfiguration.Behavior) {
         behavior.enableCodeCompletion = enabled
     }
@@ -281,11 +281,11 @@ public enum PerformanceBuilder {
 
 public struct Performance: ConfigurationComponent {
     private let components: [PerformanceComponent]
-    
+
     public init(@PerformanceBuilder _ builder: () -> [PerformanceComponent]) {
         self.components = builder()
     }
-    
+
     public func apply(to configuration: inout EditorConfiguration) {
         for component in components {
             component.apply(to: &configuration.performance)
@@ -299,11 +299,11 @@ public protocol PerformanceComponent {
 
 public struct MaxHighlightingLength: PerformanceComponent {
     private let length: Int
-    
+
     public init(_ length: Int) {
         self.length = length
     }
-    
+
     public func apply(to performance: inout EditorConfiguration.Performance) {
         performance.maxSyntaxHighlightingLength = length
     }
@@ -311,11 +311,11 @@ public struct MaxHighlightingLength: PerformanceComponent {
 
 public struct UseHardwareAcceleration: PerformanceComponent {
     private let use: Bool
-    
+
     public init(_ use: Bool) {
         self.use = use
     }
-    
+
     public func apply(to performance: inout EditorConfiguration.Performance) {
         performance.useHardwareAcceleration = use
     }
@@ -323,11 +323,11 @@ public struct UseHardwareAcceleration: PerformanceComponent {
 
 public struct SmoothScrolling: PerformanceComponent {
     private let enabled: Bool
-    
+
     public init(_ enabled: Bool) {
         self.enabled = enabled
     }
-    
+
     public func apply(to performance: inout EditorConfiguration.Performance) {
         performance.smoothScrolling = enabled
     }
@@ -349,12 +349,12 @@ extension EditorConfiguration {
 public struct Preset: ConfigurationComponent {
     private let preset: PresetConfiguration
     private let modifications: [ConfigurationComponent]
-    
+
     public init(_ preset: PresetConfiguration, @ConfigurationBuilder modifications: () -> [ConfigurationComponent] = { [] }) {
         self.preset = preset
         self.modifications = modifications()
     }
-    
+
     public func apply(to configuration: inout EditorConfiguration) {
         // Apply preset
         switch preset {
@@ -385,7 +385,7 @@ public struct Preset: ConfigurationComponent {
         case .platformOptimized:
             configuration = .platformOptimized
         }
-        
+
         // Apply modifications
         for modification in modifications {
             modification.apply(to: &configuration)

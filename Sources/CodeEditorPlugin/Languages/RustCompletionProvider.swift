@@ -17,7 +17,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         "yield", "try"
         ]
     }
-    
+
     override public var types: [String] {
         [
         "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128",
@@ -26,7 +26,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         "Rc", "Arc", "RefCell", "Mutex", "RwLock", "Cell"
         ]
     }
-    
+
     private let macros = [
         "println!", "print!", "eprintln!", "eprint!", "format!", "write!",
         "writeln!", "panic!", "assert!", "assert_eq!", "assert_ne!",
@@ -35,14 +35,14 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         "option_env!", "cfg!", "line!", "column!", "file!", "module_path!",
         "stringify!", "todo!", "unimplemented!", "unreachable!", "dbg!"
     ]
-    
+
     private let traits = [
         "Clone", "Copy", "Debug", "Default", "Display", "Drop", "Eq", "Fn",
         "FnMut", "FnOnce", "From", "Into", "Iterator", "Ord", "PartialEq",
         "PartialOrd", "Send", "Sized", "Sync", "ToString", "AsRef", "AsMut",
         "Borrow", "BorrowMut", "Deref", "DerefMut"
     ]
-    
+
     private let commonModules = [
         "std", "std::io", "std::fs", "std::path", "std::env", "std::process",
         "std::thread", "std::sync", "std::time", "std::collections",
@@ -50,7 +50,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         "std::fmt", "std::mem", "std::ptr", "std::slice", "std::str",
         "std::iter", "std::ops", "std::cmp", "std::convert", "std::marker"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -155,7 +155,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     public init() {
         super.init(
             id: "rust-builtin",
@@ -164,36 +164,36 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeRustContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .use:
             items.append(contentsOf: createUseCompletions(filter: analysisResult.filter))
-            
+
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .type:
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
+
         case .macro:
             items.append(contentsOf: createMacroCompletions(filter: analysisResult.filter))
-            
+
         case .trait:
             items.append(contentsOf: createTraitCompletions(filter: analysisResult.filter))
-            
+
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
@@ -201,13 +201,13 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
-            
+
         case .lifetime:
             items.append(contentsOf: createLifetimeCompletions(filter: analysisResult.filter))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -215,61 +215,61 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeRustContext(_ context: CompletionContextModel) -> RustContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for use statements
         if lineText.hasPrefix("use ") {
             return RustContextAnalysisResult(type: .use, filter: filter)
         }
-        
+
         // Check for macro context
         if beforeCursor.hasSuffix("!") || filter.hasSuffix("!") {
             return RustContextAnalysisResult(type: .macro, filter: filter)
         }
-        
+
         // Check for trait context
         if lineText.contains("impl ") && lineText.contains(" for ") {
             return RustContextAnalysisResult(type: .trait, filter: filter)
         }
-        
+
         // Check for type context
         if lineText.contains(": ") || lineText.contains("-> ") || lineText.contains("let ") {
             return RustContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return RustContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for module access
         if beforeCursor.hasSuffix("::") {
             let targetModule = extractTargetModule(from: beforeCursor)
             return RustContextAnalysisResult(type: .member, filter: "", targetType: targetModule)
         }
-        
+
         // Check for lifetime context
         if beforeCursor.hasSuffix("'") || beforeCursor.hasSuffix("<'") {
             return RustContextAnalysisResult(type: .lifetime, filter: filter)
         }
-        
+
         return RustContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_!'")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
@@ -280,7 +280,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func extractTargetModule(from text: String) -> String? {
         // Extract the module before ::
         let pattern = #"([\w:]+)::\s*$"#
@@ -291,9 +291,9 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
@@ -310,7 +310,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createMacroCompletions(filter: String) -> [CompletionItemModel] {
         macros
             .filter { macro in
@@ -326,7 +326,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createTraitCompletions(filter: String) -> [CompletionItemModel] {
         traits
             .filter { trait in
@@ -342,7 +342,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createUseCompletions(filter: String) -> [CompletionItemModel] {
         commonModules
             .filter { module in
@@ -358,11 +358,11 @@ public final class RustCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createLifetimeCompletions(filter: String) -> [CompletionItemModel] {
         // Common lifetime names
         let lifetimes = ["'a", "'b", "'c", "'static", "'_"]
-        
+
         return lifetimes
             .filter { lifetime in
                 filter.isEmpty || lifetime.localizedCaseInsensitiveContains(filter)
@@ -377,36 +377,36 @@ public final class RustCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Member Completions Override
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide member completions based on type or module
         switch targetType.lowercased() {
         case "string", "str":
             return createStringMemberCompletions(filter: filter)
-            
+
         case "vec":
             return createVecMemberCompletions(filter: filter)
-            
+
         case "option":
             return createOptionMemberCompletions(filter: filter)
-            
+
         case "result":
             return createResultMemberCompletions(filter: filter)
-            
+
         case "std":
             return createStdModuleCompletions(filter: filter)
-            
+
         default:
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "method", "Get string length"),
@@ -425,10 +425,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("lines()", "method", "Iterator over lines"),
             ("parse()", "method", "Parse string")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createVecMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "method", "Get vector length"),
@@ -447,10 +447,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("reverse()", "method", "Reverse elements"),
             ("contains()", "method", "Check if contains")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createOptionMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("is_some()", "method", "Check if Some"),
@@ -469,10 +469,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("ok_or()", "method", "Convert to Result"),
             ("expect()", "method", "Extract with message")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createResultMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("is_ok()", "method", "Check if Ok"),
@@ -491,10 +491,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("as_ref()", "method", "Convert to reference"),
             ("as_mut()", "method", "Convert to mutable ref")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createStdModuleCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("io", "module", "I/O operations"),
@@ -512,10 +512,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("error", "module", "Error handling"),
             ("mem", "module", "Memory operations")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("clone()", "method", "Clone value"),
@@ -525,10 +525,10 @@ public final class RustCompletionProvider: BaseCompletionProvider {
             ("cmp()", "method", "Ordering comparison"),
             ("hash()", "method", "Hash value")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
         members
             .filter { name, _, _ in
@@ -559,11 +559,11 @@ private struct RustContextAnalysisResult {
         case general
         case lifetime
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

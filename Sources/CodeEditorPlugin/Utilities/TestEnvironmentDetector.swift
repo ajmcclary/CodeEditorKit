@@ -5,7 +5,7 @@ import Foundation
 /// to avoid duplication and ensure consistent test detection logic
 public enum TestEnvironmentDetector {
     // MARK: - Test Environment Detection
-    
+
     /// Detects if the code is currently running in a test environment
     /// 
     /// This method checks for the presence of the XCTestConfigurationFilePath environment variable,
@@ -39,7 +39,7 @@ public enum TestEnvironmentDetector {
     public static var isRunningInTests: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
-    
+
     /// Detects if the code is NOT running in a test environment
     /// 
     /// Convenience property that's the inverse of `isRunningInTests`.
@@ -58,9 +58,9 @@ public enum TestEnvironmentDetector {
     public static var isRunningInProduction: Bool {
         !isRunningInTests
     }
-    
+
     // MARK: - Conditional Execution Helpers
-    
+
     /// Execute a closure only if NOT running in tests
     /// 
     /// This helper method provides a clean way to conditionally execute code
@@ -81,7 +81,7 @@ public enum TestEnvironmentDetector {
             closure()
         }
     }
-    
+
     /// Execute an async closure only if NOT running in tests
     /// 
     /// Async version of `executeInProduction` for asynchronous operations.
@@ -100,7 +100,7 @@ public enum TestEnvironmentDetector {
             await closure()
         }
     }
-    
+
     /// Execute a throwing closure only if NOT running in tests
     /// 
     /// Version of `executeInProduction` for operations that can throw errors.
@@ -121,7 +121,7 @@ public enum TestEnvironmentDetector {
         }
         return nil
     }
-    
+
     /// Execute an async throwing closure only if NOT running in tests
     /// 
     /// Async throwing version of `executeInProduction`.
@@ -142,9 +142,9 @@ public enum TestEnvironmentDetector {
         }
         return nil
     }
-    
+
     // MARK: - Debug Information
-    
+
     /// Get debug information about the current environment
     /// 
     /// Useful for debugging environment detection issues.

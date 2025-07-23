@@ -8,7 +8,7 @@ import UIKit
 /// allowing proper task cancellation and preventing unstructured tasks.
 actor CatalystColorTaskManager {
     private var activeTask: Task<Void, Never>?
-    
+
     /// Applies text color with structured delay handling
     /// - Parameters:
     ///   - color: The color to apply
@@ -17,12 +17,12 @@ actor CatalystColorTaskManager {
     func applyColorWithDelay(_: UIColor, to textView: CodeEditorView, delay: UInt64 = 100) async {
         // Cancel any existing task
         activeTask?.cancel()
-        
+
         // Create a new structured task
         activeTask = Task { @MainActor in
             // Apply color immediately
             textView.applyTextColorForMacCatalyst()
-            
+
             // Wait for the specified delay
             do {
                 try await Task.sleep(for: .milliseconds(delay))
@@ -34,17 +34,17 @@ actor CatalystColorTaskManager {
                 // Task was cancelled, which is expected behavior
             }
         }
-        
+
         // Wait for the task to complete
         await activeTask?.value
     }
-    
+
     /// Cancels any active color application task
     func cancelActiveTask() {
         activeTask?.cancel()
         activeTask = nil
     }
-    
+
     deinit {
         activeTask?.cancel()
     }

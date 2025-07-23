@@ -318,7 +318,7 @@ private class NoOpCompletionViewController: UIViewController, CompletionViewCont
     func showCompletions() {}
     func hideCompletions() {}
     func reloadData() {}
-    
+
     var isVisible: Bool { false }
 }
 #endif

@@ -13,18 +13,18 @@ import AppKit
 @MainActor
 public final class SyntaxHighlightingService {
     // MARK: - Properties
-    
+
     private let syntaxHighlighter: SyntaxHighlightingCoordinator
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "SyntaxHighlightingService")
-    
+
     // MARK: - Initialization
-    
+
     public init(syntaxHighlighter: SyntaxHighlightingCoordinator? = nil) {
         self.syntaxHighlighter = syntaxHighlighter ?? SyntaxHighlightingCoordinator()
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Determines if syntax highlighting should be applied based on configuration and content
     public func shouldApplySyntaxHighlighting(
         isEnabled: Bool,
@@ -35,15 +35,15 @@ public final class SyntaxHighlightingService {
             logger.debug("Syntax highlighting disabled by configuration")
             return false
         }
-        
+
         guard textLength <= maxLength else {
             logger.debug("Text length \(textLength) exceeds maximum \(maxLength) for syntax highlighting")
             return false
         }
-        
+
         return true
     }
-    
+
     /// Calculates the appropriate range for syntax highlighting
     public func calculateHighlightingRange(
         editedRange: NSRange,
@@ -53,14 +53,14 @@ public final class SyntaxHighlightingService {
         guard editedRange.location != NSNotFound else {
             return nil
         }
-        
+
         // Validate range bounds
         let maxLocation = editedRange.location + editedRange.length
         guard maxLocation <= textLength else {
             logger.warning("Edited range \(editedRange) exceeds text length \(textLength)")
             return nil
         }
-        
+
         // If visible range is provided, expand to include it
         if let visible = visibleRange {
             let combinedLocation = min(editedRange.location, visible.location)
@@ -70,10 +70,10 @@ public final class SyntaxHighlightingService {
             )
             return NSRange(location: combinedLocation, length: combinedEnd - combinedLocation)
         }
-        
+
         return editedRange
     }
-    
+
     /// Schedules syntax highlighting with appropriate debouncing
     public func scheduleHighlighting(
         asyncHighlighter: AsyncSyntaxHighlighter,
@@ -82,20 +82,20 @@ public final class SyntaxHighlightingService {
         visibleRange: NSRange?
     ) {
         logger.debug("Scheduling syntax highlighting for language: \(language.name)")
-        
+
         asyncHighlighter.scheduleHighlighting(
             for: textView,
             language: language,
             visibleRange: visibleRange
         )
     }
-    
+
     /// Cancels all pending highlighting operations
     public func cancelHighlighting(asyncHighlighter: AsyncSyntaxHighlighter) {
         logger.debug("Cancelling all syntax highlighting")
         asyncHighlighter.cancelAllHighlighting()
     }
-    
+
     /// Updates completion trigger characters for a language
     public func getCompletionTriggerCharacters(for language: Language) -> Set<Character> {
         switch language {
@@ -148,14 +148,14 @@ public final class SyntaxHighlightingService {
             return []
         }
     }
-    
+
     /// Validates if a range is safe to highlight
     public func isValidHighlightingRange(_ range: NSRange, textLength: Int) -> Bool {
         range.location >= 0 &&
         range.length >= 0 &&
         range.location + range.length <= textLength
     }
-    
+
     /// Determines if highlighting should be viewport-based
     public func shouldUseViewportHighlighting(
         textLength: Int,
@@ -163,7 +163,7 @@ public final class SyntaxHighlightingService {
     ) -> Bool {
         textLength > viewportThreshold
     }
-    
+
     /// Calculates performance mode for highlighting
     public func determineHighlightingMode(
         textLength: Int,
@@ -179,9 +179,9 @@ public final class SyntaxHighlightingService {
             return .full
         }
     }
-    
+
     // MARK: - Cache Management
-    
+
     /// Clears any cached highlighting data
     public func clearCache() {
         // The actual cache is managed by AsyncSyntaxHighlighter
@@ -229,33 +229,33 @@ extension SyntaxHighlightingService {
             // No color set, use guaranteed visible fallback
             effectiveTextColor = PlatformColors.label
         }
-        
+
         let effectiveFont = font ?? PlatformFonts.monospacedSystemFont(
             ofSize: configuration.display.fontSize,
             weight: .regular
         )
-        
+
         return [
             .foregroundColor: effectiveTextColor,
             .font: effectiveFont,
             .backgroundColor: UIColor.clear
         ]
     }
-    
+
     /// Validates Mac Catalyst text visibility
     public func validateCatalystTextVisibility(
         textStorage: NSTextStorage,
         attributes: [NSAttributedString.Key: Any]
     ) -> Bool {
         guard textStorage.length > 0 else { return true }
-        
+
         // Check if the foreground color is visible
         if let color = attributes[.foregroundColor] as? UIColor {
             var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
             color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
             return alpha > 0.1 && (red + green + blue) > 0.1
         }
-        
+
         return false
     }
 }

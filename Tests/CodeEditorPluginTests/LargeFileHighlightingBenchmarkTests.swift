@@ -9,7 +9,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         super.setUp()
         // Setup is intentionally empty
     }
-    
+
     override func tearDown() {
         super.tearDown()
         // Force cleanup to prevent deallocation warnings
@@ -18,7 +18,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         }
     }
     // MARK: - Test Helpers
-    
+
     private func createTestComponents() -> (AsyncSyntaxHighlighter, CodeEditorView, MemoryMonitor) {
         let memoryMonitor = MemoryMonitor()
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
@@ -26,132 +26,132 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         editorView.asyncHighlighter = highlighter
         return (highlighter, editorView, memoryMonitor)
     }
-    
+
     private func generateSimpleSwiftFile(lines: Int) -> String {
         var code = "import Foundation\n\n"
-        
+
         for index in 0..<lines {
             code += "let value\(index) = \(index) // Simple constant\n"
             if index.isMultiple(of: 5) {
                 code += "func process\(index)() -> Int { return \(index) * 2 }\n"
             }
         }
-        
+
         return code
     }
-    
+
     private func generateLargeSwiftFile(lines: Int) -> String {
         // Use simplified generation for benchmark tests
         generateSimpleSwiftFile(lines: lines)
     }
-    
+
     private func generateSimpleJSONFile(objects: Int) -> String {
         var json = "[\n"
-        
+
         for index in 0..<objects {
             json += """
               {"id": \(index), "name": "Item \(index)", "value": \(index * 2)}
             """
             json += index < objects - 1 ? ",\n" : "\n"
         }
-        
+
         json += "]"
         return json
     }
-    
+
     private func generateLargeJSONFile(objects: Int) -> String {
         // Use simplified generation for benchmark tests
         generateSimpleJSONFile(objects: objects)
     }
-    
+
     // MARK: - Swift Highlighting Benchmarks
-    
+
     func testSwiftHighlightingSmallFile() async throws {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
-        
+
         let code = generateLargeSwiftFile(lines: 5) // Reduced from 20
         editorView.text = code
         editorView.language = .swift
-        
+
         // Single run instead of multiple
         let start = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         print("Small file highlighting: \(String(format: "%.3f", elapsed))s")
-        
+
         XCTAssertLessThan(elapsed, 0.5, "Small file should highlight in less than 0.5 seconds")
     }
-    
+
     func testSwiftHighlightingMediumFile() async throws {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
-        
+
         let code = generateLargeSwiftFile(lines: 15) // Reduced from 50
         editorView.text = code
         editorView.language = .swift
-        
+
         let start = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         print("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 1.5, "Medium file should highlight in less than 1.5 seconds")
     }
-    
+
     func testSwiftHighlightingLargeFile() async throws {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
-        
+
         let code = generateLargeSwiftFile(lines: 25) // Reduced from 100
         editorView.text = code
         editorView.language = .swift
-        
+
         let start = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: .swift)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         print("Large file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 2.0, "Large file should highlight in less than 2 seconds")
     }
-    
+
     // MARK: - JSON Highlighting Benchmarks
-    
+
     func testJSONHighlightingSmallFile() async throws {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
-        
+
         let json = generateLargeJSONFile(objects: 10) // Reduced from 100
         editorView.text = json
         editorView.language = .json
-        
+
         let start = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: .json)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         print("JSON small file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 1.0, "JSON small file should highlight quickly")
     }
-    
+
     func testJSONHighlightingLargeFile() async throws {
         let (highlighter, editorView, _) = createTestComponents()
         defer { highlighter.cleanup() }
-        
+
         let json = generateLargeJSONFile(objects: 50) // Dramatically reduced from 5000
         editorView.text = json
         editorView.language = .json
-        
+
         let start = CFAbsoluteTimeGetCurrent()
         await highlighter.highlightImmediately(for: editorView, language: .json)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        
+
         print("JSON large file highlighting: \(String(format: "%.3f", elapsed))s")
         XCTAssertLessThan(elapsed, 2.0, "JSON large file should highlight in reasonable time")
     }
-    
+
     // MARK: - Memory Usage Tests
-    
+
     // Disabled: Takes too long
     /*
     func testMemoryUsageDuringLargeFileHighlighting() async throws {
@@ -197,9 +197,9 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         """)
     }
     */
-    
+
     // MARK: - Background Highlighting Tests
-    
+
     // Disabled: Takes too long
     /*
     func testBackgroundHighlightingActivation() async throws {
@@ -242,9 +242,9 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         """)
     }
     */
-    
+
     // MARK: - Incremental Highlighting Tests
-    
+
     // Disabled: Takes too long
     /*
     func testIncrementalHighlightingPerformance() async throws {
@@ -277,9 +277,9 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         XCTAssertLessThan(averageTime, 0.5, "Incremental updates should be fast")
     }
     */
-    
+
     // MARK: - Multi-Language Performance
-    
+
     /*
     func testMultiLanguageHighlightingComparison() async throws {
         let (highlighter, editorView, _) = createTestComponents()

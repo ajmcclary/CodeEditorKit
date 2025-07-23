@@ -12,20 +12,20 @@ public class DebugSession {
     public let adapter: DebugAdapter
     public var state: SessionState = .initializing
     public var currentThreadId: Int = 1
-    
+
     init(id: String, configuration: LaunchConfiguration, adapter: DebugAdapter) {
         self.id = id
         self.configuration = configuration
         self.adapter = adapter
     }
-    
+
     public enum SessionState {
         case initializing
         case running
         case paused
         case terminated
     }
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
@@ -45,12 +45,12 @@ public struct LaunchConfiguration: Sendable {
     public let cwd: String?
     public let stopOnEntry: Bool
     public let noDebug: Bool
-    
+
     public enum RequestType: Sendable {
         case launch
         case attach
     }
-    
+
     public init(
         name: String,
         type: String,
@@ -88,11 +88,11 @@ public struct Breakpoint: Identifiable, Sendable {
     public var hitCondition: String?
     public var logMessage: String?
     public var verified = false
-    
+
     public var isConditional: Bool {
         condition != nil || hitCondition != nil
     }
-    
+
     public var isLogpoint: Bool {
         logMessage != nil
     }
@@ -105,7 +105,7 @@ public struct Source: Sendable {
     public let name: String?
     public let path: String
     public let sourceReference: Int?
-    
+
     public init(path: String, name: String? = nil, sourceReference: Int? = nil) {
         self.name = name
         self.path = path
@@ -123,7 +123,7 @@ public struct StackFrame: Identifiable, Sendable {
     public let line: Int
     public let column: Int
     public let presentationHint: PresentationHint?
-    
+
     public enum PresentationHint: String, Sendable {
         case normal
         case label
@@ -143,7 +143,7 @@ public struct Variable: Identifiable, Sendable {
     public let namedVariables: Int?
     public let indexedVariables: Int?
     public let presentationHint: VariablePresentationHint?
-    
+
     public struct VariablePresentationHint: Sendable {
         public let kind: String?
         public let attributes: [String]
@@ -267,7 +267,7 @@ public enum DebugError: LocalizedError, Sendable {
     case noActiveSession
     case adapterError(String)
     case communicationError(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .noAdapterForLanguage(let language):

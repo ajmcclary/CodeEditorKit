@@ -179,51 +179,51 @@ import Combine
 @MainActor
 public final class MemoryMonitor: ObservableObject {
     // MARK: - Dependencies
-    
+
     /// Memory provider for platform-specific memory information
     private let memoryProvider: PlatformMemoryProvider
     // MARK: - Configuration
-    
+
     /// Memory threshold for triggering cleanup (in MB)
     public var memoryThresholdMB: Double = 100.0
-    
+
     /// Monitoring interval in seconds
     public var monitoringInterval: TimeInterval = 10.0
-    
+
     /// Enable automatic cleanup when threshold is exceeded
     public var enableAutomaticCleanup: Bool = true
-    
+
     /// Enable periodic cleanup regardless of memory usage
     public var enablePeriodicCleanup: Bool = true
-    
+
     /// Periodic cleanup interval in seconds
     public var periodicCleanupInterval: TimeInterval = 300.0 // 5 minutes
-    
+
     // MARK: - State
-    
+
     /// Current memory usage statistics
     @Published public private(set) var memoryStats = MemoryStatistics()
-    
+
     /// Registered cleanup handlers
     private var cleanupHandlers: [String: CleanupHandler] = [:]
-    
+
     /// Memory monitoring task
     private var monitoringTask: Task<Void, Never>?
-    
+
     /// Periodic cleanup task
     private var cleanupTask: Task<Void, Never>?
-    
+
     /// Logger
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.memory", category: "MemoryMonitor")
-    
+
     /// Whether we're under memory pressure
     @Published public private(set) var isUnderPressure: Bool = false
-    
+
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
-    
+
     // MARK: - Initialization
-    
+
     /// Initialize with optional memory provider
     /// - Parameter memoryProvider: Platform memory provider (defaults to system provider)
     /// 
@@ -231,11 +231,11 @@ public final class MemoryMonitor: ObservableObject {
     ///   to begin memory monitoring. This change provides better control over resource usage.
     public init(memoryProvider: PlatformMemoryProvider? = nil) {
         self.memoryProvider = memoryProvider ?? SystemMemoryProvider()
-        
+
         // Note: No longer auto-starts monitoring.
         // Call startMonitoring() explicitly when ready.
     }
-    
+
     deinit {
         // Note: We cannot safely access @MainActor properties from deinit
         // as it may be called from any thread. The tasks will be automatically
@@ -243,9 +243,9 @@ public final class MemoryMonitor: ObservableObject {
         // Users should call stopMonitoring() explicitly before releasing the monitor
         // to ensure proper cleanup.
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Register a cleanup handler
     /// - Parameters:
     ///   - identifier: Unique identifier for the handler
@@ -261,17 +261,17 @@ public final class MemoryMonitor: ObservableObject {
             priority: priority,
             handler: handler
         )
-        
+
         logger.info("Registered cleanup handler: \(identifier) with priority: \(priority.rawValue)")
     }
-    
+
     /// Unregister a cleanup handler
     /// - Parameter identifier: The identifier of the handler to remove
     public func unregisterCleanupHandler(identifier: String) {
         cleanupHandlers.removeValue(forKey: identifier)
         logger.info("Unregistered cleanup handler: \(identifier)")
     }
-    
+
     /// Force immediate cleanup
     /// - Parameter targetReduction: Target memory reduction in MB (nil for all available)
     /// - Returns: Total amount of memory freed
@@ -279,31 +279,31 @@ public final class MemoryMonitor: ObservableObject {
     public func performCleanup(targetReduction: Double? = nil) async -> Double {
         let startTime = Date()
         let initialMemory = getCurrentMemoryUsage()
-        
+
         logger.info("Starting forced cleanup. Initial memory: \(initialMemory)MB")
-        
+
         var totalFreed: Double = 0
         let sortedHandlers = cleanupHandlers.values.sorted { $0.priority.rawValue > $1.priority.rawValue }
-        
+
         for handler in sortedHandlers {
             let result = await handler.handler()
             totalFreed += result.memoryFreedMB
-            
+
             // Only log in non-test environments
             if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
                 logger.debug("Cleanup handler \(handler.identifier) freed \(result.memoryFreedMB)MB")
             }
-            
+
             // Check if we've reached the target
             if let target = targetReduction, totalFreed >= target {
                 break
             }
         }
-        
+
         let finalMemory = getCurrentMemoryUsage()
         let actualFreed = max(0, initialMemory - finalMemory)
         let duration = Date().timeIntervalSince(startTime)
-        
+
         let operation = CleanupOperation(
             timestamp: startTime,
             duration: duration,
@@ -312,42 +312,42 @@ public final class MemoryMonitor: ObservableObject {
             memoryFreed: actualFreed,
             trigger: .manual
         )
-        
+
         recordCleanupOperation(operation)
         updateMemoryStats()
-        
+
         // Only log in non-test environments to avoid cluttering test output
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             logger.info("Cleanup completed. Memory freed: \(actualFreed)MB in \(duration)s")
         }
-        
+
         return actualFreed
     }
-    
+
     /// Get current memory usage in MB
     public func getCurrentMemoryUsage() -> Double {
         memoryProvider.getCurrentMemoryUsage()
     }
-    
+
     /// Get memory pressure status
     public func getMemoryPressure() -> MemoryPressure {
         memoryProvider.getMemoryPressure()
     }
-    
+
     /// Start memory monitoring
     /// 
     /// - Note: Since v1.1.0, monitoring must be started explicitly. This provides better control
     ///   over when resource-intensive monitoring begins.
     public func startMonitoring() {
         stopMonitoring()
-        
+
         // Start monitoring task
         monitoringTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
-                
+
                 await self.checkMemoryUsage()
-                
+
                 do {
                     try await Task.sleep(for: .seconds(self.monitoringInterval))
                 } catch {
@@ -356,79 +356,79 @@ public final class MemoryMonitor: ObservableObject {
                 }
             }
         }
-        
+
         // Start periodic cleanup task if enabled
         if enablePeriodicCleanup {
             cleanupTask = Task { [weak self] in
                 while !Task.isCancelled {
                     guard let self else { return }
-                    
+
                     do {
                         try await Task.sleep(for: .seconds(self.periodicCleanupInterval))
                     } catch {
                         // Task was cancelled
                         return
                     }
-                    
+
                     await self.performPeriodicCleanup()
                 }
             }
         }
-        
+
         logger.info("Memory monitoring started")
     }
-    
+
     /// Stop memory monitoring
     public func stopMonitoring() {
         monitoringTask?.cancel()
         monitoringTask = nil
-        
+
         cleanupTask?.cancel()
         cleanupTask = nil
-        
+
         logger.info("Memory monitoring stopped")
     }
-    
+
     /// Get memory statistics
     public func getMemoryStatistics() -> MemoryStatistics {
         var stats = memoryStats
         stats.currentUsageMB = getCurrentMemoryUsage()
         return stats
     }
-    
+
     /// Reset statistics
     public func resetStatistics() {
         memoryStats = MemoryStatistics()
         cleanupHistory.removeAll()
         logger.info("Memory statistics reset")
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func checkMemoryUsage() async {
         let currentUsage = getCurrentMemoryUsage()
         updateMemoryStats(currentUsage: currentUsage)
-        
+
         // Update pressure status
         let wasUnderPressure = isUnderPressure
         isUnderPressure = memoryProvider.isUnderMemoryPressure()
-        
+
         // Notify if pressure status changed
         if isUnderPressure != wasUnderPressure {
             logger.info("Memory pressure changed: \(wasUnderPressure ? "normal" : "pressure") -> \(isUnderPressure ? "pressure" : "normal")")
         }
-        
+
         if enableAutomaticCleanup && currentUsage > memoryThresholdMB {
             logger.warning("Memory usage (\(currentUsage)MB) exceeded threshold (\(self.memoryThresholdMB)MB)")
-            
+
             let targetReduction = currentUsage - (self.memoryThresholdMB * 0.8) // Target 80% of threshold
             await performAutomaticCleanup(targetReduction: targetReduction)
         }
     }
-    
+
     private func performAutomaticCleanup(targetReduction: Double) async {
         let freed = await performCleanup(targetReduction: targetReduction)
-        
+
         _ = CleanupOperation(
             timestamp: Date(),
             duration: 0, // Will be updated by performCleanup
@@ -437,16 +437,16 @@ public final class MemoryMonitor: ObservableObject {
             memoryFreed: freed,
             trigger: .automatic
         )
-        
+
         // Only log in non-test environments
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             logger.info("Automatic cleanup freed \(freed)MB")
         }
     }
-    
+
     private func performPeriodicCleanup() async {
         let freed = await performCleanup()
-        
+
         _ = CleanupOperation(
             timestamp: Date(),
             duration: 0,
@@ -455,37 +455,37 @@ public final class MemoryMonitor: ObservableObject {
             memoryFreed: freed,
             trigger: .periodic
         )
-        
+
         // Only log in non-test environments
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             logger.info("Periodic cleanup freed \(freed)MB")
         }
     }
-    
+
     private func updateMemoryStats(currentUsage: Double? = nil) {
         let usage = currentUsage ?? getCurrentMemoryUsage()
-        
+
         memoryStats.currentUsageMB = usage
         memoryStats.peakUsageMB = max(memoryStats.peakUsageMB, usage)
         memoryStats.lastUpdateTime = Date()
-        
+
         // Update rolling average
         memoryStats.usageHistory.append(usage)
         if memoryStats.usageHistory.count > 100 { // Keep last 100 readings
             memoryStats.usageHistory.removeFirst()
         }
-        
+
         memoryStats.averageUsageMB = memoryStats.usageHistory.reduce(0, +) / Double(memoryStats.usageHistory.count)
     }
-    
+
     private func recordCleanupOperation(_ operation: CleanupOperation) {
         cleanupHistory.append(operation)
-        
+
         // Keep only last 50 cleanup operations
         if cleanupHistory.count > 50 {
             cleanupHistory.removeFirst()
         }
-        
+
         // Update statistics
         memoryStats.totalCleanupOperations += 1
         memoryStats.totalMemoryFreed += operation.memoryFreed
@@ -511,7 +511,7 @@ public enum CleanupPriority: Int, CaseIterable, Sendable {
 public struct CleanupResult: Sendable {
     public let memoryFreedMB: Double
     public let description: String?
-    
+
     public init(memoryFreedMB: Double, description: String? = nil) {
         self.memoryFreedMB = memoryFreedMB
         self.description = description
@@ -545,14 +545,14 @@ public struct MemoryStatistics {
     public var totalCleanupOperations: Int = 0
     public var totalMemoryFreed: Double = 0
     public var lastUpdateTime = Date()
-    
+
     public var usageHistory: [Double] = []
-    
+
     public var memoryEfficiency: Double {
         guard peakUsageMB > 0 else { return 0 }
         return 1.0 - (averageUsageMB / peakUsageMB)
     }
-    
+
     public var cleanupEffectiveness: Double {
         guard totalCleanupOperations > 0 else { return 0 }
         return totalMemoryFreed / Double(totalCleanupOperations)

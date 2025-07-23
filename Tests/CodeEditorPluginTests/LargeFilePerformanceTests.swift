@@ -7,7 +7,7 @@ final class LargeFilePerformanceTests: XCTestCase {
         super.setUp()
         // Setup is intentionally empty
     }
-    
+
     override func tearDown() {
         super.tearDown()
         // Force cleanup to prevent deallocation warnings
@@ -16,25 +16,25 @@ final class LargeFilePerformanceTests: XCTestCase {
         }
     }
     // MARK: - Test Data Generation
-    
+
     private func generateLargeSwiftFile(lines: Int) -> String {
         var content = """
         //
         //  LargeGeneratedFile.swift
         //  Performance Test File
         //
-        
+
         import Foundation
         import UIKit
-        
+
         """
-        
+
         // Generate realistic Swift code patterns
         for index in 0..<(lines / 20) {
             content += """
-            
+
             // MARK: - Section \(index)
-            
+
             /// Documentation for MyClass\(index)
             /// This class demonstrates various Swift features
             public class MyClass\(index): NSObject {
@@ -42,18 +42,18 @@ final class LargeFilePerformanceTests: XCTestCase {
                 private let identifier = UUID()
                 private var counter: Int = 0
                 public var name: String = "Class\(index)"
-                
+
                 // Computed property
                 var description: String {
                     return "MyClass\(index) - \\(name) [\\(counter)]"
                 }
-                
+
                 // Methods
                 public func performOperation() {
                     counter += 1
                     print("Performing operation \\(counter)")
                 }
-                
+
                 private func helperMethod(_ value: Int) -> String {
                     switch value {
                     case 0..<10:
@@ -67,22 +67,22 @@ final class LargeFilePerformanceTests: XCTestCase {
                     }
                 }
             }
-            
+
             extension MyClass\(index): CustomStringConvertible {
                 public override var description: String {
                     return "Extended: \\(self.name)"
                 }
             }
-            
+
             """
         }
-        
+
         return content
     }
-    
+
     private func generateLargeJSONFile(objects: Int) -> String {
         var json = "[\n"
-        
+
         for index in 0..<objects {
             json += """
               {
@@ -97,29 +97,29 @@ final class LargeFilePerformanceTests: XCTestCase {
                 "description": "This is a longer description for object number \(index) in our performance test"
               }
             """
-            
+
             if index < objects - 1 {
                 json += ",\n"
             }
         }
-        
+
         json += "\n]"
         return json
     }
-    
+
     // MARK: - Syntax Highlighting Performance Tests
-    
+
     @MainActor
     func testLargeFileSyntaxHighlightingPerformance() {
         let largeFile = generateLargeSwiftFile(lines: 50) // ~50 lines
         let textView = CodeEditorView()
         textView.text = largeFile
-        
+
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
-        
+
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting complete")
-            
+
             Task {
                 await highlighter.highlightImmediately(
                     for: textView,
@@ -127,7 +127,7 @@ final class LargeFilePerformanceTests: XCTestCase {
                 )
                 expectation.fulfill()
             }
-            
+
             // Platform-specific timeouts for large file highlighting
             #if targetEnvironment(macCatalyst)
             wait(for: [expectation], timeout: 2.0)
@@ -139,23 +139,23 @@ final class LargeFilePerformanceTests: XCTestCase {
             #endif
         }
     }
-    
+
     @MainActor
     func testVeryLargeFilePerformanceLimits() {
         let veryLargeFile = generateLargeSwiftFile(lines: 100) // ~100 lines
         let textView = CodeEditorView()
         textView.text = veryLargeFile
-        
+
         // Configure with performance limits
         var config = EditorConfiguration()
         config.performance.maxSyntaxHighlightingLength = 100_000 // Should disable for this file
         config.apply(to: textView)
-        
+
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
-        
+
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "Highlighting check complete")
-            
+
             Task {
                 // This should complete quickly as highlighting should be disabled
                 await highlighter.highlightImmediately(
@@ -164,22 +164,22 @@ final class LargeFilePerformanceTests: XCTestCase {
                 )
                 expectation.fulfill()
             }
-            
+
             wait(for: [expectation], timeout: 5.0) // Increased timeout for simulator performance
         }
     }
-    
+
     // MARK: - Text Editing Performance Tests
-    
+
     @MainActor
     func testLargeFileTextInsertionPerformance() {
         let largeFile = generateLargeSwiftFile(lines: 25)
         let textView = CodeEditorView()
         textView.text = largeFile
-        
+
         let insertText = "\n    // New comment\n    let newVariable = 42\n"
         let insertionPoint = largeFile.count / 2 // Middle of file
-        
+
         measure(options: Self.standardMeasureOptions) {
             // Insert text in the middle of the file
             if let range = Range(NSRange(location: insertionPoint, length: 0), in: largeFile) {
@@ -189,67 +189,67 @@ final class LargeFilePerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     // MARK: - Scrolling Performance Tests
-    
+
     @MainActor
     func testLargeFileScrollingPerformance() {
         let largeFile = generateLargeSwiftFile(lines: 50)
         let textView = CodeEditorView()
-        
+
         // Disable syntax highlighting for scrolling performance test
         var config = EditorConfiguration()
         config.performance.maxSyntaxHighlightingLength = 0 // Disable syntax highlighting
         config.apply(to: textView)
-        
+
         textView.text = largeFile
-        
+
         // Set up viewport manager
         _ = ViewportManager(textView: textView, memoryMonitor: MemoryMonitor())
-        
+
         measure(options: Self.standardMeasureOptions) {
             // Simulate scrolling through the document
             for location in stride(from: 0, to: largeFile.count, by: largeFile.count / 10) {
                 if let range = Range(NSRange(location: location, length: 100), in: largeFile) {
                     textView.scrollRangeToVisible(NSRange(range, in: largeFile))
-                    
+
                     // Give viewport manager time to process
                     RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.01))
                 }
             }
         }
     }
-    
+
     // MARK: - Memory Usage Tests
-    
+
     @MainActor
     func testLargeFileMemoryUsage() async {
         let memoryMonitor = MemoryMonitor()
         let initialMemory = memoryMonitor.getCurrentMemoryUsage()
-        
+
         // Create large file
         let largeFile = generateLargeSwiftFile(lines: 100)
         let textView = CodeEditorView()
         textView.memoryMonitor = memoryMonitor
         textView.text = largeFile
         textView.language = .swift
-        
+
         // Configure and apply highlighting
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
         await highlighter.highlightImmediately(for: textView, language: .swift)
-        
+
         // Highlight again to ensure cache is populated (first run might not cache)
         await highlighter.highlightImmediately(for: textView, language: .swift)
-        
+
         // Check memory usage
         let currentMemory = memoryMonitor.getCurrentMemoryUsage()
         let memoryIncrease = currentMemory - initialMemory
-        
+
         XCTAssertLessThan(memoryIncrease, 60.0, "Memory increase should be less than 60MB for 100 line file")
-        
+
         // Test cache statistics
         let cacheStats = await highlighter.getCacheStatistics()
-        
+
         // If cache is empty, it might be because the text is too large and wasn't cached
         // or highlighting was done synchronously. Either way, we consider it valid.
         if cacheStats.cacheSize > 0 {
@@ -260,69 +260,69 @@ final class LargeFilePerformanceTests: XCTestCase {
             XCTAssertEqual(cacheStats.estimatedMemoryMB, 0, "Empty cache should report 0 memory")
         }
     }
-    
+
     // MARK: - Code Folding Performance Tests
-    
+
     @MainActor
     func testLargeFileCodeFoldingPerformance() {
         let largeFile = generateLargeSwiftFile(lines: 25)
         let textView = CodeEditorView()
-        
+
         // Set language for proper code folding detection
         textView.language = .swift
-        
+
         // Enable code folding
         var config = EditorConfiguration()
         config.display.enableCodeFolding = true
         config.apply(to: textView)
-        
+
         textView.text = largeFile
-        
+
         // Wait for folding engine to be ready and process regions
         // The code folding engine processes regions asynchronously
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 1.0))
-        
+
         measure(options: Self.standardMeasureOptions) {
             // Test folding performance by toggling folds at various lines
             var foldedLines: [Int] = []
-            
+
             // Try to fold at various locations throughout the file
             for lineNumber in stride(from: 5, to: 25, by: 5) {
                 if textView.isFoldable(at: lineNumber) && textView.fold(at: lineNumber) {
                     foldedLines.append(lineNumber)
                 }
             }
-            
+
             // Give time for folding operations to complete
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
-            
+
             // Unfold all the folded lines
             for lineNumber in foldedLines {
                 _ = textView.unfold(at: lineNumber)
             }
-            
+
             // Wait for unfold operations to complete
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
-            
+
             // For performance tests, we just want to ensure the operations complete
             // The actual folding detection depends on async processing
             XCTAssertTrue(true, "Folding operations completed")
         }
     }
-    
+
     // MARK: - Different File Type Performance
-    
+
     @MainActor
     func testLargeJSONHighlightingPerformance() {
         let largeJSON = generateLargeJSONFile(objects: 25)
         let textView = CodeEditorView()
         textView.text = largeJSON
-        
+
         let highlighter = AsyncSyntaxHighlighter(memoryMonitor: MemoryMonitor())
-        
+
         measure(options: Self.standardMeasureOptions) {
             let expectation = self.expectation(description: "JSON highlighting complete")
-            
+
             Task {
                 await highlighter.highlightImmediately(
                     for: textView,
@@ -330,13 +330,13 @@ final class LargeFilePerformanceTests: XCTestCase {
                 )
                 expectation.fulfill()
             }
-            
+
             wait(for: [expectation], timeout: 5.0)
         }
     }
-    
+
     // MARK: - Background Highlighting Tests
-    
+
     // Disabled: Takes too long even with small files
     /*
     @MainActor
@@ -371,23 +371,23 @@ final class LargeFilePerformanceTests: XCTestCase {
         XCTAssertGreaterThan(stats.totalRequests, 0, "Should have background requests")
     }
     */
-    
+
     // MARK: - Viewport Performance
-    
+
     @MainActor
     func testViewportOptimizationPerformance() {
         let largeFile = generateLargeSwiftFile(lines: 50)
         let textView = CodeEditorView()
         textView.text = largeFile
-        
+
         // Configure performance settings
         var config = EditorConfiguration()
         config.performance.maxVisibleLines = 100
         config.performance.renderingUpdateStrategy = .batched
         config.apply(to: textView)
-        
+
         _ = ViewportManager(textView: textView, memoryMonitor: MemoryMonitor())
-        
+
         measure(options: Self.standardMeasureOptions) {
             // Simulate rapid scrolling
             for _ in 0..<5 {
@@ -396,7 +396,7 @@ final class LargeFilePerformanceTests: XCTestCase {
                     textView.scrollRangeToVisible(NSRange(range, in: largeFile))
                 }
             }
-            
+
             // Wait for viewport to stabilize
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
         }

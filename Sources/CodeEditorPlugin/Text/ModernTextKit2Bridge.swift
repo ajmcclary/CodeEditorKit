@@ -9,11 +9,11 @@ import UIKit
 @MainActor
 internal class ModernTextKit2Bridge: NSObject {
     // MARK: - Properties
-    
+
     private weak var textView: PlatformTextView?
     private var textLayoutManager: NSTextLayoutManager? { textView?.textLayoutManager }
     private var textContentManager: NSTextContentManager? { textLayoutManager?.textContentManager }
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private var textViewVisibleRect: CGRect? {
         textView?.visibleRect
@@ -23,89 +23,89 @@ internal class ModernTextKit2Bridge: NSObject {
         textView?.bounds
     }
     #endif
-    
+
     // MARK: - Initialization
-    
+
     init(textView: PlatformTextView) {
         self.textView = textView
         super.init()
         ensureTextKit2Configuration()
     }
-    
+
     // MARK: - Configuration
-    
+
     private func ensureTextKit2Configuration() {
         guard textView != nil else { return }
-        
+
         // Ensure TextKit2 is properly configured
         // Note: TextKit2 initialization happens automatically in modern systems
-        
+
         // Configure text layout manager
         textLayoutManager?.delegate = self
         textLayoutManager?.textViewportLayoutController.delegate = self
-        
+
         // Enable advanced features
         textLayoutManager?.limitsLayoutForSuspiciousContents = true
         textLayoutManager?.usesFontLeading = true
     }
-    
+
     // MARK: - Range Conversion
-    
+
     /// Convert NSRange to NSTextRange
     func textRange(from nsRange: NSRange) -> NSTextRange? {
         guard let textContentManager else { return nil }
         let documentRange = textContentManager.documentRange
-        
+
         guard let startLocation = textContentManager.location(
             documentRange.location,
             offsetBy: nsRange.location
         ) else { return nil }
-        
+
         guard let endLocation = textContentManager.location(
             startLocation,
             offsetBy: nsRange.length
         ) else { return nil }
-        
+
         return NSTextRange(location: startLocation, end: endLocation)
     }
-    
+
     /// Convert NSTextRange to NSRange
     func nsRange(from textRange: NSTextRange) -> NSRange? {
         guard let textContentManager else { return nil }
         let documentRange = textContentManager.documentRange
-        
+
         let startOffset = textContentManager.offset(
             from: documentRange.location,
             to: textRange.location
         )
-        
+
         let endOffset = textContentManager.offset(
             from: documentRange.location,
             to: textRange.endLocation
         )
-        
+
         guard startOffset != NSNotFound, endOffset != NSNotFound else { return nil }
-        
+
         return NSRange(location: startOffset, length: endOffset - startOffset)
     }
-    
+
     // MARK: - Layout Operations
-    
+
     /// Ensure layout for a specific range
     func ensureLayout(for textRange: NSTextRange) {
         textLayoutManager?.ensureLayout(for: textRange)
     }
-    
+
     /// Ensure layout for NSRange
     func ensureLayout(for nsRange: NSRange) {
         guard let textRange = textRange(from: nsRange) else { return }
         ensureLayout(for: textRange)
     }
-    
+
     /// Get bounding rect for text range
     func boundingRect(for textRange: NSTextRange) -> CGRect {
         var rect = CGRect.zero
-        
+
         textLayoutManager?.enumerateTextSegments(
             in: textRange,
             type: .standard,
@@ -114,12 +114,12 @@ internal class ModernTextKit2Bridge: NSObject {
             rect = rect.union(segmentFrame)
             return true
         }
-        
+
         return rect
     }
-    
+
     // MARK: - Fragment Operations
-    
+
     /// Enumerate text layout fragments in range
     func enumerateFragments(
         in textRange: NSTextRange,
@@ -130,27 +130,27 @@ internal class ModernTextKit2Bridge: NSObject {
             options: [.ensuresLayout, .ensuresExtraLineFragment]
         ) { fragment in
             let fragmentRange = fragment.rangeInElement
-            
+
             // Check if fragment intersects with our range
             if fragmentRange.location.compare(textRange.endLocation) == .orderedAscending &&
                fragmentRange.endLocation.compare(textRange.location) == .orderedDescending {
                 return block(fragment)
             }
-            
+
             // Continue if we haven't reached the range yet
             if fragmentRange.endLocation.compare(textRange.location) == .orderedAscending {
                 return true
             }
-            
+
             // Stop if we've passed the range
             return false
         }
     }
-    
+
     /// Get line fragments for range
     func lineFragments(for textRange: NSTextRange) -> [LineFragment] {
         var fragments: [LineFragment] = []
-        
+
         enumerateFragments(in: textRange) { layoutFragment in
             let fragmentRange = layoutFragment.rangeInElement
             let lineFragment = LineFragment(
@@ -162,12 +162,12 @@ internal class ModernTextKit2Bridge: NSObject {
             fragments.append(lineFragment)
             return true
         }
-        
+
         return fragments
     }
-    
+
     // MARK: - Rendering Attributes
-    
+
     /// Set rendering attributes (non-layout affecting)
     func setRenderingAttributes(
         _ attributes: [NSAttributedString.Key: Any],
@@ -175,14 +175,14 @@ internal class ModernTextKit2Bridge: NSObject {
     ) {
         textLayoutManager?.setRenderingAttributes(attributes, for: textRange)
     }
-    
+
     /// Remove rendering attributes
     func removeRenderingAttributes(
         for textRange: NSTextRange
     ) {
         textLayoutManager?.setRenderingAttributes([:], for: textRange)
     }
-    
+
     /// Add temporary attributes using rendering attributes
     func addTemporaryAttributes(
         _ attributes: [NSAttributedString.Key: Any],
@@ -191,50 +191,50 @@ internal class ModernTextKit2Bridge: NSObject {
         guard let textRange = textRange(from: nsRange) else { return }
         setRenderingAttributes(attributes, for: textRange)
     }
-    
+
     // MARK: - Viewport Management
-    
+
     /// Get current viewport range
     var viewportRange: NSTextRange? {
         textLayoutManager?.textViewportLayoutController.viewportRange
     }
-    
+
     /// Get visible text ranges
     var visibleRanges: [NSTextRange] {
         guard let viewportRange else { return [] }
-        
+
         var ranges: [NSTextRange] = []
-        
+
         textLayoutManager?.enumerateTextLayoutFragments(
             from: viewportRange.location,
             options: [.ensuresLayout]
         ) { fragment in
             let fragmentRange = fragment.rangeInElement
-            
+
             // Check if fragment is visible
             if fragment.layoutFragmentFrame.intersects(self.textViewVisibleRect ?? .zero) {
                 ranges.append(fragmentRange)
             }
-            
+
             // Stop if we've passed the viewport
             return fragmentRange.location.compare(viewportRange.endLocation) == .orderedAscending
         }
-        
+
         return ranges
     }
-    
+
     // MARK: - Performance Optimization
-    
+
     /// Invalidate layout for range
     func invalidateLayout(for textRange: NSTextRange) {
         textLayoutManager?.invalidateLayout(for: textRange)
     }
-    
+
     /// Invalidate rendering attributes
     func invalidateRenderingAttributes(for textRange: NSTextRange) {
         textLayoutManager?.invalidateRenderingAttributes(for: textRange)
     }
-    
+
     /// Batch layout updates
     func performBatchUpdates(_ updates: () -> Void) {
         textLayoutManager?.textViewportLayoutController.layoutViewport()
@@ -243,22 +243,22 @@ internal class ModernTextKit2Bridge: NSObject {
             textLayoutManager?.ensureLayout(for: range)
         }
     }
-    
+
     // MARK: - Text Selection
-    
+
     /// Get text selections as text ranges
     var textSelections: [NSTextRange] {
         textLayoutManager?.textSelections.flatMap { selection in
             selection.textRanges
         } ?? []
     }
-    
+
     /// Convert point to text location
     func textLocation(at point: CGPoint) -> NSTextLocation? {
         guard let textLayoutManager else { return nil }
-        
+
         var location: NSTextLocation?
-        
+
         textLayoutManager.enumerateTextLayoutFragments(
             from: textLayoutManager.documentRange.location,
             options: [.ensuresLayout]
@@ -270,30 +270,30 @@ internal class ModernTextKit2Bridge: NSObject {
                             x: point.x - lineFragment.typographicBounds.minX,
                             y: point.y - lineFragment.typographicBounds.minY
                         )
-                        
+
                         let characterIndex = lineFragment.characterIndex(for: relativePoint)
                         location = fragment.rangeInElement.location
-                        
+
                         if let loc = location,
                            let textContentManager = self.textContentManager {
                             location = textContentManager.location(loc, offsetBy: characterIndex)
                         }
-                        
+
                         return false // Stop enumeration
                 }
             }
             return true
         }
-        
+
         return location
     }
-    
+
     // MARK: - Line Information
-    
+
     /// Get line number for text location
     func lineNumber(for location: NSTextLocation) -> Int {
         var lineNumber = 0
-        
+
         textLayoutManager?.enumerateTextLayoutFragments(
             from: textLayoutManager?.documentRange.location ?? location,
             options: [.ensuresLayout]
@@ -302,24 +302,24 @@ internal class ModernTextKit2Bridge: NSObject {
             if fragmentRange.contains(location) {
                 return false
             }
-            
+
             // Count line breaks in fragment
             if let nsRange = self.nsRange(from: fragmentRange),
                let textStorage = self.textView?.textStorage {
                 let text = textStorage.attributedSubstring(from: nsRange).string
                 lineNumber += text.components(separatedBy: .newlines).count - 1
             }
-            
+
             return true
         }
-        
+
         return lineNumber + 1 // 1-based line numbers
     }
-    
+
     /// Get character index in line
     func characterIndexInLine(for location: NSTextLocation) -> Int {
         var characterIndex = 0
-        
+
         textLayoutManager?.enumerateTextLayoutFragments(
             from: location,
             options: [.reverse, .ensuresLayout]
@@ -330,14 +330,14 @@ internal class ModernTextKit2Bridge: NSObject {
                     from: fragmentRange.location,
                     to: location
                 )
-                
+
                 if offset != NSNotFound {
                     // Check for line break before location
                     if let nsRange = self.nsRange(from: fragmentRange),
                        let textStorage = self.textView?.textStorage {
                         let text = textStorage.attributedSubstring(from: nsRange).string
                         let beforeLocation = String(text.prefix(offset))
-                        
+
                         if let lastNewline = beforeLocation.lastIndex(of: "\n") {
                             characterIndex = beforeLocation.distance(from: beforeLocation.index(after: lastNewline), to: beforeLocation.endIndex)
                             return false
@@ -349,10 +349,10 @@ internal class ModernTextKit2Bridge: NSObject {
             }
             return true
         }
-        
+
         return characterIndex
     }
-    
+
     deinit {
         // Cleanup is handled automatically by ARC
     }
@@ -377,7 +377,7 @@ extension ModernTextKit2Bridge: @preconcurrency NSTextViewportLayoutControllerDe
     public func viewportBounds(for _: NSTextViewportLayoutController) -> CGRect {
         textViewVisibleRect ?? .zero
     }
-    
+
     public func textViewportLayoutController(
         _: NSTextViewportLayoutController,
         configureRenderingSurfaceFor _: NSTextLayoutFragment
@@ -393,11 +393,11 @@ public struct LineFragment {
     public let bounds: CGRect
     public let usageBounds: CGRect
     public let textLineFragments: [NSTextLineFragment]
-    
+
     public var lineHeight: CGFloat {
         bounds.height
     }
-    
+
     public var baselineOffset: CGFloat {
         textLineFragments.first?.typographicBounds.minY ?? 0
     }
@@ -420,7 +420,7 @@ extension NSTextLineFragment {
         // In practice, you'd use Core Text or TextKit2's more advanced APIs
         let glyphOrigin = typographicBounds.origin
         let relativeX = point.x - glyphOrigin.x
-        
+
         // Estimate based on average character width
         let averageCharWidth = typographicBounds.width / CGFloat(max(1, characterRange.length))
         return min(characterRange.length - 1, max(0, Int(relativeX / averageCharWidth)))

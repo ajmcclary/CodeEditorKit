@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class PythonCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
-    
+
     override public var keywords: [String] {
         [
             "def", "class", "if", "elif", "else", "for", "while", "try", "except",
@@ -15,7 +15,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             "in", "is", "del", "async", "await", "assert", "raise", "match", "case"
         ]
     }
-    
+
     override public var types: [String] {
         [
             "int", "float", "str", "bool", "list", "tuple", "dict", "set", "frozenset",
@@ -23,7 +23,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             "property", "staticmethod", "classmethod", "super"
         ]
     }
-    
+
     override public var functions: [String] {
         [
             "print", "input", "len", "range", "enumerate", "zip", "map", "filter",
@@ -34,7 +34,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             "hash", "iter", "next", "callable", "repr", "ascii", "breakpoint"
         ]
     }
-    
+
     override public var literals: [String] {
         [
             "True", "False", "None", "self", "__name__", "__main__", "__file__",
@@ -47,7 +47,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             "__abs__", "__invert__", "__enter__", "__exit__", "__call__"
         ]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -132,7 +132,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     // Common module imports
     private let commonModules = [
         "os", "sys", "time", "datetime", "json", "re", "math", "random",
@@ -141,9 +141,9 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         "subprocess", "logging", "argparse", "configparser", "csv",
         "sqlite3", "urllib", "requests", "numpy", "pandas", "matplotlib"
     ]
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "python-builtin",
@@ -152,60 +152,60 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Context Analysis Override
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for import statements - treat as keyword context
         if lineText.hasPrefix("import ") || lineText.hasPrefix("from ") {
             // We'll handle imports in createFunctionCompletions by including modules
             return ContextAnalysisResult(type: .function, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for function definition
         if lineText.contains("def ") && lineText.contains("(") && !lineText.contains("):") {
             return ContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         // Check for type hints
         if lineText.contains(": ") && !lineText.contains("=") {
             return ContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     // MARK: - Override Function Completions
-    
+
     override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         let lineText = extractCurrentWord(from: filter) // This is a simplification
-        
+
         // Check if we're in an import context
         if lineText.contains("import") || lineText.contains("from") {
             return createImportCompletions(filter: filter)
         }
-        
+
         // Otherwise return Python built-in functions
         return createBuiltinFunctionCompletions(filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         // Simple heuristic to extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
@@ -216,9 +216,9 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Python-Specific Completion Methods
-    
+
     private func createBuiltinFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
@@ -235,7 +235,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createImportCompletions(filter: String) -> [CompletionItemModel] {
         commonModules
             .filter { module in
@@ -252,36 +252,36 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Member Completions Override
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide common member completions based on type
         switch targetType.lowercased() {
         case "str", "string":
             return createStringMemberCompletions(filter: filter)
-            
+
         case "list":
             return createListMemberCompletions(filter: filter)
-            
+
         case "dict", "dictionary":
             return createDictMemberCompletions(filter: filter)
-            
+
         case "set":
             return createSetMemberCompletions(filter: filter)
-            
+
         default:
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     // MARK: - Parameter Completions Override
-    
+
     override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["self", "cls", "args", "kwargs", "key", "value", "index", "item", "data", "result", "error", "callback"]
-        
+
         return commonParameters
             .filter { param in
                 filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
@@ -297,9 +297,9 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("upper()", "method", "Return uppercase string"),
@@ -318,7 +318,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("isdigit()", "method", "Check if all characters are digits"),
             ("isalpha()", "method", "Check if all characters are alphabetic")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -334,7 +334,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("append()", "method", "Add element to end"),
@@ -349,7 +349,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("reverse()", "method", "Reverse list in place"),
             ("copy()", "method", "Return shallow copy")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -365,7 +365,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createDictMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("get()", "method", "Get value for key with default"),
@@ -379,7 +379,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("copy()", "method", "Return shallow copy"),
             ("setdefault()", "method", "Set default value for key")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -395,7 +395,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createSetMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("add()", "method", "Add element to set"),
@@ -411,7 +411,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("issuperset()", "method", "Check if superset"),
             ("copy()", "method", "Return shallow copy")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -427,7 +427,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("__str__()", "method", "String representation"),
@@ -437,7 +437,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("__dict__", "property", "Instance dictionary"),
             ("__doc__", "property", "Documentation string")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)

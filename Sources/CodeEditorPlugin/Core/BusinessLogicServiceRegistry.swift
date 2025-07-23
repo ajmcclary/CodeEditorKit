@@ -7,13 +7,13 @@ import Foundation
 @MainActor
 public final class BusinessLogicServiceRegistry {
     // MARK: - Singleton
-    
+
     /// Shared instance for convenience. Consider using dependency injection instead.
     @available(*, deprecated, message: "Use dependency injection by creating your own instance instead")
     public static let shared = BusinessLogicServiceRegistry()
-    
+
     // MARK: - Services
-    
+
     private var _lineNumberCalculationService: LineNumberCalculationService?
     private var _gutterSizingService: GutterSizingService?
     private var _codeFoldingCoordinatorService: CodeFoldingCoordinatorService?
@@ -22,12 +22,12 @@ public final class BusinessLogicServiceRegistry {
     private var _languageDetectionService: LanguageDetectionService?
     private var _textEditingService: TextEditingService?
     private var _completionProviderRegistry: CompletionProviderRegistry?
-    
+
     // Service dependencies
     private weak var codeFoldingEngine: CodeFoldingEngine?
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new service registry instance
     /// - Parameters:
     ///   - lineNumberCalculationService: Optional pre-configured line number service
@@ -57,42 +57,42 @@ public final class BusinessLogicServiceRegistry {
         self._textEditingService = textEditingService
         self._completionProviderRegistry = completionProviderRegistry
     }
-    
+
     // MARK: - Service Access
-    
+
     /// Gets or creates the line number calculation service
     public var lineNumberCalculationService: LineNumberCalculationService {
         if let service = _lineNumberCalculationService {
             return service
         }
-        
+
         let service = LineNumberCalculationService()
         _lineNumberCalculationService = service
         return service
     }
-    
+
     /// Gets or creates the gutter sizing service
     public var gutterSizingService: GutterSizingService {
         if let service = _gutterSizingService {
             return service
         }
-        
+
         let service = GutterSizingService(lineNumberCalculationService: lineNumberCalculationService)
         _gutterSizingService = service
         return service
     }
-    
+
     /// Gets or creates the code folding coordinator service
     public var codeFoldingCoordinatorService: CodeFoldingCoordinatorService {
         if let service = _codeFoldingCoordinatorService {
             return service
         }
-        
+
         // Ensure we have a code folding engine
         guard let engine = codeFoldingEngine else {
             fatalError("CodeFoldingEngine must be registered before accessing CodeFoldingCoordinatorService")
         }
-        
+
         let service = CodeFoldingCoordinatorService(
             lineNumberCalculationService: lineNumberCalculationService,
             codeFoldingEngine: engine
@@ -100,74 +100,74 @@ public final class BusinessLogicServiceRegistry {
         _codeFoldingCoordinatorService = service
         return service
     }
-    
+
     /// Gets or creates the editor layout service
     public var editorLayoutService: EditorLayoutService {
         if let service = _editorLayoutService {
             return service
         }
-        
+
         let service = EditorLayoutService(gutterSizingService: gutterSizingService)
         _editorLayoutService = service
         return service
     }
-    
+
     /// Gets or creates the syntax highlighting service
     public var syntaxHighlightingService: SyntaxHighlightingService {
         if let service = _syntaxHighlightingService {
             return service
         }
-        
+
         let service = SyntaxHighlightingService()
         _syntaxHighlightingService = service
         return service
     }
-    
+
     /// Gets or creates the language detection service
     public var languageDetectionService: LanguageDetectionService {
         if let service = _languageDetectionService {
             return service
         }
-        
+
         let service = LanguageDetectionService()
         _languageDetectionService = service
         return service
     }
-    
+
     /// Gets or creates the text editing service
     public var textEditingService: TextEditingService {
         if let service = _textEditingService {
             return service
         }
-        
+
         let service = TextEditingService()
         _textEditingService = service
         return service
     }
-    
+
     /// Gets or creates the completion provider registry
     public var completionProviderRegistry: CompletionProviderRegistry {
         if let registry = _completionProviderRegistry {
             return registry
         }
-        
+
         let registry = CompletionProviderRegistry()
         _completionProviderRegistry = registry
         return registry
     }
-    
+
     // MARK: - Service Registration
-    
+
     /// Registers the code folding engine dependency
     internal func registerCodeFoldingEngine(_ engine: CodeFoldingEngine) {
         self.codeFoldingEngine = engine
-        
+
         // Invalidate code folding coordinator if it was already created
         _codeFoldingCoordinatorService = nil
     }
-    
+
     // MARK: - Service Management
-    
+
     /// Clears all service caches
     public func clearAllCaches() {
         _lineNumberCalculationService?.clearCache()
@@ -178,7 +178,7 @@ public final class BusinessLogicServiceRegistry {
         _languageDetectionService?.clearCache()
         // TextEditingService doesn't have caches to clear
     }
-    
+
     /// Resets all services (useful for testing)
     public func resetAllServices() {
         _lineNumberCalculationService = nil
@@ -190,7 +190,7 @@ public final class BusinessLogicServiceRegistry {
         _textEditingService = nil
         codeFoldingEngine = nil
     }
-    
+
     /// Gets service status for debugging
     public func getServiceStatus() -> [String: Bool] {
         [
@@ -242,15 +242,15 @@ extension EditorLayoutService: CacheableService {
 extension CodeFoldingCoordinatorService: CacheableService, PersistentService {
     // Already implements clearCache() (via clearAllFolds())
     // Already implements saveState() and restoreState()
-    
+
     public func clearCache() {
         clearAllFolds()
     }
-    
+
     public func saveState() -> [String: Any] {
         saveFoldingState()
     }
-    
+
     public func restoreState(from _: [String: Any]) {
         // This would need a textView parameter, so it's handled separately
         // in the actual implementation
@@ -270,7 +270,7 @@ extension BusinessLogicServiceRegistry {
         if let engine = codeFoldingEngine {
             registerCodeFoldingEngine(engine)
         }
-        
+
         // Update folding state if code folding is enabled
         if configuration.display.enableCodeFolding {
             self.codeFoldingCoordinatorService.updateFoldingState(
@@ -278,28 +278,28 @@ extension BusinessLogicServiceRegistry {
                 configuration: configuration
             )
         }
-        
+
         // Warm up caches with initial calculations
         let lineCount = (textView.text ?? "").components(separatedBy: .newlines).count
         let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize)
-        
+
         _ = gutterSizingService.calculateOptimalWidth(
             lineCount: lineCount,
             font: font,
             configuration: configuration
         )
-        
+
         _ = lineNumberCalculationService.calculateVisibleLineRanges(
             for: textView,
             configuration: configuration
         )
     }
-    
+
     /// Invalidates caches related to a specific text view
     public func invalidateCaches(for textView: CodeEditorView) {
         lineNumberCalculationService.invalidateCache(for: textView)
     }
-    
+
     /// Invalidates caches related to a specific configuration
     public func invalidateCaches(for configuration: EditorConfiguration) {
         editorLayoutService.invalidateCache(for: configuration)
@@ -316,37 +316,37 @@ public enum BusinessLogic {
     public static var services: BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry.shared
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var lineNumbers: LineNumberCalculationService {
         services.lineNumberCalculationService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var gutterSizing: GutterSizingService {
         services.gutterSizingService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var codeFolding: CodeFoldingCoordinatorService {
         services.codeFoldingCoordinatorService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var layout: EditorLayoutService {
         services.editorLayoutService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var syntaxHighlighting: SyntaxHighlightingService {
         services.syntaxHighlightingService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var languageDetection: LanguageDetectionService {
         services.languageDetectionService
     }
-    
+
     @available(*, deprecated, message: "Use dependency injection by passing services directly")
     public static var textEditing: TextEditingService {
         services.textEditingService
@@ -362,7 +362,7 @@ public enum ServiceRegistryBuilder {
     public static func makeDefault() -> BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry()
     }
-    
+
     /// Creates a minimal service registry with only essential services
     public static func makeMinimal() -> BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry(
@@ -370,7 +370,7 @@ public enum ServiceRegistryBuilder {
             textEditingService: TextEditingService()
         )
     }
-    
+
     /// Creates a service registry for testing with mock services
     public static func makeForTesting(
         lineNumberCalculationService: LineNumberCalculationService? = nil,

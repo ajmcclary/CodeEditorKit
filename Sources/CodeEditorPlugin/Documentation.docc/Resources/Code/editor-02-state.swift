@@ -10,7 +10,7 @@ function hello() {
 
 hello();
 """
-    
+
     var body: some View {
         Text("Hello, World!")
     }

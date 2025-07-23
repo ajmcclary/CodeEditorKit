@@ -4,7 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var code = "// Your Swift code here"
     @State private var config = EditorConfiguration()
-    
+
     init() {
         // Configure the editor
         _config = State(initialValue: {
@@ -17,13 +17,13 @@ struct ContentView: View {
             return configuration
         }())
     }
-    
+
     var body: some View {
         VStack {
             Text("Configured Editor")
                 .font(.headline)
                 .padding()
-            
+
             CodeEditor(text: $code)
                 .codeLanguage(.swift)
                 // Apply configuration using environment

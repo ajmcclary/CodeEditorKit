@@ -61,7 +61,7 @@ public enum PlatformAnimation {
         )
         #endif
     }
-    
+
     /// Animates changes with spring physics
     /// - Parameters:
     ///   - duration: Animation duration in seconds
@@ -99,7 +99,7 @@ public enum PlatformAnimation {
         )
         #endif
     }
-    
+
     /// Performs changes without animation
     /// - Parameter changes: The changes to perform
     @MainActor
@@ -113,27 +113,27 @@ public enum PlatformAnimation {
         UIView.performWithoutAnimation(changes)
         #endif
     }
-    
+
     /// Platform-agnostic animation options
     public struct AnimationOptions: OptionSet, Sendable {
         public let rawValue: Int
-        
+
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
-        
+
         // Timing curves
         public static let curveEaseIn = Self(rawValue: 1 << 0)
         public static let curveEaseOut = Self(rawValue: 1 << 1)
         public static let curveEaseInOut = Self(rawValue: 1 << 2)
         public static let curveLinear = Self(rawValue: 1 << 3)
-        
+
         // Other options
         public static let allowUserInteraction = Self(rawValue: 1 << 4)
         public static let beginFromCurrentState = Self(rawValue: 1 << 5)
         public static let repeatAnimation = Self(rawValue: 1 << 6)
         public static let autoreverse = Self(rawValue: 1 << 7)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         func toCAMediaTimingFunction() -> CAMediaTimingFunction {
             if self.contains(.curveEaseIn) {
@@ -147,11 +147,11 @@ public enum PlatformAnimation {
             }
         }
         #endif
-        
+
         #if canImport(UIKit)
         func toUIViewAnimationOptions() -> UIView.AnimationOptions {
             var options: UIView.AnimationOptions = []
-            
+
             if self.contains(.curveEaseIn) {
                 options.insert(.curveEaseIn)
             } else if self.contains(.curveEaseOut) {
@@ -161,7 +161,7 @@ public enum PlatformAnimation {
             } else {
                 options.insert(.curveEaseInOut)
             }
-            
+
             if self.contains(.allowUserInteraction) {
                 options.insert(.allowUserInteraction)
             }
@@ -174,7 +174,7 @@ public enum PlatformAnimation {
             if self.contains(.autoreverse) {
                 options.insert(.autoreverse)
             }
-            
+
             return options
         }
         #endif
@@ -202,7 +202,7 @@ public enum PlatformAnimationTransaction {
         return try actions()
         #endif
     }
-    
+
     /// Sets the animation duration for implicit animations
     /// - Parameters:
     ///   - duration: The animation duration

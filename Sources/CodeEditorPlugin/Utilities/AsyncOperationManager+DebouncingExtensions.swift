@@ -45,18 +45,18 @@ extension AsyncOperationManager {
     ) async throws -> T {
         // Cancel existing task
         debounceTasks[key]?.cancel()
-        
+
         // Clear previous results/errors
         debounceResults.removeValue(forKey: key)
         debounceErrors.removeValue(forKey: key)
-        
+
         // Create new debounce task
         let task = Task { [weak self] in
             do {
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                
+
                 guard !Task.isCancelled else { return }
-                
+
                 let result = try await operation()
                 await self?.storeDebounceResult(key: key, result: result)
             } catch {
@@ -64,27 +64,27 @@ extension AsyncOperationManager {
                     await self?.storeDebounceError(key: key, error: error)
                 }
             }
-            
+
             await self?.cleanupDebounceTask(key: key)
         }
-        
+
         debounceTasks[key] = task
-        
+
         // Wait for task completion
         _ = await task.value
-        
+
         // Return result or throw error
         if let error = debounceErrors[key] {
             throw error
         }
-        
+
         guard let result = debounceResults[key] as? T else {
             throw AsyncOperationError.noResult
         }
-        
+
         return result
     }
-    
+
     /// Creates a debounced version of an async function.
     ///
     /// Returns a function that automatically debounces calls to the original function.
@@ -121,17 +121,17 @@ extension AsyncOperationManager {
             try await self.debounce(key: key, delay: delay, operation: operation)
         }
     }
-    
+
     // MARK: - Private Helpers
-    
+
     func cleanupDebounceTask(key: String) {
         debounceTasks.removeValue(forKey: key)
     }
-    
+
     func storeDebounceResult(key: String, result: Any) {
         debounceResults[key] = result
     }
-    
+
     func storeDebounceError(key: String, error: Error) {
         debounceErrors[key] = error
     }

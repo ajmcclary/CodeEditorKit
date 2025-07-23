@@ -11,7 +11,7 @@ struct CodableColor: Codable, Equatable {
     let green: CGFloat
     let blue: CGFloat
     let alpha: CGFloat
-    
+
     init(color: PlatformColor) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // Convert to RGB color space if needed
@@ -44,14 +44,14 @@ struct CodableColor: Codable, Equatable {
         self.alpha = alpha
         #endif
     }
-    
+
     init(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
         self.red = red
         self.green = green
         self.blue = blue
         self.alpha = alpha
     }
-    
+
     var platformColor: PlatformColor {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSColor(red: red, green: green, blue: blue, alpha: alpha)
@@ -59,7 +59,7 @@ struct CodableColor: Codable, Equatable {
         return UIColor(red: red, green: green, blue: blue, alpha: alpha)
         #endif
     }
-    
+
     /// Default selected line highlight color
     static let defaultSelectedLineHighlight = Self(
         red: 0.0,

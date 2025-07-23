@@ -12,16 +12,16 @@ extension SyntaxHighlightingCoordinator {
             return true
         }
     }
-    
+
     /// Get available languages for syntax highlighting
     public var supportedLanguages: [Language] {
         Language.allCases.filter { supportsLanguage($0) }
     }
-    
+
     /// Get the appropriate highlighter for a language
     public func highlighter(for language: Language) -> (any SyntaxHighlighter)? {
         // Note: Custom highlighter registry has been removed in favor of built-in highlighters
-        
+
         // Return built-in highlighters
         switch language {
         case .swift:
@@ -43,7 +43,7 @@ extension MemoryMonitor {
         // For simplicity, assume we have at least 100MB available if not under pressure
         // This is a reasonable assumption for modern devices
         let pressure = getMemoryPressure()
-        
+
         switch pressure {
         case .normal:
             return 500.0 // Plenty of memory available

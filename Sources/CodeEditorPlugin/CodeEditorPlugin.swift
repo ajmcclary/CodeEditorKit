@@ -90,16 +90,16 @@ import SwiftUI
 public struct CodeEditorPlugin {
     /// Current version of the CodeEditorPlugin
     public static let version = "1.0.0"
-    
+
     /// Swift version used to build the plugin
     public static let swiftVersion = "6.0"
-    
+
     /// Minimum supported macOS version
     public static let minimumMacOSVersion = "12.0"
-    
+
     /// Minimum supported iOS version
     public static let minimumIOSVersion = "16.0"
-    
+
     /// Supported programming languages count
     public static let supportedLanguagesCount = 17
 

@@ -10,20 +10,20 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Configuration Application
-    
+
     internal func applyConfiguration() {
         // Apply performance settings first (including memory monitor)
         if let configMemoryMonitor = configuration.performance.memoryMonitor {
             memoryMonitor = configMemoryMonitor
         }
-        
+
         // Apply workspace root for LSP
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if lspManager.workspaceRoot != configuration.workspaceRoot {
             lspManager.workspaceRoot = configuration.workspaceRoot
         }
         #endif
-        
+
         // Apply display settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, line numbers are handled by NSRulerView in the container
@@ -34,50 +34,50 @@ extension CodeEditorView {
         // But when used standalone, the text view should manage its own gutter
         updateGutterVisibility()
         #endif
-        
+
         if configuration.display.highlightSelectedLine {
             updateSelectedLineHighlight()
         } else {
             removeLineHighlight()
         }
-        
+
         if configuration.display.enableSyntaxHighlighting {
             applySyntaxHighlighting()
         } else {
             removeSyntaxHighlighting()
         }
-        
+
         updateLayoutManagerSettings()
-        
+
         // Apply font settings
         font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
         textColor = PlatformColors.label
-        
+
         // Apply layout settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         updateTextContainerSize()
         #endif
-        
+
         // Apply paragraph style for tab width and line spacing
         applyParagraphStyle()
-        
+
         // Apply word wrap settings (especially important on iOS when font size changes)
         ContainerViewHelper.configureTextViewScrolling(self, wrapLines: configuration.layout.wrapLines)
-        
+
         // Update text container size for word wrap changes
         #if canImport(UIKit)
         updateTextContainerSize()
         #endif
-        
+
         // Ensure text colors are visible on Mac Catalyst
         #if targetEnvironment(macCatalyst)
         applyTextColorForMacCatalyst()
         #endif
-        
+
         // Apply behavior settings
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
-        
+
         // Apply text input behavior settings on macOS
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         isAutomaticTextCompletionEnabled = configuration.behavior.isAutomaticTextCompletionEnabled
@@ -88,23 +88,23 @@ extension CodeEditorView {
         isGrammarCheckingEnabled = configuration.behavior.isGrammarCheckingEnabled
         isContinuousSpellCheckingEnabled = configuration.behavior.isContinuousSpellCheckingEnabled
         #endif
-        
+
         // Update code folding configuration
         updateCodeFoldingConfiguration()
-        
+
         // Force layout update
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         needsLayout = true
         #else
         setNeedsLayout()
         #endif
-        
+
         // Notify container view to update gutter width if needed
         containerView?.applyConfiguration()
     }
-    
+
     // MARK: - Line Highlighting
-    
+
     @objc
     internal func handleTextViewDidChangeSelection(_ notification: Notification) {
         updateSelectedLineHighlight()
@@ -115,7 +115,7 @@ extension CodeEditorView {
         // Post our own notification
         let selectionNotification = Notification(name: Self.codeEditorViewDidChangeSelectionNotification, object: self)
         NotificationCenter.default.post(selectionNotification)
-        
+
         // Publish selection changed event
         eventPublisher.publishSync(.textSelectionDidChange(selectedRange))
     }
@@ -203,9 +203,9 @@ extension CodeEditorView {
         // This is a known limitation - invisible characters require custom drawing on iOS/Catalyst
         #endif
     }
-    
+
     // MARK: - Syntax Highlighting Toggle
-    
+
     internal func removeSyntaxHighlighting() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = self.textStorage else { return }
@@ -215,21 +215,21 @@ extension CodeEditorView {
 
         // Cancel any in-progress highlighting first
         asyncHighlighter.cancelAllHighlighting()
-        
+
         // For large files, batch the attribute changes
         let textLength = textStorage.length
         guard textLength > 0 else { return }
-        
+
         textStorage.beginEditing()
         defer { textStorage.endEditing() }
-        
+
         // Process in chunks for better performance on large files
-        let chunkSize = configuration.performance.maxSyntaxHighlightingLength > 0 
+        let chunkSize = configuration.performance.maxSyntaxHighlightingLength > 0
             ? min(configuration.performance.maxSyntaxHighlightingLength, 50_000)
             : 50_000
-        
+
         let defaultColor = textColor ?? PlatformColors.label
-        
+
         if textLength <= chunkSize {
             // Small file - process in one go
             let fullRange = NSRange(location: 0, length: textLength)
@@ -243,22 +243,22 @@ extension CodeEditorView {
                     let remainingLength = textLength - location
                     let currentChunkSize = min(chunkSize, remainingLength)
                     let range = NSRange(location: location, length: currentChunkSize)
-                    
+
                     textStorage.removeAttribute(.foregroundColor, range: range)
                     textStorage.addAttribute(.foregroundColor, value: defaultColor, range: range)
-                    
+
                     location += currentChunkSize
                 }
             }
         }
     }
-    
+
     // MARK: - Code Folding Configuration
-    
+
     /// Update code folding configuration from EditorConfiguration
     internal func updateCodeFoldingConfiguration() {
         codeFoldingEngine.configuration = configuration.createCodeFoldingConfiguration()
-        
+
         // Update folding regions if folding is enabled
         if configuration.display.enableCodeFolding {
             // Update the folding engine with current language

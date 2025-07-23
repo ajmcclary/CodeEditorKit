@@ -10,11 +10,11 @@ public struct LSPRequest: Codable {
     public let id: RequestId
     public let method: String
     public let params: AnyCodable
-    
+
     enum CodingKeys: String, CodingKey {
         case jsonrpc, id, method, params
     }
-    
+
     public init(id: RequestId, method: String, params: any Codable & Sendable) {
         self.id = id
         self.method = method
@@ -27,11 +27,11 @@ public struct LSPNotification: Codable {
     public let jsonrpc: String = "2.0"
     public let method: String
     public let params: AnyCodable
-    
+
     enum CodingKeys: String, CodingKey {
         case jsonrpc, method, params
     }
-    
+
     public init(method: String, params: any Codable & Sendable) {
         self.method = method
         self.params = AnyCodable(params)
@@ -42,7 +42,7 @@ public struct LSPNotification: Codable {
 public enum RequestId: Codable, Sendable {
     case string(String)
     case number(Int)
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let intValue = try? container.decode(Int.self) {
@@ -59,7 +59,7 @@ public enum RequestId: Codable, Sendable {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -75,14 +75,14 @@ public enum RequestId: Codable, Sendable {
 /// Type-erased codable wrapper
 public struct AnyCodable: Codable, Sendable {
     private let value: any Codable & Sendable
-    
+
     public init(_ value: any Codable & Sendable) {
         self.value = value
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
+
         if let boolValue = try? container.decode(Bool.self) {
             value = boolValue
         } else if let intValue = try? container.decode(Int.self) {
@@ -105,10 +105,10 @@ public struct AnyCodable: Codable, Sendable {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        
+
         switch value {
         case let boolValue as Bool:
             try container.encode(boolValue)
@@ -143,7 +143,7 @@ public struct Position: Codable, Sendable, Hashable {
     public let line: Int
     /// Character offset on a line (zero-based)
     public let character: Int
-    
+
     public init(line: Int, character: Int) {
         self.line = line
         self.character = character
@@ -156,7 +156,7 @@ public struct LSPRange: Codable, Sendable, Hashable {
     public let start: Position
     /// The range's end position
     public let end: Position
-    
+
     public init(start: Position, end: Position) {
         self.start = start
         self.end = end
@@ -167,7 +167,7 @@ public struct LSPRange: Codable, Sendable, Hashable {
 public struct Location: Codable, Sendable {
     public let uri: String
     public let range: LSPRange
-    
+
     public init(uri: String, range: LSPRange) {
         self.uri = uri
         self.range = range
@@ -180,7 +180,7 @@ public struct Location: Codable, Sendable {
 public struct TextDocumentIdentifier: Codable, Sendable {
     /// The text document's URI
     public let uri: String
-    
+
     public init(uri: String) {
         self.uri = uri
     }
@@ -192,7 +192,7 @@ public struct VersionedTextDocumentIdentifier: Codable, Sendable {
     public let uri: String
     /// The version number of this document
     public let version: Int
-    
+
     public init(uri: String, version: Int) {
         self.uri = uri
         self.version = version
@@ -209,7 +209,7 @@ public struct TextDocumentItem: Codable, Sendable {
     public let version: Int
     /// The content of the opened text document
     public let text: String
-    
+
     public init(uri: String, languageId: String, version: Int, text: String) {
         self.uri = uri
         self.languageId = languageId
@@ -226,7 +226,7 @@ public struct TextDocumentContentChangeEvent: Codable, Sendable {
     public let rangeLength: Int?
     /// The new text of the range/document
     public let text: String
-    
+
     public init(text: String, range: LSPRange? = nil, rangeLength: Int? = nil) {
         self.range = range
         self.rangeLength = rangeLength
@@ -241,7 +241,7 @@ public struct ClientCapabilities: Codable, Sendable {
     public let textDocument: TextDocumentClientCapabilities?
     public let workspace: WorkspaceClientCapabilities?
     public let window: WindowClientCapabilities?
-    
+
     public init(
         textDocument: TextDocumentClientCapabilities? = nil,
         workspace: WorkspaceClientCapabilities? = nil,
@@ -251,7 +251,7 @@ public struct ClientCapabilities: Codable, Sendable {
         self.workspace = workspace
         self.window = window
     }
-    
+
     public static let `default` = Self(
         textDocument: TextDocumentClientCapabilities.default,
         workspace: WorkspaceClientCapabilities.default,
@@ -265,7 +265,7 @@ public struct TextDocumentClientCapabilities: Codable, Sendable {
     public let hover: HoverClientCapabilities?
     public let definition: DefinitionClientCapabilities?
     public let publishDiagnostics: PublishDiagnosticsClientCapabilities?
-    
+
     public init(
         completion: CompletionClientCapabilities? = nil,
         hover: HoverClientCapabilities? = nil,
@@ -277,7 +277,7 @@ public struct TextDocumentClientCapabilities: Codable, Sendable {
         self.definition = definition
         self.publishDiagnostics = publishDiagnostics
     }
-    
+
     public static let `default` = Self(
         completion: CompletionClientCapabilities.default,
         hover: HoverClientCapabilities.default,
@@ -290,12 +290,12 @@ public struct TextDocumentClientCapabilities: Codable, Sendable {
 public struct CompletionClientCapabilities: Codable, Sendable {
     public let dynamicRegistration: Bool
     public let completionItem: CompletionItemClientCapabilities?
-    
+
     public init(dynamicRegistration: Bool = false, completionItem: CompletionItemClientCapabilities? = nil) {
         self.dynamicRegistration = dynamicRegistration
         self.completionItem = completionItem
     }
-    
+
     public static let `default` = Self(
         dynamicRegistration: true,
         completionItem: CompletionItemClientCapabilities.default
@@ -306,12 +306,12 @@ public struct CompletionClientCapabilities: Codable, Sendable {
 public struct CompletionItemClientCapabilities: Codable, Sendable {
     public let snippetSupport: Bool
     public let documentationFormat: [MarkupKind]
-    
+
     public init(snippetSupport: Bool = false, documentationFormat: [MarkupKind] = []) {
         self.snippetSupport = snippetSupport
         self.documentationFormat = documentationFormat
     }
-    
+
     public static let `default` = Self(
         snippetSupport: true,
         documentationFormat: [.markdown, .plaintext]
@@ -322,12 +322,12 @@ public struct CompletionItemClientCapabilities: Codable, Sendable {
 public struct HoverClientCapabilities: Codable, Sendable {
     public let dynamicRegistration: Bool
     public let contentFormat: [MarkupKind]
-    
+
     public init(dynamicRegistration: Bool = false, contentFormat: [MarkupKind] = []) {
         self.dynamicRegistration = dynamicRegistration
         self.contentFormat = contentFormat
     }
-    
+
     public static let `default` = Self(
         dynamicRegistration: true,
         contentFormat: [.markdown, .plaintext]
@@ -337,11 +337,11 @@ public struct HoverClientCapabilities: Codable, Sendable {
 /// Definition client capabilities
 public struct DefinitionClientCapabilities: Codable, Sendable {
     public let dynamicRegistration: Bool
-    
+
     public init(dynamicRegistration: Bool = false) {
         self.dynamicRegistration = dynamicRegistration
     }
-    
+
     public static let `default` = Self(dynamicRegistration: true)
 }
 
@@ -349,12 +349,12 @@ public struct DefinitionClientCapabilities: Codable, Sendable {
 public struct PublishDiagnosticsClientCapabilities: Codable, Sendable {
     public let relatedInformation: Bool
     public let tagSupport: DiagnosticTagSupport?
-    
+
     public init(relatedInformation: Bool = false, tagSupport: DiagnosticTagSupport? = nil) {
         self.relatedInformation = relatedInformation
         self.tagSupport = tagSupport
     }
-    
+
     public static let `default` = Self(
         relatedInformation: true,
         tagSupport: DiagnosticTagSupport.default
@@ -364,11 +364,11 @@ public struct PublishDiagnosticsClientCapabilities: Codable, Sendable {
 /// Diagnostic tag support
 public struct DiagnosticTagSupport: Codable, Sendable {
     public let valueSet: [DiagnosticTag]
-    
+
     public init(valueSet: [DiagnosticTag]) {
         self.valueSet = valueSet
     }
-    
+
     public static let `default` = Self(valueSet: [.unnecessary, .deprecated])
 }
 
@@ -376,12 +376,12 @@ public struct DiagnosticTagSupport: Codable, Sendable {
 public struct WorkspaceClientCapabilities: Codable, Sendable {
     public let workspaceFolders: Bool
     public let configuration: Bool
-    
+
     public init(workspaceFolders: Bool = false, configuration: Bool = false) {
         self.workspaceFolders = workspaceFolders
         self.configuration = configuration
     }
-    
+
     public static let `default` = Self(
         workspaceFolders: true,
         configuration: true
@@ -391,11 +391,11 @@ public struct WorkspaceClientCapabilities: Codable, Sendable {
 /// Window client capabilities
 public struct WindowClientCapabilities: Codable, Sendable {
     public let showMessage: ShowMessageRequestClientCapabilities?
-    
+
     public init(showMessage: ShowMessageRequestClientCapabilities? = nil) {
         self.showMessage = showMessage
     }
-    
+
     public static let `default` = Self(
         showMessage: ShowMessageRequestClientCapabilities.default
     )
@@ -404,11 +404,11 @@ public struct WindowClientCapabilities: Codable, Sendable {
 /// Show message request client capabilities
 public struct ShowMessageRequestClientCapabilities: Codable, Sendable {
     public let messageActionItem: MessageActionItemClientCapabilities?
-    
+
     public init(messageActionItem: MessageActionItemClientCapabilities? = nil) {
         self.messageActionItem = messageActionItem
     }
-    
+
     public static let `default` = Self(
         messageActionItem: MessageActionItemClientCapabilities.default
     )
@@ -417,11 +417,11 @@ public struct ShowMessageRequestClientCapabilities: Codable, Sendable {
 /// Message action item client capabilities
 public struct MessageActionItemClientCapabilities: Codable, Sendable {
     public let additionalPropertiesSupport: Bool
-    
+
     public init(additionalPropertiesSupport: Bool = false) {
         self.additionalPropertiesSupport = additionalPropertiesSupport
     }
-    
+
     public static let `default` = Self(additionalPropertiesSupport: true)
 }
 
@@ -432,7 +432,7 @@ public struct ServerCapabilities: Codable, Sendable {
     public let hoverProvider: Bool
     public let definitionProvider: Bool
     public let documentSymbolProvider: Bool
-    
+
     public init(
         textDocumentSync: TextDocumentSyncOptions? = nil,
         completionProvider: CompletionOptions? = nil,
@@ -452,7 +452,7 @@ public struct ServerCapabilities: Codable, Sendable {
 public struct TextDocumentSyncOptions: Codable, Sendable {
     public let openClose: Bool
     public let change: TextDocumentSyncKind?
-    
+
     public init(openClose: Bool = true, change: TextDocumentSyncKind? = nil) {
         self.openClose = openClose
         self.change = change
@@ -471,7 +471,7 @@ public struct CompletionOptions: Codable, Sendable {
     public let triggerCharacters: [String]
     public let allCommitCharacters: [String]
     public let resolveProvider: Bool
-    
+
     public init(
         triggerCharacters: [String] = [],
         allCommitCharacters: [String] = [],
@@ -495,7 +495,7 @@ public enum MarkupKind: String, Codable, Sendable {
 public struct MarkupContent: Codable, Sendable {
     public let kind: MarkupKind
     public let value: String
-    
+
     public init(kind: MarkupKind, value: String) {
         self.kind = kind
         self.value = value
@@ -527,7 +527,7 @@ public struct Diagnostic: Codable, Sendable {
     public let message: String
     public let tags: [DiagnosticTag]
     public let relatedInformation: [DiagnosticRelatedInformation]
-    
+
     public init(
         range: LSPRange,
         message: String,
@@ -551,7 +551,7 @@ public struct Diagnostic: Codable, Sendable {
 public enum DiagnosticCode: Codable, Sendable {
     case string(String)
     case number(Int)
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let intValue = try? container.decode(Int.self) {
@@ -568,7 +568,7 @@ public enum DiagnosticCode: Codable, Sendable {
             )
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -585,7 +585,7 @@ public enum DiagnosticCode: Codable, Sendable {
 public struct DiagnosticRelatedInformation: Codable, Sendable {
     public let location: Location
     public let message: String
-    
+
     public init(location: Location, message: String) {
         self.location = location
         self.message = message
@@ -598,7 +598,7 @@ public struct DiagnosticRelatedInformation: Codable, Sendable {
 public struct WorkspaceFolder: Codable, Sendable {
     public let uri: String
     public let name: String
-    
+
     public init(uri: String, name: String) {
         self.uri = uri
         self.name = name

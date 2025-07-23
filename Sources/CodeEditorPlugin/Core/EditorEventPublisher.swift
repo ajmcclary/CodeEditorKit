@@ -54,9 +54,9 @@ import UIKit
 @available(macOS 10.15, iOS 13.0, *)
 public actor EditorEventPublisher {
     private var handlers: [ObjectIdentifier: WeakHandler] = [:]
-    
+
     public init() {}
-    
+
     /// Subscribe to editor events.
     ///
     /// Adds an event handler to receive all published events. The handler
@@ -68,11 +68,11 @@ public actor EditorEventPublisher {
     public func subscribe(_ handler: any EditorEventHandler) {
         let id = ObjectIdentifier(handler)
         handlers[id] = WeakHandler(handler)
-        
+
         // Clean up any deallocated handlers
         cleanupDeallocatedHandlers()
     }
-    
+
     /// Unsubscribe from editor events.
     ///
     /// Removes an event handler from receiving events.
@@ -82,7 +82,7 @@ public actor EditorEventPublisher {
         let id = ObjectIdentifier(handler)
         handlers.removeValue(forKey: id)
     }
-    
+
     /// Publish an event to all subscribers.
     ///
     /// Sends the event to all registered handlers. Events are delivered
@@ -94,36 +94,36 @@ public actor EditorEventPublisher {
     public func publish(_ event: EditorEvent) {
         // Get active handlers
         let activeHandlers = handlers.values.compactMap { $0.value }
-        
+
         // Clean up deallocated handlers
         cleanupDeallocatedHandlers()
-        
+
         // Publish to all active handlers in a single task to avoid excessive task creation
         guard !activeHandlers.isEmpty else { return }
-        
+
         Task { @MainActor in
             for handler in activeHandlers {
                 handler.handle(event)
             }
         }
     }
-    
+
     /// Remove all handlers.
     ///
     /// Clears all event subscriptions. Useful for cleanup or reset scenarios.
     public func removeAll() {
         handlers.removeAll()
     }
-    
+
     /// Clean up handlers that have been deallocated
     private func cleanupDeallocatedHandlers() {
         handlers = handlers.filter { _, weakHandler in
             weakHandler.value != nil
         }
     }
-    
+
     // MARK: - Convenience Methods for Non-async Contexts
-    
+
     /// Publish an event from a non-async context.
     ///
     /// This is a convenience method that creates a Task to call the async publish method.
@@ -135,7 +135,7 @@ public actor EditorEventPublisher {
             await publish(event)
         }
     }
-    
+
     /// Subscribe from a non-async context.
     ///
     /// This is a convenience method that creates a Task to call the async subscribe method.
@@ -146,7 +146,7 @@ public actor EditorEventPublisher {
             await subscribe(handler)
         }
     }
-    
+
     /// Unsubscribe from a non-async context.
     ///
     /// This is a convenience method that creates a Task to call the async unsubscribe method.
@@ -162,7 +162,7 @@ public actor EditorEventPublisher {
 /// Weak reference wrapper for EditorEventHandler
 private final class WeakHandler {
     weak var value: (any EditorEventHandler)?
-    
+
     init(_ value: any EditorEventHandler) {
         self.value = value
     }
@@ -180,7 +180,7 @@ extension EditorEventPublisher {
         EditorEventCombinePublisher(eventPublisher: self)
             .eraseToAnyPublisher()
     }
-    
+
     /// Create a filtered publisher for specific event types
     func publisher<T>(for eventType: T.Type) -> AnyPublisher<T, Never> where T: EditorEventType {
         publisher()
@@ -196,9 +196,9 @@ extension EditorEventPublisher {
 private struct EditorEventCombinePublisher: Publisher, Sendable {
     typealias Output = EditorEvent
     typealias Failure = Never
-    
+
     let eventPublisher: EditorEventPublisher
-    
+
     nonisolated func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Never, S.Input == EditorEvent {
         let subscription = EditorEventSubscription(
             subscriber: subscriber,
@@ -215,19 +215,19 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
 private final class HandlerReference: @unchecked Sendable {
     private let lock = NSLock()
     private var handler: ((EditorEvent) -> Void)?
-    
+
     func set(_ handler: @escaping (EditorEvent) -> Void) {
         lock.lock()
         self.handler = handler
         lock.unlock()
     }
-    
+
     func clear() {
         lock.lock()
         handler = nil
         lock.unlock()
     }
-    
+
     func handle(_ event: EditorEvent) {
         lock.lock()
         let eventHandler = handler
@@ -241,20 +241,20 @@ private final class HandlerReference: @unchecked Sendable {
 private final class WrapperStorage: @unchecked Sendable {
     private let lock = NSLock()
     private var wrapper: HandlerWrapper?
-    
+
     func set(_ wrapper: HandlerWrapper) {
         lock.lock()
         self.wrapper = wrapper
         lock.unlock()
     }
-    
+
     func get() -> HandlerWrapper? {
         lock.lock()
         let result = wrapper
         lock.unlock()
         return result
     }
-    
+
     func clear() -> HandlerWrapper? {
         lock.lock()
         let result = wrapper
@@ -268,11 +268,11 @@ private final class WrapperStorage: @unchecked Sendable {
 @available(macOS 10.15, iOS 13.0, *)
 private final class HandlerBox: @unchecked Sendable {
     private let handler: (EditorEvent) -> Void
-    
+
     init(handler: @escaping (EditorEvent) -> Void) {
         self.handler = handler
     }
-    
+
     func handle(_ event: EditorEvent) {
         handler(event)
     }
@@ -283,7 +283,7 @@ private final class HandlerBox: @unchecked Sendable {
 @MainActor
 private final class HandlerWrapper: EditorEventHandler {
     var handlerBox: HandlerBox?
-    
+
     func handle(_ event: EditorEvent) {
         handlerBox?.handle(event)
     }
@@ -311,29 +311,29 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     private var pendingSetup = true
     private let wrapperStorage = WrapperStorage()
     private let handlerReference = HandlerReference()
-    
+
     init(subscriber: S, eventPublisher: EditorEventPublisher) {
         self.subscriber = subscriber
         self.eventPublisher = eventPublisher
-        
+
         // Set up the handler reference immediately
         handlerReference.set { [weak self] event in
             self?.handleEvent(event)
         }
     }
-    
+
     nonisolated private func ensureSetup() {
         // Extract all necessary values before entering the Task to avoid capturing self
         let isPendingSetup = pendingSetup
         guard isPendingSetup else { return }
-        
+
         let handlerRef = self.handlerReference
         let publisher = self.eventPublisher
         let storage = self.wrapperStorage
-        
+
         // Mark as not pending immediately to avoid race conditions
         pendingSetup = false
-        
+
         // Use structured concurrency for main actor isolation
         Task { @MainActor in
             // Create and set up the handler on the main actor
@@ -342,39 +342,39 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
             }
             let wrapper = HandlerWrapper()
             wrapper.handlerBox = box
-            
+
             // Subscribe the wrapper to the publisher
             publisher.subscribeSync(wrapper)
             storage.set(wrapper)
         }
     }
-    
+
     private func handleEvent(_ event: EditorEvent) {
         lock.lock()
         let sub = subscriber
         lock.unlock()
-        
+
         _ = sub?.receive(event)
     }
-    
+
     nonisolated func request(_: Subscribers.Demand) {
         // Ensure setup when subscription is activated
         ensureSetup()
         // Events are pushed, so we don't need to handle demand
     }
-    
+
     nonisolated func cancel() {
         lock.lock()
         subscriber = nil
         lock.unlock()
-        
+
         // Clear the handler reference
         handlerReference.clear()
-        
+
         // Remove wrapper and unsubscribe on main actor
         let wrapper = wrapperStorage.clear()
         guard let wrappedValue = wrapper else { return }
-        
+
         // Extract publisher before Task to avoid capturing self
         let publisher = eventPublisher
         publisher.unsubscribeSync(wrappedValue)

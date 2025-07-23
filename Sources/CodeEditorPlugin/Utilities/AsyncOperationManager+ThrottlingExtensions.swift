@@ -45,7 +45,7 @@ extension AsyncOperationManager {
         operation: () async throws -> T
     ) async throws -> T {
         let now = Date()
-        
+
         if let lastRun = throttleInfo[key],
            now.timeIntervalSince(lastRun) < interval {
             // Return cached result if available
@@ -53,9 +53,9 @@ extension AsyncOperationManager {
                 return cached
             }
         }
-        
+
         throttleInfo[key] = now
-        
+
         do {
             let result = try await operation()
             debounceResults[key] = result
@@ -65,7 +65,7 @@ extension AsyncOperationManager {
             throw error
         }
     }
-    
+
     /// Creates a throttled version of an async function.
     ///
     /// This method returns a new function that automatically throttles calls

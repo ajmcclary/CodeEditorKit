@@ -18,7 +18,7 @@ extension PlatformCapabilities {
         public let supportsFloatingPanels: Bool
         public let recommendedLayoutStyle: LayoutStyle
     }
-    
+
     /// Recommended layout styles for different platforms
     public enum LayoutStyle {
         case desktop      // Full desktop with multiple panels
@@ -26,7 +26,7 @@ extension PlatformCapabilities {
         case mobile       // Mobile-first single-pane
         case adaptive     // Adaptive layout based on size class
     }
-    
+
     /// Get comprehensive UI capabilities
     ///
     /// This computed property provides a complete overview of UI features
@@ -62,7 +62,7 @@ extension PlatformCapabilities {
     /// - Returns: Comprehensive UI capability information
     public var uiCapabilities: UICapabilities {
         let layoutStyle: LayoutStyle
-        
+
         switch currentPlatform {
         case .macOS:
             layoutStyle = .desktop
@@ -77,7 +77,7 @@ extension PlatformCapabilities {
         case .catalyst:
             layoutStyle = .adaptive
         }
-        
+
         return UICapabilities(
             supportsMinimap: supportsMinimap,
             supportsMultipleWindows: supportsMultipleWindows,
@@ -88,7 +88,7 @@ extension PlatformCapabilities {
             recommendedLayoutStyle: layoutStyle
         )
     }
-    
+
     /// Whether minimap view is supported
     ///
     /// Minimap provides a zoomed-out overview of the entire document,
@@ -104,7 +104,7 @@ extension PlatformCapabilities {
         // Currently only implemented for iOS platforms
         currentPlatform == .iOS || currentPlatform == .catalyst
     }
-    
+
     /// Whether multiple windows are supported
     ///
     /// Multiple window support allows users to have several editor
@@ -125,14 +125,14 @@ extension PlatformCapabilities {
         case .iOS:
             #if canImport(UIKit)
             // iPadOS supports multiple windows via scenes
-            return UIDevice.current.userInterfaceIdiom == .pad && 
+            return UIDevice.current.userInterfaceIdiom == .pad &&
                    systemVersionComponents.major >= 13
             #else
             return false
             #endif
         }
     }
-    
+
     /// Whether Touch Bar is supported
     ///
     /// Touch Bar provides contextual controls on supported MacBook models.
@@ -150,7 +150,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether context menus are supported
     ///
     /// Context menus provide quick access to relevant actions
@@ -172,7 +172,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether vibrant/translucent materials are supported
     ///
     /// Vibrant materials provide visual depth and system integration
@@ -194,7 +194,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Whether floating/detachable panels are supported
     ///
     /// Floating panels allow users to detach sections of the interface
@@ -221,7 +221,7 @@ extension PlatformCapabilities {
             #endif
         }
     }
-    
+
     /// Whether the device has a notch or dynamic island
     ///
     /// Devices with notches or dynamic islands require special consideration
@@ -247,7 +247,7 @@ extension PlatformCapabilities {
         return false
         #endif
     }
-    
+
     /// Get recommended UI configuration for optimal UX
     ///
     /// This method provides platform-specific recommendations for UI
@@ -262,7 +262,7 @@ extension PlatformCapabilities {
     /// - Returns: Recommended UI configuration
     public func recommendedUIConfiguration() -> UIConfiguration {
         var config = UIConfiguration()
-        
+
         // Platform-specific base configuration
         switch currentPlatform {
         case .macOS:
@@ -271,7 +271,7 @@ extension PlatformCapabilities {
             config.enableFloatingPanels = true
             config.enableTouchBar = supportsTouchBar
             config.showFullToolbar = true
-            
+
         case .iOS:
             #if canImport(UIKit)
             if UIDevice.current.userInterfaceIdiom == .pad {
@@ -286,10 +286,10 @@ extension PlatformCapabilities {
             #else
             config.layoutStyle = .mobile
             #endif
-            
+
             config.enableVibrantMaterials = supportsVibrantMaterials
             config.respectSafeAreas = true
-            
+
         case .catalyst:
             config.layoutStyle = .adaptive
             config.enableVibrantMaterials = supportsVibrantMaterials
@@ -297,16 +297,16 @@ extension PlatformCapabilities {
             config.showFullToolbar = true
             config.enableHybridInteraction = true
         }
-        
+
         // Feature-based adjustments
         if supportsMinimap {
             config.enableMinimap = true
         }
-        
+
         if supportsContextMenus {
             config.enableRichContextMenus = true
         }
-        
+
         // Accessibility and Dynamic Type adjustments
         #if canImport(UIKit)
         if UIAccessibility.isVoiceOverRunning {
@@ -314,47 +314,47 @@ extension PlatformCapabilities {
             config.enableFloatingPanels = false
         }
         #endif
-        
+
         return config
     }
-    
+
     /// Configuration for UI features and behavior
     public struct UIConfiguration {
         /// Primary layout style for the interface
         public var layoutStyle: LayoutStyle = .adaptive
-        
+
         /// Whether to enable vibrant/translucent materials
         public var enableVibrantMaterials: Bool = false
-        
+
         /// Whether to enable floating/detachable panels
         public var enableFloatingPanels: Bool = false
-        
+
         /// Whether to enable Touch Bar integration
         public var enableTouchBar: Bool = false
-        
+
         /// Whether to enable minimap view
         public var enableMinimap: Bool = false
-        
+
         /// Whether to show full toolbar or compact version
         public var showFullToolbar: Bool = true
-        
+
         /// Whether to enable rich context menus
         public var enableRichContextMenus: Bool = false
-        
+
         /// Whether to respect safe areas for notched devices
         public var respectSafeAreas: Bool = true
-        
+
         /// Whether to simplify interface for accessibility
         public var simplifyInterface: Bool = false
-        
+
         /// Whether to enable hybrid mouse/touch interaction (Catalyst)
         public var enableHybridInteraction: Bool = false
-        
+
         public init() {}
     }
-    
+
     // MARK: - Layout Utilities
-    
+
     /// Get safe layout margins for current device
     ///
     /// Provides recommended margins that account for device-specific
@@ -376,7 +376,7 @@ extension PlatformCapabilities {
             )
         }
         #endif
-        
+
         // Fallback margins based on platform
         switch currentPlatform {
         case .macOS:
@@ -389,7 +389,7 @@ extension PlatformCapabilities {
             return NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
         }
     }
-    
+
     /// Get recommended minimum touch target size
     ///
     /// Returns the minimum touch target size for interactive elements

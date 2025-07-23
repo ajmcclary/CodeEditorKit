@@ -5,7 +5,7 @@ import XCTest
 extension XCTestCase {
     /// Global performance budget reporter for tests
     static let budgetReporter = PerformanceBudgetReporter()
-    
+
     /// Measure operation against performance budget
     func measureAgainstBudget(
         _ operation: String,
@@ -16,11 +16,11 @@ extension XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
         try block()
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        
+
         Task { @MainActor in
             await Self.budgetReporter.record(operation: operation, duration: duration)
         }
-        
+
         // Check budget immediately for test failure
         if let budget = PerformanceBudget.budget(for: operation) {
             // Apply simulator multiplier for performance budgets
@@ -36,7 +36,7 @@ extension XCTestCase {
             #else
             let status = budget.check(duration)
             #endif
-            
+
             switch status {
             case .withinBudget:
                 // Pass
@@ -56,7 +56,7 @@ extension XCTestCase {
             }
         }
     }
-    
+
     /// Measure async operation against performance budget
     func measureAsyncAgainstBudget(
         _ operation: String,
@@ -68,9 +68,9 @@ extension XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
         try await block()
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        
+
         await Self.budgetReporter.record(operation: operation, duration: duration)
-        
+
         // Check budget immediately for test failure
         if let budget = PerformanceBudget.budget(for: operation) {
             // Apply simulator multiplier for performance budgets
@@ -86,7 +86,7 @@ extension XCTestCase {
             #else
             let status = budget.check(duration)
             #endif
-            
+
             switch status {
             case .withinBudget:
                 // Pass
@@ -106,7 +106,7 @@ extension XCTestCase {
             }
         }
     }
-    
+
     /// Assert that a file size operation meets its budget
     func assertFileSizePerformance(
         fileSize: Int,
@@ -122,16 +122,16 @@ extension XCTestCase {
         } else {
             budgetKey = "file_open_large"
         }
-        
+
         try measureAgainstBudget(budgetKey, file: file, line: line, block: operation)
     }
-    
+
     /// Generate performance report at end of test suite
     static func generatePerformanceReport() async {
         let report = await budgetReporter.generateReport()
         let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "PerformanceBudget")
         logger.info("\n\(report.summary)\n")
-        
+
         // Reset for next test run
         await budgetReporter.reset()
     }

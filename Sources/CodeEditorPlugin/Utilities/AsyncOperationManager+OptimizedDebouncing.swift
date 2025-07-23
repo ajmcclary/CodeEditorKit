@@ -25,22 +25,22 @@ extension AsyncOperationManager {
     ) async throws -> T {
         // Cancel existing task
         debounceTasks[key]?.cancel()
-        
+
         // Clear previous results/errors
         debounceResults.removeValue(forKey: key)
         debounceErrors.removeValue(forKey: key)
-        
+
         // Create a unique identifier for this specific call
         _ = UUID()
-        
+
         // Create new debounce task
         let task = Task { [weak self] in
             do {
                 // Use a more efficient sleep that can be interrupted
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                
+
                 guard !Task.isCancelled else { return }
-                
+
                 // Execute the operation
                 let result = try await operation()
                 await self?.storeDebounceResult(key: key, result: result)
@@ -49,27 +49,27 @@ extension AsyncOperationManager {
                     await self?.storeDebounceError(key: key, error: error)
                 }
             }
-            
+
             await self?.cleanupDebounceTask(key: key)
         }
-        
+
         debounceTasks[key] = task
-        
+
         // Wait for task completion
         _ = await task.value
-        
+
         // Return result or throw error
         if let error = debounceErrors[key] {
             throw error
         }
-        
+
         guard let result = debounceResults[key] as? T else {
             throw AsyncOperationError.noResult
         }
-        
+
         return result
     }
-    
+
     /// Fast debounce for fire-and-forget operations
     ///
     /// This version is optimized for operations where you don't need the result.
@@ -86,25 +86,25 @@ extension AsyncOperationManager {
     ) {
         // Cancel existing task
         debounceTasks[key]?.cancel()
-        
+
         // Create new debounce task
         let task = Task { [weak self] in
             do {
                 try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                
+
                 guard !Task.isCancelled else { return }
-                
+
                 await operation()
             } catch {
                 // Silently ignore cancellation errors
             }
-            
+
             await self?.cleanupDebounceTask(key: key)
         }
-        
+
         debounceTasks[key] = task
     }
-    
+
     /// Batch debounce for multiple operations
     ///
     /// This optimizes performance when multiple debounced operations need to be executed.
@@ -120,7 +120,7 @@ extension AsyncOperationManager {
         delay: TimeInterval
     ) async throws -> [String: T] {
         var results: [String: T] = [:]
-        
+
         // Create tasks for all operations
         await withTaskGroup(of: (String, Result<T, Error>).self) { group in
             for (key, operation) in operations {
@@ -137,7 +137,7 @@ extension AsyncOperationManager {
                     }
                 }
             }
-            
+
             // Collect results
             for await (key, result) in group {
                 switch result {
@@ -150,7 +150,7 @@ extension AsyncOperationManager {
                 }
             }
         }
-        
+
         return results
     }
 }
@@ -166,7 +166,7 @@ extension AsyncOperationManager {
         public let averageDelay: TimeInterval
         public let peakConcurrentOperations: Int
     }
-    
+
     @MainActor
     private static var debounceMetrics = DebounceMetrics(
         totalCalls: 0,
@@ -175,7 +175,7 @@ extension AsyncOperationManager {
         averageDelay: 0,
         peakConcurrentOperations: 0
     )
-    
+
     /// Get current debounce performance metrics
     @MainActor
     public func getDebounceMetrics() -> DebounceMetrics {

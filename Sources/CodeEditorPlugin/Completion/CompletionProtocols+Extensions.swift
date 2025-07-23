@@ -39,16 +39,16 @@ import Foundation
 public protocol CompletionProvider: Sendable {
     /// Unique identifier for this provider
     var id: String { get }
-    
+
     /// Languages supported by this provider
     var supportedLanguages: [Language] { get }
-    
+
     /// Characters that trigger completion automatically
     var triggerCharacters: [String] { get }
-    
+
     /// Whether this provider supports snippet insertions
     var supportsSnippets: Bool { get }
-    
+
     /// Provide completions for the given context
     /// - Parameter context: The completion context
     /// - Returns: Completion result with items

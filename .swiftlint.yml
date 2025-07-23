@@ -43,11 +43,8 @@ disabled_rules:
   - required_deinit                        # Only add when cleanup is needed
   - static_operator                        # Operators need to be free functions
   - switch_case_alignment                  # Handled by SwiftFormat
-  - switch_case_on_newline                 # Complex switch statements
   - todo                                   # We use TODOs for tracking
-  - trailing_whitespace                    # Handled by SwiftFormat
   - type_body_length                       # Allow longer types
-  - type_contents_order                    # Specific ordering needs
 
 # ===========================
 # MARK: - Opt-In Rules

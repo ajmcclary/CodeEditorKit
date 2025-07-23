@@ -24,22 +24,22 @@ public enum BecomeFirstResponderOption: Sendable {
 public struct CodeEditorEnvironment: Sendable {
     /// The language for syntax highlighting
     public var language: Language
-    
+
     /// The theme for visual styling
     public var theme: CodeEditorSwiftUITheme
-    
+
     /// The editor configuration settings
     public var configuration: EditorConfiguration
-    
+
     /// Whether the editor should become first responder
     public var becomeFirstResponder: Bool
-    
+
     /// Optional memory monitor for performance tracking
     public var memoryMonitor: MemoryMonitor?
-    
+
     /// Optional unified event system for advanced event handling
     public var eventSystem: UnifiedEventSystem?
-    
+
     /// Creates a new CodeEditor environment configuration
     public init(
         language: Language = .plainText,
@@ -56,10 +56,10 @@ public struct CodeEditorEnvironment: Sendable {
         self.memoryMonitor = memoryMonitor
         self.eventSystem = eventSystem
     }
-    
+
     /// Default environment configuration
     public static let `default` = Self()
-    
+
     /// Creates a copy with updated values
     public func with(
         language: Language? = nil,
@@ -85,7 +85,7 @@ public struct CodeEditorEnvironment: Sendable {
 @available(macOS 12.0, iOS 16.0, *)
 public struct CodeEditorEnvironmentKey: EnvironmentKey {
     public static let defaultValue = CodeEditorEnvironment.default
-    
+
     public typealias Value = CodeEditorEnvironment
 }
 
@@ -98,39 +98,39 @@ extension EnvironmentValues {
         get { self[CodeEditorEnvironmentKey.self] }
         set { self[CodeEditorEnvironmentKey.self] = newValue }
     }
-    
+
     // MARK: - Legacy Support (Computed Properties)
-    
+
     /// Legacy: Access the theme directly
     public var codeEditorTheme: CodeEditorSwiftUITheme {
         get { codeEditorEnvironment.theme }
         set { codeEditorEnvironment = codeEditorEnvironment.with(theme: newValue) }
     }
-    
+
     /// Legacy: Access the language directly
     public var codeEditorLanguage: Language {
         get { codeEditorEnvironment.language }
         set { codeEditorEnvironment = codeEditorEnvironment.with(language: newValue) }
     }
-    
+
     /// Legacy: Access the configuration directly
     public var codeEditorConfiguration: EditorConfiguration {
         get { codeEditorEnvironment.configuration }
         set { codeEditorEnvironment = codeEditorEnvironment.with(configuration: newValue) }
     }
-    
+
     /// Legacy: Access the become first responder flag directly
     public var codeEditorBecomeFirstResponder: Bool {
         get { codeEditorEnvironment.becomeFirstResponder }
         set { codeEditorEnvironment = codeEditorEnvironment.with(becomeFirstResponder: newValue ? .yes : .no) }
     }
-    
+
     /// Legacy: Access the memory monitor directly
     public var codeEditorMemoryMonitor: MemoryMonitor? {
         get { codeEditorEnvironment.memoryMonitor }
         set { codeEditorEnvironment = codeEditorEnvironment.with(memoryMonitor: newValue) }
     }
-    
+
     /// Legacy: Access the event system directly
     public var codeEditorEventSystem: UnifiedEventSystem? {
         get { codeEditorEnvironment.eventSystem }
@@ -146,14 +146,14 @@ extension View {
     public func codeEditorEnvironment(_ environment: CodeEditorEnvironment) -> some View {
         self.environment(\.codeEditorEnvironment, environment)
     }
-    
+
     /// Set the CodeEditor environment using a builder closure
     public func codeEditorEnvironment(@CodeEditorEnvironmentBuilder builder: () -> CodeEditorEnvironment) -> some View {
         self.environment(\.codeEditorEnvironment, builder())
     }
-    
+
     // MARK: - Convenience Modifiers
-    
+
     /// Update specific properties of the CodeEditor environment
     public func codeEditorEnvironment(
         language: Language? = nil,
@@ -184,7 +184,7 @@ public enum CodeEditorEnvironmentBuilder {
     public static func buildBlock(_ environment: CodeEditorEnvironment) -> CodeEditorEnvironment {
         environment
     }
-    
+
     public static func buildExpression(_ environment: CodeEditorEnvironment) -> CodeEditorEnvironment {
         environment
     }

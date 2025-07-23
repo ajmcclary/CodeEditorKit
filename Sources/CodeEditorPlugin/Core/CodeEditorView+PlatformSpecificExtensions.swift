@@ -10,7 +10,7 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Convenience Methods
-    
+
     /// Set the programming language for syntax highlighting
     /// Sets the programming language based on a file extension.
     ///
@@ -55,23 +55,23 @@ extension CodeEditorView {
         let languageService = businessLogicServices.languageDetectionService
         return Array(languageService.getAllSupportedExtensions())
     }
-    
+
     internal var gutterView: GutterView? {
         gutterViewStorage
     }
-    
+
     // MARK: - IOS Specific Methods
-    
+
     #if canImport(UIKit)
     override open func didMoveToWindow() {
         super.didMoveToWindow()
-        
+
         #if targetEnvironment(macCatalyst)
         // On Mac Catalyst, we need to reapply text color when the view is added to window
         if window != nil {
             // Apply immediately
             applyTextColorForMacCatalyst()
-            
+
             // Also apply after a short delay to ensure view hierarchy is ready
             Task { @MainActor [weak self] in
                 do {
@@ -85,17 +85,17 @@ extension CodeEditorView {
         #endif
     }
     #endif
-    
+
     // MARK: - MacOS Specific Methods
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func toggleRuler(_: Any?) {
         isLineNumbersEnabled.toggle()
     }
     #endif
-    
+
     // MARK: - Tab Handling
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Handle tab key press for macOS
     override public func insertTab(_ sender: Any?) {
@@ -108,7 +108,7 @@ extension CodeEditorView {
             super.insertTab(sender)
         }
     }
-    
+
     /// Handle backtab (shift+tab) for macOS
     override public func insertBacktab(_ sender: Any?) {
         if configuration.layout.insertSpacesForTabs {
@@ -118,13 +118,13 @@ extension CodeEditorView {
                 super.insertBacktab(sender)
                 return
             }
-            
+
             let currentRange = selectedRange()
             guard currentRange.location > 0 else {
                 super.insertBacktab(sender)
                 return
             }
-            
+
             // Look backwards to find spaces to remove
             let maxCheck = min(tabWidth, currentRange.location)
             let checkRange = NSRange(location: currentRange.location - maxCheck, length: maxCheck)
@@ -134,7 +134,7 @@ extension CodeEditorView {
                 return
             }
             let substring = String(text[range])
-            
+
             // Count trailing spaces
             var spacesToRemove = 0
             for char in substring.reversed() {
@@ -144,7 +144,7 @@ extension CodeEditorView {
                     break
                 }
             }
-            
+
             if spacesToRemove > 0 {
                 let removeRange = NSRange(location: currentRange.location - spacesToRemove, length: spacesToRemove)
                 replaceCharacters(in: removeRange, with: "")
@@ -156,15 +156,15 @@ extension CodeEditorView {
         }
     }
     #endif
-    
+
     // MARK: - Notifications
-    
+
     /// Custom notification for CodeEditorView selection changes
     public static let codeEditorViewDidChangeSelectionNotification = Notification
         .Name("CodeEditorViewDidChangeSelectionNotification")
-        
+
     // MARK: - CompletionViewControllerDelegate
-    
+
     public func completionViewController(
         _: some CompletionViewControllerRepresentable,
         complete item: any CompletionItemView,
@@ -178,12 +178,12 @@ extension CodeEditorView {
             // Fallback - use a default or empty string
             textToInsert = ""
         }
-        
+
         // Insert the completion text if not empty
         if !textToInsert.isEmpty {
             insertText(textToInsert)
         }
-        
+
         // Hide the completion window
         hideCompletionPopup()
     }

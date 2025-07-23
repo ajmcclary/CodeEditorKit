@@ -6,13 +6,13 @@ import Foundation
 public protocol RecoverableAsyncError: Error, Sendable {
     /// Suggested recovery strategies for this error
     var recoveryStrategies: [RecoveryStrategy] { get }
-    
+
     /// Whether this error should trigger an automatic retry
     var isRetryable: Bool { get }
-    
+
     /// Suggested delay before retry (if retryable)
     var retryDelay: Duration? { get }
-    
+
     /// User-friendly error description
     var userDescription: String { get }
 }
@@ -28,11 +28,11 @@ public struct RecoveryStrategy: Sendable {
         case useAlternativeImplementation(name: String)
         case reduceResourceUsage(suggestion: String)
     }
-    
+
     public let action: Action
     public let priority: Int // Higher number = higher priority
     public let description: String
-    
+
     public init(action: Action, priority: Int, description: String) {
         self.action = action
         self.priority = priority
@@ -46,23 +46,23 @@ public enum BackoffStrategy: Sendable {
     case linear(initial: Duration, increment: Duration)
     case exponential(initial: Duration, multiplier: Double, maxDelay: Duration)
     case jitter(base: Duration, maxJitter: Duration)
-    
+
     public func delay(for attempt: Int) -> Duration {
         switch self {
         case .constant(let duration):
             return duration
-            
+
         case let .linear(initial, increment):
             let milliseconds = Double(initial.components.seconds) * 1_000 + Double(initial.components.attoseconds) / 1_000_000_000_000_000
             let incrementMs = Double(increment.components.seconds) * 1_000 + Double(increment.components.attoseconds) / 1_000_000_000_000_000
             return .milliseconds(Int(milliseconds + incrementMs * Double(attempt - 1)))
-            
+
         case let .exponential(initial, multiplier, maxDelay):
             let initialMs = Double(initial.components.seconds) * 1_000 + Double(initial.components.attoseconds) / 1_000_000_000_000_000
             let delayMs = initialMs * pow(multiplier, Double(attempt - 1))
             let maxMs = Double(maxDelay.components.seconds) * 1_000 + Double(maxDelay.components.attoseconds) / 1_000_000_000_000_000
             return .milliseconds(Int(min(delayMs, maxMs)))
-            
+
         case let .jitter(base, maxJitter):
             let baseMs = Double(base.components.seconds) * 1_000 + Double(base.components.attoseconds) / 1_000_000_000_000_000
             let jitterMs = Double(maxJitter.components.seconds) * 1_000 + Double(maxJitter.components.attoseconds) / 1_000_000_000_000_000
@@ -83,7 +83,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
     case memoryPressure(availableMB: Double, requiredMB: Double)
     case timeout(duration: Duration)
     case cancelled
-    
+
     public var recoveryStrategies: [RecoveryStrategy] {
         switch self {
         case .textTooLarge:
@@ -104,7 +104,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Adjust performance settings"
                 )
             ]
-            
+
         case .languageNotSupported:
             return [
                 RecoveryStrategy(
@@ -118,7 +118,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Inform user about limitation"
                 )
             ]
-            
+
         case .parsingFailed:
             return [
                 RecoveryStrategy(
@@ -137,7 +137,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Fall back to simpler highlighting"
                 )
             ]
-            
+
         case .cacheCorrupted:
             return [
                 RecoveryStrategy(
@@ -146,7 +146,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Clear corrupted cache and rebuild"
                 )
             ]
-            
+
         case .memoryPressure:
             return [
                 RecoveryStrategy(
@@ -165,7 +165,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Defer operation"
                 )
             ]
-            
+
         case .timeout:
             return [
                 RecoveryStrategy(
@@ -179,7 +179,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
                     description: "Use incremental processing"
                 )
             ]
-            
+
         case .cancelled:
             return [
                 RecoveryStrategy(
@@ -190,7 +190,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
             ]
         }
     }
-    
+
     public var isRetryable: Bool {
         switch self {
         case .parsingFailed, .timeout, .memoryPressure:
@@ -200,7 +200,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
             return false
         }
     }
-    
+
     public var retryDelay: Duration? {
         switch self {
         case .parsingFailed:
@@ -216,7 +216,7 @@ public enum SyntaxHighlightingError: RecoverableAsyncError {
             return nil
         }
     }
-    
+
     public var userDescription: String {
         switch self {
         case let .textTooLarge(size, limit):
@@ -253,7 +253,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
     case tooManyResults(count: Int, limit: Int)
     case lspConnectionFailed(Error)
     case cancelled
-    
+
     public var recoveryStrategies: [RecoveryStrategy] {
         switch self {
         case .providerNotAvailable:
@@ -264,7 +264,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
                     description: "Fall back to simple completion"
                 )
             ]
-            
+
         case .contextExtractionFailed:
             return [
                 RecoveryStrategy(
@@ -278,7 +278,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
                     description: "Continue with limited context"
                 )
             ]
-            
+
         case .timeout:
             return [
                 RecoveryStrategy(
@@ -292,7 +292,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
                     description: "Limit completion results"
                 )
             ]
-            
+
         case let .tooManyResults(count, limit):
             return [
                 RecoveryStrategy(
@@ -306,7 +306,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
                     description: "Inform user about truncation"
                 )
             ]
-            
+
         case .lspConnectionFailed:
             return [
                 RecoveryStrategy(
@@ -325,7 +325,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
                     description: "Notify user about LSP issue"
                 )
             ]
-            
+
         case .cancelled:
             return [
                 RecoveryStrategy(
@@ -336,7 +336,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
             ]
         }
     }
-    
+
     public var isRetryable: Bool {
         switch self {
         case .contextExtractionFailed, .timeout, .lspConnectionFailed:
@@ -346,7 +346,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
             return false
         }
     }
-    
+
     public var retryDelay: Duration? {
         switch self {
         case .contextExtractionFailed:
@@ -362,7 +362,7 @@ public enum CompletionAsyncError: RecoverableAsyncError {
             return nil
         }
     }
-    
+
     public var userDescription: String {
         switch self {
         case .providerNotAvailable(let language):
@@ -392,21 +392,21 @@ public enum CompletionAsyncError: RecoverableAsyncError {
 @available(macOS 13.0, iOS 16.0, *)
 public actor ErrorRecoveryCoordinator {
     private var activeRecoveries: [UUID: RecoveryTask] = [:]
-    
+
     private struct RecoveryTask {
         let error: any RecoverableAsyncError
         let strategy: RecoveryStrategy
         let startTime: Date
         var attempts: Int = 0
     }
-    
+
     /// Attempt to recover from an error using its suggested strategies
     public func recover<T>(
         from error: any RecoverableAsyncError,
         operation: @Sendable () async throws -> T
     ) async throws -> T {
         let strategies = error.recoveryStrategies.sorted { $0.priority > $1.priority }
-        
+
         for strategy in strategies {
             let recoveryId = UUID()
             activeRecoveries[recoveryId] = RecoveryTask(
@@ -414,7 +414,7 @@ public actor ErrorRecoveryCoordinator {
                 strategy: strategy,
                 startTime: Date()
             )
-            
+
             do {
                 let result = try await attemptRecovery(
                     strategy: strategy,
@@ -430,11 +430,11 @@ public actor ErrorRecoveryCoordinator {
                 continue
             }
         }
-        
+
         // All strategies failed, throw original error
         throw error
     }
-    
+
     private func attemptRecovery<T>(
         strategy: RecoveryStrategy,
         error: any RecoverableAsyncError,
@@ -448,49 +448,49 @@ public actor ErrorRecoveryCoordinator {
                 backoffStrategy: backoffStrategy,
                 operation: operation
             )
-            
+
         case .fallback, .useAlternativeImplementation:
             // These require context-specific handling
             throw error
-            
+
         case .ignore:
             throw CancellationError()
-            
+
         case .reportToUser:
             // Log and continue
             CrossPlatformLogger.logger().error("Error reported to user: \(error.userDescription)")
             throw error
-            
+
         case .clearCacheAndRetry:
             // This would need to be handled by specific subsystems
             throw error
-            
+
         case .reduceResourceUsage:
             // This would need to be handled by specific subsystems
             throw error
         }
     }
-    
+
     private func retryWithBackoff<T>(
         maxAttempts: Int,
         backoffStrategy: BackoffStrategy,
         operation: @Sendable () async throws -> T
     ) async throws -> T {
         var lastError: Error?
-        
+
         for attempt in 1...maxAttempts {
             do {
                 return try await operation()
             } catch {
                 lastError = error
-                
+
                 if attempt < maxAttempts {
                     let delay = backoffStrategy.delay(for: attempt)
                     try await Task.sleep(for: delay)
                 }
             }
         }
-        
+
         throw lastError ?? SyntaxHighlightingError.cancelled
     }
 }

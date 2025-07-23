@@ -9,7 +9,7 @@ public enum InsightsPerformanceStatus {
     case suboptimal
     case degraded
     case critical
-    
+
     public var color: Color {
         switch self {
         case .optimal: return .green
@@ -18,7 +18,7 @@ public enum InsightsPerformanceStatus {
         case .critical: return .red
         }
     }
-    
+
     public var description: String {
         switch self {
         case .optimal: return "Performance is optimal"
@@ -39,7 +39,7 @@ public enum InsightsPerformanceIssue: Identifiable {
     case increasingCPUUsage(trend: PerformanceTrend)
     case unresponsiveUI(fps: Int)
     case slowSyntaxHighlighting(time: TimeInterval)
-    
+
     public var id: String {
         switch self {
         case .slowTextLayout: return "slowTextLayout"
@@ -50,7 +50,7 @@ public enum InsightsPerformanceIssue: Identifiable {
         case .slowSyntaxHighlighting: return "slowSyntaxHighlighting"
         }
     }
-    
+
     public var severity: IssueSeverity {
         switch self {
         case .slowTextLayout(let time):
@@ -72,7 +72,7 @@ public enum InsightsPerformanceIssue: Identifiable {
             return time > 0.5 ? .warning : .info
         }
     }
-    
+
     public var description: String {
         switch self {
         case .slowTextLayout(let time):
@@ -101,7 +101,7 @@ public enum IssueSeverity: Int, Comparable {
     case info = 0
     case warning = 1
     case critical = 2
-    
+
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
@@ -122,7 +122,7 @@ public enum InsightsPerformanceRecommendation: Identifiable {
     case reduceConcurrentOperations(current: Int, max: Int)
     case enableHardwareAcceleration
     case useReadOnlyMode
-    
+
     public var id: String {
         switch self {
         case .enableViewportOptimization: return "enableViewportOptimization"
@@ -138,7 +138,7 @@ public enum InsightsPerformanceRecommendation: Identifiable {
         case .useReadOnlyMode: return "useReadOnlyMode"
         }
     }
-    
+
     public var title: String {
         switch self {
         case .enableViewportOptimization:
@@ -175,7 +175,7 @@ public enum InsightsPerformanceRecommendation: Identifiable {
             return "Use Read-Only Mode"
         }
     }
-    
+
     public var actionDescription: String {
         switch self {
         case .enableViewportOptimization:
@@ -223,7 +223,7 @@ public struct RealTimeMetrics {
     public var currentFPS: Int = 60
     public var activeOperations: Int = 0
     public var averageResponseTime: Double = 0
-    
+
     public init() {}
 }
 
@@ -234,7 +234,7 @@ public struct PerformanceThresholds {
     public let minCacheHitRate: Double
     public let minFPS: Int
     public let maxResponseTime: TimeInterval
-    
+
     public init(
         maxLayoutTime: TimeInterval = 0.05, // 50ms
         maxMemoryUsageGB: Double = 2.0,
@@ -256,7 +256,7 @@ public struct MonitoringConfiguration {
     public var enableAlerts: Bool
     public var alertThreshold: IssueSeverity
     public var updateInterval: TimeInterval
-    
+
     public init(
         enableRealTimeMetrics: Bool = true,
         enableAlerts: Bool = true,
@@ -279,7 +279,7 @@ public struct PerformanceDataPoint {
     public let memoryUsage: Double
     public let fps: Int
     public let responseTime: Double
-    
+
     public init(
         timestamp: Date,
         cpuUsage: Double,
@@ -301,7 +301,7 @@ public struct PerformanceTrend {
     public let changeRate: Double // Percentage change per time unit
     public let isIncreasing: Bool
     public let confidence: Double // 0-1 confidence in the trend
-    
+
     public init(metric: String, changeRate: Double, isIncreasing: Bool, confidence: Double) {
         self.metric = metric
         self.changeRate = changeRate
@@ -315,9 +315,9 @@ public struct PerformanceTrend {
 public final class PerformanceHistory {
     private var dataPoints: [PerformanceDataPoint] = []
     private let maxDataPoints = 300 // 5 minutes at 1 second intervals
-    
+
     public init() {}
-    
+
     public func record(_ metrics: RealTimeMetrics) {
         let dataPoint = PerformanceDataPoint(
             timestamp: Date(),
@@ -326,27 +326,27 @@ public final class PerformanceHistory {
             fps: metrics.currentFPS,
             responseTime: metrics.averageResponseTime
         )
-        
+
         dataPoints.append(dataPoint)
-        
+
         // Trim old data points
         if dataPoints.count > maxDataPoints {
             dataPoints.removeFirst(dataPoints.count - maxDataPoints)
         }
     }
-    
+
     public func getHistory(for _: String, duration: TimeInterval) -> [PerformanceDataPoint] {
         let cutoff = Date().addingTimeInterval(-duration)
         return dataPoints.filter { $0.timestamp >= cutoff }
     }
-    
+
     public func analyzeTrend(for metric: String) -> PerformanceTrend? {
         guard dataPoints.count >= 10 else { return nil }
-        
+
         // Simple linear regression for trend analysis
         let recentPoints = Array(dataPoints.suffix(60)) // Last minute
         guard recentPoints.count >= 10 else { return nil }
-        
+
         let values: [Double]
         switch metric {
         case "cpu":
@@ -364,20 +364,20 @@ public final class PerformanceHistory {
         default:
             return nil
         }
-        
+
         // Calculate simple trend
         let firstHalf = values.prefix(values.count / 2).reduce(0, +) / Double(values.count / 2)
         let secondHalf = values.suffix(values.count / 2).reduce(0, +) / Double(values.count / 2)
-        
+
         let changeRate = ((secondHalf - firstHalf) / firstHalf) * 100
         let isIncreasing = secondHalf > firstHalf
-        
+
         // Simple confidence based on variance
         let variance = values.reduce(0) { sum, value in
             sum + pow(value - firstHalf, 2)
         } / Double(values.count)
         let confidence = max(0, min(1, 1 - (variance / 100)))
-        
+
         return PerformanceTrend(
             metric: metric,
             changeRate: abs(changeRate),
@@ -385,7 +385,7 @@ public final class PerformanceHistory {
             confidence: confidence
         )
     }
-    
+
     public func clear() {
         dataPoints.removeAll()
     }

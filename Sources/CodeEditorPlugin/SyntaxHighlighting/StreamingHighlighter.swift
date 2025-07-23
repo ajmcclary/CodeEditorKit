@@ -22,16 +22,16 @@ public struct StreamingHighlighter: Sendable {
     public struct Configuration: Sendable {
         /// Size of text chunks to process at once (in characters)
         public let chunkSize: Int
-        
+
         /// Maximum number of chunks to buffer ahead
         public let bufferSize: Int
-        
+
         /// Priority for background processing
         public let priority: _Concurrency.TaskPriority
-        
+
         /// Whether to yield empty chunks (useful for progress tracking)
         public let yieldEmptyChunks: Bool
-        
+
         public init(
             chunkSize: Int = 50_000,
             bufferSize: Int = 3,
@@ -43,14 +43,14 @@ public struct StreamingHighlighter: Sendable {
             self.priority = priority
             self.yieldEmptyChunks = yieldEmptyChunks
         }
-        
+
         /// Configuration optimized for very large files (1MB+)
         public static let largeFile = Self(
             chunkSize: 100_000,
             bufferSize: 2,
             priority: .low
         )
-        
+
         /// Configuration for responsive UI updates
         public static let responsive = Self(
             chunkSize: 25_000,
@@ -58,15 +58,15 @@ public struct StreamingHighlighter: Sendable {
             priority: .high
         )
     }
-    
+
     private let configuration: Configuration
     private let coordinator: SyntaxHighlightingCoordinator
-    
+
     public init(configuration: Configuration = .init()) {
         self.configuration = configuration
         self.coordinator = SyntaxHighlightingCoordinator()
     }
-    
+
     /// Stream highlight results for the given text
     /// - Parameters:
     ///   - text: The text to highlight
@@ -89,12 +89,12 @@ public struct StreamingHighlighter: Sendable {
 @available(macOS 13.0, iOS 16.0, *)
 public struct HighlightStream: AsyncSequence {
     public typealias Element = HighlightChunk
-    
+
     let text: String
     let language: Language
     let configuration: StreamingHighlighter.Configuration
     let coordinator: SyntaxHighlightingCoordinator
-    
+
     public func makeAsyncIterator() -> AsyncIterator {
         AsyncIterator(
             text: text,
@@ -103,7 +103,7 @@ public struct HighlightStream: AsyncSequence {
             coordinator: coordinator
         )
     }
-    
+
     /// An async iterator that processes text in chunks
     public struct AsyncIterator: AsyncIteratorProtocol {
         private let text: String
@@ -113,7 +113,7 @@ public struct HighlightStream: AsyncSequence {
         private var currentOffset: String.Index
         private let endIndex: String.Index
         private var chunkIndex: Int = 0
-        
+
         init(
             text: String,
             language: Language,
@@ -127,30 +127,30 @@ public struct HighlightStream: AsyncSequence {
             self.currentOffset = text.startIndex
             self.endIndex = text.endIndex
         }
-        
+
         public mutating func next() async throws -> HighlightChunk? {
             // Check if we've processed all text
             guard currentOffset < endIndex else { return nil }
-            
+
             // Check for cancellation
             try Task.checkCancellation()
-            
+
             // Calculate chunk boundaries
             let chunkStart = currentOffset
             let remainingDistance = text.distance(from: currentOffset, to: endIndex)
             let chunkDistance = Swift.min(configuration.chunkSize, remainingDistance)
             let chunkEnd = text.index(currentOffset, offsetBy: chunkDistance)
-            
+
             // Extract chunk text
             let chunkText = String(text[chunkStart..<chunkEnd])
-            
+
             // Process chunk with appropriate priority
             let tokens = await processChunk(chunkText, startOffset: chunkStart)
-            
+
             // Update offset for next iteration
             currentOffset = chunkEnd
             chunkIndex += 1
-            
+
             // Create chunk result
             let chunk = HighlightChunk(
                 index: chunkIndex - 1,
@@ -158,15 +158,15 @@ public struct HighlightStream: AsyncSequence {
                 tokens: tokens,
                 isComplete: currentOffset >= endIndex
             )
-            
+
             // Skip empty chunks unless configured to yield them
             if tokens.isEmpty && !configuration.yieldEmptyChunks && !chunk.isComplete {
                 return try await next()
             }
-            
+
             return chunk
         }
-        
+
         private func processChunk(
             _ chunkText: String,
             startOffset: String.Index
@@ -176,10 +176,10 @@ public struct HighlightStream: AsyncSequence {
                 source: chunkText,
                 language: language
             )
-            
+
             // Adjust token ranges to account for chunk offset
             let startDistance = text.distance(from: text.startIndex, to: startOffset)
-            
+
             return chunkTokens.map { token in
                 let adjustedRange = NSRange(
                     location: token.range.location + startDistance,
@@ -200,16 +200,16 @@ public struct HighlightStream: AsyncSequence {
 public struct HighlightChunk: Sendable {
     /// The chunk index (0-based)
     public let index: Int
-    
+
     /// The text range this chunk covers
     public let range: Range<String.Index>
-    
+
     /// The highlight tokens found in this chunk
     public let tokens: [HighlightedToken]
-    
+
     /// Whether this is the final chunk
     public let isComplete: Bool
-    
+
     /// Progress percentage (0.0 to 1.0)
     public var progress: Double {
         // This is an approximation since we don't know total chunks ahead of time
@@ -236,28 +236,28 @@ extension AsyncSyntaxHighlighter {
     ) async {
         // Cancel any existing highlighting
         cancelAllHighlighting()
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let text = textView.string
         #else
         let text = textView.text ?? ""
         #endif
-        
+
         // Create highlighter
         let highlighter = StreamingHighlighter(configuration: configuration)
-        
+
         // Track processed tokens for deduplication
         var allTokens: [HighlightedToken] = []
-        
+
         // Process stream
         do {
             for try await chunk in highlighter.highlightStream(text: text, language: language) {
                 // Check if cancelled
                 guard !Task.isCancelled else { break }
-                
+
                 // Accumulate tokens
                 allTokens.append(contentsOf: chunk.tokens)
-                
+
                 // Apply tokens incrementally
                 // For visible range, apply immediately
                 if let visibleRange {
@@ -276,13 +276,13 @@ extension AsyncSyntaxHighlighter {
                         applyTokens(chunk.tokens, to: textView)
                     }
                 }
-                
+
                 // Update progress if needed
                 if chunk.index.isMultiple(of: 5) || chunk.isComplete {
                     // Progress recording would go here if the method existed
                     // await performanceMonitor.recordProgress(chunk.progress)
                 }
-                
+
                 // Cache if complete
                 if chunk.isComplete {
                     let cacheKey = SmartTokenCache.CacheKey(
@@ -302,7 +302,7 @@ extension AsyncSyntaxHighlighter {
             CrossPlatformLogger.logger().debug("Streaming highlighting cancelled or failed: \(error)")
         }
     }
-    
+
     /// Check if streaming should be used based on text size
     public func shouldUseStreaming(for text: String) -> Bool {
         // Use streaming for files larger than 500KB

@@ -22,7 +22,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         "string", "number", "boolean", "symbol", "bigint", "undefined", "null"
         ]
     }
-    
+
     override public var types: [String] {
         [
         // Primitive types
@@ -38,14 +38,14 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         "Error", "Function", "Object", "String", "Number", "Boolean", "Symbol"
         ]
     }
-    
+
     private let decorators = [
         "@Component", "@Injectable", "@Directive", "@Pipe", "@NgModule",
         "@Input", "@Output", "@ViewChild", "@ContentChild", "@HostListener",
         "@HostBinding", "@Optional", "@Self", "@SkipSelf", "@Host",
         "@deprecated", "@experimental", "@sealed", "@override", "@readonly"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -135,7 +135,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     public init() {
         super.init(
             id: "typescript-builtin",
@@ -144,50 +144,50 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeTypeScriptContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .type:
             items.append(contentsOf: createTSTypeCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
+
         case .decorator:
             items.append(contentsOf: createDecoratorCompletions(filter: analysisResult.filter))
-            
+
         case .import:
             items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
-            
+
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .generic:
             items.append(contentsOf: createGenericCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
-            
+
         case .parameter:
             items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -195,55 +195,55 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeTypeScriptContext(_ context: CompletionContextModel) -> TypeScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for decorator context
         if lineText.hasPrefix("@") || beforeCursor.hasSuffix("@") {
             return TypeScriptContextAnalysisResult(type: .decorator, filter: filter)
         }
-        
+
         // Check for type context
         if lineText.contains(": ") || lineText.contains("extends ") || lineText.contains("implements ") {
             return TypeScriptContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Check for generic context
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">")) {
             return TypeScriptContextAnalysisResult(type: .generic, filter: filter)
         }
-        
+
         // Check for import/require statements
         if lineText.hasPrefix("import ") || lineText.contains("from '") || lineText.contains("require(") {
             return TypeScriptContextAnalysisResult(type: .import, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return TypeScriptContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for function definition
         if lineText.contains("function ") && lineText.contains("(") && !lineText.contains(")") {
             return TypeScriptContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         return TypeScriptContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         // Extract the object before the dot
         let pattern = #"([\w$]+)\s*\.\s*$"#
@@ -254,9 +254,9 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
@@ -274,11 +274,11 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createTSTypeCompletions(filter: String) -> [CompletionItemModel] {
         // Additional common types not in builtinTypes
         let additionalTypes = ["HTMLElement", "Document", "Window", "Event", "MouseEvent", "KeyboardEvent", "FormData", "Response", "Request"]
-        
+
         return additionalTypes
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -293,7 +293,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createDecoratorCompletions(filter: String) -> [CompletionItemModel] {
         decorators
             .filter { decorator in
@@ -310,7 +310,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createImportCompletions(filter: String) -> [CompletionItemModel] {
         // Common TypeScript/JavaScript modules and type definitions
         let modules = [
@@ -318,7 +318,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             "react", "react-dom", "vue", "angular", "express", "axios",
             "rxjs", "lodash", "moment", "date-fns", "zod", "yup"
         ]
-        
+
         return modules
             .filter { module in
                 filter.isEmpty || module.localizedCaseInsensitiveContains(filter)
@@ -333,11 +333,11 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createGenericCompletions(filter: String) -> [CompletionItemModel] {
         // Common generic type parameters
         let generics = ["T", "K", "V", "E", "TKey", "TValue", "TResult", "TError", "TData"]
-        
+
         return generics
             .filter { generic in
                 filter.isEmpty || generic.localizedCaseInsensitiveContains(filter)
@@ -352,41 +352,41 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Member Completions Override
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide TypeScript-aware member completions
         switch targetType.lowercased() {
         case "array":
             return createArrayMemberCompletions(filter: filter)
-            
+
         case "promise":
             return createPromiseMemberCompletions(filter: filter)
-            
+
         case "string":
             return createStringMemberCompletions(filter: filter)
-            
+
         case "object":
             return createObjectMemberCompletions(filter: filter)
-            
+
         default:
             // For unknown types, provide common members
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     // MARK: - Parameter Completions Override
-    
+
     override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = [
             "event: Event", "error: Error", "data: any", "result: T",
             "callback: () => void", "options: Options", "config: Config",
             "request: Request", "response: Response", "next: NextFunction"
         ]
-        
+
         return commonParameters
             .filter { param in
                 let paramName = param.split(separator: ":").first ?? ""
@@ -402,9 +402,9 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members (TypeScript-aware)
-    
+
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "number"),
@@ -419,7 +419,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             ("some(fn: (value: T) => boolean): boolean", "method", "Test any element"),
             ("every(fn: (value: T) => boolean): boolean", "method", "Test all elements")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 let memberName = name.split(separator: "(").first ?? ""
@@ -435,14 +435,14 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createPromiseMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("then<U>(fn: (value: T) => U): Promise<U>", "method", "Handle resolved value"),
             ("catch(fn: (error: any) => T): Promise<T>", "method", "Handle rejection"),
             ("finally(fn: () => void): Promise<T>", "method", "Execute after settlement")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 let memberName = name.split(separator: "(").first ?? ""
@@ -459,7 +459,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "number"),
@@ -473,7 +473,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             ("trim(): string", "method", "Remove whitespace"),
             ("replace(search: string | RegExp, replace: string): string", "method", "Replace text")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 let memberName = name.split(separator: "(").first ?? ""
@@ -490,7 +490,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createObjectMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("Object.keys(obj: T): string[]", "method", "Get object keys"),
@@ -499,7 +499,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
             ("Object.assign<T>(target: T, ...sources: any[]): T", "method", "Copy properties"),
             ("Object.freeze<T>(obj: T): Readonly<T>", "method", "Freeze object")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
@@ -516,14 +516,14 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("toString(): string", "method", "Convert to string"),
             ("valueOf(): T", "method", "Primitive value"),
             ("constructor", "property", "Constructor function")
         ]
-        
+
         return members
             .filter { name, _, _ in
                 let memberName = name.split(separator: "(").first ?? ""
@@ -555,11 +555,11 @@ private struct TypeScriptContextAnalysisResult {
         case decorator
         case generic
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

@@ -3,14 +3,14 @@ import XCTest
 
 final class LanguageDetectionTests: XCTestCase {
     // MARK: - Language Enum Tests
-    
+
     func testAllLanguagesHaveValidIdentifiers() {
         for language in Language.allCases {
             XCTAssertFalse(language.identifier.isEmpty, "Language \(language) should have a non-empty identifier")
             XCTAssertEqual(language.rawValue, language.identifier, "Language identifier should match rawValue")
         }
     }
-    
+
     func testLanguageFromIdentifier() {
         let expectedLanguages: [(identifier: String, language: Language)] = [
             ("swift", .swift),
@@ -34,29 +34,29 @@ final class LanguageDetectionTests: XCTestCase {
             ("shell", .shell),
             ("plaintext", .plainText)
         ]
-        
+
         for (identifier, expectedLanguage) in expectedLanguages {
             let language = Language(identifier: identifier)
             XCTAssertEqual(language, expectedLanguage, "Language(identifier: \"\(identifier)\") should return \(expectedLanguage)")
         }
     }
-    
+
     func testFileExtensionDetection() {
         let testCases: [(fileExt: String, expectedLanguage: Language)] = [
             // Swift
             ("swift", .swift),
-            
+
             // JavaScript/TypeScript
             ("js", .javascript),
             ("jsx", .javascript),
             ("mjs", .javascript),
             ("ts", .typescript),
             ("tsx", .typescript),
-            
+
             // Python
             ("py", .python),
             ("pyw", .python),
-            
+
             // System Languages
             ("go", .go),
             ("rs", .rust),
@@ -67,7 +67,7 @@ final class LanguageDetectionTests: XCTestCase {
             ("cxx", .cpp),
             ("hpp", .cpp),
             ("java", .java),
-            
+
             // Web Languages
             ("html", .html),
             ("htm", .html),
@@ -78,7 +78,7 @@ final class LanguageDetectionTests: XCTestCase {
             ("less", .css),
             ("php", .php),
             ("phtml", .php),
-            
+
             // Data Formats
             ("json", .json),
             ("jsonc", .json),
@@ -88,25 +88,25 @@ final class LanguageDetectionTests: XCTestCase {
             ("xsl", .xml),
             ("svg", .xml),
             ("sql", .sql),
-            
+
             // Documentation
             ("md", .markdown),
             ("markdown", .markdown),
             ("mdown", .markdown),
-            
+
             // Scripting
             ("rb", .ruby),
             ("rbw", .ruby),
             ("sh", .shell),
             ("bash", .shell),
             ("zsh", .shell),
-            
+
             // Plain Text
             ("txt", .plainText),
             ("text", .plainText),
             ("log", .plainText)
         ]
-        
+
         for (fileExt, expectedLanguage) in testCases {
             let detectedLanguage = Language(fileExtension: fileExt)
             XCTAssertEqual(
@@ -116,7 +116,7 @@ final class LanguageDetectionTests: XCTestCase {
             )
         }
     }
-    
+
     func testLanguageNames() {
         let expectedNames: [(language: Language, name: String)] = [
             (.swift, "Swift"),
@@ -140,18 +140,18 @@ final class LanguageDetectionTests: XCTestCase {
             (.shell, "Shell"),
             (.plainText, "Plain Text")
         ]
-        
+
         for (language, expectedName) in expectedNames {
             XCTAssertEqual(language.name, expectedName, "Language \(language) should have name '\(expectedName)'")
         }
     }
-    
+
     // MARK: - Syntax Highlighting Integration Tests
-    
+
     func testSyntaxHighlightingCoordinatorLanguageSupport() {
         let coordinator = SyntaxHighlightingCoordinator()
         let testText = "// Test comment\nlet x = 42"
-        
+
         // Test that all languages can be processed without errors
         for language in Language.allCases {
             XCTAssertNoThrow(
@@ -160,21 +160,21 @@ final class LanguageDetectionTests: XCTestCase {
             )
         }
     }
-    
+
     func testLanguageDetectionFromFileExtension() {
         let coordinator = SyntaxHighlightingCoordinator()
-        
+
         let testCases = [
             "test.swift", "test.js", "test.py", "test.go", "test.rs",
             "test.c", "test.cpp", "test.java", "test.html", "test.css",
             "test.json", "test.md", "test.yaml", "test.xml", "test.sql",
             "test.rb", "test.php", "test.sh", "test.txt"
         ]
-        
+
         for fileName in testCases {
             let fileExtension = String(fileName.split(separator: ".").last!)
             let detectedLanguage = coordinator.detectLanguage(from: fileExtension)
-            
+
             // Should not default to plainText for supported extensions
             if [
                 "swift", "js", "py", "go", "rs", "c", "cpp", "java", "html",
@@ -186,16 +186,16 @@ final class LanguageDetectionTests: XCTestCase {
                     "Extension '\(fileExtension)' should not default to plainText"
                 )
             }
-            
+
             XCTAssertNotNil(detectedLanguage, "Should detect a language for extension '\(fileExtension)'")
         }
     }
-    
+
     // MARK: - Completion Provider Integration Tests
-    
+
     @MainActor func testCompletionProvidersRegistration() {
         let engine = SmartCompletionEngine(memoryMonitor: MemoryMonitor())
-        
+
         // Test that completion providers are registered for all major languages
         let testCases: [(language: Language, hasProvider: Bool)] = [
             (.swift, true),
@@ -219,10 +219,10 @@ final class LanguageDetectionTests: XCTestCase {
             (.shell, true),
             (.plainText, false) // PlainText typically doesn't have completion
         ]
-        
+
         for (language, shouldHaveProvider) in testCases {
             let hasProvider = engine.hasCompletionProvider(for: language.identifier)
-            
+
             if shouldHaveProvider {
                 XCTAssertTrue(hasProvider, "Language \(language) should have a completion provider")
             }
@@ -230,18 +230,18 @@ final class LanguageDetectionTests: XCTestCase {
             // may have fallback or generic providers
         }
     }
-    
+
     // MARK: - Performance Tests
-    
+
     func testLanguageDetectionPerformance() {
         measure(options: Self.standardMeasureOptions) {
             // Test performance of language detection for common file extensions
             let extensions = [
-                "swift", "js", "py", "go", "rs", "c", "cpp", "java", 
-                "html", "css", "json", "md", "yaml", "xml", "sql", 
+                "swift", "js", "py", "go", "rs", "c", "cpp", "java",
+                "html", "css", "json", "md", "yaml", "xml", "sql",
                 "rb", "php", "sh", "txt"
             ]
-            
+
             for _ in 0..<1_000 {
                 for ext in extensions {
                     _ = Language(fileExtension: ext)
@@ -249,7 +249,7 @@ final class LanguageDetectionTests: XCTestCase {
             }
         }
     }
-    
+
     func testLanguageEnumIterationPerformance() {
         measure(options: Self.standardMeasureOptions) {
             // Test performance of iterating through all language cases

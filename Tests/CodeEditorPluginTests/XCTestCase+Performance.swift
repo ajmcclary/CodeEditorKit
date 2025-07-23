@@ -15,7 +15,7 @@ extension XCTestCase {
         options.iterationCount = 3
         return options
     }
-    
+
     /// Fast measure options for quick performance tests
     /// Uses only 2 iterations for tests that don't need high precision
     static var fastMeasureOptions: XCTMeasureOptions {
@@ -23,7 +23,7 @@ extension XCTestCase {
         options.iterationCount = 2
         return options
     }
-    
+
     /// Ultra-fast measure options for simple performance tests
     /// Uses only 1 iteration - use sparingly for tests that are already slow
     static var ultraFastMeasureOptions: XCTMeasureOptions {
@@ -31,7 +31,7 @@ extension XCTestCase {
         options.iterationCount = 1
         return options
     }
-    
+
     /// Checks if running in test environment
     static var isTestEnvironment: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil

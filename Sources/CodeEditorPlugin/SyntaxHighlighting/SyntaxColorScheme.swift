@@ -12,7 +12,7 @@ import AppKit
 /// Color scheme for syntax highlighting
 public struct SyntaxColorScheme: Sendable {
     // MARK: - Properties
-    
+
     public let keyword: PlatformColor
     public let identifier: PlatformColor
     public let string: PlatformColor
@@ -26,9 +26,9 @@ public struct SyntaxColorScheme: Sendable {
     public let preprocessor: PlatformColor
     public let error: PlatformColor
     public let plain: PlatformColor
-    
+
     // MARK: - Initialization
-    
+
     public init(
         keyword: PlatformColor,
         identifier: PlatformColor,
@@ -58,9 +58,9 @@ public struct SyntaxColorScheme: Sendable {
         self.error = error
         self.plain = plain
     }
-    
+
     // MARK: - Default Schemes
-    
+
     /// Default color scheme with platform-appropriate colors
     public static let `default`: SyntaxColorScheme = {
         #if canImport(UIKit)
@@ -97,7 +97,7 @@ public struct SyntaxColorScheme: Sendable {
         )
         #endif
     }()
-    
+
     /// Dark mode optimized color scheme
     public static let dark: SyntaxColorScheme = {
         #if canImport(UIKit)
@@ -134,7 +134,7 @@ public struct SyntaxColorScheme: Sendable {
         )
         #endif
     }()
-    
+
     /// Light mode optimized color scheme
     public static let light: SyntaxColorScheme = {
         #if canImport(UIKit)

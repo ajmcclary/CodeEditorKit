@@ -5,7 +5,7 @@ import Foundation
 extension ConfigurationValidator {
     func validateLayout(_ layout: EditorConfiguration.Layout) -> [ValidationIssue] {
         var issues: [ValidationIssue] = []
-        
+
         // Tab width validation - more permissive range
         if !PlatformConstants.validTabWidthRange.contains(layout.tabWidth) {
             issues.append(ValidationIssue(
@@ -15,7 +15,7 @@ extension ConfigurationValidator {
                 suggestedValue: max(PlatformConstants.validTabWidthRange.lowerBound, min(PlatformConstants.validTabWidthRange.upperBound, layout.tabWidth))
             ))
         }
-        
+
         // Gutter width validation (showGutter is controlled by display.showLineNumbers)
         if layout.gutterWidth < 20.0 {
             issues.append(ValidationIssue(
@@ -25,7 +25,7 @@ extension ConfigurationValidator {
                 suggestedValue: max(40.0, layout.gutterWidth)
             ))
         }
-        
+
         // Line spacing validation
         if layout.lineHeightMultiple < 0 {
             issues.append(ValidationIssue(
@@ -35,7 +35,7 @@ extension ConfigurationValidator {
                 suggestedValue: max(0, layout.lineHeightMultiple)
             ))
         }
-        
+
         // Text container width fraction validation
         if layout.textContainerWidthFraction < 0 || layout.textContainerWidthFraction > 1 {
             issues.append(ValidationIssue(
@@ -45,7 +45,7 @@ extension ConfigurationValidator {
                 suggestedValue: max(0, min(1, layout.textContainerWidthFraction))
             ))
         }
-        
+
         return issues
     }
 }

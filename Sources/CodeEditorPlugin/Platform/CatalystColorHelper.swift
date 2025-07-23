@@ -32,13 +32,13 @@ enum CatalystColorHelper {
             // Use system blue which properly supports getRed
             return .systemBlue
         }
-        
+
         // For custom colors, try conversion but with fallback
         let converted = PlatformColor.from(color)
-        
+
         // Test if the color has extractable components
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-        
+
         // Try to get RGB components using getRed first
         let testColor = converted.resolvedColor(with: UITraitCollection.current)
         if testColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
@@ -54,10 +54,10 @@ enum CatalystColorHelper {
             let cgColor = converted.cgColor
             if let components = cgColor.components, components.count >= 3 {
                 red = components[0]
-                green = components[1] 
+                green = components[1]
                 blue = components[2]
                 alpha = components.count > 3 ? components[3] : 1.0
-                
+
                 // Check if color is visible but has reduced opacity
                 if alpha > 0.1 && alpha < 0.95 && (red + green + blue) > 0.1 {
                     // Create a new color with full opacity
@@ -67,11 +67,11 @@ enum CatalystColorHelper {
                 }
             }
         }
-        
+
         // If we can't extract components or color is not visible, return label color
         return .label
     }
-    
+
     /// Applies text color to a text view with Catalyst-specific handling
     ///
     /// This method ensures the color is properly applied on Mac Catalyst,
@@ -96,10 +96,10 @@ enum CatalystColorHelper {
         } else {
             effectiveColor = color
         }
-        
+
         // Apply effective color to the text view
         textView.textColor = effectiveColor
-        
+
         // Apply color to text storage immediately
         let textStorage = textView.textStorage
         if textStorage.length > 0 {
@@ -107,7 +107,7 @@ enum CatalystColorHelper {
             textStorage.addAttribute(.foregroundColor, value: effectiveColor, range: NSRange(location: 0, length: textStorage.length))
             textStorage.endEditing()
         }
-        
+
         // Use task manager for structured delayed application
         Task {
             let manager = taskManager ?? CatalystColorTaskManager()

@@ -4,7 +4,7 @@ import Foundation
 /// This consolidates common text parsing patterns used across multiple language completion providers
 public enum CompletionParsingHelpers {
     // MARK: - Target Type Extraction
-    
+
     /// Extract target object from text before dot notation (e.g., "object.method")
     /// Common pattern used by multiple completion providers
     ///
@@ -22,7 +22,7 @@ public enum CompletionParsingHelpers {
         let pattern = #"([\w$]+)\s*\.\s*$"#
         return extractWithPattern(pattern, from: text)
     }
-    
+
     /// Extract target object from text before arrow notation (e.g., "object->method")
     /// Used by languages like C, C++, PHP
     ///
@@ -33,7 +33,7 @@ public enum CompletionParsingHelpers {
         let pattern = #"(\w+)\s*->\s*$"#
         return extractWithPattern(pattern, from: text)
     }
-    
+
     /// Extract target object from text before scope resolution (e.g., "Namespace::class")
     /// Used by languages like C++, PHP
     ///
@@ -44,7 +44,7 @@ public enum CompletionParsingHelpers {
         let pattern = #"([\w:]+)::\s*$"#
         return extractWithPattern(pattern, from: text)
     }
-    
+
     /// Extract target object for combined dot or arrow notation
     /// Used by languages that support both patterns like C++
     ///
@@ -55,7 +55,7 @@ public enum CompletionParsingHelpers {
         let pattern = #"(\w+)\s*(?:\.|->)\s*$"#
         return extractWithPattern(pattern, from: text)
     }
-    
+
     /// Extract target with custom separator pattern
     /// Allows completion providers to specify their own separators
     ///
@@ -67,9 +67,9 @@ public enum CompletionParsingHelpers {
         let pattern = #"(\w+)\s*"# + separator + #"\s*$"#
         return extractWithPattern(pattern, from: text)
     }
-    
+
     // MARK: - Comment Prefix Extraction
-    
+
     /// Extract comment prefix for a language
     /// Common pattern used for comment-related completion features
     ///
@@ -86,26 +86,26 @@ public enum CompletionParsingHelpers {
         switch language {
         case .swift, .javascript, .typescript, .rust, .c, .cpp, .java, .go:
             return "//"
-            
+
         case .python, .ruby, .shell, .yaml:
             return "#"
-            
+
         case .html, .xml:
             return "<!--"
-            
+
         case .css:
             return "/*"
-            
+
         case .sql:
             return "--"
-            
+
         default:
             return nil
         }
     }
-    
+
     // MARK: - Current Word Extraction
-    
+
     /// Extract the current word being typed from text
     /// Common pattern for filtering completions
     ///
@@ -115,7 +115,7 @@ public enum CompletionParsingHelpers {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
-    
+
     /// Extract the current identifier (word with underscores/dollars) from text
     /// Used for languages that support $ in identifiers
     ///
@@ -125,9 +125,9 @@ public enum CompletionParsingHelpers {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
-    
+
     // MARK: - Private Helper Methods
-    
+
     /// Extract text using a regex pattern with safe Range handling
     /// Consolidates the common pattern of regex extraction with proper error handling
     ///
@@ -157,16 +157,16 @@ extension CompletionParsingHelpers {
         switch language {
         case .swift, .javascript, .typescript, .python, .ruby, .java, .go, .rust:
             return extractTargetForDotNotation(from:)
-            
+
         case .c, .cpp:
             return extractTargetForDotOrArrowNotation(from:)
-            
+
         case .php:
             // PHP supports both -> for objects and :: for static methods
             return { text in
                 extractTargetForArrowNotation(from: text) ?? extractTargetForScopeResolution(from: text)
             }
-            
+
         default:
             return nil
         }

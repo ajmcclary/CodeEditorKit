@@ -18,7 +18,7 @@ extension EditorConfigurationBuilder {
   public func maxHighlightingLength(_ length: Int) -> Self {
     with { $0.performance.maxSyntaxHighlightingLength = length }
   }
-  
+
   /// Sets a custom memory monitor instance
   /// - Parameter monitor: The memory monitor to use, or nil to use default
   /// - Returns: The builder for chaining

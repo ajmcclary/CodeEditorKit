@@ -52,21 +52,21 @@ extension AsyncOperationManager {
         shouldRetry: ((Error) -> Bool)? = nil
     ) async throws -> T {
         precondition(maxAttempts >= 1, "maxAttempts must be at least 1")
-        
+
         var currentDelay = delay
         var lastError: Error?
-        
+
         for attempt in 1...maxAttempts {
             do {
                 return try await operation()
             } catch {
                 lastError = error
-                
+
                 // Check if we should retry
                 if let shouldRetry, !shouldRetry(error) {
                     throw error
                 }
-                
+
                 // Don't delay after the last attempt
                 if attempt < maxAttempts {
                     logger.info("Retry attempt \(attempt) failed, waiting \(currentDelay)s before retry")
@@ -75,7 +75,7 @@ extension AsyncOperationManager {
                 }
             }
         }
-        
+
         throw lastError ?? AsyncOperationError.noResult
     }
 }

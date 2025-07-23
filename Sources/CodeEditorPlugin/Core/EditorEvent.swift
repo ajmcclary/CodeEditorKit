@@ -75,13 +75,13 @@ import UIKit
 /// - SeeAlso: ``EditorEventHandler``, ``EditorEventPublisher``, ``EditorEventType``
 public enum EditorEvent: Sendable {
     // Text events
-    
+
     /// Text content has changed.
     ///
     /// Fired after the text has been modified. The associated value contains
     /// the complete new text content of the editor.
     case textDidChange(String)
-    
+
     /// Text is about to change.
     ///
     /// Fired before text modification occurs. Can be used for validation.
@@ -89,63 +89,63 @@ public enum EditorEvent: Sendable {
     ///   - range: The range of text being replaced
     ///   - replacement: The new text that will replace the range
     case textWillChange(range: NSRange, replacement: String)
-    
+
     /// Text selection or cursor position has changed.
     ///
     /// Fired whenever the user moves the cursor or changes the selection.
     /// The associated value contains the new selected range.
     case textSelectionDidChange(NSRange)
-    
+
     // Editor lifecycle
-    
+
     /// Editor has become the first responder (gained focus).
     ///
     /// Indicates the editor is now active and will receive keyboard input.
     case didBecomeFirstResponder
-    
+
     /// Editor has resigned first responder (lost focus).
     ///
     /// Indicates the editor is no longer active for keyboard input.
     case didResignFirstResponder
-    
+
     // Completion
-    
+
     /// Code completion has been requested.
     ///
     /// Fired when the user triggers completion, either manually or automatically.
     /// The context contains information about the current position and trigger.
     case completionRequested(context: CompletionContext)
-    
+
     /// A completion item has been selected.
     ///
     /// Fired when the user selects an item from the completion list.
     /// The associated value contains the selected completion item.
     case completionItemSelected(any CompletionItemView)
-    
+
     // Annotations
-    
+
     /// Mouse is hovering over an annotation.
     ///
     /// Fired when the mouse enters an annotation's hover area.
     /// The associated value contains the annotation's unique identifier.
     case annotationHovered(annotationId: String)
-    
+
     /// An annotation has been clicked.
     ///
     /// Fired when the user clicks on an annotation badge or marker.
     /// The associated value contains the annotation's unique identifier.
     case annotationClicked(annotationId: String)
-    
+
     // Performance
-    
+
     /// A performance warning has been triggered.
     ///
     /// Fired when the editor detects performance issues, such as slow
     /// syntax highlighting or excessive memory usage.
     case performanceWarning(message: String)
-    
+
     // Errors
-    
+
     /// An error occurred during editor operation.
     ///
     /// Fired when any error occurs that doesn't halt editor operation

@@ -59,7 +59,7 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether syntax highlighting is enabled (convenience property)
     @available(*, deprecated, renamed: "isSyntaxHighlightingEnabled", message: "Use isSyntaxHighlightingEnabled for consistent naming")
     public var showsSyntaxHighlighting: Bool {
@@ -76,7 +76,7 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether line numbers are shown (convenience property)
     @available(*, deprecated, renamed: "isLineNumbersEnabled", message: "Use isLineNumbersEnabled for consistent naming")
     public var showsLineNumbers: Bool {
@@ -93,7 +93,7 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether the current line is highlighted (convenience property)
     @available(*, deprecated, renamed: "isSelectedLineHighlightEnabled", message: "Use isSelectedLineHighlightEnabled for consistent naming")
     public var showsSelectedLineHighlight: Bool {
@@ -110,14 +110,14 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether invisible characters are shown (convenience property)
     @available(*, deprecated, renamed: "isInvisibleCharactersEnabled", message: "Use isInvisibleCharactersEnabled for consistent naming")
     public var showsInvisibleCharacters: Bool {
         get { isInvisibleCharactersEnabled }
         set { isInvisibleCharactersEnabled = newValue }
     }
-    
+
     /// Controls whether code folding is enabled (convenience property)
     public var isCodeFoldingEnabled: Bool {
         get { configuration.display.enableCodeFolding }
@@ -127,14 +127,14 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether code folding is enabled (convenience property)
     @available(*, deprecated, renamed: "isCodeFoldingEnabled", message: "Use isCodeFoldingEnabled for consistent naming")
     public var enablesCodeFolding: Bool {
         get { isCodeFoldingEnabled }
         set { isCodeFoldingEnabled = newValue }
     }
-    
+
     /// Controls whether folding controls are shown in the gutter (convenience property)
     public var isFoldingControlsEnabled: Bool {
         get { configuration.display.showFoldingControls }
@@ -144,7 +144,7 @@ extension CodeEditorView {
             configuration = configuration.with(display: display)
         }
     }
-    
+
     /// Controls whether folding controls are shown in the gutter (convenience property)
     @available(*, deprecated, renamed: "isFoldingControlsEnabled", message: "Use isFoldingControlsEnabled for consistent naming")
     public var showsFoldingControls: Bool {
@@ -153,7 +153,7 @@ extension CodeEditorView {
     }
 
     // MARK: - Completion System
-    
+
     /// Controls whether code completion is enabled (convenience property)
     public var isCodeCompletionEnabled: Bool {
         get { configuration.behavior.enableCodeCompletion }
@@ -163,7 +163,7 @@ extension CodeEditorView {
             configuration = configuration.with(behavior: behavior)
         }
     }
-    
+
     /// Controls whether code completion is enabled (convenience property)
     @available(*, deprecated, renamed: "isCodeCompletionEnabled", message: "Use isCodeCompletionEnabled for consistent naming")
     public var enablesCodeCompletion: Bool {

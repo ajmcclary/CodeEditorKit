@@ -7,69 +7,69 @@ extension EditorConfiguration {
     /// and text processing features.
     public struct Behavior: Equatable, Sendable {
         // MARK: - Properties
-        
+
         /// Whether the editor is editable
         public var isEditable: Bool = true
-        
+
         /// Whether the editor is selectable
         public var isSelectable: Bool = true
-        
+
         /// Whether to enable auto indentation
         public var autoIndent: Bool = true
-        
+
         /// Whether to enable code completion
         public var enableCodeCompletion: Bool = true
-        
+
         /// Alias for enableCodeCompletion for backward compatibility
         @available(*, deprecated, renamed: "enableCodeCompletion")
         public var codeCompletion: Bool {
             get { enableCodeCompletion }
             set { enableCodeCompletion = newValue }
         }
-        
+
         /// Whether to detect links in text
         public var isAutomaticLinkDetectionEnabled: Bool = false
-        
+
         /// Whether to enable automatic quote substitution
         public var isAutomaticQuoteSubstitutionEnabled: Bool = false
-        
+
         /// Alias for isAutomaticQuoteSubstitutionEnabled for backward compatibility
         @available(*, deprecated, renamed: "isAutomaticQuoteSubstitutionEnabled")
         public var autoQuoteSubstitution: Bool {
             get { isAutomaticQuoteSubstitutionEnabled }
             set { isAutomaticQuoteSubstitutionEnabled = newValue }
         }
-        
+
         /// Whether to enable automatic dash substitution
         public var isAutomaticDashSubstitutionEnabled: Bool = false
-        
+
         /// Whether to automatically close brackets
         public var autoCloseBrackets: Bool = true
-        
+
         /// Whether to automatically close quotes
         public var autoCloseQuotes: Bool = true
-        
+
         /// Whether to enable continuous spell checking
         public var isContinuousSpellCheckingEnabled: Bool = false
-        
+
         /// Whether to enable grammar checking
         public var isGrammarCheckingEnabled: Bool = false
-        
+
         /// Whether to enable automatic text replacement
         public var isAutomaticTextReplacementEnabled: Bool = false
-        
+
         /// Whether to enable automatic spelling correction
         public var isAutomaticSpellingCorrectionEnabled: Bool = false
-        
+
         /// Whether to enable automatic text completion
         public var isAutomaticTextCompletionEnabled: Bool = false
-        
+
         /// Whether to show completion suggestions inline
         public var showInlineCompletionSuggestions: Bool = true
-        
+
         /// Completion trigger characters
         public var completionTriggerCharacters: Set<Character> = [".", ":", "\"", "'", "/", "<", " "]
-        
+
         /// Whether to automatically scroll to cursor position.
         ///
         /// When enabled, the editor automatically scrolls to make the cursor
@@ -81,9 +81,9 @@ extension EditorConfiguration {
         ///
         /// - Note: This does not affect manual scrolling or cursor movement.
         public var autoScrollToCursor: Bool = false
-        
+
         // MARK: - Initialization
-        
+
         public init() {}
     }
 }
@@ -110,7 +110,7 @@ extension EditorConfiguration.Behavior: Codable {
         case completionTriggerCharacters
         case autoScrollToCursor
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEditable = try container.decodeIfPresent(Bool.self, forKey: .isEditable) ?? true
@@ -121,13 +121,13 @@ extension EditorConfiguration.Behavior: Codable {
         isAutomaticQuoteSubstitutionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticQuoteSubstitutionEnabled) ?? false
         isAutomaticDashSubstitutionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticDashSubstitutionEnabled) ?? false
         showInlineCompletionSuggestions = try container.decodeIfPresent(Bool.self, forKey: .showInlineCompletionSuggestions) ?? true
-        
+
         if let characters = try container.decodeIfPresent(String.self, forKey: .completionTriggerCharacters) {
             completionTriggerCharacters = Set(characters)
         } else {
             completionTriggerCharacters = [".", ":", "\"", "'", "/", "<", " "]
         }
-        
+
         // Additional properties with defaults
         autoCloseBrackets = try container.decodeIfPresent(Bool.self, forKey: .autoCloseBrackets) ?? true
         autoCloseQuotes = try container.decodeIfPresent(Bool.self, forKey: .autoCloseQuotes) ?? true
@@ -138,7 +138,7 @@ extension EditorConfiguration.Behavior: Codable {
         isAutomaticTextCompletionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticTextCompletionEnabled) ?? false
         autoScrollToCursor = try container.decodeIfPresent(Bool.self, forKey: .autoScrollToCursor) ?? false
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isEditable, forKey: .isEditable)

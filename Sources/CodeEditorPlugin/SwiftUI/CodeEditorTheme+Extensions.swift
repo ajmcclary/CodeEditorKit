@@ -15,7 +15,7 @@ public struct CodeEditorSwiftUITheme: Sendable, Hashable {
     public let lineNumberColor: Color
     public let selectedLineColor: Color
     public let name: String
-    
+
     public init(
         name: String = "default",
         backgroundColor: Color = Color.clear,
@@ -29,17 +29,17 @@ public struct CodeEditorSwiftUITheme: Sendable, Hashable {
         self.lineNumberColor = lineNumberColor
         self.selectedLineColor = selectedLineColor
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
-    
+
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.name == rhs.name
     }
-    
+
     public static let `default` = Self(name: "default")
-    
+
     public static let dark: Self = {
         Self(
             name: "dark",
@@ -63,13 +63,13 @@ extension View {
     public func codeEditorTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
         environment(\.codeEditorTheme, theme)
     }
-    
+
     /// Control whether the code editor should become first responder
     @available(*, deprecated, renamed: "becomeFirstResponder(_:)", message: "Use becomeFirstResponder(_:) instead")
     public func codeEditorBecomeFirstResponder(_ become: Bool) -> some View {
         environment(\.codeEditorBecomeFirstResponder, become)
     }
-    
+
     /// Set the selected line highlight color for the code editor
     public func codeEditorLineHighlightColor(_ color: PlatformColor) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in

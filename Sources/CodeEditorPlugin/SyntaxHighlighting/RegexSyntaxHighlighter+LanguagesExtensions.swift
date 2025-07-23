@@ -48,26 +48,26 @@ extension RegexSyntaxHighlighter {
 
         // Markdown
         languages["markdown"] = createMarkdownDefinition()
-        
+
         // YAML
         languages["yaml"] = createYAMLDefinition()
-        
+
         // XML
         languages["xml"] = createXMLDefinition()
-        
+
         // SQL
         languages["sql"] = createSQLDefinition()
-        
+
         // Shell
         languages["shell"] = createShellDefinition()
 
         return languages
     }
-    
+
     /// Create efficient Language enum to LanguageDefinition mapping
     internal static func createLanguageMap(from definitions: [String: RegexLanguageDefinition]) -> [Language: RegexLanguageDefinition] {
         var languageMap: [Language: RegexLanguageDefinition] = [:]
-        
+
         // Map Language enum cases to their corresponding LanguageDefinitions
         for language in Language.allCases {
             switch language {
@@ -134,12 +134,12 @@ extension RegexSyntaxHighlighter {
                 break
             }
         }
-        
+
         return languageMap
     }
 
     // MARK: - Individual Language Definitions
-    
+
     private static func createJavaScriptDefinition() -> LanguageDefinition {
         let jsKeywords = [
             "const", "let", "var", "function", "class", "if", "else", "for", "while", "do",
@@ -147,7 +147,7 @@ extension RegexSyntaxHighlighter {
             "finally", "throw", "async", "await", "import", "export", "from", "as",
             "typeof", "instanceof"
         ]
-        
+
         return LanguageDefinitionBuilder()
             .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
             .addStrings(single: true, double: true, backtick: true)
@@ -165,9 +165,9 @@ extension RegexSyntaxHighlighter {
             "return", "try", "catch", "finally", "throw", "async", "await", "import", "export",
             "from", "as", "typeof", "instanceof", "public", "private", "protected", "readonly", "static"
         ]
-        
+
         let tsTypes = ["string", "number", "boolean", "object", "any", "void", "never", "unknown"]
-        
+
         return LanguageDefinitionBuilder()
             .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
             .addStrings(single: true, double: true, backtick: true)
@@ -185,7 +185,7 @@ extension RegexSyntaxHighlighter {
             "with", "as", "import", "from", "return", "yield", "break", "continue", "pass",
             "global", "nonlocal", "lambda", "and", "or", "not", "in", "is", "True", "False", "None"
         ]
-        
+
         return LanguageDefinitionBuilder()
             .addComments(singleLine: "#")
             .addCustomRule(pattern: #"\"\"\"[\s\S]*?\"\"\""#, type: .string, priority: 9) // Triple-quoted strings
@@ -422,7 +422,7 @@ extension RegexSyntaxHighlighter {
 
         return RegexLanguageDefinition(name: "Markdown", fileExtensions: ["md", "markdown", "mdown", "mkd"], rules: rules)
     }
-    
+
     private static func createYAMLDefinition() -> RegexLanguageDefinition {
         let rules: [RegexHighlightRule] = [
             rule(#"#.*$"#, .comment, 10),
@@ -436,7 +436,7 @@ extension RegexSyntaxHighlighter {
 
         return RegexLanguageDefinition(name: "YAML", fileExtensions: ["yaml", "yml"], rules: rules)
     }
-    
+
     private static func createXMLDefinition() -> RegexLanguageDefinition {
         let rules: [RegexHighlightRule] = [
             rule(#"<!--[\s\S]*?-->"#, .comment, 10),
@@ -449,7 +449,7 @@ extension RegexSyntaxHighlighter {
 
         return RegexLanguageDefinition(name: "XML", fileExtensions: ["xml", "xsl", "xslt", "svg"], rules: rules)
     }
-    
+
     private static func createSQLDefinition() -> LanguageDefinition {
         let sqlKeywords = [
             "SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER",
@@ -458,7 +458,7 @@ extension RegexSyntaxHighlighter {
             "BETWEEN", "IN", "LIKE", "IS", "EXISTS", "JOIN", "INNER", "LEFT", "RIGHT", "FULL",
             "OUTER", "UNION", "GROUP", "BY", "HAVING", "ORDER", "ASC", "DESC", "LIMIT", "OFFSET"
         ]
-        
+
         return LanguageDefinitionBuilder()
             .addComments(singleLine: "--", multiLineStart: "/*", multiLineEnd: "*/")
             .addStrings(single: true, double: true)
@@ -468,14 +468,14 @@ extension RegexSyntaxHighlighter {
             .addOperators(pattern: #"[+\-*/%=<>!]+"#)
             .build(name: "SQL", fileExtensions: ["sql"])
     }
-    
+
     private static func createShellDefinition() -> LanguageDefinition {
         let shellKeywords = [
             "if", "then", "else", "elif", "fi", "case", "esac", "for", "while", "until", "do", "done",
             "function", "return", "break", "continue", "exit", "export", "local", "readonly", "declare",
             "typeset", "let", "eval", "exec", "shift", "set", "unset", "trap", "source", "alias", "unalias"
         ]
-        
+
         return LanguageDefinitionBuilder()
             .addComments(singleLine: "#")
             .addStrings(single: true, double: true)

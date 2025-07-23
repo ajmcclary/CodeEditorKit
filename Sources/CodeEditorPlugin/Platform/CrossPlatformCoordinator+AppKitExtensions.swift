@@ -8,13 +8,13 @@ extension CrossPlatformCoordinator {
     func optimizeForMacOS(_ textView: CodeEditorView) {
         // Enable platform-specific features
         // Note: CodeEditorView doesn't currently support multiple selection
-        
+
         // Set up rulers and guides
         if let scrollView = textView.enclosingScrollView {
             scrollView.rulersVisible = false // Can be toggled by user
         }
     }
-    
+
     func setupMacOSNotifications() {
         // Workspace notifications
         let workspaceObserver = NotificationCenter.default.addObserver(
@@ -26,7 +26,7 @@ extension CrossPlatformCoordinator {
         }
         addObserver(workspaceObserver)
     }
-    
+
     func handleMacOSKeyInput(key: String, modifiers: PlatformModifierFlags, in textView: CodeEditorView) -> Bool {
         // Full keyboard shortcut support
         if modifiers.contains(.command) {
@@ -37,7 +37,7 @@ extension CrossPlatformCoordinator {
             default: break
             }
         }
-        
+
         if modifiers.contains(.option) {
             switch key {
             case "↑": logger.debug("Move line up"); return true
@@ -45,10 +45,10 @@ extension CrossPlatformCoordinator {
             default: break
             }
         }
-        
+
         return false
     }
-    
+
     func handleMacOSMouseInput(location: CGPoint, type: PlatformMouseEventType, in textView: CodeEditorView) -> Bool {
         switch type {
         case .rightClick:
@@ -64,7 +64,7 @@ extension CrossPlatformCoordinator {
             return false
         }
     }
-    
+
     func handleMacOSPencilInput(location: CGPoint, pressure: CGFloat, azimuth: CGFloat, in textView: CodeEditorView) -> Bool {
         // Apple Pencil not supported on macOS
         _ = location
@@ -73,25 +73,25 @@ extension CrossPlatformCoordinator {
         _ = textView
         return false
     }
-    
+
     // MARK: - MacOS Context Menu
-    
+
     func createMacOSContextMenu(for textView: CodeEditorView, at _: CGPoint) -> NSMenu {
         let descriptor = SharedContextMenuBuilder.createStandardCodeEditorMenu(for: textView, coordinator: self)
         return SharedContextMenuBuilder.buildNSMenu(from: descriptor, target: self)
     }
-    
+
     // MARK: - MacOS Specific Actions
-    
+
     private func selectNextOccurrence(in textView: CodeEditorView) {
         guard let selectedRange = textView.selectedRanges.first?.rangeValue,
               selectedRange.length > 0,
               let selectedText = textView.text else { return }
-        
+
         // swiftlint:disable:next legacy_objc_type
         let searchString = (selectedText as NSString).substring(with: selectedRange)
         let searchRange = NSRange(location: selectedRange.upperBound, length: selectedText.count - selectedRange.upperBound)
-        
+
         // swiftlint:disable:next legacy_objc_type
         let nextRange = (selectedText as NSString).range(of: searchString, options: [], range: searchRange)
         if nextRange.location != NSNotFound {
@@ -108,27 +108,27 @@ extension CrossPlatformCoordinator {
             }
         }
     }
-    
+
     private func selectLine(in textView: CodeEditorView) {
         guard let text = textView.text else { return }
         let selectedRange = textView.selectedRange
         // swiftlint:disable:next legacy_objc_type
         let nsText = (text as NSString)
-        
+
         // Find line boundaries
         var lineStart = 0
         var lineEnd = 0
         var contentsEnd = 0
         nsText.getLineStart(&lineStart, end: &lineEnd, contentsEnd: &contentsEnd, for: selectedRange)
-        
+
         // Select the entire line
         let lineRange = NSRange(location: lineStart, length: lineEnd - lineStart)
         textView.selectedRange = lineRange
         textView.scrollRangeToVisible(lineRange)
     }
-    
+
     // toggleComment is now implemented in the main CrossPlatformCoordinator class
-    
+
     @objc private func toggleCommentAction() {
         // Find the first responder text view
         if let window = NSApp.keyWindow,
@@ -136,17 +136,17 @@ extension CrossPlatformCoordinator {
             toggleComment(in: textView)
         }
     }
-    
+
     @objc private func formatSelection() {
         logger.debug("Format selection requested")
         // Implementation tracked in GitHub issue #1
     }
-    
+
     @objc private func goToDefinition() {
         logger.debug("Go to definition requested")
         // Implementation tracked in GitHub issue #2
     }
-    
+
     @objc private func findReferences() {
         logger.debug("Find references requested")
         // Implementation tracked in GitHub issue #3

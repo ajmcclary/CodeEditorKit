@@ -265,27 +265,27 @@ final class SyntaxHighlightingTests: XCTestCase {
             XCTAssertLessThanOrEqual(currentEnd, nextStart, "Tokens should not overlap")
         }
     }
-    
+
     // MARK: - Language Enum Direct Mapping Tests
-    
+
     @MainActor
     func testRegexHighlighterLanguageEnumMapping() {
         let regexHighlighter = RegexSyntaxHighlighter()
-        
+
         // Test that all supported languages can be accessed directly via Language enum
         let supportedLanguages: [Language] = [
             .javascript, .typescript, .python, .go, .rust, .c, .cpp, .java,
             .html, .css, .json, .markdown, .yaml, .xml, .sql, .ruby, .php, .shell
         ]
-        
+
         for language in supportedLanguages {
             let definition = regexHighlighter.languageDefinition(for: language)
             XCTAssertNotNil(definition, "Should find definition for \(language)")
-            
+
             if let definition {
                 XCTAssertFalse(definition.rules.isEmpty, "\(language) should have highlighting rules")
                 XCTAssertEqual(definition.name, language.name, "Definition name should match language name")
-                
+
                 // Verify that the file extensions match
                 let definitionExtensions = Set(definition.fileExtensions)
                 let languageExtensions = Set(language.fileExtensions)
@@ -296,7 +296,7 @@ final class SyntaxHighlightingTests: XCTestCase {
                 )
             }
         }
-        
+
         // Test that Swift and plainText return nil (Swift uses SwiftSyntaxHighlighter, plainText has no highlighting)
         XCTAssertNil(
             regexHighlighter.languageDefinition(for: .swift),
@@ -307,19 +307,19 @@ final class SyntaxHighlightingTests: XCTestCase {
             "Plain text should not have highlighting definition"
         )
     }
-    
+
     @MainActor
     func testLanguageEnumMappingEfficiency() {
         let regexHighlighter = RegexSyntaxHighlighter()
-        
+
         // Test that direct Language enum access is available and efficient
         let testCode = "function test() { return 'hello'; }"
-        
+
         // Using new Language enum method
         if let jsDefinition = regexHighlighter.languageDefinition(for: .javascript) {
             let tokens = regexHighlighter.highlight(source: testCode, language: jsDefinition)
             XCTAssertFalse(tokens.isEmpty, "JavaScript highlighting should produce tokens")
-            
+
             // Verify we get expected token types
             let hasKeywords = tokens.contains { $0.type == .keyword }
             let hasStrings = tokens.contains { $0.type == .string }
@@ -331,16 +331,16 @@ final class SyntaxHighlightingTests: XCTestCase {
     }
 
     // MARK: - Cancellation Tests
-    
+
     @MainActor
     func testApplyHighlightingCancellation() async throws {
         let coordinator = SyntaxHighlightingCoordinator()
         let largeCode = String(repeating: "let x = 10; var y = 20; ", count: 5_000)
         let tokens = coordinator.highlight(source: largeCode, language: .swift)
-        
+
         // Create an attributed string
         let attributedString = NSMutableAttributedString(string: largeCode)
-        
+
         // Create a task that will be cancelled
         let task = Task {
             try await coordinator.applyHighlighting(
@@ -349,10 +349,10 @@ final class SyntaxHighlightingTests: XCTestCase {
                 progressHandler: nil
             )
         }
-        
+
         // Cancel the task immediately
         task.cancel()
-        
+
         // Verify that the task throws a cancellation error
         do {
             try await task.value
@@ -361,19 +361,19 @@ final class SyntaxHighlightingTests: XCTestCase {
             XCTAssertTrue(Task.isCancelled || error is CancellationError, "Should throw cancellation error")
         }
     }
-    
+
     @MainActor
     func testApplyHighlightingProgressHandler() async throws {
         let coordinator = SyntaxHighlightingCoordinator()
         let code = String(repeating: "let x = 10; ", count: 200)
         let tokens = coordinator.highlight(source: code, language: .swift)
-        
+
         // Create an attributed string
         let attributedString = NSMutableAttributedString(string: code)
-        
+
         // Track progress updates
         var progressUpdates: [Double] = []
-        
+
         // Apply highlighting with progress handler
         try await coordinator.applyHighlighting(
             to: attributedString,
@@ -381,11 +381,11 @@ final class SyntaxHighlightingTests: XCTestCase {
         ) { progress in
                 progressUpdates.append(progress)
         }
-        
+
         // Verify progress was reported
         XCTAssertFalse(progressUpdates.isEmpty, "Should report progress")
         XCTAssertEqual(progressUpdates.last, 1.0, "Final progress should be 1.0")
-        
+
         // Verify highlighting was applied
         var hasHighlighting = false
         attributedString.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: attributedString.length)) { value, _, _ in

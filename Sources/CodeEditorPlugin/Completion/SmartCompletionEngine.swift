@@ -19,7 +19,7 @@ public final class SmartCompletionEngine: ObservableObject {
     // MARK: - Properties
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "SmartCompletion")
-    
+
     /// Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor
 

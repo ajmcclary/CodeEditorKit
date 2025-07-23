@@ -9,24 +9,24 @@ import UIKit
 @MainActor
 public enum TextMetricsCalculator {
     // MARK: - Line Height Calculations
-    
+
     /// Calculate the line height for a given font
     public static func calculateLineHeight(for font: PlatformFont) -> CGFloat {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let layoutManager = NSLayoutManager()
         let textContainer = NSTextContainer()
         let textStorage = NSTextStorage(string: "M")
-        
+
         textStorage.addAttribute(.font, value: font, range: NSRange(location: 0, length: 1))
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
-        
+
         return layoutManager.defaultLineHeight(for: font)
         #else
         return font.lineHeight
         #endif
     }
-    
+
     /// Calculate line height with spacing
     public static func calculateLineHeight(
         for font: PlatformFont,
@@ -36,9 +36,9 @@ public enum TextMetricsCalculator {
         let baseHeight = calculateLineHeight(for: font)
         return baseHeight + lineSpacing + paragraphSpacing
     }
-    
+
     // MARK: - Text Measurement
-    
+
     /// Measure the size of text with given attributes
     public static func measureText(
         _ text: String,
@@ -46,7 +46,7 @@ public enum TextMetricsCalculator {
         constrainingSize: CGSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
     ) -> CGSize {
         let attributedString = NSAttributedString(string: text, attributes: attributes)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let size = attributedString.boundingRect(
             with: constrainingSize,
@@ -59,13 +59,13 @@ public enum TextMetricsCalculator {
             context: nil
         ).size
         #endif
-        
+
         return CGSize(
             width: ceil(size.width),
             height: ceil(size.height)
         )
     }
-    
+
     /// Measure text width for a single line
     public static func measureTextWidth(
         _ text: String,
@@ -79,23 +79,23 @@ public enum TextMetricsCalculator {
         )
         return size.width
     }
-    
+
     // MARK: - Memory Usage Estimation
-    
+
     /// Estimate memory usage for a text string
     public static func estimateMemoryUsage(for text: String) -> Int {
         // Base string memory
         let stringMemory = text.utf8.count
-        
+
         // Estimate overhead for NSString/NSAttributedString
         let overheadFactor = 2.5 // Empirically determined
-        
+
         // Account for potential attributes storage
         let attributesOverhead = text.count * 8 // Rough estimate per character
-        
+
         return Int(Double(stringMemory) * overheadFactor) + attributesOverhead
     }
-    
+
     /// Estimate memory usage for syntax highlighting
     public static func estimateSyntaxHighlightingMemory(
         for text: String,
@@ -103,15 +103,15 @@ public enum TextMetricsCalculator {
     ) -> Int {
         let lineCount = text.components(separatedBy: .newlines).count
         let estimatedTokens = lineCount * averageTokensPerLine
-        
+
         // Each token stores range + attributes
         let bytesPerToken = 32 // NSRange (16) + attribute pointer (8) + overhead
-        
+
         return estimatedTokens * bytesPerToken
     }
-    
+
     // MARK: - Visible Lines Calculation
-    
+
     /// Calculate which lines are visible in a given bounds
     public static func calculateVisibleLines(
         in bounds: CGRect,
@@ -120,8 +120,8 @@ public enum TextMetricsCalculator {
         contentOffset: CGPoint = .zero
     ) -> Range<Int> {
         // Validate inputs to prevent crashes
-        guard lineHeight > 0, 
-              bounds.width.isFinite, 
+        guard lineHeight > 0,
+              bounds.width.isFinite,
               bounds.height.isFinite,
               bounds.origin.x.isFinite,
               bounds.origin.y.isFinite,
@@ -129,30 +129,30 @@ public enum TextMetricsCalculator {
               contentOffset.y.isFinite else {
             return 0..<0
         }
-        
+
         let adjustedBounds = CGRect(
             x: bounds.origin.x,
             y: bounds.origin.y + contentOffset.y,
             width: bounds.width,
             height: bounds.height
         )
-        
+
         // Additional validation for adjusted bounds
         guard adjustedBounds.minY.isFinite, adjustedBounds.maxY.isFinite else {
             return 0..<0
         }
-        
+
         // Safe conversion with bounds checking
         let firstVisibleLineDouble = floor(adjustedBounds.minY / lineHeight)
         let lastVisibleLineDouble = ceil(adjustedBounds.maxY / lineHeight)
-        
+
         // Ensure values are within Int range before conversion
         let firstVisibleLine = max(0, Int(max(Double(Int.min), min(Double(Int.max), firstVisibleLineDouble))))
         let lastVisibleLine = min(totalLines - 1, Int(max(Double(Int.min), min(Double(Int.max), lastVisibleLineDouble))))
-        
+
         // Ensure we don't create an invalid range
         let endLine = min(lastVisibleLine + 1, totalLines)
-        
+
         // Handle edge case where firstVisibleLine >= endLine
         if firstVisibleLine >= endLine {
             // Return an empty range at a valid position
@@ -163,30 +163,30 @@ public enum TextMetricsCalculator {
                 return 0..<0
             }
         }
-        
+
         return firstVisibleLine..<endLine
     }
-    
+
     /// Calculate the number of visible lines that fit in bounds
     public static func calculateVisibleLineCount(
         in bounds: CGRect,
         lineHeight: CGFloat
     ) -> Int {
         // Validate inputs to prevent crashes
-        guard lineHeight > 0, 
-              bounds.height.isFinite, 
+        guard lineHeight > 0,
+              bounds.height.isFinite,
               bounds.height >= 0 else {
             return 1
         }
-        
+
         // Safe conversion with bounds checking
         let visibleLinesDouble = floor(bounds.height / lineHeight)
         let visibleLines = Int(max(Double(Int.min), min(Double(Int.max), visibleLinesDouble)))
         return max(1, visibleLines)
     }
-    
+
     // MARK: - Character Metrics
-    
+
     /// Calculate average character width for a font
     public static func calculateAverageCharacterWidth(for font: PlatformFont) -> CGFloat {
         // Use a representative string
@@ -194,23 +194,23 @@ public enum TextMetricsCalculator {
         let width = measureTextWidth(sampleText, font: font)
         return width / CGFloat(sampleText.count)
     }
-    
+
     /// Calculate monospace character width
     public static func calculateMonospaceCharacterWidth(for font: PlatformFont) -> CGFloat? {
         // Check if font is monospace by comparing widths
         let narrowChar = measureTextWidth("i", font: font)
         let wideChar = measureTextWidth("W", font: font)
-        
+
         // If widths are equal, it's monospace
         if abs(narrowChar - wideChar) < 0.01 {
             return narrowChar
         }
-        
+
         return nil
     }
-    
+
     // MARK: - Tab Width Calculation
-    
+
     /// Calculate the width of a tab character
     public static func calculateTabWidth(
         font: PlatformFont,
@@ -219,9 +219,9 @@ public enum TextMetricsCalculator {
         let spaceWidth = measureTextWidth(" ", font: font)
         return spaceWidth * CGFloat(tabSize)
     }
-    
+
     // MARK: - Line Number Width
-    
+
     /// Calculate the width needed for line numbers
     public static func calculateLineNumberWidth(
         lineCount: Int,
@@ -233,9 +233,9 @@ public enum TextMetricsCalculator {
         let textWidth = measureTextWidth(sampleNumber, font: font)
         return textWidth + padding * 2
     }
-    
+
     // MARK: - Scroll Metrics
-    
+
     /// Calculate content size for scrolling
     public static func calculateContentSize(
         lineCount: Int,
@@ -246,7 +246,7 @@ public enum TextMetricsCalculator {
         let height = CGFloat(lineCount) * lineHeight + bottomPadding
         return CGSize(width: width, height: height)
     }
-    
+
     /// Calculate line at point
     public static func lineIndex(
         at point: CGPoint,
@@ -254,7 +254,7 @@ public enum TextMetricsCalculator {
     ) -> Int {
         max(0, Int(floor(point.y / lineHeight)))
     }
-    
+
     /// Calculate character index at point
     public static func characterIndex(
         at point: CGPoint,
@@ -263,28 +263,28 @@ public enum TextMetricsCalculator {
         lineOrigin: CGPoint
     ) -> Int {
         let relativeX = point.x - lineOrigin.x
-        
+
         // Binary search for character position
         var low = 0
         var high = line.count
-        
+
         while low < high {
             let mid = (low + high) / 2
             let substring = String(line.prefix(mid))
             let width = measureTextWidth(substring, font: font)
-            
+
             if width < relativeX {
                 low = mid + 1
             } else {
                 high = mid
             }
         }
-        
+
         return low
     }
-    
+
     // MARK: - Performance Metrics
-    
+
     /// Estimate rendering complexity
     public static func estimateRenderingComplexity(
         text _: String,
@@ -293,7 +293,7 @@ public enum TextMetricsCalculator {
     ) -> RenderingComplexity {
         let visibleCharacters = visibleRange.length
         let complexity = visibleCharacters * attributeRuns
-        
+
         if complexity < 10_000 {
             return .low
         } else if complexity < 100_000 {
@@ -302,7 +302,7 @@ public enum TextMetricsCalculator {
             return .high
         }
     }
-    
+
     /// Calculate optimal batch size for processing
     public static func calculateOptimalBatchSize(
         totalCharacters: Int,
@@ -310,16 +310,16 @@ public enum TextMetricsCalculator {
     ) -> Int {
         let bytesPerCharacter = 100 // Rough estimate including overhead
         let maxCharactersInMemory = availableMemory / bytesPerCharacter
-        
+
         // Use 1/10th of available memory for each batch
         let batchSize = min(maxCharactersInMemory / 10, totalCharacters)
-        
+
         // Clamp to reasonable range
         return max(1_000, min(100_000, batchSize))
     }
-    
+
     // MARK: - Layout Metrics
-    
+
     /// Calculate wrapped line breaks
     public static func calculateWrappedLineBreaks(
         text: String,
@@ -327,16 +327,16 @@ public enum TextMetricsCalculator {
         width: CGFloat
     ) -> [Int] {
         var breaks: [Int] = [0]
-        
+
         var currentLineStart = 0
         var currentLineWidth: CGFloat = 0
-        
+
         for index in 0..<text.count {
             guard let charIndex = text.index(text.startIndex, offsetBy: index, limitedBy: text.endIndex),
                   let nextIndex = text.index(charIndex, offsetBy: 1, limitedBy: text.endIndex) else { continue }
-            
+
             let char = String(text[charIndex..<nextIndex])
-            
+
             // Check for hard line break
             if char == "\n" {
                 breaks.append(index + 1)
@@ -344,11 +344,11 @@ public enum TextMetricsCalculator {
                 currentLineWidth = 0
                 continue
             }
-            
+
             // Measure character width
             let charWidth = measureTextWidth(char, font: font)
             currentLineWidth += charWidth
-            
+
             // Check if we need to wrap
             if currentLineWidth > width && index > currentLineStart {
                 // Find word boundary
@@ -361,10 +361,10 @@ public enum TextMetricsCalculator {
                         break
                     }
                 }
-                
+
                 breaks.append(wrapPoint)
                 currentLineStart = wrapPoint
-                
+
                 // Recalculate width from wrap point
                 guard let wrapStartIndex = text.index(text.startIndex, offsetBy: wrapPoint, limitedBy: text.endIndex),
                       let wrapEndIndex = text.index(text.startIndex, offsetBy: index + 1, limitedBy: text.endIndex) else { continue }
@@ -372,7 +372,7 @@ public enum TextMetricsCalculator {
                 currentLineWidth = measureTextWidth(remainingText, font: font)
             }
         }
-        
+
         return breaks
     }
 }
@@ -392,11 +392,11 @@ extension NSAttributedString {
     @MainActor
     public func calculatedSize(constrainingSize: CGSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)) -> CGSize {
         var attributes: [NSAttributedString.Key: Any] = [:]
-        
+
         if length > 0 {
             attributes = self.attributes(at: 0, effectiveRange: nil)
         }
-        
+
         return TextMetricsCalculator.measureText(
             string,
             attributes: attributes,

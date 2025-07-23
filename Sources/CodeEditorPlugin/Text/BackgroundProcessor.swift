@@ -39,7 +39,7 @@ actor BackgroundProcessor<Value: Sendable> {
         guard !hasPendingWork else {
             return nil
         }
-        
+
         return try operation(value)
     }
 
@@ -49,7 +49,7 @@ actor BackgroundProcessor<Value: Sendable> {
     ) async throws -> T {
         beginBackgroundWork()
         defer { endBackgroundWork() }
-        
+
         return try await operation(value)
     }
 
@@ -58,17 +58,17 @@ actor BackgroundProcessor<Value: Sendable> {
         operation: @escaping @Sendable (Value) async throws -> T
     ) async throws -> T {
         beginBackgroundWork()
-        
+
         // Store the current task so it can be cancelled
         let task = Task<T, Error> {
             try await operation(value)
         }
-        
+
         // Track the task for potential cancellation
         currentTask = Task {
             _ = await task.result
         }
-        
+
         do {
             let result = try await task.value
             endBackgroundWork()
@@ -80,13 +80,13 @@ actor BackgroundProcessor<Value: Sendable> {
             throw error
         }
     }
-    
+
     /// Cancel any pending operations
     func cancelPendingOperations() {
         // Cancel the current task if any
         currentTask?.cancel()
         currentTask = nil
-        
+
         // Reset pending count since we're cancelling all operations
         pendingCount = 0
     }

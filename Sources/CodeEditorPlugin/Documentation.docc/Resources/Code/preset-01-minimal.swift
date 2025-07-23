@@ -7,25 +7,25 @@ struct ContentView: View {
     // - No line numbers
     // - No gutter
     // - Minimal UI distractions
-    
+
     func greet(name: String) {
         logger.debug("Hello, \\(name)!")
     }
     """
-    
+
     // Use the minimal preset for a clean look
     @State private var config = EditorConfiguration.minimal
-    
+
     var body: some View {
         VStack {
             Text("Minimal Editor Preset")
                 .font(.headline)
                 .padding()
-            
+
             Text("Perfect for focused writing and note-taking")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             CodeEditor(text: $code)
                 .codeLanguage(.swift)
                 .environment(\.codeEditorConfiguration, config)

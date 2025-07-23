@@ -17,28 +17,28 @@ import Foundation
 public struct RemoteLSPConfiguration: Sendable, Codable {
     /// The WebSocket URL of the remote LSP server
     public let serverURL: URL
-    
+
     /// Authentication method for the server
     public let authentication: LSPAuthentication?
-    
+
     /// Policy for handling disconnections
     public let reconnectPolicy: ReconnectPolicy
-    
+
     /// Custom headers to send with the connection
     public let customHeaders: [String: String]
-    
+
     /// Transport configuration overrides
     public let transportConfiguration: LSPTransportConfiguration?
-    
+
     /// Whether to validate SSL certificates (for wss:// connections)
     public let validateSSLCertificates: Bool
-    
+
     /// Certificate pinning configuration for enhanced security
     public let certificatePinning: CertificatePinning?
-    
+
     /// Additional security options
     public let securityOptions: SecurityOptions
-    
+
     public init(
         serverURL: URL,
         authentication: LSPAuthentication? = nil,
@@ -65,16 +65,16 @@ public struct RemoteLSPConfiguration: Sendable, Codable {
 public struct CertificatePinning: Sendable, Codable {
     /// Pinning method to use
     public let method: PinningMethod
-    
+
     /// Expected certificate data or public key hashes
     public let pinnedData: [Data]
-    
+
     /// Whether to allow pinning bypass in debug builds
     public let allowDebugBypass: Bool
-    
+
     /// Backup pins for certificate rotation
     public let backupPins: [Data]
-    
+
     public init(
         method: PinningMethod,
         pinnedData: [Data],
@@ -86,15 +86,15 @@ public struct CertificatePinning: Sendable, Codable {
         self.allowDebugBypass = allowDebugBypass
         self.backupPins = backupPins
     }
-    
+
     /// Pinning method
     public enum PinningMethod: String, Sendable, Codable {
         /// Pin the entire certificate
         case certificate
-        
+
         /// Pin the Subject Public Key Info (SPKI)
         case publicKey
-        
+
         /// Pin intermediate CA certificates
         case intermediateCertificate
     }
@@ -105,19 +105,19 @@ public struct CertificatePinning: Sendable, Codable {
 public struct SecurityOptions: Sendable, Codable {
     /// Minimum TLS version to accept
     public let minimumTLSVersion: TLSVersion
-    
+
     /// Allowed cipher suites (empty means system default)
     public let allowedCipherSuites: Set<String>
-    
+
     /// Enable OCSP stapling verification
     public let requireOCSPStapling: Bool
-    
+
     /// Enable certificate transparency verification
     public let requireCertificateTransparency: Bool
-    
+
     /// Connection timeout for security validations
     public let securityValidationTimeout: TimeInterval
-    
+
     public init(
         minimumTLSVersion: TLSVersion = .tls12,
         allowedCipherSuites: Set<String> = [],
@@ -131,7 +131,7 @@ public struct SecurityOptions: Sendable, Codable {
         self.requireCertificateTransparency = requireCertificateTransparency
         self.securityValidationTimeout = securityValidationTimeout
     }
-    
+
     /// TLS Version
     public enum TLSVersion: String, Sendable, Codable {
         case tls10 = "1.0"
@@ -146,22 +146,22 @@ public struct SecurityOptions: Sendable, Codable {
 public enum LSPAuthentication: Sendable, Codable {
     /// No authentication required
     case noAuth
-    
+
     /// Bearer token authentication
     case bearerToken(String)
-    
+
     /// Basic authentication with username and password
     case basic(username: String, password: String)
-    
+
     /// API key authentication
     case apiKey(key: String, headerName: String = "X-API-Key")
-    
+
     /// Custom authentication headers
     case custom(headers: [String: String])
-    
+
     /// OAuth2 token (requires separate token management)
     case oauth2(accessToken: String)
-    
+
     /// Get the authentication headers
     public var headers: [String: String] {
         switch self {
@@ -194,16 +194,16 @@ public enum LSPAuthentication: Sendable, Codable {
 public enum ReconnectPolicy: Sendable, Codable {
     /// Never attempt to reconnect
     case never
-    
+
     /// Reconnect immediately on disconnection
     case immediate
-    
+
     /// Exponential backoff with maximum attempts
     case exponentialBackoff(maxAttempts: Int, initialDelay: TimeInterval = 1.0, maxDelay: TimeInterval = 60.0)
-    
+
     /// Fixed delay between attempts
     case fixedDelay(attempts: Int, delay: TimeInterval)
-    
+
     /// Convert to transport configuration
     public var transportConfig: (autoReconnect: Bool, maxAttempts: Int, delay: TimeInterval) {
         switch self {
@@ -227,10 +227,10 @@ public enum ReconnectPolicy: Sendable, Codable {
 public enum LSPServerConfiguration: Sendable {
     /// Local server (macOS only)
     case local(LocalLSPConfiguration)
-    
+
     /// Remote server (all platforms)
     case remote(RemoteLSPConfiguration)
-    
+
     /// Create appropriate transport based on configuration
     public func createTransport() async throws -> LSPTransport {
         switch self {
@@ -247,15 +247,15 @@ public enum LSPServerConfiguration: Sendable {
                 message: "Local LSP servers are not supported on this platform"
             )
             #endif
-            
+
         case .remote(let config):
             var headers = config.customHeaders
-            
+
             // Add authentication headers
             if let auth = config.authentication {
                 headers.merge(auth.headers) { _, new in new }
             }
-            
+
             let transportConfig = config.transportConfiguration ?? {
                 let policy = config.reconnectPolicy.transportConfig
                 return LSPTransportConfiguration(
@@ -264,7 +264,7 @@ public enum LSPServerConfiguration: Sendable {
                     reconnectDelay: policy.delay
                 )
             }()
-            
+
             return WebSocketTransport(
                 url: config.serverURL,
                 headers: headers,
@@ -279,16 +279,16 @@ public enum LSPServerConfiguration: Sendable {
 public struct LocalLSPConfiguration: Sendable, Codable {
     /// Path to the LSP server executable
     public let executablePath: String
-    
+
     /// Command line arguments
     public let arguments: [String]
-    
+
     /// Working directory for the server
     public let workingDirectory: URL?
-    
+
     /// Environment variables
     public let environment: [String: String]
-    
+
     public init(
         executablePath: String,
         arguments: [String] = [],
@@ -313,7 +313,7 @@ extension RemoteLSPConfiguration {
             reconnectPolicy: .exponentialBackoff(maxAttempts: 5)
         )
     }
-    
+
     /// Create a configuration for a private server with bearer token
     public static func privateServer(url: URL, token: String) -> RemoteLSPConfiguration {
         RemoteLSPConfiguration(
@@ -322,7 +322,7 @@ extension RemoteLSPConfiguration {
             reconnectPolicy: .exponentialBackoff(maxAttempts: 5)
         )
     }
-    
+
     /// Create a secure configuration with certificate pinning
     public static func secureServer(
         url: URL,
@@ -343,7 +343,7 @@ extension RemoteLSPConfiguration {
             )
         )
     }
-    
+
     /// Create an enterprise-grade secure configuration
     public static func enterpriseServer(
         url: URL,
@@ -381,13 +381,13 @@ extension CertificatePinning {
             }
             return data
         }
-        
+
         return CertificatePinning(
             method: .certificate,
             pinnedData: pinnedData
         )
     }
-    
+
     /// Create pinning configuration from base64-encoded public key hashes
     public static func fromPublicKeyHashes(_ hashes: [String]) throws -> CertificatePinning {
         let pinnedData = try hashes.compactMap { hash -> Data? in
@@ -396,7 +396,7 @@ extension CertificatePinning {
             }
             return data
         }
-        
+
         return CertificatePinning(
             method: .publicKey,
             pinnedData: pinnedData

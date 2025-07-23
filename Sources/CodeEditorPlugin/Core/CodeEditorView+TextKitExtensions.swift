@@ -10,7 +10,7 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Text Changes
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func insertText(_ string: Any, replacementRange: NSRange) {
         super.insertText(string, replacementRange: replacementRange)
@@ -24,9 +24,9 @@ extension CodeEditorView {
     #else
     // UITextView handles text insertion differently - use text did change notifications instead
     #endif
-    
+
     // MARK: - Text Properties
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     public var text: String? {
         get {
@@ -36,10 +36,10 @@ extension CodeEditorView {
             let textEditingService = businessLogicServices.textEditingService
             // Use a large limit for text validation - maxSyntaxHighlightingLength is for highlighting only
             let validationResult = textEditingService.validateTextChange(
-                newText: newValue, 
+                newText: newValue,
                 maxLength: 100_000_000 // 100MB limit for text
             )
-            
+
             switch validationResult {
             case .valid(let sanitizedText):
                 string = sanitizedText
@@ -67,7 +67,7 @@ extension CodeEditorView {
         }
     }
     #endif
-    
+
     public var textSelection: NSRange {
         get {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -87,9 +87,9 @@ extension CodeEditorView {
             #endif
         }
     }
-    
+
     // MARK: - TextKit Properties
-    
+
     /// Get the text content storage for TextKit2 operations
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public var textContentStorage: NSTextContentStorage? {
@@ -100,7 +100,7 @@ extension CodeEditorView {
         textLayoutManager?.textContentManager as? NSTextContentStorage
     }
     #endif
-    
+
     public var widthTracksTextView: Bool {
         get {
             let textKitBridge = TextKitBridge(textView: self)
@@ -160,13 +160,13 @@ extension CodeEditorView {
         }
     }
     #endif
-    
+
     // MARK: - Text Range Operations
-    
+
     public func shouldChangeText(in textRange: NSTextRange, replacementString: String?) -> Bool {
         // Check if editing is allowed
         guard configuration.behavior.isEditable else { return false }
-        
+
         // Convert NSTextRange to NSRange for compatibility
         let textKitBridge = TextKitBridge(textView: self)
         if textKitBridge.version == .textKit2 {
@@ -191,7 +191,7 @@ extension CodeEditorView {
                 #endif
             }
         }
-        
+
         return true
     }
 
@@ -201,11 +201,11 @@ extension CodeEditorView {
         #else
         let textStorage = self.textStorage
         #endif
-        
+
         // Convert NSTextRange to NSRange
         let textKitBridge = TextKitBridge(textView: self)
         let nsRange: NSRange
-        
+
         if textKitBridge.version == .textKit2 {
             // Use TextKit2 conversion
             if let convertedRange = textKitBridge.nsRangeFromTextRange(textRange) {
@@ -223,18 +223,18 @@ extension CodeEditorView {
                 nsRange = NSRange(textRange) ?? selectedRange
             }
         }
-        
+
         // Perform the replacement
         textStorage.beginEditing()
         textStorage.replaceCharacters(in: nsRange, with: string)
         textStorage.endEditing()
-        
+
         // Update syntax highlighting for the affected area if enabled
         if isSyntaxHighlightingEnabled {
             let affectedRange = NSRange(location: nsRange.location, length: string.count)
             applySyntaxHighlighting(in: affectedRange)
         }
-        
+
         // Notify delegate
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         delegate?.textDidChange?(Notification(name: NSText.didChangeNotification, object: self))
@@ -242,9 +242,9 @@ extension CodeEditorView {
         // UITextView will send its own notification
         #endif
     }
-    
+
     // MARK: - TextKit Helper Methods
-    
+
     /// Calculate line rect using TextKit2-compatible approach that doesn't force TextKit1
     internal func calculateLineRect(for range: NSRange) -> CGRect? {
         let textKitBridge = TextKitBridge(textView: self)
@@ -252,12 +252,12 @@ extension CodeEditorView {
     }
 
     // MARK: - TextKit Version Detection
-    
+
     /// Detects which TextKit version is currently being used and logs warnings for compatibility mode
     public func detectTextKitVersion() -> String {
         let textKitBridge = TextKitBridge(textView: self)
         let version = textKitBridge.version
-        
+
         #if canImport(UIKit)
         if version == .textKit2 {
             Self.logger.info("✅ Using TextKit 2 with textLayoutManager")
@@ -279,16 +279,16 @@ extension CodeEditorView {
         }
         #endif
     }
-    
+
     /// Validates that TextKit 2 is being used properly
     public func validateTextKit2Usage() -> Bool {
         let textKitBridge = TextKitBridge(textView: self)
         let isUsingTextKit2 = textKitBridge.version == .textKit2
-        
+
         if !isUsingTextKit2 {
             Self.logger.warning("TextKit 2 validation failed: \(textKitBridge.version.description)")
         }
-        
+
         return isUsingTextKit2
     }
 

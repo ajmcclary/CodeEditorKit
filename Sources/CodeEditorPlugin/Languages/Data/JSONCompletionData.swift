@@ -5,11 +5,11 @@ import Foundation
 /// Static data constants for JSON completion provider
 public enum JSONCompletionData {
     // MARK: - JSON Keywords
-    
+
     static let keywords = ["true", "false", "null"]
-    
+
     // MARK: - JSON Schema Properties
-    
+
     static let schemaProperties = [
         "$schema", "$id", "$ref", "$defs", "definitions", "title", "description",
         "type", "properties", "items", "required", "additionalProperties",
@@ -19,21 +19,21 @@ public enum JSONCompletionData {
         "maxLength", "pattern", "minItems", "maxItems", "uniqueItems",
         "minProperties", "maxProperties", "if", "then", "else"
     ]
-    
+
     // MARK: - JSON Types
-    
+
     static let types = ["object", "array", "string", "number", "integer", "boolean", "null"]
-    
+
     // MARK: - JSON Formats
-    
+
     static let formats = [
         "date-time", "date", "time", "duration", "email", "hostname",
         "ipv4", "ipv6", "uri", "uri-reference", "uuid", "regex",
         "json-pointer", "relative-json-pointer"
     ]
-    
+
     // MARK: - Package.json Properties
-    
+
     static let packageJsonProperties = [
         "name", "version", "description", "main", "scripts", "keywords",
         "author", "license", "dependencies", "devDependencies",
@@ -42,16 +42,16 @@ public enum JSONCompletionData {
         "bin", "files", "directories", "publishConfig", "workspaces",
         "exports", "imports", "funding"
     ]
-    
+
     // MARK: - TSConfig Properties
-    
+
     static let tsconfigProperties = [
         "compilerOptions", "include", "exclude", "files", "extends",
         "references", "typeAcquisition", "watchOptions", "buildOptions"
     ]
-    
+
     // MARK: - TypeScript Compiler Options
-    
+
     static let compilerOptions = [
         "target", "module", "lib", "jsx", "outDir", "rootDir", "strict",
         "esModuleInterop", "skipLibCheck", "forceConsistentCasingInFileNames",
@@ -63,16 +63,16 @@ public enum JSONCompletionData {
         "strictNullChecks", "strictFunctionTypes", "strictBindCallApply",
         "strictPropertyInitialization", "noImplicitThis", "alwaysStrict"
     ]
-    
+
     // MARK: - ESLint Properties
-    
+
     static let eslintProperties = [
         "env", "extends", "parser", "parserOptions", "plugins", "rules",
         "settings", "overrides", "globals", "ignorePatterns", "root"
     ]
-    
+
     // MARK: - Common JSON Snippet Templates
-    
+
     static let snippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "object",
@@ -248,18 +248,18 @@ public enum JSONCompletionData {
             description: "Array property schema"
         )
     ]
-    
+
     // MARK: - Common JSON File Types
-    
+
     static let jsonFileTypes = [
         "package.json", "tsconfig.json", "jsconfig.json", ".eslintrc.json",
         "launch.json", "settings.json", "tasks.json", "composer.json",
         "bower.json", ".prettierrc.json", ".babelrc.json", "manifest.json",
         "appsettings.json", "schema.json"
     ]
-    
+
     // MARK: - Common Script Names
-    
+
     static let commonScripts = [
         "start", "test", "build", "dev", "lint", "format", "clean",
         "watch", "serve", "deploy", "publish", "prepare", "preinstall",

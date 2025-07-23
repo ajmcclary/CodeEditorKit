@@ -20,16 +20,16 @@ public enum PlatformInputEvent: Sendable {
 /// Platform-agnostic modifier flags
 public struct PlatformModifierFlags: OptionSet, Sendable {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
+
     public static let command = Self(rawValue: 1 << 0)
     public static let option = Self(rawValue: 1 << 1)
     public static let control = Self(rawValue: 1 << 2)
     public static let shift = Self(rawValue: 1 << 3)
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Create from NSEvent modifier flags
     public init(from flags: NSEvent.ModifierFlags) {
@@ -41,7 +41,7 @@ public struct PlatformModifierFlags: OptionSet, Sendable {
         self = result
     }
     #endif
-    
+
     #if canImport(UIKit)
     /// Create from UIKeyModifierFlags
     public init(from flags: UIKeyModifierFlags) {
@@ -63,7 +63,7 @@ public struct TouchInfo: Hashable, Sendable {
     public let previousLocation: CGPoint
     public let timestamp: TimeInterval
     public let identifier: Int
-    
+
     public init(
         location: CGPoint,
         previousLocation: CGPoint,
@@ -75,7 +75,7 @@ public struct TouchInfo: Hashable, Sendable {
         self.timestamp = timestamp
         self.identifier = identifier
     }
-    
+
     #if canImport(UIKit)
     /// Create from UITouch
     @MainActor
@@ -97,7 +97,7 @@ public enum PlatformTouchPhase: Sendable {
     case stationary
     case ended
     case cancelled
-    
+
     #if canImport(UIKit)
     /// Create from UITouch phase
     public init(from phase: UITouch.Phase) {
@@ -128,7 +128,7 @@ public enum PlatformMouseEventType: Sendable {
     case exited
     case rightClick
     case hover
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Create from NSEvent type
     public init?(from eventType: NSEvent.EventType) {
@@ -155,7 +155,7 @@ public struct ToolbarItem: Identifiable, Sendable {
     public let icon: String
     public let action: ToolbarAction
     public let keyboardShortcut: KeyboardShortcut?
-    
+
     public init(
         title: String,
         icon: String,
@@ -169,7 +169,7 @@ public struct ToolbarItem: Identifiable, Sendable {
         self.action = action
         self.keyboardShortcut = keyboardShortcut
     }
-    
+
     public enum ToolbarAction: Sendable {
         case find
         case replace
@@ -179,11 +179,11 @@ public struct ToolbarItem: Identifiable, Sendable {
         case toggleMinimap
         case custom(id: String)
     }
-    
+
     public struct KeyboardShortcut: Sendable {
         public let key: String
         public let modifiers: PlatformModifierFlags
-        
+
         public init(key: String, modifiers: PlatformModifierFlags) {
             self.key = key
             self.modifiers = modifiers

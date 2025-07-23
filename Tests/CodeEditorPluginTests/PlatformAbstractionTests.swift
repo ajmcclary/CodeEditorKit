@@ -13,10 +13,10 @@ final class PlatformAbstractionTests: XCTestCase {
         // Cleanup
     }
     // MARK: - Platform Detection Tests
-    
+
     func testPlatformDetection() {
         let capabilities = PlatformCapabilities.shared
-        
+
         #if targetEnvironment(macCatalyst)
         XCTAssertEqual(capabilities.currentPlatform, .catalyst)
         #elseif canImport(AppKit)
@@ -25,20 +25,20 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
         #endif
     }
-    
+
     func testSystemVersionDetection() {
         let capabilities = PlatformCapabilities.shared
-        
+
         XCTAssertFalse(capabilities.systemVersion.isEmpty)
-        
+
         let components = capabilities.systemVersionComponents
         XCTAssertGreaterThan(components.major, 0)
         XCTAssertGreaterThanOrEqual(components.minor, 0)
         XCTAssertGreaterThanOrEqual(components.patch, 0)
     }
-    
+
     // MARK: - Type Alias Tests
-    
+
     func testPlatformTypeAliases() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(PlatformColor.self == NSColor.self)
@@ -50,9 +50,9 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertTrue(PlatformView.self == UIView.self)
         #endif
     }
-    
+
     // MARK: - Color System Tests
-    
+
     func testSemanticColors() {
         // Test that all semantic colors are non-nil
         XCTAssertNotNil(PlatformColors.label)
@@ -68,51 +68,51 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertNotNil(PlatformColors.controlAccentColor)
         XCTAssertNotNil(PlatformColors.textBackgroundColor)
     }
-    
+
     func testHexColorInitialization() {
         // Test 3-digit hex
         let color3 = PlatformColor(hexString: "#F00")
         XCTAssertNotNil(color3)
-        
+
         // Test 4-digit hex
         let color4 = PlatformColor(hexString: "#F00F")
         XCTAssertNotNil(color4)
-        
+
         // Test 6-digit hex
         let color6 = PlatformColor(hexString: "#FF0000")
         XCTAssertNotNil(color6)
-        
+
         // Test 8-digit hex
         let color8 = PlatformColor(hexString: "#FF0000FF")
         XCTAssertNotNil(color8)
-        
+
         // Test without hash
         let colorNoHash = PlatformColor(hexString: "FF0000")
         XCTAssertNotNil(colorNoHash)
-        
+
         // Test invalid hex
         let colorInvalid = PlatformColor(hexString: "GGGGGG")
         XCTAssertNil(colorInvalid)
     }
-    
+
     // MARK: - Font System Tests
-    
+
     func testFontCreation() {
         let monoFont = PlatformFonts.monospacedSystemFont(ofSize: 14.0)
         XCTAssertNotNil(monoFont)
-        
+
         let systemFont = PlatformFonts.systemFont(ofSize: 16.0)
         XCTAssertNotNil(systemFont)
-        
+
         let fontSize = PlatformFonts.systemFontSize
         XCTAssertGreaterThan(fontSize, 0)
     }
-    
+
     // MARK: - Capability Detection Tests
-    
+
     func testTextKitCapabilities() {
         let capabilities = PlatformCapabilities.shared
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS 13+ should support TextKit2
         if capabilities.systemVersionComponents.major >= 13 {
@@ -124,22 +124,22 @@ final class PlatformAbstractionTests: XCTestCase {
             XCTAssertTrue(capabilities.supportsTextKit2)
         }
         #endif
-        
+
         // TextKit2 preference should match support
         if capabilities.supportsTextKit2 {
             XCTAssertTrue(capabilities.preferTextKit2 || !capabilities.preferTextKit2)
         }
     }
-    
+
     func testPlatformSpecificCapabilities() {
         let capabilities = PlatformCapabilities.shared
-        
+
         switch capabilities.currentPlatform {
         case .macOS:
             XCTAssertTrue(capabilities.supportsTouchBar)
             XCTAssertTrue(capabilities.supportsKeyboardShortcuts)
             XCTAssertFalse(capabilities.supportsPencilInput)
-            
+
         case .iOS:
             XCTAssertFalse(capabilities.supportsTouchBar)
             XCTAssertTrue(capabilities.supportsGestureRecognizers)
@@ -149,22 +149,22 @@ final class PlatformAbstractionTests: XCTestCase {
                 XCTAssertTrue(capabilities.supportsPencilInput)
             }
             #endif
-            
+
         case .catalyst:
             XCTAssertFalse(capabilities.supportsTouchBar)
             XCTAssertTrue(capabilities.supportsMultipleWindows)
             XCTAssertTrue(capabilities.supportsKeyboardShortcuts)
         }
     }
-    
+
     // MARK: - Configuration Tests
-    
+
     func testRecommendedConfiguration() {
         let capabilities = PlatformCapabilities.shared
         let config = capabilities.recommendedConfiguration()
-        
+
         XCTAssertNotNil(config)
-        
+
         switch capabilities.currentPlatform {
         case .iOS:
             // iOS config varies by device
@@ -182,29 +182,29 @@ final class PlatformAbstractionTests: XCTestCase {
             XCTAssertEqual(config.display.fontSize, 16.0)
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
             #endif
-            
+
         case .catalyst:
             // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)
             XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0)
             XCTAssertEqual(config.layout.gutterWidth, 45.0)
-            
+
         case .macOS:
             // Default config should be unchanged
             XCTAssertEqual(config.display.fontSize, EditorConfiguration.default.display.fontSize)
         }
     }
-    
+
     // MARK: - Cross-Platform Coordinator Tests
-    
+
     func testCrossPlatformCoordinator() {
         let coordinator = CrossPlatformCoordinator()
-        
+
         XCTAssertNotNil(coordinator.platformAdjustments)
-        
+
         // Test feature availability using the new API
         XCTAssertTrue(coordinator.isFeatureAvailable(.syntaxHighlighting))
         XCTAssertTrue(coordinator.isFeatureAvailable(.codeCompletion))
-        
+
         // Test platform adjustments
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(coordinator.platformAdjustments.defaultFontSize, 12.0)
@@ -212,13 +212,13 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertEqual(coordinator.platformAdjustments.defaultFontSize, 14.0)
         #endif
     }
-    
+
     func testToolbarItemCreation() {
         let coordinator = CrossPlatformCoordinator()
         let toolbarItems = coordinator.createToolbarItems()
-        
+
         XCTAssertFalse(toolbarItems.isEmpty)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS should have more toolbar items
         XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
@@ -235,15 +235,15 @@ final class PlatformAbstractionTests: XCTestCase {
         }
         #endif
     }
-    
+
     // MARK: - Text Input Features Tests
-    
+
     func testTextInputFeatures() {
         let features = TextInputFeaturesFactory.create()
-        
+
         XCTAssertNotNil(features)
         XCTAssertTrue(features.supportsSpellChecking)
-        
+
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertTrue(features.supportsGrammarChecking)
         XCTAssertTrue(features.supportsAutomaticTextCompletion)
@@ -253,14 +253,14 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertFalse(features.supportsAutomaticTextCompletion)
         #endif
     }
-    
+
     // MARK: - MacOS Version Detection Tests
-    
+
     func testMacOSVersionDetection() {
         let capabilities = PlatformCapabilities.shared
         let version = capabilities.systemVersionComponents
         XCTAssertGreaterThan(version.major, 0)
-        
+
         // Test platform detection
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         XCTAssertEqual(capabilities.currentPlatform, .macOS)
@@ -274,34 +274,34 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
         #endif
     }
-    
+
     // MARK: - Memory and Performance Tests
-    
+
     func testPerformanceRecommendations() {
         let capabilities = PlatformCapabilities.shared
-        
+
         XCTAssertGreaterThan(capabilities.recommendedCacheSize, 0)
         XCTAssertGreaterThan(capabilities.maxRecommendedFileSize, 0)
-        
+
         // Cache size should be less than max file size
         XCTAssertLessThan(capabilities.recommendedCacheSize, capabilities.maxRecommendedFileSize * 10)
     }
-    
+
     // MARK: - Feature Status Tests
-    
+
     func testFeatureStatusLogic() {
         let capabilities = PlatformCapabilities.shared
-        
+
         // Test full feature availability
         let syntaxHighlighting = capabilities.getFeatureAvailability(.syntaxHighlighting)
         XCTAssertTrue(syntaxHighlighting.isAvailable)
         XCTAssertTrue(syntaxHighlighting.isFullyAvailable)
-        
+
         // Test platform-specific features
         #if canImport(UIKit)
         let touchSupport = capabilities.getFeatureAvailability(.touchSupport)
         XCTAssertTrue(touchSupport.isAvailable)
-        
+
         let floatingPanels = capabilities.getFeatureAvailability(.floatingPanels)
         XCTAssertFalse(floatingPanels.isAvailable)
         #else
@@ -324,7 +324,7 @@ extension PlatformAbstractionTests {
             _ = capabilities.recommendedCacheSize
         }
     }
-    
+
     func testConfigurationCreationPerformance() {
         measure(options: Self.standardMeasureOptions) {
             let capabilities = PlatformCapabilities.shared

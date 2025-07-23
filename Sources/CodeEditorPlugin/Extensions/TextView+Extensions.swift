@@ -51,7 +51,7 @@ extension UnifiedTextViewProtocol {
         return CGRect(origin: contentOffset, size: bounds.size)
         #endif
     }
-    
+
     /// Returns the bounding rectangle for the given text range using TextKitBridge
     func unifiedBoundingRect(for range: NSRange) -> CGRect? {
         guard let textView = self as? PlatformTextView else { return nil }
@@ -68,7 +68,7 @@ extension TextView {
     var visibleContainerRect: CGRect {
         unifiedVisibleContainerRect
     }
-    
+
     /// Returns the bounding rectangle for the given text range using layout manager
     public func boundingRect(for range: NSRange) -> CGRect? {
         unifiedBoundingRect(for: range)
@@ -82,7 +82,7 @@ extension TextView {
     public func setRenderingAttributes(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
         let textKitBridge = TextKitBridge(textView: self)
         textKitBridge.setTemporaryAttributes(attributes, for: range)
-        
+
         // Force refresh by temporarily changing selection if using TextKit2
         if textKitBridge.version == .textKit2 {
             let currentSelection = getCurrentSelection()
@@ -90,12 +90,12 @@ extension TextView {
             restoreSelection(currentSelection)
         }
     }
-    
+
     /// Clear rendering attributes for the specified range
     public func clearRenderingAttributes(for range: NSRange) {
         setRenderingAttributes([:], for: range)
     }
-    
+
     /// Apply syntax highlighting colors with proper TextKit 2 support
     public func applySyntaxHighlighting(_ attributes: [NSAttributedString.Key: Any], for range: NSRange) {
         // Use rendering attributes for non-layout affecting changes like color
@@ -103,16 +103,16 @@ extension TextView {
             // Only apply color and other non-layout affecting attributes as rendering attributes
             key == .foregroundColor || key == .backgroundColor
         }
-        
+
         if !renderingAttributes.isEmpty {
             setRenderingAttributes(renderingAttributes, for: range)
         }
-        
+
         // Apply layout-affecting attributes through the text storage
         let layoutAttributes = attributes.filter { key, _ in
             key != .foregroundColor && key != .backgroundColor
         }
-        
+
         if !layoutAttributes.isEmpty {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             textStorage?.addAttributes(layoutAttributes, range: range)
@@ -121,9 +121,9 @@ extension TextView {
             #endif
         }
     }
-    
+
     // MARK: - Private Helpers
-    
+
     private func getCurrentSelection() -> Any {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return self.selectedRanges
@@ -131,7 +131,7 @@ extension TextView {
         return self.selectedRange
         #endif
     }
-    
+
     private func setTemporarySelection(_ range: NSRange) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         self.selectedRanges = [NSValue(range: range)]
@@ -139,7 +139,7 @@ extension TextView {
         self.selectedRange = range
         #endif
     }
-    
+
     private func restoreSelection(_ selection: Any) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let ranges = selection as? [NSValue] {

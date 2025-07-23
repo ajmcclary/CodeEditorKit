@@ -10,25 +10,25 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Paragraph Style
-    
+
     /// Apply paragraph style settings for tab width and line spacing
     internal func applyParagraphStyle() {
         // Get font to use for calculations
         let font = self.font ?? PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize, weight: .regular)
-        
+
         // Get cached paragraph style instead of creating new one each time
         let paragraphStyle = ParagraphStyleCache.shared.paragraphStyle(
             tabWidth: configuration.layout.tabWidth,
             lineHeightMultiple: configuration.layout.lineHeightMultiple,
             font: font
         )
-        
+
         // Apply the paragraph style to all text
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if let textStorage = self.textStorage {
             let range = NSRange(location: 0, length: textStorage.length)
             textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
-            
+
             // Set as default paragraph style for new text
             defaultParagraphStyle = paragraphStyle
         }
@@ -36,13 +36,13 @@ extension CodeEditorView {
         let textStorage = self.textStorage
         let range = NSRange(location: 0, length: textStorage.length)
         textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
-        
+
         // Set as typing attributes for new text
         var typingAttrs = typingAttributes
         typingAttrs[.paragraphStyle] = paragraphStyle
         typingAttributes = typingAttrs
         #endif
-        
+
         // Force text view to relayout and redraw
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         needsDisplay = true
@@ -52,21 +52,21 @@ extension CodeEditorView {
         setNeedsLayout()
         #endif
     }
-    
+
     // MARK: - Layout Overrides
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {
             // Save scroll position before layout
             let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
-            
+
             super.layout()
             updateGutterFrame()
             updateLineHighlightFrame()
             updateAnnotationViews()
-            
+
             // Restore scroll position if it was changed during layout
             if let scrollView = enclosingScrollView,
                let savedPosition = savedScrollPosition,
@@ -92,31 +92,31 @@ extension CodeEditorView {
             hasPreservedWordWrapState = true
         }
         #endif
-        
+
         super.layoutSubviews()
         updateGutterFrame()
         updateLineHighlightFrame()
         updateAnnotationViews()
-        
+
         // Don't update text container size here to prevent configuration loops
         // Text container size is managed by configuration updates
-        
+
         #if targetEnvironment(macCatalyst)
         // Check if word wrap state was incorrectly changed
         if hasPreservedWordWrapState && preservedWordWrapState != configuration.layout.wrapLines {
             Self.logger.debug("Mac Catalyst: Word wrap state changed during layout, restoring to \(preservedWordWrapState)")
-            
+
             // Restore without triggering loops
             var updatedConfig = configuration
             updatedConfig.layout.wrapLines = preservedWordWrapState
-            
+
             isApplyingConfiguration = true
             defer { isApplyingConfiguration = false }
-            
+
             configuration = updatedConfig
             updateTextContainerSize()
         }
-        
+
         // Monitor for text container changes
         monitorTextContainerChanges()
         #endif
@@ -134,10 +134,10 @@ extension CodeEditorView {
     override public func setFrameSize(_ newSize: NSSize) {
         // Save scroll position before frame change
         let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
-        
+
         super.setFrameSize(newSize)
         updateGutterFrame()
-        
+
         // Restore scroll position if needed
         if let scrollView = enclosingScrollView,
            let savedPosition = savedScrollPosition,
@@ -149,14 +149,14 @@ extension CodeEditorView {
         }
     }
     #endif
-    
+
     // MARK: - Text Container Origin
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Override textContainerOrigin to account for ruler view when using NSScrollView
     override public var textContainerOrigin: NSPoint {
         let origin = super.textContainerOrigin
-        
+
         // Check if we're in a scroll view with a ruler view
         if let scrollView = self.enclosingScrollView,
            scrollView.hasVerticalRuler && scrollView.rulersVisible,
@@ -165,36 +165,36 @@ extension CodeEditorView {
             // The text container inset handles the internal padding
             // This prevents double offsetting
         }
-        
+
         return origin
     }
     #endif
-    
+
     // MARK: - Text Container Management
-    
+
     /// Updates the text container size based on current configuration and bounds
     internal func updateTextContainerSize() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textContainer = self.textContainer else { return }
-        
+
         // If we're in a container view with minimap visible, let the container handle the sizing
         if let container = containerView, container.configuration.display.showMinimap {
             // The container view's layoutViewsAppKit method will handle text container sizing
             // We should not override it here
             return
         }
-        
+
         if configuration.layout.wrapLines {
             // For word wrap mode, set container width to match view width
             textContainer.containerSize = NSSize(
                 width: bounds.width - textContainerInset.width * 2,
                 height: CGFloat.greatestFiniteMagnitude
             )
-            
+
             // Ensure proper tracking settings
             textContainer.widthTracksTextView = true
             isHorizontallyResizable = false
-            
+
             // Invalidate layout to force text reflow
             if let textStorage {
                 textContainer.layoutManager?.invalidateLayout(
@@ -208,16 +208,16 @@ extension CodeEditorView {
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
             )
-            
+
             // Ensure proper tracking settings
             textContainer.widthTracksTextView = false
             isHorizontallyResizable = true
         }
-        
+
         #else
         // iOS/Catalyst handles container sizing differently
         let textContainer = self.textContainer
-        
+
         if configuration.layout.wrapLines {
             // Enable word wrapping
             textContainer.lineBreakMode = .byWordWrapping
@@ -226,7 +226,7 @@ extension CodeEditorView {
                 height: CGFloat.greatestFiniteMagnitude
             )
             textContainer.widthTracksTextView = true
-            
+
             // Update scrolling behavior
             self.alwaysBounceHorizontal = false
             self.showsHorizontalScrollIndicator = false
@@ -238,7 +238,7 @@ extension CodeEditorView {
                 height: CGFloat.greatestFiniteMagnitude
             )
             textContainer.widthTracksTextView = false
-            
+
             // Enable horizontal scrolling
             self.alwaysBounceHorizontal = true
             self.showsHorizontalScrollIndicator = true

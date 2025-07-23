@@ -49,18 +49,18 @@ extension AsyncOperationManager {
         let effectiveBatchSize = min(batchSize ?? maxConcurrentOperations, maxConcurrentOperations)
         var results: [T?] = Array(repeating: nil, count: operations.count)
         var firstError: Error?
-        
+
         // Process in batches
         for batchStart in stride(from: 0, to: operations.count, by: effectiveBatchSize) {
             let batchEnd = min(batchStart + effectiveBatchSize, operations.count)
             let batchOperations = Array(operations[batchStart..<batchEnd])
             let batchIndices = Array(batchStart..<batchEnd)
-            
+
             // Execute batch concurrently
             await withTaskGroup(of: (Int, Result<T, Error>).self) { group in
                 for (offset, operation) in batchOperations.enumerated() {
                     let index = batchIndices[offset]
-                    
+
                     group.addTask { @Sendable in
                         do {
                             let result = try await operation()
@@ -70,13 +70,13 @@ extension AsyncOperationManager {
                         }
                     }
                 }
-                
+
                 // Collect results
                 for await (index, result) in group {
                     switch result {
                     case .success(let value):
                         results[index] = value
-                        
+
                     case .failure(let error):
                         if firstError == nil {
                             firstError = error
@@ -86,12 +86,12 @@ extension AsyncOperationManager {
                 }
             }
         }
-        
+
         // Throw first error if any occurred
         if let error = firstError {
             throw error
         }
-        
+
         return results
     }
 }

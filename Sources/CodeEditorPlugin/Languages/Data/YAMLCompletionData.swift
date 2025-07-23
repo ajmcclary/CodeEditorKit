@@ -5,15 +5,15 @@ import Foundation
 /// Static data constants for YAML completion provider
 public enum YAMLCompletionData {
     // MARK: - YAML Keywords
-    
+
     static let keywords = ["true", "false", "null", "yes", "no", "on", "off"]
-    
+
     // MARK: - Special Symbols
-    
+
     static let specialSymbols = ["&", "*", "<<"]
-    
+
     // MARK: - GitHub Actions Keys
-    
+
     static let githubActionsKeys = [
         "name", "on", "env", "defaults", "concurrency", "jobs", "permissions",
         "runs-on", "needs", "if", "steps", "uses", "with", "run", "shell",
@@ -21,9 +21,9 @@ public enum YAMLCompletionData {
         "matrix", "fail-fast", "max-parallel", "container", "services", "outputs",
         "outcome", "outputs", "environment", "secrets", "id", "uses", "with"
     ]
-    
+
     // MARK: - Docker Compose Keys
-    
+
     static let dockerComposeKeys = [
         "version", "services", "networks", "volumes", "configs", "secrets",
         "image", "build", "command", "entrypoint", "container_name", "depends_on",
@@ -33,9 +33,9 @@ public enum YAMLCompletionData {
         "sysctls", "ulimits", "userns_mode", "volumes", "working_dir", "context",
         "dockerfile", "args", "cache_from", "labels", "shm_size", "target"
     ]
-    
+
     // MARK: - Kubernetes Keys
-    
+
     static let kubernetesKeys = [
         "apiVersion", "kind", "metadata", "spec", "status", "name", "namespace",
         "labels", "annotations", "selector", "template", "replicas", "containers",
@@ -45,9 +45,9 @@ public enum YAMLCompletionData {
         "securityContext", "stdin", "stdinOnce", "targetPort", "protocol",
         "type", "clusterIP", "loadBalancerIP", "externalIPs", "sessionAffinity"
     ]
-    
+
     // MARK: - Ansible Keys
-    
+
     static let ansibleKeys = [
         "hosts", "tasks", "handlers", "vars", "vars_files", "roles", "include",
         "import_playbook", "pre_tasks", "post_tasks", "name", "become", "become_user",
@@ -58,9 +58,9 @@ public enum YAMLCompletionData {
         "when", "with_items", "with_list", "with_dict", "loop", "register", "delegate_to",
         "local_action", "notify", "changed_when", "failed_when", "until", "retries", "delay"
     ]
-    
+
     // MARK: - CircleCI Keys
-    
+
     static let circleciKeys = [
         "version", "orbs", "commands", "executors", "jobs", "workflows", "triggers",
         "docker", "machine", "macos", "windows", "resource_class", "working_directory",
@@ -71,9 +71,9 @@ public enum YAMLCompletionData {
         "schedule", "cron", "parameters", "pipeline", "setup", "path", "key", "keys",
         "paths", "root", "destination", "command", "name", "no_output_timeout", "background"
     ]
-    
+
     // MARK: - Snippet Templates
-    
+
     static let snippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "github-workflow",
@@ -89,7 +89,7 @@ on:
 jobs:
   ${4:build}:
     runs-on: ${5:ubuntu-latest}
-    
+
     steps:
     - uses: actions/checkout@v3
     - name: ${6:Build}
@@ -164,7 +164,7 @@ spec:
 - name: ${1:Configure servers}
   hosts: ${2:all}
   become: ${3:yes}
-  
+
   tasks:
     - name: ${4:Ensure nginx is installed}
       ${5:package}:
@@ -263,9 +263,9 @@ ${1:text}: >
             description: "Environment variable with default"
         )
     ]
-    
+
     // MARK: - Common YAML File Types
-    
+
     static let yamlFileTypes = [
         ".yml", ".yaml", "docker-compose.yml", "docker-compose.yaml",
         ".gitlab-ci.yml", ".travis.yml", "ansible.cfg", "playbook.yml",
@@ -273,8 +273,8 @@ ${1:text}: >
         "application.yml", "application.yaml", "swagger.yml", "swagger.yaml",
         "openapi.yml", "openapi.yaml"
     ]
-    
+
     // MARK: - Common Data Types
-    
+
     static let dataTypes = ["string", "number", "integer", "boolean", "array", "object", "null"]
 }

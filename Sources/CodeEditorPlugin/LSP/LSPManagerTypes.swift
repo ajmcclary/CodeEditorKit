@@ -33,7 +33,7 @@ public struct LanguageServerConfig: Sendable {
     public let autoStart: Bool
     public let enablePathResolution: Bool
     public let retryConfiguration: LSPRetryConfiguration
-    
+
     public init(
         languageId: String,
         serverPath: String,
@@ -63,7 +63,7 @@ struct OpenDocument {
     let languageId: String
     var version: Int
     let filePath: String
-    
+
     mutating func incrementVersion() {
         version += 1
     }
@@ -76,14 +76,14 @@ public struct LSPManagerCompletionItem: CompletionItemView {
     public let item: any CompletionItemView
     public let languageId: String
     public let client: LSPClient
-    
-    nonisolated public var id: String { 
+
+    nonisolated public var id: String {
         // Generate a unique ID based on item properties
         "\(languageId)-\(UUID().uuidString)"
     }
-    
+
     public var view: PlatformView { item.view }
-    
+
     public init(item: any CompletionItemView, languageId: String, client: LSPClient) {
         self.item = item
         self.languageId = languageId

@@ -8,10 +8,10 @@ final class SyntaxHighlightingPerformanceMonitor {
         case tokenApplication = "TokenApplication"
         case cacheOperation = "CacheOperation"
     }
-    
+
     private var metrics: [Category: [Duration]] = [:]
     private let metricsLimit = 100
-    
+
     func measure<T>(
         category: Category,
         operation: () async throws -> T
@@ -23,24 +23,24 @@ final class SyntaxHighlightingPerformanceMonitor {
         }
         return try await operation()
     }
-    
+
     private func recordMetric(category: Category, duration: Duration) {
         var categoryMetrics = metrics[category] ?? []
         categoryMetrics.append(duration)
-        
+
         // Keep only recent metrics
         if categoryMetrics.count > metricsLimit {
             categoryMetrics.removeFirst()
         }
-        
+
         metrics[category] = categoryMetrics
-        
+
         // Log slow operations
         if duration > .milliseconds(100) {
             CrossPlatformLogger.logger().debug("⚠️ Slow \(category.rawValue): \(String(format: "%.3f", duration.timeInterval))s")
         }
     }
-    
+
     func getAverageTime(for category: Category) -> Duration? {
         guard let categoryMetrics = metrics[category], !categoryMetrics.isEmpty else {
             return nil
@@ -51,7 +51,7 @@ final class SyntaxHighlightingPerformanceMonitor {
         }
         return Duration.seconds(totalSeconds / Double(categoryMetrics.count))
     }
-    
+
     func reset() {
         metrics.removeAll()
     }

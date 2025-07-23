@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class CSSCompletionProvider: BaseCompletionProvider {
     // MARK: - CSS-specific properties
-    
+
     // CSS properties
     private let cssProperties = [
         // Layout
@@ -59,7 +59,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         "clip", "clip-path", "mask", "mask-image", "mask-mode", "mask-position",
         "object-fit", "object-position", "will-change", "contain", "aspect-ratio"
     ]
-    
+
     // CSS values by property type
     private let commonValues: [String: [String]] = [
         "display": ["none", "block", "inline", "inline-block", "flex", "inline-flex", "grid", "inline-grid", "table", "table-row", "table-cell", "list-item", "contents"],
@@ -88,7 +88,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         "background-attachment": ["scroll", "fixed", "local"],
         "background-size": ["auto", "cover", "contain"]
     ]
-    
+
     // CSS pseudo-classes
     private let pseudoClasses = [
         "hover", "active", "focus", "visited", "link", "disabled", "enabled",
@@ -99,13 +99,13 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         "valid", "invalid", "in-range", "out-of-range", "read-only", "read-write",
         "placeholder-shown", "default", "checked", "indeterminate"
     ]
-    
+
     // CSS pseudo-elements
     private let pseudoElements = [
         "before", "after", "first-line", "first-letter", "selection",
         "backdrop", "placeholder", "marker", "cue", "grammar-error", "spelling-error"
     ]
-    
+
     // CSS functions
     private let cssFunctions = [
         "rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch",
@@ -119,14 +119,14 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         "perspective", "blur", "brightness", "contrast", "drop-shadow", "grayscale",
         "hue-rotate", "invert", "opacity", "saturate", "sepia"
     ]
-    
+
     // CSS units
     private let units = [
         "px", "em", "rem", "%", "vw", "vh", "vmin", "vmax", "ch", "ex",
         "cm", "mm", "in", "pt", "pc", "deg", "rad", "grad", "turn",
         "s", "ms", "Hz", "kHz", "dpi", "dpcm", "dppx", "fr"
     ]
-    
+
     // Common color names
     private let colorNames = [
         "transparent", "black", "white", "red", "green", "blue", "yellow",
@@ -135,7 +135,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         "aqua", "fuchsia", "crimson", "coral", "salmon", "gold", "khaki",
         "lavender", "violet", "indigo", "turquoise", "tan", "beige", "ivory"
     ]
-    
+
     private let cssSnippets: [SnippetTemplate] = [
         SnippetTemplate(
             label: "media",
@@ -198,9 +198,9 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             description: "CSS custom property"
         )
     ]
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "css-builtin",
@@ -209,81 +209,81 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - BaseCompletionProvider Overrides
-    
+
     override public var keywords: [String] {
         // CSS at-rules and important keywords
         [
-            "@media", "@import", "@keyframes", "@font-face", "@supports", "@page", 
+            "@media", "@import", "@keyframes", "@font-face", "@supports", "@page",
             "@namespace", "@charset", "@document", "@viewport", "@counter-style",
-            "@font-feature-values", "@property", "!important", "inherit", "initial", 
+            "@font-feature-values", "@property", "!important", "inherit", "initial",
             "unset", "revert"
         ]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         cssSnippets
     }
-    
+
     override public var functions: [String] {
         cssFunctions
     }
-    
+
     // MARK: - Context Analysis Override
-    
+
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for @ rules
         if lineText.hasPrefix("@") || filter.hasPrefix("@") {
             return ContextAnalysisResult(type: .keyword, filter: filter)
         }
-        
+
         // Check if we're in a rule block
         if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
             // Check for pseudo-element or pseudo-class
             if beforeCursor.hasSuffix("::") || (beforeCursor.hasSuffix(":") && !ruleContext.inDeclaration) {
                 return ContextAnalysisResult(type: .keyword, filter: "")
             }
-            
+
             // Check if we're in a declaration
             if ruleContext.inDeclaration {
                 // Check for function context
                 if beforeCursor.hasSuffix("(") || isInFunction(beforeCursor) {
                     return ContextAnalysisResult(type: .function, filter: filter)
                 }
-                
+
                 // Default to general for CSS values
                 return ContextAnalysisResult(type: .general, filter: filter, targetType: ruleContext.currentProperty)
             }
         }
-        
+
         // Default to general context
         return ContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-@")).inverted)
         return components.last ?? ""
     }
-    
+
     // MARK: - Custom Completions Override
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Check for CSS-specific contexts
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Handle CSS-specific completions
         if let ruleContext = getCurrentRuleContext(from: beforeCursor) {
             // CSS Properties
@@ -292,13 +292,13 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             } else if let property = analysisResult.targetType {
                 // CSS Values for specific property
                 items.append(contentsOf: createValueCompletions(for: property, filter: analysisResult.filter))
-                
+
                 // Units for numeric values
                 if extractLastNumber(from: beforeCursor) != nil {
                     items.append(contentsOf: createUnitCompletions(filter: analysisResult.filter))
                 }
             }
-            
+
             // Pseudo-classes and pseudo-elements
             if beforeCursor.hasSuffix("::") {
                 items.append(contentsOf: createPseudoElementCompletions(filter: ""))
@@ -309,24 +309,24 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             // Selector context
             items.append(contentsOf: createSelectorCompletions(filter: analysisResult.filter))
         }
-        
+
         // Add at-rules if appropriate
         if analysisResult.type == .keyword && analysisResult.filter.hasPrefix("@") {
             items.append(contentsOf: createAtRuleCompletions(filter: analysisResult.filter))
         }
-        
+
         // Add functions if in function context
         if analysisResult.type == .function {
             items.append(contentsOf: super.createFunctionCompletions(filter: analysisResult.filter))
         }
-        
+
         // Add snippets if supported
         if supportsSnippets && analysisResult.type == .general {
             items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -334,13 +334,13 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     private func getCurrentRuleContext(from text: String) -> RuleContext? {
         // Find if we're inside a CSS rule block
         var braceCount = 0
         var inDeclaration = false
         var currentProperty: String?
-        
+
         // Count braces to determine if we're in a rule
         for char in text {
             if char == "{" {
@@ -351,13 +351,13 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 currentProperty = nil
             }
         }
-        
+
         guard braceCount > 0 else { return nil }
-        
+
         // Find current property if in declaration
         if let lastBrace = text.lastIndex(of: "{") {
             let afterBrace = String(text[text.index(after: lastBrace)...])
-            
+
             // Check if we have a colon after the last semicolon
             if let lastSemicolon = afterBrace.lastIndex(of: ";") {
                 let afterSemicolon = String(afterBrace[afterBrace.index(after: lastSemicolon)...])
@@ -376,10 +376,10 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 }
             }
         }
-        
+
         return RuleContext(inRule: true, inDeclaration: inDeclaration, currentProperty: currentProperty)
     }
-    
+
     private func isInFunction(_ text: String) -> Bool {
         var parenCount = 0
         for char in text {
@@ -391,7 +391,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         }
         return parenCount > 0
     }
-    
+
     private func extractLastNumber(from text: String) -> String? {
         let pattern = #"(\d+\.?\d*)\s*$"#
         if let regex = try? NSRegularExpression(pattern: pattern),
@@ -401,9 +401,9 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createPropertyCompletions(filter: String) -> [CompletionItemModel] {
         cssProperties
             .filter { property in
@@ -420,12 +420,12 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createValueCompletions(for property: String?, filter: String) -> [CompletionItemModel] {
         guard let property else { return [] }
-        
+
         var items: [CompletionItemModel] = []
-        
+
         // Add property-specific values
         if let values = commonValues[property] {
             items.append(contentsOf: values
@@ -442,12 +442,12 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                     )
                 })
         }
-        
+
         // Add color names for color properties
         if ["color", "background-color", "border-color", "outline-color", "text-shadow", "box-shadow"].contains(property) {
             items.append(contentsOf: createColorCompletions(filter: filter))
         }
-        
+
         // Add inherit, initial, unset for all properties
         let globalValues = ["inherit", "initial", "unset", "revert"]
         items.append(contentsOf: globalValues
@@ -463,10 +463,10 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                     priority: 70
                 )
             })
-        
+
         return items
     }
-    
+
     private func createSelectorCompletions(filter: String) -> [CompletionItemModel] {
         let selectors = [
             ("*", "Universal selector"),
@@ -477,7 +477,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             (":hover", "Pseudo-class"),
             ("::before", "Pseudo-element")
         ]
-        
+
         return selectors
             .filter { selector, _ in
                 filter.isEmpty || selector.localizedCaseInsensitiveContains(filter)
@@ -492,7 +492,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createPseudoClassCompletions(filter: String) -> [CompletionItemModel] {
         pseudoClasses
             .filter { pseudo in
@@ -501,7 +501,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
             .map { pseudo in
                 let needsParens = ["nth-child", "nth-last-child", "nth-of-type", "nth-last-of-type", "not", "lang"].contains(pseudo)
                 let insertText = needsParens ? "\(pseudo)($0)" : pseudo
-                
+
                 return CompletionItemModel(
                     label: pseudo,
                     insertText: insertText,
@@ -511,7 +511,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createPseudoElementCompletions(filter: String) -> [CompletionItemModel] {
         pseudoElements
             .filter { pseudo in
@@ -527,7 +527,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createUnitCompletions(filter: String) -> [CompletionItemModel] {
         units
             .filter { unit in
@@ -543,7 +543,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createColorCompletions(filter: String) -> [CompletionItemModel] {
         colorNames
             .filter { color in
@@ -559,14 +559,14 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createAtRuleCompletions(filter: String) -> [CompletionItemModel] {
         let atRules = [
             "@media", "@import", "@keyframes", "@font-face", "@supports",
             "@page", "@namespace", "@charset", "@document", "@viewport",
             "@counter-style", "@font-feature-values", "@property"
         ]
-        
+
         return atRules
             .filter { rule in
                 let filterToUse = filter.hasPrefix("@") ? filter : "@\(filter)"
@@ -593,7 +593,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
                 default:
                     insertText = rule
                 }
-                
+
                 return CompletionItemModel(
                     label: rule,
                     insertText: insertText,

@@ -9,7 +9,7 @@ function hello() {
 
 hello();
 """
-    
+
     var body: some View {
         // Add the CodeEditor view with text binding
         CodeEditor(text: $code)

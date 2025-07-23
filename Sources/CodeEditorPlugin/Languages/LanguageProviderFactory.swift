@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public enum LanguageProviderFactory {
     // MARK: - Shared Language Metadata
-    
+
     /// Contains all language-specific data in a structured format
     private static let languageMetadata: [Language: LanguageMetadata] = [
         .python: LanguageMetadata(
@@ -42,7 +42,7 @@ public enum LanguageProviderFactory {
             triggerCharacters: [".", "(", "[", " ", ":"],
             memberCompletions: PythonMemberCompletions()
         ),
-        
+
         .javascript: LanguageMetadata(
             keywords: [
                 "const", "let", "var", "function", "class", "if", "else", "for", "while",
@@ -73,7 +73,7 @@ public enum LanguageProviderFactory {
             triggerCharacters: [".", "(", "[", "{", " ", ":"],
             memberCompletions: JavaScriptMemberCompletions()
         ),
-        
+
         .rust: LanguageMetadata(
             keywords: [
                 "as", "async", "await", "break", "const", "continue", "crate", "dyn",
@@ -108,19 +108,19 @@ public enum LanguageProviderFactory {
             memberCompletions: RustMemberCompletions()
         )
     ]
-    
+
     // MARK: - Factory Methods
-    
+
     /// Creates a completion provider for the specified language
     public static func createProvider(for language: Language) -> CompletionProvider? {
         guard let metadata = languageMetadata[language] else { return nil }
-        
+
         return UniversalCompletionProvider(
             language: language,
             metadata: metadata
         )
     }
-    
+
     /// Gets all supported languages
     public static var supportedLanguages: [Language] {
         Array(languageMetadata.keys)
@@ -136,10 +136,10 @@ public final class UniversalCompletionProvider: CompletionProvider {
     public let supportedLanguages: [Language]
     public let triggerCharacters: [String]
     public let supportsSnippets = true
-    
+
     private let language: Language
     private let metadata: LanguageMetadata
-    
+
     init(language: Language, metadata: LanguageMetadata) {
         self.language = language
         self.metadata = metadata
@@ -147,16 +147,16 @@ public final class UniversalCompletionProvider: CompletionProvider {
         self.supportedLanguages = [language]
         self.triggerCharacters = metadata.triggerCharacters
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Use shared context analysis
         let analysisResult = SharedContextAnalyzer.analyzeContext(context, for: language)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .keyword:
@@ -165,34 +165,34 @@ public final class UniversalCompletionProvider: CompletionProvider {
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
-            
+
         case .type:
             items.append(contentsOf: SharedCompletionBuilder.createTypeCompletions(
                 from: metadata.types,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
-            
+
         case .function:
             items.append(contentsOf: SharedCompletionBuilder.createFunctionCompletions(
                 from: metadata.functions,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
-            
+
         case .literal:
             items.append(contentsOf: SharedCompletionBuilder.createLiteralCompletions(
                 from: metadata.literals,
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
-            
+
         case .member:
             items.append(contentsOf: metadata.memberCompletions.createMemberCompletions(
                 for: analysisResult.targetType,
                 filter: analysisResult.filter
             ))
-            
+
         case .general:
             items.append(contentsOf: SharedCompletionBuilder.createKeywordCompletions(
                 from: metadata.keywords,
@@ -214,16 +214,16 @@ public final class UniversalCompletionProvider: CompletionProvider {
                 filter: analysisResult.filter,
                 languageName: language.rawValue.capitalized
             ))
-            
+
         case .parameter:
             items.append(contentsOf: SharedCompletionBuilder.createParameterCompletions(
                 for: language,
                 filter: analysisResult.filter
             ))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -261,11 +261,11 @@ public struct UniversalContextAnalysisResult {
         case parameter
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

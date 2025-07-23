@@ -16,22 +16,22 @@ import UIKit
 public struct ContextMenuAction: Sendable {
     /// The title displayed in the menu
     public let title: String
-    
+
     /// Optional keyboard shortcut
     public let keyEquivalent: String?
-    
+
     /// Optional modifier flags for keyboard shortcut
     public let modifiers: PlatformModifierFlags
-    
+
     /// The action to perform when selected
     public let handler: @MainActor @Sendable () -> Void
-    
+
     /// Whether the action is currently enabled
     public let isEnabled: Bool
-    
+
     /// Whether this is a separator item
     public let isSeparator: Bool
-    
+
     /// Create a regular menu action
     public init(
         title: String,
@@ -47,7 +47,7 @@ public struct ContextMenuAction: Sendable {
         self.handler = handler
         self.isSeparator = false
     }
-    
+
     /// Create a separator item
     public static var separator: Self {
         Self(
@@ -56,7 +56,7 @@ public struct ContextMenuAction: Sendable {
             isEnabled: false
         ) {}.withSeparator()
     }
-    
+
     private func withSeparator() -> Self {
         var action = self
         action = Self(
@@ -69,7 +69,7 @@ public struct ContextMenuAction: Sendable {
         )
         return action
     }
-    
+
     private init(
         title: String,
         keyEquivalent: String?,
@@ -90,19 +90,19 @@ public struct ContextMenuAction: Sendable {
 /// A builder for creating context menus with modern action-based API
 public struct ContextMenuBuilder: Sendable {
     internal var actions: [ContextMenuAction] = []
-    
+
     public init() {}
-    
+
     /// Add an action to the menu
     public mutating func addAction(_ action: ContextMenuAction) {
         actions.append(action)
     }
-    
+
     /// Add a separator to the menu
     public mutating func addSeparator() {
         actions.append(.separator)
     }
-    
+
     /// Build the platform-specific menu
     @MainActor
     public func build() -> PlatformContextMenu {
@@ -112,13 +112,13 @@ public struct ContextMenuBuilder: Sendable {
         return buildUIKitMenu()
         #endif
     }
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     @MainActor
     private func buildAppKitMenu() -> NSMenu {
         let menu = NSMenu()
         menu.autoenablesItems = false
-        
+
         for action in actions {
             if action.isSeparator {
                 menu.addItem(NSMenuItem.separator())
@@ -128,23 +128,23 @@ public struct ContextMenuBuilder: Sendable {
                     action: #selector(ContextMenuActionTarget.performAction(_:)),
                     keyEquivalent: action.keyEquivalent ?? ""
                 )
-                
+
                 // Create a target to handle the action
                 let target = ContextMenuActionTarget(action: action)
                 item.target = target
                 item.isEnabled = action.isEnabled
-                
+
                 // Store the target to keep it alive
                 item.representedObject = target
-                
+
                 menu.addItem(item)
             }
         }
-        
+
         return menu
     }
     #endif
-    
+
     #if canImport(UIKit)
     @MainActor
     private func buildUIKitMenu() -> UIMenu {
@@ -162,7 +162,7 @@ public struct ContextMenuBuilder: Sendable {
                 }
             }
         }
-        
+
         return UIMenu(children: children)
     }
     #endif
@@ -173,16 +173,16 @@ public struct ContextMenuBuilder: Sendable {
 @MainActor
 private class ContextMenuActionTarget: NSObject {
     private let action: ContextMenuAction
-    
+
     init(action: ContextMenuAction) {
         self.action = action
         super.init()
     }
-    
+
     @objc func performAction(_: Any?) {
         action.handler()
     }
-    
+
     deinit {
         // Cleanup
     }

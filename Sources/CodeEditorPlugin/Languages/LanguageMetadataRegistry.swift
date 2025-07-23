@@ -6,17 +6,17 @@ import Foundation
 @MainActor
 public final class LanguageMetadataRegistry {
     // MARK: - Singleton
-    
+
     public static let shared = LanguageMetadataRegistry()
 
     private init() {}
-    
+
     // MARK: - Extended Language Metadata
-    
+
     /// Complete metadata for all supported languages
     private lazy var completeLanguageMetadata: [Language: ExtendedLanguageMetadata] = {
         var metadata: [Language: ExtendedLanguageMetadata] = [:]
-        
+
         // Swift
         metadata[.swift] = ExtendedLanguageMetadata(
             keywords: [
@@ -50,7 +50,7 @@ public final class LanguageMetadataRegistry {
                 "QuartzCore", "AVFoundation", "NetworkExtension", "UserNotifications", "StoreKit"
             ]
         )
-        
+
         // TypeScript
         metadata[.typescript] = ExtendedLanguageMetadata(
             keywords: [
@@ -84,7 +84,7 @@ public final class LanguageMetadataRegistry {
                 "jest", "mocha", "eslint", "prettier", "nodemon", "dotenv", "cors", "bcrypt"
             ]
         )
-        
+
         // Go
         metadata[.go] = ExtendedLanguageMetadata(
             keywords: [
@@ -112,28 +112,28 @@ public final class LanguageMetadataRegistry {
                 "context", "sync", "log", "errors", "bufio", "path/filepath", "regexp"
             ]
         )
-        
+
         // Add other languages...
-        
+
         return metadata
     }()
-    
+
     // MARK: - Public API
-    
+
     /// Gets metadata for a specific language
     public func metadata(for language: Language) -> ExtendedLanguageMetadata? {
         completeLanguageMetadata[language]
     }
-    
+
     /// Gets all supported languages
     public var supportedLanguages: [Language] {
         Array(completeLanguageMetadata.keys)
     }
-    
+
     /// Creates a completion provider for the specified language
     public func createProvider(for language: Language) -> CompletionProvider? {
         guard let metadata = metadata(for: language) else { return nil }
-        
+
         return UniversalCompletionProvider(
             language: language,
             metadata: LanguageMetadata(
@@ -294,7 +294,7 @@ public enum GoSnippets {
 public struct SwiftMemberCompletions: LanguageMemberCompletions {
     public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         switch targetType.lowercased() {
         case "string":
             return createStringMemberCompletions(filter: filter)
@@ -309,7 +309,7 @@ public struct SwiftMemberCompletions: LanguageMemberCompletions {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of characters"),
@@ -328,7 +328,7 @@ public struct SwiftMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of elements"),
@@ -349,7 +349,7 @@ public struct SwiftMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createDictionaryMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("count", "property", "Number of key-value pairs"),
@@ -365,7 +365,7 @@ public struct SwiftMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("description", "property", "String description"),
@@ -388,7 +388,7 @@ public struct TypeScriptMemberCompletions: LanguageMemberCompletions {
 public struct GoMemberCompletions: LanguageMemberCompletions {
     public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         switch targetType.lowercased() {
         case "string":
             return createStringMemberCompletions(filter: filter)
@@ -403,7 +403,7 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "function", "String length"),
@@ -419,7 +419,7 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createSliceMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "function", "Slice length"),
@@ -431,7 +431,7 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("len()", "function", "Map length"),
@@ -441,7 +441,7 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("fmt.Printf()", "function", "Print formatted"),

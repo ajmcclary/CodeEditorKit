@@ -192,15 +192,15 @@ import UIKit
 @MainActor
 public class EditorContentView: UIView {
     // MARK: - Properties
-    
+
     /// The parent text view
     private weak var textView: CodeEditorView?
-    
+
     /// Input accessory view for keyboard shortcuts
     private var inputAccessoryToolbar: UIToolbar?
-    
+
     // MARK: - Initialization
-    
+
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
@@ -214,77 +214,77 @@ public class EditorContentView: UIView {
     private func setup() {
         backgroundColor = .clear
         isUserInteractionEnabled = true
-        
+
         // Set up gesture recognizers
         setupGestureRecognizers()
-        
+
         // Configure accessibility
         isAccessibilityElement = true
         accessibilityTraits = [.allowsDirectInteraction]
         accessibilityLabel = "Code Editor"
     }
-    
+
     // MARK: - Parent View Connection
-    
+
     /// Set the parent text view
     public func setTextView(_ textView: CodeEditorView?) {
         self.textView = textView
     }
-    
+
     // MARK: - Touch Handling
-    
+
     private func setupGestureRecognizers() {
         // Tap gesture for positioning cursor
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         addGestureRecognizer(tapGesture)
-        
+
         // Long press for selection
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         longPressGesture.minimumPressDuration = 0.5
         addGestureRecognizer(longPressGesture)
-        
+
         // Pan gesture for selection dragging
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         panGesture.delegate = self
         addGestureRecognizer(panGesture)
-        
+
         // Double tap for word selection
         let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
         doubleTapGesture.numberOfTapsRequired = 2
         addGestureRecognizer(doubleTapGesture)
-        
+
         // Triple tap for line selection
         let tripleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap(_:)))
         tripleTapGesture.numberOfTapsRequired = 3
         addGestureRecognizer(tripleTapGesture)
-        
+
         // Ensure tap gestures don't conflict
         tapGesture.require(toFail: doubleTapGesture)
         doubleTapGesture.require(toFail: tripleTapGesture)
     }
-    
+
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard let textView else { return }
-        
+
         let location = gesture.location(in: self)
-        
+
         // Convert tap location to text position
         if let position = textView.closestPosition(to: location) {
             let textRange = textView.textRange(from: position, to: position)
             textView.setSelectedTextRangeWithoutScrolling(textRange)
         }
-        
+
         // Ensure text view becomes first responder
         if textView.isEditable && !textView.isFirstResponder {
             _ = textView.becomeFirstResponder()
         }
     }
-    
+
     @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
         guard let textView else { return }
-        
+
         let location = gesture.location(in: self)
-        
+
         // Select word at tap location
         if let position = textView.closestPosition(to: location),
            let range = textView.tokenizer.rangeEnclosingPosition(
@@ -295,12 +295,12 @@ public class EditorContentView: UIView {
             textView.setSelectedTextRangeWithoutScrolling(range)
         }
     }
-    
+
     @objc private func handleTripleTap(_ gesture: UITapGestureRecognizer) {
         guard let textView else { return }
-        
+
         let location = gesture.location(in: self)
-        
+
         // Select line at tap location
         if let position = textView.closestPosition(to: location),
            let range = textView.tokenizer.rangeEnclosingPosition(
@@ -311,83 +311,83 @@ public class EditorContentView: UIView {
             textView.setSelectedTextRangeWithoutScrolling(range)
         }
     }
-    
+
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard let textView else { return }
-        
+
         switch gesture.state {
         case .began:
             let location = gesture.location(in: self)
-            
+
             // Start selection at location
             if let position = textView.closestPosition(to: location) {
                 let textRange = textView.textRange(from: position, to: position)
                 textView.setSelectedTextRangeWithoutScrolling(textRange)
-                
+
                 // Show magnifier or selection handles
                 showSelectionUI(at: location)
             }
-            
+
         case .changed:
             let location = gesture.location(in: self)
             updateSelection(to: location)
-            
+
         case .ended, .cancelled:
             hideSelectionUI()
-            
+
         default:
             break
         }
     }
-    
+
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let textView,
               textView.selectedTextRange != nil else { return }
-        
+
         switch gesture.state {
         case .began, .changed:
             let location = gesture.location(in: self)
             updateSelection(to: location)
-            
+
         case .ended, .cancelled:
             hideSelectionUI()
-            
+
         default:
             break
         }
     }
-    
+
     // MARK: - Selection UI
-    
+
     private func showSelectionUI(at _: CGPoint) {
         // Show magnifier or selection handles
         // This would typically show a magnifying glass for precise cursor positioning
     }
-    
+
     private func updateSelection(to location: CGPoint) {
         guard let textView,
               let selectedRange = textView.selectedTextRange,
               let position = textView.closestPosition(to: location) else { return }
-        
+
         // Update selection end point
         if let newRange = textView.textRange(from: selectedRange.start, to: position) {
             textView.setSelectedTextRangeWithoutScrolling(newRange)
         }
     }
-    
+
     private func hideSelectionUI() {
         // Hide magnifier or selection handles
     }
-    
+
     // MARK: - Input Accessory
-    
+
     /// Create an input accessory view with common actions
     public func createInputAccessory() -> UIView {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
-        
+
         var items: [UIBarButtonItem] = []
-        
+
         // Undo/Redo buttons
         items.append(UIBarButtonItem(
             image: UIImage(systemName: "arrow.uturn.backward"),
@@ -395,16 +395,16 @@ public class EditorContentView: UIView {
             target: self,
             action: #selector(performUndo)
         ))
-        
+
         items.append(UIBarButtonItem(
             image: UIImage(systemName: "arrow.uturn.forward"),
             style: .plain,
             target: self,
             action: #selector(performRedo)
         ))
-        
+
         items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil))
-        
+
         // Tab button
         items.append(UIBarButtonItem(
             title: "Tab",
@@ -412,9 +412,9 @@ public class EditorContentView: UIView {
             target: self,
             action: #selector(insertTab)
         ))
-        
+
         items.append(UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil))
-        
+
         // Find button
         items.append(UIBarButtonItem(
             image: UIImage(systemName: "magnifyingglass"),
@@ -422,35 +422,35 @@ public class EditorContentView: UIView {
             target: self,
             action: #selector(showFind)
         ))
-        
+
         // Done button
         items.append(UIBarButtonItem(
             barButtonSystemItem: .done,
             target: self,
             action: #selector(dismissKeyboard)
         ))
-        
+
         toolbar.items = items
         self.inputAccessoryToolbar = toolbar
         return toolbar
     }
-    
+
     // MARK: - Actions
-    
+
     @objc private func performUndo() {
         textView?.undoManager?.undo()
     }
-    
+
     @objc private func performRedo() {
         textView?.undoManager?.redo()
     }
-    
+
     @objc private func insertTab() {
         if let textView {
             (textView as CodeEditorAPI).insertText("\t")
         }
     }
-    
+
     @objc private func showFind() {
         // Trigger find UI
         NotificationCenter.default.post(
@@ -458,20 +458,20 @@ public class EditorContentView: UIView {
             object: textView
         )
     }
-    
+
     @objc private func dismissKeyboard() {
         textView?.resignFirstResponder()
     }
-    
+
     // MARK: - Hit Testing
-    
+
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         // Check if we should forward to minimap or gutter first
         if let textView = self.textView,
            let containerView = textView.superview as? CodeEditorContainerView {
             // Convert point to container coordinate space
             let containerPoint = textView.convert(point, to: containerView)
-            
+
             // Check if minimap is visible and contains the point
             if !containerView.minimapView.isHidden {
                 let minimapPoint = containerView.convert(containerPoint, to: containerView.minimapView)
@@ -480,7 +480,7 @@ public class EditorContentView: UIView {
                     return containerView.minimapView.hitTest(minimapPoint, with: event)
                 }
             }
-            
+
             // Check if gutter is visible and contains the point
             if !containerView.gutterView.isHidden {
                 let gutterPoint = containerView.convert(containerPoint, to: containerView.gutterView)
@@ -490,18 +490,18 @@ public class EditorContentView: UIView {
                 }
             }
         }
-        
+
         // Default behavior
         let hitView = super.hitTest(point, with: event)
-        
+
         // If the hit view is self, forward to text view
         if hitView == self, let textView {
             return textView
         }
-        
+
         return hitView
     }
-    
+
     deinit {
         // Cleanup if needed
     }

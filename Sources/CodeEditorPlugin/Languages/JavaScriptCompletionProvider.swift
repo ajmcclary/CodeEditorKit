@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class JavaScriptCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
-    
+
     override public var keywords: [String] {
         [
             "const", "let", "var", "function", "class", "if", "else", "for", "while",
@@ -17,7 +17,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             "debugger", "with"
         ]
     }
-    
+
     override public var types: [String] {
         [
             "Object", "Array", "String", "Number", "Boolean", "Function", "Symbol",
@@ -28,7 +28,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             "Uint32Array", "Uint8ClampedArray"
         ]
     }
-    
+
     override public var functions: [String] {
         [
             "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI",
@@ -37,14 +37,14 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             "cancelAnimationFrame", "fetch", "alert", "confirm", "prompt"
         ]
     }
-    
+
     override public var literals: [String] {
         [
             "true", "false", "null", "undefined", "NaN", "Infinity", "globalThis",
             "window", "document", "location", "navigator", "history"
         ]
     }
-    
+
     // Common modules for import completions
     private let commonModules = [
         "react", "vue", "angular", "express", "lodash", "axios", "moment",
@@ -52,7 +52,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         "chai", "sinon", "nodemon", "dotenv", "cors", "bcrypt", "jsonwebtoken",
         "mongoose", "sequelize", "graphql", "apollo", "redux", "mobx", "rxjs"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -147,9 +147,9 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "javascript-builtin",
@@ -158,30 +158,30 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeJavaScriptContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .import:
             items.append(contentsOf: createImportCompletions(filter: analysisResult.filter))
-            
+
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .type:
             items.append(contentsOf: createObjectCompletions(filter: analysisResult.filter))
-            
+
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createGlobalFunctionCompletions(filter: analysisResult.filter))
@@ -190,13 +190,13 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
-            
+
         case .parameter:
             items.append(contentsOf: createParameterCompletions(filter: analysisResult.filter))
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -204,51 +204,51 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeJavaScriptContext(_ context: CompletionContextModel) -> JavaScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for import/require statements
         if lineText.hasPrefix("import ") || lineText.contains("from '") || lineText.contains("require(") {
             return JavaScriptContextAnalysisResult(type: .import, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return JavaScriptContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for function definition
         if lineText.contains("function ") && lineText.contains("(") && !lineText.contains(")") {
             return JavaScriptContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         // Check for object property context
         if beforeCursor.hasSuffix(":") || lineText.contains("new ") {
             return JavaScriptContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return JavaScriptContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
@@ -265,7 +265,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createObjectCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { object in
@@ -281,7 +281,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createGlobalFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
@@ -297,7 +297,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     override public func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
         literals
             .filter { literal in
@@ -313,7 +313,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createImportCompletions(filter: String) -> [CompletionItemModel] {
         commonModules
             .filter { module in
@@ -329,7 +329,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
@@ -346,38 +346,38 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide common member completions based on type
         switch targetType.lowercased() {
         case "console":
             return createConsoleMemberCompletions(filter: filter)
-            
+
         case "array":
             return createArrayMemberCompletions(filter: filter)
-            
+
         case "string":
             return createStringMemberCompletions(filter: filter)
-            
+
         case "object":
             return createObjectMemberCompletions(filter: filter)
-            
+
         case "promise":
             return createPromiseMemberCompletions(filter: filter)
-            
+
         case "math":
             return createMathMemberCompletions(filter: filter)
-            
+
         default:
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["event", "error", "data", "result", "callback", "options", "config", "request", "response", "next", "done", "resolve", "reject"]
-        
+
         return commonParameters
             .filter { param in
                 filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
@@ -392,9 +392,9 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createConsoleMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("log()", "method", "Log message to console"),
@@ -410,10 +410,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("groupEnd()", "method", "End inline group"),
             ("assert()", "method", "Assert condition")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "Number of elements"),
@@ -438,10 +438,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("every()", "method", "Test if all elements pass"),
             ("some()", "method", "Test if any element passes")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length", "property", "Number of characters"),
@@ -466,10 +466,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("padEnd()", "method", "Pad end of string"),
             ("repeat()", "method", "Repeat string")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createObjectMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("assign()", "method", "Copy properties"),
@@ -491,10 +491,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("seal()", "method", "Seal object"),
             ("values()", "method", "Get values")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createPromiseMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("then()", "method", "Handle resolved value"),
@@ -507,10 +507,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("reject()", "method", "Create rejected promise"),
             ("resolve()", "method", "Create resolved promise")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMathMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("PI", "property", "Pi constant"),
@@ -529,10 +529,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("tan()", "method", "Tangent"),
             ("log()", "method", "Natural logarithm")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("toString()", "method", "Convert to string"),
@@ -540,10 +540,10 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             ("constructor", "property", "Constructor function"),
             ("hasOwnProperty()", "method", "Check own property")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
         members
             .filter { name, _, _ in
@@ -572,11 +572,11 @@ private struct JavaScriptContextAnalysisResult {
         case parameter
         case `import`
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

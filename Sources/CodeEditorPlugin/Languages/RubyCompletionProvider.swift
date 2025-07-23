@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 public final class RubyCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
-    
+
     override public var keywords: [String] {
         [
             "alias", "and", "begin", "break", "case", "class", "def", "defined?",
@@ -16,7 +16,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
             "when", "while", "yield", "__FILE__", "__LINE__", "__ENCODING__"
         ]
     }
-    
+
     override public var types: [String] {
         // Ruby built-in classes
         [
@@ -34,7 +34,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
             "Singleton", "Warning"
         ]
     }
-    
+
     override public var functions: [String] {
         // Common Ruby methods
         [
@@ -64,7 +64,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         "min", "max", "minmax", "min_by", "max_by", "minmax_by"
         ]
     }
-    
+
     // Rails-specific methods (common in Ruby development)
     private let railsMethods = [
         "validates", "validates_presence_of", "validates_uniqueness_of",
@@ -77,11 +77,11 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         "render", "redirect_to", "params", "session", "cookies", "flash",
         "respond_to", "format"
     ]
-    
+
     override public var literals: [String] {
         ["true", "false", "nil", "self", "super", "__FILE__", "__LINE__", "__ENCODING__"]
     }
-    
+
     // Ruby global variables
     private let globalVariables = [
         "$!", "$@", "$&", "$`", "$'", "$+", "$1", "$2", "$3", "$4", "$5",
@@ -91,7 +91,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         "$stdin", "$stdout", "$stderr", "$VERBOSE", "$-0", "$-a", "$-d",
         "$-F", "$-i", "$-I", "$-l", "$-p", "$-v", "$-w"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -267,9 +267,9 @@ end
         )
         ]
     }
-    
+
     // MARK: - Computed Properties for Completion
-    
+
     private var builtinClasses: [String] {
         // Extract classes from types (first part of the types array)
         [
@@ -282,7 +282,7 @@ end
             "IndexError", "KeyError", "NameError", "NoMethodError", "TypeError"
         ]
     }
-    
+
     private var builtinModules: [String] {
         // Extract modules from types (second part of the types array)
         [
@@ -291,14 +291,14 @@ end
             "Singleton", "Warning"
         ]
     }
-    
+
     private var commonMethods: [String] {
         // Use the functions array as common methods
         functions
     }
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "ruby-builtin",
@@ -307,42 +307,42 @@ end
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeRubyContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .method:
             items.append(contentsOf: createMethodCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .class:
             items.append(contentsOf: createClassCompletions(filter: analysisResult.filter))
-            
+
         case .module:
             items.append(contentsOf: createModuleCompletions(filter: analysisResult.filter))
-            
+
         case .instanceVariable:
             items.append(contentsOf: createInstanceVariableCompletions(filter: analysisResult.filter))
-            
+
         case .classVariable:
             items.append(contentsOf: createClassVariableCompletions(filter: analysisResult.filter))
-            
+
         case .globalVariable:
             items.append(contentsOf: createGlobalVariableCompletions(filter: analysisResult.filter))
-            
+
         case .symbol:
             items.append(contentsOf: createSymbolCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createClassCompletions(filter: analysisResult.filter))
@@ -351,9 +351,9 @@ end
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -361,71 +361,71 @@ end
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeRubyContext(_ context: CompletionContextModel) -> RubyContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for instance variable context
         if beforeCursor.hasSuffix("@") || filter.hasPrefix("@") {
             return RubyContextAnalysisResult(type: .instanceVariable, filter: filter)
         }
-        
+
         // Check for class variable context
         if beforeCursor.hasSuffix("@@") || filter.hasPrefix("@@") {
             return RubyContextAnalysisResult(type: .classVariable, filter: filter)
         }
-        
+
         // Check for global variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
             return RubyContextAnalysisResult(type: .globalVariable, filter: filter)
         }
-        
+
         // Check for symbol context
         if beforeCursor.hasSuffix(":") && !beforeCursor.hasSuffix("::") {
             return RubyContextAnalysisResult(type: .symbol, filter: filter)
         }
-        
+
         // Check for method context (after .)
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return RubyContextAnalysisResult(type: .method, filter: "", targetType: targetType)
         }
-        
+
         // Check for class/module context (after ::)
         if beforeCursor.hasSuffix("::") {
             return RubyContextAnalysisResult(type: .class, filter: "")
         }
-        
+
         // Check for class definition context
         if lineText.hasPrefix("class ") && !lineText.contains("end") {
             return RubyContextAnalysisResult(type: .class, filter: filter)
         }
-        
+
         // Check for module definition context
         if lineText.hasPrefix("module ") && !lineText.contains("end") {
             return RubyContextAnalysisResult(type: .module, filter: filter)
         }
-        
+
         return RubyContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@$!?")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
@@ -442,7 +442,7 @@ end
                 )
             }
     }
-    
+
     private func createClassCompletions(filter: String) -> [CompletionItemModel] {
         builtinClasses
             .filter { className in
@@ -458,7 +458,7 @@ end
                 )
             }
     }
-    
+
     private func createModuleCompletions(filter: String) -> [CompletionItemModel] {
         builtinModules
             .filter { moduleName in
@@ -474,15 +474,15 @@ end
                 )
             }
     }
-    
+
     private func createMethodCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         var methods = commonMethods
-        
+
         // Add Rails methods if it looks like Rails code
         if targetType?.lowercased().contains("active") ?? false || targetType?.lowercased().contains("action") ?? false {
             methods += railsMethods
         }
-        
+
         return methods
             .filter { method in
                 filter.isEmpty || method.localizedCaseInsensitiveContains(filter)
@@ -496,7 +496,7 @@ end
                 } else {
                     insertText = method
                 }
-                
+
                 return CompletionItemModel(
                     label: method,
                     insertText: insertText,
@@ -506,7 +506,7 @@ end
                 )
             }
     }
-    
+
     private func createCommonMethodCompletions(filter: String) -> [CompletionItemModel] {
         commonMethods
             .filter { method in
@@ -522,11 +522,11 @@ end
                 )
             }
     }
-    
+
     private func createInstanceVariableCompletions(filter: String) -> [CompletionItemModel] {
         // Common instance variable names
         let commonInstanceVars = ["@id", "@name", "@value", "@data", "@options", "@params", "@errors", "@attributes"]
-        
+
         return commonInstanceVars
             .filter { variable in
                 let filterToUse = filter.hasPrefix("@") ? filter : "@\(filter)"
@@ -542,11 +542,11 @@ end
                 )
             }
     }
-    
+
     private func createClassVariableCompletions(filter: String) -> [CompletionItemModel] {
         // Common class variable names
         let commonClassVars = ["@@instances", "@@count", "@@all", "@@cache", "@@config"]
-        
+
         return commonClassVars
             .filter { variable in
                 let filterToUse = filter.hasPrefix("@@") ? filter : "@@\(filter)"
@@ -562,7 +562,7 @@ end
                 )
             }
     }
-    
+
     private func createGlobalVariableCompletions(filter: String) -> [CompletionItemModel] {
         globalVariables
             .filter { variable in
@@ -579,7 +579,7 @@ end
                 )
             }
     }
-    
+
     private func createSymbolCompletions(filter: String) -> [CompletionItemModel] {
         // Common symbols in Ruby
         let commonSymbols = [
@@ -587,7 +587,7 @@ end
             "email", "username", "password", "token", "url", "path", "message", "error",
             "success", "failure", "pending", "active", "inactive", "enabled", "disabled"
         ]
-        
+
         return commonSymbols
             .filter { symbol in
                 filter.isEmpty || symbol.localizedCaseInsensitiveContains(filter)
@@ -602,7 +602,7 @@ end
                 )
             }
     }
-    
+
     override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
@@ -635,11 +635,11 @@ private struct RubyContextAnalysisResult {
         case symbol
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

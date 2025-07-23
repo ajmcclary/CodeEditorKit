@@ -44,54 +44,54 @@ import Combine
 /// async cleanup due to Swift limitations.
 actor AsyncTextProcessor {
     // MARK: - Properties
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "AsyncTextProcessor")
-    
+
     /// Processing queue with priority support
     private var processingQueue = PriorityQueue<ProcessingTask>()
-    
+
     /// Active processing tasks
     private var activeTasks: [UUID: Task<ProcessingResult, Error>] = [:]
-    
+
     /// Maximum concurrent operations
     private var maxConcurrentOperations: Int
-    
+
     /// Base concurrent operations limit
     private let baseConcurrentOperations: Int
-    
+
     /// Current processing load
     private var currentLoad: ProcessingLoad = .idle
-    
+
     /// System load monitor
     private var systemLoadMonitor: SystemLoadMonitor?
-    
+
     /// Performance monitor
     private let performanceMonitor = ProcessingPerformanceMonitor()
-    
+
     /// Adaptive performance settings
     private var adaptiveSettings = AdaptiveSettings()
-    
+
     /// Memory monitor
     private let memoryMonitor: MemoryMonitor
-    
+
     /// Result cache
     private var resultCache: LRUCache<ProcessingCacheKey, ProcessingResult>?
-    
+
     // MARK: - Initialization
-    
+
     init(memoryMonitor: MemoryMonitor, maxConcurrentOperations: Int? = nil) {
         // Cap at 4 to prevent oversubscription on highly-threaded systems
         let defaultConcurrency = min(4, ProcessInfo.processInfo.activeProcessorCount)
         self.baseConcurrentOperations = maxConcurrentOperations ?? defaultConcurrency
         self.maxConcurrentOperations = self.baseConcurrentOperations
         self.memoryMonitor = memoryMonitor
-        
+
         // Initialize system load monitor
         Task {
             await self.initializeSystemLoadMonitor()
         }
     }
-    
+
     deinit {
         // Note: Cannot call async cleanup() from deinit
         // Users should call cleanup() explicitly before releasing the actor
@@ -99,12 +99,12 @@ actor AsyncTextProcessor {
             task.cancel()
         }
     }
-    
+
     private func getCache() async -> LRUCache<ProcessingCacheKey, ProcessingResult> {
         if let cache = resultCache {
             return cache
         }
-        
+
         // Initialize cache on MainActor
         let monitor = memoryMonitor
         let cache = await MainActor.run {
@@ -113,9 +113,9 @@ actor AsyncTextProcessor {
         resultCache = cache
         return cache
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Submit a text processing task to the queue
     ///
     /// This method is actor-isolated and must be called with `await`.
@@ -140,7 +140,7 @@ actor AsyncTextProcessor {
     ) async -> ProcessingTaskHandle {
         let taskId = UUID()
         let cacheKey = ProcessingCacheKey(text: text, range: range, operation: operation)
-        
+
         // Check cache first
         let cache = await getCache()
         if let cachedResult = await cache.get(cacheKey) {
@@ -149,9 +149,9 @@ actor AsyncTextProcessor {
             completion(.success(cachedResult))
             return ProcessingTaskHandle(id: taskId, processor: self)
         }
-        
+
         await performanceMonitor.recordCacheMiss()
-        
+
         // Create processing task
         let task = ProcessingTask(
             id: taskId,
@@ -161,16 +161,16 @@ actor AsyncTextProcessor {
             priority: priority,
             completion: completion
         )
-        
+
         // Add to queue
         processingQueue.enqueue(task)
-        
+
         // Start processing if under limit
         await processNextTaskIfPossible()
-        
+
         return ProcessingTaskHandle(id: taskId, processor: self)
     }
-    
+
     /// Cancel a specific processing task
     ///
     /// This method is actor-isolated and must be called with `await`.
@@ -180,7 +180,7 @@ actor AsyncTextProcessor {
     func cancel(taskId: UUID) async {
         // Remove from queue if not started
         processingQueue.remove { $0.id == taskId }
-        
+
         // Cancel if active
         if let activeTask = activeTasks[taskId] {
             activeTask.cancel()
@@ -188,7 +188,7 @@ actor AsyncTextProcessor {
             await performanceMonitor.recordCancellation()
         }
     }
-    
+
     /// Get current processing status
     func getStatus() async -> ProcessingStatus {
         ProcessingStatus(
@@ -198,23 +198,23 @@ actor AsyncTextProcessor {
             performanceMetrics: await performanceMonitor.getCurrentMetrics()
         )
     }
-    
+
     /// Clear all pending tasks
     ///
     /// Immediately cancels all active and pending tasks without waiting for completion.
     /// Use `cleanup()` if you need to wait for tasks to finish.
     func clearQueue() {
         processingQueue.clear()
-        
+
         // Cancel all active tasks
         for task in activeTasks.values {
             task.cancel()
         }
         activeTasks.removeAll()
-        
+
         updateProcessingLoad()
     }
-    
+
     /// Cleanup all resources before releasing the processor
     ///
     /// This method is actor-isolated and must be called with `await`.
@@ -226,17 +226,17 @@ actor AsyncTextProcessor {
     func cleanup() async {
         // Capture active tasks before clearing to avoid reentrancy
         let tasksToAwait = Array(activeTasks.values)
-        
+
         // Clear all queues and cancel tasks
         processingQueue.clear()
         activeTasks.removeAll()
-        
+
         // Clear the cache
         resultCache = nil
-        
+
         // Update load after clearing
         updateProcessingLoad()
-        
+
         // Wait for cancelled tasks to complete outside of actor isolation
         // This avoids potential reentrancy issues
         await withTaskGroup(of: Void.self) { group in
@@ -247,30 +247,30 @@ actor AsyncTextProcessor {
             }
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func processNextTaskIfPossible() async {
         guard activeTasks.count < maxConcurrentOperations,
               let nextTask = processingQueue.dequeue() else {
             return
         }
-        
+
         // Capture task data for use in Task closure
         let taskId = nextTask.id
         let taskText = nextTask.text
         let taskRange = nextTask.range
         let taskOperation = nextTask.operation
         let taskCompletion = nextTask.completion
-        
+
         // Start processing with proper isolation
         let processingTask = Task { [weak self] () -> ProcessingResult in
             guard let self else {
                 throw ProcessingError.processorDeallocated
             }
-            
+
             let startTime = CFAbsoluteTimeGetCurrent()
-            
+
             do {
                 // Create local task for processing to avoid capturing nextTask
                 let localTask = ProcessingTask(
@@ -281,14 +281,14 @@ actor AsyncTextProcessor {
                     priority: nextTask.priority,
                     completion: taskCompletion
                 )
-                
+
                 // Perform the actual processing
                 let result = try await self.performProcessing(localTask)
-                
+
                 // Record metrics
                 let duration = CFAbsoluteTimeGetCurrent() - startTime
                 await self.performanceMonitor.recordProcessingTime(duration, for: taskOperation)
-                
+
                 // Cache the result
                 let cacheKey = ProcessingCacheKey(
                     text: taskText,
@@ -297,16 +297,16 @@ actor AsyncTextProcessor {
                 )
                 let cache = await self.getCache()
                 await cache.set(result, forKey: cacheKey)
-                
+
                 return result
             } catch {
                 await self.performanceMonitor.recordError()
                 throw error
             }
         }
-        
+
         activeTasks[taskId] = processingTask
-        
+
         // Handle completion with guaranteed cleanup
         Task { [weak self] in
             do {
@@ -317,26 +317,26 @@ actor AsyncTextProcessor {
                     taskCompletion(.failure(error))
                 }
             }
-            
+
             // Directly await cleanup after task completes
             await self?.taskCompleted(taskId)
         }
-        
+
         updateProcessingLoad()
     }
-    
+
     private func taskCompleted(_ taskId: UUID) async {
         activeTasks.removeValue(forKey: taskId)
         updateProcessingLoad()
-        
+
         // Automatic cache cleanup when queue is empty and no active tasks
         if processingQueue.isEmpty && activeTasks.isEmpty {
             await performCacheCleanupIfNeeded()
         }
-        
+
         await processNextTaskIfPossible()
     }
-    
+
     private func performCacheCleanupIfNeeded() async {
         // Clear cache when idle to free memory
         // This helps prevent long-lived tasks from keeping stale cache entries
@@ -345,49 +345,49 @@ actor AsyncTextProcessor {
             resultCache = nil
         }
     }
-    
+
     private func performProcessing(_ task: ProcessingTask) async throws -> ProcessingResult {
         // Apply adaptive settings
         let settings = adaptiveSettings.settingsForLoad(currentLoad)
-        
+
         // Perform the operation with adaptive batching
         let batchSize = settings.batchSize
         var results: [Any] = []
-        
+
         // Optimized: work with String.Index directly instead of converting to array
         let startIndex = task.text.index(task.text.startIndex, offsetBy: task.range.location)
-        
+
         var currentIndex = startIndex
         var currentLocation = task.range.location
         let endLocation = NSMaxRange(task.range)
-        
+
         while currentLocation < endLocation {
             // Check for cancellation
             try Task.checkCancellation()
-            
+
             let batchEnd = min(currentLocation + batchSize, endLocation)
             let batchLength = batchEnd - currentLocation
             let batchRange = NSRange(location: currentLocation, length: batchLength)
-            
+
             // Calculate batch end index efficiently
             let batchEndIndex = task.text.index(currentIndex, offsetBy: batchLength)
-            
+
             // Extract substring without array conversion
             let batchText = String(task.text[currentIndex..<batchEndIndex])
-            
+
             // Process batch
             let batchResult = try await task.operation.process(batchText, batchRange)
             results.append(batchResult)
-            
+
             currentIndex = batchEndIndex
             currentLocation = batchEnd
-            
+
             // Adaptive delay between batches
             if settings.delayBetweenBatches > 0 {
                 try await Task.sleep(nanoseconds: UInt64(settings.delayBetweenBatches * 1_000_000_000))
             }
         }
-        
+
         return ProcessingResult(
             taskId: task.id,
             operation: task.operation.name,
@@ -395,11 +395,11 @@ actor AsyncTextProcessor {
             processingTime: 0 // Will be set by caller
         )
     }
-    
+
     private func updateProcessingLoad() {
         let activeCount = activeTasks.count
         let queuedCount = processingQueue.count
-        
+
         if activeCount >= maxConcurrentOperations && queuedCount > 10 {
             currentLoad = .high
         } else if activeCount > maxConcurrentOperations / 2 {
@@ -409,19 +409,19 @@ actor AsyncTextProcessor {
         } else {
             currentLoad = .idle
         }
-        
+
         // Update adaptive settings based on load
         adaptiveSettings.updateForLoad(currentLoad)
-        
+
         // Update concurrent operations based on system load
         updateDynamicConcurrency()
     }
-    
+
     // MARK: - Dynamic Concurrency
-    
+
     private func initializeSystemLoadMonitor() async {
         systemLoadMonitor = SystemLoadMonitor()
-        
+
         // Start periodic updates
         Task { [weak self] in
             while !Task.isCancelled {
@@ -430,23 +430,23 @@ actor AsyncTextProcessor {
             }
         }
     }
-    
+
     private func updateDynamicConcurrency() {
         guard let monitor = systemLoadMonitor else { return }
-        
+
         let systemLoad = monitor.currentSystemLoad()
-        
+
         // Adjust concurrency based on system conditions
         // Note: Memory pressure check temporarily disabled to avoid actor isolation issues
         switch systemLoad {
         case .low:
             // System is idle, can use full concurrency
             maxConcurrentOperations = baseConcurrentOperations
-            
+
         case .medium:
             // Moderate load, reduce slightly
             maxConcurrentOperations = max(2, baseConcurrentOperations - 1)
-            
+
         case .high:
             // High load, minimize concurrency
             maxConcurrentOperations = 1
@@ -460,12 +460,12 @@ actor AsyncTextProcessor {
 public struct ProcessingTaskHandle: Sendable {
     private let id: UUID
     private let processor: AsyncTextProcessor
-    
+
     init(id: UUID, processor: AsyncTextProcessor) {
         self.id = id
         self.processor = processor
     }
-    
+
     /// Cancel this task
     public func cancel() async {
         await processor.cancel(taskId: id)
@@ -478,7 +478,7 @@ public enum TaskPriority: Int, Comparable, Sendable {
     case normal = 1
     case high = 2
     case critical = 3
-    
+
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
@@ -500,14 +500,14 @@ private struct ProcessingTask: Comparable {
     let priority: TaskPriority
     let completion: @Sendable (Result<ProcessingResult, Error>) -> Void
     let timestamp = Date()
-    
+
     static func < (lhs: Self, rhs: Self) -> Bool {
         if lhs.priority != rhs.priority {
             return lhs.priority > rhs.priority
         }
         return lhs.timestamp < rhs.timestamp
     }
-    
+
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
@@ -557,7 +557,7 @@ private struct ProcessingCacheKey: Hashable {
     let textHash: Int
     let range: NSRange
     let operationName: String
-    
+
     init(text: String, range: NSRange, operation: ProcessingOperation) {
         // Use hash of text substring for efficiency
         let substring = String(text.dropFirst(range.location).prefix(range.length))
@@ -573,7 +573,7 @@ private struct ProcessingCacheKey: Hashable {
 private struct AdaptiveSettings {
     var batchSize: Int = 1_000
     var delayBetweenBatches: TimeInterval = 0
-    
+
     mutating func updateForLoad(_ load: ProcessingLoad) {
         switch load {
         case .idle:
@@ -592,7 +592,7 @@ private struct AdaptiveSettings {
             delayBetweenBatches = 0.005 // 5ms
         }
     }
-    
+
     func settingsForLoad(_: ProcessingLoad) -> (batchSize: Int, delayBetweenBatches: TimeInterval) {
         (batchSize: batchSize, delayBetweenBatches: delayBetweenBatches)
     }
@@ -606,34 +606,34 @@ private actor ProcessingPerformanceMonitor {
     private var cacheMisses: Int = 0
     private var errors: Int = 0
     private var cancellations: Int = 0
-    
+
     func recordProcessingTime(_ time: TimeInterval, for _: ProcessingOperation) {
         totalProcessed += 1
         totalProcessingTime += time
     }
-    
+
     func recordCacheHit() {
         cacheHits += 1
     }
-    
+
     func recordCacheMiss() {
         cacheMisses += 1
     }
-    
+
     func recordError() {
         errors += 1
     }
-    
+
     func recordCancellation() {
         cancellations += 1
     }
-    
+
     func getCurrentMetrics() -> ProcessingMetrics {
         let averageTime = totalProcessed > 0 ? totalProcessingTime / Double(totalProcessed) : 0
         let cacheTotal = cacheHits + cacheMisses
         let cacheHitRate = cacheTotal > 0 ? Double(cacheHits) / Double(cacheTotal) : 0
         let errorRate = totalProcessed > 0 ? Double(errors) / Double(totalProcessed) : 0
-        
+
         return ProcessingMetrics(
             totalProcessed: totalProcessed,
             averageProcessingTime: averageTime,
@@ -648,28 +648,28 @@ private actor ProcessingPerformanceMonitor {
 /// Simple priority queue for processing tasks
 private struct PriorityQueue<T: Comparable> {
     private var heap: [T] = []
-    
+
     var count: Int { heap.count }
     var isEmpty: Bool { heap.isEmpty }
-    
+
     mutating func enqueue(_ element: T) {
         heap.append(element)
         heapifyUp(from: heap.count - 1)
     }
-    
+
     mutating func dequeue() -> T? {
         guard !heap.isEmpty else { return nil }
-        
+
         if heap.count == 1 {
             return heap.removeLast()
         }
-        
+
         let value = heap[0]
         heap[0] = heap.removeLast()
         heapifyDown(from: 0)
         return value
     }
-    
+
     mutating func remove(where predicate: (T) -> Bool) {
         heap.removeAll(where: predicate)
         // Rebuild heap
@@ -679,45 +679,45 @@ private struct PriorityQueue<T: Comparable> {
             enqueue(element)
         }
     }
-    
+
     mutating func clear() {
         heap.removeAll()
     }
-    
+
     private mutating func heapifyUp(from index: Int) {
         var childIndex = index
         let child = heap[childIndex]
         var parentIndex = (childIndex - 1) / 2
-        
+
         while childIndex > 0 && heap[parentIndex] < child {
             heap[childIndex] = heap[parentIndex]
             childIndex = parentIndex
             parentIndex = (childIndex - 1) / 2
         }
-        
+
         heap[childIndex] = child
     }
-    
+
     private mutating func heapifyDown(from index: Int) {
         var parentIndex = index
-        
+
         while true {
             let leftChildIndex = 2 * parentIndex + 1
             let rightChildIndex = leftChildIndex + 1
             var largestIndex = parentIndex
-            
+
             if leftChildIndex < heap.count && heap[leftChildIndex] > heap[largestIndex] {
                 largestIndex = leftChildIndex
             }
-            
+
             if rightChildIndex < heap.count && heap[rightChildIndex] > heap[largestIndex] {
                 largestIndex = rightChildIndex
             }
-            
+
             if largestIndex == parentIndex {
                 break
             }
-            
+
             heap.swapAt(parentIndex, largestIndex)
             parentIndex = largestIndex
         }
@@ -733,19 +733,19 @@ private struct SystemLoadMonitor {
         case medium
         case high
     }
-    
+
     func currentSystemLoad() -> SystemLoad {
         let info = ProcessInfo.processInfo
-        
+
         // Get actual system load average
         var loadavg = [Double](repeating: 0, count: 3)
         getloadavg(&loadavg, 3)
-        
+
         let oneMinuteLoad = loadavg[0]
         let processorCount = Double(info.activeProcessorCount)
-        
+
         let normalizedLoad = oneMinuteLoad / processorCount
-        
+
         if normalizedLoad < 0.5 {
             return .low
         } else if normalizedLoad < 0.8 {

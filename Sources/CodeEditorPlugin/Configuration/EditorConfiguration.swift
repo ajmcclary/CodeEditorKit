@@ -91,38 +91,38 @@ public struct EditorConfiguration: Codable, Sendable {
     // - EditorConfiguration+Layout.swift
     // - EditorConfiguration+Behavior.swift  
     // - EditorConfiguration+Performance.swift
-    
+
     // MARK: - Configuration Properties
-    
+
     /// Layout configuration
     public var layout = Layout()
-    
+
     /// Display configuration
     public var display = Display()
-    
+
     /// Behavior configuration
     public var behavior = Behavior()
-    
+
     /// Performance configuration
     public var performance = Performance()
-    
+
     /// Event system for publishing and subscribing to editor events
     /// If nil, no events will be published
     public var eventSystem: UnifiedEventSystem?
-    
+
     /// Actor coordinator for managing specialized actors
     /// If nil, a new instance will be created when needed
     @available(macOS 13.0, iOS 16.0, *)
     public var actorCoordinator: ActorCoordinator?
-    
+
     /// Workspace root URL for LSP and file operations
     /// If set, enables language server protocol features with the specified workspace root
     public var workspaceRoot: URL?
-    
+
     // MARK: - Initialization
-    
+
     public init() {}
-    
+
     public init(layout: Layout = Layout(), display: Display = Display(), behavior: Behavior = Behavior(), performance: Performance = Performance(), eventSystem: UnifiedEventSystem? = nil) {
         self.layout = layout
         self.display = display
@@ -130,94 +130,94 @@ public struct EditorConfiguration: Codable, Sendable {
         self.performance = performance
         self.eventSystem = eventSystem
     }
-    
+
     // MARK: - Convenience Methods
-    
+
     /// Create a new configuration with updated layout
     public func with(layout: Layout) -> Self {
         Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
-    
+
     /// Create a new configuration with updated display
     public func with(display: Display) -> Self {
         Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
-    
+
     /// Create a new configuration with updated behavior
     public func with(behavior: Behavior) -> Self {
         Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
-    
+
     /// Create a new configuration with updated performance
     public func with(performance: Performance) -> Self {
         Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
-    
+
     /// Create a new configuration with updated event system
     public func with(eventSystem: UnifiedEventSystem?) -> Self {
         Self(layout: layout, display: display, behavior: behavior, performance: performance, eventSystem: eventSystem)
     }
-    
+
     // MARK: - Validation
-    
+
     /// Validate the configuration and return any validation errors
     public func validate() -> [ValidationError] {
         var errors: [ValidationError] = []
-        
+
         // Validate display settings
         if !PlatformConstants.validFontSizeRange.contains(display.fontSize) {
             errors.append(ValidationError(
-                field: "display.fontSize", 
-                value: display.fontSize, 
+                field: "display.fontSize",
+                value: display.fontSize,
                 constraint: "must be between \(PlatformConstants.validFontSizeRange.lowerBound) and \(PlatformConstants.validFontSizeRange.upperBound)"
             ))
         }
-        
+
         // Validate layout settings
         if !PlatformConstants.validTabWidthRange.contains(layout.tabWidth) {
             errors.append(ValidationError(
-                field: "layout.tabWidth", 
-                value: layout.tabWidth, 
+                field: "layout.tabWidth",
+                value: layout.tabWidth,
                 constraint: "must be between \(PlatformConstants.validTabWidthRange.lowerBound) and \(PlatformConstants.validTabWidthRange.upperBound)"
             ))
         }
-        
+
         if !PlatformConstants.validLineHeightMultipleRange.contains(layout.lineHeightMultiple) {
             errors.append(ValidationError(
-                field: "layout.lineHeightMultiple", 
-                value: layout.lineHeightMultiple, 
+                field: "layout.lineHeightMultiple",
+                value: layout.lineHeightMultiple,
                 constraint: "must be between \(PlatformConstants.validLineHeightMultipleRange.lowerBound) and \(PlatformConstants.validLineHeightMultipleRange.upperBound)"
             ))
         }
-        
+
         if !PlatformConstants.validGutterWidthRange.contains(layout.gutterWidth) {
             errors.append(ValidationError(
-                field: "layout.gutterWidth", 
-                value: layout.gutterWidth, 
+                field: "layout.gutterWidth",
+                value: layout.gutterWidth,
                 constraint: "must be \(PlatformConstants.validGutterWidthRange.lowerBound) or greater"
             ))
         }
-        
+
         // Validate performance settings
         if !PlatformConstants.validHighlightingLengthRange.contains(performance.maxSyntaxHighlightingLength) {
             errors.append(ValidationError(
-                field: "performance.maxSyntaxHighlightingLength", 
-                value: performance.maxSyntaxHighlightingLength, 
+                field: "performance.maxSyntaxHighlightingLength",
+                value: performance.maxSyntaxHighlightingLength,
                 constraint: "must be \(PlatformConstants.validHighlightingLengthRange.lowerBound) or greater"
             ))
         }
-        
+
         if !PlatformConstants.validDebounceIntervalRange.contains(performance.textChangeDebounceInterval.timeInterval) {
             errors.append(ValidationError(
-                field: "performance.textChangeDebounceInterval", 
-                value: performance.textChangeDebounceInterval.timeInterval, 
+                field: "performance.textChangeDebounceInterval",
+                value: performance.textChangeDebounceInterval.timeInterval,
                 constraint: "must be between \(PlatformConstants.validDebounceIntervalRange.lowerBound) and \(PlatformConstants.validDebounceIntervalRange.upperBound) seconds"
             ))
         }
-        
+
         return errors
     }
-    
+
     /// Validate the configuration and throw an error if invalid
     public func validateAndThrow() throws {
         let errors = validate()
@@ -225,9 +225,9 @@ public struct EditorConfiguration: Codable, Sendable {
             throw CodeEditorError.configurationValidationFailed(errors)
         }
     }
-    
+
     // MARK: - Configuration Application
-    
+
     /// Apply configuration to a CodeEditorView.
     ///
     /// Updates the editor view with all settings from this configuration.
@@ -267,15 +267,15 @@ public struct EditorConfiguration: Codable, Sendable {
             // This ensures backward compatibility while alerting developers
             CrossPlatformLogger.logger().warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
         }
-        
+
         // Set the view's configuration property which will trigger applyConfiguration()
         // This will apply all the settings internally
         view.configuration = self
-        
+
         // Apply cross-platform text input features that aren't handled by applyConfiguration
         applyTextInputFeatures(to: view)
     }
-    
+
     /// Create a CodeFoldingConfiguration from this EditorConfiguration.
     ///
     /// Maps the code folding settings from this EditorConfiguration to a
@@ -315,7 +315,7 @@ extension EditorConfiguration {
         case performance
         // eventSystem is intentionally excluded from serialization
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.layout = try container.decode(Layout.self, forKey: .layout)
@@ -324,7 +324,7 @@ extension EditorConfiguration {
         self.performance = try container.decode(Performance.self, forKey: .performance)
         self.eventSystem = nil // Always nil when decoding
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(layout, forKey: .layout)

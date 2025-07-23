@@ -5,7 +5,7 @@ import Foundation
 extension ConfigurationValidator {
     func validateDisplay(_ display: EditorConfiguration.Display) -> [ValidationIssue] {
         var issues: [ValidationIssue] = []
-        
+
         // Font size validation - more permissive range
         if !PlatformConstants.validFontSizeRange.contains(display.fontSize) {
             issues.append(ValidationIssue(
@@ -15,7 +15,7 @@ extension ConfigurationValidator {
                 suggestedValue: max(PlatformConstants.validFontSizeRange.lowerBound, min(PlatformConstants.validFontSizeRange.upperBound, display.fontSize))
             ))
         }
-        
+
         return issues
     }
 }

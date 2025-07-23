@@ -14,10 +14,10 @@ import Foundation
 public enum AsyncOperationError: LocalizedError {
     /// Operation completed but no result was available.
     case noResult
-    
+
     /// Operation was cancelled before it could complete.
     case operationCancelled
-    
+
     public var errorDescription: String? {
         switch self {
         case .noResult:
@@ -98,9 +98,9 @@ public enum AsyncOperationError: LocalizedError {
 /// - SeeAlso: ``Priority``
 public actor AsyncOperationManager {
     let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "AsyncOperationManager")
-    
+
     // MARK: - Types
-    
+
     /// Operation priority levels for scheduling.
     ///
     /// Higher priority operations are executed before lower priority ones
@@ -131,30 +131,30 @@ public actor AsyncOperationManager {
     public enum Priority: Int, Comparable, Sendable {
         /// Low priority for background operations.
         case low = 0
-        
+
         /// Medium priority for standard operations (default).
         case medium = 1
-        
+
         /// High priority for important operations.
         case high = 2
-        
+
         /// Critical priority for urgent operations.
         case critical = 3
-        
+
         public static func < (lhs: Priority, rhs: Priority) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
     }
-    
+
     struct ScheduledOperation {
         let id: UUID
         let priority: Priority
         let operation: () async throws -> Any
         let scheduledTime: Date
     }
-    
+
     // MARK: - Properties
-    
+
     var scheduledOperations: [UUID: ScheduledOperation] = [:]
     var debounceTasks: [String: Task<Void, Never>] = [:]
     var debounceResults: [String: Any] = [:]
@@ -162,9 +162,9 @@ public actor AsyncOperationManager {
     var throttleInfo: [String: Date] = [:]
     var activeOperations: Set<UUID> = []
     let maxConcurrentOperations: Int
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new async operation manager with specified concurrency limit.
     ///
     /// - Parameter maxConcurrentOperations: Maximum number of operations that can
@@ -175,9 +175,9 @@ public actor AsyncOperationManager {
     public init(maxConcurrentOperations: Int = ProcessInfo.processInfo.activeProcessorCount) {
         self.maxConcurrentOperations = max(1, maxConcurrentOperations)
     }
-    
+
     // MARK: - Status
-    
+
     /// Returns the current status of the operation manager.
     ///
     /// This provides insight into the current state of operations including
@@ -205,7 +205,7 @@ public actor AsyncOperationManager {
             maxConcurrentOperations: maxConcurrentOperations
         )
     }
-    
+
     /// Cleans up stale operation data older than the specified interval.
     ///
     /// This method removes old throttle timing information and clears
@@ -224,10 +224,10 @@ public actor AsyncOperationManager {
     ///   for more aggressive cleanup.
     public func cleanup(olderThan interval: TimeInterval = 3_600) {
         let cutoff = Date().addingTimeInterval(-interval)
-        
+
         // Clean throttle info
         throttleInfo = throttleInfo.filter { $0.value > cutoff }
-        
+
         // Clear old debounce data
         let activeKeys = Set(debounceTasks.keys)
         debounceResults = debounceResults.filter { activeKeys.contains($0.key) }
@@ -254,16 +254,16 @@ public actor AsyncOperationManager {
 public struct OperationStatus: Sendable {
     /// Number of operations scheduled but not yet executing.
     public let scheduledCount: Int
-    
+
     /// Number of operations currently executing.
     public let activeCount: Int
-    
+
     /// Set of keys that have active throttling.
     public let throttledKeys: Set<String>
-    
+
     /// Set of keys that have active debouncing.
     public let debouncedKeys: Set<String>
-    
+
     /// Maximum concurrent operations allowed.
     public let maxConcurrentOperations: Int
 }
@@ -301,19 +301,19 @@ public struct OperationStatus: Sendable {
 private actor DebouncedState<T: Sendable> {
     var activeTask: Task<Void, Never>?
     var result: T?
-    
+
     func updateResult(_ value: T) {
         result = value
     }
-    
+
     func cancelActiveTask() {
         activeTask?.cancel()
     }
-    
+
     func setActiveTask(_ task: Task<Void, Never>) {
         activeTask = task
     }
-    
+
     func getResult() -> T? {
         result
     }
@@ -326,19 +326,19 @@ public func debouncedAsync<T: Sendable>(
 ) -> @Sendable (T) async -> Void {
     let state = DebouncedState<T>()
     _ = AsyncOperationManager(maxConcurrentOperations: maxConcurrentOperations)
-    
+
     return { @Sendable value in
         await state.updateResult(value)
         await state.cancelActiveTask()
-        
+
         let task = Task { @Sendable in
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-            
+
             if let capturedResult = await state.getResult(), !Task.isCancelled {
                 operation(capturedResult)
             }
         }
-        
+
         await state.setActiveTask(task)
         _ = await task.value
     }
@@ -373,7 +373,7 @@ public func debouncedAsync<T: Sendable>(
 /// - Returns: An async throttled version of the operation.
 private actor ThrottledState {
     var lastRun: Date?
-    
+
     func shouldExecute(interval: TimeInterval) -> Bool {
         let now = Date()
         if let last = lastRun, now.timeIntervalSince(last) < interval {
@@ -391,7 +391,7 @@ public func throttledAsync<T: Sendable>(
 ) -> @Sendable (T) async -> Void {
     let state = ThrottledState()
     _ = AsyncOperationManager(maxConcurrentOperations: maxConcurrentOperations)
-    
+
     return { @Sendable value in
         if await state.shouldExecute(interval: interval) {
             operation(value)

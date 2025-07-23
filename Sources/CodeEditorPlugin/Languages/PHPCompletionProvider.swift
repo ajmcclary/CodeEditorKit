@@ -11,12 +11,12 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         "$_SESSION", "$_REQUEST", "$_ENV", "$HTTP_RAW_POST_DATA",
         "$http_response_header", "$argc", "$argv"
     ]
-    
+
     public let phpMagicConstants = [
         "__LINE__", "__FILE__", "__DIR__", "__FUNCTION__", "__CLASS__",
         "__TRAIT__", "__METHOD__", "__NAMESPACE__"
     ]
-    
+
     public let phpBuiltinClasses = [
         "Exception", "ErrorException", "Error", "ParseError", "TypeError",
         "ArgumentCountError", "ArithmeticError", "DivisionByZeroError",
@@ -29,7 +29,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         "SplFileInfo", "SplFileObject", "DirectoryIterator",
         "RecursiveDirectoryIterator", "RecursiveIteratorIterator"
     ]
-    
+
     // Override base properties
     override public var keywords: [String] {
         [
@@ -47,7 +47,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
             "enum", "mixed", "never"
         ]
     }
-    
+
     override public var types: [String] {
         [
             "int", "float", "string", "bool", "array", "object", "callable",
@@ -55,7 +55,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
             "self", "parent", "static"
         ]
     }
-    
+
     override public var functions: [String] {
         [
         // String functions
@@ -95,7 +95,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         "filter_var", "filter_input", "hash", "password_hash", "password_verify"
         ]
     }
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -278,7 +278,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         )
         ]
     }
-    
+
     public init() {
         super.init(
             id: "php-builtin",
@@ -287,45 +287,45 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Override CompletionProvider
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzePHPContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .keyword:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
-            
+
         case .variable:
             items.append(contentsOf: createVariableCompletions(filter: analysisResult.filter))
-            
+
         case .function:
             items.append(contentsOf: createFunctionCompletions(filter: analysisResult.filter))
-            
+
         case .method:
             items.append(contentsOf: createMethodCompletions(for: analysisResult.targetType, filter: analysisResult.filter))
-            
+
         case .class:
             items.append(contentsOf: createClassCompletions(filter: analysisResult.filter))
-            
+
         case .type:
             items.append(contentsOf: createTypeCompletions(filter: analysisResult.filter))
-            
+
         case .namespace:
             items.append(contentsOf: createNamespaceCompletions(filter: analysisResult.filter))
-            
+
         case .superglobal:
             items.append(contentsOf: createSuperglobalCompletions(filter: analysisResult.filter))
-            
+
         case .magicConstant:
             items.append(contentsOf: createMagicConstantCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createKeywordCompletions(filter: analysisResult.filter))
             items.append(contentsOf: createFunctionCompletions(filter: analysisResult.filter))
@@ -333,9 +333,9 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -343,21 +343,21 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - PHP Context Analysis
-    
+
     private func analyzePHPContext(_ context: CompletionContextModel) -> PHPContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for PHP tag context
         if beforeCursor.hasSuffix("<?") {
             return PHPContextAnalysisResult(type: .keyword, filter: "php")
         }
-        
+
         // Check for variable context
         if beforeCursor.hasSuffix("$") || filter.hasPrefix("$") {
             // Check if it's a superglobal
@@ -366,47 +366,47 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             }
             return PHPContextAnalysisResult(type: .variable, filter: filter)
         }
-        
+
         // Check for magic constant context
         if filter.hasPrefix("__") && filter.hasSuffix("__") {
             return PHPContextAnalysisResult(type: .magicConstant, filter: filter)
         }
-        
+
         // Check for method context (->)
         if beforeCursor.hasSuffix("->") {
             let targetType = extractTargetType(from: beforeCursor, separator: "->")
             return PHPContextAnalysisResult(type: .method, filter: "", targetType: targetType)
         }
-        
+
         // Check for static method/property context (::)
         if beforeCursor.hasSuffix("::") {
             let targetType = extractTargetType(from: beforeCursor, separator: "::")
             return PHPContextAnalysisResult(type: .class, filter: "", targetType: targetType)
         }
-        
+
         // Check for namespace context
         if beforeCursor.hasSuffix("\\") || lineText.hasPrefix("use ") || lineText.hasPrefix("namespace ") {
             return PHPContextAnalysisResult(type: .namespace, filter: filter)
         }
-        
+
         // Check for type hint context
         if isInTypeHintContext(beforeCursor) {
             return PHPContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         // Check for function context
         if beforeCursor.hasSuffix("(") || isInFunctionCallContext(beforeCursor) {
             return PHPContextAnalysisResult(type: .function, filter: filter)
         }
-        
+
         return PHPContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$\\")).inverted)
         return components.last ?? ""
     }
-    
+
     // PHP-specific method for extracting target type
     private func extractTargetType(from text: String, separator: String) -> String? {
         // Extract the object/class before -> or ::
@@ -418,7 +418,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         }
         return nil
     }
-    
+
     private func isInTypeHintContext(_ text: String) -> Bool {
         // Check if we're in a function parameter or return type context
         let patterns = [
@@ -426,17 +426,17 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             #":\s*\??$"#,                        // Return type
             #"^\s*(?:public|private|protected)\s+\??$"# // Property type
         ]
-        
+
         for pattern in patterns {
             if let regex = try? NSRegularExpression(pattern: pattern),
                regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil {
                 return true
             }
         }
-        
+
         return false
     }
-    
+
     private func isInFunctionCallContext(_ text: String) -> Bool {
         // Check if we're inside parentheses
         var parenCount = 0
@@ -449,9 +449,9 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         }
         return parenCount > 0
     }
-    
+
     // MARK: - PHP-Specific Completion Creation Methods
-    
+
     private func createVariableCompletions(filter: String) -> [CompletionItemModel] {
         // Common variable names
         let commonVariables = [
@@ -460,7 +460,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             "$string", "$number", "$file", "$path", "$url", "$error", "$message",
             "$status", "$config", "$options", "$params", "$args", "$output", "$input"
         ]
-        
+
         return commonVariables
             .filter { variable in
                 let filterToUse = filter.hasPrefix("$") ? filter : "$\(filter)"
@@ -476,7 +476,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
@@ -492,7 +492,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     private func createMethodCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
         // Common object methods
         let commonMethods = [
@@ -501,14 +501,14 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             "find", "findAll", "create", "validate", "render", "redirect",
             "get", "set", "has", "add", "remove", "clear", "count", "isEmpty"
         ]
-        
+
         return commonMethods
             .filter { method in
                 filter.isEmpty || method.localizedCaseInsensitiveContains(filter)
             }
             .map { method in
                 let insertText = method.hasPrefix("get") || method.hasPrefix("is") || method.hasPrefix("has") ? "\(method)()" : "\(method)($0)"
-                
+
                 return CompletionItemModel(
                     label: method,
                     insertText: insertText,
@@ -518,7 +518,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     private func createClassCompletions(filter: String) -> [CompletionItemModel] {
         phpBuiltinClasses
             .filter { className in
@@ -534,7 +534,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     private func createNamespaceCompletions(filter: String) -> [CompletionItemModel] {
         // Common PHP namespaces
         let commonNamespaces = [
@@ -543,7 +543,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             "Illuminate", "Symfony", "Doctrine", "Twig", "Monolog", "Guzzle",
             "PHPUnit", "Carbon", "League", "Psr"
         ]
-        
+
         return commonNamespaces
             .filter { namespace in
                 filter.isEmpty || namespace.localizedCaseInsensitiveContains(filter)
@@ -558,7 +558,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     private func createSuperglobalCompletions(filter: String) -> [CompletionItemModel] {
         phpSuperglobals
             .filter { superglobal in
@@ -567,7 +567,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             }
             .map { superglobal in
                 let insertText = superglobal.hasSuffix("]") ? superglobal : "\(superglobal)['$0']"
-                
+
                 return CompletionItemModel(
                     label: superglobal,
                     insertText: insertText,
@@ -577,7 +577,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
                 )
             }
     }
-    
+
     private func createMagicConstantCompletions(filter: String) -> [CompletionItemModel] {
         phpMagicConstants
             .filter { constant in
@@ -610,11 +610,11 @@ private struct PHPContextAnalysisResult {
         case magicConstant
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let targetType: String?
-    
+
     init(type: CompletionType, filter: String, targetType: String? = nil) {
         self.type = type
         self.filter = filter

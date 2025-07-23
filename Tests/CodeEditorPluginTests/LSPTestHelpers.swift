@@ -9,7 +9,7 @@ import Foundation
 /// Adapter to bridge LSP completion items with the completion system for testing
 struct CompletionItemAdapter {
     let model: CompletionItemModel
-    
+
     init(label: String, kind: CompletionItemKind = .text) {
         self.model = CompletionItemModel(
             label: label,
@@ -28,7 +28,7 @@ struct CompletionItemAdapter {
 /// Mock LSP completion item for testing
 struct MockLSPCompletionItem {
     let item: Any
-    
+
     init(label: String, kind: CompletionItemKind = .text) {
         self.item = CompletionItemAdapter(label: label, kind: kind)
     }
@@ -88,7 +88,7 @@ struct LSPCompletionItem: Codable, Sendable {
     let commitCharacters: [String]
     let command: Command?
     let data: AnyCodable?
-    
+
     init(
         label: String,
         kind: LSPCompletionItemKind? = nil,
@@ -128,15 +128,15 @@ struct LSPCompletionItem: Codable, Sendable {
 enum CompletionItemDocumentation: Codable, Sendable {
     case string(String)
     case markupContent(MarkupContent)
-    
+
     enum CodingKeys: String, CodingKey {
         case string
         case markupContent
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
+
         if let stringValue = try? container.decode(String.self) {
             self = .string(stringValue)
         } else if let markupValue = try? container.decode(MarkupContent.self) {
@@ -151,10 +151,10 @@ enum CompletionItemDocumentation: Codable, Sendable {
             )
         }
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        
+
         switch self {
         case .string(let value):
             try container.encode(value)

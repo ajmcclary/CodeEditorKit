@@ -15,7 +15,7 @@ public protocol CodePattern {
 /// Method chaining pattern for suggesting common chaining methods
 public struct MethodChainingPattern: CodePattern {
     public init() {}
-    
+
     public func generateSuggestion(for context: CompletionContextModel) -> CompletionItemModel? {
         // Suggest common chaining methods
         if context.currentWord.isEmpty && context.lineText.hasSuffix(".") {
@@ -33,7 +33,7 @@ public struct MethodChainingPattern: CodePattern {
 /// Property access pattern for suggesting common properties
 public struct PropertyAccessPattern: CodePattern {
     public init() {}
-    
+
     public func generateSuggestion(for context: CompletionContextModel) -> CompletionItemModel? {
         // Suggest common properties
         if context.currentWord.hasPrefix(".") {
@@ -54,7 +54,7 @@ public struct PropertyAccessPattern: CodePattern {
 /// Function call pattern for suggesting parameter completions
 public struct FunctionCallPattern: CodePattern {
     public init() {}
-    
+
     public func generateSuggestion(for context: CompletionContextModel) -> CompletionItemModel? {
         // Suggest function parameter completion
         if context.lineText.contains("(") && !context.lineText.contains(")") {
@@ -74,7 +74,7 @@ public struct FunctionCallPattern: CodePattern {
 /// Registry for managing code patterns
 public struct CodePatternRegistry {
     private var patterns: [CodePattern] = []
-    
+
     public init() {
         // Register default patterns
         patterns = [
@@ -83,13 +83,13 @@ public struct CodePatternRegistry {
             FunctionCallPattern()
         ]
     }
-    
+
     /// Register a new code pattern
     /// - Parameter pattern: The pattern to register
     public mutating func register(_ pattern: CodePattern) {
         patterns.append(pattern)
     }
-    
+
     /// Generate suggestions from all registered patterns
     /// - Parameter context: The current completion context
     /// - Returns: Array of completion suggestions

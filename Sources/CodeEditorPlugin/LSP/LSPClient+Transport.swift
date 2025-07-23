@@ -10,7 +10,7 @@ extension LSPClient {
         self.init()
         self.transport = transport
     }
-    
+
     /// Connect using server configuration that automatically selects appropriate transport
     /// - Parameters:
     ///   - configuration: Unified server configuration
@@ -19,7 +19,7 @@ extension LSPClient {
         // Create appropriate transport based on configuration
         let transport = try await configuration.createTransport()
         self.transport = transport
-        
+
         // Extract base configuration
         let baseConfig: ServerConfiguration
         switch configuration {
@@ -39,7 +39,7 @@ extension LSPClient {
                 serverArguments: []
             )
         }
-        
+
         // Connect using the base implementation
         try await connect(configuration: baseConfig)
     }

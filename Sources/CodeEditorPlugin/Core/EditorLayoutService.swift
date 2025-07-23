@@ -12,14 +12,14 @@ import UIKit
 @MainActor
 public final class EditorLayoutService {
     // MARK: - Types
-    
+
     public struct ComponentFrames {
         public let containerFrame: CGRect
         public let textViewFrame: CGRect
         public let gutterFrame: CGRect
         public let minimapFrame: CGRect
         public let scrollViewFrame: CGRect
-        
+
         public init(
             containerFrame: CGRect,
             textViewFrame: CGRect,
@@ -34,29 +34,29 @@ public final class EditorLayoutService {
             self.scrollViewFrame = scrollViewFrame
         }
     }
-    
+
     public struct EdgeInsets: Sendable {
         public let top: CGFloat
         public let left: CGFloat
         public let bottom: CGFloat
         public let right: CGFloat
-        
+
         public init(top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat) {
             self.top = top
             self.left = left
             self.bottom = bottom
             self.right = right
         }
-        
+
         public static let zero = Self(top: 0, left: 0, bottom: 0, right: 0)
     }
-    
+
     public struct LayoutOptimizations {
         public let useMinimapOptimization: Bool
         public let useGutterOptimization: Bool
         public let useScrollOptimization: Bool
         public let recommendedAnimationDuration: TimeInterval
-        
+
         public init(
             useMinimapOptimization: Bool,
             useGutterOptimization: Bool,
@@ -69,7 +69,7 @@ public final class EditorLayoutService {
             self.recommendedAnimationDuration = recommendedAnimationDuration
         }
     }
-    
+
     public struct LayoutConstraints {
         public let minimumGutterWidth: CGFloat
         public let maximumGutterWidth: CGFloat
@@ -77,7 +77,7 @@ public final class EditorLayoutService {
         public let minimumMinimapWidth: CGFloat
         public let maximumMinimapWidth: CGFloat
         public let safeAreaInsets: EdgeInsets
-        
+
         public init(
             minimumGutterWidth: CGFloat = 40.0,
             maximumGutterWidth: CGFloat = 200.0,
@@ -94,29 +94,29 @@ public final class EditorLayoutService {
             self.safeAreaInsets = safeAreaInsets
         }
     }
-    
+
     // MARK: - Properties
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "EditorLayoutService")
     private let gutterSizingService: GutterSizingService
-    
+
     // Layout constants
     private let minimapWidthRatio: CGFloat = 0.15 // 15% of container width
     private let gutterWidthRatio: CGFloat = 0.08   // 8% of container width
     private let animationDuration: TimeInterval = 0.25
-    
+
     // Cache for layout calculations
     private var layoutCache: [String: ComponentFrames] = [:]
     private let maxCacheSize = 10
-    
+
     // MARK: - Initialization
-    
+
     public init(gutterSizingService: GutterSizingService) {
         self.gutterSizingService = gutterSizingService
     }
-    
+
     // MARK: - Public Interface
-    
+
     /// Calculates component frames for the given container bounds and configuration
     public func calculateComponentFrames(
         containerBounds: CGRect,
@@ -130,24 +130,24 @@ public final class EditorLayoutService {
             constraints: constraints,
             lineCount: lineCount
         )
-        
+
         if let cached = layoutCache[cacheKey] {
             return cached
         }
-        
+
         let frames = performLayoutCalculation(
             containerBounds: containerBounds,
             configuration: configuration,
             constraints: constraints,
             lineCount: lineCount
         )
-        
+
         // Cache the result
         cacheLayout(cacheKey: cacheKey, frames: frames)
-        
+
         return frames
     }
-    
+
     /// Calculates text container insets based on configuration and component visibility
     public func calculateTextContainerInsets(
         configuration: EditorConfiguration,
@@ -161,7 +161,7 @@ public final class EditorLayoutService {
             bottom: safeAreaInsets.bottom,
             right: safeAreaInsets.right
         )
-        
+
         // Add gutter width to left inset if gutter is visible
         if gutterVisible {
             insets = EdgeInsets(
@@ -171,7 +171,7 @@ public final class EditorLayoutService {
                 right: insets.right
             )
         }
-        
+
         // Add standard text padding
         let textPadding = calculateTextPadding(configuration: configuration)
         insets = EdgeInsets(
@@ -180,10 +180,10 @@ public final class EditorLayoutService {
             bottom: insets.bottom + textPadding.bottom,
             right: insets.right + textPadding.right
         )
-        
+
         return insets
     }
-    
+
     /// Optimizes layout based on configuration and available space
     public func optimizeLayoutForConfiguration(
         _ configuration: EditorConfiguration,
@@ -191,7 +191,7 @@ public final class EditorLayoutService {
     ) -> LayoutOptimizations {
         let hasLimitedWidth = availableSpace.width < 600
         let hasLimitedHeight = availableSpace.height < 400
-        
+
         return LayoutOptimizations(
             useMinimapOptimization: configuration.display.showMinimap && !hasLimitedWidth,
             useGutterOptimization: configuration.display.isLineNumbersEnabled,
@@ -199,29 +199,29 @@ public final class EditorLayoutService {
             recommendedAnimationDuration: calculateOptimalAnimationDuration(for: configuration)
         )
     }
-    
+
     /// Calculates optimal Z-positioning for components
     public func calculateZPositions(configuration _: EditorConfiguration) -> [String: CGFloat] {
         var zPositions: [String: CGFloat] = [:]
-        
+
         // Base layer
         zPositions["textView"] = 0
-        
+
         // UI overlays
         zPositions["gutter"] = 10
         zPositions["minimap"] = 15
-        
+
         // Interactive elements
         zPositions["scrollbar"] = 20
         zPositions["searchOverlay"] = 25
-        
+
         // Temporary overlays
         zPositions["completionPopup"] = 100
         zPositions["tooltip"] = 150
-        
+
         return zPositions
     }
-    
+
     /// Determines if layout should animate based on change type
     public func shouldAnimateLayoutChange(
         from oldConfiguration: EditorConfiguration,
@@ -232,11 +232,11 @@ public final class EditorLayoutService {
            oldConfiguration.display.showMinimap != newConfiguration.display.showMinimap {
             return false
         }
-        
+
         // Animate for minor adjustments
         return true
     }
-    
+
     /// Calculates layout for specific display modes
     public func calculateLayoutForDisplayMode(
         _ mode: DisplayMode,
@@ -244,31 +244,31 @@ public final class EditorLayoutService {
         configuration: EditorConfiguration
     ) -> ComponentFrames {
         var adjustedConfiguration = configuration
-        
+
         switch mode {
         case .minimal:
             adjustedConfiguration.display.showMinimap = false
             adjustedConfiguration.display.isLineNumbersEnabled = false
-            
+
         case .standard:
             // Use configuration as-is
             break
-            
+
         case .presentation:
             adjustedConfiguration.display.fontSize = max(configuration.display.fontSize, 18)
             adjustedConfiguration.display.showMinimap = true
-            
+
         case .debugging:
             adjustedConfiguration.display.isLineNumbersEnabled = true
             adjustedConfiguration.display.enableAnnotations = true
         }
-        
+
         return calculateComponentFrames(
             containerBounds: containerBounds,
             configuration: adjustedConfiguration
         )
     }
-    
+
     /// Updates layout for responsive design
     public func calculateResponsiveLayout(
         containerBounds: CGRect,
@@ -276,22 +276,22 @@ public final class EditorLayoutService {
         screenSize: ScreenSize
     ) -> ComponentFrames {
         let constraints = createResponsiveConstraints(for: screenSize)
-        
+
         return calculateComponentFrames(
             containerBounds: containerBounds,
             configuration: configuration,
             constraints: constraints
         )
     }
-    
+
     // MARK: - Cache Management
-    
+
     /// Clears the layout cache
     public func clearCache() {
         layoutCache.removeAll()
         logger.debug("Layout cache cleared")
     }
-    
+
     /// Invalidates cache for specific configuration
     public func invalidateCache(for configuration: EditorConfiguration) {
         let configHash = String(configuration.hashValue)
@@ -326,7 +326,7 @@ extension EditorLayoutService {
         lineCount: Int
     ) -> ComponentFrames {
         let adjustedBounds = applyConstraints(containerBounds, constraints: constraints)
-        
+
         // Calculate gutter frame
         let gutterFrame = calculateGutterFrame(
             containerBounds: adjustedBounds,
@@ -334,7 +334,7 @@ extension EditorLayoutService {
             constraints: constraints,
             lineCount: lineCount
         )
-        
+
         // Calculate minimap frame
         let minimapFrame = calculateMinimapFrame(
             containerBounds: adjustedBounds,
@@ -342,7 +342,7 @@ extension EditorLayoutService {
             constraints: constraints,
             gutterFrame: gutterFrame
         )
-        
+
         // Calculate text view frame
         let textViewFrame = calculateTextViewFrame(
             containerBounds: adjustedBounds,
@@ -350,13 +350,13 @@ extension EditorLayoutService {
             minimapFrame: minimapFrame,
             configuration: configuration
         )
-        
+
         // Calculate scroll view frame (encompasses text view)
         let scrollViewFrame = calculateScrollViewFrame(
             textViewFrame: textViewFrame,
             configuration: configuration
         )
-        
+
         return ComponentFrames(
             containerFrame: adjustedBounds,
             textViewFrame: textViewFrame,
@@ -365,7 +365,7 @@ extension EditorLayoutService {
             scrollViewFrame: scrollViewFrame
         )
     }
-    
+
     func calculateGutterFrame(
         containerBounds: CGRect,
         configuration: EditorConfiguration,
@@ -375,19 +375,19 @@ extension EditorLayoutService {
         guard configuration.display.isLineNumbersEnabled else {
             return .zero
         }
-        
+
         let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize)
         let sizingResult = gutterSizingService.calculateOptimalWidth(
             lineCount: lineCount,
             font: font,
             configuration: configuration
         )
-        
+
         let width = max(
             constraints.minimumGutterWidth,
             min(constraints.maximumGutterWidth, sizingResult.recommendedWidth)
         )
-        
+
         return CGRect(
             x: containerBounds.minX,
             y: containerBounds.minY,
@@ -395,7 +395,7 @@ extension EditorLayoutService {
             height: containerBounds.height
         )
     }
-    
+
     func calculateMinimapFrame(
         containerBounds: CGRect,
         configuration: EditorConfiguration,
@@ -405,15 +405,15 @@ extension EditorLayoutService {
         guard configuration.display.showMinimap else {
             return .zero
         }
-        
+
         let availableWidth = containerBounds.width - gutterFrame.width
         let proposedWidth = availableWidth * minimapWidthRatio
-        
+
         let width = max(
             constraints.minimumMinimapWidth,
             min(constraints.maximumMinimapWidth, proposedWidth)
         )
-        
+
         return CGRect(
             x: containerBounds.maxX - width,
             y: containerBounds.minY,
@@ -421,7 +421,7 @@ extension EditorLayoutService {
             height: containerBounds.height
         )
     }
-    
+
     func calculateTextViewFrame(
         containerBounds: CGRect,
         gutterFrame: CGRect,
@@ -430,10 +430,10 @@ extension EditorLayoutService {
     ) -> CGRect {
         let leftMargin = gutterFrame.width
         let rightMargin = minimapFrame.width
-        
+
         let x = containerBounds.minX + leftMargin
         let width = containerBounds.width - leftMargin - rightMargin
-        
+
         return CGRect(
             x: x,
             y: containerBounds.minY,
@@ -441,7 +441,7 @@ extension EditorLayoutService {
             height: containerBounds.height
         )
     }
-    
+
     func calculateScrollViewFrame(
         textViewFrame: CGRect,
         configuration _: EditorConfiguration
@@ -449,13 +449,13 @@ extension EditorLayoutService {
         // Scroll view encompasses the text view
         textViewFrame
     }
-    
+
     func calculateTextPadding(configuration: EditorConfiguration) -> EdgeInsets {
         let basePadding: CGFloat = 8.0
         let scaleFactor = configuration.display.fontSize / 14.0 // Scale with font size
-        
+
         let adjustedPadding = basePadding * scaleFactor
-        
+
         return EdgeInsets(
             top: adjustedPadding,
             left: adjustedPadding,
@@ -463,12 +463,12 @@ extension EditorLayoutService {
             right: adjustedPadding
         )
     }
-    
+
     func calculateOptimalAnimationDuration(for _: EditorConfiguration) -> TimeInterval {
         // Faster animations for better perceived performance
         animationDuration * 0.8
     }
-    
+
     func applyConstraints(_ bounds: CGRect, constraints: LayoutConstraints) -> CGRect {
         CGRect(
             x: bounds.minX + constraints.safeAreaInsets.left,
@@ -477,7 +477,7 @@ extension EditorLayoutService {
             height: bounds.height - constraints.safeAreaInsets.top - constraints.safeAreaInsets.bottom
         )
     }
-    
+
     func createResponsiveConstraints(for screenSize: ScreenSize) -> LayoutConstraints {
         switch screenSize {
         case .compact:
@@ -488,7 +488,7 @@ extension EditorLayoutService {
                 minimumMinimapWidth: 0, // Disable minimap on compact screens
                 maximumMinimapWidth: 0
             )
-            
+
         case .regular:
             return LayoutConstraints(
                 minimumGutterWidth: 40,
@@ -497,14 +497,14 @@ extension EditorLayoutService {
                 minimumMinimapWidth: 60,
                 maximumMinimapWidth: 120
             )
-            
+
         case .large:
             return LayoutConstraints() // Use defaults
         }
     }
-    
+
     // MARK: - Cache Helpers
-    
+
     func generateCacheKey(
         bounds: CGRect,
         configuration: EditorConfiguration,
@@ -514,10 +514,10 @@ extension EditorLayoutService {
         let boundsKey = "\(Int(bounds.width))x\(Int(bounds.height))"
         let configHash = String(configuration.hashValue)
         let constraintsKey = "\(Int(constraints.minimumGutterWidth))_\(Int(constraints.maximumGutterWidth))"
-        
+
         return "\(boundsKey)_\(configHash)_\(constraintsKey)_\(lineCount)"
     }
-    
+
     func cacheLayout(cacheKey: String, frames: ComponentFrames) {
         if layoutCache.count >= maxCacheSize,
            let oldestKey = layoutCache.keys.first {
@@ -544,7 +544,7 @@ extension EditorLayoutService {
             lineCount: lineCount
         )
     }
-    
+
     /// Determines if layout needs updating
     public func layoutNeedsUpdate(
         currentFrames: ComponentFrames,
@@ -555,10 +555,10 @@ extension EditorLayoutService {
             containerBounds: newBounds,
             configuration: configuration
         )
-        
+
         // Check if any significant frame changed
         let threshold: CGFloat = 1.0
-        
+
         return !newFrames.containerFrame.equalTo(currentFrames.containerFrame, threshold: threshold) ||
                !newFrames.textViewFrame.equalTo(currentFrames.textViewFrame, threshold: threshold) ||
                !newFrames.gutterFrame.equalTo(currentFrames.gutterFrame, threshold: threshold) ||

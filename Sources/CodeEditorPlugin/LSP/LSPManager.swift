@@ -73,19 +73,19 @@ import Combine
 @MainActor
 public final class LSPManager: ObservableObject {
     // MARK: - State
-    
+
     /// Client registry for managing LSP servers
     private let clientRegistry: LSPClientRegistry
-    
+
     /// Document manager for handling document synchronization
     private let documentManager: LSPDocumentManager
-    
+
     /// Active LSP clients (delegated to client registry)
     @Published public private(set) var activeClients: [String: LSPClient] = [:]
-    
+
     /// Registered language server configurations (delegated to client registry)
     @Published public private(set) var serverConfigurations: [String: LanguageServerConfig] = [:]
-    
+
     /// Current workspace root
     public var workspaceRoot: URL? {
         didSet {
@@ -98,23 +98,23 @@ public final class LSPManager: ObservableObject {
             }
         }
     }
-    
+
     // MARK: - Initialization
-    
+
     private let memoryMonitor: MemoryMonitor
-    
+
     public init(memoryMonitor: MemoryMonitor, workspaceRoot: URL? = nil) {
         self.clientRegistry = LSPClientRegistry()
         self.documentManager = LSPDocumentManager(clientRegistry: clientRegistry)
         self.memoryMonitor = memoryMonitor
-        
+
         // Set workspace root on client registry
         self.workspaceRoot = workspaceRoot
         self.clientRegistry.workspaceRoot = workspaceRoot
-        
+
         // Sync published properties with client registry
         syncPublishedProperties()
-        
+
         // Register with memory monitor after initialization
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -125,21 +125,21 @@ public final class LSPManager: ObservableObject {
                 guard let self else {
                     return CleanupResult(memoryFreedMB: 0, description: "LSPManager deallocated")
                 }
-                
+
                 let beforeClientCount = self.activeClients.count
                 let beforeDocumentCount = self.documentManager.getAllDocuments().count
-                
+
                 // Cleanup through components
                 self.clientRegistry.cleanup()
                 self.documentManager.cleanup()
-                
+
                 // Clear published state
                 self.activeClients.removeAll()
                 self.serverConfigurations.removeAll()
-                
+
                 // Estimate memory freed (rough estimate)
                 let estimatedMemoryMB = Double(beforeClientCount) * 5.0 + Double(beforeDocumentCount) * 0.1
-                
+
                 return CleanupResult(
                     memoryFreedMB: estimatedMemoryMB,
                     description: "Disconnected \(beforeClientCount) LSP clients and cleared \(beforeDocumentCount) documents"
@@ -147,37 +147,37 @@ public final class LSPManager: ObservableObject {
             }
         }
     }
-    
+
     deinit {
         // Note: Cannot access @MainActor isolated properties in deinit
         // Components will be automatically cleaned up by ARC
     }
-    
+
     // MARK: - Configuration Management
-    
+
     /// Register a language server configuration
     /// - Parameter config: Server configuration
     public func registerLanguageServer(_ config: LanguageServerConfig) {
         clientRegistry.registerLanguageServer(config)
         syncPublishedProperties()
     }
-    
+
     /// Unregister a language server configuration
     /// - Parameter languageId: Language identifier
     public func unregisterLanguageServer(for languageId: String) {
         clientRegistry.unregisterLanguageServer(for: languageId)
         syncPublishedProperties()
     }
-    
+
     /// Get language ID for a file extension
     /// - Parameter fileExtension: File extension (with or without dot)
     /// - Returns: Language ID if found
     public func languageId(for fileExtension: String) -> String? {
         clientRegistry.languageId(for: fileExtension)
     }
-    
+
     // MARK: - Client Management
-    
+
     /// Start a language server for the given language
     /// - Parameters:
     ///   - languageId: Language identifier
@@ -187,35 +187,35 @@ public final class LSPManager: ObservableObject {
         retryConfig: LSPRetryConfiguration? = nil
     ) async throws {
         try await clientRegistry.startLanguageServer(for: languageId, retryConfig: retryConfig)
-        
+
         // Reopen any documents for this language
         await documentManager.reopenDocuments(for: languageId)
-        
+
         syncPublishedProperties()
     }
-    
+
     /// Stop a language server
     /// - Parameter languageId: Language identifier
     public func stopLanguageServer(for languageId: String) {
         clientRegistry.stopLanguageServer(for: languageId)
         syncPublishedProperties()
     }
-    
+
     /// Stop all running language servers
     public func stopAllServers() {
         clientRegistry.stopAllServers()
         syncPublishedProperties()
     }
-    
+
     /// Get LSP client for a language
     /// - Parameter languageId: Language identifier
     /// - Returns: LSP client if available
     public func client(for languageId: String) -> LSPClient? {
         clientRegistry.client(for: languageId)
     }
-    
+
     // MARK: - Document Management
-    
+
     /// Open a document in the appropriate LSP server
     /// - Parameters:
     ///   - filePath: Path to the file
@@ -233,7 +233,7 @@ public final class LSPManager: ObservableObject {
         )
         syncPublishedProperties()
     }
-    
+
     /// Update document content
     /// - Parameters:
     ///   - filePath: Path to the file
@@ -250,15 +250,15 @@ public final class LSPManager: ObservableObject {
             changes: changes
         )
     }
-    
+
     /// Close a document
     /// - Parameter filePath: Path to the file
     public func closeDocument(filePath: String) async throws {
         try await documentManager.closeDocument(filePath: filePath)
     }
-    
+
     // MARK: - Language Features
-    
+
     /// Request completion for a file position
     /// - Parameters:
     ///   - filePath: Path to the file
@@ -271,18 +271,18 @@ public final class LSPManager: ObservableObject {
         character: Int
     ) async throws -> [LSPManagerCompletionItem] {
         let uri = "file://\(filePath)"
-        
+
         guard let document = documentManager.getDocument(for: filePath) else {
             return []
         }
-        
+
         guard let client = clientRegistry.client(for: document.languageId) else {
             return []
         }
-        
+
         let position = Position(line: line, character: character)
         let completionList = try await client.requestCompletion(uri: uri, position: position)
-        
+
         return completionList.items.map { lspItem in
             // Convert LSP completion item to our completion item format
             let documentationText: String? = {
@@ -297,7 +297,7 @@ public final class LSPManager: ObservableObject {
                     return nil
                 }
             }()
-            
+
             let convertedItem = CompletionItemAdapter(
                 CompletionItemModel(
                     label: lspItem.label,
@@ -310,7 +310,7 @@ public final class LSPManager: ObservableObject {
             return LSPManagerCompletionItem(item: convertedItem, languageId: document.languageId, client: client)
         } as [LSPManagerCompletionItem]
     }
-    
+
     /// Request hover information
     /// - Parameters:
     ///   - filePath: Path to the file
@@ -323,19 +323,19 @@ public final class LSPManager: ObservableObject {
         character: Int
     ) async throws -> Hover? {
         let uri = "file://\(filePath)"
-        
+
         guard let document = documentManager.getDocument(for: filePath) else {
             return nil
         }
-        
+
         guard let client = clientRegistry.client(for: document.languageId) else {
             return nil
         }
-        
+
         let position = Position(line: line, character: character)
         return try await client.requestHover(uri: uri, position: position)
     }
-    
+
     /// Request symbol definition
     /// - Parameters:
     ///   - filePath: Path to the file
@@ -348,67 +348,67 @@ public final class LSPManager: ObservableObject {
         character: Int
     ) async throws -> [Location] {
         let uri = "file://\(filePath)"
-        
+
         guard let document = documentManager.getDocument(for: filePath) else {
             return []
         }
-        
+
         guard let client = clientRegistry.client(for: document.languageId) else {
             return []
         }
-        
+
         let position = Position(line: line, character: character)
         return try await client.requestDefinition(uri: uri, position: position)
     }
-    
+
     /// Get diagnostics for a file
     /// - Parameter filePath: Path to the file
     /// - Returns: Diagnostics for the file
     public func getDiagnostics(for filePath: String) -> [LSPDiagnostic] {
         let uri = "file://\(filePath)"
-        
+
         guard let document = documentManager.getDocument(for: filePath) else {
             return []
         }
-        
+
         guard let client = clientRegistry.client(for: document.languageId) else {
             return []
         }
-        
+
         return client.diagnostics[uri] ?? []
     }
-    
+
     // MARK: - Language Server Availability
-    
+
     /// Check if a language server is available for the given configuration
     /// - Parameter config: Language server configuration to check
     /// - Returns: True if the server executable can be found
     public func isLanguageServerAvailable(_ config: LanguageServerConfig) -> Bool {
         clientRegistry.isLanguageServerAvailable(config)
     }
-    
+
     /// Get all available paths for a language server executable
     /// - Parameter executableName: Name of the executable (e.g., "typescript-language-server")
     /// - Returns: Array of absolute paths where the executable was found
     public func findLanguageServerPaths(for executableName: String) -> [String] {
         clientRegistry.findLanguageServerPaths(for: executableName)
     }
-    
+
     /// Get availability status for all configured language servers
     /// - Returns: Dictionary mapping language IDs to availability status
     public func getLanguageServerAvailability() -> [String: Bool] {
         clientRegistry.getLanguageServerAvailability()
     }
-    
+
     /// Resolve the actual path that would be used for a language server
     /// - Parameter config: Language server configuration
     /// - Returns: The resolved absolute path, or nil if not found
     public func resolveLanguageServerPath(_ config: LanguageServerConfig) -> String? {
         clientRegistry.resolveLanguageServerPath(config)
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Sync published properties with client registry state
     private func syncPublishedProperties() {
         activeClients = clientRegistry.activeClients
@@ -417,4 +417,3 @@ public final class LSPManager: ObservableObject {
 }
 
 #endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
-    

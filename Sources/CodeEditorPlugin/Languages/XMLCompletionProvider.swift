@@ -13,7 +13,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         "minInclusive", "maxInclusive", "minExclusive", "maxExclusive", "length",
         "minLength", "maxLength", "totalDigits", "fractionDigits"
     ]
-    
+
     // XML Schema elements
     private let schemaElements = [
         "schema", "element", "attribute", "complexType", "simpleType", "sequence",
@@ -24,7 +24,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         "appinfo", "import", "include", "redefine", "notation", "any", "anyAttribute",
         "unique", "key", "keyref", "selector", "field"
     ]
-    
+
     // Common XML attributes
     private let commonAttributes = [
         "id", "name", "type", "ref", "use", "default", "fixed", "form", "minOccurs",
@@ -33,7 +33,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         "xmlns:xsi", "xsi:schemaLocation", "xsi:noNamespaceSchemaLocation", "version",
         "encoding", "standalone", "xml:lang", "xml:space", "xml:base"
     ]
-    
+
     // XML namespaces
     private let namespaces = [
         ("xmlns", "http://www.w3.org/2000/xmlns/"),
@@ -47,14 +47,14 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         ("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
         ("atom", "http://www.w3.org/2005/Atom")
     ]
-    
+
     // XML entities
     private let entities = [
         "&lt;", "&gt;", "&amp;", "&quot;", "&apos;", "&#160;", "&#169;", "&#174;",
         "&#8482;", "&#8364;", "&#163;", "&#165;", "&#162;", "&#176;", "&#177;",
         "&#181;", "&#182;", "&#167;", "&#247;", "&#215;", "&#172;", "&#173;"
     ]
-    
+
     // XML Schema types
     private let schemaTypes = [
         "string", "boolean", "decimal", "float", "double", "duration", "dateTime",
@@ -65,7 +65,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         "long", "int", "short", "byte", "nonNegativeInteger", "unsignedLong",
         "unsignedInt", "unsignedShort", "unsignedByte", "positiveInteger"
     ]
-    
+
     // SVG specific elements (for SVG files)
     private let svgElements = [
         "svg", "g", "rect", "circle", "ellipse", "line", "polyline", "polygon",
@@ -75,9 +75,9 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         "defs", "title", "desc", "metadata", "script", "style", "animate",
         "animateMotion", "animateTransform", "animateColor", "set", "mpath"
     ]
-    
+
     // MARK: - Overrides
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
@@ -113,7 +113,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
            targetNamespace="${1:http://example.com/schema}"
            xmlns="${1:http://example.com/schema}"
            elementFormDefault="qualified">
-    
+
     <xs:element name="${2:root}">
         <xs:complexType>
             <xs:sequence>
@@ -121,7 +121,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
             </xs:sequence>
         </xs:complexType>
     </xs:element>
-    
+
 </xs:schema>
 """,
             description: "XML Schema template"
@@ -168,9 +168,9 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     // MARK: - Initialization
-    
+
     public init() {
         super.init(
             id: "xml-builtin",
@@ -179,49 +179,49 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - Overridden Methods
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeXMLContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .tag:
             items.append(contentsOf: createTagCompletions(for: analysisResult.fileType, filter: analysisResult.filter))
-            
+
         case .attribute:
             items.append(contentsOf: createAttributeCompletions(for: analysisResult.targetTag, fileType: analysisResult.fileType, filter: analysisResult.filter))
-            
+
         case .attributeValue:
             items.append(contentsOf: createAttributeValueCompletions(for: analysisResult.targetTag, attribute: analysisResult.targetAttribute, fileType: analysisResult.fileType, filter: analysisResult.filter))
-            
+
         case .entity:
             items.append(contentsOf: createEntityCompletions(filter: analysisResult.filter))
-            
+
         case .closeTag:
             if let tagToClose = analysisResult.targetTag {
                 items.append(createCloseTagCompletion(for: tagToClose))
             }
-            
+
         case .namespace:
             items.append(contentsOf: createNamespaceCompletions(filter: analysisResult.filter))
-            
+
         case .declaration:
             items.append(contentsOf: createDeclarationCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             if supportsSnippets {
                 items.append(contentsOf: createSnippetCompletions(filter: analysisResult.filter))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -229,51 +229,51 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         if text.hasSuffix("&") {
             return "&"
         }
-        
+
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-:&")).inverted)
         return components.last ?? ""
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeXMLContext(_ context: CompletionContextModel) -> XMLContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
         let fileType = detectFileType(from: context.text)
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for declaration context (<?xml or <!)
         if beforeCursor.hasSuffix("<?") || beforeCursor.hasSuffix("<!") {
             return XMLContextAnalysisResult(type: .declaration, filter: filter, fileType: fileType)
         }
-        
+
         // Check for entity context
         if beforeCursor.hasSuffix("&") || (filter.hasPrefix("&") && !filter.hasSuffix(";")) {
             return XMLContextAnalysisResult(type: .entity, filter: filter, fileType: fileType)
         }
-        
+
         // Check for namespace context
         if beforeCursor.hasSuffix("xmlns:") || beforeCursor.hasSuffix("xmlns=") {
             return XMLContextAnalysisResult(type: .namespace, filter: filter, fileType: fileType)
         }
-        
+
         // Check for closing tag
         if beforeCursor.hasSuffix("</") {
             let openTag = findUnclosedTag(in: beforeCursor)
             return XMLContextAnalysisResult(type: .closeTag, filter: filter, fileType: fileType, targetTag: openTag)
         }
-        
+
         // Check for opening tag
         if beforeCursor.hasSuffix("<") || (beforeCursor.contains("<") && !beforeCursor.contains(">") && isInTag(beforeCursor)) {
             return XMLContextAnalysisResult(type: .tag, filter: filter, fileType: fileType)
         }
-        
+
         // Check for attribute context
         if let tagContext = getCurrentTagContext(from: beforeCursor) {
             // Check if we're in attribute value
@@ -285,39 +285,39 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 return XMLContextAnalysisResult(type: .attribute, filter: filter, fileType: fileType, targetTag: tagContext)
             }
         }
-        
+
         return XMLContextAnalysisResult(type: .general, filter: filter, fileType: fileType)
     }
-    
+
     private func detectFileType(from text: String) -> XMLFileType {
         // Check for XML Schema
         if text.contains("xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"") || text.contains("<xs:schema") {
             return .schema
         }
-        
+
         // Check for XSLT
         if text.contains("xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"") || text.contains("<xsl:stylesheet") {
             return .xslt
         }
-        
+
         // Check for SVG
         if text.contains("xmlns=\"http://www.w3.org/2000/svg\"") || text.contains("<svg") {
             return .svg
         }
-        
+
         // Check for SOAP
         if text.contains("soap:Envelope") || text.contains("xmlns:soap=") {
             return .soap
         }
-        
+
         // Check for RSS/Atom
         if text.contains("<rss") || text.contains("<feed") || text.contains("<atom:feed") {
             return .feed
         }
-        
+
         return .generic
     }
-    
+
     private func getCurrentTagContext(from text: String) -> String? {
         // Find the most recent unclosed tag
         let pattern = #"<(\w+(?::\w+)?)\s*[^>]*$"#
@@ -328,7 +328,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func getCurrentAttributeContext(from text: String) -> String? {
         // Find the current attribute being edited
         let pattern = #"(\w+(?::\w+)?)\s*=\s*[\"']?[^\"']*$"#
@@ -339,15 +339,15 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func findUnclosedTag(in text: String) -> String? {
         // Simple approach: find the most recent opening tag without a closing tag
         var tagStack: [String] = []
         let tagPattern = #"<(/)?(\w+(?::\w+)?)[^>]*>"#
-        
+
         if let regex = try? NSRegularExpression(pattern: tagPattern) {
             let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
-            
+
             for match in matches {
                 if let closeRange = Range(match.range(at: 1), in: text),
                    let tagRange = Range(match.range(at: 2), in: text) {
@@ -369,32 +369,32 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 }
             }
         }
-        
+
         return tagStack.last
     }
-    
+
     private func isInTag(_ text: String) -> Bool {
         let lastOpenBracket = text.lastIndex(of: "<") ?? text.startIndex
         let lastCloseBracket = text.lastIndex(of: ">") ?? text.startIndex
         return lastOpenBracket > lastCloseBracket
     }
-    
+
     private func isInAttributePosition(_ text: String) -> Bool {
         // Check if we're inside a tag and after the tag name
         guard isInTag(text) else { return false }
-        
+
         let pattern = #"<\w+(?::\w+)?\s+[^>]*$"#
         if let regex = try? NSRegularExpression(pattern: pattern) {
             return regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
         }
         return false
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createTagCompletions(for fileType: XMLFileType, filter: String) -> [CompletionItemModel] {
         var elements: [String] = []
-        
+
         switch fileType {
         case .schema:
             elements = schemaElements
@@ -414,14 +414,14 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         case .generic:
             elements = commonElements
         }
-        
+
         return elements
             .filter { element in
                 filter.isEmpty || element.localizedCaseInsensitiveContains(filter)
             }
             .map { element in
                 let insertText = element.contains(" ") ? element : "\(element)>$0</\(element)>"
-                
+
                 return CompletionItemModel(
                     label: element,
                     insertText: insertText,
@@ -432,22 +432,22 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createAttributeCompletions(for _: String?, fileType: XMLFileType, filter: String) -> [CompletionItemModel] {
         var attributes = commonAttributes
-        
+
         // Add namespace-specific attributes for schema files
         if fileType == .schema {
             attributes.append(contentsOf: ["base", "itemType", "memberTypes", "mixed", "processContents", "namespace", "schemaLocation", "public", "system"])
         }
-        
+
         return attributes
             .filter { attribute in
                 filter.isEmpty || attribute.localizedCaseInsensitiveContains(filter)
             }
             .map { attribute in
                 let insertText = "\(attribute)=\"$0\""
-                
+
                 return CompletionItemModel(
                     label: attribute,
                     insertText: insertText,
@@ -457,45 +457,45 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createAttributeValueCompletions(for _: String?, attribute: String?, fileType: XMLFileType, filter: String) -> [CompletionItemModel] {
         guard let attribute else { return [] }
-        
+
         var values: [String] = []
-        
+
         // Provide common values based on attribute
         switch attribute {
         case "type" where fileType == .schema:
             values = schemaTypes
-            
+
         case "use":
             values = ["required", "optional", "prohibited"]
-            
+
         case "processContents":
             values = ["strict", "lax", "skip"]
-            
+
         case "block", "final":
             values = ["restriction", "extension", "substitution", "#all"]
-            
+
         case "form":
             values = ["qualified", "unqualified"]
-            
+
         case "maxOccurs":
             values = ["unbounded", "0", "1"]
-            
+
         case "minOccurs":
             values = ["0", "1"]
-            
+
         case "standalone":
             values = ["yes", "no"]
-            
+
         case "xml:space":
             values = ["preserve", "default"]
-            
+
         default:
             break
         }
-        
+
         return values
             .filter { value in
                 filter.isEmpty || value.localizedCaseInsensitiveContains(filter)
@@ -510,7 +510,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createEntityCompletions(filter: String) -> [CompletionItemModel] {
         entities
             .filter { entity in
@@ -527,7 +527,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCloseTagCompletion(for tag: String) -> CompletionItemModel {
         CompletionItemModel(
             label: tag,
@@ -538,7 +538,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
             preselect: true
         )
     }
-    
+
     private func createNamespaceCompletions(filter: String) -> [CompletionItemModel] {
         namespaces
             .filter { prefix, _ in
@@ -554,10 +554,10 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createDeclarationCompletions(filter: String) -> [CompletionItemModel] {
         var items: [CompletionItemModel] = []
-        
+
         // XML declaration
         if filter.isEmpty || "xml".localizedCaseInsensitiveContains(filter) {
             items.append(CompletionItemModel(
@@ -568,7 +568,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 priority: 90
             ))
         }
-        
+
         // DOCTYPE
         if filter.isEmpty || "DOCTYPE".localizedCaseInsensitiveContains(filter) {
             items.append(CompletionItemModel(
@@ -579,7 +579,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 priority: 85
             ))
         }
-        
+
         // CDATA
         if filter.isEmpty || "CDATA".localizedCaseInsensitiveContains(filter) {
             items.append(CompletionItemModel(
@@ -590,7 +590,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
                 priority: 85
             ))
         }
-        
+
         return items
     }
 }
@@ -608,13 +608,13 @@ private struct XMLContextAnalysisResult {
         case declaration
         case general
     }
-    
+
     let type: CompletionType
     let filter: String
     let fileType: XMLFileType
     let targetTag: String?
     let targetAttribute: String?
-    
+
     init(type: CompletionType, filter: String, fileType: XMLFileType, targetTag: String? = nil, targetAttribute: String? = nil) {
         self.type = type
         self.filter = filter

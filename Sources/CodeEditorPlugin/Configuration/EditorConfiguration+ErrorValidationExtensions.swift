@@ -7,7 +7,7 @@ extension EditorConfiguration {
     /// - Throws: `DomainError.configuration` with detailed error information
     public func validateWithDomainError() throws {
         let errors = validate()
-        
+
         if !errors.isEmpty {
             let errorDescriptions = errors.map { error in
                 "\(error.field): \(error.constraint)"
@@ -17,7 +17,7 @@ extension EditorConfiguration {
             )
         }
     }
-    
+
     /// Validates a specific property and throws if invalid
     /// - Parameters:
     ///   - keyPath: The key path to the property to validate
@@ -34,7 +34,7 @@ extension EditorConfiguration {
                     reason: "Must be between \(PlatformConstants.validFontSizeRange.lowerBound) and \(PlatformConstants.validFontSizeRange.upperBound)"
                 )
             }
-            
+
         case \EditorConfiguration.layout.tabWidth:
             guard let tabWidth = value as? Int,
                   PlatformConstants.validTabWidthRange.contains(tabWidth) else {
@@ -44,7 +44,7 @@ extension EditorConfiguration {
                     reason: "Must be between \(PlatformConstants.validTabWidthRange.lowerBound) and \(PlatformConstants.validTabWidthRange.upperBound)"
                 )
             }
-            
+
         case \EditorConfiguration.layout.lineHeightMultiple:
             guard let lineHeight = value as? CGFloat,
                   PlatformConstants.validLineHeightMultipleRange.contains(lineHeight) else {
@@ -54,7 +54,7 @@ extension EditorConfiguration {
                     reason: "Must be between \(PlatformConstants.validLineHeightMultipleRange.lowerBound) and \(PlatformConstants.validLineHeightMultipleRange.upperBound)"
                 )
             }
-            
+
         case \EditorConfiguration.layout.gutterWidth:
             guard let gutterWidth = value as? CGFloat,
                   PlatformConstants.validGutterWidthRange.contains(gutterWidth) else {
@@ -64,7 +64,7 @@ extension EditorConfiguration {
                     reason: "Must be at least \(PlatformConstants.validGutterWidthRange.lowerBound)"
                 )
             }
-            
+
         case \EditorConfiguration.performance.maxSyntaxHighlightingLength:
             guard let maxLength = value as? Int,
                   PlatformConstants.validHighlightingLengthRange.contains(maxLength) else {
@@ -74,13 +74,13 @@ extension EditorConfiguration {
                     reason: "Must be at least \(PlatformConstants.validHighlightingLengthRange.lowerBound)"
                 )
             }
-            
+
         default:
             // For unvalidated properties, no error is thrown
             break
         }
     }
-    
+
     /// Checks for incompatible settings and throws if found
     /// - Throws: `ConfigurationError.incompatibleSettings` if incompatible settings are detected
     public func checkCompatibility() throws {
@@ -91,9 +91,9 @@ extension EditorConfiguration {
                 setting2: "behavior.enableCodeCompletion=true"
             )
         }
-        
+
         // Note: wrapLinesIndented was removed from Display configuration
-        
+
         if performance.maxSyntaxHighlightingLength == 0 && display.enableSyntaxHighlighting == true {
             throw ConfigurationDomainError.incompatibleSettings(
                 setting1: "performance.maxSyntaxHighlightingLength=0",
@@ -111,33 +111,33 @@ extension EditorConfiguration {
     /// - Throws: `ConfigurationError` if fixes cannot be applied
     public func withAutoFixes() throws -> EditorConfiguration {
         var fixed = self
-        
+
         // Fix font size
         if !PlatformConstants.validFontSizeRange.contains(display.fontSize) {
             fixed.display.fontSize = display.fontSize < PlatformConstants.validFontSizeRange.lowerBound
                 ? PlatformConstants.validFontSizeRange.lowerBound
                 : PlatformConstants.validFontSizeRange.upperBound
         }
-        
+
         // Fix tab width
         if !PlatformConstants.validTabWidthRange.contains(layout.tabWidth) {
             fixed.layout.tabWidth = layout.tabWidth < PlatformConstants.validTabWidthRange.lowerBound
                 ? PlatformConstants.validTabWidthRange.lowerBound
                 : PlatformConstants.validTabWidthRange.upperBound
         }
-        
+
         // Fix line height
         if !PlatformConstants.validLineHeightMultipleRange.contains(layout.lineHeightMultiple) {
             fixed.layout.lineHeightMultiple = layout.lineHeightMultiple < PlatformConstants.validLineHeightMultipleRange.lowerBound
                 ? PlatformConstants.validLineHeightMultipleRange.lowerBound
                 : PlatformConstants.validLineHeightMultipleRange.upperBound
         }
-        
+
         // Fix gutter width
         if !PlatformConstants.validGutterWidthRange.contains(layout.gutterWidth) {
             fixed.layout.gutterWidth = max(layout.gutterWidth, PlatformConstants.validGutterWidthRange.lowerBound)
         }
-        
+
         // Fix max highlighting length
         if !PlatformConstants.validHighlightingLengthRange.contains(performance.maxSyntaxHighlightingLength) {
             fixed.performance.maxSyntaxHighlightingLength = max(
@@ -145,17 +145,17 @@ extension EditorConfiguration {
                 PlatformConstants.validHighlightingLengthRange.lowerBound
             )
         }
-        
+
         // Fix incompatible settings
         if !fixed.behavior.isEditable && fixed.behavior.enableCodeCompletion {
             fixed.behavior.enableCodeCompletion = false
         }
-        
+
         // Note: wrapLinesIndented was removed from Display configuration
-        
+
         // Validate the fixed configuration
         try fixed.validateWithDomainError()
-        
+
         return fixed
     }
 }

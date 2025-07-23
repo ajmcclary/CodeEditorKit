@@ -30,7 +30,7 @@ extension PlatformColor {
         return withAlphaComponent(alpha)
         #endif
     }
-    
+
     /// Creates a color from RGBA components (0.0 to 1.0)
     public static func rgba(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat = 1.0) -> PlatformColor {
         #if canImport(UIKit)
@@ -39,7 +39,7 @@ extension PlatformColor {
         return NSColor(red: red, green: green, blue: blue, alpha: alpha)
         #endif
     }
-    
+
     /// Creates a color from HSB components
     public static func hsb(hue: CGFloat, saturation: CGFloat, brightness: CGFloat, alpha: CGFloat = 1.0) -> PlatformColor {
         #if canImport(UIKit)
@@ -48,19 +48,19 @@ extension PlatformColor {
         return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
         #endif
     }
-    
+
     /// Creates a color from a hex string (e.g., "#FF0000", "FF0000", "#F00")
     public convenience init?(hexString: String) {
         let hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
         let scanner = Scanner(string: hex.hasPrefix("#") ? String(hex.dropFirst()) : hex)
-        
+
         var hexNumber: UInt64 = 0
         guard scanner.scanHexInt64(&hexNumber) else { return nil }
-        
+
         let length = hex.count - (hex.hasPrefix("#") ? 1 : 0)
-        
+
         let red, green, blue, alpha: CGFloat
-        
+
         switch length {
         case 3: // RGB (12-bit)
             red = CGFloat((hexNumber & 0xF00) >> 8) / 15.0
@@ -86,14 +86,14 @@ extension PlatformColor {
         default:
             return nil
         }
-        
+
         #if canImport(UIKit)
         self.init(red: red, green: green, blue: blue, alpha: alpha)
         #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         self.init(red: red, green: green, blue: blue, alpha: alpha)
         #endif
     }
-    
+
     /// Returns the RGBA components of the color
     public var rgbaComponents: (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
         #if canImport(UIKit)
@@ -101,26 +101,26 @@ extension PlatformColor {
         var green: CGFloat = 0
         var blue: CGFloat = 0
         var alpha: CGFloat = 0
-        
+
         guard getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
             return nil
         }
-        
+
         return (red, green, blue, alpha)
         #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let color = usingColorSpace(.deviceRGB) else { return nil }
-        
+
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
         var alpha: CGFloat = 0
-        
+
         color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        
+
         return (red, green, blue, alpha)
         #endif
     }
-    
+
     /// Blends this color with another color by the specified amount
     /// - Parameters:
     ///   - color: The color to blend with
@@ -131,10 +131,10 @@ extension PlatformColor {
               let components2 = color.rgbaComponents else {
             return self
         }
-        
+
         let clampedAmount = max(0, min(1, amount))
         let inverseAmount = 1 - clampedAmount
-        
+
         return .rgba(
             red: components1.red * inverseAmount + components2.red * clampedAmount,
             green: components1.green * inverseAmount + components2.green * clampedAmount,
@@ -142,14 +142,14 @@ extension PlatformColor {
             alpha: components1.alpha * inverseAmount + components2.alpha * clampedAmount
         )
     }
-    
+
     /// Returns a lighter version of the color
     /// - Parameter amount: The amount to lighten (0.0 to 1.0)
     /// - Returns: The lightened color
     public func lightened(by amount: CGFloat = 0.2) -> PlatformColor {
         blended(with: .white, amount: amount)
     }
-    
+
     /// Returns a darker version of the color
     /// - Parameter amount: The amount to darken (0.0 to 1.0)
     /// - Returns: The darkened color
@@ -171,12 +171,12 @@ extension NSColor {
     public static var label: NSColor {
         .labelColor
     }
-    
+
     /// Convenience property to match UIColor API
     public static var secondaryLabel: NSColor {
         .secondaryLabelColor
     }
-    
+
     /// Convenience property to match UIColor API
     public static var tertiaryLabel: NSColor {
         .tertiaryLabelColor

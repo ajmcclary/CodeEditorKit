@@ -47,7 +47,7 @@ extension AsyncOperationManager {
     ) async throws -> T {
         let operationId = UUID()
         let scheduledTime = Date().addingTimeInterval(delay)
-        
+
         // Create scheduled operation
         let scheduled = ScheduledOperation(
             id: operationId,
@@ -55,30 +55,30 @@ extension AsyncOperationManager {
             operation: { try await operation() },
             scheduledTime: scheduledTime
         )
-        
+
         scheduledOperations[operationId] = scheduled
-        
+
         // Wait for execution slot
         while activeOperations.count >= maxConcurrentOperations {
             try await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
-        
+
         // Execute when ready
         activeOperations.insert(operationId)
         defer {
             activeOperations.remove(operationId)
             scheduledOperations.removeValue(forKey: operationId)
         }
-        
+
         // Apply delay if needed
         if delay > 0 {
             try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
-        
+
         // Execute operation
         return try await operation()
     }
-    
+
     /// Cancels scheduled operations that match the given predicate.
     ///
     /// This method allows selective cancellation of operations based on their
@@ -106,15 +106,15 @@ extension AsyncOperationManager {
     ///   through this method.
     public func cancelOperations(matching predicate: (UUID, Priority) -> Bool) {
         let toCancel = scheduledOperations.filter { predicate($0.key, $0.value.priority) }
-        
+
         for (id, _) in toCancel {
             scheduledOperations.removeValue(forKey: id)
             activeOperations.remove(id)
         }
-        
+
         logger.info("Cancelled \(toCancel.count) operations")
     }
-    
+
     /// Cancels all scheduled operations.
     ///
     /// This method immediately cancels all operations that haven't started executing.

@@ -10,7 +10,7 @@ import AppKit
 
 extension CodeEditorView {
     // MARK: - Public API
-    
+
     /// Adds an annotation to the text view at the specified range.
     ///
     /// Annotations appear as inline badges in the editor with custom content and styling.
@@ -61,7 +61,7 @@ extension CodeEditorView {
         annotationViews[id]?.removeFromSuperview()
         annotationViews.removeValue(forKey: id)
     }
-    
+
     /// Removes an annotation.
     ///
     /// Convenience method for removing an annotation by its instance.
@@ -93,7 +93,7 @@ extension CodeEditorView {
     @MainActor
     public func removeAllAnnotations() {
         // Call the internal method to clear the array
-        clearAnnotations() 
+        clearAnnotations()
         // Clear the annotation views
         annotationViews.values.forEach { $0.removeFromSuperview() }
         annotationViews.removeAll()
@@ -120,7 +120,7 @@ extension CodeEditorView {
     public var allAnnotations: [Annotation] {
         annotations
     }
-    
+
     /// Reload all annotations from the data source.
     ///
     /// This method refreshes the annotation views based on the current annotations or data source.
@@ -131,7 +131,7 @@ extension CodeEditorView {
     }
 
     // MARK: - Private Methods
-    
+
     @MainActor
     private func updateAnnotationView(for annotation: Annotation) {
         // Remove existing view if any
@@ -148,7 +148,7 @@ extension CodeEditorView {
         guard let textLayoutManager else {
             return
         }
-        
+
         // Convert Annotation to CodeEditorViewAnnotation
         let textViewAnnotation = CodeEditorViewAnnotation(
             location: annotation.range.location,
@@ -158,12 +158,12 @@ extension CodeEditorView {
 
         // Ensure layout for the annotation range
         textLayoutManager.ensureLayout(for: annotation.range)
-        
+
         // Get text layout fragment for the annotation location
         guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotation.range.location) else {
             return
         }
-        
+
         guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotation.range.location) else {
             return
         }
@@ -172,8 +172,8 @@ extension CodeEditorView {
         guard let segmentFrame = textLayoutManager.textSegmentFrame(
             in: annotation.range,
             type: .standard
-        ) else { 
-            return 
+        ) else {
+            return
         }
 
         // Calculate inline annotation position using configuration values
@@ -186,7 +186,7 @@ extension CodeEditorView {
         let inlineX = textContainerInset.left + segmentFrame.maxX + badgePadding
         let inlineY = textContainerInset.top + segmentFrame.midY - (badgeSize / 2)
         #endif
-        
+
         let proposedFrame = CGRect(
             x: inlineX,
             y: inlineY,
@@ -203,7 +203,7 @@ extension CodeEditorView {
         ) {
             addSubview(annotationView)
             annotationViews[annotation.id] = annotationView
-            
+
             // Force view update
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             annotationView.needsDisplay = true
@@ -214,7 +214,7 @@ extension CodeEditorView {
             #endif
         }
     }
-    
+
     /// Update all annotation views (called during layout)
     @MainActor
     internal func updateAnnotationViews() {

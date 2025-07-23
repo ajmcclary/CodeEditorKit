@@ -90,7 +90,7 @@ public protocol EditorEventHandler: AnyObject, Sendable {
 @MainActor
 public final class ClosureEventHandler: EditorEventHandler {
     private let handler: @Sendable (EditorEvent) -> Void
-    
+
     /// Creates a closure-based event handler.
     ///
     /// - Parameter handler: The closure to call for each event. Must be Sendable
@@ -98,7 +98,7 @@ public final class ClosureEventHandler: EditorEventHandler {
     public init(_ handler: @escaping @Sendable (EditorEvent) -> Void) {
         self.handler = handler
     }
-    
+
     public func handle(_ event: EditorEvent) {
         handler(event)
     }

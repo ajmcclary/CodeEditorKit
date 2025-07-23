@@ -13,7 +13,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         "signed", "sizeof", "static", "struct", "switch", "typedef", "union",
         "unsigned", "void", "volatile", "while", "_Bool", "_Complex", "_Imaginary"
     ]
-    
+
     // Additional C++ keywords
     private let cppKeywords = [
         "alignas", "alignof", "and", "and_eq", "asm", "bitand", "bitor", "bool",
@@ -26,7 +26,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         "throw", "true", "try", "typeid", "typename", "using", "virtual", "wchar_t",
         "xor", "xor_eq"
     ]
-    
+
     // Standard library types
     private let stdTypes = [
         // C types
@@ -38,7 +38,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         "optional", "variant", "any", "function", "thread", "mutex",
         "condition_variable", "atomic", "future", "promise"
     ]
-    
+
     // Standard library headers
     private let headers = [
         // C headers
@@ -51,13 +51,13 @@ public final class CCompletionProvider: BaseCompletionProvider {
         "future", "chrono", "random", "regex", "filesystem", "optional",
         "variant", "any", "type_traits", "numeric", "iterator", "ranges"
     ]
-    
+
     // Preprocessor directives
     private let preprocessor = [
         "#include", "#define", "#undef", "#ifdef", "#ifndef", "#if", "#else",
         "#elif", "#endif", "#error", "#pragma", "#warning", "#line"
     ]
-    
+
     override public var snippets: [SnippetTemplate] {
         [
         // C snippets
@@ -164,9 +164,9 @@ public final class CCompletionProvider: BaseCompletionProvider {
         )
         ]
     }
-    
+
     private let isCpp: Bool
-    
+
     public init() {
         self.isCpp = false // Will be determined by context
         super.init(
@@ -176,39 +176,39 @@ public final class CCompletionProvider: BaseCompletionProvider {
             supportsSnippets: true
         )
     }
-    
+
     // MARK: - CompletionProvider Implementation
-    
+
     override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
-        
+
         // Determine if we're in C++ mode
         let isCurrentlyCpp = context.language == .cpp
-        
+
         // Analyze context to determine what kind of completions to provide
         let analysisResult = analyzeCContext(context)
         var items: [CompletionItemModel] = []
-        
+
         // Add appropriate completions based on context
         switch analysisResult.type {
         case .preprocessor:
             items.append(contentsOf: createPreprocessorCompletions(filter: analysisResult.filter))
-            
+
         case .include:
             items.append(contentsOf: createIncludeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
-            
+
         case .keyword:
             items.append(contentsOf: createCKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
-            
+
         case .type:
             items.append(contentsOf: createCTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
-            
+
         case .member:
             items.append(contentsOf: createMemberCompletions(for: analysisResult.targetType, filter: analysisResult.filter, isCpp: isCurrentlyCpp))
-            
+
         case .namespace:
             items.append(contentsOf: createNamespaceCompletions(filter: analysisResult.filter))
-            
+
         case .general:
             items.append(contentsOf: createCKeywordCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             items.append(contentsOf: createCTypeCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
@@ -216,9 +216,9 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 items.append(contentsOf: createCSnippetCompletions(filter: analysisResult.filter, isCpp: isCurrentlyCpp))
             }
         }
-        
+
         let processingTime = Date().timeIntervalSince(startTime)
-        
+
         return CompletionResult(
             items: items,
             context: context,
@@ -226,16 +226,16 @@ public final class CCompletionProvider: BaseCompletionProvider {
             processingTime: processingTime
         )
     }
-    
+
     // MARK: - Context Analysis
-    
+
     private func analyzeCContext(_ context: CompletionContextModel) -> CContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
-        
+
         // Check for preprocessor directives
         if lineText.hasPrefix("#") {
             if lineText.hasPrefix("#include") {
@@ -243,33 +243,33 @@ public final class CCompletionProvider: BaseCompletionProvider {
             }
             return CContextAnalysisResult(type: .preprocessor, filter: filter)
         }
-        
+
         // Check for namespace context (C++ only)
         if beforeCursor.hasSuffix("::") {
             let targetNamespace = extractTargetNamespace(from: beforeCursor)
             return CContextAnalysisResult(type: .namespace, filter: "", targetType: targetNamespace)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") || beforeCursor.hasSuffix("->") {
             let targetType = extractTargetType(from: beforeCursor)
             return CContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for type context
         if lineText.contains(" ") && !lineText.contains("=") && !lineText.contains("(") {
             // Likely a variable declaration
             return CContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return CContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     override public func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
-    
+
     override public func extractTargetType(from text: String) -> String? {
         // Extract the object before . or ->
         let pattern = #"(\w+)\s*(?:\.|->)\s*$"#
@@ -280,7 +280,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     private func extractTargetNamespace(from text: String) -> String? {
         // Extract the namespace before ::
         let pattern = #"([\w:]+)::\s*$"#
@@ -291,15 +291,15 @@ public final class CCompletionProvider: BaseCompletionProvider {
         }
         return nil
     }
-    
+
     // MARK: - Completion Creation Methods
-    
+
     private func createCKeywordCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         var keywords = cKeywords
         if isCpp {
             keywords += cppKeywords
         }
-        
+
         return keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -315,23 +315,23 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCTypeCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         var types = ["int", "char", "float", "double", "void", "long", "short", "unsigned", "signed"]
-        
+
         if isCpp {
             types += stdTypes
         } else {
             types += ["size_t", "ptrdiff_t", "time_t", "FILE", "NULL"]
         }
-        
+
         return types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
             }
             .map { type in
                 let isTemplate = isCpp && ["vector", "map", "unordered_map", "set", "unordered_set", "list", "deque", "queue", "stack", "priority_queue", "pair", "tuple", "array", "unique_ptr", "shared_ptr", "weak_ptr", "optional", "variant"].contains(type)
-                
+
                 return CompletionItemModel(
                     label: type,
                     insertText: isTemplate ? "std::\(type)<$0>" : type,
@@ -341,7 +341,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createPreprocessorCompletions(filter: String) -> [CompletionItemModel] {
         preprocessor
             .filter { directive in
@@ -357,10 +357,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createIncludeCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         let relevantHeaders = isCpp ? headers.filter { !$0.hasSuffix(".h") || $0 == "math.h" || $0 == "stdio.h" } : headers.filter { $0.hasSuffix(".h") }
-        
+
         return relevantHeaders
             .filter { header in
                 filter.isEmpty || header.localizedCaseInsensitiveContains(filter)
@@ -368,7 +368,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
             .map { header in
                 let isSystemHeader = !header.contains("/")
                 let insertText = isSystemHeader ? "<\(header)>" : "\"\(header)\""
-                
+
                 return CompletionItemModel(
                     label: header,
                     insertText: insertText,
@@ -378,12 +378,12 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createCSnippetCompletions(filter: String, isCpp: Bool) -> [CompletionItemModel] {
         let relevantSnippets = isCpp ? snippets : snippets.filter { snippet in
             !["class", "template", "namespace", "try", "lambda", "unique_ptr", "shared_ptr", "vector"].contains(snippet.label)
         }
-        
+
         return relevantSnippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
@@ -399,22 +399,22 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     private func createMemberCompletions(for targetType: String?, filter: String, isCpp: Bool) -> [CompletionItemModel] {
         guard let targetType else { return [] }
-        
+
         // Provide common member completions based on type
         if isCpp {
             switch targetType.lowercased() {
             case "string":
                 return createStringMemberCompletions(filter: filter)
-                
+
             case "vector":
                 return createVectorMemberCompletions(filter: filter)
-                
+
             case "map", "unordered_map":
                 return createMapMemberCompletions(filter: filter)
-                
+
             default:
                 return createCommonMemberCompletions(filter: filter)
             }
@@ -423,10 +423,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
             return createCommonMemberCompletions(filter: filter)
         }
     }
-    
+
     private func createNamespaceCompletions(filter: String) -> [CompletionItemModel] {
         let stdMembers = ["cout", "cin", "cerr", "endl", "string", "vector", "map", "set", "sort", "find", "copy", "move", "forward", "make_unique", "make_shared"]
-        
+
         return stdMembers
             .filter { member in
                 filter.isEmpty || member.localizedCaseInsensitiveContains(filter)
@@ -441,9 +441,9 @@ public final class CCompletionProvider: BaseCompletionProvider {
                 )
             }
     }
-    
+
     // MARK: - Type-Specific Members
-    
+
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("length()", "method", "Get string length"),
@@ -462,10 +462,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("substr()", "method", "Get substring"),
             ("compare()", "method", "Compare strings")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createVectorMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("size()", "method", "Get vector size"),
@@ -484,10 +484,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("capacity()", "method", "Get capacity"),
             ("shrink_to_fit()", "method", "Shrink capacity")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("size()", "method", "Get map size"),
@@ -503,10 +503,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("contains()", "method", "Check if contains key"),
             ("emplace()", "method", "Construct and insert")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
             ("size()", "method", "Get size"),
@@ -515,10 +515,10 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("begin()", "method", "Begin iterator"),
             ("end()", "method", "End iterator")
         ]
-        
+
         return createMemberItems(from: members, filter: filter)
     }
-    
+
     private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
         members
             .filter { name, _, _ in
@@ -548,12 +548,12 @@ extension CCompletionProvider {
         case namespace
         case general
     }
-    
+
     struct CContextAnalysisResult {
         let type: CCompletionType
         let filter: String
         let targetType: String?
-        
+
         init(type: CCompletionType, filter: String, targetType: String? = nil) {
             self.type = type
             self.filter = filter

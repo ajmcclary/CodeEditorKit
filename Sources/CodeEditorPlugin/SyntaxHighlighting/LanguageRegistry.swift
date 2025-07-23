@@ -7,20 +7,20 @@ import Foundation
 public protocol LanguageProvider: Sendable {
     /// Unique identifier for the language
     var identifier: String { get }
-    
+
     /// Display name for the language
     var displayName: String { get }
-    
+
     /// File extensions associated with this language
     var fileExtensions: [String] { get }
-    
+
     /// Create a syntax highlighter for this language
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter
-    
+
     /// Optional: Provide code completion items
     nonisolated func completionKeywords() -> [String]
-    
+
     /// Optional: Provide documentation URL
     nonisolated var documentationURL: URL? { get }
 }
@@ -28,7 +28,7 @@ public protocol LanguageProvider: Sendable {
 // Default implementations
 extension LanguageProvider {
     nonisolated func completionKeywords() -> [String] { [] }
-    
+
     nonisolated var documentationURL: URL? { nil }
 }
 
@@ -39,10 +39,10 @@ extension LanguageProvider {
 public protocol SyntaxHighlighter {
     /// Highlight the given source code
     func highlight(source: String) -> [HighlightedToken]
-    
+
     /// Check if incremental highlighting is supported
     var supportsIncrementalHighlighting: Bool { get }
-    
+
     /// Perform incremental highlighting (optional)
     func highlightIncremental(source: String, changeRange: NSRange) -> [HighlightedToken]
 }
@@ -50,7 +50,7 @@ public protocol SyntaxHighlighter {
 // Default implementation
 extension SyntaxHighlighter {
     public var supportsIncrementalHighlighting: Bool { false }
-    
+
     public func highlightIncremental(source: String, changeRange _: NSRange) -> [HighlightedToken] {
         // Fall back to full highlighting
         highlight(source: source)
@@ -63,18 +63,18 @@ extension SyntaxHighlighter {
 @MainActor
 public final class LanguageRegistry {
     // MARK: - Singleton
-    
+
     /// Shared instance for convenience. Consider using dependency injection instead.
     @available(*, deprecated, message: "Use dependency injection instead of singleton pattern. Create your own LanguageRegistry instance.")
     public static let shared = LanguageRegistry()
-    
+
     // MARK: - Properties
-    
+
     private var providers: [String: any LanguageProvider] = [:]
     private var extensionMap: [String: String] = [:] // extension -> identifier
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new language registry instance.
     /// - Parameter includeBuiltInLanguages: Whether to automatically register built-in languages (default: true)
     public init(includeBuiltInLanguages: Bool = true) {
@@ -82,61 +82,61 @@ public final class LanguageRegistry {
             registerBuiltInLanguages()
         }
     }
-    
+
     // MARK: - Registration
-    
+
     /// Register a language provider
     public func register(_ provider: any LanguageProvider) {
         providers[provider.identifier] = provider
-        
+
         // Update extension map
         for ext in provider.fileExtensions {
             extensionMap[ext.lowercased()] = provider.identifier
         }
     }
-    
+
     /// Unregister a language provider
     public func unregister(identifier: String) {
         guard let provider = providers[identifier] else { return }
-        
+
         // Remove from providers
         providers.removeValue(forKey: identifier)
-        
+
         // Remove from extension map
         for ext in provider.fileExtensions {
             extensionMap.removeValue(forKey: ext.lowercased())
         }
     }
-    
+
     // MARK: - Lookup
-    
+
     /// Get language provider by identifier
     public func provider(for identifier: String) -> (any LanguageProvider)? {
         providers[identifier]
     }
-    
+
     /// Get language provider by file extension
     public func provider(forFileExtension fileExtension: String) -> (any LanguageProvider)? {
         guard let identifier = extensionMap[fileExtension.lowercased()] else { return nil }
         return providers[identifier]
     }
-    
+
     /// Get all registered languages
     public var allLanguages: [any LanguageProvider] {
         Array(providers.values).sorted { $0.displayName < $1.displayName }
     }
-    
+
     /// Get all supported file extensions
     public var allFileExtensions: [String] {
         Array(extensionMap.keys).sorted()
     }
-    
+
     // MARK: - Built-in Languages
-    
+
     private func registerBuiltInLanguages() {
         // Register Swift
         register(SwiftLanguageProvider())
-        
+
         // Register other built-in languages
         register(PythonLanguageProvider())
         register(JavaScriptLanguageProvider())
@@ -157,11 +157,11 @@ struct SwiftLanguageProvider: LanguageProvider {
     let identifier = "swift"
     let displayName = "Swift"
     let fileExtensions = ["swift"]
-    
+
     var documentationURL: URL? {
         URL(string: "https://docs.swift.org/swift-book/")
     }
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         #if targetEnvironment(macCatalyst)
@@ -171,7 +171,7 @@ struct SwiftLanguageProvider: LanguageProvider {
         return SwiftSyntaxHighlighter()
         #endif
     }
-    
+
     func completionKeywords() -> [String] {
         ["func", "var", "let", "class", "struct", "enum", "protocol", "import", "if", "else", "for", "while", "return"]
     }
@@ -182,7 +182,7 @@ struct PythonLanguageProvider: LanguageProvider {
     let identifier = "python"
     let displayName = "Python"
     let fileExtensions = ["py", "pyw"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -194,13 +194,13 @@ struct PythonLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 7),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\\b", tokenType: .keyword, priority: 6)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -210,7 +210,7 @@ struct JavaScriptLanguageProvider: LanguageProvider {
     let identifier = "javascript"
     let displayName = "JavaScript"
     let fileExtensions = ["js", "jsx", "mjs"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -222,13 +222,13 @@ struct JavaScriptLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof|new|this|super)\\b", tokenType: .keyword, priority: 7)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -238,7 +238,7 @@ struct JSONLanguageProvider: LanguageProvider {
     let identifier = "json"
     let displayName = "JSON"
     let fileExtensions = ["json", "jsonc"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -247,13 +247,13 @@ struct JSONLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null)\\b", tokenType: .keyword, priority: 7),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "[{}\\[\\],:]", tokenType: .punctuation, priority: 6)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -263,7 +263,7 @@ struct HTMLLanguageProvider: LanguageProvider {
     let identifier = "html"
     let displayName = "HTML"
     let fileExtensions = ["html", "htm", "xhtml"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -273,13 +273,13 @@ struct HTMLLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 6),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -289,7 +289,7 @@ struct CSSLanguageProvider: LanguageProvider {
     let identifier = "css"
     let displayName = "CSS"
     let fileExtensions = ["css", "scss", "sass", "less"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -301,13 +301,13 @@ struct CSSLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+(\\.\\d+)?(px|em|rem|%|vh|vw)?\\b", tokenType: .number, priority: 5)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -317,7 +317,7 @@ struct MarkdownLanguageProvider: LanguageProvider {
     let identifier = "markdown"
     let displayName = "Markdown"
     let fileExtensions = ["md", "markdown", "mdown"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -330,13 +330,13 @@ struct MarkdownLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "```[\\s\\S]*?```", tokenType: .string, priority: 10),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\[[^\\]]+\\]\\([^)]+\\)", tokenType: .function, priority: 6)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -346,7 +346,7 @@ struct XMLLanguageProvider: LanguageProvider {
     let identifier = "xml"
     let displayName = "XML"
     let fileExtensions = ["xml", "xsl", "xslt", "svg"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -356,13 +356,13 @@ struct XMLLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 6),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -372,7 +372,7 @@ struct YAMLLanguageProvider: LanguageProvider {
     let identifier = "yaml"
     let displayName = "YAML"
     let fileExtensions = ["yaml", "yml"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
@@ -383,13 +383,13 @@ struct YAMLLanguageProvider: LanguageProvider {
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null|yes|no|on|off)\\b", tokenType: .keyword, priority: 6),
             try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 5)
         ].compactMap { $0 }
-        
+
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
             name: displayName,
             fileExtensions: fileExtensions,
             rules: rules
         )
-        
+
         return RegexSyntaxHighlighter(customLanguage: definition)
     }
 }
@@ -399,7 +399,7 @@ struct PlainTextLanguageProvider: LanguageProvider {
     let identifier = "plaintext"
     let displayName = "Plain Text"
     let fileExtensions = ["txt", "text", "log"]
-    
+
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         // Return a no-op highlighter for plain text
@@ -421,7 +421,7 @@ extension RegexSyntaxHighlighter: SyntaxHighlighter {
         self.init()
         // The existing RegexSyntaxHighlighter will handle the language definition
     }
-    
+
     public func highlight(source: String) -> [HighlightedToken] {
         // Use Swift language definition as default
         // Create a basic language definition for plain text highlighting

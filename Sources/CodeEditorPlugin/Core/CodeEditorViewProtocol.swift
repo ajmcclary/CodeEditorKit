@@ -23,7 +23,7 @@ package protocol CodeEditorViewProtocol {
 
     @available(*, deprecated, renamed: "isInvisibleCharactersEnabled", message: "Use isInvisibleCharactersEnabled for consistent naming")
     var showsInvisibleCharacters: Bool { get set }
-    
+
     var isInvisibleCharactersEnabled: Bool { get set }
 
     associatedtype Color
@@ -48,7 +48,7 @@ package protocol CodeEditorViewProtocol {
 
     @available(*, deprecated, renamed: "isLineNumbersEnabled", message: "Use isLineNumbersEnabled for consistent naming")
     var showsLineNumbers: Bool { get set }
-    
+
     var isLineNumbersEnabled: Bool { get set }
 
     var font: Font { get set }

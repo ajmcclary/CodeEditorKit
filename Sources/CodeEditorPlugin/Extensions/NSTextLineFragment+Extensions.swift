@@ -30,12 +30,12 @@ extension NSTextLineFragment {
         ) else {
             return nil
         }
-        
+
         let endLocation = textContentManager.location(
             textLayoutFragment.rangeInElement.location,
             offsetBy: characterRange.location + characterRange.length
         )
-        
+
         return NSTextRange(location: startLocation, end: endLocation)
     }
 }
@@ -68,7 +68,7 @@ extension NSTextLineFragment {
         }
 
         guard let start else { return nil }
-        
+
         // Continuing to look here for an empty fragment doesn't make sense
         if characterRange.length == 0 {
             return NSRange(start..<start)

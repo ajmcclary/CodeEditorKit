@@ -11,17 +11,17 @@ public struct ConfigurationToggleView: View {
     let title: String
     let binding: Binding<Bool>
     let disabled: Bool
-    
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
+
     public var body: some View {
         AdaptiveHStack {
             Text(title)
                 .adaptiveFontSize(16)
                 .foregroundColor(disabled ? .secondary : .primary)
-            
+
             Spacer()
-            
+
             Toggle("", isOn: binding)
                 .toggleStyle(.switch)
                 .disabled(disabled)
@@ -39,24 +39,24 @@ public struct ConfigurationSliderView<T>: View where T: BinaryFloatingPoint, T.S
     let range: ClosedRange<T>
     let step: T.Stride
     let formatter: (T) -> String
-    
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
+
     public var body: some View {
         AdaptiveVStack(alignment: .leading) {
             AdaptiveHStack {
                 Text(title)
                     .adaptiveFontSize(16)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 Text(formatter(binding.wrappedValue))
                     .adaptiveFontSize(14)
                     .foregroundColor(.secondary)
                     .monospacedDigit()
             }
-            
+
             Slider(value: binding, in: range)
                 .accessibilityLabel(title)
                 .accessibilityValue(formatter(binding.wrappedValue))
@@ -71,17 +71,17 @@ public struct ConfigurationPickerView<T: Hashable>: View {
     let binding: Binding<T>
     let allCases: [T]
     let displayName: (T) -> String
-    
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
+
     public var body: some View {
         AdaptiveHStack {
             Text(title)
                 .adaptiveFontSize(16)
                 .foregroundColor(.primary)
-            
+
             Spacer()
-            
+
             Picker(title, selection: binding) {
                 ForEach(allCases, id: \.self) { value in
                     Text(displayName(value))
@@ -102,10 +102,10 @@ public struct ConfigurationTextFieldView: View {
     let binding: Binding<String>
     let placeholder: String
     let validation: ((String) -> Bool)?
-    
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isValid: Bool = true
-    
+
     public init(
         title: String,
         binding: Binding<String>,
@@ -117,13 +117,13 @@ public struct ConfigurationTextFieldView: View {
         self.placeholder = placeholder
         self.validation = validation
     }
-    
+
     public var body: some View {
         AdaptiveVStack(alignment: .leading) {
             Text(title)
                 .adaptiveFontSize(16)
                 .foregroundColor(.primary)
-            
+
             TextField(placeholder, text: binding)
                 .textFieldStyle(.roundedBorder)
                 .adaptiveFontSize(14)
@@ -149,9 +149,9 @@ public struct ConfigurationIntStepperView: View {
     let range: ClosedRange<Int>
     let step: Int
     let formatter: (Int) -> String
-    
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
+
     public init(
         title: String,
         binding: Binding<Int>,
@@ -165,15 +165,15 @@ public struct ConfigurationIntStepperView: View {
         self.step = step
         self.formatter = formatter
     }
-    
+
     public var body: some View {
         AdaptiveHStack {
             Text(title)
                 .adaptiveFontSize(16)
                 .foregroundColor(.primary)
-            
+
             Spacer()
-            
+
             Stepper(
                 value: binding,
                 in: range,
@@ -206,7 +206,7 @@ public enum ConfigurationSectionBuilder {
             content()
         }
     }
-    
+
     /// Creates a group of related configuration controls
     @MainActor
     public static func group<Content: View>(
@@ -220,7 +220,7 @@ public enum ConfigurationSectionBuilder {
         .background(Color.secondary.opacity(0.1))
         .adaptiveCornerRadius()
     }
-    
+
     /// Creates a header for configuration sections
     @MainActor
     public static func header(_ title: String, subtitle: String? = nil) -> some View {
@@ -230,7 +230,7 @@ public enum ConfigurationSectionBuilder {
                 .fontWeight(.semibold)
                 .adaptiveFontSize(22)
                 .foregroundColor(.primary)
-            
+
             if let subtitle {
                 Text(subtitle)
                     .adaptiveFontSize(16)
@@ -254,7 +254,7 @@ public enum ConfigurationViewPresets {
             .foregroundColor(.secondary)
             .font(.caption)
     }
-    
+
     /// Example behavior configuration controls (deprecated - use direct bindings instead)
     /// See AdvancedFeaturesShowcaseView.swift for the recommended pattern
     @available(*, deprecated, message: "Use direct bindings like $appState.currentConfiguration.behavior.property instead")
@@ -276,9 +276,9 @@ public enum ConfigurationViewMigrationHelper {
     public static func directBindingExample() -> some View {
         Text("""
         // Recommended pattern:
-        Toggle("Show Line Numbers", 
+        Toggle("Show Line Numbers",
                isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
-        
+
         // See AdvancedFeaturesShowcaseView.swift for complete examples
         """)
         .foregroundColor(.secondary)
@@ -293,7 +293,7 @@ public enum ConfigurationViewMigrationHelper {
 struct OnChangeModifier<T: Equatable>: ViewModifier {
     let binding: Binding<T>
     let action: (T) -> Void
-    
+
     func body(content: Content) -> some View {
         if #available(iOS 17.0, macOS 14.0, *) {
             content.onChange(of: binding.wrappedValue) { _, newValue in

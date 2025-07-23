@@ -9,7 +9,7 @@ function hello() {
 
 hello();
 """
-    
+
     var body: some View {
         CodeEditor(text: $code)
             // Set the language for syntax highlighting

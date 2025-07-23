@@ -4,10 +4,10 @@ import Foundation
 struct JSONSymbolProvider: DocumentSymbolProvider {
     func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
-        
+
         // Try to parse JSON structure
         guard let data = text.data(using: .utf8) else { return [] }
-        
+
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
             symbols = extractSymbols(from: jsonObject, text: text, path: [])
@@ -15,30 +15,30 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
             // Fallback to line-by-line parsing for malformed JSON
             symbols = parseLineByLine(text: text)
         }
-        
+
         return symbols
     }
-    
+
     private func extractSymbols(from object: Any, text: String, path: [String]) -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
-        
+
         if let dictionary = object as? [String: Any] {
             for (key, value) in dictionary {
                 let currentPath = path + [key]
                 let location = findKeyLocation(key: key, in: text, path: currentPath)
-                
+
                 let kind = symbolKind(for: value)
                 let detail = symbolDetail(for: value)
-                
+
                 let symbol = DocumentSymbol(
                     name: key,
                     kind: kind,
                     range: NSRange(location: location, length: key.count + detail.count + 4), // approximate
                     detail: detail
                 )
-                
+
                 symbols.append(symbol)
-                
+
                 // Recursively process nested objects
                 if kind == .object || kind == .array {
                     symbols.append(contentsOf: extractSymbols(from: value, text: text, path: currentPath))
@@ -51,41 +51,41 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
                 }
             }
         }
-        
+
         return symbols
     }
-    
+
     private func parseLineByLine(text: String) -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
         let lines = text.components(separatedBy: .newlines)
         var currentLocation = 0
-        
+
         for (lineIndex, line) in lines.enumerated() {
             if let symbol = detectJSONSymbol(in: line, at: currentLocation, line: lineIndex) {
                 symbols.append(symbol)
             }
-            
+
             currentLocation += line.count + 1
         }
-        
+
         return symbols
     }
-    
+
     private func detectJSONSymbol(in line: String, at location: Int, line _: Int) -> DocumentSymbol? {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
-        
+
         // Detect JSON keys (quoted strings followed by colon)
         if let colonIndex = trimmed.firstIndex(of: ":") {
             let beforeColon = String(trimmed.prefix(upTo: colonIndex)).trimmingCharacters(in: .whitespaces)
-            
+
             // Extract quoted key
             if beforeColon.hasPrefix("\"") && beforeColon.hasSuffix("\"") && beforeColon.count > 2 {
                 let key = String(beforeColon.dropFirst().dropLast())
                 let afterColon = String(trimmed.suffix(from: trimmed.index(after: colonIndex))).trimmingCharacters(in: .whitespaces)
-                
+
                 let kind = inferKind(from: afterColon)
                 let detail = getValuePreview(from: afterColon)
-                
+
                 return DocumentSymbol(
                     name: key,
                     kind: kind,
@@ -94,10 +94,10 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
                 )
             }
         }
-        
+
         return nil
     }
-    
+
     private func symbolKind(for value: Any) -> DocumentSymbolKind {
         switch value {
         case is [String: Any]:
@@ -122,7 +122,7 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
             return .key
         }
     }
-    
+
     private func symbolDetail(for value: Any) -> String {
         switch value {
         case let dict as [String: Any]:
@@ -137,10 +137,10 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
 
         case let int as Int:
             return "\(int)"
-            
+
         case let double as Double:
             return "\(double)"
-            
+
         case let float as Float:
             return "\(float)"
 
@@ -154,10 +154,10 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
             return "unknown"
         }
     }
-    
+
     private func inferKind(from valueText: String) -> DocumentSymbolKind {
         let trimmed = valueText.trimmingCharacters(in: .whitespaces)
-        
+
         if trimmed.hasPrefix("{") {
             return .object
         } else if trimmed.hasPrefix("[") {
@@ -174,16 +174,16 @@ struct JSONSymbolProvider: DocumentSymbolProvider {
             return .key
         }
     }
-    
+
     private func getValuePreview(from valueText: String) -> String {
         let trimmed = valueText.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: "")
-        
+
         if trimmed.count > 50 {
             return String(trimmed.prefix(50)) + "..."
         }
         return trimmed
     }
-    
+
     private func findKeyLocation(key: String, in text: String, path _: [String]) -> Int {
         // Simple implementation - in a real scenario, you'd want more sophisticated location finding
         if let range = text.range(of: "\"\(key)\":") {

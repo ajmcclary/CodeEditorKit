@@ -16,7 +16,7 @@ import UIKit
 @MainActor
 public protocol AnnotationsContentViewProtocol: AnyObject {
     var annotations: [Annotation] { get set }
-    
+
     func setNeedsDisplayAnnotations()
 }
 
@@ -26,29 +26,29 @@ public protocol AnnotationsContentViewProtocol: AnyObject {
 @MainActor
 public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtocol {
     // MARK: - Properties
-    
+
     public var annotations: [Annotation] = [] {
         didSet {
             setNeedsDisplayAnnotations()
         }
     }
-    
+
     private var annotationViews: [AnnotationView] = []
-    
+
     // MARK: - Initialization
-    
+
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
     }
-    
+
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
     }
-    
+
     // MARK: - Setup
-    
+
     private func setup() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         wantsLayer = true
@@ -57,27 +57,27 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
         backgroundColor = PlatformColors.clear
         #endif
     }
-    
+
     // MARK: - Display Updates
-    
+
     public func setNeedsDisplayAnnotations() {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         needsDisplay = true
         #else
         setNeedsDisplay()
         #endif
-        
+
         // Update annotation views
         updateAnnotationViews()
     }
-    
+
     // MARK: - Annotation View Management
-    
+
     private func updateAnnotationViews() {
         // Remove existing annotation views
         annotationViews.forEach { $0.removeFromSuperview() }
         annotationViews.removeAll()
-        
+
         // Create new annotation views
         for annotation in annotations {
             if let lineAnnotation = annotation as? LineAnnotation {
@@ -87,37 +87,37 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
                     annotation: lineAnnotation,
                     frame: CGRect(x: 0, y: 0, width: size, height: size)
                 )
-                
+
                 addSubview(annotationView)
                 annotationViews.append(annotationView)
             }
         }
-        
+
         // Layout annotation views
         layoutAnnotationViews()
     }
-    
+
     private func layoutAnnotationViews() {
         // Simple layout: stack annotations vertically
         var yOffset: CGFloat = 10
         let xOffset: CGFloat = 10
         let spacing: CGFloat = 5
-        
+
         for annotationView in annotationViews {
             annotationView.frame.origin = CGPoint(x: xOffset, y: yOffset)
             yOffset += annotationView.frame.height + spacing
         }
     }
-    
+
     // MARK: - Platform-Specific Overrides
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Text views need a flipped coordinate system on macOS
     nonisolated override public var isFlipped: Bool { true }
     #endif
-    
+
     // MARK: - Layout
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     override public func layout() {
         // Ensure we're on the main thread for layout operations
@@ -137,7 +137,7 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
         layoutAnnotationViews()
     }
     #endif
-    
+
     deinit {
         // Cleanup is handled by ARC
     }

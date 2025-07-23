@@ -55,10 +55,10 @@ public final class ContextMenuCoordinator: ObservableObject {
     /// - Warning: This property is deprecated. Use dependency injection instead.
     @available(*, deprecated, message: "Use dependency injection instead of the singleton pattern")
     public static let shared = ContextMenuCoordinator()
-    
+
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "ContextMenuCoordinator")
     private let capabilities: PlatformCapabilities
-    
+
     /// Context types for menu customization
     public enum MenuContext {
         case textSelection
@@ -68,18 +68,18 @@ public final class ContextMenuCoordinator: ObservableObject {
         case searchResult
         case symbolReference
     }
-    
+
     // MARK: - Initialization
-    
+
     /// Creates a new ContextMenuCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
         self.capabilities = capabilities ?? PlatformCapabilities.shared
         logger.debug("ContextMenuCoordinator initialized")
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Create cross-platform context menu using modern action-based API
     ///
     /// This method creates a context menu appropriate for the given context and platform,
@@ -96,7 +96,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         context: MenuContext = .textSelection
     ) -> PlatformContextMenu {
         var builder = ContextMenuBuilder()
-        
+
         switch context {
         case .textSelection:
             addTextSelectionActions(to: &builder, range: range, textView: textView)
@@ -116,11 +116,11 @@ public final class ContextMenuCoordinator: ObservableObject {
         case .symbolReference:
             addSymbolReferenceActions(to: &builder, range: range, textView: textView)
         }
-        
+
         logger.debug("Created context menu for \(String(describing: context)) with \(builder.actionCount) actions")
         return builder.build()
     }
-    
+
     /// Create basic editing context menu
     ///
     /// Returns a minimal context menu with essential editing operations.
@@ -132,22 +132,22 @@ public final class ContextMenuCoordinator: ObservableObject {
     /// - Returns: Basic editing context menu
     public func createEditingMenu(canCut: Bool, canCopy: Bool, canPaste: Bool) -> PlatformContextMenu {
         var builder = ContextMenuBuilder()
-        
+
         if canCut {
             builder.addAction(createCutAction())
         }
-        
+
         if canCopy {
             builder.addAction(createCopyAction())
         }
-        
+
         if canPaste {
             builder.addAction(createPasteAction())
         }
-        
+
         return builder.build()
     }
-    
+
     /// Create code navigation context menu
     ///
     /// Returns a context menu focused on code navigation and exploration.
@@ -158,7 +158,7 @@ public final class ContextMenuCoordinator: ObservableObject {
     /// - Returns: Code navigation context menu
     public func createNavigationMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
         var builder = ContextMenuBuilder()
-        
+
         if capabilities.isFeatureAvailable(.goToDefinition) {
             builder.addAction(ContextMenuAction(
                 title: "Go to Definition",
@@ -169,7 +169,7 @@ public final class ContextMenuCoordinator: ObservableObject {
                 self?.performGoToDefinition(at: range, in: textView)
             })
         }
-        
+
         if capabilities.isFeatureAvailable(.symbolNavigation) {
             builder.addAction(ContextMenuAction(
                 title: "Find References",
@@ -180,7 +180,7 @@ public final class ContextMenuCoordinator: ObservableObject {
                 self?.performFindReferences(at: range, in: textView)
             })
         }
-        
+
         if capabilities.isFeatureAvailable(.symbolNavigation) {
             builder.addAction(ContextMenuAction(
                 title: "Find in Workspace",
@@ -191,10 +191,10 @@ public final class ContextMenuCoordinator: ObservableObject {
                 self?.performWorkspaceSearch(at: range, in: textView)
             })
         }
-        
+
         return builder.build()
     }
-    
+
     /// Create refactoring context menu
     ///
     /// Returns a context menu with code refactoring options.
@@ -205,7 +205,7 @@ public final class ContextMenuCoordinator: ObservableObject {
     /// - Returns: Refactoring context menu
     public func createRefactoringMenu(for range: NSRange, in textView: CodeEditorView) -> PlatformContextMenu {
         var builder = ContextMenuBuilder()
-        
+
         // Only show refactoring on platforms that support it well
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         if capabilities.currentPlatform == .macOS { // Refactoring only on macOS
@@ -217,10 +217,10 @@ public final class ContextMenuCoordinator: ObservableObject {
             ) { @MainActor [weak self] in
                 self?.performRename(at: range, in: textView)
             })
-            
+
             if range.length > 0 {
                 builder.addSeparator()
-                
+
                 builder.addAction(ContextMenuAction(
                     title: "Extract Method",
                     keyEquivalent: nil,
@@ -228,7 +228,7 @@ public final class ContextMenuCoordinator: ObservableObject {
                 ) { @MainActor [weak self] in
                     self?.performExtractMethod(at: range, in: textView)
                 })
-                
+
                 builder.addAction(ContextMenuAction(
                     title: "Extract Variable",
                     keyEquivalent: nil,
@@ -236,7 +236,7 @@ public final class ContextMenuCoordinator: ObservableObject {
                 ) { @MainActor [weak self] in
                     self?.performExtractVariable(at: range, in: textView)
                 })
-                
+
                 builder.addAction(ContextMenuAction(
                     title: "Inline Variable",
                     keyEquivalent: nil,
@@ -247,10 +247,10 @@ public final class ContextMenuCoordinator: ObservableObject {
             }
         }
         #endif
-        
+
         return builder.build()
     }
-    
+
     /// Show context menu at specified location
     ///
     /// - Parameters:
@@ -264,25 +264,25 @@ public final class ContextMenuCoordinator: ObservableObject {
         showIOSContextMenu(menu, at: location, in: textView)
         #endif
     }
-    
+
     // MARK: - Menu Building Helpers
-    
+
     private func addTextSelectionActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         // Basic editing actions
         if textView.canCut {
             builder.addAction(createCutAction(for: textView))
         }
-        
+
         if textView.canCopy {
             builder.addAction(createCopyAction(for: textView))
         }
-        
+
         if textView.canPaste {
             builder.addAction(createPasteAction(for: textView))
         }
-        
+
         builder.addSeparator()
-        
+
         // Selection actions
         builder.addAction(ContextMenuAction(
             title: "Select All",
@@ -292,7 +292,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak textView] in
             textView?.selectAll(nil)
         })
-        
+
         if range.length > 0 {
             // Code navigation actions for selected text
             if capabilities.isFeatureAvailable(.goToDefinition) {
@@ -305,20 +305,20 @@ public final class ContextMenuCoordinator: ObservableObject {
                     self?.performGoToDefinition(at: range, in: textView)
                 })
             }
-            
+
             // Platform-specific advanced actions
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             addMacOSAdvancedActions(to: &builder, range: range, textView: textView)
             #endif
         }
     }
-    
+
     private func addEmptyAreaActions(to builder: inout ContextMenuBuilder, textView: CodeEditorView) {
         // Paste action for empty area
         if textView.canPaste {
             builder.addAction(createPasteAction(for: textView))
         }
-        
+
         builder.addAction(ContextMenuAction(
             title: "Select All",
             keyEquivalent: "a",
@@ -327,11 +327,11 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak textView] in
             textView?.selectAll(nil)
         })
-        
+
         // Platform-specific empty area actions
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         builder.addSeparator()
-        
+
         builder.addAction(ContextMenuAction(
             title: "Show Rulers",
             keyEquivalent: nil,
@@ -341,7 +341,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         })
         #endif
     }
-    
+
     private func addLineNumberActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         builder.addAction(ContextMenuAction(
             title: "Toggle Breakpoint",
@@ -350,7 +350,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performToggleBreakpoint(at: range, in: textView)
         })
-        
+
         builder.addAction(ContextMenuAction(
             title: "Add Bookmark",
             keyEquivalent: nil,
@@ -358,9 +358,9 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performAddBookmark(at: range, in: textView)
         })
-        
+
         builder.addSeparator()
-        
+
         builder.addAction(ContextMenuAction(
             title: "Go to Line...",
             keyEquivalent: "l",
@@ -370,7 +370,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             self?.performGoToLine(in: textView)
         })
     }
-    
+
     private func addAnnotationActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         builder.addAction(ContextMenuAction(
             title: "Show Details",
@@ -379,7 +379,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performShowAnnotationDetails(at: range, in: textView)
         })
-        
+
         builder.addAction(ContextMenuAction(
             title: "Quick Fix",
             keyEquivalent: nil,
@@ -387,9 +387,9 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performQuickFix(at: range, in: textView)
         })
-        
+
         builder.addSeparator()
-        
+
         builder.addAction(ContextMenuAction(
             title: "Ignore Warning",
             keyEquivalent: nil,
@@ -398,7 +398,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             self?.performIgnoreWarning(at: range, in: textView)
         })
     }
-    
+
     private func addSearchResultActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         builder.addAction(ContextMenuAction(
             title: "Replace",
@@ -407,7 +407,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performReplace(at: range, in: textView)
         })
-        
+
         builder.addAction(ContextMenuAction(
             title: "Replace All",
             keyEquivalent: nil,
@@ -416,7 +416,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             self?.performReplaceAll(in: textView)
         })
     }
-    
+
     private func addSymbolReferenceActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         builder.addAction(ContextMenuAction(
             title: "Go to Definition",
@@ -425,7 +425,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performGoToDefinition(at: range, in: textView)
         })
-        
+
         builder.addAction(ContextMenuAction(
             title: "Find All References",
             keyEquivalent: nil,
@@ -433,7 +433,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         ) { @MainActor [weak self] in
             self?.performFindReferences(at: range, in: textView)
         })
-        
+
         builder.addAction(ContextMenuAction(
             title: "Rename Symbol",
             keyEquivalent: nil,
@@ -442,15 +442,15 @@ public final class ContextMenuCoordinator: ObservableObject {
             self?.performRename(at: range, in: textView)
         })
     }
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func addMacOSAdvancedActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         if capabilities.currentPlatform == .macOS { // Refactoring only on macOS
             builder.addSeparator()
-            
+
             // Refactoring submenu
             var refactoringBuilder = ContextMenuBuilder()
-            
+
             refactoringBuilder.addAction(ContextMenuAction(
                 title: "Rename...",
                 keyEquivalent: nil,
@@ -458,7 +458,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             ) { @MainActor [weak self] in
                 self?.performRename(at: range, in: textView)
             })
-            
+
             if range.length > 0 {
                 refactoringBuilder.addAction(ContextMenuAction(
                     title: "Extract Method...",
@@ -467,7 +467,7 @@ public final class ContextMenuCoordinator: ObservableObject {
                 ) { @MainActor [weak self] in
                     self?.performExtractMethod(at: range, in: textView)
                 })
-                
+
                 refactoringBuilder.addAction(ContextMenuAction(
                     title: "Extract Variable...",
                     keyEquivalent: nil,
@@ -476,14 +476,14 @@ public final class ContextMenuCoordinator: ObservableObject {
                     self?.performExtractVariable(at: range, in: textView)
                 })
             }
-            
+
             builder.addSubmenu(title: "Refactor", actions: refactoringBuilder.actions)
         }
     }
     #endif
-    
+
     // MARK: - Action Factories
-    
+
     private func createCutAction(for textView: CodeEditorView? = nil) -> ContextMenuAction {
         ContextMenuAction(
             title: "Cut",
@@ -494,7 +494,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             textView?.cut(nil)
         }
     }
-    
+
     private func createCopyAction(for textView: CodeEditorView? = nil) -> ContextMenuAction {
         ContextMenuAction(
             title: "Copy",
@@ -505,7 +505,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             textView?.copy(nil)
         }
     }
-    
+
     private func createPasteAction(for textView: CodeEditorView? = nil) -> ContextMenuAction {
         ContextMenuAction(
             title: "Paste",
@@ -516,16 +516,16 @@ public final class ContextMenuCoordinator: ObservableObject {
             textView?.paste(nil)
         }
     }
-    
+
     // MARK: - Platform-Specific Display
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private func showMacOSContextMenu(_ menu: PlatformContextMenu, at location: CGPoint, in textView: CodeEditorView) {
         // Show the NSMenu directly
         menu.popUp(positioning: nil, at: location, in: textView)
     }
     #endif
-    
+
     #if canImport(UIKit)
     private func showIOSContextMenu(_: PlatformContextMenu, at location: CGPoint, in _: CodeEditorView) {
         // Convert to UIMenu and show via UIMenuController or context menu interaction
@@ -533,79 +533,79 @@ public final class ContextMenuCoordinator: ObservableObject {
         logger.debug("Showing iOS context menu at (\(location.x), \(location.y))")
     }
     #endif
-    
+
     // MARK: - Action Implementations
-    
+
     private func performGoToDefinition(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Go to definition at range: \(range)")
         // Implementation would navigate to symbol definition
     }
-    
+
     private func performFindReferences(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Find references at range: \(range)")
         // Implementation would show references panel
     }
-    
+
     private func performWorkspaceSearch(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Workspace search at range: \(range)")
         // Implementation would open workspace search
     }
-    
+
     private func performRename(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Rename at range: \(range)")
         // Implementation would start rename operation
     }
-    
+
     private func performExtractMethod(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Extract method at range: \(range)")
         // Implementation would extract selected code to method
     }
-    
+
     private func performExtractVariable(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Extract variable at range: \(range)")
         // Implementation would extract expression to variable
     }
-    
+
     private func performInlineVariable(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Inline variable at range: \(range)")
         // Implementation would inline variable usage
     }
-    
+
     private func performToggleBreakpoint(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Toggle breakpoint at range: \(range)")
         // Implementation would toggle debugger breakpoint
     }
-    
+
     private func performAddBookmark(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Add bookmark at range: \(range)")
         // Implementation would add navigation bookmark
     }
-    
+
     private func performGoToLine(in _: CodeEditorView?) {
         logger.info("Go to line requested")
         // Implementation would show go-to-line dialog
     }
-    
+
     private func performShowAnnotationDetails(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Show annotation details at range: \(range)")
         // Implementation would show detailed annotation info
     }
-    
+
     private func performQuickFix(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Quick fix at range: \(range)")
         // Implementation would apply automatic fix
     }
-    
+
     private func performIgnoreWarning(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Ignore warning at range: \(range)")
         // Implementation would suppress warning
     }
-    
+
     private func performReplace(at range: NSRange, in _: CodeEditorView?) {
         logger.info("Replace at range: \(range)")
         // Implementation would replace current match
     }
-    
+
     private func performReplaceAll(in _: CodeEditorView?) {
         logger.info("Replace all requested")
         // Implementation would replace all matches
@@ -619,7 +619,7 @@ extension ContextMenuBuilder {
     var actionCount: Int {
         actions.count
     }
-    
+
     /// Add a submenu to the context menu
     /// - Parameters:
     ///   - title: The submenu title

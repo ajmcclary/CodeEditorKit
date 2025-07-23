@@ -13,32 +13,32 @@ enum ContainerViewInitializer {
         let initialFrame: CGRect
         let gutterWidth: CGFloat
         let minimapWidth: CGFloat
-        
+
         init(frame: CGRect, gutterWidth: CGFloat = 40, minimapWidth: CGFloat = 100) {
             self.initialFrame = frame == .zero ? CGRect(x: 0, y: 0, width: 600, height: 400) : frame
             self.gutterWidth = gutterWidth
             self.minimapWidth = minimapWidth
         }
     }
-    
+
     /// Create all common views with unified logic
     static func createViews(with parameters: InitializationParameters) -> ViewComponents {
         let textView = CodeEditorView(frame: parameters.initialFrame)
-        
+
         let gutterView = GutterView(frame: CGRect(
             x: 0,
             y: 0,
             width: parameters.gutterWidth,
             height: parameters.initialFrame.height
         ))
-        
+
         let minimapView = MinimapView(frame: CGRect(
             x: parameters.initialFrame.width - parameters.minimapWidth,
             y: 0,
             width: parameters.minimapWidth,
             height: parameters.initialFrame.height
         ))
-        
+
         #if canImport(UIKit)
         let contentView = EditorContentView(frame: parameters.initialFrame)
         return ViewComponents(
@@ -57,7 +57,7 @@ enum ContainerViewInitializer {
         )
         #endif
     }
-    
+
     /// Common setup logic for both platforms
     static func performCommonSetup(
         for container: CodeEditorContainerView,
@@ -65,26 +65,26 @@ enum ContainerViewInitializer {
     ) {
         // Set container reference
         components.textView.containerView = container
-        
+
         // Apply common configuration
         container.configuration.apply(to: components.textView)
-        
+
         // Setup minimap (this needs to be called on container directly due to stored property)
         container.setupMinimap()
-        
+
         // Setup common observers
         setupCommonObservers(for: container, with: components)
-        
+
         // Remove any internal gutter from text view before setting up
         components.textView.removeGutter()
-        
+
         // Apply initial text container insets
         container.updateTextContainerInsets()
-        
+
         // Set container background using platform colors
         setupContainerBackground(for: container)
     }
-    
+
     /// Setup platform-specific views using unified patterns
     static func setupPlatformViews(
         for container: CodeEditorContainerView,
@@ -96,9 +96,9 @@ enum ContainerViewInitializer {
         setupUIKitViews(for: container, with: components)
         #endif
     }
-    
+
     // MARK: - Private Helpers
-    
+
     private static func setupContainerBackground(for container: CodeEditorContainerView) {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS uses layer background
@@ -109,7 +109,7 @@ enum ContainerViewInitializer {
         container.backgroundColor = PlatformColors.systemBackground
         #endif
     }
-    
+
     private static func setupCommonObservers(
         for container: CodeEditorContainerView,
         with components: ViewComponents
@@ -131,33 +131,33 @@ enum ContainerViewInitializer {
         )
         #endif
     }
-    
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private static func setupAppKitViews(
         for container: CodeEditorContainerView,
         with components: ViewComponents
     ) {
         guard let scrollView = components.scrollView else { return }
-        
+
         // Configure scroll view
         scrollView.documentView = components.textView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
-        
+
         // Add views to container
         container.addSubview(scrollView)
         container.addSubview(components.minimapView, positioned: .above, relativeTo: scrollView)
-        
+
         // Configure minimap layer
         components.minimapView.wantsLayer = true
         components.minimapView.layer?.zPosition = 1_000
         components.minimapView.layer?.backgroundColor = MinimapConfiguration.defaultBackgroundColor.cgColor
-        
+
         // Setup ruler view if line numbers are enabled
         setupRulerView(for: container, scrollView: scrollView, textView: components.textView)
     }
-    
+
     private static func setupRulerView(
         for container: CodeEditorContainerView,
         scrollView: NSScrollView,
@@ -166,17 +166,17 @@ enum ContainerViewInitializer {
         let config = container.configuration
         scrollView.hasVerticalRuler = config.display.isLineNumbersEnabled
         scrollView.rulersVisible = config.display.isLineNumbersEnabled
-        
+
         if config.display.isLineNumbersEnabled {
             let rulerView = LineNumberRulerView(scrollView: scrollView, orientation: .verticalRuler)
             rulerView.textView = textView
             rulerView.ruleThickness = config.layout.gutterWidth
             scrollView.verticalRulerView = rulerView
-            
+
             scrollView.hasVerticalRuler = true
             scrollView.rulersVisible = true
             rulerView.needsDisplay = true
-            
+
             // Setup ruler view observer
             NotificationCenter.default.addObserver(
                 rulerView,
@@ -195,23 +195,23 @@ enum ContainerViewInitializer {
         addSubviewIfNeeded(components.gutterView, to: container)
         addSubviewIfNeeded(components.textView, to: container)
         addSubviewIfNeeded(components.minimapView, to: container)
-        
+
         // Configure auto layout
         components.gutterView.translatesAutoresizingMaskIntoConstraints = false
         components.textView.translatesAutoresizingMaskIntoConstraints = false
         components.minimapView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         // Configure gutter-textview relationship FIRST
         components.gutterView.textView = components.textView
         components.gutterView.observeTextView()
-        
+
         // Set delegate LAST to ensure it's not overridden
         components.textView.delegate = container
-        
+
         // Rebuild constraints using container's existing method
         container.rebuildConstraints()
     }
-    
+
     private static func addSubviewIfNeeded(_ subview: PlatformView, to container: CodeEditorContainerView) {
         if !subview.isDescendant(of: container) {
             container.addSubview(subview)
@@ -225,14 +225,14 @@ struct ViewComponents {
     let textView: CodeEditorView
     let gutterView: GutterView
     let minimapView: MinimapView
-    
+
     #if canImport(UIKit)
     let contentView: EditorContentView?
-    
+
     #if !targetEnvironment(macCatalyst)
     let scrollView: UIScrollView? = nil
     #endif
-    
+
     init(textView: CodeEditorView, gutterView: GutterView, minimapView: MinimapView, contentView: EditorContentView) {
         self.textView = textView
         self.gutterView = gutterView
@@ -241,7 +241,7 @@ struct ViewComponents {
     }
     #else
     let scrollView: NSScrollView?
-    
+
     init(textView: CodeEditorView, gutterView: GutterView, minimapView: MinimapView, scrollView: NSScrollView) {
         self.textView = textView
         self.gutterView = gutterView

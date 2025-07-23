@@ -8,19 +8,19 @@ import Foundation
 @MainActor
 internal final class ObserverStore {
     private var observers: [NSObjectProtocol] = []
-    
+
     /// Add an observer to the store
     /// - Parameter observer: The notification observer to track
     func addObserver(_ observer: NSObjectProtocol) {
         observers.append(observer)
     }
-    
+
     /// Remove all observers from notification center and clear the store
     func removeAllObservers() {
         observers.forEach { NotificationCenter.default.removeObserver($0) }
         observers.removeAll()
     }
-    
+
     /// Non-isolated cleanup method for safe cleanup from deinit
     nonisolated func cleanup() {
         // Use MainActor to safely clean up observers
@@ -28,7 +28,7 @@ internal final class ObserverStore {
             removeAllObservers()
         }
     }
-    
+
     deinit {
         // Cannot access MainActor isolated properties in deinit with Swift 6
         // Cleanup happens automatically via the cleanup() task

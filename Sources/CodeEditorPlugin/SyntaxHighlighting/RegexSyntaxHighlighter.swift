@@ -11,7 +11,7 @@ import UIKit
 /// A pure Swift regex-based syntax highlighter for various programming languages
 public final class RegexSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
-    
+
     /// Optimized token type mapping for O(1) conversion
     static let tokenTypeMap: [RegexSyntaxTokenType: TokenType] = [
         .keyword: .keyword,
@@ -28,11 +28,11 @@ public final class RegexSyntaxHighlighter: Sendable {
         .preprocessor: .preprocessor,
         .unknown: .unknown
     ]
-    
+
     // MARK: - Properties
 
     public let supportedLanguages: [String: RegexLanguageDefinition]
-    
+
     // Direct language mapping for efficient lookup
     private let languageMap: [Language: RegexLanguageDefinition]
 
@@ -51,7 +51,7 @@ public final class RegexSyntaxHighlighter: Sendable {
             language.fileExtensions.contains(fileExtension.lowercased())
         }
     }
-    
+
     /// Get language definition by Language enum case (preferred method)
     public func languageDefinition(for language: Language) -> RegexLanguageDefinition? {
         languageMap[language]
@@ -66,7 +66,7 @@ public final class RegexSyntaxHighlighter: Sendable {
         // Pre-allocate collections with estimated capacity for better performance
         var tokens: [HighlightedToken] = []
         tokens.reserveCapacity(min(source.count / 20, 1_000))
-        
+
         let range = NSRange(location: 0, length: source.utf16.count)
 
         // Use IntervalTree for O(log n) overlap checking instead of O(n)
@@ -86,14 +86,14 @@ public final class RegexSyntaxHighlighter: Sendable {
 
                 // Convert token type efficiently using lookup instead of switch
                 let coordinatorTokenType = mapTokenType(rule.tokenType)
-                
+
                 // Only create substring when we actually need the text content
                 guard let stringRange = Range(matchRange, in: source) else {
                     continue
                 }
                 let text = String(source[stringRange])
                 tokens.append(HighlightedToken(range: matchRange, type: coordinatorTokenType, text: text))
-                
+
                 // Insert into interval tree for future overlap checks
                 processedIntervals.insert(matchRange)
             }
@@ -103,7 +103,7 @@ public final class RegexSyntaxHighlighter: Sendable {
         tokens.sort { $0.range.location < $1.range.location }
         return tokens
     }
-    
+
     /// Efficiently map RegexTokenType to TokenType using lookup table
     private func mapTokenType(_ regexTokenType: RegexSyntaxTokenType) -> TokenType {
         // Use class-level lookup table for O(1) token type conversion
@@ -147,10 +147,10 @@ public typealias RegexTokenType = RegexSyntaxTokenType
 extension RegexSyntaxHighlighter {
     /// Nested LanguageDefinition for backward compatibility
     public typealias LanguageDefinition = RegexLanguageDefinition
-    
+
     /// Nested HighlightRule for backward compatibility
     public typealias HighlightRule = RegexHighlightRule
-    
+
     /// Nested RegexTokenType for backward compatibility
     public typealias RegexTokenType = RegexSyntaxTokenType
 }

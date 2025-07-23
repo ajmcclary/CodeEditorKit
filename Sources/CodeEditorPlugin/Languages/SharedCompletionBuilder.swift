@@ -5,7 +5,7 @@ import Foundation
 /// Provides shared completion building logic to eliminate duplication across language providers
 public enum SharedCompletionBuilder {
     // MARK: - Common Completion Creation
-    
+
     /// Creates keyword completions from an array of keywords
     public static func createKeywordCompletions(
         from keywords: [String],
@@ -27,7 +27,7 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     /// Creates type completions from an array of types
     public static func createTypeCompletions(
         from types: [String],
@@ -48,7 +48,7 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     /// Creates function completions from an array of functions
     public static func createFunctionCompletions(
         from functions: [String],
@@ -60,10 +60,10 @@ public enum SharedCompletionBuilder {
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
             }
             .map { function in
-                let insertText = function.hasSuffix("!") || function.hasSuffix("()") 
-                    ? function 
+                let insertText = function.hasSuffix("!") || function.hasSuffix("()")
+                    ? function
                     : "\(function)($0)"
-                
+
                 return CompletionItemModel(
                     label: function,
                     insertText: insertText,
@@ -73,7 +73,7 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     /// Creates literal completions from an array of literals
     public static func createLiteralCompletions(
         from literals: [String],
@@ -87,7 +87,7 @@ public enum SharedCompletionBuilder {
             .map { literal in
                 let kind: CompletionItemKind = literal.hasPrefix("__") ? .method : .value
                 let detail = literal.hasPrefix("__") ? "\(languageName) magic method" : "\(languageName) literal"
-                
+
                 return CompletionItemModel(
                     label: literal,
                     insertText: literal,
@@ -97,14 +97,14 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     /// Creates parameter completions for common parameter names by language
     public static func createParameterCompletions(
         for language: Language,
         filter: String
     ) -> [CompletionItemModel] {
         let parameters = getCommonParameters(for: language)
-        
+
         return parameters
             .filter { param in
                 filter.isEmpty || param.localizedCaseInsensitiveContains(filter)
@@ -119,7 +119,7 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     /// Creates member completions from tuples of (name, type, description)
     public static func createMemberItems(
         from members: [(String, String, String)],
@@ -136,7 +136,7 @@ public enum SharedCompletionBuilder {
                 case "module": .module
                 default: .property
                 }
-                
+
                 return CompletionItemModel(
                     label: name,
                     insertText: name,
@@ -146,9 +146,9 @@ public enum SharedCompletionBuilder {
                 )
             }
     }
-    
+
     // MARK: - Language-Specific Parameter Lists
-    
+
     private static func getCommonParameters(for language: Language) -> [String] {
         switch language {
         case .python:
@@ -180,10 +180,10 @@ public enum SharedContextAnalyzer {
     ) -> UniversalContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
-        
+
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor, for: language)
-        
+
         // Language-specific context analysis
         switch language {
         case .python:
@@ -199,9 +199,9 @@ public enum SharedContextAnalyzer {
             return analyzeGeneralContext(lineText: lineText, beforeCursor: beforeCursor, filter: filter)
         }
     }
-    
+
     // MARK: - Language-Specific Analysis
-    
+
     private static func analyzePythonContext(
         lineText: String,
         beforeCursor: String,
@@ -211,26 +211,26 @@ public enum SharedContextAnalyzer {
         if lineText.hasPrefix("import ") || lineText.hasPrefix("from ") {
             return UniversalContextAnalysisResult(type: .literal, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return UniversalContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for function definition
         if lineText.contains("def ") && lineText.contains("(") && !lineText.contains("):") {
             return UniversalContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         // Check for type hints
         if lineText.contains(": ") && !lineText.contains("=") {
             return UniversalContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return UniversalContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     private static func analyzeJavaScriptContext(
         lineText: String,
         beforeCursor: String,
@@ -240,26 +240,26 @@ public enum SharedContextAnalyzer {
         if lineText.hasPrefix("import ") || lineText.contains("from '") || lineText.contains("require(") {
             return UniversalContextAnalysisResult(type: .literal, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return UniversalContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for function definition
         if lineText.contains("function ") && lineText.contains("(") && !lineText.contains(")") {
             return UniversalContextAnalysisResult(type: .parameter, filter: filter)
         }
-        
+
         // Check for object property context
         if beforeCursor.hasSuffix(":") || lineText.contains("new ") {
             return UniversalContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return UniversalContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     private static func analyzeRustContext(
         lineText: String,
         beforeCursor: String,
@@ -269,27 +269,27 @@ public enum SharedContextAnalyzer {
         if lineText.hasPrefix("use ") {
             return UniversalContextAnalysisResult(type: .literal, filter: filter)
         }
-        
+
         // Check for member access
         if beforeCursor.hasSuffix(".") {
             let targetType = extractTargetType(from: beforeCursor)
             return UniversalContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         // Check for module access
         if beforeCursor.hasSuffix("::") {
             let targetModule = extractTargetModule(from: beforeCursor)
             return UniversalContextAnalysisResult(type: .member, filter: "", targetType: targetModule)
         }
-        
+
         // Check for type context
         if lineText.contains(": ") || lineText.contains("-> ") || lineText.contains("let ") {
             return UniversalContextAnalysisResult(type: .type, filter: filter)
         }
-        
+
         return UniversalContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     private static func analyzeGeneralContext(
         lineText _: String,
         beforeCursor: String,
@@ -300,23 +300,23 @@ public enum SharedContextAnalyzer {
             let targetType = extractTargetType(from: beforeCursor)
             return UniversalContextAnalysisResult(type: .member, filter: "", targetType: targetType)
         }
-        
+
         return UniversalContextAnalysisResult(type: .general, filter: filter)
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private static func extractCurrentWord(from text: String, for language: Language) -> String {
         let additionalChars = switch language {
         case .rust: "_!'"
         case .javascript: "_$"
         default: "_"
         }
-        
+
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: additionalChars)).inverted)
         return components.last ?? ""
     }
-    
+
     private static func extractTargetType(from text: String) -> String? {
         // Simple heuristic to extract the object before the dot
         let pattern = #"(\w+)\s*\.\s*$"#
@@ -327,7 +327,7 @@ public enum SharedContextAnalyzer {
         }
         return nil
     }
-    
+
     private static func extractTargetModule(from text: String) -> String? {
         // Extract the module before ::
         let pattern = #"([\w:]+)::\s*$"#

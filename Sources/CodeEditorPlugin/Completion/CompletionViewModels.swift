@@ -11,7 +11,7 @@ public struct CompletionPopupState {
     public var selectedIndex: Int
     public var isLoading: Bool
     public var animationDuration: TimeInterval
-    
+
     public init(
         isVisible: Bool = false,
         position: CGPoint = .zero,
@@ -39,7 +39,7 @@ public struct CompletionContext: Sendable {
     public let currentLine: String
     public let language: Language
     public let contextRange: NSRange
-    
+
     public init(
         triggerLocation: Int,
         triggerCharacter: String?,
@@ -69,7 +69,7 @@ public struct CompletionItem: Identifiable, Hashable {
     public let insertText: String?
     public let priority: Int
     public let matchScore: Double
-    
+
     public init(
         text: String,
         kind: CompletionItemKind,
@@ -87,11 +87,11 @@ public struct CompletionItem: Identifiable, Hashable {
         self.priority = priority
         self.matchScore = matchScore
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
