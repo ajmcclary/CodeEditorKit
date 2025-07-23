@@ -74,17 +74,19 @@ final class ErrorHandlingTests: XCTestCase {
     func testMemoryPressureRecovery() async throws {
         let editorView = CodeEditorView()
         
-        // Simulate memory pressure scenario with smaller text
-        let largeText = String(repeating: "func test() { print(\"memory test\") }\n", count: 100) // Reduced from 1000
+        // Simulate memory pressure scenario with bounded text
+        let largeText = MemoryBoundedTestData.swiftCode(lines: 100)
         
-        editorView.text = largeText
-        
-        // Skip actual cleanup in tests - just verify editor remains functional
-        // The real cleanup is tested in MemoryMonitor's own tests
-        
-        // Editor should still be functional
-        XCTAssertFalse(editorView.text?.isEmpty ?? true)
-        XCTAssertEqual(editorView.text, largeText)
+        TestMemoryOptimizer.measureMemoryUsage(operation: "Memory pressure test") {
+            editorView.text = largeText
+            
+            // Skip actual cleanup in tests - just verify editor remains functional
+            // The real cleanup is tested in MemoryMonitor's own tests
+            
+            // Editor should still be functional
+            XCTAssertFalse(editorView.text?.isEmpty ?? true)
+            XCTAssertEqual(editorView.text, largeText)
+        }
         
         // Should be able to continue operations
         let newText = "func newFunction() {}"

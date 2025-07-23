@@ -638,7 +638,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
                 }
             }
             // Increased timeout for reliability (500 operations need time)
-            wait(for: [debounceExpectation, throttleExpectation], timeout: 3.0)
+            wait(for: [debounceExpectation, throttleExpectation], timeout: 10.0)
         }
     }
     

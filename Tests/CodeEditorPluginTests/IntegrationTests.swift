@@ -7,11 +7,11 @@ import AppKit
 #endif
 
 @MainActor
-final class IntegrationTests: XCTestCase {
+final class IntegrationTests: CleanupTestCase {
     // MARK: - Async Highlighting Integration Tests
     
     func testAsyncHighlightingWithLanguageSwitch() async throws {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         let expectation = XCTestExpectation(description: "Async highlighting completes")
         
         // Start with Swift
@@ -68,7 +68,7 @@ final class IntegrationTests: XCTestCase {
     }
     
     func testAsyncHighlightingWithRapidTextChanges() async throws {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         editor.language = .swift
         
         // Rapidly change text multiple times
@@ -109,7 +109,7 @@ final class IntegrationTests: XCTestCase {
     }
     
     func testAsyncHighlightingCancellationOnLanguageChange() async throws {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         
         // Set a large text that takes time to highlight
         let largeCode = String(repeating: "func test() { print(\"test\") }\n", count: 100)
@@ -133,7 +133,7 @@ final class IntegrationTests: XCTestCase {
     
     func testPlatformCapabilitiesWithTextView() {
         let capabilities = PlatformCapabilities.shared
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         
         // Verify platform-specific features work correctly
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -158,7 +158,7 @@ final class IntegrationTests: XCTestCase {
     }
     
     func testPlatformAbstractionIntegration() {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         
         // Test platform colors
         editor.textColor = PlatformColors.label
@@ -186,7 +186,7 @@ final class IntegrationTests: XCTestCase {
     // MARK: - Cross-Platform Coordinator Integration Tests
     
     func testCrossPlatformCoordinatorWithEditor() async throws {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         let coordinator = CrossPlatformCoordinator()
         
         // Set up coordinator with text view
@@ -246,7 +246,7 @@ final class IntegrationTests: XCTestCase {
     // MARK: - Configuration Hot Reload Integration Tests
     
     func testConfigurationHotReloadIntegration() async throws {
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         
         // Initial configuration
         var config = EditorConfiguration()
@@ -278,7 +278,7 @@ final class IntegrationTests: XCTestCase {
             throw XCTSkip("TextKit2 not supported on this platform")
         }
         
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         // Load a smaller file for faster tests
         let largeContent = String(repeating: "func test() { print(\"test\") }\n", count: 100) // Reduced from 1000
         editor.text = largeContent
@@ -301,7 +301,7 @@ final class IntegrationTests: XCTestCase {
         let config = EditorConfiguration.minimal
         
         // Apply configuration
-        let editor = CodeEditorView()
+        let editor = createCodeEditorView()
         editor.configuration = config
         
         // Verify configuration applied

@@ -17,6 +17,13 @@ extension CodeEditorView {
             memoryMonitor = configMemoryMonitor
         }
         
+        // Apply workspace root for LSP
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if lspManager.workspaceRoot != configuration.workspaceRoot {
+            lspManager.workspaceRoot = configuration.workspaceRoot
+        }
+        #endif
+        
         // Apply display settings
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, line numbers are handled by NSRulerView in the container

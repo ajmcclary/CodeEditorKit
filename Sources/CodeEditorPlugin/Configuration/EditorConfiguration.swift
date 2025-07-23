@@ -115,6 +115,10 @@ public struct EditorConfiguration: Codable, Sendable {
     @available(macOS 13.0, iOS 16.0, *)
     public var actorCoordinator: ActorCoordinator?
     
+    /// Workspace root URL for LSP and file operations
+    /// If set, enables language server protocol features with the specified workspace root
+    public var workspaceRoot: URL?
+    
     // MARK: - Initialization
     
     public init() {}

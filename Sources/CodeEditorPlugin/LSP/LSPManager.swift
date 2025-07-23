@@ -179,9 +179,14 @@ public final class LSPManager: ObservableObject {
     // MARK: - Client Management
     
     /// Start a language server for the given language
-    /// - Parameter languageId: Language identifier
-    public func startLanguageServer(for languageId: String) async throws {
-        try await clientRegistry.startLanguageServer(for: languageId)
+    /// - Parameters:
+    ///   - languageId: Language identifier
+    ///   - retryConfig: Retry configuration (defaults to nil, which uses the server's configured retry settings)
+    public func startLanguageServer(
+        for languageId: String,
+        retryConfig: LSPRetryConfiguration? = nil
+    ) async throws {
+        try await clientRegistry.startLanguageServer(for: languageId, retryConfig: retryConfig)
         
         // Reopen any documents for this language
         await documentManager.reopenDocuments(for: languageId)

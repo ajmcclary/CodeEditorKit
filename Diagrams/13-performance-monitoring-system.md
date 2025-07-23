@@ -1,6 +1,6 @@
 # Performance Monitoring & Optimization System
 
-This diagram shows the comprehensive performance monitoring and optimization system that ensures 60fps rendering and efficient resource usage.
+This diagram shows the comprehensive performance monitoring and optimization system that ensures 60fps rendering and efficient resource usage, including performance budget enforcement.
 
 ```mermaid
 classDiagram
@@ -12,6 +12,8 @@ classDiagram
         +performanceMonitor PerformanceMonitor
         +performanceInsights PerformanceInsights
         +productionMetrics ProductionPerformanceMetrics
+        +performanceBudget PerformanceBudget
+        +budgetReporter PerformanceBudgetReporter
         +initialize()
         +startMonitoring()
         +generateReport()
@@ -114,7 +116,7 @@ classDiagram
         +optimizeRendering()
     }
 
-    %% Row 5 - Support Components
+    %% Row 5 - Support Components & Budget System
     class TelemetryCollector {
         <<telemetry>>
         +userConsent Bool
@@ -135,6 +137,22 @@ classDiagram
         +editingLatency TimeInterval
         +typingResponsiveness Double
         +undoRedoPerformance TimeInterval
+    }
+
+    class PerformanceBudget {
+        <<budget system>>
+        +budgets [String: Budget]
+        +budget(for: String) Budget?
+        +checkBudgets() [BudgetViolation]
+    }
+
+    class PerformanceBudgetReporter {
+        <<budget reporter>>
+        +measurements [String: [TimeInterval]]
+        +record(operation: String, duration: TimeInterval)
+        +averageMeasurements() [String: TimeInterval]
+        +generateReport() PerformanceBudgetReport
+        +reset()
     }
 
 
@@ -242,6 +260,14 @@ classDiagram
         memory
     }
 
+    class BudgetStatus {
+        <<enumeration>>
+        withinBudget
+        warning
+        critical
+        exceeded
+    }
+
     %% Key Relationships
     UnifiedPerformanceSystem --> PerformanceMonitor : uses
     UnifiedPerformanceSystem --> PerformanceInsights : uses
@@ -249,6 +275,8 @@ classDiagram
     UnifiedPerformanceSystem --> AdaptivePerformanceMode : uses
     UnifiedPerformanceSystem --> MemoryMonitor : uses
     UnifiedPerformanceSystem --> ViewportManager : uses
+    UnifiedPerformanceSystem --> PerformanceBudget : enforces
+    UnifiedPerformanceSystem --> PerformanceBudgetReporter : reports
 
     PerformanceMonitor --> PerformanceMetrics : collects
     PerformanceMetrics --> RenderingMetrics : contains
@@ -278,6 +306,10 @@ classDiagram
 
     PerformanceConfiguration --> IOSLargeFileOptimizer : configures
 
+    PerformanceBudget --> BudgetStatus : evaluates
+    PerformanceBudgetReporter --> PerformanceBudget : uses
+    PerformanceMonitor --> PerformanceBudgetReporter : records to
+
     %% Styling - Dark mode friendly colors
     classDef system fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
     classDef monitor fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
@@ -290,6 +322,7 @@ classDiagram
     classDef views fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
     classDef enum fill:#8E8E9320,stroke:#8E8E93,stroke-width:2px,color:#1D1D1F
     classDef ios fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
+    classDef budget fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
 
     class UnifiedPerformanceSystem system
     class PerformanceMonitor monitor
@@ -318,6 +351,9 @@ classDiagram
     class PerformanceConfigMode enum
     class OptimizationMode enum
     class MemoryPressureMode enum
+    class BudgetStatus enum
+    class PerformanceBudget budget
+    class PerformanceBudgetReporter budget
 ```
 
 ## Performance Optimization Flow
@@ -421,6 +457,8 @@ flowchart TD
 - **Trend Analysis**: Long-term performance pattern analysis
 - **Predictive Analytics**: Performance prediction based on context
 - **Optimization Suggestions**: Automated performance recommendations
+- **Budget Enforcement**: Monitor and enforce performance budgets
+- **Budget Reporting**: Generate reports on budget compliance
 
 ### 6. iOS-Specific Optimizations
 - **Aggressive Memory Management**: Enhanced cleanup for limited iOS memory
@@ -437,3 +475,20 @@ flowchart TD
 4. **Proactive Optimization**: Prevents performance issues before they occur
 5. **Data-Driven**: Uses metrics to make optimization decisions
 6. **Platform-Specific**: Tailored optimizations for iOS device constraints
+7. **Budget Compliance**: Ensures operations stay within defined performance budgets
+
+## Performance Budget Integration
+
+```swift
+// Define performance budgets
+let budgets = [
+    "syntax_highlighting": Budget(operation: "Syntax Highlighting", targetTime: 0.016),
+    "text_layout": Budget(operation: "Text Layout", targetTime: 0.016),
+    "completion_request": Budget(operation: "Completion", targetTime: 0.05)
+]
+
+// Track and report
+let reporter = PerformanceBudgetReporter()
+reporter.record(operation: "syntax_highlighting", duration: 0.015) // ✅ Within budget
+reporter.record(operation: "text_layout", duration: 0.025) // ⚠️ Warning
+```

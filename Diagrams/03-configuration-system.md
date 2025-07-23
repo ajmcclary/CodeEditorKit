@@ -1,6 +1,6 @@
 # Configuration System Diagram
 
-This diagram illustrates the comprehensive configuration system used throughout the CodeEditorPlugin framework.
+This diagram illustrates the comprehensive configuration system used throughout the CodeEditorPlugin framework, including batch update management for minimizing change notifications.
 
 ```mermaid
 classDiagram
@@ -165,6 +165,18 @@ classDiagram
         +decodeJSON() throws
     }
 
+    %% Seventh Row - Configuration Update Management
+    class ConfigurationBatchUpdater {
+        &lt;&lt;batch updates&gt;&gt;
+        +pendingUpdates [(EditorConfiguration) -> EditorConfiguration]
+        +updateTimer Timer?
+        +updateDelay TimeInterval
+        +onUpdate (EditorConfiguration) -> Void
+        +queueUpdate()
+        +applyPendingUpdates()
+        +scheduleUpdate()
+    }
+
     %% Relationships
     EditorConfiguration *-- DisplayConfiguration : contains
     EditorConfiguration *-- LayoutConfiguration : contains
@@ -186,6 +198,9 @@ classDiagram
     
     AppState --> EditorConfiguration : manages
     AppState --> ConfigurationPersistence : uses
+    AppState --> ConfigurationBatchUpdater : uses
+    
+    ConfigurationBatchUpdater --> EditorConfiguration : batches updates
     
     ConfigurationEnvironmentKey --> EditorConfiguration : provides
     
@@ -213,6 +228,7 @@ classDiagram
     class ConfigurationValidator util
     class ConfigurationPresets util
     class ConfigurationPersistence util
+    class ConfigurationBatchUpdater util
     class ConfigurationEnvironmentKey swiftui
     class AppState swiftui
 ```
@@ -231,6 +247,24 @@ appState.updateConfiguration { config in
     config.display.fontSize = 16
     config.behavior.autoIndent = true
 }
+```
+
+### Batch Updates with Updater
+```swift
+let batchUpdater = ConfigurationBatchUpdater { updatedConfig in
+    appState.configuration = updatedConfig
+}
+
+// Queue multiple updates
+batchUpdater.queueUpdate { config in
+    config.display.fontSize = 16
+}
+
+batchUpdater.queueUpdate { config in
+    config.behavior.autoIndent = true
+}
+
+// Updates are automatically batched and applied after delay
 ```
 
 ### Environment Integration

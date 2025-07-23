@@ -427,7 +427,12 @@ struct UnifiedContentView: View {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(jsonString, forType: .string)
             #else
-            UIPasteboard.general.string = jsonString
+            // Use secure pasteboard access on iOS 16+
+            if #available(iOS 16.0, *) {
+                UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: jsonString]]
+            } else {
+                UIPasteboard.general.string = jsonString
+            }
             #endif
         }
     }

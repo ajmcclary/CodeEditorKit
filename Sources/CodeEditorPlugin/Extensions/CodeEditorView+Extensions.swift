@@ -17,11 +17,8 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         cut(nil)
         #else
-        if let selectedRange = selectedTextRange,
-           let selectedText = text(in: selectedRange) {
-            UIPasteboard.general.string = selectedText
-            deleteBackward()
-        }
+        // Use the built-in cut method which handles pasteboard securely
+        cut(nil)
         #endif
     }
     
@@ -30,10 +27,8 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         copy(nil)
         #else
-        if let selectedRange = selectedTextRange,
-           let selectedText = text(in: selectedRange) {
-            UIPasteboard.general.string = selectedText
-        }
+        // Use the built-in copy method which handles pasteboard securely
+        copy(nil)
         #endif
     }
     
@@ -42,9 +37,8 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         paste(nil)
         #else
-        if let pasteString = UIPasteboard.general.string {
-            super.insertText(pasteString)
-        }
+        // Use the built-in paste method which handles pasteboard securely
+        paste(nil)
         #endif
     }
     
@@ -91,7 +85,10 @@ extension CodeEditorView {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         return NSPasteboard.general.string(forType: .string) != nil
         #else
-        return UIPasteboard.general.string != nil
+        // On iOS 16+, checking pasteboard content triggers authorization prompts
+        // Since we can't reliably check without prompting, assume paste is available when editable
+        // The actual paste operation will handle any authorization if needed
+        return true
         #endif
     }
 }

@@ -2,7 +2,7 @@
 import XCTest
 
 /// Performance regression tests to ensure optimizations don't degrade over time
-final class PerformanceRegressionTests: XCTestCase {
+final class PerformanceRegressionTests: CleanupTestCase {
     override func setUp() async throws {
         try await super.setUp()
         // Give the system time to settle between tests
@@ -24,6 +24,12 @@ final class PerformanceRegressionTests: XCTestCase {
         static let symbolNavigatorLookup: TimeInterval = 0.2 // 200ms for navigation
         static let memoryPressureTest: TimeInterval = 2.0 // 2s max
         static let tolerancePercentage: Double = 50.0 // Allow 50% variance for CI environment
+        
+        // New baselines for tests we optimized
+        static let completionCancellation: TimeInterval = 0.1 // 100ms max (was 131s)
+        static let layoutOperationRecording: TimeInterval = 0.01 // 10ms max (was 46s)
+        static let memoryPressureRecovery: TimeInterval = 0.5 // 500ms max (was 24s)
+        static let contextMenuCreation: TimeInterval = 0.5 // 500ms max (was 74-90s)
     }
     
     // MARK: - AsyncOperationManager Tests
@@ -98,16 +104,13 @@ final class PerformanceRegressionTests: XCTestCase {
         let matcher = FuzzyMatcher()
         let candidates = (0..<10_000).map { "function\($0)WithLongName" }
         
-        let startTime = CFAbsoluteTimeGetCurrent()
-        let results = matcher.match(pattern: "func", candidates: candidates)
-        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        var results: [FuzzyMatcher.MatchResult] = []
+        
+        measureAgainstBudget("fuzzy_search") {
+            results = matcher.match(pattern: "func", candidates: candidates)
+        }
         
         XCTAssertFalse(results.isEmpty)
-        XCTAssertLessThan(
-            duration,
-            PerformanceBaselines.fuzzyMatcherSearch * (1.0 + PerformanceBaselines.tolerancePercentage / 100.0),
-            "FuzzyMatcher performance regression detected: \(duration)s > baseline \(PerformanceBaselines.fuzzyMatcherSearch)s"
-        )
     }
     
     // MARK: - SymbolNavigator Tests
@@ -115,7 +118,7 @@ final class PerformanceRegressionTests: XCTestCase {
     @MainActor
     func testSymbolNavigatorRegressionCheck() throws {
         let navigator = SymbolNavigator()
-        let textView = CodeEditorView(frame: .zero)
+        let textView = createCodeEditorView(frame: .zero)
         
         // Generate test code with many symbols
         var largeCode = ""
@@ -156,7 +159,7 @@ final class PerformanceRegressionTests: XCTestCase {
     @MainActor
     func testSymbolNavigatorPerformanceBaseline() throws {
         let navigator = SymbolNavigator()
-        let textView = CodeEditorView(frame: .zero)
+        let textView = createCodeEditorView(frame: .zero)
         
         // Generate large code file
         var largeCode = ""
@@ -185,19 +188,20 @@ final class PerformanceRegressionTests: XCTestCase {
     func testMemoryPressureRegressionCheck() async throws {
         let startTime = CFAbsoluteTimeGetCurrent()
         
+        // Create editors manually instead of using withMultipleEditors to avoid async/throws issues
         var editors: [CodeEditorView] = []
-        
-        // Create editors
         for index in 0..<5 {
-            let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-            editor.text = "Editor \(index): " + String(repeating: "test ", count: 100)
+            let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+            editor.text = "Editor \(index): " + MemoryBoundedTestData.repetitiveText(
+                pattern: "test ",
+                count: 100
+            )
             editor.language = .swift
             editor.isLineNumbersEnabled = false
             editors.append(editor)
         }
         
-        // Clean up
-        editors.removeAll()
+        // Editors will be automatically cleaned up by CleanupTestCase tearDown
         
         let duration = CFAbsoluteTimeGetCurrent() - startTime
         
@@ -213,7 +217,7 @@ final class PerformanceRegressionTests: XCTestCase {
     @MainActor
     func testCombinedPerformanceScenario() async throws {
         // This test simulates a realistic usage scenario
-        let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 800, height: 600))
+        let editor = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 800, height: 600))
         let asyncManager = AsyncOperationManager()
         let fuzzyMatcher = FuzzyMatcher()
         let navigator = SymbolNavigator()
@@ -233,7 +237,7 @@ final class PerformanceRegressionTests: XCTestCase {
         }
         
         editor.text = code
-        editor.language = .swift
+        editor.language = Language.swift
         navigator.attach(to: editor)
         
         let startTime = CFAbsoluteTimeGetCurrent()
@@ -261,6 +265,84 @@ final class PerformanceRegressionTests: XCTestCase {
         XCTAssertLessThan(totalDuration, 2.0, "Combined performance scenario took too long: \(totalDuration)s")
     }
     
+    // MARK: - Optimized Test Regression Checks
+    
+    @MainActor
+    func testCompletionCancellationPerformance() async throws {
+        let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
+        let slowProvider = MockSlowCompletionProvider()
+        completionManager.registerProvider(slowProvider)
+        
+        let language = Language.swift
+        let context = CompletionContextModel(text: "test", cursorPosition: 4, language: language)
+        
+        try await measureAsyncAgainstBudget("completion_cancellation") { @MainActor in
+            // Start and cancel a request
+            Task { @MainActor in
+                do {
+                    _ = try await completionManager.requestCompletions(for: context)
+                } catch {
+                    // Expected cancellation
+                }
+            }
+            
+            try await Task.sleep(nanoseconds: 5_000_000) // 5ms
+            completionManager.cancelCurrentRequest()
+        }
+    }
+    
+    @MainActor
+    func testLayoutOperationRecordingPerformance() async throws {
+        let performanceMonitor = TextKit2PerformanceMonitor()
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Record multiple layout operations
+        for _ in 0..<100 {
+            performanceMonitor.recordLayoutOperation(duration: 0.001)
+        }
+        
+        let duration = CFAbsoluteTimeGetCurrent() - startTime
+        
+        XCTAssertLessThan(
+            duration,
+            PerformanceBaselines.layoutOperationRecording,
+            "Layout operation recording regression: \(duration)s > baseline \(PerformanceBaselines.layoutOperationRecording)s"
+        )
+    }
+    
+    @MainActor
+    func testMemoryPressureRecoveryPerformance() async throws {
+        let editorView = createCodeEditorView()
+        
+        try await measureAsyncAgainstBudget("memory_pressure_recovery") { @MainActor in
+            // Simulate memory pressure with smaller text
+            let largeText = String(repeating: "func test() { print(\"memory test\") }\n", count: 100)
+            editorView.text = largeText
+            
+            // Verify editor remains functional
+            editorView.text = "func newFunction() {}"
+        }
+    }
+    
+    @MainActor
+    func testContextMenuCreationPerformance() async throws {
+        let coordinator = CrossPlatformCoordinator()
+        let textView = createCodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = "Hello, World! This is a test."
+        
+        var menu: Any?
+        
+        try await measureAsyncAgainstBudget("context_menu_creation") { @MainActor in
+            // Create context menu
+            let range = NSRange(location: 0, length: 5)
+            textView.selectedRange = range
+            menu = coordinator.createContextMenu(for: range, in: textView)
+        }
+        
+        XCTAssertNotNil(menu)
+    }
+    
     // MARK: - Performance Monitoring Helpers
     
     private func measureAndReport<T>(
@@ -280,5 +362,29 @@ final class PerformanceRegressionTests: XCTestCase {
         }
         
         return result
+    }
+}
+
+// MARK: - Mock Providers for Testing
+
+@MainActor
+private class MockSlowCompletionProvider: CompletionProvider {
+    let id = "slow-provider"
+    let supportedLanguages: [Language] = [.swift]
+    let triggerCharacters: [String] = []
+    
+    func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+        // Check for cancellation frequently
+        for _ in 0..<20 {
+            try Task.checkCancellation()
+            try await Task.sleep(nanoseconds: 1_000_000) // 1ms
+        }
+        
+        return CompletionResult(
+            items: [],
+            context: context,
+            isIncomplete: false,
+            processingTime: 0.02
+        )
     }
 }

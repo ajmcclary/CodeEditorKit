@@ -11,6 +11,86 @@ Enable IDE-level intelligence with Language Server Protocol support.
 
 CodeEditorPlugin provides comprehensive Language Server Protocol (LSP) support, bringing advanced IDE features like intelligent code completion, real-time diagnostics, and refactoring capabilities to your editor. The framework supports two modes of operation to ensure cross-platform compatibility.
 
+LSP support provides advanced IDE features including:
+- Code completion with context awareness
+- Hover information and documentation
+- Go to definition and find references
+- Real-time diagnostics and error reporting
+- Document symbols and outline view
+- Code actions and refactoring support
+
+## Required Configuration
+
+### Setting Workspace Root
+
+The most important requirement for LSP to work is setting a workspace root. Without it, you'll see errors like:
+```
+Failed to start language server for swift: Invalid LSP response: No workspace root set
+```
+
+### SwiftUI Configuration
+
+```swift
+import SwiftUI
+import CodeEditorPlugin
+
+struct MyEditorView: View {
+    @State private var code = ""
+    @State private var projectURL = URL(fileURLWithPath: "/path/to/project")
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .codeLanguage(.swift)
+            .codeWorkspaceRoot(projectURL)  // Required for LSP
+    }
+}
+```
+
+### Programmatic Configuration
+
+```swift
+var configuration = EditorConfiguration()
+configuration.workspaceRoot = URL(fileURLWithPath: "/path/to/project")
+
+// Apply to editor
+editorView.configuration = configuration
+```
+
+### Dynamic Workspace Detection
+
+For file-based editors, automatically detect the workspace root:
+
+```swift
+func findWorkspaceRoot(for fileURL: URL) -> URL? {
+    var currentURL = fileURL.deletingLastPathComponent()
+    
+    // Look for common project indicators
+    let projectIndicators = [
+        ".git",
+        "Package.swift",
+        ".xcodeproj",
+        ".xcworkspace",
+        "Cargo.toml",
+        "package.json",
+        "pyproject.toml",
+        "go.mod"
+    ]
+    
+    while currentURL.path != "/" {
+        for indicator in projectIndicators {
+            let indicatorURL = currentURL.appendingPathComponent(indicator)
+            if FileManager.default.fileExists(atPath: indicatorURL.path) {
+                return currentURL
+            }
+        }
+        currentURL = currentURL.deletingLastPathComponent()
+    }
+    
+    // Fallback to file's directory
+    return fileURL.deletingLastPathComponent()
+}
+```
+
 ## Platform Support Matrix
 
 | Feature | macOS | iOS | Mac Catalyst |
@@ -36,6 +116,29 @@ Connect to language servers over WebSocket for cross-platform support:
 > Important: When developing for iOS or Mac Catalyst, you must use remote LSP servers. Plan your architecture accordingly.
 
 > Note: LSP integration is currently in preview with support for Swift, TypeScript, and Python. Full LSP 3.17 compliance is targeted for v2.0.
+
+## Supported Language Servers
+
+### Swift (sourcekit-lsp)
+- **Auto-detected**: Yes (bundled with Xcode)
+- **Path**: `/usr/bin/sourcekit-lsp` or Xcode toolchain
+- **Features**: Full support including SwiftSyntax integration
+
+### TypeScript/JavaScript
+- **Installation**: `npm install -g typescript-language-server`
+- **Features**: IntelliSense, type checking, refactoring
+
+### Python (pylsp)
+- **Installation**: `pip install python-lsp-server`
+- **Features**: Auto-completion, linting, formatting
+
+### Rust (rust-analyzer)
+- **Installation**: `rustup component add rust-analyzer`
+- **Features**: Type inference, macro expansion, inlay hints
+
+### Go (gopls)
+- **Installation**: `go install golang.org/x/tools/gopls@latest`
+- **Features**: Auto-imports, formatting, diagnostics
 
 ## Supported Features
 
@@ -437,6 +540,74 @@ class LSPCache {
 }
 ```
 
+## Troubleshooting Setup Issues
+
+### "No workspace root set" Error
+
+**Cause**: LSPManager created without workspace root configuration.
+
+**Solution**: Always set workspace root before using LSP features:
+```swift
+// SwiftUI
+.codeWorkspaceRoot(projectURL)
+
+// UIKit/AppKit
+config.workspaceRoot = projectURL
+```
+
+### Language Server Not Found
+
+**Cause**: Language server executable not in PATH.
+
+**Solution**: Install the language server or specify full path:
+```swift
+// Check if language server is available
+let availability = lspManager.getLanguageServerAvailability()
+print(availability)
+
+// Find language server paths
+let paths = lspManager.findLanguageServerPaths(for: "sourcekit-lsp")
+print(paths)
+```
+
+### No Completions Appearing
+
+**Cause**: Document not opened in LSP or wrong file path.
+
+**Solution**: Ensure file paths are absolute and documents are opened:
+```swift
+// Use absolute paths
+let absolutePath = fileURL.path
+try await lspManager.openDocument(
+    filePath: absolutePath,
+    content: documentContent
+)
+```
+
+## Best Practices
+
+1. **Always Set Workspace Root**: This is mandatory for LSP to function.
+
+2. **Use Absolute Paths**: LSP requires absolute file paths, not relative ones.
+
+3. **Handle Async Operations**: LSP operations are asynchronous:
+   ```swift
+   Task {
+       try await lspManager.startLanguageServer(for: .swift)
+   }
+   ```
+
+4. **Monitor LSP Status**: Check if servers are running:
+   ```swift
+   let activeClients = lspManager.activeClients
+   let isSwiftLSPRunning = activeClients["swift"] != nil
+   ```
+
+5. **Clean Up Resources**: Stop servers when done:
+   ```swift
+   lspManager.stopAllServers()
+   ```
+
 ## Technical Analysis
 
 ### Platform Dependencies
@@ -651,6 +822,50 @@ LSPLogger.logFile = URL(fileURLWithPath: "~/lsp.log")
 
 While LSP support is currently macOS-only due to platform security restrictions, CodeEditorPlugin has excellent foundations for implementing alternative solutions. The existing completion system already provides excellent code intelligence for most use cases, making the editor highly functional on all platforms even without full LSP support.
 
+## Example: Complete Setup
+
+```swift
+import SwiftUI
+import CodeEditorPlugin
+
+struct ProjectEditorView: View {
+    @State private var code = ""
+    @State private var configuration = EditorConfiguration()
+    
+    let projectURL: URL
+    let fileURL: URL
+    
+    var body: some View {
+        CodeEditor(text: $code)
+            .codeLanguage(detectLanguage())
+            .codeWorkspaceRoot(projectURL)
+            .environment(\.codeEditorConfiguration, configuration)
+            .onAppear {
+                setupLSP()
+            }
+    }
+    
+    private func setupLSP() {
+        // Enable completion features
+        configuration.behavior.autoCompletion = true
+        configuration.behavior.showCompletionOnTyping = true
+        
+        // Set workspace root
+        configuration.workspaceRoot = projectURL
+    }
+    
+    private func detectLanguage() -> Language {
+        switch fileURL.pathExtension {
+        case "swift": return .swift
+        case "py": return .python
+        case "js": return .javascript
+        case "ts": return .typescript
+        default: return .plainText
+        }
+    }
+}
+```
+
 ## See Also
 
 - <doc:Plugin-Architecture>
@@ -658,3 +873,4 @@ While LSP support is currently macOS-only due to platform security restrictions,
 - <doc:Advanced-Patterns>
 - <doc:Platform-Abstraction>
 - <doc:Catalyst-Best-Practices>
+- <doc:Articles/LSP-Retry-Configuration>

@@ -169,11 +169,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
                 Self.logger.warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
             }
             
-            // Apply configuration if it changed OR if the memory monitor changed
-            // (memoryMonitor is excluded from EditorConfiguration equality)
+            // Apply configuration if it changed OR if the memory monitor changed OR if workspace root changed
+            // (memoryMonitor and workspaceRoot are excluded from EditorConfiguration equality)
             if !isApplyingConfiguration && 
                (configuration != oldValue || 
-                configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor) {
+                configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor ||
+                configuration.workspaceRoot != oldValue.workspaceRoot) {
                 isApplyingConfiguration = true
                 applyConfiguration()
                 isApplyingConfiguration = false
@@ -195,7 +196,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     
     /// LSP manager for language server integration
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    internal lazy var lspManager = memoryCoordinator.createLSPManager()
+    internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
     #endif
     
     /// Code folding engine for managing foldable regions and fold states
@@ -416,6 +417,24 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         
         // Cancel any pending layout operations
         layoutCoordinator.cancelPendingLayout()
+        
+        // Cancel any pending completion requests
+        completionManager.cancelCurrentRequest()
+        
+        // Clean up code folding - no cleanup method available
+        
+        // Clean up syntax highlighting
+        Task {
+            await syntaxHighlighter.cancelHighlighting()
+        }
+        
+        // Remove any gutter view
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        gutterViewStorage?.removeFromSuperview()
+        #endif
+        
+        // Clear delegate to break potential retain cycles
+        delegate = nil
         
         super.removeFromSuperview()
     }

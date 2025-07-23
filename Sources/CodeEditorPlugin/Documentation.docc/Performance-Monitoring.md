@@ -10,6 +10,8 @@ Monitor and optimize your editor's performance with built-in tools.
 
 CodeEditorPlugin includes comprehensive performance monitoring tools that provide real-time insights into rendering performance, memory usage, and syntax highlighting efficiency.
 
+> Tip: For detailed optimization techniques, see <doc:Articles/Performance-Optimizations>. For test-specific performance configuration, see <doc:Articles/Test-Performance-Configuration>.
+
 ## Enabling Performance Monitoring
 
 ### SwiftUI
@@ -289,4 +291,6 @@ try csv.write(to: csvURL)
 - <doc:Configuration-System>
 - <doc:Swift6-Concurrency>
 - <doc:Architecture-Overview>
-- <doc:Performance-Optimization-Integration>
+- <doc:Articles/Performance-Optimization-Integration>
+- <doc:Articles/Performance-Optimizations>
+- <doc:Articles/Test-Performance-Configuration>

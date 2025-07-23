@@ -289,7 +289,9 @@ public final class GutterViewModel {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(String(lineNumber), forType: .string)
             #elseif canImport(UIKit)
-            UIPasteboard.general.string = String(lineNumber)
+            // Use UIPasteboard's items API for secure pasteboard access
+            let lineNumberString = String(lineNumber)
+            UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: lineNumberString]]
             #endif
             
         default:

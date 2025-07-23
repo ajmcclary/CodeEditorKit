@@ -6,7 +6,7 @@ import UIKit
 @testable import CodeEditorPlugin
 import XCTest
 
-final class TextKit2OptimizationTests: XCTestCase {
+final class TextKit2OptimizationTests: IsolatedTestCase {
     @MainActor
     private func withOptimizer<T>(_ body: (TextKit2RenderingOptimizer) async throws -> T) async throws -> T {
         let optimizer = TextKit2RenderingOptimizer(memoryMonitor: MemoryMonitor())
@@ -164,20 +164,28 @@ final class TextKit2OptimizationTests: XCTestCase {
     
     @MainActor
     func testLayoutOperationRecording() async throws {
-        try await withMonitor { performanceMonitor in
-            performanceMonitor.recordLayoutOperation(duration: 0.1)
-            
-            XCTAssertEqual(performanceMonitor.layoutOperations, 1)
-            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.1)
-            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.1)
-            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.1)
-            
-            performanceMonitor.recordLayoutOperation(duration: 0.2)
-            
-            XCTAssertEqual(performanceMonitor.layoutOperations, 2)
-            XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.15, accuracy: 0.001) // (0.1 + 0.2) / 2
-            XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.2)
-            XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.3, accuracy: 0.001)
+        // Use isolated test runner with timing measurements
+        try await runIsolatedTest(timeout: 5) {
+            try await TestIsolationHelper.measureTime(
+                operation: "testLayoutOperationRecording",
+                warningThreshold: 0.5
+            ) {
+                try await self.withMonitor { performanceMonitor in
+                    performanceMonitor.recordLayoutOperation(duration: 0.1)
+                    
+                    XCTAssertEqual(performanceMonitor.layoutOperations, 1)
+                    XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.1)
+                    XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.1)
+                    XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.1)
+                    
+                    performanceMonitor.recordLayoutOperation(duration: 0.2)
+                    
+                    XCTAssertEqual(performanceMonitor.layoutOperations, 2)
+                    XCTAssertEqual(performanceMonitor.averageLayoutTime, 0.15, accuracy: 0.001) // (0.1 + 0.2) / 2
+                    XCTAssertEqual(performanceMonitor.peakLayoutTime, 0.2)
+                    XCTAssertEqual(performanceMonitor.totalRenderingTime, 0.3, accuracy: 0.001)
+                }
+            }
         }
     }
     

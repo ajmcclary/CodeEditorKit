@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "C3B16AAE-D409-4D59-981D-B9F32129B699",
+      "name" : "Parallel Test Configuration",
+      "options" : {
+        "testExecutionOrdering": "random",
+        "targetForVariableExpansion" : {
+          "containerPath" : "container:",
+          "identifier" : "CodeEditorPluginTests",
+          "name" : "CodeEditorPluginTests"
+        }
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "testTimeoutsEnabled" : true,
+    "maximumTestExecutionTimeAllowance" : 60,
+    "maximumTestRepetitions" : 3,
+    "testExecutionOrdering" : "random",
+    "executionOrderRandomizationSeed" : 0,
+    "parallelizationMode" : "automatic",
+    "testRepetitionMode" : "retryOnFailure"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CodeEditorPluginTests",
+        "name" : "CodeEditorPluginTests"
+      },
+      "skippedTests" : [
+      ]
+    }
+  ],
+  "version" : 1
+}

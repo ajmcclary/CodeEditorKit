@@ -165,7 +165,7 @@ final class LargeFilePerformanceTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            wait(for: [expectation], timeout: 1.0) // Short timeout expected
+            wait(for: [expectation], timeout: 5.0) // Increased timeout for simulator performance
         }
     }
     

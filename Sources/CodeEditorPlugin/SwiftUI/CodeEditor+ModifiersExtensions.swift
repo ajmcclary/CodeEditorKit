@@ -47,6 +47,26 @@ extension View {
         environment(\.codeEditorLanguage, language)
     }
     
+    /// Sets the workspace root URL for LSP and file operations.
+    ///
+    /// - Parameter url: The workspace root URL
+    /// - Returns: A view with the workspace root set in the configuration
+    ///
+    /// Setting a workspace root enables Language Server Protocol (LSP) features
+    /// like code completion, hover information, and diagnostics.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// CodeEditor(text: $code)
+    ///     .codeWorkspaceRoot(projectURL)
+    /// ```
+    public func codeWorkspaceRoot(_ url: URL?) -> some View {
+        transformEnvironment(\.codeEditorConfiguration) { config in
+            config.workspaceRoot = url
+        }
+    }
+    
     /// Configures the visibility of line numbers in the gutter.
     ///
     /// - Parameter visible: Whether to show line numbers (default: true)

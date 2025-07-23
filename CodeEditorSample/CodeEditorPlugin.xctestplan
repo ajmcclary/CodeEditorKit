@@ -4,15 +4,20 @@
       "id" : "C3B16AAE-D409-4D59-981D-B9F32129B699",
       "name" : "Test Scheme Action",
       "options" : {
-
+        "testTimeoutsEnabled" : true,
+        "maximumTestExecutionTimeAllowance" : 60
       }
     }
   ],
   "defaultOptions" : {
-    "performanceAntipatternCheckerEnabled" : true
+    "performanceAntipatternCheckerEnabled" : true,
+    "testTimeoutsEnabled" : true,
+    "maximumTestExecutionTimeAllowance" : 60,
+    "mainThreadCheckerEnabled" : true
   },
   "testTargets" : [
     {
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:",
         "identifier" : "CodeEditorPluginTests",

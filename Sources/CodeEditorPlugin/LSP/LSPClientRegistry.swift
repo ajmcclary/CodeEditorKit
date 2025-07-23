@@ -45,7 +45,11 @@ final class LSPClientRegistry {
         // Auto-start if configured and we have a workspace
         if config.autoStart, workspaceRoot != nil {
             Task {
-                try? await startLanguageServer(for: config.languageId)
+                do {
+                    try await startLanguageServer(for: config.languageId, retryConfig: config.retryConfiguration)
+                } catch {
+                    logger.error("Failed to auto-start LSP server for \(config.languageId): \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -73,12 +77,20 @@ final class LSPClientRegistry {
     
     // MARK: - Client Management
     
-    /// Start a language server for the given language
-    /// - Parameter languageId: Language identifier
-    func startLanguageServer(for languageId: String) async throws {
+    /// Start a language server for the given language with retry support
+    /// - Parameters:
+    ///   - languageId: Language identifier
+    ///   - retryConfig: Retry configuration (defaults to nil, which uses the server's configured retry settings)
+    func startLanguageServer(
+        for languageId: String,
+        retryConfig: LSPRetryConfiguration? = nil
+    ) async throws {
         guard let config = serverConfigurations[languageId] else {
             throw LSPError.invalidResponse("No configuration found for language: \(languageId)")
         }
+        
+        // Use provided retry config or fall back to the server's configured retry settings
+        let effectiveRetryConfig = retryConfig ?? config.retryConfiguration
         
         guard let workspaceRoot else {
             throw LSPError.invalidResponse("No workspace root set")
@@ -103,7 +115,7 @@ final class LSPClientRegistry {
             resolvedServerPath = config.serverPath
         }
         
-        let client = LSPClient()
+        let client = await LSPClient.createAndSetup()
         let serverConfig = LSPClient.ServerConfiguration(
             languageId: languageId,
             serverPath: resolvedServerPath,
@@ -112,10 +124,35 @@ final class LSPClientRegistry {
             capabilities: config.capabilities
         )
         
-        try await client.connect(configuration: serverConfig)
-        activeClients[languageId] = client
+        // Attempt connection with retry logic
+        var lastError: Error?
         
-        logger.info("Successfully started LSP server for \(languageId)")
+        for attempt in 0...effectiveRetryConfig.maxRetries {
+            do {
+                try await client.connect(configuration: serverConfig)
+                activeClients[languageId] = client
+                logger.info("Successfully started LSP server for \(languageId) on attempt \(attempt + 1)")
+                return
+            } catch {
+                lastError = error
+                
+                if attempt < effectiveRetryConfig.maxRetries {
+                    let delay = effectiveRetryConfig.delay(for: attempt)
+                    logger.warning("Failed to start LSP server for \(languageId) on attempt \(attempt + 1)/\(effectiveRetryConfig.maxRetries + 1). Retrying in \(String(format: "%.1f", delay))s. Error: \(error.localizedDescription)")
+                    
+                    // Wait before retrying
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    
+                    // Reset client state for retry
+                    client.disconnect()
+                } else {
+                    logger.error("Failed to start LSP server for \(languageId) after \(effectiveRetryConfig.maxRetries + 1) attempts. Error: \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // Throw the last error if all retries failed
+        throw lastError ?? LSPError.serverError(code: -1, message: "Failed to start LSP server after retries", data: nil)
     }
     
     /// Stop a language server
@@ -145,7 +182,8 @@ final class LSPClientRegistry {
     }
     
     /// Restart all clients (used when workspace root changes)
-    func restartAllClients() async {
+    /// - Parameter retryConfig: Retry configuration for restarting servers
+    func restartAllClients(retryConfig: LSPRetryConfiguration = .default) async {
         let clientsToRestart = Array(activeClients.keys)
         
         // Stop all clients
@@ -156,7 +194,11 @@ final class LSPClientRegistry {
         // Restart clients that should auto-start
         for languageId in clientsToRestart {
             if let config = serverConfigurations[languageId], config.autoStart {
-                try? await startLanguageServer(for: languageId)
+                do {
+                    try await startLanguageServer(for: languageId, retryConfig: retryConfig)
+                } catch {
+                    logger.error("Failed to restart LSP server for \(languageId): \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -326,9 +368,11 @@ extension LSPClientRegistry {
     }
     
     /// Start a language server for the given language
-    /// - Parameter language: Language enum case
-    func startLanguageServer(for language: Language) async throws {
-        try await startLanguageServer(for: language.lspIdentifier)
+    /// - Parameters:
+    ///   - language: Language enum case
+    ///   - retryConfig: Retry configuration (defaults to standard retry settings)
+    func startLanguageServer(for language: Language, retryConfig: LSPRetryConfiguration = .default) async throws {
+        try await startLanguageServer(for: language.lspIdentifier, retryConfig: retryConfig)
     }
     
     /// Stop a language server for the given language

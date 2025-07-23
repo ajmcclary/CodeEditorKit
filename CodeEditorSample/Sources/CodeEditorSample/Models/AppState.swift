@@ -215,7 +215,13 @@ class AppState: ObservableObject {
     /// ```swift
     /// if let json = appState.exportConfigurationAsJSON() {
     ///     // Save or share the configuration JSON
-    ///     UIPasteboard.general.string = json
+    ///     #if canImport(UIKit)
+    ///     if #available(iOS 16.0, *) {
+    ///         UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: json]]
+    ///     } else {
+    ///         UIPasteboard.general.string = json
+    ///     }
+    ///     #endif
     /// }
     /// ```
     ///

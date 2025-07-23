@@ -1,6 +1,6 @@
 # Language Support & Syntax Highlighting Pipeline
 
-This diagram shows the complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths.
+This diagram shows the complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths, with enhanced performance optimization capabilities.
 
 ```mermaid
 flowchart TB
@@ -32,6 +32,7 @@ flowchart TB
         COORD[Coordinator]
         SELECT[Highlighter Selection<br/>Based on Language]
         CACHE[Highlighting Cache<br/>LRU with TTL]
+        OPTCOORD[OptimizedSyntaxHighlightingCoordinator<br/>- Viewport Optimization<br/>- Chunking Support<br/>- Circuit Breaker]
     end
 
     %% Highlighter Types
@@ -69,6 +70,9 @@ flowchart TB
         DEBOUNCE[Debouncer<br/>250ms default]
         VIEWPORT[Viewport Only<br/>Visible Range]
         INCREMENTAL[Incremental<br/>Updates]
+        PERFTRACK[SyntaxHighlightingPerformanceTracker<br/>- Tokenization Time<br/>- Cache Hit Rate<br/>- Apply Attributes Time]
+        CHUNKING[Chunking Strategy<br/>Max 5K chars/chunk]
+        CIRCUITBREAK[Circuit Breaker<br/>100ms threshold]
     end
 
     %% Flow - Language Detection
@@ -87,7 +91,8 @@ flowchart TB
     
     %% Flow - Highlighting
     LANG --> COORD
-    COORD --> SELECT
+    COORD --> OPTCOORD
+    OPTCOORD --> SELECT
     SELECT --> CACHE
     
     CACHE -->|Hit| ATTRS
@@ -117,10 +122,14 @@ flowchart TB
     THEME --> ASYNC
     
     %% Performance Integration
-    COORD --> DEBOUNCE
+    OPTCOORD --> DEBOUNCE
+    OPTCOORD --> PERFTRACK
     DEBOUNCE --> VIEWPORT
     VIEWPORT --> INCREMENTAL
+    VIEWPORT --> CHUNKING
+    CHUNKING --> CIRCUITBREAK
     INCREMENTAL --> ASYNC
+    PERFTRACK --> ASYNC
     
     %% Output
     ASYNC --> RENDER[Rendered Text]
@@ -144,6 +153,7 @@ flowchart TB
     class COORD coordinator
     class SELECT coordinator
     class CACHE coordinator
+    class OPTCOORD coordinator
     class SS swift
     class PARSE swift
     class VISIT swift
@@ -160,6 +170,9 @@ flowchart TB
     class DEBOUNCE perf
     class VIEWPORT perf
     class INCREMENTAL perf
+    class PERFTRACK perf
+    class CHUNKING perf
+    class CIRCUITBREAK perf
 ```
 
 ## Language Configuration Example
@@ -183,9 +196,26 @@ enum HighlighterType {
 ## Performance Optimizations
 
 1. **AST Caching**: SwiftSyntax ASTs cached for reuse
-2. **LRU Cache**: Recently highlighted documents cached
-3. **Viewport Rendering**: Only visible text highlighted
+2. **LRU Cache**: Recently highlighted documents cached with TTL
+3. **Viewport Rendering**: Only visible text highlighted with configurable padding
 4. **Incremental Updates**: Only changed regions re-highlighted
-5. **Debouncing**: Rapid changes batched together
+5. **Debouncing**: Rapid changes batched together (250ms default)
 6. **Background Processing**: Heavy parsing off main thread
 7. **Token Batching**: Multiple tokens applied in single update
+8. **Chunking Strategy**: Large documents split into 5K character chunks
+9. **Circuit Breaker**: Operations exceeding 100ms threshold are interrupted
+10. **Performance Tracking**: Detailed metrics for tokenization, caching, and rendering
+11. **Cache Warming**: Proactive caching of likely-to-be-used content
+
+## Optimized Coordinator Configuration
+
+```swift
+let config = OptimizedSyntaxHighlightingCoordinator.HighlightingConfiguration(
+    enableViewportOptimization: true,
+    viewportPadding: 500,           // Characters before/after visible range
+    maxChunkSize: 5_000,            // Max characters per chunk
+    enableIncrementalHighlighting: true,
+    cacheWarmingEnabled: true,
+    circuitBreakerThreshold: 0.1    // 100ms
+)
+```

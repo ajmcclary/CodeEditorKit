@@ -81,8 +81,9 @@ public final class MemoryManagementCoordinator {
     
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Creates and returns an LSPManager with proper memory monitoring
-    public func createLSPManager() -> LSPManager {
-        let manager = LSPManager(memoryMonitor: memoryMonitor)
+    /// - Parameter workspaceRoot: Optional workspace root URL for the LSP manager
+    public func createLSPManager(workspaceRoot: URL? = nil) -> LSPManager {
+        let manager = LSPManager(memoryMonitor: memoryMonitor, workspaceRoot: workspaceRoot)
         components.lspManager = manager
         return manager
     }

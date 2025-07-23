@@ -1,6 +1,6 @@
 # CodeEditorPlugin Architecture Diagrams
 
-This directory contains **27 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
+This directory contains **29 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
 
 ## Index of Diagrams
 
@@ -11,7 +11,7 @@ Overview of the entire CodeEditorPlugin framework showing main layers and their 
 Detailed class diagram of the main components including CodeEditorView, CodeEditorAPI protocol, UnifiedEventSystem, BusinessLogicServiceRegistry, and their relationships. Shows the protocol-oriented design and delegation patterns.
 
 ### 3. [Configuration System](03-configuration-system.md)
-Complete configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, persistence, and SwiftUI environment integration.
+Complete configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, persistence, SwiftUI environment integration, and batch update management with ConfigurationBatchUpdater.
 
 ### 4. [Service Architecture](04-service-architecture.md)
 Service-oriented architecture diagram showing BusinessLogicServiceRegistry and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionManager, MemoryMonitor). Includes lifecycle management and event integration.
@@ -20,7 +20,7 @@ Service-oriented architecture diagram showing BusinessLogicServiceRegistry and a
 Unified event system flow diagram illustrating event sources, creation, filtering, queuing, dispatching, and handler execution. Shows priority-based processing and async support.
 
 ### 6. [Language Support & Syntax Highlighting Pipeline](06-language-syntax-highlighting-pipeline.md)
-Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, and rendering stages.
+Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, rendering stages, and enhanced performance optimization with OptimizedSyntaxHighlightingCoordinator, performance tracking, chunking, and circuit breaker pattern.
 
 ### 7. [Completion System Architecture](07-completion-system-architecture.md)
 Code completion system including CompletionManager, provider registry, session management, caching, and UI components. Includes sequence diagram of completion flow.
@@ -38,10 +38,10 @@ Visual component hierarchy showing CodeEditorContainerView and all child compone
 Comprehensive architecture for advanced features including debugging integration, search functionality, smart editing, and code folding. Shows feature coordination, state management, and UI integration.
 
 ### 12. [LSP System Complete Architecture](12-lsp-system-architecture.md)
-Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, and error handling.
+Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, error handling, and retry configuration with exponential backoff and jitter support.
 
 ### 13. [Performance Monitoring & Optimization System](13-performance-monitoring-system.md)
-Advanced performance monitoring with adaptive optimization, memory management, and real-time metrics. Includes profiling, bottleneck detection, and automatic performance tuning.
+Advanced performance monitoring with adaptive optimization, memory management, and real-time metrics. Includes profiling, bottleneck detection, automatic performance tuning, and integration with the performance budget system for enforcement and reporting.
 
 ### 14. [Symbol Navigation & Code Intelligence](14-symbol-navigation-intelligence.md)
 Symbol navigation and code intelligence system with multi-language support, cross-reference tracking, and intelligent navigation. Includes definition lookup, reference finding, and workspace symbol search.
@@ -84,6 +84,12 @@ Automatically generated package dependency diagram for CodeEditorSample demonstr
 
 ### 27. [Plugin System Architecture](27-plugin-system-architecture.md)
 Comprehensive plugin system architecture providing extensibility through a stable API with controlled access. Includes plugin lifecycle management, security model with permissions, dependency resolution, and event-based communication between plugins and the core system.
+
+### 28. [Performance Budget System](28-performance-budget-system.md)
+Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
+
+### 29. [Enhanced Syntax Highlighting Architecture](29-enhanced-syntax-highlighting-architecture.md)
+Optimized syntax highlighting system with advanced performance features including viewport optimization, chunking strategy, circuit breaker pattern, smart caching with prefetching, incremental updates, and comprehensive performance tracking. Shows the complete architecture for handling files from 1 line to 1M+ lines efficiently.
 
 ## How to View These Diagrams
 

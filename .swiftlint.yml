@@ -144,7 +144,7 @@ opt_in_rules:
   - strong_iboutlet
   - superfluous_disable_command
   # - switch_case_on_newline # Disabled
-  - test_case_accessibility
+  # - test_case_accessibility # Disabled - conflicts with test helper methods
   - toggle_bool
   - trailing_closure
   # - type_contents_order # Disabled
@@ -323,6 +323,8 @@ strict: true # Enable strict mode for better Swift 6 compliance
   
 private_outlet:
   allow_private_set: true # TCA often uses private(set) for state properties
+
+# test_case_accessibility configuration removed - rule disabled
   
 # SwiftLint version
 swiftlint_version: 0.59.1

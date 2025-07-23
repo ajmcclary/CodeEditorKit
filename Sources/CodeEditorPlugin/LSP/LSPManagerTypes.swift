@@ -32,6 +32,7 @@ public struct LanguageServerConfig: Sendable {
     public let capabilities: ClientCapabilities
     public let autoStart: Bool
     public let enablePathResolution: Bool
+    public let retryConfiguration: LSPRetryConfiguration
     
     public init(
         languageId: String,
@@ -40,7 +41,8 @@ public struct LanguageServerConfig: Sendable {
         serverArguments: [String] = [],
         capabilities: ClientCapabilities = .default,
         autoStart: Bool = true,
-        enablePathResolution: Bool = true
+        enablePathResolution: Bool = true,
+        retryConfiguration: LSPRetryConfiguration = .default
     ) {
         self.languageId = languageId
         self.serverPath = serverPath
@@ -49,6 +51,7 @@ public struct LanguageServerConfig: Sendable {
         self.capabilities = capabilities
         self.autoStart = autoStart
         self.enablePathResolution = enablePathResolution
+        self.retryConfiguration = retryConfiguration
     }
 }
 

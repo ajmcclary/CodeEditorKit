@@ -22,10 +22,15 @@
         }
       ]
     },
-    "testExecutionOrdering" : "random"
+    "testExecutionOrdering" : "random",
+    "testTimeoutsEnabled" : true,
+    "maximumTestExecutionTimeAllowance" : 60,
+    "mainThreadCheckerEnabled" : true,
+    "performanceAntipatternCheckerEnabled" : true
   },
   "testTargets" : [
     {
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:CodeEditorSample",
         "identifier" : "CodeEditorSampleTests",
@@ -62,6 +67,7 @@
       ]
     },
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:CodeEditorSample",
         "identifier" : "CodeEditorSampleUITests",

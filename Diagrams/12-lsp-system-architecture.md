@@ -1,6 +1,6 @@
 # LSP System Complete Architecture
 
-This diagram shows the comprehensive Language Server Protocol implementation that provides advanced language features through external language servers.
+This diagram shows the comprehensive Language Server Protocol implementation that provides advanced language features through external language servers, including retry configuration with exponential backoff.
 
 ```mermaid
 classDiagram
@@ -39,6 +39,7 @@ classDiagram
         +documentManager LSPDocumentManager
         +capabilities ServerCapabilities?
         +state LSPClientState
+        +retryConfiguration LSPRetryConfiguration
         +initialize()
         +shutdown()
         +sendRequest()
@@ -207,6 +208,7 @@ classDiagram
         +transportType LSPTransportType
         +initializationOptions [String: Any]?
         +settings [String: Any]?
+        +retryConfiguration LSPRetryConfiguration?
     }
 
     class LSPPathResolver {
@@ -277,6 +279,20 @@ classDiagram
         +sessionCache URLSession.Configuration
     }
 
+    class LSPRetryConfiguration {
+        &lt;&lt;retry config&gt;&gt;
+        +maxRetries Int
+        +initialDelay TimeInterval
+        +maxDelay TimeInterval
+        +backoffFactor Double
+        +jitterEnabled Bool
+        +default LSPRetryConfiguration
+        +aggressive LSPRetryConfiguration
+        +conservative LSPRetryConfiguration
+        +noRetry LSPRetryConfiguration
+        +calculateNextDelay() TimeInterval
+    }
+
     %% Bottom Row - Diagnostics & Enums
     class LSPDiagnosticsProvider {
         &lt;&lt;diagnostics provider&gt;&gt;
@@ -321,6 +337,7 @@ classDiagram
     LSPClient --> LSPDocumentManager : syncs with
     LSPClient --> LSPClientState : maintains
     LSPClient --> ServerCapabilities : negotiates
+    LSPClient --> LSPRetryConfiguration : uses
 
     LSPTransport <|-- ProcessTransport : implements
     LSPTransport <|-- WebSocketTransport : implements
@@ -336,6 +353,7 @@ classDiagram
     LSPProtocol --> LSPTypes : uses
     LSPConfigurationProvider --> LSPServerConfiguration : provides
     LSPServerConfiguration --> LSPTransportType : specifies
+    LSPServerConfiguration --> LSPRetryConfiguration : includes
 
     LSPCompletionProvider --> LSPClient : uses
     LSPHoverProvider --> LSPClient : uses
@@ -378,6 +396,7 @@ classDiagram
     class LSPTransportType enum
     class CertificatePinning security
     class TLSConfiguration security
+    class LSPRetryConfiguration config
     class ValidationMode enum
     class TLSVersion enum
 ```
@@ -456,11 +475,31 @@ sequenceDiagram
 - **Error Handling**: Comprehensive error management
 - **State Management**: Robust client state tracking
 - **Resource Cleanup**: Proper resource disposal
+- **Retry Configuration**: Configurable retry logic with exponential backoff
+- **Jitter Support**: Prevents thundering herd problems during retries
 
 ## Benefits
 
 1. **Language Agnostic**: Works with any LSP-compliant language server
 2. **Scalable**: Handles multiple concurrent language servers
-3. **Robust**: Built-in error handling and recovery
+3. **Robust**: Built-in error handling and recovery with configurable retry strategies
 4. **Extensible**: Plugin architecture for custom providers
 5. **Performance**: Optimized message handling and caching
+
+## Retry Configuration Examples
+
+```swift
+// Default configuration (3 retries, 1s initial delay)
+let defaultRetry = LSPRetryConfiguration.default
+
+// Aggressive retry for critical connections
+let aggressiveRetry = LSPRetryConfiguration.aggressive
+// 5 retries, 0.5s initial delay, 1.5x backoff
+
+// Conservative for resource-limited environments
+let conservativeRetry = LSPRetryConfiguration.conservative
+// 2 retries, 2s initial delay, no jitter
+
+// No retry for single-attempt scenarios
+let noRetry = LSPRetryConfiguration.noRetry
+```

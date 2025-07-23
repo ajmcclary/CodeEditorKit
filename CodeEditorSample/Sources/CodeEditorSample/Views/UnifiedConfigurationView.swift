@@ -374,7 +374,12 @@ struct UnifiedConfigurationView: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(json, forType: .string)
         #else
-        UIPasteboard.general.string = json
+        // Use secure pasteboard access on iOS 16+
+        if #available(iOS 16.0, *) {
+            UIPasteboard.general.items = [[UIPasteboard.typeAutomatic: json]]
+        } else {
+            UIPasteboard.general.string = json
+        }
         #endif
         
         showAlert(title: "Copied to Clipboard", message: "Configuration JSON copied to clipboard.")
