@@ -118,90 +118,123 @@ public final class CompletionManager {
         currentRequest?.cancel()
 
         // Check cache first if enabled
-        if enableCaching {
-            let cacheKey = CompletionCacheKey(context: context)
-            if let cachedResult = cache.get(cacheKey), !cachedResult.isExpired {
-                statistics.recordCacheHit()
-                return cachedResult.result
-            }
-            statistics.recordCacheMiss()
+        if let cachedResult = getCachedResult(for: context) {
+            return cachedResult
         }
 
         // Create new request
         currentRequest = Task {
             let startTime = Date()
 
-            // Find applicable providers
-            let applicableProviders = providers.values.filter { provider in
-                provider.supportedLanguages.contains(context.language) ||
-                provider.supportedLanguages.isEmpty
-            }
+            // Get results from providers
+            let results = await fetchResultsFromProviders(for: context, startTime: startTime)
 
-            guard !applicableProviders.isEmpty else {
-                let result = CompletionResult(
-                    items: [],
-                    context: context,
-                    isIncomplete: false,
-                    processingTime: 0
-                )
-                statistics.recordRequest(processingTime: 0)
-                return result
-            }
+            // Process and cache the results
 
-            // Request from all applicable providers concurrently
-            let results = await withTaskGroup(of: CompletionResult?.self) { group in
-                for provider in applicableProviders {
-                    _ = provider.id // Capture the id on the main actor
-                    group.addTask {
-                        do {
-                            return try await provider.completions(for: context)
-                        } catch {
-                            // Log error but don't fail the entire request
-                            // Log error but don't fail the entire request
-                            return nil
-                        }
-                    }
-                }
-
-                var allResults: [CompletionResult] = []
-                for await result in group {
-                    if let result {
-                        allResults.append(result)
-                    }
-                }
-                return allResults
-            }
-
-            // Combine results
-            let allItems = results.flatMap { $0.items }
-            let isIncomplete = results.contains { $0.isIncomplete }
-            let processingTime = Date().timeIntervalSince(startTime)
-
-            // Sort and deduplicate items
-            let sortedItems = sortAndDeduplicateItems(allItems)
-
-            let result = CompletionResult(
-                items: sortedItems,
-                context: context,
-                isIncomplete: isIncomplete,
-                processingTime: processingTime
-            )
-
-            // Cache the result if enabled and not incomplete
-            if enableCaching && !isIncomplete && !sortedItems.isEmpty {
-                let cacheKey = CompletionCacheKey(context: context)
-                let cachedResult = CachedCompletionResult(result: result, expirationTime: cacheExpirationTime)
-                cache.set(cachedResult, forKey: cacheKey)
-            }
-
-            statistics.recordRequest(processingTime: processingTime)
-            return result
+            return processAndCacheResults(results, context: context, startTime: startTime)
         }
 
         guard let request = currentRequest else {
             throw CompletionRequestError.noActiveRequest
         }
         return try await request.value
+    }
+
+    // MARK: - Helper Methods
+
+    private func getCachedResult(for context: CompletionContextModel) -> CompletionResult? {
+        guard enableCaching else { return nil }
+
+        let cacheKey = CompletionCacheKey(context: context)
+        if let cachedResult = cache.get(cacheKey), !cachedResult.isExpired {
+            statistics.recordCacheHit()
+            return cachedResult.result
+        }
+        statistics.recordCacheMiss()
+        return nil
+    }
+
+    private func fetchResultsFromProviders(
+        for context: CompletionContextModel,
+        startTime _: Date
+    ) async -> [CompletionResult] {
+        // Find applicable providers
+        let applicableProviders = providers.values.filter { provider in
+            provider.supportedLanguages.contains(context.language) ||
+            provider.supportedLanguages.isEmpty
+        }
+
+        guard !applicableProviders.isEmpty else {
+            let result = CompletionResult(
+                items: [],
+                context: context,
+                isIncomplete: false,
+                processingTime: 0
+            )
+            statistics.recordRequest(processingTime: 0)
+            return [result]
+        }
+
+        // Request from all applicable providers concurrently
+        return await collectResultsConcurrently(from: applicableProviders, context: context)
+    }
+
+    private func collectResultsConcurrently(
+        from providers: [any CompletionProvider],
+        context: CompletionContextModel
+    ) async -> [CompletionResult] {
+        await withTaskGroup(of: CompletionResult?.self) { group in
+            for provider in providers {
+                _ = provider.id // Capture the id on the main actor
+                group.addTask {
+                    do {
+                        return try await provider.completions(for: context)
+                    } catch {
+                        // Log error but don't fail the entire request
+                        return nil
+                    }
+                }
+            }
+
+            var allResults: [CompletionResult] = []
+            for await result in group {
+                if let result {
+                    allResults.append(result)
+                }
+            }
+            return allResults
+        }
+    }
+
+    private func processAndCacheResults(
+        _ results: [CompletionResult],
+        context: CompletionContextModel,
+        startTime: Date
+    ) -> CompletionResult {
+        // Combine results
+        let allItems = results.flatMap { $0.items }
+        let isIncomplete = results.contains { $0.isIncomplete }
+        let processingTime = Date().timeIntervalSince(startTime)
+
+        // Sort and deduplicate items
+        let sortedItems = sortAndDeduplicateItems(allItems)
+
+        let result = CompletionResult(
+            items: sortedItems,
+            context: context,
+            isIncomplete: isIncomplete,
+            processingTime: processingTime
+        )
+
+        // Cache the result if enabled and not incomplete
+        if enableCaching && !isIncomplete && !sortedItems.isEmpty {
+            let cacheKey = CompletionCacheKey(context: context)
+            let cachedResult = CachedCompletionResult(result: result, expirationTime: cacheExpirationTime)
+            cache.set(cachedResult, forKey: cacheKey)
+        }
+
+        statistics.recordRequest(processingTime: processingTime)
+        return result
     }
 
     /// Request completions with debouncing and throttling

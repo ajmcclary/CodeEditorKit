@@ -93,10 +93,10 @@ public struct CertificatePinning: Sendable, Codable {
         case certificate
 
         /// Pin the Subject Public Key Info (SPKI)
-        case publicKey
+        case publicKey = "public_key"
 
         /// Pin intermediate CA certificates
-        case intermediateCertificate
+        case intermediateCertificate = "intermediate_certificate"
     }
 }
 

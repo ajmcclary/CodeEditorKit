@@ -39,7 +39,7 @@ struct LSPFileExampleView: View {
             // Editor
             CodeEditor(text: $code)
                 .codeLanguage(
-                    fileURL != nil ? detectLanguage(for: fileURL!) ?? .plainText : .plainText
+                    fileURL.flatMap { detectLanguage(for: $0) } ?? .plainText
                 )
                 .environment(\.codeEditorConfiguration, configuration)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

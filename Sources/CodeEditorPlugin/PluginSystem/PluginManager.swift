@@ -425,7 +425,12 @@ private actor PluginStatePersistence {
     private let fileManager = FileManager.default
 
     private var stateDirectory: URL {
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            // Fallback to temp directory if app support is not available
+            return fileManager.temporaryDirectory
+                .appendingPathComponent("CodeEditorPlugin")
+                .appendingPathComponent("PluginStates")
+        }
         return appSupport
             .appendingPathComponent("CodeEditorPlugin")
             .appendingPathComponent("PluginStates")

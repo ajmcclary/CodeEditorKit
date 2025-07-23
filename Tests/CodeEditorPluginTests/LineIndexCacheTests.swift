@@ -16,6 +16,15 @@ final class LineIndexCacheTests: XCTestCase {
         super.tearDown()
     }
 
+    // Helper to ensure cache is available
+    private func requireCache() -> LineIndexCache {
+        guard let cache else {
+            XCTFail("Cache is not initialized")
+            return LineIndexCache() // Return a dummy instance to allow tests to continue
+        }
+        return cache
+    }
+
     func testLineNumberCalculation() {
         let text = """
         Line 1
@@ -25,18 +34,22 @@ final class LineIndexCacheTests: XCTestCase {
         """
 
         // Test first line
-        let firstLineNumber = cache!.lineNumber(at: 0, in: text)
+        let cache = requireCache()
+        let firstLineNumber = cache.lineNumber(at: 0, in: text)
         XCTAssertEqual(firstLineNumber, 1)
-        XCTAssertEqual(cache!.lineNumber(at: 5, in: text), 1) // Middle of "Line 1"
+        XCTAssertEqual(cache.lineNumber(at: 5, in: text), 1) // Middle of "Line 1"
 
         // Test second line
-        XCTAssertEqual(cache!.lineNumber(at: 7, in: text), 2) // Start of "Line 2"
-        XCTAssertEqual(cache!.lineNumber(at: 12, in: text), 2) // Middle of "Line 2"
+        XCTAssertEqual(cache.lineNumber(at: 7, in: text), 2) // Start of "Line 2"
+        XCTAssertEqual(cache.lineNumber(at: 12, in: text), 2) // Middle of "Line 2"
 
         // Test last line
-        let lastLineStart = text.lastIndex(of: "4")!
+        guard let lastLineStart = text.lastIndex(of: "4") else {
+            XCTFail("Failed to find '4' in text")
+            return
+        }
         let offset = text.distance(from: text.startIndex, to: lastLineStart)
-        XCTAssertEqual(cache!.lineNumber(at: offset, in: text), 4)
+        XCTAssertEqual(cache.lineNumber(at: offset, in: text), 4)
     }
 
     func testLineRangeCalculation() {
@@ -47,39 +60,39 @@ final class LineIndexCacheTests: XCTestCase {
         """
 
         // Test first line range
-        let range1 = cache!.lineRangeNSRange(for: 1, in: text)
+        let range1 = requireCache().lineRangeNSRange(for: 1, in: text)
         XCTAssertNotNil(range1)
         XCTAssertEqual(range1?.location, 0)
         XCTAssertEqual(range1?.length, 7) // "Line 1\n"
 
         // Test middle line range
-        let range2 = cache!.lineRangeNSRange(for: 2, in: text)
+        let range2 = requireCache().lineRangeNSRange(for: 2, in: text)
         XCTAssertNotNil(range2)
         XCTAssertEqual(range2?.location, 7)
         XCTAssertEqual(range2?.length, 7) // "Line 2\n"
 
         // Test last line range (no trailing newline)
-        let range3 = cache!.lineRangeNSRange(for: 3, in: text)
+        let range3 = requireCache().lineRangeNSRange(for: 3, in: text)
         XCTAssertNotNil(range3)
         XCTAssertEqual(range3?.location, 14)
         XCTAssertEqual(range3?.length, 6) // "Line 3"
     }
 
     func testLineCount() {
-        XCTAssertEqual(cache!.lineCount(in: ""), 1) // Empty string has 1 line
-        XCTAssertEqual(cache!.lineCount(in: "Hello"), 1)
-        XCTAssertEqual(cache!.lineCount(in: "Hello\nWorld"), 2)
-        XCTAssertEqual(cache!.lineCount(in: "Line 1\nLine 2\nLine 3"), 3)
-        XCTAssertEqual(cache!.lineCount(in: "Line 1\nLine 2\nLine 3\n"), 4) // Trailing newline adds a line
+        XCTAssertEqual(requireCache().lineCount(in: ""), 1) // Empty string has 1 line
+        XCTAssertEqual(requireCache().lineCount(in: "Hello"), 1)
+        XCTAssertEqual(requireCache().lineCount(in: "Hello\nWorld"), 2)
+        XCTAssertEqual(requireCache().lineCount(in: "Line 1\nLine 2\nLine 3"), 3)
+        XCTAssertEqual(requireCache().lineCount(in: "Line 1\nLine 2\nLine 3\n"), 4) // Trailing newline adds a line
     }
 
     func testEmptyText() {
         let text = ""
 
-        XCTAssertEqual(cache!.lineNumber(at: 0, in: text), 1)
-        XCTAssertEqual(cache!.lineCount(in: text), 1)
+        XCTAssertEqual(requireCache().lineNumber(at: 0, in: text), 1)
+        XCTAssertEqual(requireCache().lineCount(in: text), 1)
 
-        let range = cache!.lineRangeNSRange(for: 1, in: text)
+        let range = requireCache().lineRangeNSRange(for: 1, in: text)
         XCTAssertNotNil(range)
         XCTAssertEqual(range?.location, 0)
         XCTAssertEqual(range?.length, 0)
@@ -88,9 +101,9 @@ final class LineIndexCacheTests: XCTestCase {
     func testInvalidLineNumbers() {
         let text = "Line 1\nLine 2"
 
-        XCTAssertNil(cache!.lineRangeNSRange(for: 0, in: text)) // Line numbers are 1-based
-        XCTAssertNil(cache!.lineRangeNSRange(for: 3, in: text)) // Beyond line count
-        XCTAssertNil(cache!.lineRangeNSRange(for: -1, in: text)) // Negative
+        XCTAssertNil(requireCache().lineRangeNSRange(for: 0, in: text)) // Line numbers are 1-based
+        XCTAssertNil(requireCache().lineRangeNSRange(for: 3, in: text)) // Beyond line count
+        XCTAssertNil(requireCache().lineRangeNSRange(for: -1, in: text)) // Negative
     }
 
     // MARK: - Performance Tests
@@ -101,10 +114,10 @@ final class LineIndexCacheTests: XCTestCase {
 
         measure(options: Self.standardMeasureOptions) {
             // Test multiple operations to ensure cache is working
-            _ = cache!.lineCount(in: largeText)
-            _ = cache!.lineNumber(at: largeText.count / 2, in: largeText)
-            _ = cache!.lineRangeNSRange(for: 5_000, in: largeText)
-            _ = cache!.lineNumber(at: largeText.count - 100, in: largeText)
+            _ = requireCache().lineCount(in: largeText)
+            _ = requireCache().lineNumber(at: largeText.count / 2, in: largeText)
+            _ = requireCache().lineRangeNSRange(for: 5_000, in: largeText)
+            _ = requireCache().lineNumber(at: largeText.count - 100, in: largeText)
         }
     }
 
@@ -113,13 +126,13 @@ final class LineIndexCacheTests: XCTestCase {
         let text2 = "Different\nText\nHere"
 
         // First access builds cache for text1
-        XCTAssertEqual(cache!.lineCount(in: text1), 2)
+        XCTAssertEqual(requireCache().lineCount(in: text1), 2)
 
         // Access with different text should rebuild cache
-        XCTAssertEqual(cache!.lineCount(in: text2), 3)
+        XCTAssertEqual(requireCache().lineCount(in: text2), 3)
 
         // Verify cache was updated by checking line ranges
-        let range = cache!.lineRangeNSRange(for: 3, in: text2)
+        let range = requireCache().lineRangeNSRange(for: 3, in: text2)
         XCTAssertNotNil(range)
         if let range, let stringRange = Range(range, in: text2) {
             let substring = text2[stringRange]
@@ -142,7 +155,7 @@ final class LineIndexCacheTests: XCTestCase {
 
         // Test visible range in the middle
         let visibleRange = NSRange(location: 7, length: 14) // "Line 2\nLine 3\n"
-        let visibleLines = cache!.visibleLineInfo(in: text, visibleRange: visibleRange)
+        let visibleLines = requireCache().visibleLineInfo(in: text, visibleRange: visibleRange)
 
         XCTAssertEqual(visibleLines.count, 2)
         XCTAssertEqual(visibleLines[0].lineNumber, 2)
@@ -156,16 +169,16 @@ final class LineIndexCacheTests: XCTestCase {
 
         // Test at start
         let startIndex = text.startIndex
-        XCTAssertEqual(cache!.lineNumber(at: startIndex, in: text), 1)
+        XCTAssertEqual(requireCache().lineNumber(at: startIndex, in: text), 1)
 
         // Test at "World"
         if let worldIndex = text.firstIndex(of: "W") {
-            XCTAssertEqual(cache!.lineNumber(at: worldIndex, in: text), 2)
+            XCTAssertEqual(requireCache().lineNumber(at: worldIndex, in: text), 2)
         }
 
         // Test at "Test"
         if let testIndex = text.firstIndex(of: "T") {
-            XCTAssertEqual(cache!.lineNumber(at: testIndex, in: text), 3)
+            XCTAssertEqual(requireCache().lineNumber(at: testIndex, in: text), 3)
         }
     }
 
@@ -173,13 +186,13 @@ final class LineIndexCacheTests: XCTestCase {
         let text = "First\nSecond\nThird"
 
         // Test line 2 range returns correct String.Index range
-        if let range = cache!.lineRange(for: 2, in: text) {
+        if let range = requireCache().lineRange(for: 2, in: text) {
             let substring = String(text[range])
             XCTAssertEqual(substring, "Second\n")
         }
 
         // Test last line (no trailing newline)
-        if let range = cache!.lineRange(for: 3, in: text) {
+        if let range = requireCache().lineRange(for: 3, in: text) {
             let substring = String(text[range])
             XCTAssertEqual(substring, "Third")
         }

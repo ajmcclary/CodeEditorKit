@@ -147,7 +147,13 @@ public final class PluginWorkspace: @unchecked Sendable {
 
     /// Base directory for plugin storage
     public var baseDirectory: URL {
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            // Fallback to temp directory if app support is not available
+            return fileManager.temporaryDirectory
+                .appendingPathComponent("CodeEditorPlugin")
+                .appendingPathComponent("Plugins")
+                .appendingPathComponent(pluginIdentifier)
+        }
         return appSupport
             .appendingPathComponent("CodeEditorPlugin")
             .appendingPathComponent("Plugins")

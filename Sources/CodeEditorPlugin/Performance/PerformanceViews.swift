@@ -43,94 +43,121 @@ public struct PerformanceInsightsPanel: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack {
-                Text("Performance Insights")
-                    .font(.headline)
+            headerSection
+            metricsSection
 
-                Spacer()
-
-                PerformanceStatusView(insights: insights)
-            }
-
-            // Real-time metrics
-            VStack(alignment: .leading, spacing: 8) {
-                MetricRow(label: "CPU", value: "\(Int(insights.metrics.cpuUsage))%")
-                MetricRow(label: "Memory", value: String(format: "%.1f GB", insights.metrics.memoryUsage))
-                MetricRow(label: "FPS", value: "\(insights.metrics.currentFPS)")
-                MetricRow(label: "Response", value: String(format: "%.0f ms", insights.metrics.averageResponseTime * 1_000))
-            }
-            .padding(.vertical, 4)
-
-            // Issues
             if !insights.issues.isEmpty {
                 Divider()
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Active Issues")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    ForEach(insights.issues) { issue in
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(issue.severity == .critical ? .red : .orange)
-                                .font(.caption)
-
-                            Text(issue.description)
-                                .font(.caption)
-                                .lineLimit(2)
-                        }
-                    }
-                }
+                issuesSection
             }
 
-            // Recommendations
             if !insights.recommendations.isEmpty {
                 Divider()
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Recommendations")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    ForEach(insights.recommendations.prefix(3)) { recommendation in
-                        HStack {
-                            Image(systemName: "lightbulb.fill")
-                                .foregroundColor(.yellow)
-                                .font(.caption)
-
-                            Text(recommendation.title)
-                                .font(.caption)
-                                .lineLimit(1)
-                        }
-                    }
-                }
+                recommendationsSection
             }
 
-            // Actions
             Divider()
-
-            HStack {
-                Button("Detailed Report") {
-                    showingDetailedReport = true
-                }
-                .font(.caption)
-
-                Spacer()
-
-                Button("Reset") {
-                    insights.reset()
-                }
-                .font(.caption)
-                .foregroundColor(.red)
-            }
+            actionsSection
         }
         .padding()
         .background(Color(PlatformColors.controlBackground))
         .cornerRadius(8)
         .sheet(isPresented: $showingDetailedReport) {
             DetailedPerformanceReportView(insights: insights)
+        }
+    }
+
+    private var headerSection: some View {
+        HStack {
+            Text("Performance Insights")
+                .font(.headline)
+            Spacer()
+            PerformanceStatusView(insights: insights)
+        }
+    }
+
+    private var metricsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            MetricRow(label: "CPU", value: "\(Int(insights.metrics.cpuUsage))%")
+            MetricRow(label: "Memory", value: String(format: "%.1f GB", insights.metrics.memoryUsage))
+            MetricRow(label: "FPS", value: "\(insights.metrics.currentFPS)")
+            MetricRow(label: "Response", value: String(format: "%.0f ms", insights.metrics.averageResponseTime * 1_000))
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var issuesSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Active Issues")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            ForEach(insights.issues) { issue in
+                IssueRow(issue: issue)
+            }
+        }
+    }
+
+    private var recommendationsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Recommendations")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            ForEach(insights.recommendations.prefix(3)) { recommendation in
+                RecommendationRow(recommendation: recommendation)
+            }
+        }
+    }
+
+    private var actionsSection: some View {
+        HStack {
+            Button("Detailed Report") {
+                showingDetailedReport = true
+            }
+            .font(.caption)
+
+            Spacer()
+
+            Button("Reset") {
+                insights.reset()
+            }
+            .font(.caption)
+            .foregroundColor(.red)
+        }
+    }
+}
+
+// MARK: - Helper Views
+
+private struct IssueRow: View {
+    let issue: PerformanceIssue
+
+    var body: some View {
+        HStack {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(issue.severity == .critical ? .red : .orange)
+                .font(.caption)
+
+            Text(issue.description)
+                .font(.caption)
+                .lineLimit(2)
+        }
+    }
+}
+
+private struct RecommendationRow: View {
+    let recommendation: PerformanceRecommendation
+
+    var body: some View {
+        HStack {
+            Image(systemName: "lightbulb.fill")
+                .foregroundColor(.yellow)
+                .font(.caption)
+
+            Text(recommendation.title)
+                .font(.caption)
+                .lineLimit(1)
         }
     }
 }
@@ -169,61 +196,18 @@ public struct DetailedPerformanceReportView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Performance Status
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Overall Performance")
-                            .font(.headline)
-
-                        HStack {
-                            Circle()
-                                .fill(insights.status.color)
-                                .frame(width: 16, height: 16)
-
-                            Text(insights.status.description)
-                                .font(.body)
-                        }
-                    }
-
+                    performanceStatusSection
                     Divider()
-
-                    // Detailed Metrics
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Real-Time Metrics")
-                            .font(.headline)
-
-                        DetailedMetricRow(label: "CPU Usage", value: "\(Int(insights.metrics.cpuUsage))%", color: cpuColor(insights.metrics.cpuUsage))
-                        DetailedMetricRow(label: "Memory Usage", value: String(format: "%.2f GB", insights.metrics.memoryUsage), color: memoryColor(insights.metrics.memoryUsage))
-                        DetailedMetricRow(label: "Frame Rate", value: "\(insights.metrics.currentFPS) FPS", color: fpsColor(insights.metrics.currentFPS))
-                        DetailedMetricRow(label: "Response Time", value: String(format: "%.0f ms", insights.metrics.averageResponseTime * 1_000), color: responseTimeColor(insights.metrics.averageResponseTime))
-                        DetailedMetricRow(label: "Active Operations", value: "\(insights.metrics.activeOperations)", color: .primary)
-                    }
+                    metricsSection
 
                     if !insights.issues.isEmpty {
                         Divider()
-
-                        // Active Issues
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Active Issues")
-                                .font(.headline)
-
-                            ForEach(insights.issues) { issue in
-                                IssueDetailRow(issue: issue)
-                            }
-                        }
+                        issuesSection
                     }
 
                     if !insights.recommendations.isEmpty {
                         Divider()
-
-                        // Recommendations
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Recommendations")
-                                .font(.headline)
-
-                            ForEach(insights.recommendations) { recommendation in
-                                RecommendationDetailRow(recommendation: recommendation)
-                            }
-                        }
+                        recommendationsSection
                     }
                 }
                 .padding()
@@ -235,6 +219,61 @@ public struct DetailedPerformanceReportView: View {
                 dismiss()
             })
             #endif
+        }
+    }
+
+    @ViewBuilder
+    private var performanceStatusSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Overall Performance")
+                .font(.headline)
+
+            HStack {
+                Circle()
+                    .fill(insights.status.color)
+                    .frame(width: 16, height: 16)
+
+                Text(insights.status.description)
+                    .font(.body)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var metricsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Real-Time Metrics")
+                .font(.headline)
+
+            DetailedMetricRow(label: "CPU Usage", value: "\(Int(insights.metrics.cpuUsage))%", color: cpuColor(insights.metrics.cpuUsage))
+            DetailedMetricRow(label: "Memory Usage", value: String(format: "%.2f GB", insights.metrics.memoryUsage), color: memoryColor(insights.metrics.memoryUsage))
+            DetailedMetricRow(label: "Frame Rate", value: "\(insights.metrics.currentFPS) FPS", color: fpsColor(insights.metrics.currentFPS))
+            DetailedMetricRow(label: "Response Time", value: String(format: "%.0f ms", insights.metrics.averageResponseTime * 1_000), color: responseTimeColor(insights.metrics.averageResponseTime))
+            DetailedMetricRow(label: "Active Operations", value: "\(insights.metrics.activeOperations)", color: .primary)
+        }
+    }
+
+    @ViewBuilder
+    private var issuesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Active Issues")
+                .font(.headline)
+
+            ForEach(insights.issues) { issue in
+                IssueDetailRow(issue: issue)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var recommendationsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Recommendations")
+                .font(.headline)
+
+            ForEach(insights.recommendations) { recommendation in
+                RecommendationDetailRow(recommendation: recommendation)
+            }
         }
     }
 

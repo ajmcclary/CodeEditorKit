@@ -100,10 +100,13 @@ final class ConfigurationBasicTests: XCTestCase {
         textView.text = "Test content"
 
         // Create mock NSTextRange for annotation
-        let mockRange = NSTextRange(
+        guard let mockRange = NSTextRange(
             location: MockTextLocation(offset: 0),
             end: MockTextLocation(offset: textView.text?.count ?? 0)
-        )!
+        ) else {
+            XCTFail("Failed to create mock range")
+            return
+        }
         let annotation = Annotation(range: mockRange, content: "Test annotation", id: "test")
 
         textView.addAnnotation(annotation)

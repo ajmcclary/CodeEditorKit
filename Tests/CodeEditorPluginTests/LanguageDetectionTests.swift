@@ -172,7 +172,7 @@ final class LanguageDetectionTests: XCTestCase {
         ]
 
         for fileName in testCases {
-            let fileExtension = String(fileName.split(separator: ".").last!)
+            let fileExtension = String(fileName.split(separator: ".").last ?? "")
             let detectedLanguage = coordinator.detectLanguage(from: fileExtension)
 
             // Should not default to plainText for supported extensions

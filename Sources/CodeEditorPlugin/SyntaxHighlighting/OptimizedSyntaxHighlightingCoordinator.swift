@@ -137,11 +137,13 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         // Determine highlighting strategy
         let tokens: [HighlightedToken]
 
-        if configuration.enableViewportOptimization && visibleRange != nil && text.count > 10_000 {
+        if configuration.enableViewportOptimization,
+           let visibleRange,
+           text.count > 10_000 {
             tokens = await highlightViewport(
                 text: text,
                 language: language,
-                visibleRange: visibleRange!,
+                visibleRange: visibleRange,
                 cacheCheckTime: cacheCheckTime,
                 totalStartTime: startTime
             )

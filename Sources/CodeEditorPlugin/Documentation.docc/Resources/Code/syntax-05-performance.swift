@@ -9,34 +9,50 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("Performance Optimization")
-                .font(.headline)
-                .padding()
+            headerSection
+            performanceSettings
+            contentSection
+            loadButtonsSection
+        }
+        .onAppear {
+            setupPerformanceConfig()
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Large File Performance Settings")
-                    .font(.subheadline)
-
-                Toggle("Async Highlighting", isOn: $config.performance.asyncHighlighting)
-                    .help("Process syntax highlighting in background")
-
-                HStack {
-                    Text("Delay: \(config.performance.highlightingDelay, specifier: "%.1f")s")
-                    Slider(value: $config.performance.highlightingDelay, in: 0.1...2.0)
-                }
-
-                Toggle("Cache Highlights", isOn: $config.performance.cacheHighlights)
-                    .help("Cache highlighting results for better performance")
-
-                Toggle("Incremental Layout", isOn: $config.performance.useIncrementalLayout)
-                    .help("Only re-layout changed portions")
-
-                Text("File size: ~\(code.count / 1_024)KB")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+    private var headerSection: some View {
+        Text("Performance Optimization")
+            .font(.headline)
             .padding()
+    }
 
+    private var performanceSettings: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Large File Performance Settings")
+                .font(.subheadline)
+
+            Toggle("Async Highlighting", isOn: $config.performance.asyncHighlighting)
+                .help("Process syntax highlighting in background")
+
+            HStack {
+                Text("Delay: \(config.performance.highlightingDelay, specifier: "%.1f")s")
+                Slider(value: $config.performance.highlightingDelay, in: 0.1...2.0)
+            }
+
+            Toggle("Cache Highlights", isOn: $config.performance.cacheHighlights)
+                .help("Cache highlighting results for better performance")
+
+            Toggle("Incremental Layout", isOn: $config.performance.useIncrementalLayout)
+                .help("Only re-layout changed portions")
+
+            Text("File size: ~\(code.count / 1_024)KB")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+    }
+
+    private var contentSection: some View {
+        Group {
             if isLoading {
                 ProgressView("Loading large file...")
                     .padding()
@@ -47,35 +63,37 @@ struct ContentView: View {
                     .frame(minHeight: 400)
                     .padding()
             }
-
-            HStack {
-                Button("Load Small File") {
-                    code = generateSmallFile()
-                }
-
-                Button("Load Large File") {
-                    isLoading = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        code = generateLargeFile()
-                        isLoading = false
-                    }
-                }
-
-                Button("Load Huge File") {
-                    isLoading = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        code = generateHugeFile()
-                        isLoading = false
-                    }
-                }
-            }
-            .padding()
         }
-        .onAppear {
-            // Enable performance features for large files
-            config.performance.asyncHighlighting = true
-            config.performance.cacheHighlights = true
-            config.performance.maxHighlightingFileSize = 1_024 * 1_024 // 1MB
+    }
+
+    private var loadButtonsSection: some View {
+        HStack {
+            Button("Load Small File") {
+                code = generateSmallFile()
+            }
+
+            Button("Load Large File") {
+                loadFileWithDelay(generateLargeFile(), delay: 0.5)
+            }
+
+            Button("Load Huge File") {
+                loadFileWithDelay(generateHugeFile(), delay: 1.0)
+            }
+        }
+        .padding()
+    }
+
+    private func setupPerformanceConfig() {
+        config.performance.asyncHighlighting = true
+        config.performance.cacheHighlights = true
+        config.performance.maxHighlightingFileSize = 1_024 * 1_024 // 1MB
+    }
+
+    private func loadFileWithDelay(_ content: String, delay: TimeInterval) {
+        isLoading = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            code = content
+            isLoading = false
         }
     }
 

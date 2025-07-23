@@ -56,11 +56,14 @@ final class IOSAnnotationTests: XCTestCase {
         // Create mock text range
         let startLocation = MockTextLocation(offset: 20)
         let endLocation = MockTextLocation(offset: 53)
-        let range = NSTextRange(location: startLocation, end: endLocation)
+        guard let range = NSTextRange(location: startLocation, end: endLocation) else {
+            XCTFail("Failed to create NSTextRange")
+            return
+        }
 
         // Create annotation
         let annotation = Annotation(
-            range: range!,
+            range: range,
             content: "TODO: Implement this feature",
             id: "test-todo-1"
         )

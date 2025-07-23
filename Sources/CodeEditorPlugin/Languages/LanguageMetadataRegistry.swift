@@ -15,10 +15,25 @@ public final class LanguageMetadataRegistry {
 
     /// Complete metadata for all supported languages
     private lazy var completeLanguageMetadata: [Language: ExtendedLanguageMetadata] = {
+        createLanguageMetadata()
+    }()
+
+    /// Create language metadata dictionary
+    private func createLanguageMetadata() -> [Language: ExtendedLanguageMetadata] {
         var metadata: [Language: ExtendedLanguageMetadata] = [:]
 
-        // Swift
-        metadata[.swift] = ExtendedLanguageMetadata(
+        metadata[.swift] = createSwiftMetadata()
+        metadata[.typescript] = createTypeScriptMetadata()
+        metadata[.go] = createGoMetadata()
+
+        // Add other languages...
+
+        return metadata
+    }
+
+    /// Create Swift metadata
+    private func createSwiftMetadata() -> ExtendedLanguageMetadata {
+        ExtendedLanguageMetadata(
             keywords: [
                 "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func",
                 "import", "init", "inout", "internal", "let", "operator", "private", "protocol",
@@ -50,9 +65,11 @@ public final class LanguageMetadataRegistry {
                 "QuartzCore", "AVFoundation", "NetworkExtension", "UserNotifications", "StoreKit"
             ]
         )
+    }
 
-        // TypeScript
-        metadata[.typescript] = ExtendedLanguageMetadata(
+    /// Create TypeScript metadata
+    private func createTypeScriptMetadata() -> ExtendedLanguageMetadata {
+        ExtendedLanguageMetadata(
             keywords: [
                 "break", "case", "catch", "class", "const", "continue", "debugger", "default",
                 "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for",
@@ -84,9 +101,11 @@ public final class LanguageMetadataRegistry {
                 "jest", "mocha", "eslint", "prettier", "nodemon", "dotenv", "cors", "bcrypt"
             ]
         )
+    }
 
-        // Go
-        metadata[.go] = ExtendedLanguageMetadata(
+    /// Create Go metadata
+    private func createGoMetadata() -> ExtendedLanguageMetadata {
+        ExtendedLanguageMetadata(
             keywords: [
                 "break", "case", "chan", "const", "continue", "default", "defer", "else", "fallthrough",
                 "for", "func", "go", "goto", "if", "import", "interface", "map", "package", "range",
@@ -112,11 +131,7 @@ public final class LanguageMetadataRegistry {
                 "context", "sync", "log", "errors", "bufio", "path/filepath", "regexp"
             ]
         )
-
-        // Add other languages...
-
-        return metadata
-    }()
+    }
 
     // MARK: - Public API
 

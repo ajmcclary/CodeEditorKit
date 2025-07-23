@@ -158,7 +158,7 @@ final class InputCoordinatorTests: XCTestCase {
         // First configure gestures
         coordinator.configureGestures(for: mockView)
         XCTAssertNotNil(mockView.gestureRecognizers, "Should have gestures")
-        XCTAssertFalse(mockView.gestureRecognizers!.isEmpty, "Should have gestures configured")
+        XCTAssertFalse(mockView.gestureRecognizers?.isEmpty ?? true, "Should have gestures configured")
 
         // Then remove them
         coordinator.removeGestures(from: mockView)

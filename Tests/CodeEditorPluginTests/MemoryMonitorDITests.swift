@@ -147,10 +147,11 @@ final class MemoryMonitorDITests: XCTestCase {
             priority: .normal
         ) { @MainActor in
             cleanupCalled = true
-            cleanupResult = CleanupResult(memoryFreedMB: 10.0, description: "Test cleanup")
+            let result = CleanupResult(memoryFreedMB: 10.0, description: "Test cleanup")
+            cleanupResult = result
             // Simulate memory reduction
             mockProvider.memoryUsage = 90.0
-            return cleanupResult!
+            return result
         }
 
         // Force cleanup

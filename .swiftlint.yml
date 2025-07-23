@@ -31,18 +31,16 @@ analyzer_rules:
 # ===========================
 
 disabled_rules:
-  - attributes                              # SwiftUI @ViewBuilder patterns
-  - closure_body_length                     # Complex SwiftUI views
   - file_length                            # Allow longer files for complex features
   - function_body_length                    # Allow longer function bodies
   - large_tuple                            # Sometimes needed for state
-  - line_length                            # Handled by SwiftFormat
+  - line_length                            # Long lines sometimes needed
   - missing_docs                           # Documentation is optional for internal code
   - multiple_closures_with_trailing_closure # Common SwiftUI pattern
   - override_in_extension                   # Platform-specific extensions require overrides
   - required_deinit                        # Only add when cleanup is needed
   - static_operator                        # Operators need to be free functions
-  - switch_case_alignment                  # Handled by SwiftFormat
+  - switch_case_alignment                  # Complex case alignments
   - todo                                   # We use TODOs for tracking
   - type_body_length                       # Allow longer types
 
@@ -69,6 +67,7 @@ opt_in_rules:
   - sorted_first_last
   
   # Closures
+  - closure_body_length
   - closure_end_indentation
   - closure_spacing
   - trailing_closure
@@ -79,6 +78,7 @@ opt_in_rules:
   - collection_alignment
   - comma_inheritance
   - convenience_type
+  # - indentation_width  # Disabled: preprocessor directives use 2-space indentation
   - let_var_whitespace
   - literal_expression_end_indentation
   - modifier_order
@@ -111,6 +111,7 @@ opt_in_rules:
   - fallthrough
   - fatal_error_message
   - file_name_no_space
+  - force_unwrapping
   - function_default_parameter_at_end
   - identical_operands
   - implicit_return
@@ -129,6 +130,7 @@ opt_in_rules:
   - prefer_self_type_over_type_of_self
   - prefer_zero_over_explicit_init
   - prefixed_toplevel_constant
+  - raw_value_for_camel_cased_codable_enum
   - reduce_boolean
   - reduce_into
   - redundant_nil_coalescing
@@ -235,6 +237,13 @@ nesting:
 
 private_outlet:
   allow_private_set: true
+
+closure_body_length:
+  warning: 50
+  error: 100
+
+force_unwrapping:
+  severity: warning
 
 # ===========================
 # MARK: - Custom Rules
