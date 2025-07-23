@@ -9,6 +9,8 @@ Enable IDE-level intelligence with Language Server Protocol support.
 
 ## Overview
 
+> Important: LSP functionality is only available on macOS. On iOS and Mac Catalyst, LSP features are not available due to platform limitations.
+
 CodeEditorPlugin provides comprehensive Language Server Protocol (LSP) support, bringing advanced IDE features like intelligent code completion, real-time diagnostics, and refactoring capabilities to your editor. The framework supports two modes of operation to ensure cross-platform compatibility.
 
 LSP support provides advanced IDE features including:

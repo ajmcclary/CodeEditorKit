@@ -1,8 +1,10 @@
-# ``CodeEditorPlugin/LSPPathResolver``
+# LSPPathResolver
 
 @Metadata {
     @PageColor(purple)
 }
+
+> Important: LSP functionality is only available on macOS. This type is not available on iOS or Mac Catalyst.
 
 Resolves Language Server Protocol (LSP) server executable paths with flexible path resolution strategies.
 
@@ -143,6 +145,4 @@ guard let serverPath = resolver.resolvePath("my-language-server") else {
 
 ## See Also
 
-- ``LSPManager``
-- ``LanguageServerConfig``
-- <doc:LSPManager/Language-Server-Configuration>
+- <doc:LSP-Integration>

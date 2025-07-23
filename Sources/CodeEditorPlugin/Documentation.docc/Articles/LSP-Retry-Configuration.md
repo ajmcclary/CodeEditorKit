@@ -2,6 +2,8 @@
 
 Configure robust retry behavior for Language Server Protocol connections to ensure reliability.
 
+> Important: LSP functionality is only available on macOS. This documentation does not apply to iOS or Mac Catalyst builds.
+
 ## Overview
 
 The CodeEditorPlugin includes sophisticated retry logic for LSP connections, ensuring better reliability when starting language servers. This is particularly useful in environments where servers may take time to start or experience intermittent failures.
@@ -158,5 +160,3 @@ The retry mechanism:
 ## See Also
 
 - <doc:LSP-Integration>
-- ``LSPManager``
-- ``LSPServerConfiguration``
