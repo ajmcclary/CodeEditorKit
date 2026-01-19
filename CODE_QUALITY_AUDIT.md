@@ -1,94 +1,190 @@
-# Code Quality Audit Report
-## CodeEditorPlugin - Structural Design and Maintainability Assessment
+# Code Quality Audit Report: CodeEditorPlugin
 
 **Audit Date:** January 2026
 **Auditor:** Senior Software Architect
-**Codebase Version:** commit 1f6453d
-**Scope:** 401 source files across 17 directories
+**Codebase Version:** Current `main` branch (commit ed22856)
+**Scope:** Structural design, maintainability, and code quality analysis
+**Files Analyzed:** 401 source files across 17 directories
 
 ---
 
 ## Executive Summary
 
-The CodeEditorPlugin codebase demonstrates **strong overall architectural health** with well-defined module boundaries, consistent naming conventions, and proper Swift 6 concurrency adoption. The framework shows evidence of thoughtful design with a comprehensive service layer, proper separation of concerns, and established patterns for cross-platform development.
+The CodeEditorPlugin codebase demonstrates **professional-grade architecture** with strong adherence to modern Swift patterns and comprehensive cross-platform support. With **401 source files** across **17 directories**, the project maintains a well-organized structure with clear separation of concerns.
 
-### Structural Health Score: **B+ (82/100)**
+### Overall Health Score: **B+ (Good)**
 
 | Category | Score | Assessment |
 |----------|-------|------------|
-| Abstraction Quality | 78/100 | Good utilities exist but 6 God objects identified |
-| Pattern Consistency | 85/100 | Strong overall, singleton anti-pattern needs attention |
-| Code Reuse | 75/100 | Shared infrastructure exists but underutilized |
-| Documentation | 90/100 | Excellent DocC and inline documentation |
-| Testability | 80/100 | 66 test files, good coverage foundation |
+| Architecture | A | Excellent service-based architecture with actor model |
+| Pattern Consistency | B+ | ~90% compliance with documented patterns |
+| Code Duplication | B- | Moderate duplication requiring attention |
+| Abstraction Quality | B | Good abstractions with some God objects |
+| Maintainability | B+ | Clear structure, good documentation |
 
-### Key Findings
+### Key Findings Summary
 
 **Strengths:**
+- Excellent Swift 6 concurrency implementation with actors
+- Consistent use of `+Extensions` naming convention (100% compliance)
+- Proper platform detection using `#if canImport()` (100% compliance)
+- Well-designed service registry pattern
+- Comprehensive error handling infrastructure
 - Zero SwiftLint violations maintained
-- Excellent platform detection patterns (`#if canImport()` used correctly)
-- Consistent logging through `CrossPlatformLogger`
-- Well-structured dependency injection via `BusinessLogicServiceRegistry`
-- Comprehensive actor-based concurrency model
 
-**Areas for Improvement:**
-- 6 potential God objects requiring decomposition
-- 4 singleton instances contradict stated DI guidelines
-- Significant code duplication in language completion providers
-- Shared utility infrastructure underutilized by newer code
+**Critical Issues:**
+1. **7 singleton patterns** violate documented DI guidelines
+2. **PlatformCapabilities** class exhibits God Object anti-pattern (~1,915 lines across extensions)
+3. **Language enum switch duplication** across 6+ files creates maintenance burden
+4. **Completion generation code** has 4 nearly identical method implementations
+
+### Impact Assessment
+
+| Issue Category | Business Impact | Technical Debt Cost |
+|----------------|-----------------|---------------------|
+| Singleton violations | Medium | High |
+| God Objects | High | High |
+| Code duplication | Medium | Medium |
+| Pattern inconsistencies | Low | Low |
 
 ### Estimated Technical Debt
 
 | Priority | Items | Effort (Story Points) |
 |----------|-------|----------------------|
-| Critical | 2 | 13 |
-| High | 4 | 21 |
-| Medium | 6 | 18 |
+| Critical | 3 | 15 |
+| High | 5 | 25 |
+| Medium | 5 | 15 |
 | Low | 3 | 8 |
-| **Total** | **15** | **60** |
+| **Total** | **16** | **63** |
 
 ---
 
-## 1. Abstraction Analysis
+## Section 1: Abstraction Analysis
 
 ### 1.1 Utility Module Assessment
 
-The codebase contains **78 utility/helper/extension files** organized across 6 categories:
+The codebase contains **91 utility/helper/extension files** organized across multiple categories:
 
 | Category | Count | Quality Assessment |
 |----------|-------|-------------------|
-| Extension Files (+Extensions) | 27 | Excellent - consistent naming |
+| Extension Files (+Extensions) | 86 | Excellent - consistent naming |
 | Service Classes | 16 | Good - proper SRP adherence |
 | Helper Classes | 14 | Good - focused responsibilities |
-| Manager Classes | 7 | Good - clear lifecycle ownership |
 | Utility Files | 13 | Mixed - some overburdened |
-| Language Utilities | 1 | Good - SQL-specific |
 
-**Well-Designed Utilities:**
+#### Well-Designed Utilities
 
-1. **CrossPlatformLogger** (`Utilities/CrossPlatformLogger.swift`)
-   - Clean abstraction over `os.Logger`
-   - Consistent usage across 72 files
-   - Proper log level categorization
+**1. AsyncOperationManager** (`Sources/CodeEditorPlugin/Utilities/AsyncOperationManager.swift`)
+- **Lines:** 411 (main) + 695 (extensions) = 1,106 total
+- **Status:** Excellent design - **recommended pattern**
+- **Assessment:** Properly decomposed into focused extensions:
+  - `+DebouncingExtensions.swift` (138 lines)
+  - `+OptimizedDebouncing.swift` (184 lines)
+  - `+SchedulingExtensions.swift` (136 lines)
+  - `+ThrottlingExtensions.swift` (109 lines)
+  - `+RetryExtensions.swift` (81 lines)
+  - `+BatchExtensions.swift` (97 lines)
 
-2. **LRUCache** (`Utilities/LRUCache.swift`)
-   - Thread-safe implementation with memory monitoring
-   - Proper capacity management
-   - Integration with `MemoryMonitor`
+This demonstrates the **recommended pattern** for managing complex functionality through focused extensions.
 
-3. **AsyncOperationManager** (`Utilities/AsyncOperationManager.swift`)
-   - Well-decomposed with focused extensions:
-     - `+DebouncingExtensions.swift`
-     - `+ThrottlingExtensions.swift`
-     - `+SchedulingExtensions.swift`
-     - `+RetryExtensions.swift`
-     - `+BatchExtensions.swift`
+**2. LRUCache** (`Sources/CodeEditorPlugin/Utilities/LRUCache.swift`)
+- **Lines:** 272
+- **Status:** Good
+- **Assessment:** Clean generic implementation with proper memory monitor integration
+
+**3. TextMetricsCalculator** (`Sources/CodeEditorPlugin/Utilities/TextMetricsCalculator.swift`)
+- **Lines:** 432
+- **Status:** Good
+- **Assessment:** Focused single responsibility for text measurement
+
+**4. CrossPlatformLogger** (`Sources/CodeEditorPlugin/Utilities/CrossPlatformLogger.swift`)
+- **Lines:** 113
+- **Status:** Excellent
+- **Assessment:** Clean abstraction over `os.Logger`, consistently used across 114 occurrences in 74 files
 
 ### 1.2 God Objects Identified
 
-The following classes exhibit excessive responsibility aggregation:
+The following classes exhibit excessive responsibility aggregation requiring decomposition:
 
-#### 1.2.1 TextParsingUtilities (CRITICAL)
+#### 1.2.1 PlatformCapabilities (CRITICAL)
+
+**File:** `Sources/CodeEditorPlugin/Platform/PlatformCapabilities.swift`
+**Total Lines:** 615 (main) + ~1,300 (extensions) = **~1,915 lines**
+**Method Count:** 40+ public/private methods
+**Severity:** Critical
+
+**Current Responsibilities (Too Many):**
+1. Platform detection (macOS, iOS, Catalyst)
+2. TextKit capability detection
+3. Performance metrics and recommendations
+4. UI feature detection
+5. Input capability detection
+6. Device information
+7. Feature availability matrix for 40+ editor features
+
+**Evidence:**
+
+```swift
+// Sources/CodeEditorPlugin/Platform/PlatformCapabilities.swift:64-67
+@MainActor
+public final class PlatformCapabilities {
+    /// Shared singleton instance for platform capability detection
+    public static let shared = PlatformCapabilities()
+```
+
+**Extensions contributing to bloat:**
+- `PlatformCapabilities+TextKitExtensions.swift` (514 lines)
+- `PlatformCapabilities+UIExtensions.swift` (429 lines)
+- `PlatformCapabilities+PerformanceExtensions.swift` (514 lines)
+- `PlatformCapabilities+InputExtensions.swift` (366 lines)
+
+**Negative Impact:**
+- Difficult to unit test individual capabilities
+- Changes to one capability area risk affecting others
+- Cognitive overload when navigating the class
+- Violates Single Responsibility Principle
+
+**Recommendation:** Split into focused capability modules:
+
+```swift
+// Proposed refactoring structure
+public protocol PlatformCapabilityProvider: Sendable {
+    associatedtype Capability
+    func check(_ capability: Capability) -> Bool
+}
+
+// Separate capability domains
+public final class TextKitCapabilities: PlatformCapabilityProvider { }
+public final class PerformanceCapabilities: PlatformCapabilityProvider { }
+public final class UICapabilities: PlatformCapabilityProvider { }
+public final class InputCapabilities: PlatformCapabilityProvider { }
+
+// Facade coordinator (replaces monolithic PlatformCapabilities)
+@MainActor
+public final class PlatformCapabilityCoordinator {
+    public let textKit: TextKitCapabilities
+    public let performance: PerformanceCapabilities
+    public let ui: UICapabilities
+    public let input: InputCapabilities
+
+    public init(
+        textKit: TextKitCapabilities = .init(),
+        performance: PerformanceCapabilities = .init(),
+        ui: UICapabilities = .init(),
+        input: InputCapabilities = .init()
+    ) {
+        self.textKit = textKit
+        self.performance = performance
+        self.ui = ui
+        self.input = input
+    }
+}
+```
+
+---
+
+#### 1.2.2 TextParsingUtilities (CRITICAL)
+
 **File:** `Sources/CodeEditorPlugin/Text/TextParsingUtilities.swift`
 **Lines:** 705
 **Severity:** Critical
@@ -105,8 +201,6 @@ The following classes exhibit excessive responsibility aggregation:
 - Hierarchical syntax tree parsing
 - Identifier extraction
 
-**Impact:** High cognitive load for developers, difficult to test individual parsing concerns, modification risk affects unrelated functionality.
-
 **Recommendation:** Decompose into focused utilities:
 
 ```swift
@@ -120,29 +214,10 @@ Text/Parsing/
 └── PatternExtractor.swift         // Dot/arrow/bracket notation
 ```
 
-**Refactoring Example:**
-```swift
-// Before (in TextParsingUtilities.swift)
-public static func extractDotNotationPattern(from text: String) -> String? { ... }
-public static func matchBrackets(in text: String) -> [(Int, Int)] { ... }
-
-// After
-// PatternExtractor.swift
-public enum PatternExtractor {
-    public static func extractDotNotation(from text: String) -> String? { ... }
-    public static func extractArrowNotation(from text: String) -> String? { ... }
-}
-
-// BracketMatcher.swift
-public struct BracketMatcher {
-    public func findMatchingPairs(in text: String) -> [(Int, Int)] { ... }
-    public func validateNesting(in text: String) -> Bool { ... }
-}
-```
-
 ---
 
-#### 1.2.2 ConfigurationHotReload (HIGH)
+#### 1.2.3 ConfigurationHotReload (HIGH)
+
 **File:** `Sources/CodeEditorPlugin/Configuration/ConfigurationHotReload.swift`
 **Lines:** 627
 **Severity:** High
@@ -155,8 +230,6 @@ public struct BracketMatcher {
 5. Validation rule management
 6. Preset application
 7. Change notification
-
-**Impact:** Tightly coupled concerns make testing individual features difficult; changes to validation logic may inadvertently affect history management.
 
 **Recommendation:** Extract into composable managers:
 
@@ -171,39 +244,33 @@ Configuration/HotReload/
 
 ---
 
-#### 1.2.3 EditorLayoutService (MEDIUM)
-**File:** `Sources/CodeEditorPlugin/Core/EditorLayoutService.swift`
-**Lines:** 664
+#### 1.2.4 AsyncTextProcessor (MEDIUM)
+
+**File:** `Sources/CodeEditorPlugin/Text/AsyncTextProcessor.swift`
+**Lines:** 758
+**Method Count:** 33+ public methods
 **Severity:** Medium
 
-**Current Responsibilities:**
-- Component frame calculations (5+ components)
-- Layout optimization recommendations
-- Responsive layout calculations
-- Animation timing calculations
-- Z-position determination
-- Cache management
+**Responsibilities:**
+- Task queuing and priority management
+- Concurrent operation limiting
+- Result caching
+- Performance monitoring
+- System load monitoring
+- Adaptive settings management
+- Memory pressure response
 
-**Recommendation:** Extract calculation logic:
-
-```swift
-// Proposed structure
-Core/Layout/
-├── EditorLayoutService.swift         // Orchestration facade
-├── ComponentFrameCalculator.swift    // Pure frame calculations
-├── LayoutOptimizer.swift             // Optimization logic
-├── ResponsiveLayoutProvider.swift    // Responsive calculations
-└── LayoutCache.swift                 // Caching concerns
-```
+**Recommendation:** Extract task queue management and caching into separate actors.
 
 ---
 
-#### 1.2.4 Additional God Objects (MEDIUM)
+#### 1.2.5 Additional God Objects (MEDIUM)
 
 | File | Lines | Key Issue |
 |------|-------|-----------|
 | `LSP/LSPClient.swift` | 658 | Mixes transport, protocol, and request coordination |
 | `Features/SmartEditingEngine.swift` | 696 | Multiple editing features combined |
+| `Core/EditorLayoutService.swift` | 664 | Layout calculations + cache management |
 | `Layout/GutterViewModel.swift` | 650 | Large view model with many nested types |
 
 ### 1.3 Under-Utilized Abstractions
@@ -215,422 +282,612 @@ Several well-designed shared utilities are not consistently used:
 | `SharedCompletionBuilder` | `Languages/` | 40% | 100% |
 | `CompletionParsingHelpers` | `Completion/` | 30% | 100% |
 | `SharedContextAnalyzer` | `Languages/` | 20% | 100% |
-| `LanguageMemberCompletions` | `Languages/` | 25% | 100% |
+| `CoordinateSystemHelper` | `Utilities/` | 25% | 75%+ |
 
 ---
 
-## 2. Pattern Consistency Review
+## Section 2: Pattern Consistency Review
 
 ### 2.1 Dependency Injection Violations
 
-**Issue:** The `CLAUDE.md` explicitly states "No singletons - use DI for all services," but 4 singleton instances exist:
+**CLAUDE.md States:** "No singletons - use DI for all services"
 
-| File | Line | Singleton | Usage Count |
-|------|------|-----------|-------------|
-| `Platform/PlatformCapabilities.swift` | 67 | `static let shared` | 15+ files |
-| `Platform/PlatformServiceLayer.swift` | 20 | `static let shared` | 8+ files |
-| `Performance/ProductionPerformanceMetrics.swift` | 11 | `static let shared` | 5 files |
-| `Performance/AdaptivePerformanceMode.swift` | 23 | References shared metrics | 1 file |
+**Violations Found:** 7 singleton patterns
 
-**Impact:**
-- Complicates unit testing (cannot inject mocks)
+| File | Line | Singleton Pattern | Usage Count |
+|------|------|-------------------|-------------|
+| `Languages/LanguageMetadataRegistry.swift` | 11 | `public static let shared` | 5+ files |
+| `Platform/PlatformServiceLayer.swift` | 19-22 | `public static let shared` | 8+ files |
+| `Platform/PlatformCapabilities.swift` | 67 | `public static let shared` | 15+ files |
+| `Performance/ProductionPerformanceMetrics.swift` | 11 | `public static let shared` | 5 files |
+| `Performance/UnifiedPerformanceSystem.swift` | 11 | `public static let shared` | 3 files |
+| `Text/ParagraphStyleCache.swift` | 142 | `nonisolated(unsafe) public static let shared` | 4 files |
+| `Core/BusinessLogicServiceRegistry.swift` | - | Lazy singleton pattern | 10+ files |
+
+**Evidence:**
+
+```swift
+// Sources/CodeEditorPlugin/Languages/LanguageMetadataRegistry.swift:7-14
+@MainActor
+public final class LanguageMetadataRegistry {
+    // MARK: - Singleton
+
+    /// Shared instance for global language metadata access
+    public static let shared = LanguageMetadataRegistry()
+
+    /// Private initializer for singleton pattern
+    private init() {}
+```
+
+**Fallback Pattern (also problematic):**
+
+```swift
+// Sources/CodeEditorPlugin/Platform/CrossPlatformCoordinator.swift:73
+self.capabilities = capabilities ?? PlatformCapabilities.shared  // Uses singleton as fallback
+```
+
+**Negative Impact:**
+- Difficult to unit test in isolation
 - Hidden dependencies make code harder to reason about
-- Violates project's own architectural guidelines
+- Contradicts documented architecture guidelines
+- Potential thread-safety issues
 
-**Recommendation:** Migrate to dependency injection via `EditorConfiguration`:
+**Recommendation:** Convert singletons to injectable dependencies:
 
 ```swift
-// Before
-let capabilities = PlatformCapabilities.shared
+// Before (singleton)
+public final class LanguageMetadataRegistry {
+    public static let shared = LanguageMetadataRegistry()
+    private init() {}
+}
 
-// After
+// After (injectable)
+public final class LanguageMetadataRegistry: @unchecked Sendable {
+    public init() {}
+}
+
+// Usage via EditorConfiguration
 public struct EditorConfiguration {
-    // Add injectable services
-    public var platformCapabilities: PlatformCapabilities = PlatformCapabilities()
-    public var performanceMetrics: PerformanceMetricsProtocol = ProductionPerformanceMetrics()
-}
-
-// Usage
-let capabilities = configuration.platformCapabilities
-```
-
-### 2.2 Error Handling Inconsistencies
-
-**124 total `try?` usages found** - Analysis:
-
-| Category | Count | Assessment |
-|----------|-------|------------|
-| JSON/Codable decoding | 87 | Acceptable |
-| File operations | 12 | Concerning |
-| LSP operations | 8 | Mixed |
-| Other | 17 | Review needed |
-
-**Concerning Silent Failures:**
-
-```swift
-// LSPClient.swift:192 - Shutdown failure is significant
-try? await sendShutdownRequest()
-
-// PluginContext.swift:169 - Directory creation failure should be logged
-try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
-
-// PluginManager.swift:443 - State directory creation
-try? fileManager.createDirectory(...)
-```
-
-**Recommendation:** Add logging for file system operations:
-
-```swift
-// Before
-try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
-
-// After
-do {
-    try fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
-} catch {
-    logger.warning("Failed to create directory at \(baseDirectory): \(error)")
+    public var languageRegistry: LanguageMetadataRegistry = LanguageMetadataRegistry()
 }
 ```
 
-### 2.3 Pattern Consistency Strengths
+**Positive Finding:** `MemoryMonitor.swift` (lines 18-35) properly documents that singleton pattern is deprecated and recommends dependency injection.
 
-| Pattern | Files Checked | Compliance | Notes |
-|---------|---------------|------------|-------|
-| Extension naming (`+Extensions`) | 27 | 100% | Excellent |
-| Platform detection (`#if canImport`) | All | 100% | Zero `#if os()` found |
-| Logging (`CrossPlatformLogger`) | 72 | 100% | Only CrossPlatformLogger uses print() |
-| Async/Concurrency | 40+ | 100% | Proper actor usage |
-| Service naming | 64 | 100% | Consistent Manager/Provider/Service |
+### 2.2 Extension Naming Convention
 
-### 2.4 MainActor and Sendable Usage
+**Status:** 100% Compliant
 
-**Current Statistics:**
+All **86 extension files** properly use the `+Extensions` suffix as documented:
+- `CodeEditorView+Extensions.swift`
+- `NSTextLayoutManager+Extensions.swift`
+- `EditorConfiguration+PerformanceExtensions.swift`
+- `SyntaxHighlightingCoordinator+Extensions.swift`
+
+### 2.3 Platform Detection
+
+**Status:** 100% Compliant
+
+All platform detection uses `#if canImport()` pattern correctly:
+
+```swift
+// Correct pattern used throughout (verified in 206+ files)
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#endif
+```
+
+No violations of `#if os()` found.
+
+### 2.4 Logging Patterns
+
+**Status:** 98% Compliant
+
+- **114 occurrences** of `CrossPlatformLogger` across **74 files**
+- Only **2 legitimate** print() usages for Linux fallback in `CrossPlatformLogger.swift` itself
+
+```swift
+// Proper pattern (Sources/CodeEditorPlugin/Core/TextEditingService.swift:14)
+private let logger = CrossPlatformLogger.logger(
+    subsystem: "com.codeeditor.plugin",
+    category: "TextEditingService"
+)
+```
+
+### 2.5 ViewModel Patterns
+
+**Status:** Consistent and Modern
+
+All ViewModels use modern Swift patterns:
+- `@Observable` (iOS 17+, macOS 14+)
+- `@MainActor`
+- No deprecated `@ObservableObject` or `@EnvironmentObject`
+
+```swift
+// Sources/CodeEditorPlugin/Layout/GutterViewModel.swift:13-16
+@MainActor
+@Observable
+public final class GutterViewModel {
+    // ...
+}
+```
+
+### 2.6 Service Structure Consistency
+
+**Status:** Highly Consistent
+
+All services follow the established pattern:
+
+```swift
+@MainActor
+public final class [ServiceName] {
+    private let logger = CrossPlatformLogger.logger(...)
+
+    public init(...) { }
+
+    // Public methods
+}
+```
+
+**Services verified:**
+- `TextEditingService`
+- `SyntaxHighlightingService`
+- `LanguageDetectionService`
+- `LineNumberCalculationService`
+- `EditorLayoutService`
+- `GutterSizingService`
+- `CodeFoldingCoordinatorService`
+
+### 2.7 Swift 6 Concurrency
+
+**Status:** Excellent Compliance
+
 - `@MainActor` annotations: 312 instances
-- `nonisolated` declarations: 217 instances
+- `nonisolated` declarations: 217 instances (39 with `nonisolated(unsafe)`)
 - `Sendable` conformances: 492 types
+- Proper actors declared: `AsyncOperationManager`, `WebSocketTransport`, `ProcessTransport`, `HighlightingTaskManager`, `PluginStatePersistence`
 
-**Assessment:** Swift 6 concurrency is consistently and correctly applied throughout the codebase.
+### 2.8 Force Unwraps
+
+**Status:** 100% Compliant
+
+No dangerous force unwraps found. Only legitimate uses in `init(coder:)` stubs:
+
+```swift
+// Proper pattern in required initializers
+required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+}
+```
 
 ---
 
-## 3. Duplication and Reuse Audit
+## Section 3: Duplication and Reuse Audit
 
-### 3.1 Critical Duplication
+### 3.1 Critical Duplication: Language Enum Switch Statements
 
-#### 3.1.1 `createMemberItems()` Implementation
 **Severity:** Critical
-**Duplication Factor:** 4x
+**Occurrences:** 6+ files
+**Estimated Duplicate Lines:** 300+
 
 **Affected Files:**
-- `Languages/JavaCompletionProvider.swift:472-486`
-- `Languages/JavaScriptCompletionProvider.swift:547-561`
-- `Languages/RustCompletionProvider.swift:532-546`
-- `Languages/CCompletionProvider.swift:522-536`
 
-**Existing Solution:** `Languages/SharedCompletionBuilder.swift:124-148`
+| File | Lines | Method |
+|------|-------|--------|
+| `SyntaxHighlighting/SyntaxHighlightingCoordinator.swift` | 64-91, 107-134 | `highlight()`, `highlightAsync()` |
+| `Core/SyntaxHighlightingService.swift` | 105-154 | `getCompletionTriggerCharacters()` |
+| `LSP/LSPCompletionProvider.swift` | 139-199 | `languageIdForLanguage()` |
+| `SyntaxHighlighting/BackgroundHighlightingActor.swift` | 28-52 | `createBasicHighlighting()` |
+| `SyntaxHighlighting/RegexSyntaxHighlighter+LanguagesExtensions.swift` | 73+ | `createLanguageMap()` |
+| `Text/Parsing/LanguagePatternDetector.swift` | 58+ | `getKeywords()`, `getStringDelimiters()` |
 
-**Duplicate Code:**
+**Evidence:**
+
 ```swift
-// Repeated in 4 files
-private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-    members
-        .filter { name, _, _ in
-            filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-        }
-        .map { name, type, description in
-            let kind: CompletionItemKind = switch type {
-            case "method": .method
-            case "property": .property
-            case "module": .module
-            default: .property
-            }
-            return CompletionItemModel(
-                label: name,
-                kind: kind,
-                detail: description,
-                insertText: name
-            )
-        }
-}
-```
-
-**Refactoring:**
-```swift
-// In each provider, replace with:
-import SharedCompletionBuilder
-
-// Replace implementation with:
-private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-    SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
-}
-```
-
-**Impact:** ~60 lines of redundant code; inconsistency risk if one implementation is updated.
-
----
-
-#### 3.1.2 `extractTargetType()` Implementation
-**Severity:** High
-**Duplication Factor:** 6x
-
-**Affected Files:**
-| File | Line | Variation |
-|------|------|-----------|
-| `JavaCompletionProvider.swift` | 245 | Standard dot notation |
-| `RustCompletionProvider.swift` | 273 | Standard dot notation |
-| `CCompletionProvider.swift` | 273 | Includes arrow notation |
-| `GoCompletionProvider.swift` | 183 | Standard dot notation |
-| `PythonCompletionProvider.swift` | 209 | Standard dot notation |
-| `RubyCompletionProvider.swift` | 423 | Standard dot notation |
-
-**Existing Solution:** `Completion/CompletionParsingHelpers.swift:20-57`
-- `extractTargetForDotNotation()`
-- `extractTargetForArrowNotation()`
-- `extractTargetForDotOrArrowNotation()`
-
-**Inconsistency:** Some providers (Ruby, JavaScript) correctly use `CompletionParsingHelpers`, others re-implement.
-
-**Refactoring:**
-```swift
-// Before (in JavaCompletionProvider.swift:245)
-override public func extractTargetType(from text: String) -> String? {
-    let pattern = #"(\w+)\s*\.\s*$"#
-    if let regex = try? NSRegularExpression(pattern: pattern),
-       let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-       let range = Range(match.range(at: 1), in: text) {
-        return String(text[range])
+// Sources/CodeEditorPlugin/SyntaxHighlighting/SyntaxHighlightingCoordinator.swift:64-91
+public func highlight(source: String, language: Language) -> [HighlightedToken] {
+    switch language {
+    case .swift:
+        return swiftHighlighter.highlight(source: source)
+    case .json:
+        // JSON-specific handling...
+    case .plainText:
+        return []
+    default:
+        // regex highlighter...
     }
-    return nil
 }
 
-// After
-override public func extractTargetType(from text: String) -> String? {
-    CompletionParsingHelpers.extractTargetForDotNotation(from: text)
+// Duplicated in highlightAsync() at lines 95-134 with identical structure
+public func highlightAsync(source: String, language: Language) async -> [HighlightedToken] {
+    switch language {
+    case .swift:
+        return swiftHL.highlight(source: source)
+    case .json:
+        // Identical JSON handling duplicated...
+    // ...same cases repeated
+    }
+}
+```
+
+**Negative Impact:**
+- Adding a new language requires changes in 6+ files
+- Bug fixes must be replicated across all switch statements
+- High risk of inconsistency between sync/async versions
+- Maintenance burden grows linearly with language count
+
+**Recommendation:** Create a unified `LanguageHighlightingStrategy` pattern:
+
+```swift
+// Proposed: Sources/CodeEditorPlugin/SyntaxHighlighting/LanguageHighlightingStrategy.swift
+public protocol LanguageHighlightingStrategy: Sendable {
+    func highlight(source: String) -> [HighlightedToken]
+}
+
+public final class LanguageHighlightingFactory {
+    private let swiftHighlighter: SwiftSyntaxHighlighter
+    private let regexHighlighter: RegexSyntaxHighlighter
+    private let jsonTokenizer: FastJSONTokenizer
+
+    public func strategy(for language: Language) -> LanguageHighlightingStrategy {
+        switch language {
+        case .swift: return SwiftHighlightingStrategy(highlighter: swiftHighlighter)
+        case .json: return JSONHighlightingStrategy(tokenizer: jsonTokenizer)
+        case .plainText: return PlainTextStrategy()
+        default: return RegexHighlightingStrategy(highlighter: regexHighlighter, language: language)
+        }
+    }
+}
+
+// Usage (single switch statement, reusable for sync/async)
+public func highlight(source: String, language: Language) -> [HighlightedToken] {
+    factory.strategy(for: language).highlight(source: source)
 }
 ```
 
 ---
 
-#### 3.1.3 `analyzeContext()` Implementation
+### 3.2 High Duplication: Completion Generation Methods
+
 **Severity:** High
-**Duplication Factor:** 7x
+**File:** `Sources/CodeEditorPlugin/Completion/CompletionGenerationService.swift`
+**Lines:** 120-187
+**Duplicate Lines:** 68
+
+**Evidence:**
+
+```swift
+// Lines 120-137: generateSwiftBasicCompletions
+private func generateSwiftBasicCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
+    let keywords = ["func", "var", "let", "class", "struct", ...]
+    return keywords
+        .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
+        .map { keyword in
+            CompletionItemModel(label: keyword, kind: .keyword, priority: ...)
+        }
+}
+
+// Lines 139-155: generatePythonBasicCompletions - IDENTICAL STRUCTURE
+private func generatePythonBasicCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
+    let keywords = ["def", "class", "import", ...]  // Only this differs
+    return keywords
+        .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }  // Duplicated
+        .map { keyword in
+            CompletionItemModel(label: keyword, kind: .keyword, priority: ...)  // Duplicated
+        }
+}
+
+// Lines 157-173: generateJavaScriptBasicCompletions - IDENTICAL STRUCTURE
+// Lines 175-187: generateGenericCompletions - IDENTICAL STRUCTURE
+```
+
+**Note:** `SharedCompletionBuilder.createKeywordCompletions()` exists but isn't used here.
+
+**Recommendation:** Consolidate to single parameterized method:
+
+```swift
+private func generateKeywordCompletions(
+    _ context: CompletionContext,
+    keywords: [String]
+) -> [CompletionItemModel] {
+    keywords
+        .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
+        .map { CompletionItemModel(label: $0, kind: .keyword, priority: .keyword.defaultPriority) }
+}
+
+private func generateBasicCompletions(for context: CompletionContext) -> [CompletionItemModel] {
+    let keywords: [String] = switch context.language {
+    case .swift: ["func", "var", "let", "class", "struct", ...]
+    case .python: ["def", "class", "import", ...]
+    case .javascript, .typescript: ["function", "const", "let", ...]
+    default: ["if", "else", "for", "while", ...]
+    }
+    return generateKeywordCompletions(context, keywords: keywords)
+}
+```
+
+---
+
+### 3.3 Structural Duplication: Language Completion Providers
+
+**Severity:** High
+**File Count:** 14 provider files
+**Estimated Duplicate Structure:** 1,800+ lines
 
 **Affected Files:**
-- `SwiftCompletionProvider.swift:121-143`
-- `JavaCompletionProvider.swift:203-238`
-- `RustCompletionProvider.swift:221-266`
-- `CCompletionProvider.swift` (similar lines)
-- `TypeScriptCompletionProvider.swift`
-- `JavaScriptCompletionProvider.swift:210-239`
-- `GoCompletionProvider.swift`
+- `Languages/SwiftCompletionProvider.swift`
+- `Languages/JavaScriptCompletionProvider.swift` (397 lines)
+- `Languages/TypeScriptCompletionProvider.swift` (561 lines)
+- `Languages/PythonCompletionProvider.swift`
+- `Languages/RustCompletionProvider.swift` (407 lines)
+- `Languages/JavaCompletionProvider.swift`
+- `Languages/GoCompletionProvider.swift`
+- `Languages/CCompletionProvider.swift`
+- `Languages/PHPCompletionProvider.swift`
+- `Languages/RubyCompletionProvider.swift`
+- `Languages/SQLCompletionProvider.swift` (473 lines)
+- `Languages/ShellCompletionProvider.swift`
+- `Languages/CSSCompletionProvider.swift`
+- `Languages/HTMLCompletionProvider.swift`
 
-**Common Duplicate Pattern:**
+**Pattern:** All providers inherit from `BaseCompletionProvider` with identical override structure:
+- `override public var keywords: [String]`
+- `override public var types: [String]`
+- `override public var functions: [String]`
+- `override public var snippets: [SnippetTemplate]`
+
+**Note:** `LanguageProviderFactory` already attempts consolidation using `LanguageMetadata`, but individual provider classes still exist as duplicates.
+
+**Recommendation:** Deprecate individual provider classes in favor of data-driven approach:
+
 ```swift
-// Repeated structure in 7 files
-override public func analyzeContext(text: String, cursorPosition: Int) -> CompletionContext {
-    let lineText = getLineText(text: text, position: cursorPosition)
-    let trimmed = lineText.trimmingCharacters(in: .whitespaces)
-    let beforeCursor = getTextBeforeCursor(text: text, position: cursorPosition)
-    let currentWord = extractCurrentWord(from: beforeCursor)
+// Single generic provider using metadata registry
+public final class MetadataBasedCompletionProvider: BaseCompletionProvider {
+    private let metadata: ExtendedLanguageMetadata
 
-    // Language-specific checks follow...
+    public init(language: Language, registry: LanguageMetadataRegistry) {
+        self.metadata = registry.metadata(for: language)
+        super.init(language: language)
+    }
+
+    public override var keywords: [String] { metadata.keywords }
+    public override var types: [String] { metadata.types }
+    public override var functions: [String] { metadata.functions }
+    public override var snippets: [SnippetTemplate] { metadata.snippets }
 }
 ```
 
-**Existing Solution:** `Languages/SharedCompletionBuilder.swift:175-305` provides `SharedContextAnalyzer`
-
-**Impact:** ~300 lines of duplicated context analysis logic across providers.
-
 ---
 
-#### 3.1.4 `extractCurrentWord()` Implementation
-**Severity:** High
-**Duplication Factor:** 20x
+### 3.4 Moderate Duplication: Error Type Implementations
 
-**Affected Files:** Found in 20 completion providers
+**Severity:** Moderate
+**File Count:** 9 files with 12 error enums
+**Pattern:** All implement `LocalizedError` with identical switch statement structures
 
-**Common Implementation:**
+**Primary Files:**
+- `Core/CodeEditorError.swift` (lines 110-282)
+- `Core/DomainErrors.swift` (7 nested error enums)
+- `PluginSystem/PluginProtocol.swift`
+- `Configuration/ConfigurationHotReload.swift`
+- `Configuration/ConfigurationMigrator.swift`
+
+**Evidence:**
+
 ```swift
-private func extractCurrentWord(from text: String) -> String {
-    let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
-    return components.last ?? ""
+// Sources/CodeEditorPlugin/Core/DomainErrors.swift:67-100
+public enum ConfigurationDomainError: LocalizedError, Sendable {
+    case invalidValue(property: String, value: String, reason: String)
+    case incompatibleSettings(setting1: String, setting2: String)
+    // ...
+
+    public var errorDescription: String? {
+        switch self {
+        case let .invalidValue(property, value, reason):
+            return "Invalid value '\(value)' for property '\(property)': \(reason)"
+        // ... identical pattern for each case
+        }
+    }
+
+    public var recoverySuggestion: String? {
+        switch self {
+        case .invalidValue(let property, _, _):
+            return "Check the documentation..."
+        // ... identical pattern
+        }
+    }
 }
 ```
 
-**Existing Solution:** `Completion/CompletionParsingHelpers.swift:114-127`
-- `extractCurrentWord()`
-- `extractCurrentIdentifier()` (supports `$` character)
+**Recommendation:** Create error generation utilities or consider Swift 5.9+ macros.
 
 ---
 
-### 3.2 Duplication Summary Table
+### 3.5 Duplication Summary Table
 
-| Duplication Type | Files Affected | Lines Duplicated | Existing Solution | Priority |
-|-----------------|----------------|------------------|-------------------|----------|
-| `createMemberItems()` | 4 | ~60 | SharedCompletionBuilder | Critical |
-| `extractTargetType()` | 6 | ~90 | CompletionParsingHelpers | High |
-| `analyzeContext()` | 7 | ~300 | SharedContextAnalyzer | High |
-| `extractCurrentWord()` | 20 | ~100 | CompletionParsingHelpers | High |
-| Type-specific members | 6+ | ~400 | LanguageMemberCompletions | Medium |
-| **Total** | **43** | **~950** | | |
+| Duplication Type | Severity | Files | Est. Lines | Existing Solution | Priority |
+|------------------|----------|-------|------------|-------------------|----------|
+| Language enum switches | Critical | 6 | 300+ | None | P0 |
+| Completion generation | High | 1 | 68 | SharedCompletionBuilder | P1 |
+| Completion providers | High | 14 | 1,800+ | LanguageMetadataRegistry | P1 |
+| `createMemberItems()` | High | 4 | ~60 | SharedCompletionBuilder | P1 |
+| `extractTargetType()` | High | 6 | ~90 | CompletionParsingHelpers | P2 |
+| `analyzeContext()` | High | 7 | ~300 | SharedContextAnalyzer | P2 |
+| `extractCurrentWord()` | High | 20 | ~100 | CompletionParsingHelpers | P2 |
+| Error implementations | Moderate | 9 | ~400 | None | P3 |
+| **Total** | | **67** | **~3,118** | | |
 
-### 3.3 Positive Reuse Patterns
+### 3.6 Positive Reuse Patterns
 
 The codebase has established good reuse infrastructure:
 
-| Utility | Purpose | Files Using |
-|---------|---------|-------------|
-| `SharedCompletionBuilder` | Member item creation | 6 providers |
-| `CompletionParsingHelpers` | Regex extraction | 4 providers |
-| `BaseCompletionProvider` | Base completion logic | 20 providers |
-| `LineBasedSymbolProvider` | Symbol detection | 8 providers |
-| `LanguageMemberCompletions` | Type member lists | 2 languages |
+| Utility | Purpose | Files Using | Adoption |
+|---------|---------|-------------|----------|
+| `SharedCompletionBuilder` | Member item creation | 6 providers | 40% |
+| `CompletionParsingHelpers` | Regex extraction | 4 providers | 30% |
+| `BaseCompletionProvider` | Base completion logic | 20 providers | 100% |
+| `LineBasedSymbolProvider` | Symbol detection | 8 providers | 80% |
+| `LanguageMemberCompletions` | Type member lists | 2 languages | 25% |
 
 **Gap:** The infrastructure exists but adoption is incomplete. Newer providers tend to re-implement rather than reuse.
 
 ---
 
-## 4. Prioritized Refactoring Roadmap
+## Section 4: Prioritized Refactoring Roadmap
 
-### Phase 1: Critical (Weeks 1-2)
-**Impact:** High maintainability improvement, low risk
+### Phase 1: Quick Wins (High Impact, Low Effort)
 
-| Task | Files | Effort | Impact |
-|------|-------|--------|--------|
-| Decompose `TextParsingUtilities.swift` | 1 → 5 | 8 SP | Reduces cognitive load |
-| Migrate `createMemberItems()` to SharedCompletionBuilder | 4 | 2 SP | Eliminates 60 LOC duplication |
-| Add DI for `PlatformCapabilities` | 15+ | 3 SP | Improves testability |
+| Priority | Task | Files | Impact | Effort |
+|----------|------|-------|--------|--------|
+| 1.1 | Consolidate completion generation methods | 1 | Medium | 2 SP |
+| 1.2 | Extract language highlighting strategy | 2 | High | 4 SP |
+| 1.3 | Document singleton deprecation plan | 7 | Low | 1 SP |
 
-**Deliverables:**
-- [ ] Create `Text/Parsing/` module with focused utilities
-- [ ] Update Java, JavaScript, Rust, C providers to use SharedCompletionBuilder
-- [ ] Add `platformCapabilities` to EditorConfiguration
+**Deliverable:** Reduce duplication in `CompletionGenerationService` and `SyntaxHighlightingCoordinator`
 
-### Phase 2: High Priority (Weeks 3-4)
-**Impact:** Reduces duplication by ~500 LOC
+### Phase 2: Dependency Injection Migration (High Impact, Medium Effort)
 
-| Task | Files | Effort | Impact |
-|------|-------|--------|--------|
-| Consolidate `extractTargetType()` | 6 | 3 SP | Eliminates regex duplication |
-| Standardize `analyzeContext()` | 7 | 5 SP | Eliminates 300 LOC |
-| Migrate `extractCurrentWord()` | 20 | 3 SP | Consistent word extraction |
-| Add DI for `ProductionPerformanceMetrics` | 5 | 3 SP | Actor testability |
+| Priority | Task | Files | Impact | Effort |
+|----------|------|-------|--------|--------|
+| 2.1 | Convert `LanguageMetadataRegistry` to injectable | 3 | Medium | 4 SP |
+| 2.2 | Convert `PlatformServiceLayer` to injectable | 5 | Medium | 4 SP |
+| 2.3 | Update `EditorConfiguration` with DI properties | 2 | Medium | 2 SP |
+| 2.4 | Add deprecation warnings to remaining singletons | 4 | Low | 1 SP |
 
-**Deliverables:**
-- [ ] All providers use `CompletionParsingHelpers.extractTargetFor*`
-- [ ] All providers use `SharedContextAnalyzer.analyzeContext()`
-- [ ] Remove all inline `extractCurrentWord()` implementations
+**Deliverable:** Achieve CLAUDE.md DI compliance for core services
 
-### Phase 3: Medium Priority (Weeks 5-6)
-**Impact:** Architectural improvements
+### Phase 3: God Object Decomposition (High Impact, High Effort)
 
-| Task | Files | Effort | Impact |
-|------|-------|--------|--------|
-| Extract `ConfigurationHistoryManager` | 1 → 3 | 5 SP | SRP compliance |
-| Decompose `EditorLayoutService` | 1 → 4 | 5 SP | Focused calculators |
-| Complete `LanguageMemberCompletions` adoption | 6+ | 5 SP | ~400 LOC reduction |
+| Priority | Task | Files | Impact | Effort |
+|----------|------|-------|--------|--------|
+| 3.1 | Create `PlatformCapabilityCoordinator` facade | 1 | High | 2 SP |
+| 3.2 | Extract `TextKitCapabilities` | 2 | High | 4 SP |
+| 3.3 | Extract `PerformanceCapabilities` | 2 | High | 4 SP |
+| 3.4 | Extract `UICapabilities` | 2 | Medium | 4 SP |
+| 3.5 | Extract `InputCapabilities` | 2 | Medium | 4 SP |
+| 3.6 | Decompose `TextParsingUtilities` | 1 → 5 | High | 8 SP |
+| 3.7 | Migrate consumers to new API | 20+ | High | 8 SP |
 
-**Deliverables:**
-- [ ] Configuration hot reload uses composition
-- [ ] Layout calculations properly separated
-- [ ] All major languages use LanguageMemberCompletions
+**Deliverable:** Replace monolithic classes with focused, single-responsibility modules
 
-### Phase 4: Low Priority (Backlog)
-**Impact:** Polish and consistency
+### Phase 4: Completion Provider Consolidation (Medium Impact, High Effort)
 
-| Task | Files | Effort | Impact |
-|------|-------|--------|--------|
-| Decompose `SmartEditingEngine` | 1 → 4 | 3 SP | Improved testability |
-| Add error logging to `try?` file operations | 3 | 2 SP | Better debugging |
-| Document remaining God objects | 3 | 3 SP | Future guidance |
+| Priority | Task | Files | Impact | Effort |
+|----------|------|-------|--------|--------|
+| 4.1 | Enhance `LanguageMetadataRegistry` with all languages | 1 | Medium | 8 SP |
+| 4.2 | Create `MetadataBasedCompletionProvider` | 1 | Medium | 4 SP |
+| 4.3 | Migrate providers to use shared utilities | 14 | Medium | 6 SP |
+| 4.4 | Deprecate individual language providers | 14 | Low | 2 SP |
 
----
+**Deliverable:** Single data-driven completion provider infrastructure
 
-## 5. Metrics and Monitoring
+### Phase 5: Error Handling Standardization (Low Impact, Medium Effort)
 
-### Recommended Quality Gates
+| Priority | Task | Files | Impact | Effort |
+|----------|------|-------|--------|--------|
+| 5.1 | Create `ErrorDescriptionBuilder` utility | 1 | Low | 2 SP |
+| 5.2 | Standardize error implementations | 9 | Low | 4 SP |
 
-```yaml
-# Proposed CI quality checks
-code_quality:
-  max_file_lines: 500
-  max_class_methods: 15
-  max_cyclomatic_complexity: 10
-  required_test_coverage: 80%
-  duplication_threshold: 3%
-```
-
-### Tracking Dashboard Metrics
-
-| Metric | Current | Target | Measurement |
-|--------|---------|--------|-------------|
-| God Objects (>500 LOC) | 6 | 0 | File line count |
-| Singleton Usage | 4 | 0 | `static.*shared` grep |
-| Duplication Rate | ~2.5% | <1% | Code similarity analysis |
-| Shared Utility Adoption | 35% | 90% | Provider audit |
-| Test Coverage | ~70% | 85% | Code coverage tools |
+**Deliverable:** Consistent, maintainable error handling across codebase
 
 ---
 
-## 6. Conclusion
+## Section 5: Compliance Matrix
 
-The CodeEditorPlugin codebase demonstrates solid architectural foundations with well-thought-out module boundaries and consistent application of Swift best practices. The primary areas requiring attention are:
-
-1. **God Object Decomposition:** 6 classes exceed recommended responsibility thresholds
-2. **Singleton Migration:** 4 instances contradict DI guidelines and complicate testing
-3. **Duplication Elimination:** ~950 lines of identified duplicate code across completion providers
-4. **Shared Utility Adoption:** Excellent infrastructure exists but is underutilized
-
-Implementing the recommended refactoring roadmap will:
-- Reduce cognitive load for developers
-- Improve unit test coverage and isolation
-- Decrease maintenance burden through code reuse
-- Align implementation with stated architectural guidelines
-
-The estimated effort of **60 story points** across **15 items** represents approximately 6 weeks of focused refactoring work, which can be parallelized and integrated incrementally without disrupting ongoing feature development.
+| CLAUDE.md Rule | Status | Compliance |
+|----------------|--------|------------|
+| Extensions use `+Extensions` suffix | Compliant | 100% |
+| Platform detection uses `#if canImport()` | Compliant | 100% |
+| Use `CrossPlatformLogger`, not `print()` | Compliant | 98% |
+| No singletons - use DI | **Violation** | 0% (7 singletons) |
+| No force unwraps (`!`) | Compliant | 100% |
+| Swift 6 concurrency (actors) | Compliant | 100% |
+| `ConfigurationBindingBuilder` deprecated | Compliant | 100% |
+| Zero SwiftLint violations | Compliant | 100% |
 
 ---
 
-## Appendix A: File Inventory
+## Appendix A: Files Requiring Attention
 
-### God Objects Requiring Attention
+### Critical Priority
 
-| File | Lines | Severity | Section |
-|------|-------|----------|---------|
-| `Text/TextParsingUtilities.swift` | 705 | Critical | 1.2.1 |
-| `Configuration/ConfigurationHotReload.swift` | 627 | High | 1.2.2 |
-| `Core/EditorLayoutService.swift` | 664 | Medium | 1.2.3 |
-| `LSP/LSPClient.swift` | 658 | Medium | 1.2.4 |
-| `Features/SmartEditingEngine.swift` | 696 | Medium | 1.2.4 |
-| `Layout/GutterViewModel.swift` | 650 | Medium | 1.2.4 |
-| `Languages/ShellCompletionProvider.swift` | 732 | Low | 1.2.4 |
+| File | Issue | Lines |
+|------|-------|-------|
+| `Platform/PlatformCapabilities.swift` | God Object | 65-615 |
+| `Text/TextParsingUtilities.swift` | God Object | 1-705 |
+| `SyntaxHighlighting/SyntaxHighlightingCoordinator.swift` | Duplicate switch | 64-134 |
+| `Languages/LanguageMetadataRegistry.swift` | Singleton violation | 11 |
 
-### Singleton Instances
+### High Priority
 
-| File | Line | Instance |
-|------|------|----------|
-| `Platform/PlatformCapabilities.swift` | 67 | `PlatformCapabilities.shared` |
-| `Platform/PlatformServiceLayer.swift` | 20 | `PlatformServiceLayer.shared` |
-| `Performance/ProductionPerformanceMetrics.swift` | 11 | `ProductionPerformanceMetrics.shared` |
-| `Performance/AdaptivePerformanceMode.swift` | 23 | References shared metrics |
+| File | Issue | Lines |
+|------|-------|-------|
+| `Completion/CompletionGenerationService.swift` | Duplicate methods | 120-187 |
+| `Platform/PlatformServiceLayer.swift` | Singleton violation | 19-22 |
+| `Performance/ProductionPerformanceMetrics.swift` | Singleton violation | 11 |
+| `Performance/UnifiedPerformanceSystem.swift` | Singleton violation | 11 |
+| `Configuration/ConfigurationHotReload.swift` | God Object | 1-627 |
 
-### Duplication Hotspots
+### Medium Priority
 
-| Pattern | Primary Files |
-|---------|---------------|
-| `createMemberItems()` | Java, JavaScript, Rust, C completion providers |
-| `extractTargetType()` | Java, Rust, C, Go, Python, Ruby completion providers |
-| `analyzeContext()` | Swift, Java, Rust, C, TypeScript, JavaScript, Go providers |
-| `extractCurrentWord()` | 20 completion provider files |
-
----
-
-## Appendix B: Reference Documentation
-
-- **CLAUDE.md:** Project architectural guidelines
-- **Package.swift:** Dependency declarations
-- **Sources/CodeEditorPlugin/Documentation.docc/:** DocC documentation
+| File | Issue | Lines |
+|------|-------|-------|
+| `Text/ParagraphStyleCache.swift` | Singleton violation | 142 |
+| `Platform/CrossPlatformCoordinator.swift` | Singleton fallback | 73 |
+| `Core/DomainErrors.swift` | Verbose error impl | 1-200+ |
+| `Text/AsyncTextProcessor.swift` | Large scope | All |
+| `Core/EditorLayoutService.swift` | God Object | 1-664 |
+| `LSP/LSPClient.swift` | God Object | 1-658 |
 
 ---
 
-*Report generated by automated code quality analysis. Manual review recommended for implementation decisions.*
+## Appendix B: Metrics Summary
+
+### Code Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total Source Files | 401 |
+| Total Test Files | 66 |
+| Supported Languages | 20 |
+| Extension Files | 86 |
+| Service Classes | 16 |
+| Actor Declarations | 12 |
+| @MainActor Annotations | 312 |
+| Sendable Conformances | 492 |
+
+### Quality Metrics
+
+| Metric | Current | Target |
+|--------|---------|--------|
+| God Objects (>500 LOC) | 7 | 0 |
+| Singleton Usage | 7 | 0 |
+| Duplication Rate | ~3% | <1% |
+| Shared Utility Adoption | 35% | 90% |
+| SwiftLint Violations | 0 | 0 |
+
+---
+
+## Conclusion
+
+The CodeEditorPlugin codebase demonstrates strong architectural foundations with excellent Swift 6 concurrency patterns and consistent coding conventions. The primary areas requiring attention are:
+
+1. **Singleton pattern elimination** - 7 violations need migration to DI
+2. **PlatformCapabilities decomposition** - God Object requires splitting into focused modules
+3. **TextParsingUtilities decomposition** - Critical God Object with 10+ responsibilities
+4. **Language-related code consolidation** - Significant duplication opportunity (~3,100 lines)
+
+Implementing the proposed refactoring roadmap will improve:
+- **Testability** through proper dependency injection
+- **Maintainability** by reducing code duplication by ~3,000 lines
+- **Scalability** through focused, single-responsibility classes
+- **Developer productivity** by simplifying the mental model
+
+The recommended approach is to execute the roadmap in phases, starting with quick wins that demonstrate value while building toward larger architectural improvements. The estimated effort of **63 story points** across **16 items** represents focused refactoring work that can be parallelized and integrated incrementally.
+
+---
+
+*Report generated by Senior Software Architect code quality analysis*
+*Last updated: January 2026*
