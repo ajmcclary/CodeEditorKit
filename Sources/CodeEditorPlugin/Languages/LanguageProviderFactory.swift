@@ -3,117 +3,46 @@ import Foundation
 // MARK: - Language Provider Factory
 
 /// Factory for creating language-specific completion providers with shared logic and reduced duplication
+///
+/// This factory uses centralized metadata from `LanguageStaticMetadata` and provides
+/// a `UniversalCompletionProvider` for all 20 supported languages.
 @MainActor
 public enum LanguageProviderFactory {
-    // MARK: - Shared Language Metadata
+    // MARK: - Member Completion Providers
 
-    /// Contains all language-specific data in a structured format
-    private static let languageMetadata: [Language: LanguageMetadata] = [
-        .python: LanguageMetadata(
-            keywords: [
-                "def", "class", "if", "elif", "else", "for", "while", "try", "except",
-                "finally", "with", "as", "import", "from", "return", "yield", "break",
-                "continue", "pass", "global", "nonlocal", "lambda", "and", "or", "not",
-                "in", "is", "del", "async", "await", "assert", "raise", "match", "case"
-            ],
-            types: [
-                "int", "float", "str", "bool", "list", "tuple", "dict", "set", "frozenset",
-                "bytes", "bytearray", "memoryview", "range", "complex", "type", "object",
-                "property", "staticmethod", "classmethod", "super"
-            ],
-            functions: [
-                "print", "input", "len", "range", "enumerate", "zip", "map", "filter",
-                "sorted", "reversed", "sum", "min", "max", "any", "all", "abs", "round",
-                "pow", "divmod", "isinstance", "issubclass", "hasattr", "getattr", "setattr",
-                "delattr", "open", "format", "chr", "ord", "bin", "hex", "oct", "eval",
-                "exec", "compile", "globals", "locals", "vars", "dir", "help", "id",
-                "hash", "iter", "next", "callable", "repr", "ascii", "breakpoint"
-            ],
-            literals: [
-                "True", "False", "None", "self", "__name__", "__main__", "__file__",
-                "__doc__", "__dict__", "__class__", "__init__", "__new__", "__del__",
-                "__str__", "__repr__", "__eq__", "__ne__", "__lt__", "__le__", "__gt__",
-                "__ge__", "__hash__", "__bool__", "__len__", "__getitem__", "__setitem__",
-                "__delitem__", "__iter__", "__next__", "__contains__", "__add__", "__sub__",
-                "__mul__", "__truediv__", "__floordiv__", "__mod__", "__pow__", "__and__",
-                "__or__", "__xor__", "__lshift__", "__rshift__", "__neg__", "__pos__",
-                "__abs__", "__invert__", "__enter__", "__exit__", "__call__"
-            ],
-            triggerCharacters: [".", "(", "[", " ", ":"],
-            memberCompletions: PythonMemberCompletions()
-        ),
-
-        .javascript: LanguageMetadata(
-            keywords: [
-                "const", "let", "var", "function", "class", "if", "else", "for", "while",
-                "do", "switch", "case", "default", "break", "continue", "return", "try",
-                "catch", "finally", "throw", "async", "await", "import", "export", "from",
-                "as", "typeof", "instanceof", "new", "this", "super", "static", "extends",
-                "constructor", "get", "set", "of", "in", "delete", "void", "yield",
-                "debugger", "with"
-            ],
-            types: [
-                "Object", "Array", "String", "Number", "Boolean", "Function", "Symbol",
-                "Date", "RegExp", "Error", "Math", "JSON", "console", "Promise", "Map",
-                "Set", "WeakMap", "WeakSet", "Proxy", "Reflect", "Intl", "BigInt",
-                "ArrayBuffer", "SharedArrayBuffer", "DataView", "Float32Array", "Float64Array",
-                "Int8Array", "Int16Array", "Int32Array", "Uint8Array", "Uint16Array",
-                "Uint32Array", "Uint8ClampedArray"
-            ],
-            functions: [
-                "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI",
-                "encodeURIComponent", "decodeURIComponent", "eval", "setTimeout", "clearTimeout",
-                "setInterval", "clearInterval", "setImmediate", "clearImmediate", "requestAnimationFrame",
-                "cancelAnimationFrame", "fetch", "alert", "confirm", "prompt"
-            ],
-            literals: [
-                "true", "false", "null", "undefined", "NaN", "Infinity", "globalThis",
-                "window", "document", "location", "navigator", "history"
-            ],
-            triggerCharacters: [".", "(", "[", "{", " ", ":"],
-            memberCompletions: JavaScriptMemberCompletions()
-        ),
-
-        .rust: LanguageMetadata(
-            keywords: [
-                "as", "async", "await", "break", "const", "continue", "crate", "dyn",
-                "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in",
-                "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
-                "self", "Self", "static", "struct", "super", "trait", "true", "type",
-                "unsafe", "use", "where", "while", "abstract", "become", "box", "do",
-                "final", "macro", "override", "priv", "typeof", "unsized", "virtual",
-                "yield", "try"
-            ],
-            types: [
-                "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128",
-                "isize", "str", "u8", "u16", "u32", "u64", "u128", "usize",
-                "String", "Vec", "HashMap", "HashSet", "Option", "Result", "Box",
-                "Rc", "Arc", "RefCell", "Mutex", "RwLock", "Cell"
-            ],
-            functions: [
-                "println!", "print!", "eprintln!", "eprint!", "format!", "write!",
-                "writeln!", "panic!", "assert!", "assert_eq!", "assert_ne!",
-                "debug_assert!", "debug_assert_eq!", "debug_assert_ne!", "vec!",
-                "include!", "include_str!", "include_bytes!", "concat!", "env!",
-                "option_env!", "cfg!", "line!", "column!", "file!", "module_path!",
-                "stringify!", "todo!", "unimplemented!", "unreachable!", "dbg!"
-            ],
-            literals: [
-                "Clone", "Copy", "Debug", "Default", "Display", "Drop", "Eq", "Fn",
-                "FnMut", "FnOnce", "From", "Into", "Iterator", "Ord", "PartialEq",
-                "PartialOrd", "Send", "Sized", "Sync", "ToString", "AsRef", "AsMut",
-                "Borrow", "BorrowMut", "Deref", "DerefMut"
-            ],
-            triggerCharacters: [".", "::", "(", "<", " ", "!"],
-            memberCompletions: RustMemberCompletions()
-        )
+    private static let memberCompletionsMap: [Language: any LanguageMemberCompletions] = [
+        .swift: SwiftMemberCompletions(),
+        .javascript: JavaScriptMemberCompletions(),
+        .typescript: TypeScriptMemberCompletions(),
+        .python: PythonMemberCompletions(),
+        .rust: RustMemberCompletions(),
+        .go: GoMemberCompletions(),
+        .java: JavaMemberCompletions(),
+        .c: CMemberCompletions(),
+        .cpp: CMemberCompletions() // C++ uses same base as C
     ]
 
     // MARK: - Factory Methods
 
     /// Creates a completion provider for the specified language
+    ///
+    /// Uses centralized `LanguageStaticMetadata` for keyword/type/function data
+    /// and language-specific member completions where available.
     public static func createProvider(for language: Language) -> CompletionProvider? {
-        guard let metadata = languageMetadata[language] else { return nil }
+        guard let staticMetadata = LanguageStaticMetadata.metadata(for: language) else {
+            return nil
+        }
+
+        let memberCompletions = memberCompletionsMap[language] ?? DefaultMemberCompletions()
+
+        let metadata = LanguageMetadata(
+            keywords: staticMetadata.keywords,
+            types: staticMetadata.types,
+            functions: staticMetadata.functions,
+            literals: staticMetadata.literals,
+            triggerCharacters: staticMetadata.triggerCharacters,
+            memberCompletions: memberCompletions
+        )
 
         return UniversalCompletionProvider(
             language: language,
@@ -121,9 +50,32 @@ public enum LanguageProviderFactory {
         )
     }
 
+    /// Creates metadata for a specific language
+    ///
+    /// This is useful when you need direct access to the metadata
+    /// without creating a full provider.
+    public static func metadata(for language: Language) -> LanguageMetadata? {
+        guard let staticMetadata = LanguageStaticMetadata.metadata(for: language) else {
+            return nil
+        }
+
+        let memberCompletions = memberCompletionsMap[language] ?? DefaultMemberCompletions()
+
+        return LanguageMetadata(
+            keywords: staticMetadata.keywords,
+            types: staticMetadata.types,
+            functions: staticMetadata.functions,
+            literals: staticMetadata.literals,
+            triggerCharacters: staticMetadata.triggerCharacters,
+            memberCompletions: memberCompletions
+        )
+    }
+
     /// Gets all supported languages
+    ///
+    /// Returns all languages that have static metadata defined.
     public static var supportedLanguages: [Language] {
-        Array(languageMetadata.keys)
+        Array(LanguageStaticMetadata.all.keys)
     }
 }
 

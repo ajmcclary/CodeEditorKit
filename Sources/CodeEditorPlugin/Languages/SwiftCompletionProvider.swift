@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Swift Completion Provider
 
 /// Built-in completion provider for Swift language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .swift)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .swift) instead")
 @MainActor
 public final class SwiftCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements

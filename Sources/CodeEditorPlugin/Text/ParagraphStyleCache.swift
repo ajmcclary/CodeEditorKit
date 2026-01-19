@@ -6,7 +6,8 @@ import AppKit
 #endif
 
 /// Cache for paragraph styles to avoid recomputation
-public final class ParagraphStyleCache {
+/// Thread-safety note: This cache should be accessed from a consistent context (typically MainActor)
+public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Types
 
     /// Key for caching paragraph styles
@@ -139,6 +140,7 @@ public final class ParagraphStyleCache {
 
 extension ParagraphStyleCache {
     /// Shared instance for global paragraph style caching
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     nonisolated(unsafe) public static let shared = ParagraphStyleCache()
 
     /// Cached hidden paragraph style for code folding

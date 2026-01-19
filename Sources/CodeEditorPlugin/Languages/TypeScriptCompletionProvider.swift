@@ -3,6 +3,10 @@ import Foundation
 // MARK: - TypeScript Completion Provider
 
 /// Built-in completion provider for TypeScript language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .typescript)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .typescript) instead")
 @MainActor
 public final class TypeScriptCompletionProvider: BaseCompletionProvider {
     // TypeScript extends JavaScript, so include JS keywords plus TS-specific ones

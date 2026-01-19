@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Rust Completion Provider
 
 /// Built-in completion provider for Rust language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .rust)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .rust) instead")
 @MainActor
 public final class RustCompletionProvider: BaseCompletionProvider {
     // Rust language elements

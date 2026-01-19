@@ -3,6 +3,10 @@ import Foundation
 // MARK: - XML Completion Provider
 
 /// Built-in completion provider for XML language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .xml)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .xml) instead")
 @MainActor
 public final class XMLCompletionProvider: BaseCompletionProvider {
     // Common XML elements

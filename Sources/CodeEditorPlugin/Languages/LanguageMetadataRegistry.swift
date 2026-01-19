@@ -8,10 +8,11 @@ public final class LanguageMetadataRegistry {
     // MARK: - Singleton
 
     /// Shared instance for global language metadata access
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     public static let shared = LanguageMetadataRegistry()
 
-    /// Private initializer for singleton pattern
-    private init() {}
+    /// Public initializer for dependency injection
+    public init() {}
 
     // MARK: - Extended Language Metadata
 

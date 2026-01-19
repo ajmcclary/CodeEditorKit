@@ -8,9 +8,11 @@ public final class UnifiedPerformanceSystem {
     // MARK: - Singleton
 
     /// Shared instance of the unified performance system.
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     public static let shared = UnifiedPerformanceSystem()
 
-    private init() {}
+    /// Public initializer for dependency injection
+    public init() {}
 
     deinit {
         // Cleanup is handled automatically by ARC

@@ -5,15 +5,21 @@ import Foundation
 /// Centralized registry for managing completion providers with automatic language support
 @MainActor
 public final class CompletionProviderRegistry {
-    /// Creates a new completion provider registry
-    public init() {
-        loadBuiltInProviders()
-    }
-
     // MARK: - Properties
 
     private var providers: [String: CompletionProvider] = [:]
     private var languageProviders: [Language: [CompletionProvider]] = [:]
+    private let languageMetadataRegistry: LanguageMetadataRegistry
+
+    // MARK: - Initialization
+
+    /// Creates a new completion provider registry with dependency injection
+    /// - Parameter languageMetadataRegistry: The metadata registry to use for creating providers.
+    ///   If nil, falls back to the deprecated shared singleton.
+    public init(languageMetadataRegistry: LanguageMetadataRegistry? = nil) {
+        self.languageMetadataRegistry = languageMetadataRegistry ?? .shared
+        loadBuiltInProviders()
+    }
 
     // MARK: - Registration
 
@@ -86,7 +92,7 @@ public final class CompletionProviderRegistry {
         }
 
         // Try to create one using the metadata registry
-        guard let provider = LanguageMetadataRegistry.shared.createProvider(for: language) else {
+        guard let provider = languageMetadataRegistry.createProvider(for: language) else {
             CrossPlatformLogger.logger().warning("No provider available for language: \(language)")
             return nil
         }
@@ -97,13 +103,13 @@ public final class CompletionProviderRegistry {
 
     /// Creates providers for all supported languages
     public func loadAllLanguageProviders() {
-        let supportedLanguages = LanguageMetadataRegistry.shared.supportedLanguages
+        let registrySupportedLanguages = languageMetadataRegistry.supportedLanguages
 
-        for language in supportedLanguages {
+        for language in registrySupportedLanguages {
             _ = ensureProvider(for: language)
         }
 
-        CrossPlatformLogger.logger().info("Loaded providers for \(supportedLanguages.count) languages")
+        CrossPlatformLogger.logger().info("Loaded providers for \(registrySupportedLanguages.count) languages")
     }
 
     // MARK: - Built-in Providers

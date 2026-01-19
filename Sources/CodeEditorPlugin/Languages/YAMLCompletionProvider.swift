@@ -3,6 +3,10 @@ import Foundation
 // MARK: - YAML Completion Provider
 
 /// Built-in completion provider for YAML language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .yaml)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .yaml) instead")
 @MainActor
 public final class YAMLCompletionProvider: BaseCompletionProvider {
     // Reference to static data from YAMLCompletionData

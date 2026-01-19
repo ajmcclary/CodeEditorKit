@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Ruby Completion Provider
 
 /// Built-in completion provider for Ruby language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .ruby)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .ruby) instead")
 @MainActor
 public final class RubyCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements

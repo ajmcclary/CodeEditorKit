@@ -119,6 +119,29 @@ public struct EditorConfiguration: Codable, Sendable {
     /// If set, enables language server protocol features with the specified workspace root
     public var workspaceRoot: URL?
 
+    // MARK: - Injectable Dependencies
+    // These properties support dependency injection instead of singleton access
+
+    /// Platform capabilities provider
+    /// If nil, PlatformCapabilities.shared will be used (deprecated fallback)
+    @MainActor public var platformCapabilities: PlatformCapabilities?
+
+    /// Unified performance monitoring system
+    /// If nil, UnifiedPerformanceSystem.shared will be used (deprecated fallback)
+    @MainActor public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
+
+    /// Paragraph style cache for text rendering
+    /// If nil, ParagraphStyleCache.shared will be used (deprecated fallback)
+    public var paragraphStyleCache: ParagraphStyleCache?
+
+    /// Language metadata registry for completion and highlighting
+    /// If nil, LanguageMetadataRegistry.shared will be used (deprecated fallback)
+    @MainActor public var languageMetadataRegistry: LanguageMetadataRegistry?
+
+    /// Platform service layer for cross-platform operations
+    /// If nil, PlatformServiceLayer.shared will be used (deprecated fallback)
+    @MainActor public var platformServiceLayer: PlatformServiceLayer?
+
     // MARK: - Initialization
 
     public init() {}
@@ -129,6 +152,32 @@ public struct EditorConfiguration: Codable, Sendable {
         self.behavior = behavior
         self.performance = performance
         self.eventSystem = eventSystem
+    }
+
+    /// Full initializer with all injectable dependencies
+    @MainActor
+    public init(
+        layout: Layout = Layout(),
+        display: Display = Display(),
+        behavior: Behavior = Behavior(),
+        performance: Performance = Performance(),
+        eventSystem: UnifiedEventSystem? = nil,
+        platformCapabilities: PlatformCapabilities? = nil,
+        unifiedPerformanceSystem: UnifiedPerformanceSystem? = nil,
+        paragraphStyleCache: ParagraphStyleCache? = nil,
+        languageMetadataRegistry: LanguageMetadataRegistry? = nil,
+        platformServiceLayer: PlatformServiceLayer? = nil
+    ) {
+        self.layout = layout
+        self.display = display
+        self.behavior = behavior
+        self.performance = performance
+        self.eventSystem = eventSystem
+        self.platformCapabilities = platformCapabilities
+        self.unifiedPerformanceSystem = unifiedPerformanceSystem
+        self.paragraphStyleCache = paragraphStyleCache
+        self.languageMetadataRegistry = languageMetadataRegistry
+        self.platformServiceLayer = platformServiceLayer
     }
 
     // MARK: - Convenience Methods
@@ -313,7 +362,7 @@ extension EditorConfiguration {
         case display
         case behavior
         case performance
-        // eventSystem is intentionally excluded from serialization
+        // eventSystem and injectable dependencies are intentionally excluded from serialization
     }
 
     /// Initializes an EditorConfiguration from a decoder
@@ -325,7 +374,13 @@ extension EditorConfiguration {
         self.display = try container.decode(Display.self, forKey: .display)
         self.behavior = try container.decode(Behavior.self, forKey: .behavior)
         self.performance = try container.decode(Performance.self, forKey: .performance)
-        self.eventSystem = nil // Always nil when decoding
+        // Non-serialized properties are always nil when decoding
+        self.eventSystem = nil
+        self.platformCapabilities = nil
+        self.unifiedPerformanceSystem = nil
+        self.paragraphStyleCache = nil
+        self.languageMetadataRegistry = nil
+        self.platformServiceLayer = nil
     }
 
     /// Encodes the EditorConfiguration to an encoder

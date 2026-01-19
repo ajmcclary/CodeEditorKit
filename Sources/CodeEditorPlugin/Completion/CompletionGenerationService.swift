@@ -95,95 +95,78 @@ internal final class CompletionGenerationService {
         model
     }
 
+    /// Generates basic completions for any language using centralized metadata
+    /// This consolidates previous language-specific methods into a single data-driven approach
     private func generateBasicCompletions(for context: CompletionContext) -> [CompletionItemModel] {
-        var items: [CompletionItemModel] = []
-
-        // Language-specific basic completions
-        switch context.language {
-        case .swift:
-            items.append(contentsOf: generateSwiftBasicCompletions(context))
-
-        case .python:
-            items.append(contentsOf: generatePythonBasicCompletions(context))
-
-        case .javascript, .typescript:
-            items.append(contentsOf: generateJavaScriptBasicCompletions(context))
-
-        default:
-            // Generic keywords
-            items.append(contentsOf: generateGenericCompletions(context))
+        // Try to get metadata from the centralized registry first
+        if let metadata = LanguageMetadataRegistry.shared.metadata(for: context.language) {
+            return SharedCompletionBuilder.createKeywordCompletions(
+                from: metadata.keywords,
+                filter: context.prefix,
+                languageName: context.language.name
+            )
         }
 
-        return items
+        // Try LanguageProviderFactory as fallback (for languages like Python, JavaScript, Rust)
+        if LanguageProviderFactory.createProvider(for: context.language) != nil {
+            // Create a basic context model and attempt to get completions
+            let providerContext = CompletionContextModel(
+                text: "",
+                cursorPosition: 0,
+                language: context.language,
+                triggerKind: .manual,
+                triggerCharacter: nil,
+                lineText: context.currentLine
+            )
+
+            // Use shared context analysis for a quick prefix extraction
+            let analysisResult = SharedContextAnalyzer.analyzeContext(providerContext, for: context.language)
+            let filter = context.prefix.isEmpty ? analysisResult.filter : context.prefix
+
+            // Get keywords from factory metadata
+            return SharedCompletionBuilder.createKeywordCompletions(
+                from: fallbackKeywords(for: context.language),
+                filter: filter,
+                languageName: context.language.name
+            )
+        }
+
+        // Ultimate fallback: generic keywords
+        return SharedCompletionBuilder.createKeywordCompletions(
+            from: fallbackKeywords(for: context.language),
+            filter: context.prefix,
+            languageName: context.language.name
+        )
     }
 
-    private func generateSwiftBasicCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
-        let keywords = [
-            "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
-            "import", "if", "else", "for", "while", "switch", "case", "default",
-            "return", "break", "continue", "guard", "defer", "do", "try", "catch",
-            "throws", "async", "await", "actor", "typealias", "associatedtype"
-        ]
+    /// Returns fallback keywords for languages not yet in the centralized registry
+    private func fallbackKeywords(for language: Language) -> [String] {
+        switch language {
+        case .swift:
+            return [
+                "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
+                "import", "if", "else", "for", "while", "switch", "case", "default",
+                "return", "break", "continue", "guard", "defer", "do", "try", "catch",
+                "throws", "async", "await", "actor", "typealias", "associatedtype"
+            ]
 
-        return keywords
-            .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    kind: .keyword,
-                    priority: CompletionItemKind.keyword.defaultPriority
-                )
-            }
-    }
+        case .python:
+            return [
+                "def", "class", "import", "from", "if", "elif", "else", "for", "while",
+                "break", "continue", "return", "yield", "lambda", "with", "as", "try",
+                "except", "finally", "raise", "assert", "pass", "del", "global", "nonlocal"
+            ]
 
-    private func generatePythonBasicCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
-        let keywords = [
-            "def", "class", "import", "from", "if", "elif", "else", "for", "while",
-            "break", "continue", "return", "yield", "lambda", "with", "as", "try",
-            "except", "finally", "raise", "assert", "pass", "del", "global", "nonlocal"
-        ]
+        case .javascript, .typescript:
+            return [
+                "function", "const", "let", "var", "class", "extends", "import", "export",
+                "if", "else", "for", "while", "do", "switch", "case", "default", "break",
+                "continue", "return", "throw", "try", "catch", "finally", "async", "await"
+            ]
 
-        return keywords
-            .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    kind: .keyword,
-                    priority: CompletionItemKind.keyword.defaultPriority
-                )
-            }
-    }
-
-    private func generateJavaScriptBasicCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
-        let keywords = [
-            "function", "const", "let", "var", "class", "extends", "import", "export",
-            "if", "else", "for", "while", "do", "switch", "case", "default", "break",
-            "continue", "return", "throw", "try", "catch", "finally", "async", "await"
-        ]
-
-        return keywords
-            .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    kind: .keyword,
-                    priority: CompletionItemKind.keyword.defaultPriority
-                )
-            }
-    }
-
-    private func generateGenericCompletions(_ context: CompletionContext) -> [CompletionItemModel] {
-        let keywords = ["if", "else", "for", "while", "return", "break", "continue"]
-
-        return keywords
-            .filter { $0.lowercased().hasPrefix(context.prefix.lowercased()) }
-            .map { keyword in
-                CompletionItemModel(
-                    label: keyword,
-                    kind: .keyword,
-                    priority: CompletionItemKind.keyword.defaultPriority
-                )
-            }
+        default:
+            return ["if", "else", "for", "while", "return", "break", "continue"]
+        }
     }
 
     private func calculateSimpleMatchScore(_ text: String, prefix: String) -> Double {

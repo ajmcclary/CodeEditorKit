@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Python Completion Provider
 
 /// Built-in completion provider for Python language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .python)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .python) instead")
 @MainActor
 public final class PythonCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements

@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Shell Completion Provider
 
 /// Built-in completion provider for Shell/Bash language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .shell)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .shell) instead")
 @MainActor
 public final class ShellCompletionProvider: BaseCompletionProvider {
     // Shell-specific context (stored for use in completions method)

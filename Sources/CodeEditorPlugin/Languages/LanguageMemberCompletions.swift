@@ -561,3 +561,84 @@ public struct JavaMemberCompletions: LanguageMemberCompletions {
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 }
+
+// MARK: - C/C++ Member Completions
+
+public struct CMemberCompletions: LanguageMemberCompletions {
+    public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+        guard let targetType else { return [] }
+
+        switch targetType.lowercased() {
+        case "stdio", "printf", "scanf":
+            return createStdioMemberCompletions(filter: filter)
+
+        case "stdlib":
+            return createStdlibMemberCompletions(filter: filter)
+
+        case "string":
+            return createStringMemberCompletions(filter: filter)
+
+        default:
+            return []
+        }
+    }
+
+    private func createStdioMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("printf()", "func", "Print formatted output"),
+            ("scanf()", "func", "Read formatted input"),
+            ("fprintf()", "func", "Print to file"),
+            ("fscanf()", "func", "Read from file"),
+            ("fopen()", "func", "Open file"),
+            ("fclose()", "func", "Close file"),
+            ("fread()", "func", "Read from file"),
+            ("fwrite()", "func", "Write to file"),
+            ("fgets()", "func", "Read line"),
+            ("fputs()", "func", "Write string")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createStdlibMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("malloc()", "func", "Allocate memory"),
+            ("free()", "func", "Free memory"),
+            ("realloc()", "func", "Reallocate memory"),
+            ("calloc()", "func", "Allocate and zero"),
+            ("exit()", "func", "Exit program"),
+            ("abort()", "func", "Abort program"),
+            ("atoi()", "func", "String to int"),
+            ("atof()", "func", "String to float"),
+            ("qsort()", "func", "Quick sort"),
+            ("bsearch()", "func", "Binary search")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("strlen()", "func", "String length"),
+            ("strcpy()", "func", "Copy string"),
+            ("strncpy()", "func", "Copy n chars"),
+            ("strcat()", "func", "Concatenate"),
+            ("strcmp()", "func", "Compare strings"),
+            ("strchr()", "func", "Find char"),
+            ("strstr()", "func", "Find substring"),
+            ("memcpy()", "func", "Copy memory"),
+            ("memset()", "func", "Fill memory")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+}
+
+// MARK: - Default Member Completions
+
+/// Default member completions for languages without specific implementations
+public struct DefaultMemberCompletions: LanguageMemberCompletions {
+    public init() {}
+
+    public func createMemberCompletions(for _: String?, filter _: String) -> [CompletionItemModel] {
+        // Return empty for languages without specific member completions
+        []
+    }
+}

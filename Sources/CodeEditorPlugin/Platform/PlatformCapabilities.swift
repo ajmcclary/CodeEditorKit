@@ -64,12 +64,14 @@ import AppKit
 @MainActor
 public final class PlatformCapabilities {
     /// Shared singleton instance for platform capability detection
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     public static let shared = PlatformCapabilities()
 
     /// Cached platform value since it's determined at compile time
     private let _currentPlatform: Platform
 
-    private init() {
+    /// Public initializer for dependency injection
+    public init() {
         // Cache the platform since it's compile-time determined
         #if targetEnvironment(macCatalyst)
         self._currentPlatform = .catalyst

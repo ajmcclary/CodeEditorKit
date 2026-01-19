@@ -3,6 +3,10 @@ import Foundation
 // MARK: - SQL Completion Provider
 
 /// Built-in completion provider for SQL language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .sql)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .sql) instead")
 @MainActor
 public final class SQLCompletionProvider: BaseCompletionProvider {
     // MARK: - Override Properties

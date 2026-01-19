@@ -3,6 +3,10 @@ import Foundation
 // MARK: - JSON Completion Provider
 
 /// Built-in completion provider for JSON language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .json)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .json) instead")
 @MainActor
 public final class JSONCompletionProvider: BaseCompletionProvider {
     // JSON keywords and values (overriding base class property)

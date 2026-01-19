@@ -3,6 +3,10 @@ import Foundation
 // MARK: - Go Completion Provider
 
 /// Built-in completion provider for Go language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .go)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .go) instead")
 @MainActor
 public final class GoCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements

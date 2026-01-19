@@ -3,6 +3,11 @@ import Foundation
 // MARK: - C/C++ Completion Provider
 
 /// Built-in completion provider for C and C++ languages
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .c)`
+///   or `LanguageProviderFactory.createProvider(for: .cpp)` which returns a `UniversalCompletionProvider`
+///   with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .c) or .cpp instead")
 @MainActor
 public final class CCompletionProvider: BaseCompletionProvider {
     // C keywords

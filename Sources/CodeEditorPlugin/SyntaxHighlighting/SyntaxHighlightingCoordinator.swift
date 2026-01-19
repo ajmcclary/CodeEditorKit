@@ -40,6 +40,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     private let regexHighlighter: RegexSyntaxHighlighter
     private let fastJSONTokenizer: FastJSONTokenizer
     private let performanceMonitor: PerformanceMonitor
+    private let strategyExecutor: HighlightingStrategyExecutor
 
     // Use an actor for managing mutable state
     private let taskManager = HighlightingTaskManager()
@@ -51,6 +52,13 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         regexHighlighter = RegexSyntaxHighlighter()
         fastJSONTokenizer = FastJSONTokenizer()
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
+
+        // Initialize strategy executor with highlighters
+        self.strategyExecutor = HighlightingStrategyExecutor(
+            swiftHighlighter: swiftHighlighter,
+            regexHighlighter: regexHighlighter,
+            fastJSONTokenizer: fastJSONTokenizer
+        )
     }
 
     // MARK: - Public Methods
@@ -62,33 +70,7 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
 
     /// Highlight source code synchronously
     public func highlight(source: String, language: Language) -> [HighlightedToken] {
-        switch language {
-        case .swift:
-            return swiftHighlighter.highlight(source: source)
-
-        case .json:
-            // Use specialized JSON tokenizer for better performance and stability
-            let tokens = fastJSONTokenizer.tokenize(source)
-            let colorScheme = SyntaxColorScheme.default
-            let attributes = fastJSONTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
-
-            // Convert to HighlightedToken format
-            return attributes.map { range, attrs in
-                let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
-                let type = TokenType.fromColor(color, scheme: colorScheme)
-                return HighlightedToken(range: range, type: type, text: "")
-            }
-
-        case .plainText:
-            return []
-
-        default:
-            // Use regex highlighter for all other languages
-            if let languageDefinition = regexHighlighter.languageDefinition(for: language) {
-                return regexHighlighter.highlight(source: source, language: languageDefinition)
-            }
-            return []
-        }
+        strategyExecutor.highlight(source: source, language: language)
     }
 
     /// Highlight source code asynchronously with cancellation support
@@ -96,41 +78,12 @@ public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
         // Cancel any existing highlighting task
         await taskManager.cancelCurrent()
 
-        // Capture highlighters explicitly
-        let swiftHL = swiftHighlighter
-        let regexHL = regexHighlighter
-        let jsonTokenizer = fastJSONTokenizer
+        // Capture the executor for use in the task
+        let executor = strategyExecutor
 
         // Create new task for highlighting
         let task = Task<[HighlightedToken], Never> {
-            // Perform highlighting directly without performance monitoring in async context
-            switch language {
-            case .swift:
-                return swiftHL.highlight(source: source)
-
-            case .json:
-                // Use specialized JSON tokenizer for better performance and stability
-                let tokens = jsonTokenizer.tokenize(source)
-                let colorScheme = SyntaxColorScheme.default
-                let attributes = jsonTokenizer.highlightingAttributes(for: tokens, colorScheme: colorScheme)
-
-                // Convert to HighlightedToken format
-                return attributes.map { range, attrs in
-                    let color = attrs[.foregroundColor] as? PlatformColor ?? colorScheme.plain
-                    let type = TokenType.fromColor(color, scheme: colorScheme)
-                    return HighlightedToken(range: range, type: type, text: "")
-                }
-
-            case .plainText:
-                return []
-
-            default:
-                // Use regex highlighter for all other languages
-                if let languageDefinition = regexHL.languageDefinition(for: language) {
-                    return regexHL.highlight(source: source, language: languageDefinition)
-                }
-                return []
-            }
+            executor.highlight(source: source, language: language)
         }
 
         await taskManager.setCurrentTask(task)

@@ -3,6 +3,10 @@ import Foundation
 // MARK: - HTML Completion Provider
 
 /// Built-in completion provider for HTML language
+///
+/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .html)`
+///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
+@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .html) instead")
 @MainActor
 public final class HTMLCompletionProvider: BaseCompletionProvider {
     // HTML5 elements

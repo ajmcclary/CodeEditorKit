@@ -22,6 +22,9 @@ public final class BusinessLogicServiceRegistry {
     // Service dependencies
     private weak var codeFoldingEngine: CodeFoldingEngine?
 
+    // Injectable dependencies
+    private let languageMetadataRegistry: LanguageMetadataRegistry?
+
     // MARK: - Initialization
 
     /// Creates a new service registry instance
@@ -34,6 +37,7 @@ public final class BusinessLogicServiceRegistry {
     ///   - languageDetectionService: Optional pre-configured language detection service
     ///   - textEditingService: Optional pre-configured text editing service
     ///   - completionProviderRegistry: Optional pre-configured completion provider registry
+    ///   - languageMetadataRegistry: Optional language metadata registry for DI
     public init(
         lineNumberCalculationService: LineNumberCalculationService? = nil,
         gutterSizingService: GutterSizingService? = nil,
@@ -42,7 +46,8 @@ public final class BusinessLogicServiceRegistry {
         syntaxHighlightingService: SyntaxHighlightingService? = nil,
         languageDetectionService: LanguageDetectionService? = nil,
         textEditingService: TextEditingService? = nil,
-        completionProviderRegistry: CompletionProviderRegistry? = nil
+        completionProviderRegistry: CompletionProviderRegistry? = nil,
+        languageMetadataRegistry: LanguageMetadataRegistry? = nil
     ) {
         self._lineNumberCalculationService = lineNumberCalculationService
         self._gutterSizingService = gutterSizingService
@@ -52,6 +57,7 @@ public final class BusinessLogicServiceRegistry {
         self._languageDetectionService = languageDetectionService
         self._textEditingService = textEditingService
         self._completionProviderRegistry = completionProviderRegistry
+        self.languageMetadataRegistry = languageMetadataRegistry
     }
 
     // MARK: - Service Access
@@ -147,7 +153,7 @@ public final class BusinessLogicServiceRegistry {
             return registry
         }
 
-        let registry = CompletionProviderRegistry()
+        let registry = CompletionProviderRegistry(languageMetadataRegistry: languageMetadataRegistry)
         _completionProviderRegistry = registry
         return registry
     }
@@ -315,15 +321,18 @@ extension BusinessLogicServiceRegistry {
 @MainActor
 public enum ServiceRegistryBuilder {
     /// Creates a default service registry with all services pre-configured
-    public static func makeDefault() -> BusinessLogicServiceRegistry {
-        BusinessLogicServiceRegistry()
+    /// - Parameter languageMetadataRegistry: Optional language metadata registry for DI
+    public static func makeDefault(languageMetadataRegistry: LanguageMetadataRegistry? = nil) -> BusinessLogicServiceRegistry {
+        BusinessLogicServiceRegistry(languageMetadataRegistry: languageMetadataRegistry)
     }
 
     /// Creates a minimal service registry with only essential services
-    public static func makeMinimal() -> BusinessLogicServiceRegistry {
+    /// - Parameter languageMetadataRegistry: Optional language metadata registry for DI
+    public static func makeMinimal(languageMetadataRegistry: LanguageMetadataRegistry? = nil) -> BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry(
             lineNumberCalculationService: LineNumberCalculationService(),
-            textEditingService: TextEditingService()
+            textEditingService: TextEditingService(),
+            languageMetadataRegistry: languageMetadataRegistry
         )
     }
 
@@ -335,7 +344,8 @@ public enum ServiceRegistryBuilder {
         editorLayoutService: EditorLayoutService? = nil,
         syntaxHighlightingService: SyntaxHighlightingService? = nil,
         languageDetectionService: LanguageDetectionService? = nil,
-        textEditingService: TextEditingService? = nil
+        textEditingService: TextEditingService? = nil,
+        languageMetadataRegistry: LanguageMetadataRegistry? = nil
     ) -> BusinessLogicServiceRegistry {
         BusinessLogicServiceRegistry(
             lineNumberCalculationService: lineNumberCalculationService,
@@ -344,7 +354,8 @@ public enum ServiceRegistryBuilder {
             editorLayoutService: editorLayoutService,
             syntaxHighlightingService: syntaxHighlightingService,
             languageDetectionService: languageDetectionService,
-            textEditingService: textEditingService
+            textEditingService: textEditingService,
+            languageMetadataRegistry: languageMetadataRegistry
         )
     }
 }

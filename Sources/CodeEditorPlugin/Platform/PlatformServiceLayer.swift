@@ -17,15 +17,21 @@ public final class PlatformServiceLayer {
     // MARK: - Singleton
 
     /// Shared singleton instance providing centralized platform services
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     public static let shared = PlatformServiceLayer()
 
-    private init() {}
+    // MARK: - Owned Services
+
+    private let _deviceService = PlatformDeviceService()
+
+    /// Public initializer for dependency injection
+    public init() {}
 
     // MARK: - Device Detection Service
 
     /// Centralized device and platform detection
     public var deviceService: PlatformDeviceService {
-        PlatformDeviceService.shared
+        _deviceService
     }
 
     /// Platform-specific menu service
@@ -68,9 +74,11 @@ public final class PlatformServiceLayer {
 @MainActor
 public final class PlatformDeviceService {
     /// Shared singleton instance for device detection
+    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
     public static let shared = PlatformDeviceService()
 
-    private init() {}
+    /// Public initializer for dependency injection
+    public init() {}
 
     // MARK: - Device Type Detection
 
