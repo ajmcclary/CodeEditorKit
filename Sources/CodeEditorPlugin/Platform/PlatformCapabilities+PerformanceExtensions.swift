@@ -54,6 +54,7 @@ extension PlatformCapabilities {
 
             case .intel64:
                 return true // AVX support
+
             case .unknown:
                 return false
             }
@@ -283,10 +284,13 @@ extension PlatformCapabilities {
         switch memoryProfile {
         case .ultra:
             return 100 * 1_024 * 1_024 // 100MB
+
         case .high:
             return 50 * 1_024 * 1_024 // 50MB
+
         case .medium:
             return 20 * 1_024 * 1_024 // 20MB
+
         case .low:
             return 10 * 1_024 * 1_024 // 10MB
         }

@@ -252,7 +252,7 @@ final class AnnotationTests: XCTestCase {
         XCTAssertNil(textView.annotationsDataSource)
         textView.annotationsDataSource = dataSource
         XCTAssertNotNil(textView.annotationsDataSource)
-        XCTAssertTrue(textView.annotationsDataSource === dataSource)
+        XCTAssertIdentical(textView.annotationsDataSource, dataSource)
     }
 
     func testAnnotationDataSourceWeakReference() {

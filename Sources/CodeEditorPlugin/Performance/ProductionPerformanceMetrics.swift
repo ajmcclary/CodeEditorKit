@@ -235,8 +235,10 @@ public struct ProductionThresholds: Sendable {
         switch fileSize {
         case 0..<10_000:
             return 0.1  // 100ms for small files
+
         case 10_000..<100_000:
             return 0.5  // 500ms for medium files
+
         default:
             return 1.0  // 1s for large files
         }

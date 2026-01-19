@@ -33,6 +33,7 @@ final class ConfigurationMigratorTests: XCTestCase {
             XCTAssertEqual(config.display.fontSize, 14.0)
             XCTAssertTrue(config.display.isLineNumbersEnabled)
             // Theme was not migrated in the actual implementation
+
         case .failure(let error):
             XCTFail("Migration failed with error: \(error)")
         }
@@ -132,6 +133,7 @@ final class ConfigurationMigratorTests: XCTestCase {
             // Note: memoryMonitor is created at runtime, not during migration
             XCTAssertTrue(config.display.enableSyntaxHighlighting)
             XCTAssertEqual(config.layout.tabWidth, 4) // Default value
+
         case .failure(let error):
             XCTFail("Migration failed with error: \(error)")
         }

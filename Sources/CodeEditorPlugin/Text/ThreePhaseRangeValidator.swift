@@ -49,7 +49,7 @@ public actor ThreePhaseRangeValidator<Content: VersionedContent> {
     private var task: Task<Void, Error>?
 
     /// The configuration used by this validator, accessible from any isolation context.
-    public nonisolated let configuration: Configuration
+    nonisolated public let configuration: Configuration
 
     /// Creates a new three-phase range validator with the specified configuration and actor isolation.
     /// - Parameters:

@@ -161,7 +161,7 @@ extension CodeEditorView {
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// NSTextView requires flipped coordinates for proper text rendering
-    nonisolated override public var isFlipped: Bool {
+    override nonisolated public var isFlipped: Bool {
         true
     }
     #endif

@@ -134,7 +134,7 @@ public actor EditorEventPublisher {
     /// Use this when you need to publish from a synchronous context.
     ///
     /// - Parameter event: The event to publish
-    public nonisolated func publishSync(_ event: EditorEvent) {
+    nonisolated public func publishSync(_ event: EditorEvent) {
         Task {
             await publish(event)
         }
@@ -145,7 +145,7 @@ public actor EditorEventPublisher {
     /// This is a convenience method that creates a Task to call the async subscribe method.
     ///
     /// - Parameter handler: The event handler to add
-    public nonisolated func subscribeSync(_ handler: any EditorEventHandler) {
+    nonisolated public func subscribeSync(_ handler: any EditorEventHandler) {
         Task {
             await subscribe(handler)
         }
@@ -156,7 +156,7 @@ public actor EditorEventPublisher {
     /// This is a convenience method that creates a Task to call the async unsubscribe method.
     ///
     /// - Parameter handler: The event handler to remove
-    public nonisolated func unsubscribeSync(_ handler: any EditorEventHandler) {
+    nonisolated public func unsubscribeSync(_ handler: any EditorEventHandler) {
         Task {
             await unsubscribe(handler)
         }

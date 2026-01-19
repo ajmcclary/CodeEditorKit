@@ -322,7 +322,7 @@ final class CodeEditorViewTests: XCTestCase {
 
         textView.annotationsDataSource = mockDataSource
         XCTAssertNotNil(textView.annotationsDataSource)
-        XCTAssertTrue(textView.annotationsDataSource === mockDataSource)
+        XCTAssertIdentical(textView.annotationsDataSource, mockDataSource)
 
         // Test weak reference
         textView.annotationsDataSource = nil

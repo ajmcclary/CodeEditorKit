@@ -587,6 +587,7 @@ private struct AdaptiveSettings {
         case .medium:
             batchSize = 500
             delayBetweenBatches = 0.001 // 1ms
+
         case .high:
             batchSize = 200
             delayBetweenBatches = 0.005 // 5ms

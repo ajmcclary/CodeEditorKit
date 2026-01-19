@@ -27,6 +27,7 @@ extension SyntaxHighlightingCoordinator {
         case .swift:
             // SwiftSyntaxHighlighter is created on demand
             return nil // Will be handled by highlightAsync
+
         default:
             // RegexSyntaxHighlighter handles most languages
             return nil // Will be handled by highlightAsync
@@ -47,10 +48,13 @@ extension MemoryMonitor {
         switch pressure {
         case .normal:
             return 500.0 // Plenty of memory available
+
         case .warning:
             return 100.0 // Some memory available
+
         case .critical:
             return 50.0 // Very limited memory
+
         case .urgent:
             return 10.0 // Almost no memory
         }

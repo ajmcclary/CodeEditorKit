@@ -113,7 +113,7 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Text views need a flipped coordinate system on macOS
-    nonisolated override public var isFlipped: Bool { true }
+    override nonisolated public var isFlipped: Bool { true }
     #endif
 
     // MARK: - Layout

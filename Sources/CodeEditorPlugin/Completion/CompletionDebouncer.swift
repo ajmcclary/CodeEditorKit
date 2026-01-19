@@ -243,10 +243,13 @@ public final class CompletionDebouncer: ObservableObject {
         switch pattern {
         case .rapid:
             debounceDelay = 0.5 // Longer delay for rapid typing
+
         case .steady:
             debounceDelay = 0.3 // Normal delay
+
         case .slow:
             debounceDelay = 0.1 // Shorter delay for slow typing
+
         case .paused:
             debounceDelay = 0.05 // Very short delay when user pauses
         }

@@ -253,16 +253,19 @@ extension CodeEditorView {
                     modernVC.selectNext()
                     return
                 }
+
             case 126: // Up arrow
                 if let modernVC = completionVC as? CompletionViewController {
                     modernVC.selectPrevious()
                     return
                 }
+
             case 36: // Return
                 if let modernVC = completionVC as? CompletionViewController {
                     modernVC.insertSelectedItem()
                     return
                 }
+
             case 53: // Escape
                 hideCompletionPopup()
                 return

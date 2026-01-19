@@ -470,7 +470,7 @@ extension CodeEditorView {
     // MARK: - NSTextLayoutOrientationProvider
 
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    override public nonisolated var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
+    override nonisolated public var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
         // For NSTextView, we'll default to horizontal layout
         .horizontal
     }
@@ -502,7 +502,7 @@ extension CodeEditorView {
     /// A configured `NSTextLayoutFragment` for the specified text element
     ///
     /// - Note: This method is marked `nonisolated` for TextKit2 compatibility
-    public nonisolated func textLayoutManager(
+    nonisolated public func textLayoutManager(
         _: NSTextLayoutManager,
         textLayoutFragmentFor _: NSTextLocation,
         in textElement: NSTextElement

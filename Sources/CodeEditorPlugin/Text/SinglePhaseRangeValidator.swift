@@ -30,7 +30,7 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
     private var eventQueue: AwaitableQueue<ValidationOperation>
 
     /// The configuration used by this validator, accessible from any isolation context.
-    public nonisolated let configuration: Configuration
+    nonisolated public let configuration: Configuration
     /// Handler called when validation operations complete with range and completion status.
     public var validationHandler: @Sendable (NSRange, Bool) -> Void = { _, _ in }
     /// Optional name for this validator instance for debugging purposes.

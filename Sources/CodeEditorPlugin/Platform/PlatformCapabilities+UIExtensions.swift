@@ -418,8 +418,10 @@ extension PlatformCapabilities {
         switch currentPlatform {
         case .macOS:
             return CGSize(width: 24, height: 24) // Mouse precision
+
         case .iOS:
             return CGSize(width: 44, height: 44) // iOS HIG
+
         case .catalyst:
             return CGSize(width: 32, height: 32) // Hybrid approach
         }

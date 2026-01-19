@@ -534,6 +534,7 @@ extension TextParsingUtilities {
 
         case .python:
             return ["\"", "'", "`"] // Including triple quotes would need special handling
+
         default:
             return ["\"", "'"]
         }

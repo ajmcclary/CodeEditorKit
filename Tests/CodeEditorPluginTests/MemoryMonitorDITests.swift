@@ -105,7 +105,7 @@ final class MemoryMonitorDITests: XCTestCase {
         config.apply(to: editor)
 
         // Verify the original monitor is still used
-        XCTAssertTrue(editor.memoryMonitor === originalMonitor, "Editor should keep its original monitor when config has nil")
+        XCTAssertIdentical(editor.memoryMonitor, originalMonitor, "Editor should keep its original monitor when config has nil")
     }
 
     @MainActor
@@ -277,7 +277,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let editor = CodeEditorView(frame: .zero, memoryMonitor: customMonitor)
 
         // Verify the monitor is injected
-        XCTAssertTrue(editor.memoryMonitor === customMonitor, "Custom monitor should be injected")
+        XCTAssertIdentical(editor.memoryMonitor, customMonitor, "Custom monitor should be injected")
 
         // Force cleanup through the editor's monitor
         _ = await editor.memoryMonitor.performCleanup()

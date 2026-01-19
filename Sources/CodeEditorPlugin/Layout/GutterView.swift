@@ -49,7 +49,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     private var interactionHandler: GutterInteractionHandler?
 
     #if canImport(UIKit)
-    private nonisolated(unsafe) var displayLink: CADisplayLink?
+    nonisolated(unsafe) private var displayLink: CADisplayLink?
     private var lastContentOffset: CGPoint = .zero
     private var pauseTask: Task<Void, Never>?
     #endif
@@ -116,7 +116,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     }
 
     /// Text views need a flipped coordinate system on macOS
-    nonisolated override public var isFlipped: Bool { true }
+    override nonisolated public var isFlipped: Bool { true }
     #else
     override public func draw(_ rect: CGRect) {
         super.draw(rect)

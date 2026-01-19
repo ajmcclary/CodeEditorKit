@@ -39,7 +39,7 @@ final class ParagraphStyleCacheTests: XCTestCase {
         )
 
         // Should be the exact same instance
-        XCTAssertTrue(style1 === style2, "Cached paragraph style should return the same instance")
+        XCTAssertIdentical(style1, style2, "Cached paragraph style should return the same instance")
     }
 
     func testDifferentParametersCreateDifferentStyles() {
@@ -64,9 +64,9 @@ final class ParagraphStyleCacheTests: XCTestCase {
         )
 
         // All should be different instances
-        XCTAssertFalse(style1 === style2, "Different tab width should create different style")
-        XCTAssertFalse(style1 === style3, "Different line height should create different style")
-        XCTAssertFalse(style2 === style3, "All styles should be different")
+        XCTAssertNotIdentical(style1, style2, "Different tab width should create different style")
+        XCTAssertNotIdentical(style1, style3, "Different line height should create different style")
+        XCTAssertNotIdentical(style2, style3, "All styles should be different")
     }
 
     func testCacheClear() {
@@ -89,7 +89,7 @@ final class ParagraphStyleCacheTests: XCTestCase {
         )
 
         // Should be a different instance after clearing
-        XCTAssertFalse(style1 === style2, "After clearing cache, should create new instance")
+        XCTAssertNotIdentical(style1, style2, "After clearing cache, should create new instance")
     }
 
     // MARK: - Style Properties Tests

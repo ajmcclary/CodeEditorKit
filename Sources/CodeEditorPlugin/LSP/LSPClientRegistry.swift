@@ -402,6 +402,7 @@ extension LSPClientRegistry {
             // Check file extension to distinguish between JS and TS
             let ext = fileURL.pathExtension.lowercased()
             return (ext == "ts" || ext == "tsx") ? .typescript : .javascript
+
         case "python": return .python
         case "go": return .go
         case "rust": return .rust

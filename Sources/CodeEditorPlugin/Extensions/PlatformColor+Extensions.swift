@@ -67,16 +67,19 @@ extension PlatformColor {
             green = CGFloat((hexNumber & 0x0F0) >> 4) / 15.0
             blue = CGFloat(hexNumber & 0x00F) / 15.0
             alpha = 1.0
+
         case 4: // ARGB (16-bit)
             alpha = CGFloat((hexNumber & 0xF000) >> 12) / 15.0
             red = CGFloat((hexNumber & 0x0F00) >> 8) / 15.0
             green = CGFloat((hexNumber & 0x00F0) >> 4) / 15.0
             blue = CGFloat(hexNumber & 0x000F) / 15.0
+
         case 6: // RRGGBB (24-bit)
             red = CGFloat((hexNumber & 0xFF0000) >> 16) / 255.0
             green = CGFloat((hexNumber & 0x00FF00) >> 8) / 255.0
             blue = CGFloat(hexNumber & 0x0000FF) / 255.0
             alpha = 1.0
+
         case 8: // RRGGBBAA (32-bit)
             red = CGFloat((hexNumber & 0xFF000000) >> 24) / 255.0
             green = CGFloat((hexNumber & 0x00FF0000) >> 16) / 255.0

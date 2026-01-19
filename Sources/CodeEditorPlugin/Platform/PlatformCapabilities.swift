@@ -233,8 +233,10 @@ extension PlatformCapabilities {
         // Core features
         case .syntaxHighlighting, .codeCompletion, .lineNumbers:
             return true // Always available
+
         case .codeFolding:
             return true // Software feature
+
         case .minimap:
             return supportsMinimap
 
@@ -244,14 +246,17 @@ extension PlatformCapabilities {
 
         case .smartBrackets, .autoIndent:
             return true // Always available
+
         case .findReplace:
             return true // Basic version available everywhere
+
         case .columnSelection:
             return currentPlatform == .macOS
 
         // Navigation features
         case .symbolNavigation, .breadcrumbs:
             return true // Software features with platform-specific UI
+
         case .goToDefinition:
             // Check platform-specific availability
             if currentPlatform == .macOS {
@@ -280,10 +285,13 @@ extension PlatformCapabilities {
 
         case .localLSP:
             return currentPlatform == .macOS // Process API required
+
         case .remoteLSP:
             return true // WebSocket available on all platforms
+
         case .pluginSystem:
             return true // Software feature
+
         case .externalTools:
             return currentPlatform == .macOS
 
@@ -308,6 +316,7 @@ extension PlatformCapabilities {
 
         case .toolbars:
             return true // Different implementations per platform
+
         case .touchBarSupport:
             return supportsTouchBar
 

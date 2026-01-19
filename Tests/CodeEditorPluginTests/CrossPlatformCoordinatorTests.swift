@@ -53,9 +53,9 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         )
 
         // Verify dependencies are used
-        XCTAssertTrue(coordinator.inputCoordinator === customInputCoordinator)
-        XCTAssertTrue(coordinator.toolbarCoordinator === customToolbarCoordinator)
-        XCTAssertTrue(coordinator.contextMenuCoordinator === customContextMenuCoordinator)
+        XCTAssertIdentical(coordinator.inputCoordinator, customInputCoordinator)
+        XCTAssertIdentical(coordinator.toolbarCoordinator, customToolbarCoordinator)
+        XCTAssertIdentical(coordinator.contextMenuCoordinator, customContextMenuCoordinator)
 
         // Verify coordinator works correctly
         XCTAssertNotNil(coordinator.platformAdjustments)
