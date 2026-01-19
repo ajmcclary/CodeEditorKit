@@ -301,7 +301,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
     // MARK: - Type-Specific Members
 
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("upper()", "method", "Return uppercase string"),
             ("lower()", "method", "Return lowercase string"),
             ("capitalize()", "method", "Return capitalized string"),
@@ -319,24 +319,11 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("isalpha()", "method", "Check if all characters are alphabetic")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)",
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("append()", "method", "Add element to end"),
             ("extend()", "method", "Extend list by appending elements"),
             ("insert()", "method", "Insert element at index"),
@@ -350,24 +337,11 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("copy()", "method", "Return shallow copy")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)",
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createDictMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("get()", "method", "Get value for key with default"),
             ("keys()", "method", "Return dict keys"),
             ("values()", "method", "Return dict values"),
@@ -380,24 +354,11 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("setdefault()", "method", "Set default value for key")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)",
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createSetMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("add()", "method", "Add element to set"),
             ("remove()", "method", "Remove element (raises error if not found)"),
             ("discard()", "method", "Remove element (no error if not found)"),
@@ -412,24 +373,11 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("copy()", "method", "Return shallow copy")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)",
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("__str__()", "method", "String representation"),
             ("__repr__()", "method", "Developer representation"),
             ("__len__()", "method", "Length of object"),
@@ -438,19 +386,6 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
             ("__doc__", "property", "Documentation string")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "c_\(name)",
-                    priority: 40
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter, sortPrefix: "c_", priority: 40)
     }
 }

@@ -338,6 +338,21 @@ public enum TextRangeUtilities {
         let newLength = max(0, range.length - (amount * 2))
         return NSRange(location: newLocation, length: newLength)
     }
+
+    // MARK: - Line Utilities
+
+    /// Calculate character offset for a given line index
+    /// - Parameters:
+    ///   - lineIndex: The zero-based index of the line
+    ///   - lines: Array of line strings
+    /// - Returns: The character offset from the start of text to the beginning of the line
+    public static func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
+        var location = 0
+        for index in 0..<lineIndex {
+            location += lines[index].count + 1 // +1 for newline
+        }
+        return location
+    }
 }
 
 // MARK: - Private Helpers

@@ -264,7 +264,7 @@ public final class ViewportManager: ObservableObject {
 
         // Create a prefetch task
         let taskId = UUID()
-        let prefetchTask = Task(priority: .background) { [weak self] in
+        let prefetchTask = Task { [weak self] in
             guard let self else { return }
 
             // Ensure layout for predicted range

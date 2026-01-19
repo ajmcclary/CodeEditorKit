@@ -187,7 +187,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
     // MARK: - Type-Specific Members
 
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("count", "property", "Number of characters"),
             ("isEmpty", "property", "Whether string is empty"),
             ("uppercased()", "method", "Returns uppercased string"),
@@ -198,24 +198,11 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("replacingOccurrences(of:with:)", "method", "Replace occurrences")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)", // Members get high priority
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createArrayMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("count", "property", "Number of elements"),
             ("isEmpty", "property", "Whether array is empty"),
             ("first", "property", "First element (optional)"),
@@ -228,24 +215,11 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("forEach(_:)", "method", "Iterate over elements")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)", // Members get high priority
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createDictionaryMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("count", "property", "Number of key-value pairs"),
             ("isEmpty", "property", "Whether dictionary is empty"),
             ("keys", "property", "Collection of keys"),
@@ -256,42 +230,16 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
             ("map(_:)", "method", "Transform key-value pairs")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    sortText: "a_\(name)", // Members get high priority
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("description", "property", "String representation"),
             ("debugDescription", "property", "Debug string representation"),
             ("hashValue", "property", "Hash value for Hashable types")
         ]
 
-        return members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-            CompletionItemModel(
-                label: name,
-                insertText: name,
-                kind: type == "method" ? .method : .property,
-                detail: description,
-                sortText: "c_\(name)", // Common members lower priority
-                priority: 40
-            )
-            }
+        return filteredMemberCompletions(from: members, filter: filter, sortPrefix: "c_", priority: 40)
     }
 }

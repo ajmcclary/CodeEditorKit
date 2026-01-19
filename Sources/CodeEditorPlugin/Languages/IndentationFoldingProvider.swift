@@ -21,8 +21,8 @@ internal struct IndentationFoldingProvider: CodeFoldingProvider {
                 let (startLine, _, title) = indentStack.removeLast()
 
                 if index - startLine >= 2 { // Minimum lines for folding
-                    let startLocation = locationForLine(startLine, in: lines)
-                    let endLocation = locationForLine(index - 1, in: lines) + lines[index - 1].count
+                    let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
+                    let endLocation = TextRangeUtilities.locationForLine(index - 1, in: lines) + lines[index - 1].count
 
                     regions.append(FoldableRegion(
                         range: NSRange(location: startLocation, length: endLocation - startLocation),
@@ -39,13 +39,5 @@ internal struct IndentationFoldingProvider: CodeFoldingProvider {
         }
 
         return regions
-    }
-
-    private func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
-        var location = 0
-        for index in 0..<lineIndex {
-            location += lines[index].count + 1 // +1 for newline
-        }
-        return location
     }
 }

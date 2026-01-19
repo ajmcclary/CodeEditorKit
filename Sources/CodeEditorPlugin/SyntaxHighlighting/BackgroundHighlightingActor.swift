@@ -14,16 +14,10 @@ actor HighlightingActor {
         try Task.checkCancellation()
         _ = maxConcurrentOperations // Reserved for future use
 
-        // Use task priority based on highlighting priority
-        if let taskPriority = priority.taskPriority {
-            return await Task(priority: taskPriority) {
-                createBasicHighlighting(for: text, language: language)
-            }.value
-        } else {
-            return await Task {
-                createBasicHighlighting(for: text, language: language)
-            }.value
-        }
+        // Use inherited task priority to avoid "Task policy set failed" errors
+        return await Task {
+            createBasicHighlighting(for: text, language: language)
+        }.value
     }
 
     private func createBasicHighlighting(for text: String, language: Language) -> [HighlightedToken] {

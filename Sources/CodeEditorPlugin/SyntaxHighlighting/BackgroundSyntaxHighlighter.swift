@@ -2,6 +2,11 @@ import Foundation
 #if canImport(Combine)
 import Combine
 #endif
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
 /// Performs syntax highlighting in background threads to improve UI responsiveness
 @available(macOS 10.15, iOS 13.0, *)
@@ -53,6 +58,9 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
     /// Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor
 
+    /// Observer for app termination to ensure cleanup
+    private var terminationObserver: NSObjectProtocol?
+
     // MARK: - Completion Handlers
 
     /// Completion handler for highlighting results
@@ -64,12 +72,47 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         self.memoryMonitor = memoryMonitor
         // Register with memory monitor
         registerWithMemoryMonitor()
+        // Register for app termination to ensure cleanup
+        registerForTermination()
     }
 
     deinit {
         // Cleanup is handled automatically by ARC
         // Note: Cannot access @MainActor properties from deinit in Swift 6
         // cleanup() must be called explicitly before deallocation
+        // The termination observer will be removed when the object is deallocated.
+    }
+
+    /// Register for app termination notifications to ensure cleanup
+    private func registerForTermination() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Cancel tasks directly during termination to avoid creating new Tasks
+            MainActor.assumeIsolated {
+                self?.debounceTask?.cancel()
+                for (_, task) in self?.activeTasks ?? [:] {
+                    task.cancel()
+                }
+            }
+        }
+        #elseif canImport(UIKit)
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.debounceTask?.cancel()
+                for (_, task) in self?.activeTasks ?? [:] {
+                    task.cancel()
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Public Methods

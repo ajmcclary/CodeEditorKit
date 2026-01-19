@@ -2,6 +2,11 @@ import Foundation
 #if canImport(Combine)
 import Combine
 #endif
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 
 /// Monitors memory usage and provides automatic cleanup capabilities
 ///
@@ -222,6 +227,9 @@ public final class MemoryMonitor: ObservableObject {
     /// Cleanup operations history
     @Published public private(set) var cleanupHistory: [CleanupOperation] = []
 
+    /// Observer for app termination to ensure cleanup
+    private var terminationObserver: NSObjectProtocol?
+
     // MARK: - Initialization
 
     /// Initialize with optional memory provider
@@ -234,6 +242,9 @@ public final class MemoryMonitor: ObservableObject {
 
         // Note: No longer auto-starts monitoring.
         // Call startMonitoring() explicitly when ready.
+
+        // Register for app termination to ensure cleanup
+        registerForTermination()
     }
 
     deinit {
@@ -242,6 +253,36 @@ public final class MemoryMonitor: ObservableObject {
         // cancelled when they are deallocated.
         // Users should call stopMonitoring() explicitly before releasing the monitor
         // to ensure proper cleanup.
+        // The termination observer will be removed when the object is deallocated.
+    }
+
+    /// Register for app termination notifications to ensure cleanup
+    private func registerForTermination() {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Cancel tasks directly - they're Optional<Task> so this is safe
+            // even from a non-MainActor context during termination
+            MainActor.assumeIsolated {
+                self?.monitoringTask?.cancel()
+                self?.cleanupTask?.cancel()
+            }
+        }
+        #elseif canImport(UIKit)
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.monitoringTask?.cancel()
+                self?.cleanupTask?.cancel()
+            }
+        }
+        #endif
     }
 
     // MARK: - Public Methods

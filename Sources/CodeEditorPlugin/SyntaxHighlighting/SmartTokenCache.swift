@@ -212,7 +212,7 @@ actor SmartTokenCache {
         }
 
         // Schedule background tokenization for the predicted range
-        Task(priority: .low) {
+        Task {
             // This is a placeholder - actual tokenization would happen through
             // the syntax highlighting coordinator
             await Task.yield()

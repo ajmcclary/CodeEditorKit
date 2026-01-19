@@ -4,7 +4,7 @@ import Foundation
 struct SQLSymbolProvider: DocumentSymbolProvider {
     func detectSymbols(in text: String) async -> [DocumentSymbol] {
         var symbols: [DocumentSymbol] = []
-        let statements = splitSQLStatements(text)
+        let statements = SQLParsingUtility.splitStatements(text)
         var currentLocation = 0
 
         for statement in statements {
@@ -15,65 +15,6 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         }
 
         return symbols
-    }
-
-    private func splitSQLStatements(_ text: String) -> [String] {
-        // Split by semicolons that are not inside quotes
-        var statements: [String] = []
-        var currentStatement = ""
-        var inSingleQuotes = false
-        var inDoubleQuotes = false
-        var inComment = false
-
-        let lines = text.components(separatedBy: .newlines)
-
-        for line in lines {
-            let processedLine = line
-
-            // Handle line comments
-            if line.trimmingCharacters(in: .whitespaces).hasPrefix("--") {
-                inComment = true
-            }
-
-            if inComment {
-                inComment = false
-                continue
-            }
-
-            for char in processedLine {
-                switch char {
-                case "'":
-                    if !inDoubleQuotes { inSingleQuotes.toggle() }
-                    currentStatement.append(char)
-
-                case "\"":
-                    if !inSingleQuotes { inDoubleQuotes.toggle() }
-                    currentStatement.append(char)
-
-                case ";":
-                    if !inSingleQuotes && !inDoubleQuotes {
-                        if !currentStatement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            statements.append(currentStatement.trimmingCharacters(in: .whitespacesAndNewlines))
-                        }
-                        currentStatement = ""
-                    } else {
-                        currentStatement.append(char)
-                    }
-
-                default:
-                    currentStatement.append(char)
-                }
-            }
-
-            currentStatement.append("\n")
-        }
-
-        // Add the last statement if it doesn't end with semicolon
-        if !currentStatement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            statements.append(currentStatement.trimmingCharacters(in: .whitespacesAndNewlines))
-        }
-
-        return statements
     }
 
     private func detectSQLSymbol(in statement: String, at location: Int) -> DocumentSymbol? {
@@ -114,7 +55,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractCreateTable(from statement: String, at location: Int) -> DocumentSymbol? {
-        let tableName = extractObjectName(from: statement, afterKeyword: "CREATE TABLE")
+        let tableName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "CREATE TABLE", defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "TABLE \(tableName)",
@@ -125,7 +66,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractCreateView(from statement: String, at location: Int) -> DocumentSymbol? {
-        let viewName = extractObjectName(from: statement, afterKeyword: "CREATE VIEW")
+        let viewName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "CREATE VIEW", defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "VIEW \(viewName)",
@@ -136,7 +77,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractCreateIndex(from statement: String, at location: Int) -> DocumentSymbol? {
-        let indexName = extractObjectName(from: statement, afterKeyword: "CREATE INDEX")
+        let indexName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "CREATE INDEX", defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "INDEX \(indexName)",
@@ -148,7 +89,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
 
     private func extractCreateProcedure(from statement: String, at location: Int) -> DocumentSymbol? {
         let keyword = statement.uppercased().contains("CREATE PROCEDURE") ? "CREATE PROCEDURE" : "CREATE PROC"
-        let procName = extractObjectName(from: statement, afterKeyword: keyword)
+        let procName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: keyword, defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "PROC \(procName)",
@@ -159,7 +100,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractCreateFunction(from statement: String, at location: Int) -> DocumentSymbol? {
-        let funcName = extractObjectName(from: statement, afterKeyword: "CREATE FUNCTION")
+        let funcName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "CREATE FUNCTION", defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "FUNC \(funcName)",
@@ -215,7 +156,7 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractAlterTable(from statement: String, at location: Int) -> DocumentSymbol? {
-        let tableName = extractObjectName(from: statement, afterKeyword: "ALTER TABLE")
+        let tableName = SQLParsingUtility.extractObjectName(from: statement, afterKeyword: "ALTER TABLE", defaultValue: "unknown")
 
         return DocumentSymbol(
             name: "ALTER TABLE \(tableName)",
@@ -250,20 +191,6 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
         )
     }
 
-    private func extractObjectName(from statement: String, afterKeyword keyword: String) -> String {
-        let upperStatement = statement.uppercased()
-        let upperKeyword = keyword.uppercased()
-
-        guard let keywordRange = upperStatement.range(of: upperKeyword) else {
-            return "unknown"
-        }
-
-        let afterKeyword = String(statement[keywordRange.upperBound...]).trimmingCharacters(in: .whitespaces)
-        let objectName = afterKeyword.prefix { !$0.isWhitespace && $0 != "(" }
-
-        return String(objectName).trimmingCharacters(in: .whitespaces)
-    }
-
     private func extractTablesFromSelect(_ statement: String) -> [String] {
         let upperStatement = statement.uppercased()
 
@@ -292,6 +219,6 @@ struct SQLSymbolProvider: DocumentSymbolProvider {
     }
 
     private func extractTableFromDML(_ statement: String, keyword: String) -> String {
-        extractObjectName(from: statement, afterKeyword: keyword)
+        SQLParsingUtility.extractObjectName(from: statement, afterKeyword: keyword, defaultValue: "unknown")
     }
 }

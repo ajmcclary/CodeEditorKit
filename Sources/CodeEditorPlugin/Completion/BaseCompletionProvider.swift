@@ -267,6 +267,88 @@ open class BaseCompletionProvider: CompletionProvider {
         // Default: suggest types for parameters
         createTypeCompletions(filter: filter)
     }
+
+    // MARK: - Shared Filtering Helpers
+
+    /// Create filtered completions from a simple list of items
+    /// - Parameters:
+    ///   - items: Array of item names to create completions for
+    ///   - filter: Filter string to match against items
+    ///   - kind: The completion item kind
+    ///   - detail: The detail text for each completion
+    ///   - sortPrefix: Optional sort text prefix (default: "d_")
+    ///   - priority: Priority for completions (default: 65)
+    /// - Returns: Array of filtered completion items
+    open func filteredCompletions(
+        from items: [String],
+        filter: String,
+        kind: CompletionItemKind,
+        detail: String,
+        sortPrefix: String = "d_",
+        priority: Int = 65
+    ) -> [CompletionItemModel] {
+        items
+            .filter { item in
+                filter.isEmpty || item.localizedCaseInsensitiveContains(filter)
+            }
+            .map { item in
+                CompletionItemModel(
+                    label: item,
+                    insertText: item,
+                    kind: kind,
+                    detail: detail,
+                    sortText: "\(sortPrefix)\(item)",
+                    priority: priority
+                )
+            }
+    }
+
+    /// Create filtered member completions from a list of member tuples
+    /// - Parameters:
+    ///   - members: Array of (name, type, description) tuples
+    ///   - filter: Filter string to match against member names
+    ///   - sortPrefix: Optional sort text prefix (default: "a_")
+    ///   - priority: Priority for completions (default: 85)
+    /// - Returns: Array of filtered completion items
+    open func filteredMemberCompletions(
+        from members: [(name: String, type: String, description: String)],
+        filter: String,
+        sortPrefix: String = "a_",
+        priority: Int = 85
+    ) -> [CompletionItemModel] {
+        members
+            .filter { name, _, _ in
+                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
+            }
+            .map { name, type, description in
+                let kind: CompletionItemKind
+                switch type.lowercased() {
+                case "method":
+                    kind = .method
+
+                case "property":
+                    kind = .property
+
+                case "type", "struct", "class":
+                    kind = .struct
+
+                case "constant":
+                    kind = .constant
+
+                default:
+                    kind = .property
+                }
+
+                return CompletionItemModel(
+                    label: name,
+                    insertText: name,
+                    kind: kind,
+                    detail: description,
+                    sortText: "\(sortPrefix)\(name)",
+                    priority: priority
+                )
+            }
+    }
 }
 
 // MARK: - Supporting Types

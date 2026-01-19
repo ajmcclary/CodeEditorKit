@@ -16,8 +16,8 @@ internal struct MarkdownFoldingProvider: CodeFoldingProvider {
                 while let last = headerStack.last, last.1 >= headerLevel {
                     let (startLine, _, title) = headerStack.removeLast()
 
-                    let startLocation = locationForLine(startLine, in: lines)
-                    let endLocation = locationForLine(index - 1, in: lines) + lines[index - 1].count
+                    let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
+                    let endLocation = TextRangeUtilities.locationForLine(index - 1, in: lines) + lines[index - 1].count
 
                     regions.append(FoldableRegion(
                         range: NSRange(location: startLocation, length: endLocation - startLocation),
@@ -32,7 +32,7 @@ internal struct MarkdownFoldingProvider: CodeFoldingProvider {
 
         // Close remaining sections
         while let (startLine, _, title) = headerStack.popLast() {
-            let startLocation = locationForLine(startLine, in: lines)
+            let startLocation = TextRangeUtilities.locationForLine(startLine, in: lines)
             let endLocation = text.count
 
             regions.append(FoldableRegion(
@@ -51,13 +51,5 @@ internal struct MarkdownFoldingProvider: CodeFoldingProvider {
 
         let level = trimmed.prefix { $0 == "#" }.count
         return level <= 6 ? level : nil
-    }
-
-    private func locationForLine(_ lineIndex: Int, in lines: [String]) -> Int {
-        var location = 0
-        for index in 0..<lineIndex {
-            location += lines[index].count + 1 // +1 for newline
-        }
-        return location
     }
 }

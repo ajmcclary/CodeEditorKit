@@ -298,7 +298,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
     // MARK: - Package-Specific Members
 
     private func createFmtPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("Println()", "method", "Print with newline"),
             ("Printf()", "method", "Formatted print"),
             ("Sprintf()", "method", "Format string"),
@@ -310,11 +310,11 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             ("Fscanf()", "method", "Scan from reader")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createStringsPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("Contains()", "method", "Check substring"),
             ("HasPrefix()", "method", "Check prefix"),
             ("HasSuffix()", "method", "Check suffix"),
@@ -327,11 +327,11 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             ("Fields()", "method", "Split into fields")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createTimePackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("Now()", "method", "Current time"),
             ("Sleep()", "method", "Sleep duration"),
             ("Since()", "method", "Time since"),
@@ -344,11 +344,11 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             ("Hour", "constant", "Hour duration")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createHttpPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("Get()", "method", "HTTP GET request"),
             ("Post()", "method", "HTTP POST request"),
             ("ListenAndServe()", "method", "Start HTTP server"),
@@ -360,11 +360,11 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             ("MethodPost", "constant", "POST method")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
+        let members: [(name: String, type: String, description: String)] = [
             ("String()", "method", "String representation"),
             ("Error()", "method", "Error string"),
             ("Close()", "method", "Close resource"),
@@ -372,22 +372,6 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             ("Write()", "method", "Write data")
         ]
 
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-        members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : (type == "type" ? .struct : (type == "constant" ? .constant : .property)),
-                    detail: description,
-                    priority: 85
-                )
-            }
+        return filteredMemberCompletions(from: members, filter: filter)
     }
 }

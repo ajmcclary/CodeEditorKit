@@ -161,6 +161,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
         true
     }
+
+    func applicationWillTerminate(_: Notification) {
+        // Post notification to allow components to clean up before termination
+        // This prevents "Task policy set failed" errors from background tasks
+        NotificationCenter.default.post(name: Notification.Name("appWillTerminate"), object: nil)
+    }
 }
 #endif
 
@@ -193,10 +199,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension Notification.Name {
     /// Notification to toggle line number display in the editor.
     static let toggleLineNumbers = Notification.Name("toggleLineNumbers")
-    
+
     /// Notification to toggle invisible character display in the editor.
     static let toggleInvisibleCharacters = Notification.Name("toggleInvisibleCharacters")
-    
+
     /// Notification to reset the interface layout to defaults.
     static let resetLayout = Notification.Name("resetLayout")
+
+    /// Notification posted when the application is about to terminate.
+    /// Components should clean up background tasks when receiving this notification.
+    static let appWillTerminate = Notification.Name("appWillTerminate")
 }
