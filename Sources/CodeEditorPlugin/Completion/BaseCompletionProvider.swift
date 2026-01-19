@@ -148,8 +148,11 @@ open class BaseCompletionProvider: CompletionProvider {
     }
 
     /// Extract the current word being typed
+    /// Default implementation includes underscore as part of identifiers.
+    /// Override for languages with different identifier rules (e.g., `$` in JS/TS, `@` in Ruby/Java).
     open func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.inverted)
+        let identifierChars = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        let components = text.components(separatedBy: identifierChars.inverted)
         return components.last ?? ""
     }
 

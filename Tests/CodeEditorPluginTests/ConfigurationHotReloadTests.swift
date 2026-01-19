@@ -61,7 +61,10 @@ final class ConfigurationHotReloadTests: XCTestCase {
         let hotReload = ConfigurationHotReload()
         let observer = TestObserver()
 
-        let token = hotReload.addObserver(observer)
+        guard let token = hotReload.addObserver(observer) else {
+            XCTFail("Failed to add observer")
+            return
+        }
         hotReload.removeObserver(with: token.id)
 
         var config = EditorConfiguration()
@@ -175,7 +178,7 @@ final class ConfigurationHotReloadTests: XCTestCase {
 
         hotReload.addValidationRule { config in
             if config.display.fontSize < 8 || config.display.fontSize > 72 {
-                return ConfigurationError.invalidFontSize(config.display.fontSize)
+                return HotReloadValidationError.invalidFontSize(config.display.fontSize)
             }
             return nil
         }

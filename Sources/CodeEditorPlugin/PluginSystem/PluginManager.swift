@@ -440,7 +440,12 @@ private actor PluginStatePersistence {
 
     func saveState(_ state: PluginState, for identifier: String) async {
         // Ensure directory exists
-        try? fileManager.createDirectory(at: stateDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: stateDirectory, withIntermediateDirectories: true)
+        } catch {
+            CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PluginState")
+                .error("Failed to create state directory at \(stateDirectory): \(error)")
+        }
 
         let url = stateDirectory.appendingPathComponent("\(identifier).json")
 

@@ -37,11 +37,17 @@ public final class UnifiedEventSystem: ObservableObject {
     /// Performance metrics
     private var eventMetrics = EventMetrics()
 
+    /// Platform capabilities for adaptive behavior
+    private let capabilities: PlatformCapabilities
+
     // MARK: - Initialization
 
     /// Creates a new UnifiedEventSystem with optional configuration
-    /// - Parameter enableDefaultFilters: Whether to setup default filters (default: true)
-    public init(enableDefaultFilters: Bool = true) {
+    /// - Parameters:
+    ///   - enableDefaultFilters: Whether to setup default filters (default: true)
+    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
+    public init(enableDefaultFilters: Bool = true, capabilities: PlatformCapabilities? = nil) {
+        self.capabilities = capabilities ?? PlatformCapabilities.shared
         if enableDefaultFilters {
             setupDefaultFilters()
         }
@@ -173,7 +179,7 @@ public final class UnifiedEventSystem: ObservableObject {
     private func setupDefaultFilters() {
         // Add platform-specific filters
         let platformFilter = PlatformEventFilter(
-            allowedPlatforms: [PlatformCapabilities.shared.currentPlatform]
+            allowedPlatforms: [capabilities.currentPlatform]
         )
         eventFilters.append(platformFilter)
 

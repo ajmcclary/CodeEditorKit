@@ -413,6 +413,7 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         guard let targetType else { return [] }
 
         switch targetType.lowercased() {
+        // Type-based completions
         case "string":
             return createStringMemberCompletions(filter: filter)
 
@@ -422,10 +423,25 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         case "map":
             return createMapMemberCompletions(filter: filter)
 
+        // Package-based completions
+        case "fmt":
+            return createFmtPackageCompletions(filter: filter)
+
+        case "strings":
+            return createStringsPackageCompletions(filter: filter)
+
+        case "time":
+            return createTimePackageCompletions(filter: filter)
+
+        case "http":
+            return createHttpPackageCompletions(filter: filter)
+
         default:
             return createCommonMemberCompletions(filter: filter)
         }
     }
+
+    // MARK: - Type-Specific Members
 
     private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
@@ -465,11 +481,77 @@ public struct GoMemberCompletions: LanguageMemberCompletions {
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 
+    // MARK: - Package-Specific Members
+
+    private func createFmtPackageCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("Println()", "method", "Print with newline"),
+            ("Printf()", "method", "Formatted print"),
+            ("Sprintf()", "method", "Format string"),
+            ("Print()", "method", "Print values"),
+            ("Errorf()", "method", "Format error"),
+            ("Fprintf()", "method", "Format to writer"),
+            ("Scan()", "method", "Scan input"),
+            ("Scanf()", "method", "Scan formatted"),
+            ("Fscanf()", "method", "Scan from reader")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createStringsPackageCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("Contains()", "method", "Check substring"),
+            ("HasPrefix()", "method", "Check prefix"),
+            ("HasSuffix()", "method", "Check suffix"),
+            ("Join()", "method", "Join strings"),
+            ("Split()", "method", "Split string"),
+            ("ToLower()", "method", "Convert to lowercase"),
+            ("ToUpper()", "method", "Convert to uppercase"),
+            ("Trim()", "method", "Trim whitespace"),
+            ("Replace()", "method", "Replace substring"),
+            ("Fields()", "method", "Split into fields")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createTimePackageCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("Now()", "method", "Current time"),
+            ("Sleep()", "method", "Sleep duration"),
+            ("Since()", "method", "Time since"),
+            ("Until()", "method", "Time until"),
+            ("Parse()", "method", "Parse time"),
+            ("Duration", "type", "Duration type"),
+            ("Time", "type", "Time type"),
+            ("Second", "constant", "Second duration"),
+            ("Minute", "constant", "Minute duration"),
+            ("Hour", "constant", "Hour duration")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createHttpPackageCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("Get()", "method", "HTTP GET request"),
+            ("Post()", "method", "HTTP POST request"),
+            ("ListenAndServe()", "method", "Start HTTP server"),
+            ("HandleFunc()", "method", "Register handler"),
+            ("NewRequest()", "method", "Create request"),
+            ("StatusOK", "constant", "200 status"),
+            ("StatusNotFound", "constant", "404 status"),
+            ("MethodGet", "constant", "GET method"),
+            ("MethodPost", "constant", "POST method")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
         let members = [
-            ("fmt.Printf()", "function", "Print formatted"),
-            ("fmt.Println()", "function", "Print line"),
-            ("fmt.Sprintf()", "function", "Format string")
+            ("String()", "method", "String representation"),
+            ("Error()", "method", "Error string"),
+            ("Close()", "method", "Close resource"),
+            ("Read()", "method", "Read data"),
+            ("Write()", "method", "Write data")
         ]
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }

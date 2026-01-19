@@ -166,7 +166,12 @@ public final class PluginWorkspace: @unchecked Sendable {
     }
 
     private func setupDirectories() {
-        try? fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
+        } catch {
+            CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PluginWorkspace")
+                .error("Failed to create plugin directory at \(baseDirectory): \(error)")
+        }
     }
 
     /// Read data from plugin storage

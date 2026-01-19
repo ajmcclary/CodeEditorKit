@@ -243,14 +243,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
     }
 
     override public func extractTargetType(from text: String) -> String? {
-        // Extract the object before the dot
-        let pattern = #"(\w+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Completion Creation Method Overrides
@@ -293,29 +286,13 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             }
     }
 
+    // MARK: - Member Completions Override
+
+    /// Delegate to JavaMemberCompletions for type-specific member suggestions
+    private let javaMemberCompletions = JavaMemberCompletions()
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
-        guard let targetType else { return [] }
-
-        // Provide common member completions based on type
-        switch targetType.lowercased() {
-        case "string":
-            return createStringMemberCompletions(filter: filter)
-
-        case "list", "arraylist", "linkedlist":
-            return createListMemberCompletions(filter: filter)
-
-        case "map", "hashmap", "treemap":
-            return createMapMemberCompletions(filter: filter)
-
-        case "system":
-            return createSystemMemberCompletions(filter: filter)
-
-        case "math":
-            return createMathMemberCompletions(filter: filter)
-
-        default:
-            return createCommonMemberCompletions(filter: filter)
-        }
+        javaMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
     // MARK: - Java-Specific Completion Methods
@@ -348,138 +325,6 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
                     insertText: pkg,
                     kind: .module,
                     detail: "Java package",
-                    priority: 85
-                )
-            }
-    }
-
-    // MARK: - Type-Specific Members
-
-    private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("length()", "method", "Get string length"),
-            ("isEmpty()", "method", "Check if empty"),
-            ("charAt()", "method", "Character at index"),
-            ("substring()", "method", "Extract substring"),
-            ("indexOf()", "method", "Find index"),
-            ("contains()", "method", "Check if contains"),
-            ("startsWith()", "method", "Check prefix"),
-            ("endsWith()", "method", "Check suffix"),
-            ("toLowerCase()", "method", "Convert to lowercase"),
-            ("toUpperCase()", "method", "Convert to uppercase"),
-            ("trim()", "method", "Remove whitespace"),
-            ("replace()", "method", "Replace substring"),
-            ("split()", "method", "Split string"),
-            ("equals()", "method", "Check equality"),
-            ("compareTo()", "method", "Compare strings")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("size()", "method", "Get list size"),
-            ("isEmpty()", "method", "Check if empty"),
-            ("add()", "method", "Add element"),
-            ("remove()", "method", "Remove element"),
-            ("get()", "method", "Get element"),
-            ("set()", "method", "Set element"),
-            ("clear()", "method", "Clear list"),
-            ("contains()", "method", "Check if contains"),
-            ("indexOf()", "method", "Find index"),
-            ("iterator()", "method", "Get iterator"),
-            ("toArray()", "method", "Convert to array"),
-            ("sort()", "method", "Sort list"),
-            ("stream()", "method", "Get stream")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("size()", "method", "Get map size"),
-            ("isEmpty()", "method", "Check if empty"),
-            ("put()", "method", "Put key-value"),
-            ("get()", "method", "Get value"),
-            ("remove()", "method", "Remove key"),
-            ("clear()", "method", "Clear map"),
-            ("containsKey()", "method", "Check key"),
-            ("containsValue()", "method", "Check value"),
-            ("keySet()", "method", "Get keys"),
-            ("values()", "method", "Get values"),
-            ("entrySet()", "method", "Get entries"),
-            ("forEach()", "method", "Iterate entries")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createSystemMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("out", "property", "Standard output"),
-            ("err", "property", "Error output"),
-            ("in", "property", "Standard input"),
-            ("exit()", "method", "Exit program"),
-            ("currentTimeMillis()", "method", "Current time"),
-            ("nanoTime()", "method", "Nano time"),
-            ("getProperty()", "method", "Get property"),
-            ("setProperty()", "method", "Set property"),
-            ("getenv()", "method", "Get environment"),
-            ("gc()", "method", "Garbage collection")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMathMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("PI", "constant", "Pi constant"),
-            ("E", "constant", "E constant"),
-            ("abs()", "method", "Absolute value"),
-            ("ceil()", "method", "Ceiling"),
-            ("floor()", "method", "Floor"),
-            ("round()", "method", "Round"),
-            ("max()", "method", "Maximum"),
-            ("min()", "method", "Minimum"),
-            ("pow()", "method", "Power"),
-            ("sqrt()", "method", "Square root"),
-            ("random()", "method", "Random number"),
-            ("sin()", "method", "Sine"),
-            ("cos()", "method", "Cosine"),
-            ("tan()", "method", "Tangent"),
-            ("log()", "method", "Logarithm")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("toString()", "method", "Convert to string"),
-            ("equals()", "method", "Check equality"),
-            ("hashCode()", "method", "Hash code"),
-            ("getClass()", "method", "Get class"),
-            ("notify()", "method", "Notify thread"),
-            ("notifyAll()", "method", "Notify all threads"),
-            ("wait()", "method", "Wait for notification")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-        members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : (type == "constant" ? .constant : .property),
-                    detail: description,
                     priority: 85
                 )
             }

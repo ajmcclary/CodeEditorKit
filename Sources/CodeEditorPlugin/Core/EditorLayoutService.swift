@@ -9,6 +9,10 @@ import UIKit
 
 /// Service responsible for complex layout calculations and component positioning
 /// Extracts business logic from LayoutCoordinator and ContainerLayoutHelper
+///
+/// This class serves as a facade that coordinates layout calculations through
+/// dedicated components: ComponentFrameCalculator, LayoutOptimizer,
+/// ResponsiveLayoutProvider, and LayoutCache.
 @MainActor
 public final class EditorLayoutService {
     // MARK: - Types
@@ -165,17 +169,8 @@ public final class EditorLayoutService {
 
     // MARK: - Properties
 
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "EditorLayoutService")
     private let gutterSizingService: GutterSizingService
-
-    // Layout constants
-    private let minimapWidthRatio: CGFloat = 0.15 // 15% of container width
-    private let gutterWidthRatio: CGFloat = 0.08   // 8% of container width
-    private let animationDuration: TimeInterval = 0.25
-
-    // Cache for layout calculations
-    private var layoutCache: [String: ComponentFrames] = [:]
-    private let maxCacheSize = 10
+    private let layoutCache: LayoutCache
 
     // MARK: - Initialization
 
@@ -184,6 +179,7 @@ public final class EditorLayoutService {
     /// - Parameter gutterSizingService: Service for calculating gutter dimensions
     public init(gutterSizingService: GutterSizingService) {
         self.gutterSizingService = gutterSizingService
+        self.layoutCache = LayoutCache()
     }
 
     // MARK: - Public Interface
@@ -195,14 +191,14 @@ public final class EditorLayoutService {
         constraints: LayoutConstraints = LayoutConstraints(),
         lineCount: Int = 1_000
     ) -> ComponentFrames {
-        let cacheKey = generateCacheKey(
+        let cacheKey = LayoutCache.generateKey(
             bounds: containerBounds,
             configuration: configuration,
             constraints: constraints,
             lineCount: lineCount
         )
 
-        if let cached = layoutCache[cacheKey] {
+        if let cached = layoutCache.get(cacheKey) {
             return cached
         }
 
@@ -213,8 +209,7 @@ public final class EditorLayoutService {
             lineCount: lineCount
         )
 
-        // Cache the result
-        cacheLayout(cacheKey: cacheKey, frames: frames)
+        layoutCache.store(frames, forKey: cacheKey)
 
         return frames
     }
@@ -244,7 +239,7 @@ public final class EditorLayoutService {
         }
 
         // Add standard text padding
-        let textPadding = calculateTextPadding(configuration: configuration)
+        let textPadding = ComponentFrameCalculator.calculateTextPadding(configuration: configuration)
         insets = EdgeInsets(
             top: insets.top + textPadding.top,
             left: insets.left + textPadding.left,
@@ -260,37 +255,12 @@ public final class EditorLayoutService {
         _ configuration: EditorConfiguration,
         availableSpace: CGSize
     ) -> LayoutOptimizations {
-        let hasLimitedWidth = availableSpace.width < 600
-        let hasLimitedHeight = availableSpace.height < 400
-
-        return LayoutOptimizations(
-            useMinimapOptimization: configuration.display.showMinimap && !hasLimitedWidth,
-            useGutterOptimization: configuration.display.isLineNumbersEnabled,
-            useScrollOptimization: !hasLimitedHeight,
-            recommendedAnimationDuration: calculateOptimalAnimationDuration(for: configuration)
-        )
+        LayoutOptimizer.recommendOptimizations(for: configuration, availableSpace: availableSpace)
     }
 
     /// Calculates optimal Z-positioning for components
     public func calculateZPositions(configuration _: EditorConfiguration) -> [String: CGFloat] {
-        var zPositions: [String: CGFloat] = [:]
-
-        // Base layer
-        zPositions["textView"] = 0
-
-        // UI overlays
-        zPositions["gutter"] = 10
-        zPositions["minimap"] = 15
-
-        // Interactive elements
-        zPositions["scrollbar"] = 20
-        zPositions["searchOverlay"] = 25
-
-        // Temporary overlays
-        zPositions["completionPopup"] = 100
-        zPositions["tooltip"] = 150
-
-        return zPositions
+        LayoutOptimizer.calculateZPositions()
     }
 
     /// Determines if layout should animate based on change type
@@ -298,14 +268,7 @@ public final class EditorLayoutService {
         from oldConfiguration: EditorConfiguration,
         to newConfiguration: EditorConfiguration
     ) -> Bool {
-        // Don't animate if fundamental display properties changed
-        if oldConfiguration.display.isLineNumbersEnabled != newConfiguration.display.isLineNumbersEnabled ||
-           oldConfiguration.display.showMinimap != newConfiguration.display.showMinimap {
-            return false
-        }
-
-        // Animate for minor adjustments
-        return true
+        LayoutOptimizer.shouldAnimateLayoutChange(from: oldConfiguration, to: newConfiguration)
     }
 
     /// Calculates layout for specific display modes
@@ -346,7 +309,7 @@ public final class EditorLayoutService {
         configuration: EditorConfiguration,
         screenSize: ScreenSize
     ) -> ComponentFrames {
-        let constraints = createResponsiveConstraints(for: screenSize)
+        let constraints = ResponsiveLayoutProvider.createConstraints(for: screenSize)
 
         return calculateComponentFrames(
             containerBounds: containerBounds,
@@ -359,16 +322,12 @@ public final class EditorLayoutService {
 
     /// Clears the layout cache
     public func clearCache() {
-        layoutCache.removeAll()
-        logger.debug("Layout cache cleared")
+        layoutCache.clear()
     }
 
     /// Invalidates cache for specific configuration
     public func invalidateCache(for configuration: EditorConfiguration) {
-        let configHash = String(configuration.hashValue)
-        let keysToRemove = layoutCache.keys.filter { $0.contains(configHash) }
-        keysToRemove.forEach { layoutCache.removeValue(forKey: $0) }
-        logger.debug("Layout cache invalidated for configuration")
+        layoutCache.invalidate(for: configuration)
     }
 }
 
@@ -389,19 +348,6 @@ public enum DisplayMode {
     case debugging
 }
 
-/// Screen size categories for responsive layout.
-///
-/// `ScreenSize` categorizes different screen sizes to enable
-/// responsive layout adjustments across Apple platforms.
-public enum ScreenSize {
-    /// Compact screens (iPhone)
-    case compact
-    /// Regular screens (iPad)
-    case regular
-    /// Large screens (Mac)
-    case large
-}
-
 // MARK: - Private Implementation
 
 extension EditorLayoutService {
@@ -411,18 +357,19 @@ extension EditorLayoutService {
         constraints: LayoutConstraints,
         lineCount: Int
     ) -> ComponentFrames {
-        let adjustedBounds = applyConstraints(containerBounds, constraints: constraints)
+        let adjustedBounds = ComponentFrameCalculator.applyConstraints(containerBounds, constraints: constraints)
 
         // Calculate gutter frame
-        let gutterFrame = calculateGutterFrame(
+        let gutterFrame = ComponentFrameCalculator.calculateGutterFrame(
             containerBounds: adjustedBounds,
             configuration: configuration,
             constraints: constraints,
-            lineCount: lineCount
+            lineCount: lineCount,
+            gutterSizingService: gutterSizingService
         )
 
         // Calculate minimap frame
-        let minimapFrame = calculateMinimapFrame(
+        let minimapFrame = ComponentFrameCalculator.calculateMinimapFrame(
             containerBounds: adjustedBounds,
             configuration: configuration,
             constraints: constraints,
@@ -430,18 +377,14 @@ extension EditorLayoutService {
         )
 
         // Calculate text view frame
-        let textViewFrame = calculateTextViewFrame(
+        let textViewFrame = ComponentFrameCalculator.calculateTextViewFrame(
             containerBounds: adjustedBounds,
             gutterFrame: gutterFrame,
-            minimapFrame: minimapFrame,
-            configuration: configuration
+            minimapFrame: minimapFrame
         )
 
         // Calculate scroll view frame (encompasses text view)
-        let scrollViewFrame = calculateScrollViewFrame(
-            textViewFrame: textViewFrame,
-            configuration: configuration
-        )
+        let scrollViewFrame = ComponentFrameCalculator.calculateScrollViewFrame(textViewFrame: textViewFrame)
 
         return ComponentFrames(
             containerFrame: adjustedBounds,
@@ -450,167 +393,6 @@ extension EditorLayoutService {
             minimapFrame: minimapFrame,
             scrollViewFrame: scrollViewFrame
         )
-    }
-
-    func calculateGutterFrame(
-        containerBounds: CGRect,
-        configuration: EditorConfiguration,
-        constraints: LayoutConstraints,
-        lineCount: Int
-    ) -> CGRect {
-        guard configuration.display.isLineNumbersEnabled else {
-            return .zero
-        }
-
-        let font = PlatformFonts.monospacedSystemFont(ofSize: configuration.display.fontSize)
-        let sizingResult = gutterSizingService.calculateOptimalWidth(
-            lineCount: lineCount,
-            font: font,
-            configuration: configuration
-        )
-
-        let width = max(
-            constraints.minimumGutterWidth,
-            min(constraints.maximumGutterWidth, sizingResult.recommendedWidth)
-        )
-
-        return CGRect(
-            x: containerBounds.minX,
-            y: containerBounds.minY,
-            width: width,
-            height: containerBounds.height
-        )
-    }
-
-    func calculateMinimapFrame(
-        containerBounds: CGRect,
-        configuration: EditorConfiguration,
-        constraints: LayoutConstraints,
-        gutterFrame: CGRect
-    ) -> CGRect {
-        guard configuration.display.showMinimap else {
-            return .zero
-        }
-
-        let availableWidth = containerBounds.width - gutterFrame.width
-        let proposedWidth = availableWidth * minimapWidthRatio
-
-        let width = max(
-            constraints.minimumMinimapWidth,
-            min(constraints.maximumMinimapWidth, proposedWidth)
-        )
-
-        return CGRect(
-            x: containerBounds.maxX - width,
-            y: containerBounds.minY,
-            width: width,
-            height: containerBounds.height
-        )
-    }
-
-    func calculateTextViewFrame(
-        containerBounds: CGRect,
-        gutterFrame: CGRect,
-        minimapFrame: CGRect,
-        configuration _: EditorConfiguration
-    ) -> CGRect {
-        let leftMargin = gutterFrame.width
-        let rightMargin = minimapFrame.width
-
-        let x = containerBounds.minX + leftMargin
-        let width = containerBounds.width - leftMargin - rightMargin
-
-        return CGRect(
-            x: x,
-            y: containerBounds.minY,
-            width: max(200, width), // Ensure minimum text width
-            height: containerBounds.height
-        )
-    }
-
-    func calculateScrollViewFrame(
-        textViewFrame: CGRect,
-        configuration _: EditorConfiguration
-    ) -> CGRect {
-        // Scroll view encompasses the text view
-        textViewFrame
-    }
-
-    func calculateTextPadding(configuration: EditorConfiguration) -> EdgeInsets {
-        let basePadding: CGFloat = 8.0
-        let scaleFactor = configuration.display.fontSize / 14.0 // Scale with font size
-
-        let adjustedPadding = basePadding * scaleFactor
-
-        return EdgeInsets(
-            top: adjustedPadding,
-            left: adjustedPadding,
-            bottom: adjustedPadding,
-            right: adjustedPadding
-        )
-    }
-
-    func calculateOptimalAnimationDuration(for _: EditorConfiguration) -> TimeInterval {
-        // Faster animations for better perceived performance
-        animationDuration * 0.8
-    }
-
-    func applyConstraints(_ bounds: CGRect, constraints: LayoutConstraints) -> CGRect {
-        CGRect(
-            x: bounds.minX + constraints.safeAreaInsets.left,
-            y: bounds.minY + constraints.safeAreaInsets.top,
-            width: bounds.width - constraints.safeAreaInsets.left - constraints.safeAreaInsets.right,
-            height: bounds.height - constraints.safeAreaInsets.top - constraints.safeAreaInsets.bottom
-        )
-    }
-
-    func createResponsiveConstraints(for screenSize: ScreenSize) -> LayoutConstraints {
-        switch screenSize {
-        case .compact:
-            return LayoutConstraints(
-                minimumGutterWidth: 30,
-                maximumGutterWidth: 60,
-                minimumTextWidth: 150,
-                minimumMinimapWidth: 0, // Disable minimap on compact screens
-                maximumMinimapWidth: 0
-            )
-
-        case .regular:
-            return LayoutConstraints(
-                minimumGutterWidth: 40,
-                maximumGutterWidth: 100,
-                minimumTextWidth: 200,
-                minimumMinimapWidth: 60,
-                maximumMinimapWidth: 120
-            )
-
-        case .large:
-            return LayoutConstraints() // Use defaults
-        }
-    }
-
-    // MARK: - Cache Helpers
-
-    func generateCacheKey(
-        bounds: CGRect,
-        configuration: EditorConfiguration,
-        constraints: LayoutConstraints,
-        lineCount: Int
-    ) -> String {
-        let boundsKey = "\(Int(bounds.width))x\(Int(bounds.height))"
-        let configHash = String(configuration.hashValue)
-        let constraintsKey = "\(Int(constraints.minimumGutterWidth))_\(Int(constraints.maximumGutterWidth))"
-
-        return "\(boundsKey)_\(configHash)_\(constraintsKey)_\(lineCount)"
-    }
-
-    func cacheLayout(cacheKey: String, frames: ComponentFrames) {
-        if layoutCache.count >= maxCacheSize,
-           let oldestKey = layoutCache.keys.first {
-            // Remove oldest entry
-            layoutCache.removeValue(forKey: oldestKey)
-        }
-        layoutCache[cacheKey] = frames
     }
 }
 

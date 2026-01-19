@@ -10,9 +10,15 @@ public enum AdaptiveColorSystem {
     // MARK: - Syntax Highlighting Colors
 
     /// Adaptive syntax highlighting colors
-    public static func syntaxColor(for tokenType: TokenType) -> PlatformColor {
+    /// - Parameters:
+    ///   - tokenType: The type of syntax token to color
+    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
+    public static func syntaxColor(
+        for tokenType: TokenType,
+        capabilities: PlatformCapabilities = .shared
+    ) -> PlatformColor {
         // Use enhanced colors on macOS 14+ for better contrast
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             enhancedColor(for: tokenType)
         } else {
             traditionalColor(for: tokenType)
@@ -124,7 +130,12 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive background color for text editing areas
     public static var textBackgroundColor: PlatformColor {
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+        textBackgroundColor(capabilities: .shared)
+    }
+
+    /// Adaptive background color for text editing areas with injectable capabilities
+    public static func textBackgroundColor(capabilities: PlatformCapabilities) -> PlatformColor {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             // Use a slightly enhanced background for newer systems
             PlatformColors.textBackgroundColor.withAlphaComponent(0.98)
         } else {
@@ -134,7 +145,12 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive selection color
     public static var selectionColor: PlatformColor {
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+        selectionColor(capabilities: .shared)
+    }
+
+    /// Adaptive selection color with injectable capabilities
+    public static func selectionColor(capabilities: PlatformCapabilities) -> PlatformColor {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             // Enhanced selection color for better visibility
             PlatformColors.selectedTextBackgroundColor.withAlphaComponent(0.90)
         } else {
@@ -144,7 +160,12 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive line number color
     public static var lineNumberColor: PlatformColor {
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+        lineNumberColor(capabilities: .shared)
+    }
+
+    /// Adaptive line number color with injectable capabilities
+    public static func lineNumberColor(capabilities: PlatformCapabilities) -> PlatformColor {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             // Slightly enhanced line numbers
             PlatformColors.secondaryLabel.withAlphaComponent(0.75)
         } else {
@@ -154,7 +175,12 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive gutter background color
     public static var gutterBackgroundColor: PlatformColor {
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+        gutterBackgroundColor(capabilities: .shared)
+    }
+
+    /// Adaptive gutter background color with injectable capabilities
+    public static func gutterBackgroundColor(capabilities: PlatformCapabilities) -> PlatformColor {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             // Subtle gutter enhancement
             PlatformColors.controlBackground.withAlphaComponent(0.70)
         } else {
@@ -165,8 +191,14 @@ public enum AdaptiveColorSystem {
     // MARK: - Annotation Colors
 
     /// Get adaptive color for annotation types
-    public static func annotationColor(for severity: AnnotationSeverity) -> PlatformColor {
-        if PlatformCapabilities.shared.currentPlatform == .macOS && PlatformCapabilities.shared.systemVersionComponents.major >= 14 {
+    /// - Parameters:
+    ///   - severity: The severity level of the annotation
+    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
+    public static func annotationColor(
+        for severity: AnnotationSeverity,
+        capabilities: PlatformCapabilities = .shared
+    ) -> PlatformColor {
+        if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             switch severity {
             case .info:
                 PlatformColors.systemBlue.withAlphaComponent(0.75)

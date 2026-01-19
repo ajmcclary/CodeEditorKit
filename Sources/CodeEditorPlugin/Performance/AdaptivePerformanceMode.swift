@@ -20,12 +20,13 @@ public final class AdaptivePerformanceMode: ObservableObject {
     private let memoryMonitor: MemoryMonitor
 
     /// Performance metrics for mode decisions
-    private let performanceMetrics = ProductionPerformanceMetrics.shared
+    private let performanceMetrics: ProductionPerformanceMetrics
 
     // MARK: - Initialization
 
-    public init(memoryMonitor: MemoryMonitor) {
+    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil) {
         self.memoryMonitor = memoryMonitor
+        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
         self.configuration = PerformanceModeConfiguration(mode: .balanced)
     }
 

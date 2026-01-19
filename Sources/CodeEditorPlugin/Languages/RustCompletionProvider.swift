@@ -271,14 +271,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
     }
 
     override public func extractTargetType(from text: String) -> String? {
-        // Extract the object before the dot
-        let pattern = #"(\w+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     private func extractTargetModule(from text: String) -> String? {
@@ -380,169 +373,11 @@ public final class RustCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Member Completions Override
 
+    /// Delegate to RustMemberCompletions for type-specific member suggestions
+    private let rustMemberCompletions = RustMemberCompletions()
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
-        guard let targetType else { return [] }
-
-        // Provide member completions based on type or module
-        switch targetType.lowercased() {
-        case "string", "str":
-            return createStringMemberCompletions(filter: filter)
-
-        case "vec":
-            return createVecMemberCompletions(filter: filter)
-
-        case "option":
-            return createOptionMemberCompletions(filter: filter)
-
-        case "result":
-            return createResultMemberCompletions(filter: filter)
-
-        case "std":
-            return createStdModuleCompletions(filter: filter)
-
-        default:
-            return createCommonMemberCompletions(filter: filter)
-        }
-    }
-
-    // MARK: - Type-Specific Members
-
-    private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("len()", "method", "Get string length"),
-            ("is_empty()", "method", "Check if empty"),
-            ("chars()", "method", "Iterator over chars"),
-            ("bytes()", "method", "Iterator over bytes"),
-            ("contains()", "method", "Check substring"),
-            ("starts_with()", "method", "Check prefix"),
-            ("ends_with()", "method", "Check suffix"),
-            ("find()", "method", "Find substring"),
-            ("replace()", "method", "Replace substring"),
-            ("trim()", "method", "Trim whitespace"),
-            ("to_lowercase()", "method", "Convert to lowercase"),
-            ("to_uppercase()", "method", "Convert to uppercase"),
-            ("split()", "method", "Split string"),
-            ("lines()", "method", "Iterator over lines"),
-            ("parse()", "method", "Parse string")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createVecMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("len()", "method", "Get vector length"),
-            ("is_empty()", "method", "Check if empty"),
-            ("push()", "method", "Add element"),
-            ("pop()", "method", "Remove last element"),
-            ("insert()", "method", "Insert at index"),
-            ("remove()", "method", "Remove at index"),
-            ("clear()", "method", "Remove all elements"),
-            ("get()", "method", "Get element option"),
-            ("first()", "method", "Get first element"),
-            ("last()", "method", "Get last element"),
-            ("iter()", "method", "Get iterator"),
-            ("iter_mut()", "method", "Get mutable iterator"),
-            ("sort()", "method", "Sort elements"),
-            ("reverse()", "method", "Reverse elements"),
-            ("contains()", "method", "Check if contains")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createOptionMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("is_some()", "method", "Check if Some"),
-            ("is_none()", "method", "Check if None"),
-            ("unwrap()", "method", "Extract value or panic"),
-            ("unwrap_or()", "method", "Extract or default"),
-            ("unwrap_or_else()", "method", "Extract or compute"),
-            ("map()", "method", "Transform value"),
-            ("and_then()", "method", "Chain operations"),
-            ("or()", "method", "Provide alternative"),
-            ("or_else()", "method", "Compute alternative"),
-            ("filter()", "method", "Filter by predicate"),
-            ("take()", "method", "Take ownership"),
-            ("as_ref()", "method", "Convert to reference"),
-            ("as_mut()", "method", "Convert to mutable ref"),
-            ("ok_or()", "method", "Convert to Result"),
-            ("expect()", "method", "Extract with message")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createResultMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("is_ok()", "method", "Check if Ok"),
-            ("is_err()", "method", "Check if Err"),
-            ("ok()", "method", "Convert to Option"),
-            ("err()", "method", "Get error as Option"),
-            ("unwrap()", "method", "Extract value or panic"),
-            ("unwrap_or()", "method", "Extract or default"),
-            ("unwrap_or_else()", "method", "Extract or compute"),
-            ("expect()", "method", "Extract with message"),
-            ("map()", "method", "Transform Ok value"),
-            ("map_err()", "method", "Transform Err value"),
-            ("and_then()", "method", "Chain operations"),
-            ("or()", "method", "Provide alternative"),
-            ("or_else()", "method", "Compute alternative"),
-            ("as_ref()", "method", "Convert to reference"),
-            ("as_mut()", "method", "Convert to mutable ref")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createStdModuleCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("io", "module", "I/O operations"),
-            ("fs", "module", "File system"),
-            ("path", "module", "Path operations"),
-            ("env", "module", "Environment"),
-            ("process", "module", "Process control"),
-            ("thread", "module", "Threading"),
-            ("sync", "module", "Synchronization"),
-            ("time", "module", "Time operations"),
-            ("collections", "module", "Collections"),
-            ("vec", "module", "Vector module"),
-            ("string", "module", "String module"),
-            ("fmt", "module", "Formatting"),
-            ("error", "module", "Error handling"),
-            ("mem", "module", "Memory operations")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members = [
-            ("clone()", "method", "Clone value"),
-            ("to_string()", "method", "Convert to String"),
-            ("fmt()", "method", "Format value"),
-            ("eq()", "method", "Equality check"),
-            ("cmp()", "method", "Ordering comparison"),
-            ("hash()", "method", "Hash value")
-        ]
-
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-        members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : (type == "module" ? .module : .property),
-                    detail: description,
-                    priority: 85
-                )
-            }
+        rustMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 }
 

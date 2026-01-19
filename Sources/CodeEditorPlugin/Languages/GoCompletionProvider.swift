@@ -175,20 +175,8 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         return ContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
-        return components.last ?? ""
-    }
-
     override public func extractTargetType(from text: String) -> String? {
-        // Extract the object before the dot
-        let pattern = #"(\w+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Function Completions Override
@@ -253,26 +241,11 @@ public final class GoCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Member Completions Override
 
+    /// Delegate to GoMemberCompletions for type-specific member suggestions
+    private let goMemberCompletions = GoMemberCompletions()
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
-        guard let targetType else { return [] }
-
-        // Provide common member completions based on type
-        switch targetType.lowercased() {
-        case "fmt":
-            return createFmtPackageCompletions(filter: filter)
-
-        case "strings":
-            return createStringsPackageCompletions(filter: filter)
-
-        case "time":
-            return createTimePackageCompletions(filter: filter)
-
-        case "http":
-            return createHttpPackageCompletions(filter: filter)
-
-        default:
-            return createCommonMemberCompletions(filter: filter)
-        }
+        goMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
     // MARK: - Parameter Completions Override
@@ -293,85 +266,5 @@ public final class GoCompletionProvider: BaseCompletionProvider {
                     priority: 50
                 )
             }
-    }
-
-    // MARK: - Package-Specific Members
-
-    private func createFmtPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("Println()", "method", "Print with newline"),
-            ("Printf()", "method", "Formatted print"),
-            ("Sprintf()", "method", "Format string"),
-            ("Print()", "method", "Print values"),
-            ("Errorf()", "method", "Format error"),
-            ("Fprintf()", "method", "Format to writer"),
-            ("Scan()", "method", "Scan input"),
-            ("Scanf()", "method", "Scan formatted"),
-            ("Fscanf()", "method", "Scan from reader")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createStringsPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("Contains()", "method", "Check substring"),
-            ("HasPrefix()", "method", "Check prefix"),
-            ("HasSuffix()", "method", "Check suffix"),
-            ("Join()", "method", "Join strings"),
-            ("Split()", "method", "Split string"),
-            ("ToLower()", "method", "Convert to lowercase"),
-            ("ToUpper()", "method", "Convert to uppercase"),
-            ("Trim()", "method", "Trim whitespace"),
-            ("Replace()", "method", "Replace substring"),
-            ("Fields()", "method", "Split into fields")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createTimePackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("Now()", "method", "Current time"),
-            ("Sleep()", "method", "Sleep duration"),
-            ("Since()", "method", "Time since"),
-            ("Until()", "method", "Time until"),
-            ("Parse()", "method", "Parse time"),
-            ("Duration", "type", "Duration type"),
-            ("Time", "type", "Time type"),
-            ("Second", "constant", "Second duration"),
-            ("Minute", "constant", "Minute duration"),
-            ("Hour", "constant", "Hour duration")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createHttpPackageCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("Get()", "method", "HTTP GET request"),
-            ("Post()", "method", "HTTP POST request"),
-            ("ListenAndServe()", "method", "Start HTTP server"),
-            ("HandleFunc()", "method", "Register handler"),
-            ("NewRequest()", "method", "Create request"),
-            ("StatusOK", "constant", "200 status"),
-            ("StatusNotFound", "constant", "404 status"),
-            ("MethodGet", "constant", "GET method"),
-            ("MethodPost", "constant", "POST method")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("String()", "method", "String representation"),
-            ("Error()", "method", "Error string"),
-            ("Close()", "method", "Close resource"),
-            ("Read()", "method", "Read data"),
-            ("Write()", "method", "Write data")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
     }
 }

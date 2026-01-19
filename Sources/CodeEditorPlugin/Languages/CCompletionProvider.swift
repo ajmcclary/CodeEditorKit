@@ -265,20 +265,8 @@ public final class CCompletionProvider: BaseCompletionProvider {
         return CContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
-        return components.last ?? ""
-    }
-
     override public func extractTargetType(from text: String) -> String? {
-        // Extract the object before . or ->
-        let pattern = #"(\w+)\s*(?:\.|->)\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotOrArrowNotation(from: text)
     }
 
     private func extractTargetNamespace(from text: String) -> String? {
@@ -463,7 +451,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("compare()", "method", "Compare strings")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 
     private func createVectorMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -485,7 +473,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("shrink_to_fit()", "method", "Shrink capacity")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 
     private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -504,7 +492,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("emplace()", "method", "Construct and insert")
         ]
 
-        return createMemberItems(from: members, filter: filter)
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 
     private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
@@ -516,23 +504,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
             ("end()", "method", "End iterator")
         ]
 
-        return createMemberItems(from: members, filter: filter)
-    }
-
-    private func createMemberItems(from members: [(String, String, String)], filter: String) -> [CompletionItemModel] {
-        members
-            .filter { name, _, _ in
-                filter.isEmpty || name.localizedCaseInsensitiveContains(filter)
-            }
-            .map { name, type, description in
-                CompletionItemModel(
-                    label: name,
-                    insertText: name,
-                    kind: type == "method" ? .method : .property,
-                    detail: description,
-                    priority: 85
-                )
-            }
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 }
 

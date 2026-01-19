@@ -156,35 +156,8 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
     // MARK: - Context Analysis Override
 
     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
-        let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
-
-        // Extract current word being typed
-        let filter = extractCurrentWord(from: beforeCursor)
-
-        // Check for import statements - treat as keyword context
-        if lineText.hasPrefix("import ") || lineText.hasPrefix("from ") {
-            // We'll handle imports in createFunctionCompletions by including modules
-            return ContextAnalysisResult(type: .function, filter: filter)
-        }
-
-        // Check for member access
-        if beforeCursor.hasSuffix(".") {
-            let targetType = extractTargetType(from: beforeCursor)
-            return ContextAnalysisResult(type: .member, filter: "", targetType: targetType)
-        }
-
-        // Check for function definition
-        if lineText.contains("def ") && lineText.contains("(") && !lineText.contains("):") {
-            return ContextAnalysisResult(type: .parameter, filter: filter)
-        }
-
-        // Check for type hints
-        if lineText.contains(": ") && !lineText.contains("=") {
-            return ContextAnalysisResult(type: .type, filter: filter)
-        }
-
-        return ContextAnalysisResult(type: .general, filter: filter)
+        // Use SharedContextAnalyzer for standardized context analysis
+        SharedContextAnalyzer.analyzeContext(context, for: .python).toContextAnalysisResult()
     }
 
     // MARK: - Override Function Completions
@@ -201,20 +174,8 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         return createBuiltinFunctionCompletions(filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
-        let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
-        return components.last ?? ""
-    }
-
     override public func extractTargetType(from text: String) -> String? {
-        // Simple heuristic to extract the object before the dot
-        let pattern = #"(\w+)\s*\.\s*$"#
-        if let regex = try? NSRegularExpression(pattern: pattern),
-           let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(match.range(at: 1), in: text) {
-            return String(text[range])
-        }
-        return nil
+        CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Python-Specific Completion Methods
@@ -255,26 +216,11 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Member Completions Override
 
+    /// Delegate to PythonMemberCompletions for type-specific member suggestions
+    private let memberCompletions = PythonMemberCompletions()
+
     override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
-        guard let targetType else { return [] }
-
-        // Provide common member completions based on type
-        switch targetType.lowercased() {
-        case "str", "string":
-            return createStringMemberCompletions(filter: filter)
-
-        case "list":
-            return createListMemberCompletions(filter: filter)
-
-        case "dict", "dictionary":
-            return createDictMemberCompletions(filter: filter)
-
-        case "set":
-            return createSetMemberCompletions(filter: filter)
-
-        default:
-            return createCommonMemberCompletions(filter: filter)
-        }
+        memberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
     // MARK: - Parameter Completions Override
@@ -296,96 +242,5 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
                     priority: 50
                 )
             }
-    }
-
-    // MARK: - Type-Specific Members
-
-    private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("upper()", "method", "Return uppercase string"),
-            ("lower()", "method", "Return lowercase string"),
-            ("capitalize()", "method", "Return capitalized string"),
-            ("title()", "method", "Return title cased string"),
-            ("strip()", "method", "Remove leading and trailing whitespace"),
-            ("split()", "method", "Split string into list"),
-            ("join()", "method", "Join iterable into string"),
-            ("replace()", "method", "Replace substring"),
-            ("find()", "method", "Find substring position"),
-            ("startswith()", "method", "Check if starts with substring"),
-            ("endswith()", "method", "Check if ends with substring"),
-            ("format()", "method", "Format string"),
-            ("encode()", "method", "Encode string to bytes"),
-            ("isdigit()", "method", "Check if all characters are digits"),
-            ("isalpha()", "method", "Check if all characters are alphabetic")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("append()", "method", "Add element to end"),
-            ("extend()", "method", "Extend list by appending elements"),
-            ("insert()", "method", "Insert element at index"),
-            ("remove()", "method", "Remove first occurrence of value"),
-            ("pop()", "method", "Remove and return element"),
-            ("clear()", "method", "Remove all elements"),
-            ("index()", "method", "Return index of first occurrence"),
-            ("count()", "method", "Count occurrences of value"),
-            ("sort()", "method", "Sort list in place"),
-            ("reverse()", "method", "Reverse list in place"),
-            ("copy()", "method", "Return shallow copy")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createDictMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("get()", "method", "Get value for key with default"),
-            ("keys()", "method", "Return dict keys"),
-            ("values()", "method", "Return dict values"),
-            ("items()", "method", "Return dict items"),
-            ("update()", "method", "Update dict with key-value pairs"),
-            ("pop()", "method", "Remove and return value for key"),
-            ("popitem()", "method", "Remove and return last item"),
-            ("clear()", "method", "Remove all items"),
-            ("copy()", "method", "Return shallow copy"),
-            ("setdefault()", "method", "Set default value for key")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createSetMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("add()", "method", "Add element to set"),
-            ("remove()", "method", "Remove element (raises error if not found)"),
-            ("discard()", "method", "Remove element (no error if not found)"),
-            ("pop()", "method", "Remove and return arbitrary element"),
-            ("clear()", "method", "Remove all elements"),
-            ("union()", "method", "Return union of sets"),
-            ("intersection()", "method", "Return intersection of sets"),
-            ("difference()", "method", "Return difference of sets"),
-            ("symmetric_difference()", "method", "Return symmetric difference"),
-            ("issubset()", "method", "Check if subset"),
-            ("issuperset()", "method", "Check if superset"),
-            ("copy()", "method", "Return shallow copy")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter)
-    }
-
-    private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
-        let members: [(name: String, type: String, description: String)] = [
-            ("__str__()", "method", "String representation"),
-            ("__repr__()", "method", "Developer representation"),
-            ("__len__()", "method", "Length of object"),
-            ("__class__", "property", "Class of instance"),
-            ("__dict__", "property", "Instance dictionary"),
-            ("__doc__", "property", "Documentation string")
-        ]
-
-        return filteredMemberCompletions(from: members, filter: filter, sortPrefix: "c_", priority: 40)
     }
 }

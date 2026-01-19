@@ -339,3 +339,35 @@ public enum SharedContextAnalyzer {
         return nil
     }
 }
+
+// MARK: - Result Conversion
+
+extension UniversalContextAnalysisResult {
+    /// Converts this result to a ContextAnalysisResult for use with BaseCompletionProvider
+    public func toContextAnalysisResult() -> ContextAnalysisResult {
+        let contextType: CompletionContextType
+        switch type {
+        case .keyword:
+            contextType = .keyword
+
+        case .type:
+            contextType = .type
+
+        case .function:
+            contextType = .function
+
+        case .literal:
+            contextType = .general
+
+        case .member:
+            contextType = .member
+
+        case .parameter:
+            contextType = .parameter
+
+        case .general:
+            contextType = .general
+        }
+        return ContextAnalysisResult(type: contextType, filter: filter, targetType: targetType)
+    }
+}

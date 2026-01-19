@@ -42,11 +42,24 @@ public final class PerformanceInsights: ObservableObject {
     /// Alert manager for user notifications
     private let alertManager = PerformanceAlertManager()
 
+    /// Platform capabilities for adaptive behavior
+    private let capabilities: PlatformCapabilities
+
     // MARK: - Initialization
 
-    public init(memoryMonitor: MemoryMonitor, performanceMonitor: PerformanceMonitor? = nil) {
+    /// Creates a PerformanceInsights instance
+    /// - Parameters:
+    ///   - memoryMonitor: Memory monitor for tracking memory usage
+    ///   - performanceMonitor: Performance monitor (defaults to new instance)
+    ///   - capabilities: Platform capabilities (defaults to shared instance)
+    public init(
+        memoryMonitor: MemoryMonitor,
+        performanceMonitor: PerformanceMonitor? = nil,
+        capabilities: PlatformCapabilities? = nil
+    ) {
         self.memoryMonitor = memoryMonitor
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
+        self.capabilities = capabilities ?? PlatformCapabilities.shared
         startMonitoring()
     }
 
@@ -248,10 +261,11 @@ public final class PerformanceInsights: ObservableObject {
     }
 
     private func addPlatformSpecificRecommendations() {
-        _ = PlatformCapabilities.shared
+        // Use injected capabilities for platform-specific recommendations
+        let perfCapabilities = capabilities.performanceCapabilities
 
         // Check if file size exceeds platform recommendations
-        let recommendedMaxFileSize = 500_000  // 500K characters as default
+        let recommendedMaxFileSize = perfCapabilities.maxRecommendedFileSize
         if let currentFileSize = getCurrentFileSize(),
            currentFileSize > recommendedMaxFileSize {
             recommendations.append(.splitLargeFile(currentSize: currentFileSize, recommendedSize: recommendedMaxFileSize))

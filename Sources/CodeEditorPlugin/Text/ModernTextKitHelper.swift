@@ -10,16 +10,24 @@ import os
 enum ModernTextKitHelper {
     /// Check if TextKit2 should be used
     static var shouldUseTextKit2: Bool {
-        PlatformCapabilities.shared.preferTextKit2
+        shouldUseTextKit2(capabilities: .shared)
+    }
+
+    /// Check if TextKit2 should be used with injectable capabilities
+    static func shouldUseTextKit2(capabilities: PlatformCapabilities) -> Bool {
+        capabilities.preferTextKit2
     }
 
     /// Check if we can opt into TextKit2 for a specific text view
-    static func canOptIntoTextKit2(for textView: NSTextView) -> Bool {
+    static func canOptIntoTextKit2(
+        for textView: NSTextView,
+        capabilities: PlatformCapabilities = .shared
+    ) -> Bool {
         // Basic requirement checks
         guard textView.textContainer != nil else { return false }
 
         // Only opt into TextKit2 on macOS 13+ where it's more stable
-        guard PlatformCapabilities.shared.preferTextKit2 else {
+        guard capabilities.preferTextKit2 else {
             return false
         }
 
@@ -28,20 +36,23 @@ enum ModernTextKitHelper {
     }
 
     /// Force TextKit2 initialization if possible and beneficial
-    static func ensureTextKit2(for textView: NSTextView) -> Bool {
+    static func ensureTextKit2(
+        for textView: NSTextView,
+        capabilities: PlatformCapabilities = .shared
+    ) -> Bool {
         // Check if TextKit2 is already active
         if textView.textLayoutManager != nil {
             return true
         }
 
         // Only attempt to force TextKit2 on compatible systems
-        guard canOptIntoTextKit2(for: textView) else {
+        guard canOptIntoTextKit2(for: textView, capabilities: capabilities) else {
             return false
         }
 
         // TextKit2 should be default on macOS 13+
         // If it's not active, there might be a specific reason
-        if PlatformCapabilities.shared.preferTextKit2 {
+        if capabilities.preferTextKit2 {
             // Log the situation for debugging
             os.Logger(subsystem: "com.codeeditor.plugin", category: "ModernTextKitHelper")
                 .debug("TextKit2 not active, using TextKit1 fallback")
@@ -53,7 +64,10 @@ enum ModernTextKitHelper {
     // MARK: - NSTextView Configuration
 
     /// Configure NSTextView with optimal settings for the current macOS version
-    static func configureTextView(_ textView: NSTextView) {
+    /// - Parameters:
+    ///   - textView: The text view to configure
+    ///   - capabilities: Platform capabilities (defaults to shared instance)
+    static func configureTextView(_ textView: NSTextView, capabilities: PlatformCapabilities = .shared) {
         // Basic configuration that works across all versions
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
@@ -64,7 +78,6 @@ enum ModernTextKitHelper {
         textView.isAutomaticLinkDetectionEnabled = false
 
         // macOS version-specific optimizations
-        let capabilities = PlatformCapabilities.shared
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             configureForModernMacOS(textView)
         } else if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 13 {
@@ -136,9 +149,9 @@ enum ModernTextKitHelper {
     // MARK: - Control Size Support
 
     /// Get the recommended control size based on platform capabilities
-    static func recommendedControlSize() -> NSControl.ControlSize {
+    /// - Parameter capabilities: Platform capabilities (defaults to shared instance)
+    static func recommendedControlSize(capabilities: PlatformCapabilities = .shared) -> NSControl.ControlSize {
         // Use platform capabilities to determine appropriate size
-        let capabilities = PlatformCapabilities.shared
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             return .regular
         } else {

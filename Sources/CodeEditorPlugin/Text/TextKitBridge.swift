@@ -15,6 +15,7 @@ final class TextKitBridge {
 
     private weak var textView: PlatformTextView?
     private let isUsingTextKit2: Bool
+    private let capabilities: PlatformCapabilities
 
     /// Current TextKit version being used
     enum Version {
@@ -35,12 +36,16 @@ final class TextKitBridge {
 
     // MARK: - Initialization
 
-    init(textView: PlatformTextView) {
+    /// Creates a TextKitBridge instance
+    /// - Parameters:
+    ///   - textView: The text view to bridge
+    ///   - capabilities: Platform capabilities (defaults to shared instance)
+    init(textView: PlatformTextView, capabilities: PlatformCapabilities? = nil) {
         self.textView = textView
+        self.capabilities = capabilities ?? PlatformCapabilities.shared
 
         // Check platform capabilities and force TextKit2 if supported
-        let capabilities = PlatformCapabilities.shared
-        if capabilities.preferTextKit2 {
+        if self.capabilities.preferTextKit2 {
             // Check if TextKit2 is already enabled
             self.isUsingTextKit2 = textView.textLayoutManager != nil
         } else {
@@ -542,8 +547,6 @@ final class TextKitBridge {
 
     /// Optimize for a specific file size
     func optimizeForFileSize(_ characterCount: Int) {
-        let capabilities = PlatformCapabilities.shared
-
         if characterCount > 50_000 { // Use a reasonable threshold
             // For large files, enable TextKit2 if available
             if capabilities.supportsTextKit2 && !isUsingTextKit2 {

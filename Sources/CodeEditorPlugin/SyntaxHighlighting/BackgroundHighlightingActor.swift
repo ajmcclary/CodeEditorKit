@@ -8,7 +8,7 @@ actor HighlightingActor {
     func highlight(
         text: String,
         language: Language,
-        priority: HighlightingPriority,
+        priority _: HighlightingPriority,
         maxConcurrentOperations: Int
     ) async throws -> [HighlightedToken] {
         try Task.checkCancellation()

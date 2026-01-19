@@ -425,3 +425,139 @@ public struct RustMemberCompletions: LanguageMemberCompletions {
         return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
     }
 }
+
+// MARK: - Java Member Completions
+
+public struct JavaMemberCompletions: LanguageMemberCompletions {
+    public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+        guard let targetType else { return [] }
+
+        switch targetType.lowercased() {
+        case "string":
+            return createStringMemberCompletions(filter: filter)
+
+        case "list", "arraylist", "linkedlist":
+            return createListMemberCompletions(filter: filter)
+
+        case "map", "hashmap", "treemap":
+            return createMapMemberCompletions(filter: filter)
+
+        case "system":
+            return createSystemMemberCompletions(filter: filter)
+
+        case "math":
+            return createMathMemberCompletions(filter: filter)
+
+        default:
+            return createCommonMemberCompletions(filter: filter)
+        }
+    }
+
+    private func createStringMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("length()", "method", "Get string length"),
+            ("isEmpty()", "method", "Check if empty"),
+            ("charAt()", "method", "Character at index"),
+            ("substring()", "method", "Extract substring"),
+            ("indexOf()", "method", "Find index"),
+            ("contains()", "method", "Check if contains"),
+            ("startsWith()", "method", "Check prefix"),
+            ("endsWith()", "method", "Check suffix"),
+            ("toLowerCase()", "method", "Convert to lowercase"),
+            ("toUpperCase()", "method", "Convert to uppercase"),
+            ("trim()", "method", "Remove whitespace"),
+            ("replace()", "method", "Replace substring"),
+            ("split()", "method", "Split string"),
+            ("equals()", "method", "Check equality"),
+            ("compareTo()", "method", "Compare strings")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createListMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("size()", "method", "Get list size"),
+            ("isEmpty()", "method", "Check if empty"),
+            ("add()", "method", "Add element"),
+            ("remove()", "method", "Remove element"),
+            ("get()", "method", "Get element"),
+            ("set()", "method", "Set element"),
+            ("clear()", "method", "Clear list"),
+            ("contains()", "method", "Check if contains"),
+            ("indexOf()", "method", "Find index"),
+            ("iterator()", "method", "Get iterator"),
+            ("toArray()", "method", "Convert to array"),
+            ("sort()", "method", "Sort list"),
+            ("stream()", "method", "Get stream")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createMapMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("size()", "method", "Get map size"),
+            ("isEmpty()", "method", "Check if empty"),
+            ("put()", "method", "Put key-value"),
+            ("get()", "method", "Get value"),
+            ("remove()", "method", "Remove key"),
+            ("clear()", "method", "Clear map"),
+            ("containsKey()", "method", "Check key"),
+            ("containsValue()", "method", "Check value"),
+            ("keySet()", "method", "Get keys"),
+            ("values()", "method", "Get values"),
+            ("entrySet()", "method", "Get entries"),
+            ("forEach()", "method", "Iterate entries")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createSystemMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("out", "property", "Standard output"),
+            ("err", "property", "Error output"),
+            ("in", "property", "Standard input"),
+            ("exit()", "method", "Exit program"),
+            ("currentTimeMillis()", "method", "Current time"),
+            ("nanoTime()", "method", "Nano time"),
+            ("getProperty()", "method", "Get property"),
+            ("setProperty()", "method", "Set property"),
+            ("getenv()", "method", "Get environment"),
+            ("gc()", "method", "Garbage collection")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createMathMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("PI", "constant", "Pi constant"),
+            ("E", "constant", "E constant"),
+            ("abs()", "method", "Absolute value"),
+            ("ceil()", "method", "Ceiling"),
+            ("floor()", "method", "Floor"),
+            ("round()", "method", "Round"),
+            ("max()", "method", "Maximum"),
+            ("min()", "method", "Minimum"),
+            ("pow()", "method", "Power"),
+            ("sqrt()", "method", "Square root"),
+            ("random()", "method", "Random number"),
+            ("sin()", "method", "Sine"),
+            ("cos()", "method", "Cosine"),
+            ("tan()", "method", "Tangent"),
+            ("log()", "method", "Logarithm")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+
+    private func createCommonMemberCompletions(filter: String) -> [CompletionItemModel] {
+        let members = [
+            ("toString()", "method", "Convert to string"),
+            ("equals()", "method", "Check equality"),
+            ("hashCode()", "method", "Hash code"),
+            ("getClass()", "method", "Get class"),
+            ("notify()", "method", "Notify thread"),
+            ("notifyAll()", "method", "Notify all threads"),
+            ("wait()", "method", "Wait for notification")
+        ]
+        return SharedCompletionBuilder.createMemberItems(from: members, filter: filter)
+    }
+}

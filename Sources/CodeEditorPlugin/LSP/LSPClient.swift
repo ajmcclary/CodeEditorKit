@@ -13,14 +13,17 @@ import Foundation
 /// - Diagnostics
 /// - Symbol navigation
 ///
+/// This class serves as a facade that coordinates LSP communication through
+/// dedicated components: LSPConnectionManager, LSPLanguageFeatures, and LSPProcessManager.
+///
 /// - Important: LSP client is available on all platforms, but functionality varies:
 ///   - macOS: Full support for both local and remote LSP servers
 ///   - iOS/Mac Catalyst: Remote LSP servers only (via WebSocket transport)
 ///
 /// ## Platform Support
-/// - ✅ macOS: Full support (local + remote servers)
-/// - ✅ iOS: Remote servers only
-/// - ✅ Mac Catalyst: Remote servers only
+/// - macOS: Full support (local + remote servers)
+/// - iOS: Remote servers only
+/// - Mac Catalyst: Remote servers only
 ///
 /// ## Example Usage
 /// ```swift
@@ -28,7 +31,7 @@ import Foundation
 /// #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 /// let localConfig = LSPServerConfiguration.local(...)
 /// #endif
-/// 
+///
 /// // Remote server (all platforms)
 /// let remoteConfig = LSPServerConfiguration.remote(...)
 /// let client = LSPClient()
@@ -61,39 +64,6 @@ public final class LSPClient: ObservableObject {
         }
     }
 
-    // MARK: - State
-
-    /// Current connection state
-    @Published public private(set) var connectionState: ConnectionState = .disconnected
-
-    /// Server capabilities received during initialization
-    @Published public private(set) var serverCapabilities: ServerCapabilities?
-
-    /// Active diagnostics by document URI  
-    @Published public private(set) var diagnostics: [String: [LSPDiagnostic]] = [:]
-
-    /// LSP message handler
-    private let messageHandler = LSPMessageHandler()
-
-    /// Transport for communication (optional for backward compatibility)
-    internal var transport: LSPTransport?
-
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Process for running the language server (legacy)
-    private var serverProcess: Process?
-
-    /// Communication pipes (legacy)
-    private var stdinPipe: Pipe?
-    private var stdoutPipe: Pipe?
-    #endif
-
-    /// Request/response tracking
-    private var pendingRequests: [Int: LSPRequestCompletion] = [:]
-    private var nextRequestId: Int = 1
-
-    /// Logger for debugging
-    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
-
     // MARK: - Types
 
     public enum ConnectionState: String, CaseIterable, Sendable {
@@ -107,35 +77,48 @@ public final class LSPClient: ObservableObject {
 
     public typealias LSPRequestCompletion = @Sendable (Result<LSPResponse, LSPError>) -> Void
 
+    // MARK: - State
+
+    /// Current connection state
+    @Published public private(set) var connectionState: ConnectionState = .disconnected
+
+    /// Server capabilities received during initialization
+    @Published public private(set) var serverCapabilities: ServerCapabilities?
+
+    /// Active diagnostics by document URI
+    @Published public private(set) var diagnostics: [String: [LSPDiagnostic]] = [:]
+
+    // MARK: - Private Properties
+
+    /// LSP message handler
+    private let messageHandler = LSPMessageHandler()
+
+    /// Transport for communication (optional for backward compatibility)
+    internal var transport: LSPTransport?
+
+    /// Process manager for local server processes (macOS only)
+    private lazy var processManager = LSPProcessManager(messageHandler: messageHandler)
+
+    /// Request/response tracking
+    private var pendingRequests: [Int: LSPRequestCompletion] = [:]
+    private var nextRequestId: Int = 1
+
+    /// Logger for debugging
+    private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "LSPClient")
+
     // MARK: - Initialization
 
     /// Creates a new LSP client.
-    /// 
+    ///
     /// - Important: The message handler is not automatically set up in the initializer.
     ///   Use `createAndSetup()` for a fully initialized client, or call `setupMessageHandler()`
     ///   manually after initialization.
-    ///
-    /// ## Example
-    /// ```swift
-    /// // Option 1: Use the factory method (recommended)
-    /// let client = await LSPClient.createAndSetup()
-    /// 
-    /// // Option 2: Manual setup
-    /// let client = LSPClient()
-    /// await client.setupMessageHandler()
-    /// ```
     public init() {
         // No async work in synchronous init
     }
 
     /// Creates and sets up a new LSP client with message handlers initialized.
     /// This is the preferred way to create an LSP client.
-    ///
-    /// ## Example
-    /// ```swift
-    /// let client = await LSPClient.createAndSetup()
-    /// try await client.connect(configuration: serverConfig)
-    /// ```
     ///
     /// - Returns: A fully initialized LSP client ready for connection
     public static func createAndSetup() async -> LSPClient {
@@ -154,9 +137,7 @@ public final class LSPClient: ObservableObject {
     /// Connect to an LSP server with the given configuration
     /// - Parameter configuration: Server configuration
     public func connect(configuration: ServerConfiguration) async throws {
-        guard connectionState == .disconnected else {
-            throw LSPError.alreadyConnected
-        }
+        try LSPConnectionManager.validateCanConnect(currentState: connectionState)
 
         connectionState = .connecting
         logger.info("Connecting to LSP server: \(configuration.serverPath)")
@@ -164,11 +145,26 @@ public final class LSPClient: ObservableObject {
         do {
             // Use transport if available, otherwise fall back to process
             if transport != nil {
-                try await startTransportConnection()
+                try await LSPConnectionManager.startTransportConnection(
+                    transport: transport,
+                    messageHandler: messageHandler
+                )
             } else {
-                try await startServerProcess(configuration: configuration)
+                try processManager.startServerProcess(configuration: configuration)
             }
-            try await initializeServer(configuration: configuration)
+
+            connectionState = .initializing
+            serverCapabilities = try await LSPConnectionManager.initializeServer(
+                configuration: configuration,
+                sendRequest: { [weak self] method, params in
+                    guard let self else { throw LSPError.notConnected }
+                    return try await self.sendRequest(method: method, params: params)
+                },
+                sendNotification: { [weak self] method, params in
+                    guard let self else { throw LSPError.notConnected }
+                    try await self.sendNotification(method: method, params: params)
+                }
+            )
 
             connectionState = .initialized
             logger.info("Successfully connected and initialized LSP server")
@@ -188,12 +184,26 @@ public final class LSPClient: ObservableObject {
         if connectionState == .initialized {
             connectionState = .shuttingDown
 
-            Task {
-                try? await sendShutdownRequest()
-                if let transport {
+            Task { [weak self] in
+                guard let self else { return }
+
+                do {
+                    try await LSPConnectionManager.sendShutdownRequest(
+                        sendRequest: { method, params in
+                            try await self.sendRequest(method: method, params: params)
+                        },
+                        sendNotification: { method, params in
+                            try await self.sendNotification(method: method, params: params)
+                        }
+                    )
+                } catch {
+                    self.logger.warning("Shutdown request failed: \(error.localizedDescription)")
+                }
+
+                if let transport = self.transport {
                     await transport.disconnect()
                 } else {
-                    terminateServerProcess()
+                    self.processManager.terminateServerProcess()
                 }
             }
         } else {
@@ -202,7 +212,7 @@ public final class LSPClient: ObservableObject {
                     await transport.disconnect()
                 }
             } else {
-                terminateServerProcess()
+                processManager.terminateServerProcess()
             }
         }
 
@@ -217,20 +227,13 @@ public final class LSPClient: ObservableObject {
     // MARK: - Document Management
 
     /// Open a document in the language server
-    /// - Parameters:
-    ///   - uri: Document URI
-    ///   - languageId: Language identifier
-    ///   - version: Document version
-    ///   - text: Document content
     public func openDocument(
         uri: String,
         languageId: String,
         version: Int,
         text: String
     ) async throws {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
         let params = DidOpenTextDocumentParams(
             textDocument: TextDocumentItem(
@@ -246,18 +249,12 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Update document content
-    /// - Parameters:
-    ///   - uri: Document URI
-    ///   - version: New document version
-    ///   - changes: Content changes
     public func updateDocument(
         uri: String,
         version: Int,
         changes: [TextDocumentContentChangeEvent]
     ) async throws {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
         let params = DidChangeTextDocumentParams(
             textDocument: VersionedTextDocumentIdentifier(uri: uri, version: version),
@@ -269,11 +266,8 @@ public final class LSPClient: ObservableObject {
     }
 
     /// Close a document
-    /// - Parameter uri: Document URI
     public func closeDocument(uri: String) async throws {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
         let params = DidCloseTextDocumentParams(
             textDocument: TextDocumentIdentifier(uri: uri)
@@ -290,99 +284,54 @@ public final class LSPClient: ObservableObject {
     // MARK: - Language Features
 
     /// Request code completion
-    /// - Parameters:
-    ///   - uri: Document URI
-    ///   - position: Cursor position
-    /// - Returns: Completion list
     public func requestCompletion(
         uri: String,
         position: Position
     ) async throws -> CompletionList {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = CompletionParams(
-            textDocument: TextDocumentIdentifier(uri: uri),
-            position: position
-        )
-
-        let response = try await sendRequest(method: "textDocument/completion", params: params)
-        return try response.decode(as: CompletionList.self)
+        let params = LSPLanguageFeatures.createCompletionParams(uri: uri, position: position)
+        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.completion, params: params)
+        return try LSPLanguageFeatures.parseCompletionResponse(response)
     }
 
     /// Request hover information
-    /// - Parameters:
-    ///   - uri: Document URI
-    ///   - position: Cursor position
-    /// - Returns: Hover information
     public func requestHover(
         uri: String,
         position: Position
     ) async throws -> Hover? {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = HoverParams(
-            textDocument: TextDocumentIdentifier(uri: uri),
-            position: position
-        )
-
-        let response = try await sendRequest(method: "textDocument/hover", params: params)
-        return try? response.decode(as: Hover.self)
+        let params = LSPLanguageFeatures.createHoverParams(uri: uri, position: position)
+        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.hover, params: params)
+        return LSPLanguageFeatures.parseHoverResponse(response)
     }
 
     /// Request symbol definition
-    /// - Parameters:
-    ///   - uri: Document URI
-    ///   - position: Cursor position
-    /// - Returns: Definition locations
     public func requestDefinition(
         uri: String,
         position: Position
     ) async throws -> [Location] {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = DefinitionParams(
-            textDocument: TextDocumentIdentifier(uri: uri),
-            position: position
-        )
-
-        let response = try await sendRequest(method: "textDocument/definition", params: params)
-
-        // Handle both single Location and array of Locations
-        if let location = try? response.decode(as: Location.self) {
-            return [location]
-        } else {
-            return try response.decode(as: [Location].self)
-        }
+        let params = LSPLanguageFeatures.createDefinitionParams(uri: uri, position: position)
+        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.definition, params: params)
+        return try LSPLanguageFeatures.parseDefinitionResponse(response)
     }
 
     /// Request document symbols
-    /// - Parameter uri: Document URI
-    /// - Returns: Document symbols
     public func requestDocumentSymbols(uri: String) async throws -> [LSPDocumentSymbol] {
-        guard connectionState == .initialized else {
-            throw LSPError.notConnected
-        }
+        try LSPConnectionManager.validateConnected(currentState: connectionState)
 
-        let params = DocumentSymbolParams(
-            textDocument: TextDocumentIdentifier(uri: uri)
-        )
-
-        let response = try await sendRequest(method: "textDocument/documentSymbol", params: params)
-        return try response.decode(as: [LSPDocumentSymbol].self)
+        let params = LSPLanguageFeatures.createDocumentSymbolParams(uri: uri)
+        let response = try await sendRequest(method: LSPLanguageFeatures.Methods.documentSymbol, params: params)
+        return try LSPLanguageFeatures.parseDocumentSymbolResponse(response)
     }
 
-    // MARK: - Private Methods
+    // MARK: - Message Handler Setup
 
     /// Sets up the message handler callbacks for processing LSP messages.
     /// This method is automatically called by `createAndSetup()`.
-    ///
-    /// - Note: This method is idempotent and can be called multiple times safely.
     public func setupMessageHandler() async {
         await messageHandler.setNotificationCallback { [weak self] method, params in
             Task { @MainActor [weak self] in
@@ -397,116 +346,7 @@ public final class LSPClient: ObservableObject {
         }
     }
 
-    /// Start connection using transport
-    private func startTransportConnection() async throws {
-        guard let transport else {
-            throw LSPError.transportNotConfigured
-        }
-
-        // Set up data handler before connecting
-        await transport.setDataHandler { [weak self] data in
-            await self?.messageHandler.processIncomingData(data)
-        }
-
-        // Connect transport
-        try await transport.connect()
-
-        logger.info("Connected via transport")
-    }
-
-    private func startServerProcess(configuration: ServerConfiguration) async throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: configuration.serverPath)
-        process.arguments = configuration.serverArguments
-        process.currentDirectoryURL = configuration.workspaceRoot
-
-        // Set up pipes for communication
-        let stdinPipe = Pipe()
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-
-        process.standardInput = stdinPipe
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        // Start reading from stdout
-        Task {
-            await startReadingFromServer(pipe: stdoutPipe)
-        }
-
-        // Start the process
-        try process.run()
-
-        self.serverProcess = process
-        self.stdinPipe = stdinPipe
-        self.stdoutPipe = stdoutPipe
-
-        logger.info("Started LSP server process")
-        #else
-        throw LSPError.serverError(code: -1, message: "LSP server process not supported on this platform", data: nil)
-        #endif
-    }
-
-    private func initializeServer(configuration: ServerConfiguration) async throws {
-        connectionState = .initializing
-
-        let initializeParams = InitializeParams(
-            processId: ProcessInfo.processInfo.processIdentifier,
-            rootUri: configuration.workspaceRoot.absoluteString,
-            capabilities: configuration.capabilities,
-            workspaceFolders: [
-                WorkspaceFolder(
-                    uri: configuration.workspaceRoot.absoluteString,
-                    name: configuration.workspaceRoot.lastPathComponent
-                )
-            ]
-        )
-
-        let response = try await sendRequest(method: "initialize", params: initializeParams)
-        serverCapabilities = try response.decode(as: InitializeResult.self).capabilities
-
-        // Send initialized notification
-        try await sendNotification(method: "initialized", params: EmptyParams())
-
-        logger.info("LSP server initialized successfully")
-    }
-
-    private func sendShutdownRequest() async throws {
-        _ = try await sendRequest(method: "shutdown", params: EmptyParams())
-        try await sendNotification(method: "exit", params: EmptyParams())
-    }
-
-    private func terminateServerProcess() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        serverProcess?.terminate()
-        serverProcess?.waitUntilExit()
-        serverProcess = nil
-        stdinPipe = nil
-        stdoutPipe = nil
-        #endif
-    }
-
-    private func startReadingFromServer(pipe: Pipe) async {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        let fileHandle = pipe.fileHandleForReading
-
-        while serverProcess?.isRunning == true {
-            do {
-                let data = fileHandle.availableData
-                if !data.isEmpty {
-                    await messageHandler.processIncomingData(data)
-                }
-
-                // Small delay to prevent busy waiting
-                try await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            } catch {
-                logger.error("Error reading from server: \(error.localizedDescription)")
-                break
-            }
-        }
-        #endif
-    }
+    // MARK: - Private Methods
 
     private func sendRequest(method: String, params: any Codable & Sendable) async throws -> LSPResponse {
         let requestId = nextRequestId
@@ -552,24 +392,10 @@ public final class LSPClient: ObservableObject {
             return
         }
 
-        // Fall back to legacy pipe-based implementation
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        guard let stdinPipe else {
-            throw LSPError.notConnected
-        }
-
+        // Fall back to process-based implementation
         let encoder = JSONEncoder()
         let jsonData = try encoder.encode(message)
-
-        let header = "Content-Length: \(jsonData.count)\r\n\r\n"
-        let headerData = header.data(using: .utf8) ?? Data()
-
-        let fullMessage = headerData + jsonData
-
-        try stdinPipe.fileHandleForWriting.write(contentsOf: fullMessage)
-        #else
-        throw LSPError.serverError(code: -1, message: "LSP not supported on this platform", data: nil)
-        #endif
+        try processManager.sendMessage(jsonData)
     }
 
     private func handleNotification(method: String, params: Data) async {
@@ -623,28 +449,34 @@ public final class LSPClient: ObservableObject {
     }
 }
 
-// MARK: - Empty Parameters
-
-private struct EmptyParams: Codable {}
-
 // MARK: - Conditional Extensions for Process-based LSP
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-// Process-based LSP support is only available on macOS
 extension LSPClient {
     /// Legacy process-based connection for backward compatibility
     /// Use LSPServerConfiguration instead for new code
     func connectLegacy(configuration: ServerConfiguration) async throws {
-        guard connectionState == .disconnected else {
-            throw LSPError.alreadyConnected
-        }
+        try LSPConnectionManager.validateCanConnect(currentState: connectionState)
 
         connectionState = .connecting
         logger.info("Connecting to LSP server (legacy): \(configuration.serverPath)")
 
         do {
-            try await startServerProcess(configuration: configuration)
-            try await initializeServer(configuration: configuration)
+            try processManager.startServerProcess(configuration: configuration)
+
+            connectionState = .initializing
+            serverCapabilities = try await LSPConnectionManager.initializeServer(
+                configuration: configuration,
+                sendRequest: { [weak self] method, params in
+                    guard let self else { throw LSPError.notConnected }
+                    return try await self.sendRequest(method: method, params: params)
+                },
+                sendNotification: { [weak self] method, params in
+                    guard let self else { throw LSPError.notConnected }
+                    try await self.sendNotification(method: method, params: params)
+                }
+            )
+
             connectionState = .initialized
             logger.info("Successfully connected and initialized LSP server (legacy)")
         } catch {

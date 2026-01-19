@@ -34,9 +34,13 @@ internal class CodeFoldingEngine: ObservableObject {
 
     internal var configuration = CodeFoldingConfiguration()
 
+    // Performance metrics for production monitoring
+    private let performanceMetrics: ProductionPerformanceMetrics
+
     // MARK: - Initialization
 
-    internal init() {
+    internal init(performanceMetrics: ProductionPerformanceMetrics? = nil) {
+        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
         // Providers are now initialized in FoldingProviderRegistry
     }
 
@@ -262,7 +266,7 @@ internal class CodeFoldingEngine: ObservableObject {
 
         // Track performance metrics
         let endTime = CFAbsoluteTimeGetCurrent()
-        await ProductionPerformanceMetrics.shared.trackCodeFolding(
+        await performanceMetrics.trackCodeFolding(
             duration: endTime - startTime,
             regionCount: hierarchicalRegions.count,
             fileSize: text.count

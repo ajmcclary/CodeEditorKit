@@ -30,6 +30,9 @@ public final class AsyncSyntaxHighlighter {
     // Memory monitor for managing cache memory
     private let memoryMonitor: MemoryMonitor
 
+    // Performance metrics for production monitoring
+    private let performanceMetrics: ProductionPerformanceMetrics
+
     // Error recovery coordinator
     private let errorRecovery = ErrorRecoveryCoordinator()
 
@@ -39,13 +42,15 @@ public final class AsyncSyntaxHighlighter {
     ///
     /// - Parameters:
     ///   - memoryMonitor: Memory monitor for tracking resource usage
+    ///   - performanceMetrics: Performance metrics instance (defaults to shared)
     ///   - debounceInterval: Time to wait before processing highlighting requests
     ///   - enablePeriodicOptimization: Whether to enable periodic cache optimization
-    public init(memoryMonitor: MemoryMonitor, debounceInterval: Duration = .milliseconds(300), enablePeriodicOptimization: Bool = true) {
+    public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil, debounceInterval: Duration = .milliseconds(300), enablePeriodicOptimization: Bool = true) {
         self.coordinator = SyntaxHighlightingCoordinator()
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
         self.memoryMonitor = memoryMonitor
+        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
 
         // Set up periodic cache optimization (can be disabled for tests)
         if enablePeriodicOptimization {
@@ -215,7 +220,7 @@ public final class AsyncSyntaxHighlighter {
             applyTokens(cachedTokens, to: textView, visibleRange: visibleRange)
 
             // Track cache hit
-            await ProductionPerformanceMetrics.shared.trackHighlighting(
+            await performanceMetrics.trackHighlighting(
                 duration: 0.001, // Near-instant for cache hits
                 fileSize: textLength,
                 language: language,
@@ -266,7 +271,7 @@ public final class AsyncSyntaxHighlighter {
                     await self.tokenCache.setCachedTokens(tokens, for: cacheKey, computationTime: computationTime)
 
                     // Track performance metrics for production monitoring
-                    await ProductionPerformanceMetrics.shared.trackHighlighting(
+                    await performanceMetrics.trackHighlighting(
                         duration: endTime - startTime,
                         fileSize: textLength,
                         language: language,

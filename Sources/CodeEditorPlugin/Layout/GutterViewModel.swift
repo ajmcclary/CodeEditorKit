@@ -144,9 +144,8 @@ public final class GutterViewModel {
     private let businessLogicServices: BusinessLogicServiceRegistry
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "GutterViewModel")
 
-    // Debugging and diagnostic support
-    private var breakpoints: Set<Int> = []
-    private var diagnosticLines: Set<Int> = []
+    // Debugging and diagnostic support (delegated to GutterDebugSupport)
+    private let debugSupport = GutterDebugSupport()
 
     // Services
     private var lineNumberService: LineNumberCalculationService {
@@ -191,6 +190,11 @@ public final class GutterViewModel {
         self.businessLogicServices = businessLogicServices
         self.displayState = GutterDisplayState()
         self.interactionState = GutterInteractionState()
+
+        // Set up debug support callback
+        debugSupport.onStateChanged = { [weak self] in
+            self?.updateVisibleLineNumbers()
+        }
 
         updateDisplayState()
         logger.debug("GutterViewModel initialized")
@@ -491,8 +495,8 @@ extension GutterViewModel {
                 yPosition: position.yPosition,
                 isVisible: true,
                 isSelected: isSelected,
-                hasBreakpoint: breakpoints.contains(lineNumber),
-                hasError: diagnosticLines.contains(lineNumber),
+                hasBreakpoint: debugSupport.hasBreakpoint(at: lineNumber),
+                hasError: debugSupport.hasDiagnostic(at: lineNumber),
                 foldControlLayout: foldControlLayout
             )
 
@@ -540,55 +544,49 @@ extension GutterViewModel {
         updateVisibleLineNumbers()
     }
 
-    // MARK: - Debugging Support
+    // MARK: - Debugging Support (delegated to GutterDebugSupport)
 
     /// Sets breakpoints for debugging integration
     /// - Parameter lines: Set of line numbers that have breakpoints
     public func setBreakpoints(_ lines: Set<Int>) {
-        breakpoints = lines
-        updateVisibleLineNumbers()
+        debugSupport.setBreakpoints(lines)
     }
 
     /// Adds a breakpoint at the specified line
     public func addBreakpoint(at line: Int) {
-        breakpoints.insert(line)
-        updateVisibleLineNumbers()
+        debugSupport.addBreakpoint(at: line)
     }
 
     /// Removes a breakpoint from the specified line
     public func removeBreakpoint(at line: Int) {
-        breakpoints.remove(line)
-        updateVisibleLineNumbers()
+        debugSupport.removeBreakpoint(at: line)
     }
 
     /// Checks if a line has a breakpoint
     public func hasBreakpoint(at line: Int) -> Bool {
-        breakpoints.contains(line)
+        debugSupport.hasBreakpoint(at: line)
     }
 
-    // MARK: - Diagnostics Support
+    // MARK: - Diagnostics Support (delegated to GutterDebugSupport)
 
     /// Sets diagnostic lines for error/warning integration
     public func setDiagnosticLines(_ lines: Set<Int>) {
-        diagnosticLines = lines
-        updateVisibleLineNumbers()
+        debugSupport.setDiagnosticLines(lines)
     }
 
     /// Adds a diagnostic at the specified line
     public func addDiagnostic(at line: Int) {
-        diagnosticLines.insert(line)
-        updateVisibleLineNumbers()
+        debugSupport.addDiagnostic(at: line)
     }
 
     /// Removes a diagnostic from the specified line
     public func removeDiagnostic(at line: Int) {
-        diagnosticLines.remove(line)
-        updateVisibleLineNumbers()
+        debugSupport.removeDiagnostic(at: line)
     }
 
     /// Checks if a line has a diagnostic
     public func hasDiagnostic(at line: Int) -> Bool {
-        diagnosticLines.contains(line)
+        debugSupport.hasDiagnostic(at: line)
     }
 
     func getLineNumberTextColor(isSelected: Bool, isHovered: Bool) -> PlatformColor {
