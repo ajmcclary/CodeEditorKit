@@ -45,6 +45,10 @@ let package = Package(
     platforms: [.macOS("26.3"), .iOS("26.3"), .macCatalyst("26.3")],
     products: [
         .library(
+            name: "CodeEditorDesignTokens",
+            targets: ["CodeEditorDesignTokens"]
+        ),
+        .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
         )
@@ -52,14 +56,23 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
+        // TEMP: pinned to ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
+        // for upstream PR pointfreeco/swift-snapshot-testing#1090 (Swift 6.3
+        // Attachable conformances). Revert to upstream `from: "1.0.0"` once
+        // that PR ships in a tagged release.
+        .package(url: "https://github.com/ajmcclary/swift-snapshot-testing", branch: "fix-swift-6.3-attachable"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
     ],
     targets: [
         .target(
+            name: "CodeEditorDesignTokens",
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "CodeEditorPlugin",
             dependencies: [
+                "CodeEditorDesignTokens",
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
@@ -76,6 +89,18 @@ let package = Package(
                 "CodeEditorPlugin",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            exclude: [
+                "__Snapshots__"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorDesignTokensTests",
+            dependencies: [
+                "CodeEditorDesignTokens",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             exclude: [
