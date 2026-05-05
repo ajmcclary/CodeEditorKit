@@ -55,6 +55,10 @@ let package = Package(
         .library(
             name: "CodeEditorUI",
             targets: ["CodeEditorUI"]
+        ),
+        .executable(
+            name: "CodeEditorSample",
+            targets: ["CodeEditorSample"]
         )
     ],
     dependencies: [
@@ -95,6 +99,15 @@ let package = Package(
             dependencies: [
                 "CodeEditorDesignTokens",
                 "CodeEditorPlugin"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .executableTarget(
+            name: "CodeEditorSample",
+            dependencies: [
+                "CodeEditorDesignTokens",
+                "CodeEditorPlugin",
+                "CodeEditorUI"
             ],
             swiftSettings: swiftSettings
         ),
