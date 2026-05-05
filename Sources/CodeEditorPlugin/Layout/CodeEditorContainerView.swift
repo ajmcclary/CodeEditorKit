@@ -49,6 +49,7 @@ public final class CodeEditorContainerView: PlatformView {
         if appliedTheme == theme { return }
         appliedTheme = theme
         gutterView.apply(theme: theme)
+        minimapView.apply(theme: theme)
     }
 
     // MARK: - Initialization
