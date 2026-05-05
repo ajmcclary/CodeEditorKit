@@ -80,16 +80,13 @@ Theming/Bridges/
 
 **`Tokens.Easing → Animation`.** A free function building `Animation.timingCurve(easing.x1, easing.y1, easing.x2, easing.y2, duration: …)`. Duration is the consumer's responsibility.
 
-**`Tokens.Animation → Animation` builders.** Named animations matching the design vocabulary, each pairing one duration with one easing curve from `Tokens.Animation`:
+**`Tokens.Animation → Animation` builders.** This sub-project has exactly one named animation call site (the fold chevron). Ship it as the named convenience; everything else uses the underlying `Tokens.Easing → Animation` primitive directly until a real call site demands a name.
 
 | Builder | Duration | Easing |
 |---|---|---|
-| `.editorFold` | `durQuick` (200ms) | `easeOutSoft` |
-| `.editorReveal` | `durControl` (300ms) | `easeInOutSoft` |
-| `.popoverPresent` | `durFast` (150ms) | `easeOutSoft` |
 | `.foldChevron` | `durQuick` (200ms) | `easeOutSoft` |
 
-These are the four call-sites this sub-project actually uses. More are added as needed; the bridge file is the single home.
+The bridge file is the single home for additional named builders; sub-projects 4 and 5 will land theirs here as their call sites arrive.
 
 **Legacy `Theme` accessor removal.** The four convenience properties sub-project 2 added (`backgroundColor`, `textColor`, `lineNumberColor`, `selectedLineColor`) are deleted. Layout/ now reads `theme.style.editor.background`/`.foreground`/`.lineNumber`/`.activeLineBackground` directly.
 
@@ -179,7 +176,7 @@ Fold-toggle dispatches the existing fold action; this sub-project does not touch
 `CompletionCellComponents.swift` rewritten so all colors and metrics flow from `Theme` and `Tokens.*`.
 
 - Popover background: a new internal `_GlassSurface` view wraps `NSVisualEffectView(material: .menu, blendingMode: .behindWindow)` on macOS and `UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))` on iOS/Catalyst.
-- The glass is tinted by `theme.platform.glass.tint` at `theme.platform.glass.opacity`. Implementation: a thin colored `CALayer` on top of the visual-effect view at the configured alpha. `_GlassSurface` exposes `apply(theme:)` like every other component.
+- The glass is tinted by `theme.platform.glass.tint` at `theme.platform.glass.opacity`. Implementation: a colored tint layer/view at the configured alpha — on macOS, a sublayer above the `NSVisualEffectView`; on iOS/Catalyst, a colored subview inside the `UIVisualEffectView.contentView` per UIKit convention. `_GlassSurface` exposes `apply(theme:)` like every other component.
 - Cell typography from `Tokens.Typography`; cell padding from `Tokens.Spacing.sm`; corner radius from `Tokens.Shape.radiusMD`.
 - Selected-row background: `style.elements.activeBackground`.
 - Cell text: `style.text.base`; secondary kind/glyph: `style.text.muted`.
@@ -227,6 +224,7 @@ Sources/CodeEditorPlugin/Layout/Glass/
 | `Sources/CodeEditorPlugin/Layout/BaseUIComponents.swift` | Delete `StandardUITheme`; retype `ThemeableUIComponent.theme: Theme`. |
 | `Sources/CodeEditorPlugin/Layout/GutterInteractionHandler.swift` | Hit-testing for fold-chevron click target. |
 | `Sources/CodeEditorPlugin/Text/TextLayoutFragmentView.swift` | Per-run color via resolver; selection fill color; indent-guide draw; active-column field on render config. |
+| `Sources/CodeEditorPlugin/SyntaxHighlighting/` (highlight pipeline) | Producer of attribute runs consumes `Theme.color(forToken:)` instead of any prior hardcoded color source. Specific file (`SyntaxHighlightingCoordinator.swift` and/or the per-language providers under `Languages/`) determined during implementation step 7; alias-table need verified at the same time per the resolver section above. |
 | `Sources/CodeEditorPlugin/Annotations/AnnotationKind.swift` | `color` retyped to `func color(in theme: Theme) -> PlatformColor`. |
 | `Sources/CodeEditorPlugin/Annotations/AnnotationView.swift` | Updated call-site. |
 | `Sources/CodeEditorPlugin/Annotations/AnnotationsContentView.swift` | Adds `apply(theme:)`. |
@@ -254,7 +252,7 @@ Located under `Tests/CodeEditorPluginTests/Theming/Editor/` and `Tests/CodeEdito
 | `Color_NSColor_Bridge_PreservesSRGB` | `NSColor(tokens:)` round-trips r/g/b/alpha at 8-bit precision. |
 | `Color_UIColor_Bridge_PreservesSRGB` | Same for `UIColor` under `canImport(UIKit)`. |
 | `Easing_To_Animation_Curve` | `Tokens.Easing(0.16, 1.0, 0.3, 1.0)` produces a `timingCurve(0.16, 1.0, 0.3, 1.0, duration: …)` snapshot. |
-| `Animation_Builders_AreStable` | Snapshots of `editorFold`, `editorReveal`, `popoverPresent`, `foldChevron` don't drift. |
+| `Animation_FoldChevron_IsStable` | Snapshot of the resolved `Animation` for `Tokens.Animation.foldChevron` doesn't drift. |
 
 ### `Theme.color(forToken:)`
 
