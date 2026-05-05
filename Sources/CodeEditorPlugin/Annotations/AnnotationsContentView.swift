@@ -33,7 +33,20 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
         }
     }
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
     private var annotationViews: [AnnotationView] = []
+
+    /// Apply a theme to the content view and fan it out to every nested
+    /// annotation badge. Equality-gated.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        for annotationView in annotationViews {
+            annotationView.apply(theme: theme)
+        }
+    }
 
     // MARK: - Initialization
 
@@ -88,6 +101,9 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
                     frame: CGRect(x: 0, y: 0, width: size, height: size)
                 )
 
+                if let theme = appliedTheme {
+                    annotationView.apply(theme: theme)
+                }
                 addSubview(annotationView)
                 annotationViews.append(annotationView)
             }

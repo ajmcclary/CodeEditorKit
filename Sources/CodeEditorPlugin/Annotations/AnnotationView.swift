@@ -30,6 +30,14 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
 
     public let annotation: LineAnnotation
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived badge color. Mirrors `annotationKind.color(in:)` for the
+    /// applied theme; falls back to the system blue when no theme has been
+    /// applied yet (matches the historical default).
+    public private(set) var themedBadgeColor: PlatformColor = PlatformColors.systemBlue
+
     #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     private var trackingArea: NSTrackingArea?
     private var nsPopover: NSPopover?
@@ -135,7 +143,24 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     }
 
     private var annotationColor: PlatformColor {
-        annotationKind.color
+        if let theme = appliedTheme {
+            return annotationKind.color(in: theme)
+        }
+        return themedBadgeColor
+    }
+
+    /// Apply a theme to the annotation badge. Equality-gated; refreshes the
+    /// badge fill color based on the kind and the theme's status palette.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedBadgeColor = annotationKind.color(in: theme)
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        wantsLayer = true
+        layer?.backgroundColor = themedBadgeColor.cgColor
+        #else
+        backgroundColor = themedBadgeColor
+        #endif
     }
 
     private var iconName: String {

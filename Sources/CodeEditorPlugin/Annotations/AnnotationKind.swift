@@ -12,20 +12,23 @@ public enum AnnotationKind: String, CaseIterable, Sendable {
     case warning = "WARNING"
     case error = "ERROR"
 
-    /// The color associated with this annotation type
-    public var color: PlatformColor {
+    /// The platform color for this annotation kind under the given theme.
+    /// Reads from `theme.style.status.*` so badges follow the theme's status
+    /// palette. `.fixme` maps to `status.warning` because Zed's schema has
+    /// no dedicated FIXME entry.
+    public func color(in theme: Theme) -> PlatformColor {
         switch self {
         case .info, .note, .todo:
-            return PlatformColors.systemBlue
+            return PlatformColor(tokens: theme.style.status.info.base)
 
         case .fixme:
-            return PlatformColors.systemOrange
+            return PlatformColor(tokens: theme.style.status.warning.base)
 
         case .warning:
-            return PlatformColors.systemYellow
+            return PlatformColor(tokens: theme.style.status.warning.base)
 
         case .error:
-            return PlatformColors.systemRed
+            return PlatformColor(tokens: theme.style.status.error.base)
         }
     }
 
