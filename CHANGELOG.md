@@ -133,14 +133,14 @@ plug into the fragment renderer in a follow-up.
 - DocC `Theme-System.md` example refresh (still references the deleted
   legacy accessors).
 
-### CodeEditorUI chrome primitives (sub-project 4, 11 of 12 tasks)
+### CodeEditorUI chrome primitives (sub-project 4)
 
 Eight chrome components, two SwiftUI Style protocols, the
 `EditorState @Observable` class + environment key in
-`CodeEditorPlugin`, and 50 baseline PNG snapshots across two themes.
-Build clean, lint zero violations, every test green. Task 12
-(conformance audit + DocC sweep + this CHANGELOG entry's tail) is
-the only remaining item — small, ~10–15 minutes when picked up.
+`CodeEditorPlugin`, the `PlatformGlassSurface` modifier, the
+`Theme+Chrome` / `Theme+Glass` bridges, and 50 baseline PNG snapshots
+across two themes. Build clean, lint zero violations, every test
+green.
 
 #### Done (commits)
 
@@ -157,13 +157,63 @@ the only remaining item — small, ~10–15 minutes when picked up.
 | 9 | `ce60ad8` | `EditorSidebarShell` |
 | 10 | `fc1646c` | `EditorCommandPalette` + Style + Row |
 | 11 | `013721e` | `EditorStateBridge` helper (coordinator wiring deferred) |
+| 12 | this commit | Conformance audit + DocC sweep + sign-off |
 
-#### Deferred to Task 12
+#### Task 12 — added
 
-- Compile-time conformance audit test for `CodeEditorUI`.
-- DocC sweep across the chrome primitives' public symbols.
-- Final CHANGELOG entry tail (acceptance-criteria checklist + Task 12
-  sign-off).
+- `ConformanceAuditTests` — compile-time audit covering the chrome
+  surface: `View` on every chrome view, `ViewModifier` on
+  `PlatformGlassSurface`, the declared style protocol on
+  `Default`/`Compact` style implementers, `Hashable + Sendable` on
+  value enums (`PlatformGlassSurface.Role`, `CommandPaletteItem.Kind`),
+  `Hashable + Identifiable + Sendable` on `CommandPaletteItem`, and
+  `Sendable` on `TrafficLightsConfiguration`. Generic chrome views
+  audited via concrete `EmptyView` instantiations; AppKit-only types
+  gated on `canImport(AppKit)` to mirror the production declarations.
+
+#### Task 12 — DocC sweep
+
+- `CodeEditorUI` umbrella enum gains a full `## Topics` discussion
+  grouping every public symbol by surface (Window chrome, Tab strip,
+  Status bar & breadcrumb, Sidebar, Command palette, Liquid Glass).
+- Per-case docs added to `PlatformGlassSurface.Role` (background +
+  tint multiplier + shadow per role) and to `CommandPaletteItem.Kind`
+  (semantic intent + glyph for each case).
+- `init()` doc comments added to `DefaultEditorTabStripStyle` and
+  `CompactEditorTabStripStyle` for symmetry with
+  `DefaultEditorCommandPaletteStyle`.
+
+#### Sub-project 4 acceptance checklist
+
+- [x] `CodeEditorUI` ships as a separate library product wired into
+      `Package.swift`.
+- [x] `EditorState @Observable` + `\.editorState` environment key live
+      in `CodeEditorPlugin`; chrome views read from the environment
+      with explicit-argument overrides where applicable.
+- [x] `Theme+Chrome` and `Theme+Glass` SwiftUI bridges expose
+      `theme.titleBarColor` / `theme.glassTintColor` / `popoverShadow`
+      / etc. directly.
+- [x] `PlatformGlassSurface` modifier implements the role → background
+      / tint-multiplier / shadow mapping spec'd in the umbrella.
+- [x] All eight chrome components ship with init docs, are
+      snapshot-tested in light + dark across realistic states, and
+      are pinned by a compile-time conformance audit.
+- [x] Two SwiftUI Style protocols (`EditorTabStripStyle`,
+      `EditorCommandPaletteStyle`) ship with their `Configuration`
+      shape, default implementer, and view-modifier installer.
+- [x] AppKit-only chrome (`EditorTrafficLights`, `EditorTitleBar`,
+      `EditorSidebarShell`) is gated on `canImport(AppKit)`.
+- [x] `swift build` clean, `swiftlint` zero violations,
+      `swift test --parallel` all green.
+
+#### Deferred to follow-up commits
+
+- `EditorStateBridge` ↔ `CrossPlatformCoordinator` two-way wiring
+  (selection / language / hardware-acceleration flow from the editor
+  back into `EditorState`) — captured in the Task 11 commit message;
+  belongs to sub-project 5.
+- DocC `Theme-System.md` example refresh (still references the
+  legacy accessors removed in sub-project 3).
 
 ### Theme rewrite (sub-project 2 of the design system migration)
 

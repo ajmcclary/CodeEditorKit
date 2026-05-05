@@ -7,9 +7,13 @@ import Foundation
 public struct CommandPaletteItem: Hashable, Identifiable, Sendable {
     /// Item kind — drives the leading glyph.
     public enum Kind: Hashable, Sendable {
+        /// Open / reveal a file. Glyph: `doc`.
         case file
+        /// Jump to a symbol in the current document. Glyph: `function`.
         case symbol
+        /// Run a command (refactor, save-all, etc.). Glyph: `play.fill`.
         case action
+        /// Toggle / change a setting. Glyph: `slider.horizontal.3`.
         case setting
     }
 

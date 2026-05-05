@@ -46,6 +46,7 @@ public struct EditorTabStripStyleConfiguration {
 /// Default tab strip style — comfortable height, scroll-on-overflow,
 /// dirty dot replaces close button on dirty tabs.
 public struct DefaultEditorTabStripStyle: EditorTabStripStyle {
+    /// Creates the default style.
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -71,6 +72,7 @@ public struct DefaultEditorTabStripStyle: EditorTabStripStyle {
 
 /// Compact tab strip style — shorter height, no dividers.
 public struct CompactEditorTabStripStyle: EditorTabStripStyle {
+    /// Creates the compact style.
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {

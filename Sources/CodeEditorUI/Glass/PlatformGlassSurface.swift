@@ -13,10 +13,16 @@ public struct PlatformGlassSurface: ViewModifier {
     /// The kind of chrome surface — drives background, tint multiplier,
     /// and shadow choice.
     public enum Role: Hashable, Sendable {
+        /// Window-top title bar (`Theme.titleBarColor` background, 1.0× tint).
         case titleBar
+        /// File-tab strip (`Theme.tabBarColor` background, 0.8× tint).
         case tabBar
+        /// Bottom status bar (`Theme.statusBarColor` background, 1.0× tint).
         case statusBar
+        /// Side panel / sidebar shell (`Theme.panelColor` background, 1.2× tint).
         case panel
+        /// Floating popover, e.g. command palette (`Theme.elevatedColor`
+        /// background, 1.2× tint, plus the theme's popover drop shadow).
         case popover
     }
 
