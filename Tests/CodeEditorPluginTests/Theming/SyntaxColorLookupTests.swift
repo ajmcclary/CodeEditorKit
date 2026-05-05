@@ -1,11 +1,10 @@
-@testable import CodeEditorPlugin
 import CodeEditorDesignTokens
+@testable import CodeEditorPlugin
 import Foundation
 import Testing
 
 @Suite("Theme.color(forToken:) resolver")
 struct SyntaxColorLookupTests {
-
     @Test("Direct hit returns the SyntaxStyle.color")
     func directHit() {
         let theme = Theme.lcarsDark

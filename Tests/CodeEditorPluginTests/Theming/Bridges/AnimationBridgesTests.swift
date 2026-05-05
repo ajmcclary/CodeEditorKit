@@ -1,12 +1,11 @@
-@testable import CodeEditorPlugin
 import CodeEditorDesignTokens
+@testable import CodeEditorPlugin
 import Foundation
 import SwiftUI
 import Testing
 
 @Suite("Animation bridges")
 struct AnimationBridgesTests {
-
     @Test("Easing produces a timingCurve animation with the same control points")
     func easingProducesTimingCurve() {
         let easing = Tokens.Easing(0.16, 1.00, 0.30, 1.00)
