@@ -299,7 +299,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Apply theme colors for Mac Catalyst
     #if targetEnvironment(macCatalyst)
     func applyCatalystThemeColors(theme: Theme, to textView: CodeEditorView) {
-        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
+        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: Color(tokens: theme.style.editor.foreground))
         Task { @MainActor in
             CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
         }
@@ -340,13 +340,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         textView.language = language
 
         // Apply theme colors
-        textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
+        textView.backgroundColor = PlatformColor(tokens: theme.style.editor.background)
 
         // Apply text color
         #if targetEnvironment(macCatalyst)
         applyCatalystThemeColors(theme: theme, to: textView)
         #else
-        textView.textColor = PlatformColor.from(theme.textColor)
+        textView.textColor = PlatformColor(tokens: theme.style.editor.foreground)
         #endif
 
         // Apply initial configuration
@@ -407,13 +407,13 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         }
 
         // Apply theme colors
-        textView.backgroundColor = PlatformColor.from(theme.backgroundColor)
+        textView.backgroundColor = PlatformColor(tokens: theme.style.editor.background)
 
         // Apply text color
         #if targetEnvironment(macCatalyst)
         applyCatalystThemeColors(theme: theme, to: textView)
         #else
-        textView.textColor = PlatformColor.from(theme.textColor)
+        textView.textColor = PlatformColor(tokens: theme.style.editor.foreground)
         #endif
 
         // Update configuration if changed
