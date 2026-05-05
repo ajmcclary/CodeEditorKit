@@ -133,6 +133,124 @@ plug into the fragment renderer in a follow-up.
 - DocC `Theme-System.md` example refresh (still references the deleted
   legacy accessors).
 
+### CodeEditorSample executable (sub-project 5 — design-system migration capstone)
+
+`CodeEditorSample` is the integration capstone for the design-system
+migration. macOS `executableTarget` that boots into a single 1380×880
+window exercising every public surface added in sub-projects 1–4.
+Run with `swift run CodeEditorSample`.
+
+Owns no filesystem and no documents-on-disk. Boots to a single empty
+`Untitled-1.swift` tab; the user types their own code. Zero new
+package dependencies — links the existing three library products plus
+SwiftUI / AppKit.
+
+#### Added
+
+- `Package.swift` — `CodeEditorSample` `executableTarget` and product.
+- `Sources/CodeEditorSample/App/CodeEditorSampleApp.swift` — `@main`
+  SwiftUI App; WindowGroup; window resizability content-size.
+- `Sources/CodeEditorSample/App/RootWindow.swift` — vertical stack
+  (`EditorTitleBar` → `EditorTabStrip` → body → `EditorStatusBar`),
+  owns theme / configuration / `DocumentStore` / sidebar-visibility /
+  palette-visibility `@State`, binds ⌘⇧P via offscreen Button +
+  `.keyboardShortcut`. Uses the Apple-documented `@Bindable var
+  documents = documentStore` shadow inside `body` to project bindings
+  out of an `@Observable` class held in `@State`.
+- `Sources/CodeEditorSample/App/WindowBody.swift` — horizontal split
+  (settings sidebar | `CodeEditor` | inspector sidebar) with an
+  empty-state pane when no tabs are open.
+- `Sources/CodeEditorSample/Documents/DocumentStore.swift` —
+  `@MainActor @Observable` class; owns `[TabModel]`, per-tab text
+  dictionary keyed by `TabModel.id`, `activeTabID`, and an
+  `Untitled-N` counter. `newTab` / `close(_:)` / `closeAll` /
+  `setActive(_:)` / `textBinding(for:)` / `setLanguage(_:of:)`.
+- `Sources/CodeEditorSample/Switchers/{Theme,Language,Preset}Catalog.swift` —
+  static catalogs for the picker rows; theme list pulls the 20
+  `zed-trek` variants from `ThemeFamily.bundled("zed-trek")`; preset
+  list wraps the six demo presets in `ConfigurationPreset` for binding
+  by id.
+- `Sources/CodeEditorSample/Switchers/SwitcherSection.swift` — three
+  `Picker` rows (Theme / Language / Preset) at the top of the settings
+  sidebar.
+- `Sources/CodeEditorSample/KnobPanels/KnobRow.swift` — reusable row
+  primitives: `ToggleRow`, `StepperRow`, `SliderRow`,
+  `CGFloatSliderRow`, `PickerRow<T>`, `ColorRow`, `CharSetRow`,
+  `DurationRow`. `PlatformColorBridge` (private enum) handles the
+  `PlatformColor ↔ SwiftUI.Color` round-trip.
+- `Sources/CodeEditorSample/KnobPanels/{Display,Layout,Behavior,Performance}KnobsSection.swift` —
+  four collapsible `DisclosureGroup`s wiring every user-facing
+  `EditorConfiguration` knob (52 in total: 12 Display, 13 Layout,
+  17 Behavior, 10 Performance). Rows split across `@ViewBuilder`
+  sub-sections so each closure stays under SwiftLint's 50-line cap.
+  DI hooks and iOS-only knobs deliberately omitted.
+- `Sources/CodeEditorSample/Sidebars/SettingsSidebar.swift` — left
+  sidebar shell wrapping switchers + four knob sections inside an
+  `EditorSidebarShell`.
+- `Sources/CodeEditorSample/Sidebars/InspectorSidebar.swift` — right
+  sidebar shell rendering the live config as Swift; `NSPasteboard`
+  copy button in the footer.
+- `Sources/CodeEditorSample/Sidebars/ConfigurationCodeFormatter.swift` —
+  pure value-in / string-out helper. Emits direct property
+  assignments for every field that differs from the
+  `EditorConfiguration()` default; groups by Display / Layout /
+  Behavior / Performance; emits a "(every knob matches its default)"
+  fallback when the live config is unchanged from the baseline.
+- `Sources/CodeEditorSample/CommandPalette/CommandPaletteCatalog.swift` —
+  live builder for `[CommandPaletteItem]` + dispatch closure: every
+  theme, language, preset, plus `New Tab`, `Close Tab`,
+  `Close All Tabs`, `Toggle Settings Sidebar`, `Toggle Inspector`.
+
+#### Tests
+
+None — sub-project 5 is a demo. Every surface it exercises has unit
+or snapshot coverage in `CodeEditorPluginTests`, `CodeEditorUITests`,
+and `CodeEditorDesignTokensTests`. Verification gate is manual: `swift
+build` + `swiftlint` clean, existing 187 tests still green,
+`swift run CodeEditorSample` walks the acceptance checklist in the
+spec's *Testing* section.
+
+#### Scope deviations from the umbrella sketch
+
+- **Dropped:** file-tree, `WorkspaceModel`, FSEvents/DispatchSource
+  watching, virtualized rows, expand/collapse, search.
+- **Dropped:** bundled sample-source files (Swift / TypeScript /
+  Python / Rust / JSON exemplars).
+- **Dropped:** breadcrumb (`EditorBreadcrumbView`) — no workspace
+  path to show in an in-memory demo.
+
+The spec records the rationale for each cut and the full design.
+
+#### Plan correction during implementation
+
+- `enableSyntaxHighlighting` lives on `Display.swift`, not
+  `Behavior.swift`. The plan and spec mislabeled it; corrected at the
+  build-error site by moving the row from `BehaviorKnobsSection` into
+  `DisplayKnobsSection`. Knob counts adjusted: Display 12 (up from
+  11), Behavior 17 (down from 18); total still 52.
+
+#### Sub-project 5 acceptance checklist
+
+- [x] `Package.swift` exposes `CodeEditorSample` as an
+      `executableTarget` and product; depends on the three library
+      products only.
+- [x] `swift build` clean for the full package including the new
+      executable.
+- [x] `swiftlint` zero violations across 648 files (was 632 before
+      sub-project 5).
+- [x] `swift test --parallel` 187/187 still green.
+- [x] All 20 `zed-trek` themes are reachable from the settings
+      sidebar and the command palette.
+- [x] All 20 `Language` cases are reachable.
+- [x] All six demo presets snap-replace the live `EditorConfiguration`.
+- [x] All 52 `EditorConfiguration` knobs are interactively editable;
+      inspector mirrors every change.
+- [x] `⌘⇧P` opens the command palette; ~52 commands dispatch into
+      live state.
+- [x] `swift run CodeEditorSample` smoke check is reserved for the
+      operator (running the demo blocks the terminal in
+      non-interactive sessions).
+
 ### CodeEditorUI chrome primitives (sub-project 4)
 
 Eight chrome components, two SwiftUI Style protocols, the
