@@ -15,9 +15,9 @@ CodeEditorPlugin provides world-class performance, extensive customization, and 
 - 🚀 **Modern Swift 6 Concurrency** - Actor-based architecture for thread safety and performance
 - 💻 **True Cross-Platform** - Sophisticated abstraction layer for native performance everywhere
 - 🎨 **20 Programming Languages** - SwiftSyntax for Swift, optimized regex for other languages
-- ✅ **Production-Grade Quality** - 66 comprehensive tests with zero linting violations
-- 🔧 **Extensible Architecture** - Plugin system and LSP integration ready
-- 📁 **Streamlined Organization** - 18 feature directories (reduced from 22) for better discoverability
+- ✅ **Production-Grade Quality** - 70 test files with zero linting violations
+- 🔧 **Extensible Architecture** - LSP integration and internal plugin infrastructure
+- 📁 **Organized Source Tree** - 18 top-level source directories for discoverability
 
 ### Quick Start
 
@@ -71,7 +71,6 @@ See <doc:QuickStart> for more examples and advanced usage.
 - <doc:Unified-Event-System>
 - <doc:Code-Folding-API>
 - <doc:Production-Reliability>
-- <doc:Plugin-Architecture>
 - <doc:LSP-Integration>
 
 ### Integration
@@ -84,13 +83,11 @@ See <doc:QuickStart> for more examples and advanced usage.
 
 - <doc:Sendable-Callbacks>
 - <doc:Duration-API-Migration>
-- <doc:Configuration-Builder-Enhancements>
 
 ### Documentation
 
 - <doc:DocC-Documentation-Guide>
 - <doc:Troubleshooting>
-- <doc:Deprecation-Timeline>
 
 ### API Reference
 

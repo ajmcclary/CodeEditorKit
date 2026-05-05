@@ -138,7 +138,7 @@ public func exampleMethod(parameter1: String, parameter2: Int) throws -> Bool
 ```swift
 /// - Note: On iOS, this requires `UITextView` configuration.
 /// - Important: Mac Catalyst uses hybrid behavior.
-@available(iOS 16.0, macOS 12.0, *)
+@available(iOS 26.3, macOS 26.3, *)
 ```
 
 #### 4. Code Examples
@@ -148,15 +148,14 @@ public func exampleMethod(parameter1: String, parameter2: Int) throws -> Bool
 /// Basic usage:
 /// ```swift
 /// let config = EditorConfiguration()
-/// config.display.showLineNumbers = true
+/// config.display.isLineNumbersEnabled = true
 /// ```
 /// 
 /// Advanced configuration:
 /// ```swift
-/// let config = EditorConfigurationBuilder()
-///     .fontSize(16)
-///     .theme(.dark)
-///     .build()
+/// var config = EditorConfiguration()
+/// config.display.fontSize = 16
+/// config.display.theme = .dark
 /// ```
 ```
 

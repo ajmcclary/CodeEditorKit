@@ -1,12 +1,12 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-66-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
-[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/files-401%20source-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-437-blue)](#architecture)
 
-A powerful, production-ready code editor component for macOS, iOS, and Mac Catalyst. Built with Swift 6 and featuring syntax highlighting for 20 languages, comprehensive theming, and a modern architecture designed for performance and extensibility.
+A powerful, production-ready code editor component for macOS, iOS, and Mac Catalyst. Built with Swift 6.3 and featuring syntax highlighting for 20 languages, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
 ## ✨ Key Features
 
@@ -16,7 +16,7 @@ A powerful, production-ready code editor component for macOS, iOS, and Mac Catal
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation
 - **Themeable**: Built-in themes (Xcode, VS Code Dark, GitHub, Solarized)
 - **SwiftUI Native**: First-class SwiftUI integration with environment-based configuration
-- **Extensible**: Plugin architecture (Preview) and Language Server Protocol support (macOS only)
+- **Extensible**: Language Server Protocol support with local servers on macOS and remote servers on all supported platforms
 
 ## 🚀 Quick Start
 
@@ -52,12 +52,12 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 
 ## 📋 Requirements
 
-- **Swift**: 6.0+
+- **Swift**: 6.3+
 - **Platforms**:
-  - macOS 14.0+
-  - iOS 16.0+
-  - Mac Catalyst 16.0+
-- **Xcode**: 16.0+
+  - macOS 26.3+
+  - iOS 26.3+
+  - Mac Catalyst 26.3+
+- **Xcode**: 26.3+
 
 ## 📊 Platform Feature Availability
 
@@ -72,7 +72,6 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
 | Code Completion | ✅ | ✅ | ✅ |
 | Language Server Protocol (Local) | ✅ | ❌ | ❌ |
 | Language Server Protocol (Remote) | ✅ | ✅ | ✅ |
-| Plugin Architecture | ✅ | ✅ | ✅ |
 | Memory Monitoring | ✅ | ✅ | ✅ |
 | Large File Support (10MB+) | ✅ | ⚠️ | ⚠️ |
 
@@ -84,26 +83,9 @@ Or in Xcode: **File → Add Package Dependencies** and enter the repository URL.
   - Disabling real-time syntax highlighting for very large files
   - Using the performance monitoring APIs to track memory usage
 
-## 🔌 Plugin Architecture (Preview)
-
-The CodeEditorPlugin supports extensibility through a plugin system that allows adding new languages, themes, and features. This system is currently in preview and the API may change.
-
-```swift
-// Example: Adding a custom language
-let customLanguage = LanguageConfiguration(
-    id: "custom",
-    displayName: "Custom Language",
-    fileExtensions: ["cst", "custom"],
-    syntaxPatterns: customPatterns
-)
-LanguageRegistry.register(customLanguage)
-```
-
-For detailed plugin development guidance, see `Documentation.docc/Plugin-Architecture.md`.
-
 ## 🏗️ Architecture
 
-### Directory Structure (Streamlined 2025)
+### Directory Structure
 
 ```
 Sources/CodeEditorPlugin/
@@ -117,6 +99,7 @@ Sources/CodeEditorPlugin/
 ├── Features/          # Optional features (11 files)
 ├── SwiftUI/           # SwiftUI integration (10 files)
 ├── Platform/          # Cross-platform abstractions (32 files)
+├── PluginSystem/      # Internal plugin infrastructure
 ├── Extensions/        # Type extensions (20 files)
 ├── Performance/       # Monitoring (7 files)
 ├── LSP/              # Language Server Protocol (7 files)
@@ -126,7 +109,7 @@ Sources/CodeEditorPlugin/
 └── Documentation.docc/# DocC documentation
 ```
 
-18 directories (down from 22), 333 source files total.
+18 top-level source directories, 437 Swift source files.
 
 ### Core Components
 
@@ -141,7 +124,7 @@ Sources/CodeEditorPlugin/
 
 ```swift
 var config = EditorConfiguration()
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.display.fontSize = 14
 config.layout.tabWidth = 4
 config.behavior.autoIndent = true
@@ -246,7 +229,7 @@ config.lsp.servers["swift"] = LSPServerConfiguration.remote(
 
 ## 🧪 Testing
 
-The plugin includes 53 comprehensive tests covering all major functionality:
+The package includes 70 test files covering the major editor, configuration, platform, and language paths:
 
 ```bash
 # Run tests in parallel (faster)
@@ -272,22 +255,6 @@ Key documentation files:
 - `Configuration-System.md` - Configuration details
 - `SwiftUI-Integration.md` - SwiftUI best practices
 - `Platform-Abstraction.md` - Cross-platform development
-
-## 🎮 Sample Application
-
-Explore all features with the included sample app:
-
-```bash
-cd CodeEditorSample
-swift run
-```
-
-The sample demonstrates:
-- All configuration options
-- Theme switching
-- Language highlighting
-- Performance monitoring
-- Cross-platform behavior
 
 ## 🎯 Recent Improvements (2025)
 

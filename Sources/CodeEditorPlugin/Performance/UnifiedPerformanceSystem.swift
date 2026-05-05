@@ -5,12 +5,6 @@ import Foundation
 public final class UnifiedPerformanceSystem {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "UnifiedPerformanceSystem")
 
-    // MARK: - Singleton
-
-    /// Shared instance of the unified performance system.
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = UnifiedPerformanceSystem()
-
     /// Public initializer for dependency injection
     public init() {}
 
@@ -574,6 +568,6 @@ extension CodeEditorView {
         _ metric: PerformanceMetricType,
         operation: () async throws -> T
     ) async throws -> T {
-        try await UnifiedPerformanceSystem.shared.track(metric, operation: operation)
+        try await CodeEditorDependencies.makeUnifiedPerformanceSystem().track(metric, operation: operation)
     }
 }

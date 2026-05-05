@@ -112,7 +112,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter language: The language to optimize for
   /// - Returns: The builder for chaining
   @discardableResult
-  public func language(_ language: Language) -> Self {
+  func language(_ language: Language) -> Self {
     guard let settings = Self.languageSettings[language] else {
       // Default settings for unknown languages
       return enableSyntaxHighlighting(true)

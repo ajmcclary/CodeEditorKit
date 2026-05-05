@@ -38,6 +38,7 @@ public actor ProcessTransport: LSPTransport {
 
     private var dataHandler: (@Sendable (Data) async -> Void)?
     private var readTask: Task<Void, Never>?
+    private var stderrTask: Task<Void, Never>?
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.lsp", category: "ProcessTransport")
 
@@ -108,8 +109,9 @@ public actor ProcessTransport: LSPTransport {
             }
 
             // Monitor stderr for debugging
-            Task {
-                await monitorStderr()
+            stderrTask?.cancel()
+            stderrTask = Task { [weak self] in
+                await self?.monitorStderr()
             }
         } catch {
             self.process = nil
@@ -125,6 +127,8 @@ public actor ProcessTransport: LSPTransport {
 
         readTask?.cancel()
         readTask = nil
+        stderrTask?.cancel()
+        stderrTask = nil
 
         process?.terminate()
 
@@ -256,16 +260,19 @@ public actor ProcessTransport: LSPTransport {
         guard let stderrPipe else { return }
         let fileHandle = stderrPipe.fileHandleForReading
 
-        while process?.isRunning == true {
+        while !Task.isCancelled && process?.isRunning == true {
             let data = fileHandle.availableData
             if !data.isEmpty, let string = String(data: data, encoding: .utf8) {
                 logger.debug("LSP stderr: \(string)")
+            } else {
+                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
             }
         }
     }
 
     deinit {
         readTask?.cancel()
+        stderrTask?.cancel()
         if process?.isRunning == true {
             logger.warning("ProcessTransport deallocated while process still running")
             process?.terminate()

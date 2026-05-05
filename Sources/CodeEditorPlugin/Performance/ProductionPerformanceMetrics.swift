@@ -5,12 +5,6 @@ import os.log
 
 /// Central system for tracking performance metrics in production
 public actor ProductionPerformanceMetrics {
-    // MARK: - Singleton
-
-    /// Shared instance of the production performance metrics system.
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = ProductionPerformanceMetrics()
-
     /// Public initializer for dependency injection
     public init() {}
 

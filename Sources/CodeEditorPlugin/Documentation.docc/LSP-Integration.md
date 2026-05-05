@@ -870,7 +870,6 @@ struct ProjectEditorView: View {
 
 ## See Also
 
-- <doc:Plugin-Architecture>
 - <doc:Performance-Monitoring>
 - <doc:Advanced-Patterns>
 - <doc:Platform-Abstraction>

@@ -7,7 +7,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter editable: Whether the editor is editable
   /// - Returns: The builder for chaining
   @discardableResult
-  public func isEditable(_ editable: Bool) -> Self {
+  func isEditable(_ editable: Bool) -> Self {
     with { $0.behavior.isEditable = editable }
   }
 
@@ -15,7 +15,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to enable auto-indentation
   /// - Returns: The builder for chaining
   @discardableResult
-  public func autoIndent(_ enabled: Bool) -> Self {
+  func autoIndent(_ enabled: Bool) -> Self {
     with { $0.behavior.autoIndent = enabled }
   }
 
@@ -23,7 +23,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to enable code completion
   /// - Returns: The builder for chaining
   @discardableResult
-  public func enableCodeCompletion(_ enabled: Bool) -> Self {
+  func enableCodeCompletion(_ enabled: Bool) -> Self {
     with { $0.behavior.enableCodeCompletion = enabled }
   }
 
@@ -31,7 +31,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to enable spell checking
   /// - Returns: The builder for chaining
   @discardableResult
-  public func enableSpellCheck(_ enabled: Bool) -> Self {
+  func enableSpellCheck(_ enabled: Bool) -> Self {
     with { $0.behavior.isContinuousSpellCheckingEnabled = enabled }
   }
 }

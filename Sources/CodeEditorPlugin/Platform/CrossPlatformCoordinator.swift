@@ -60,7 +60,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
 
     /// Creates a new instance with specified dependencies
     /// - Parameters:
-    ///   - capabilities: Platform capabilities provider (defaults to shared instance)
+    ///   - capabilities: Platform capabilities provider (defaults to dependency factory)
     ///   - inputCoordinator: Input handling coordinator (defaults to new instance)
     ///   - toolbarCoordinator: Toolbar management coordinator (defaults to new instance)
     ///   - contextMenuCoordinator: Context menu coordinator (defaults to new instance)
@@ -70,7 +70,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         toolbarCoordinator: ToolbarCoordinator? = nil,
         contextMenuCoordinator: ContextMenuCoordinator? = nil
     ) {
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         self.inputCoordinator = inputCoordinator ?? InputCoordinator()
         self.toolbarCoordinator = toolbarCoordinator ?? ToolbarCoordinator()
         self.contextMenuCoordinator = contextMenuCoordinator ?? ContextMenuCoordinator()
@@ -79,10 +79,8 @@ public final class CrossPlatformCoordinator: ObservableObject {
         setupPlatformSpecificObservers()
     }
 
-    /// Private initializer for the deprecated singleton
     private convenience init() {
-        // Create new instances with shared capabilities for backward compatibility
-        let sharedCapabilities = PlatformCapabilities.shared
+        let sharedCapabilities = CodeEditorDependencies.makePlatformCapabilities()
         self.init(
             capabilities: sharedCapabilities,
             inputCoordinator: InputCoordinator(capabilities: sharedCapabilities),
@@ -113,7 +111,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
     /// Get recommended configuration for current platform
     public func recommendedConfiguration() -> EditorConfiguration {
         // Delegate to PlatformCapabilities for unified capability detection
-        PlatformCapabilities.shared.recommendedConfiguration()
+        capabilities.recommendedConfiguration()
     }
 
     /// Apply platform-specific optimizations to a text view

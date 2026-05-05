@@ -49,7 +49,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     private var interactionHandler: GutterInteractionHandler?
 
     #if canImport(UIKit)
-    nonisolated(unsafe) private var displayLink: CADisplayLink?
+    private var displayLink: CADisplayLink?
     private var lastContentOffset: CGPoint = .zero
     private var pauseTask: Task<Void, Never>?
     #endif

@@ -26,7 +26,7 @@ public final class AdaptivePerformanceMode: ObservableObject {
 
     public init(memoryMonitor: MemoryMonitor, performanceMetrics: ProductionPerformanceMetrics? = nil) {
         self.memoryMonitor = memoryMonitor
-        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
+        self.performanceMetrics = performanceMetrics ?? CodeEditorDependencies.makeProductionPerformanceMetrics()
         self.configuration = PerformanceModeConfiguration(mode: .balanced)
     }
 

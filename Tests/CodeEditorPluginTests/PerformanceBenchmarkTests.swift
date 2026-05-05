@@ -211,7 +211,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
 
     @MainActor
     func testPlatformCapabilitiesQueryPerformance() throws {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         let options = XCTMeasureOptions()
         options.iterationCount = 5

@@ -48,16 +48,20 @@ public enum CrossPlatformLogger {
 
     /// Logger instance that provides cross-platform logging functionality
     public struct Logger: Sendable {
+        #if !canImport(os.log)
         private let subsystem: String
         private let category: String
+        #endif
 
         #if canImport(os.log)
         private let osLogger: os.Logger
         #endif
 
         init(subsystem: String, category: String) {
+            #if !canImport(os.log)
             self.subsystem = subsystem
             self.category = category
+            #endif
 
             #if canImport(os.log)
             self.osLogger = os.Logger(subsystem: subsystem, category: category)
@@ -95,10 +99,12 @@ public enum CrossPlatformLogger {
             // Use os.log on Apple platforms
             osLogger.log(level: level.osLogType, "\(message)")
             #else
-            // Fallback to print on Linux
+            // Fallback to stderr on platforms without os.log.
             let timestamp = ISO8601DateFormatter().string(from: Date())
-            // swiftlint:disable:next no_print_statements
-            print("[\(timestamp)] [\(subsystem)/\(category)] [\(level.rawValue)] \(message)")
+            let line = "[\(timestamp)] [\(subsystem)/\(category)] [\(level.rawValue)] \(message)\n"
+            if let data = line.data(using: .utf8) {
+                FileHandle.standardError.write(data)
+            }
             #endif
         }
     }

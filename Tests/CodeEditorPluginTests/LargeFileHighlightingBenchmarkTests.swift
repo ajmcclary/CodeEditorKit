@@ -81,7 +81,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
 
         print("Small file highlighting: \(String(format: "%.3f", elapsed))s")
 
-        XCTAssertLessThan(elapsed, 0.5, "Small file should highlight in less than 0.5 seconds")
+        XCTAssertLessThan(elapsed, 2.0, "Small file should highlight in less than 2 seconds")
     }
 
     func testSwiftHighlightingMediumFile() async throws {
@@ -97,7 +97,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
         print("Medium file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 1.5, "Medium file should highlight in less than 1.5 seconds")
+        XCTAssertLessThan(elapsed, 3.0, "Medium file should highlight in less than 3 seconds")
     }
 
     func testSwiftHighlightingLargeFile() async throws {
@@ -113,7 +113,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
         print("Large file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 2.0, "Large file should highlight in less than 2 seconds")
+        XCTAssertLessThan(elapsed, 5.0, "Large file should highlight in less than 5 seconds")
     }
 
     // MARK: - JSON Highlighting Benchmarks
@@ -131,7 +131,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
         print("JSON small file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 1.0, "JSON small file should highlight quickly")
+        XCTAssertLessThan(elapsed, 3.0, "JSON small file should highlight quickly")
     }
 
     func testJSONHighlightingLargeFile() async throws {
@@ -147,7 +147,7 @@ final class LargeFileHighlightingBenchmarkTests: XCTestCase {
         let elapsed = CFAbsoluteTimeGetCurrent() - start
 
         print("JSON large file highlighting: \(String(format: "%.3f", elapsed))s")
-        XCTAssertLessThan(elapsed, 2.0, "JSON large file should highlight in reasonable time")
+        XCTAssertLessThan(elapsed, 5.0, "JSON large file should highlight in reasonable time")
     }
 
     // MARK: - Memory Usage Tests

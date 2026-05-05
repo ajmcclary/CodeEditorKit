@@ -30,25 +30,26 @@ struct ContentView: View {
 
 ## Configuration
 
-### Using Builder Pattern
+### Using Direct Configuration
 
-Create configurations easily with the fluent builder API:
+Create configurations by mutating the nested `EditorConfiguration` value:
 
 ```swift
 struct MyEditor: View {
     @State private var code = ""
+    @State private var configuration = {
+        var config = EditorConfiguration()
+        config.display.fontSize = 16
+        config.display.isLineNumbersEnabled = true
+        config.display.theme = .xcodeDark
+        config.display.enableSyntaxHighlighting = true
+        return config
+    }()
     
     var body: some View {
-        let config = EditorConfigurationBuilder()
-            .fontSize(16)
-            .showLineNumbers(true)
-            .theme(.xcodeDark)
-            .language(.swift)
-            .enableSyntaxHighlighting(true)
-            .build()
-        
         CodeEditor(text: $code)
-            .environment(\.codeEditorConfiguration, config)
+            .codeLanguage(.swift)
+            .environment(\.codeEditorConfiguration, configuration)
     }
 }
 ```
@@ -59,19 +60,16 @@ Start from intelligent presets:
 
 ```swift
 // Minimal editor for simple use cases
-let minimalConfig = EditorConfigurationBuilder(preset: .minimal)
-    .fontSize(14)
-    .build()
+var minimalConfig = EditorConfiguration.minimal
+minimalConfig.display.fontSize = 14
 
 // Read-only editor for code display
-let readOnlyConfig = EditorConfigurationBuilder(preset: .readOnly)
-    .theme(.github)
-    .build()
+var readOnlyConfig = EditorConfiguration.readOnly
+readOnlyConfig.display.theme = .github
 
 // Platform-optimized configuration
-let platformConfig = EditorConfigurationBuilder(preset: .platformOptimized)
-    .enableCodeCompletion(true)
-    .build()
+var platformConfig = EditorConfiguration.platformOptimized
+platformConfig.behavior.enableCodeCompletion = true
 ```
 
 ### Using Environment
@@ -88,14 +86,12 @@ struct MyEditor: View {
             .codeLanguage(.swift)
             .environment(\.codeEditorConfiguration, configuration)
             .onAppear {
-                configuration.display.showLineNumbers = true
+                configuration.display.isLineNumbersEnabled = true
                 configuration.display.theme = .xcodeDark
             }
     }
 }
 ```
-
-> **Important**: The `ConfigurationBindingBuilder` pattern has been deprecated in favor of direct property binding, which provides better Swift 6 concurrency support and eliminates Sendable warnings. See the "Direct Binding Pattern" section below for the recommended approach.
 
 ### Using Consolidated Environment (Recommended)
 
@@ -124,13 +120,17 @@ struct MyEditor: View {
     @State private var code = ""
     
     var body: some View {
+        let configuration = {
+            var config = EditorConfiguration.default
+            config.display.fontSize = 16
+            config.display.isLineNumbersEnabled = true
+            return config
+        }()
+
         let environment = CodeEditorEnvironment(
             language: .swift,
             theme: .dark,
-            configuration: EditorConfigurationBuilder()
-                .fontSize(16)
-                .showLineNumbers(true)
-                .build(),
+            configuration: configuration,
             becomeFirstResponder: true,
             memoryMonitor: MemoryMonitor(),
             eventSystem: UnifiedEventSystem()
@@ -144,7 +144,7 @@ struct MyEditor: View {
 
 ### Configuration Interface
 
-The sample app provides a comprehensive configuration interface:
+A settings view can bind directly into the nested configuration value:
 
 ```swift
 struct UnifiedConfigurationView: View {
@@ -223,7 +223,7 @@ struct ConfigurationView: View {
 // For batch updates
 Button("Apply Preset") {
     appState.updateConfiguration { config in
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.fontSize = 16
         config.behavior.isEditable = true
         config.layout.tabWidth = 4

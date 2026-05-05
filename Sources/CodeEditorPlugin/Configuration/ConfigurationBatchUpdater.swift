@@ -62,38 +62,42 @@ public final class ConfigurationBatchUpdater: @unchecked Sendable {
 
 /// Extension for lazy evaluation of expensive configuration properties
 extension EditorConfiguration {
-    // Simple in-memory cache without NSCache to avoid NSString requirement
-    nonisolated(unsafe) private static var validationCache: [Int: Bool] = [:]
-    private static let cacheLock = NSLock()
+    private actor ValidationCache {
+        private var cache: [Int: Bool] = [:]
+
+        func validate(_ configuration: EditorConfiguration) -> Bool {
+            let cacheKey = configuration.hashValue
+            if let cached = cache[cacheKey] {
+                return cached
+            }
+
+            let errors = configuration.validate()
+            let isValid = errors.isEmpty
+
+            // Limit cache size to prevent unbounded growth.
+            if cache.count > 100 {
+                cache.removeAll()
+            }
+
+            cache[cacheKey] = isValid
+            return isValid
+        }
+
+        func clear() {
+            cache.removeAll()
+        }
+    }
+
+    private static let validationCache = ValidationCache()
 
     /// Validates configuration with caching
-    public func validateWithCache() -> Bool {
-        let cacheKey = self.hashValue
-
-        Self.cacheLock.lock()
-        defer { Self.cacheLock.unlock() }
-
-        if let cached = Self.validationCache[cacheKey] {
-            return cached
-        }
-
-        let errors = validate()
-        let isValid = errors.isEmpty
-
-        // Limit cache size to prevent unbounded growth
-        if Self.validationCache.count > 100 {
-            Self.validationCache.removeAll()
-        }
-
-        Self.validationCache[cacheKey] = isValid
-        return isValid
+    public func validateWithCache() async -> Bool {
+        await Self.validationCache.validate(self)
     }
 
     /// Clears the validation cache
-    public static func clearValidationCache() {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        validationCache.removeAll()
+    public static func clearValidationCache() async {
+        await validationCache.clear()
     }
 }
 

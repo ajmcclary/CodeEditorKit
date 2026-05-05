@@ -17,9 +17,9 @@ This guide helps you resolve common issues that may arise when integrating or us
 
 **Issue**: Build errors about unavailable APIs or syntax errors.
 
-**Solution**: Ensure you're using Swift 6.0+ and Xcode 15+:
+**Solution**: Ensure you're using Swift 6.3+ and Xcode 26.3+:
 ```bash
-swift --version  # Should show Swift version 6.0 or higher
+swift --version  # Should show Swift version 6.3 or higher
 ```
 
 ### Missing Dependencies
@@ -86,7 +86,7 @@ editor.isLineNumbersEnabled = true
 
 // Option 2: Container view (manages gutter separately)
 let container = CodeEditorContainerView()
-container.configuration.display.showLineNumbers = true
+container.configuration.display.isLineNumbersEnabled = true
 ```
 
 ### iOS Keyboard Overlap
@@ -116,13 +116,9 @@ editor.layoutManager?.ensureLayout(for: editor.textContainer!)
 
 **Issue**: Metal toolchain warnings on Mac Catalyst with Xcode beta.
 
-**Solution**: These are cosmetic warnings in beta. To suppress:
+**Solution**: These are cosmetic warnings in beta. Prefer building the package target directly:
 ```bash
-# Build from command line
-xcodebuild -workspace CodeEditorSample.xcworkspace \
-           -scheme CodeEditorSample \
-           -destination 'platform=macOS,variant=Mac Catalyst' \
-           build
+swift build
 ```
 
 ### LSP Not Working on iOS

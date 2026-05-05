@@ -136,15 +136,11 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     }
 }
 
-// MARK: - Singleton Instance
+// MARK: - Shared Paragraph Styles
 
 extension ParagraphStyleCache {
-    /// Shared instance for global paragraph style caching
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    nonisolated(unsafe) public static let shared = ParagraphStyleCache()
-
     /// Cached hidden paragraph style for code folding
-    nonisolated(unsafe) public static let hiddenParagraphStyle: NSParagraphStyle = {
+    public static var hiddenParagraphStyle: NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.minimumLineHeight = 0
         style.maximumLineHeight = 0
@@ -156,5 +152,5 @@ extension ParagraphStyleCache {
             return NSParagraphStyle()
         }
         return copy
-    }()
+    }
 }

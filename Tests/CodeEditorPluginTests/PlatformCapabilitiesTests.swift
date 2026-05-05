@@ -17,7 +17,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testPlatformDetection() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let platform = capabilities.currentPlatform
 
         #if targetEnvironment(macCatalyst)
@@ -31,7 +31,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testPlatformDisplayName() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let platform = capabilities.currentPlatform
         let displayName = platform.name
 
@@ -51,13 +51,13 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testTextKit2Support() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         XCTAssertTrue(capabilities.supportsTextKit2)
     }
 
     @MainActor
     func testMultipleCursorsSupport() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let isAvailable = capabilities.isFeatureAvailable(.multipleCursors)
         let platform = capabilities.currentPlatform
 
@@ -72,7 +72,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testMinimapSupport() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let isAvailable = capabilities.isFeatureAvailable(.minimap)
         // supportsMinimap is true for iOS and Catalyst, false for macOS
         let platform = capabilities.currentPlatform
@@ -90,14 +90,14 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCodeFoldingSupport() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         // Code folding should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.codeFolding))
     }
 
     @MainActor
     func testLSPSupport() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let isAvailable = capabilities.isFeatureAvailable(.languageServerProtocol)
 
         // LSP requires process spawning, only available on macOS
@@ -110,7 +110,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testHardwareAcceleration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         // Hardware acceleration should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.hardwareAcceleration))
     }
@@ -119,7 +119,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testGoToDefinitionAvailability() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let availability = capabilities.getFeatureAvailability(.goToDefinition)
         let platform = capabilities.currentPlatform
 
@@ -146,7 +146,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testFindReplaceAvailability() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let availability = capabilities.getFeatureAvailability(.findReplace)
 
         // Find/Replace should be available on all platforms
@@ -155,7 +155,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCodeCompletionAvailability() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let availability = capabilities.getFeatureAvailability(.codeCompletion)
 
         // Code completion should be at least partially available on all platforms
@@ -164,7 +164,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testSymbolNavigationAvailability() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let availability = capabilities.getFeatureAvailability(.symbolNavigation)
         let platform = capabilities.currentPlatform
 
@@ -186,7 +186,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedConfiguration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
         let platform = capabilities.currentPlatform
 
@@ -227,7 +227,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedPerformanceConfiguration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
 
         // Performance configuration should always be optimized
@@ -258,7 +258,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testIsFeatureAvailable() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         // Test a feature that should be available on all platforms
         XCTAssertTrue(capabilities.isFeatureAvailable(.syntaxHighlighting))
         XCTAssertTrue(capabilities.isFeatureAvailable(.lineNumbers))
@@ -281,7 +281,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testPlatformDetectionPerformance() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = capabilities.currentPlatform
@@ -291,7 +291,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testFeatureAvailabilityPerformance() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         measure(options: Self.standardMeasureOptions) {
             for _ in 0..<1_000 {
                 _ = capabilities.isFeatureAvailable(.syntaxHighlighting)
@@ -302,7 +302,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedConfigurationPerformance() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         measure(options: Self.standardMeasureOptions) {
             for _ in 0..<100 {
                 _ = capabilities.recommendedConfiguration()
@@ -314,7 +314,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedConfigurationMemoryAdjustments() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
 
         // Check that memory-based adjustments are applied
@@ -339,7 +339,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedConfigurationDeviceSpecific() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
         let deviceType = capabilities.deviceType
 
@@ -382,7 +382,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testRecommendedConfigurationPerformanceCapabilities() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
         let perfCaps = capabilities.performanceCapabilities
 
@@ -403,7 +403,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testAllFeaturesHaveAvailabilityLevel() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         // Test all known features
         let features: [PlatformCapabilities.EditorFeature] = [
@@ -423,7 +423,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testInputCapabilities() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let inputCaps = capabilities.inputCapabilities
 
         // Basic validation of input capabilities based on platform
@@ -451,7 +451,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCADisplayLinkSupportOnCatalyst() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let perfCaps = capabilities.performanceCapabilities
 
         #if targetEnvironment(macCatalyst)
@@ -483,7 +483,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCatalystPerformanceCapabilities() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let perfCaps = capabilities.performanceCapabilities
 
         #if targetEnvironment(macCatalyst)
@@ -507,7 +507,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCatalystFeatureAvailability() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         #if targetEnvironment(macCatalyst)
         // Test Catalyst-specific feature availability
@@ -550,7 +550,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
 
     @MainActor
     func testCatalystRecommendedConfiguration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         #if targetEnvironment(macCatalyst)
         let config = capabilities.recommendedConfiguration()

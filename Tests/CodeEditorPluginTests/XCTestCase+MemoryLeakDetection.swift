@@ -139,7 +139,7 @@ extension XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) async {
-        weak var weakInstance = instance
+        weak let weakInstance = instance
 
         // Allow instance to go out of scope
         await Task.yield()

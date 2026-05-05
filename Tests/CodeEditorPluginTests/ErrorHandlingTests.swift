@@ -148,7 +148,7 @@ final class ErrorHandlingTests: XCTestCase {
     // MARK: - Platform-Specific Error Handling
 
     func testPlatformCapabilityErrorHandling() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         // Test feature availability checks don't crash with edge cases
         let allFeatures: [PlatformCapabilities.EditorFeature] = [

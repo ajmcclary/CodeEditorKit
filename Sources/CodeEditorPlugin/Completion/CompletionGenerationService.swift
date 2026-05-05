@@ -99,7 +99,7 @@ internal final class CompletionGenerationService {
     /// This consolidates previous language-specific methods into a single data-driven approach
     private func generateBasicCompletions(for context: CompletionContext) -> [CompletionItemModel] {
         // Try to get metadata from the centralized registry first
-        if let metadata = LanguageMetadataRegistry.shared.metadata(for: context.language) {
+        if let metadata = CodeEditorDependencies.makeLanguageMetadataRegistry().metadata(for: context.language) {
             return SharedCompletionBuilder.createKeywordCompletions(
                 from: metadata.keywords,
                 filter: context.prefix,

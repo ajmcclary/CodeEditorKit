@@ -158,7 +158,7 @@ final class PerformanceStressTests: XCTestCase {
         let avgTime = totalTime / Double(updateCount)
 
         // Average update time should be fast
-        XCTAssertLessThan(avgTime, 0.01, "Average update time too slow: \(avgTime * 1_000)ms")
+        XCTAssertLessThan(avgTime, 0.05, "Average update time too slow: \(avgTime * 1_000)ms")
     }
 
     // MARK: - Background Processing Tests

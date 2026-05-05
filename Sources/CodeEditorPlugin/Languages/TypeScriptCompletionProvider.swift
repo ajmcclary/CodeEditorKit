@@ -3,14 +3,10 @@ import Foundation
 // MARK: - TypeScript Completion Provider
 
 /// Built-in completion provider for TypeScript language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .typescript)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .typescript) instead")
 @MainActor
-public final class TypeScriptCompletionProvider: BaseCompletionProvider {
+final class TypeScriptCompletionProvider: BaseCompletionProvider {
     // TypeScript extends JavaScript, so include JS keywords plus TS-specific ones
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
         // JavaScript keywords
         "const", "let", "var", "function", "class", "if", "else", "for", "while",
@@ -27,7 +23,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
         // Primitive types
         "string", "number", "boolean", "symbol", "bigint", "any", "unknown",
@@ -50,7 +46,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         "@deprecated", "@experimental", "@sealed", "@override", "@readonly"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "interface",
@@ -140,7 +136,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    public init() {
+    init() {
         super.init(
             id: "typescript-builtin",
             supportedLanguages: [.typescript],
@@ -151,7 +147,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
 
     // MARK: - CompletionProvider Implementation
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -243,18 +239,18 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
         return TypeScriptContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Completion Creation Methods
 
-    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -352,7 +348,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Member Completions Override
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
 
         // Provide TypeScript-aware member completions
@@ -377,7 +373,7 @@ public final class TypeScriptCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Parameter Completions Override
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = [
             "event: Event", "error: Error", "data: any", "result: T",
             "callback: () => void", "options: Options", "config: Config",

@@ -9,7 +9,7 @@ struct ContentView: View {
         // Configure the editor
         _config = State(initialValue: {
             var configuration = EditorConfiguration()
-            configuration.display.showLineNumbers = true
+            configuration.display.isLineNumbersEnabled = true
             configuration.display.syntaxHighlighting = true
             configuration.display.fontSize = 14
             configuration.layout.tabWidth = 4

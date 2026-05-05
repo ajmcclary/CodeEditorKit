@@ -14,12 +14,6 @@ import AppKit
 /// Eliminates scattered platform detection logic and provides unified interfaces
 @MainActor
 public final class PlatformServiceLayer {
-    // MARK: - Singleton
-
-    /// Shared singleton instance providing centralized platform services
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = PlatformServiceLayer()
-
     // MARK: - Owned Services
 
     private let _deviceService = PlatformDeviceService()
@@ -73,10 +67,6 @@ public final class PlatformServiceLayer {
 /// Centralized device detection service that replaces scattered UIDevice.current checks
 @MainActor
 public final class PlatformDeviceService {
-    /// Shared singleton instance for device detection
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = PlatformDeviceService()
-
     /// Public initializer for dependency injection
     public init() {}
 

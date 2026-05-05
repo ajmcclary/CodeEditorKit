@@ -3,12 +3,8 @@ import Foundation
 // MARK: - XML Completion Provider
 
 /// Built-in completion provider for XML language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .xml)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .xml) instead")
 @MainActor
-public final class XMLCompletionProvider: BaseCompletionProvider {
+final class XMLCompletionProvider: BaseCompletionProvider {
     // Common XML elements
     private let commonElements = [
         "xml", "element", "attribute", "text", "cdata", "comment", "processing-instruction",
@@ -82,7 +78,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overrides
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "xml-declaration",
@@ -175,7 +171,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "xml-builtin",
             supportedLanguages: [.xml],
@@ -186,7 +182,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overridden Methods
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -234,7 +230,7 @@ public final class XMLCompletionProvider: BaseCompletionProvider {
         )
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         if text.hasSuffix("&") {
             return "&"
         }

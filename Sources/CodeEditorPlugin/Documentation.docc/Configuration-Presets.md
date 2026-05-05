@@ -209,7 +209,7 @@ Start with a preset and customize:
 var config = EditorConfiguration.minimal
 
 // Add specific customizations
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.display.fontSize = 16
 config.layout.tabWidth = 2
 
@@ -227,7 +227,7 @@ extension EditorConfiguration {
         var config = EditorConfiguration()
         
         // Display settings
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.display.fontSize = 12
         config.display.showMinimap = true
         config.display.theme = .vsDark

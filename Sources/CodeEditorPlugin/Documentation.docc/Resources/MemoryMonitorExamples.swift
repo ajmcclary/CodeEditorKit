@@ -20,36 +20,37 @@ func basicMemoryMonitorSetup() {
     config.apply(to: editor)
 }
 
-// MARK: - Example 2: Shared Memory Monitor Pattern
+// MARK: - Example 2: Injected Memory Monitor Pattern
 
 class EditorManager {
-    // Shared memory monitor for all editors
-    private let sharedMemoryMonitor = MemoryMonitor()
+    private let editorMemoryMonitor = MemoryMonitor()
+    private let imageCache = ImageCache()
+    private let syntaxCache = SyntaxCache()
 
     init() {
-        configureSharedMonitor()
+        configureMemoryMonitor()
     }
 
-    private func configureSharedMonitor() {
-        sharedMemoryMonitor.memoryThresholdMB = 300.0
-        sharedMemoryMonitor.enableAutomaticCleanup = true
+    private func configureMemoryMonitor() {
+        editorMemoryMonitor.memoryThresholdMB = 300.0
+        editorMemoryMonitor.enableAutomaticCleanup = true
 
         // Register app-wide cleanup handlers
-        sharedMemoryMonitor.registerCleanupHandler(
+        editorMemoryMonitor.registerCleanupHandler(
             identifier: "image-cache",
             priority: .high
         ) { @MainActor in
             // Clear image cache
-            let freed = ImageCache.shared.clear()
+            let freed = imageCache.clear()
             return CleanupResult(memoryFreedMB: freed, description: "Cleared image cache")
         }
 
-        sharedMemoryMonitor.registerCleanupHandler(
+        editorMemoryMonitor.registerCleanupHandler(
             identifier: "syntax-cache",
             priority: .normal
         ) { @MainActor in
             // Clear syntax highlighting cache
-            let freed = SyntaxCache.shared.clear()
+            let freed = syntaxCache.clear()
             return CleanupResult(memoryFreedMB: freed, description: "Cleared syntax cache")
         }
     }
@@ -58,7 +59,7 @@ class EditorManager {
         let editor = CodeEditorView()
 
         var config = EditorConfiguration()
-        config.performance.memoryMonitor = sharedMemoryMonitor
+        config.performance.memoryMonitor = editorMemoryMonitor
         config.apply(to: editor)
 
         return editor
@@ -120,16 +121,19 @@ struct ContentView: View {
 struct DocumentEditor: View {
     let document: Document
     let memoryMonitor: MemoryMonitor
+    private var configuration: EditorConfiguration {
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = memoryMonitor
+        config.display.isLineNumbersEnabled = true
+        return config
+    }
 
     var body: some View {
         CodeEditor(text: .constant(document.content))
+            .codeLanguage(document.language)
             .environment(
                 \.codeEditorConfiguration,
-                EditorConfigurationBuilder()
-                    .memoryMonitor(memoryMonitor)
-                    .language(document.language)
-                    .isLineNumbersEnabled(true)
-                    .build()
+                configuration
             )
     }
 }
@@ -354,13 +358,9 @@ struct Document {
 }
 
 class ImageCache {
-    static let shared = ImageCache()
-
     func clear() -> Double { 30.0 }
 }
 
 class SyntaxCache {
-    static let shared = SyntaxCache()
-
     func clear() -> Double { 15.0 }
 }

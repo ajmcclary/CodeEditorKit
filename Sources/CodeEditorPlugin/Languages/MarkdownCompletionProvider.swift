@@ -3,12 +3,8 @@ import Foundation
 // MARK: - Markdown Completion Provider
 
 /// Built-in completion provider for Markdown language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .markdown)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .markdown) instead")
 @MainActor
-public final class MarkdownCompletionProvider: BaseCompletionProvider {
+final class MarkdownCompletionProvider: BaseCompletionProvider {
     // Reference to static data from MarkdownCompletionData
     private let markdownSyntax = MarkdownCompletionData.markdownSyntax
     private let elements = MarkdownCompletionData.elements
@@ -19,11 +15,11 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
     private let linkPatterns = MarkdownCompletionData.linkPatterns
 
     // Override snippets property
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         MarkdownCompletionData.snippets
     }
 
-    public init() {
+    init() {
         super.init(
             id: "markdown-builtin",
             supportedLanguages: [.markdown],
@@ -34,7 +30,7 @@ public final class MarkdownCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overrides for Markdown Completions
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide

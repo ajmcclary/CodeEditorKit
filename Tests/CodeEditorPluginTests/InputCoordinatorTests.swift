@@ -115,7 +115,7 @@ final class InputCoordinatorTests: XCTestCase {
         let handled = coordinator.handleInput(pencilEvent, in: mockView)
 
         #if canImport(UIKit)
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         if capabilities.supportsPencilInput {
             XCTAssertTrue(handled, "Pencil input should be handled on supported devices")
         } else {

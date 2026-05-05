@@ -3,14 +3,10 @@ import Foundation
 // MARK: - Java Completion Provider
 
 /// Built-in completion provider for Java language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .java)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .java) instead")
 @MainActor
-public final class JavaCompletionProvider: BaseCompletionProvider {
+final class JavaCompletionProvider: BaseCompletionProvider {
     // Java keywords
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
             "class", "const", "continue", "default", "do", "double", "else", "enum",
@@ -24,7 +20,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
     }
 
     // Built-in types and classes
-    override public var types: [String] {
+    override var types: [String] {
         [
             "boolean", "byte", "char", "short", "int", "long", "float", "double",
             "String", "Object", "Class", "Integer", "Double", "Float", "Long",
@@ -36,7 +32,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
                 label: "class",
@@ -164,7 +160,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         "org.springframework", "org.junit", "org.apache", "com.google"
     ]
 
-    public init() {
+    init() {
         super.init(
             id: "java-builtin",
             supportedLanguages: [.java],
@@ -175,7 +171,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Completion Provider Override
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -204,7 +200,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Context Analysis Overrides
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
 
@@ -241,18 +237,18 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
         return ContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@")).inverted)
         return components.last ?? ""
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Completion Creation Method Overrides
 
-    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -269,7 +265,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
             }
     }
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParams = [
             "String str", "int n", "int i", "boolean flag", "Object obj",
             "List<?> list", "Map<?, ?> map", "Exception e", "T value"
@@ -295,7 +291,7 @@ public final class JavaCompletionProvider: BaseCompletionProvider {
     /// Delegate to JavaMemberCompletions for type-specific member suggestions
     private let javaMemberCompletions = JavaMemberCompletions()
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         javaMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 

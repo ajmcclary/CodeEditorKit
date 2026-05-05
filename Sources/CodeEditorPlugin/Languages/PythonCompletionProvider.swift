@@ -3,15 +3,11 @@ import Foundation
 // MARK: - Python Completion Provider
 
 /// Built-in completion provider for Python language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .python)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .python) instead")
 @MainActor
-public final class PythonCompletionProvider: BaseCompletionProvider {
+final class PythonCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "def", "class", "if", "elif", "else", "for", "while", "try", "except",
             "finally", "with", "as", "import", "from", "return", "yield", "break",
@@ -20,7 +16,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
             "int", "float", "str", "bool", "list", "tuple", "dict", "set", "frozenset",
             "bytes", "bytearray", "memoryview", "range", "complex", "type", "object",
@@ -28,7 +24,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         [
             "print", "input", "len", "range", "enumerate", "zip", "map", "filter",
             "sorted", "reversed", "sum", "min", "max", "any", "all", "abs", "round",
@@ -39,7 +35,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var literals: [String] {
+    override var literals: [String] {
         [
             "True", "False", "None", "self", "__name__", "__main__", "__file__",
             "__doc__", "__dict__", "__class__", "__init__", "__new__", "__del__",
@@ -52,7 +48,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "def",
@@ -148,7 +144,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "python-builtin",
             supportedLanguages: [.python],
@@ -159,14 +155,14 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Context Analysis Override
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         // Use SharedContextAnalyzer for standardized context analysis
         SharedContextAnalyzer.analyzeContext(context, for: .python).toContextAnalysisResult()
     }
 
     // MARK: - Override Function Completions
 
-    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+    override func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         let lineText = extractCurrentWord(from: filter) // This is a simplification
 
         // Check if we're in an import context
@@ -178,7 +174,7 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
         return createBuiltinFunctionCompletions(filter: filter)
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
@@ -223,13 +219,13 @@ public final class PythonCompletionProvider: BaseCompletionProvider {
     /// Delegate to PythonMemberCompletions for type-specific member suggestions
     private let memberCompletions = PythonMemberCompletions()
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         memberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
     // MARK: - Parameter Completions Override
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["self", "cls", "args", "kwargs", "key", "value", "index", "item", "data", "result", "error", "callback"]
 
         return commonParameters

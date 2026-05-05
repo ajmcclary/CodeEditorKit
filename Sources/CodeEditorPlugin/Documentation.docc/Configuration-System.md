@@ -11,25 +11,22 @@ Master CodeEditorPlugin's powerful and flexible configuration system.
 
 The EditorConfiguration system provides fine-grained control over every aspect of the editor through a clean, nested structure. Configuration changes apply instantly without recreating views.
 
-## Quick Start with Builder Pattern
+## Quick Start
 
-Use the fluent `EditorConfigurationBuilder` for easy configuration:
+Use direct mutation on the nested configuration sections:
 
 ```swift
 // Basic configuration
-let config = EditorConfigurationBuilder()
-    .fontSize(16)
-    .showLineNumbers(true)
-    .tabWidth(4)
-    .theme(.dark)
-    .language(.swift)
-    .build()
+var config = EditorConfiguration()
+config.display.fontSize = 16
+config.display.isLineNumbersEnabled = true
+config.layout.tabWidth = 4
+config.display.theme = .dark
 
 // Start from presets
-let config = EditorConfigurationBuilder(preset: .minimal)
-    .fontSize(14)
-    .enableSyntaxHighlighting(true)
-    .build()
+var minimal = EditorConfiguration.minimal
+minimal.display.fontSize = 14
+minimal.display.enableSyntaxHighlighting = true
 ```
 
 ## Configuration Structure
@@ -41,7 +38,7 @@ EditorConfiguration is organized into four logical groups:
 Controls visual appearance:
 
 ```swift
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.display.highlightSelectedLine = true
 config.display.fontSize = 14.0
 config.display.fontName = "SF Mono"
@@ -102,7 +99,7 @@ struct MyEditor: View {
         CodeEditor(text: $code)
             .environment(\.codeEditorConfiguration, configuration)
             .onAppear {
-                configuration.display.showLineNumbers = true
+                configuration.display.isLineNumbersEnabled = true
                 configuration.display.theme = .xcodeDark
             }
     }
@@ -117,60 +114,33 @@ Apply configuration directly:
 let editor = CodeEditorView()
 let config = EditorConfiguration()
 
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.layout.tabWidth = 2
 config.apply(to: editor)
 ```
 
-## Builder Pattern
+## Common Preset Customization
 
-The EditorConfigurationBuilder provides a fluent API for configuration:
+Start from built-in presets and adjust only the settings that differ:
 
 ```swift
 // Language-specific presets
-let swiftConfig = EditorConfigurationBuilder.swift()
-let webConfig = EditorConfigurationBuilder.web()
-let markdownConfig = EditorConfigurationBuilder.markdown()
+let swiftConfig = EditorConfiguration.default
 
-// Custom configuration with chaining
-let customConfig = EditorConfigurationBuilder()
-    .fontSize(16)
-    .theme(.dark)
-    .language(.python)
-    .tabWidth(4)
-    .enableCodeCompletion(true)
-    .wrapLines(false)
-    .showLineNumbers(true)
-    .enableAnnotations(true)
-    .build()
-```
+var webConfig = EditorConfiguration.default
+webConfig.layout.tabWidth = 2
 
-### Builder Methods
+var markdownConfig = EditorConfiguration.markdown
 
-```swift
-// Display settings
-.fontSize(_ size: CGFloat)
-.fontName(_ name: String)
-.theme(_ theme: Theme)
-.showLineNumbers(_ show: Bool)
-.highlightSelectedLine(_ highlight: Bool)
-.enableAnnotations(_ enable: Bool)
-
-// Layout settings  
-.tabWidth(_ width: Int)
-.insertSpacesForTabs(_ insert: Bool)
-.wrapLines(_ wrap: Bool)
-.lineSpacing(_ spacing: CGFloat)
-
-// Behavior settings
-.language(_ language: Language)
-.enableCodeCompletion(_ enable: Bool)
-.autoIndent(_ enable: Bool)
-.editable(_ editable: Bool)
-
-// Performance settings
-.enableHardwareAcceleration(_ enable: Bool)
-.maxFileSize(_ size: Int)
+// Custom configuration
+var customConfig = EditorConfiguration()
+customConfig.display.fontSize = 16
+customConfig.display.theme = .dark
+customConfig.layout.tabWidth = 4
+customConfig.behavior.enableCodeCompletion = true
+customConfig.layout.wrapLines = false
+customConfig.display.isLineNumbersEnabled = true
+customConfig.display.enableAnnotations = true
 ```
 
 ## Configuration Presets
@@ -213,20 +183,6 @@ config.display.theme = .presentation
 // - UI elements (selection, gutter, line numbers)
 ```
 
-## Builder Pattern
-
-Create configurations using the builder pattern:
-
-```swift
-let config = EditorConfigurationBuilder()
-    .preset(.default)  // Start from a preset
-    .showLineNumbers(true)
-    .fontSize(16)
-    .tabWidth(2)
-    .theme(.githubLight)
-    .build()
-```
-
 ## Immutable Updates
 
 Use the `.with()` method for immutable updates:
@@ -245,7 +201,7 @@ Changes apply immediately without view recreation:
 ```swift
 // This updates the editor instantly
 configuration.display.theme = .vsDark
-configuration.display.showLineNumbers.toggle()
+configuration.display.isLineNumbersEnabled.toggle()
 ```
 
 ## Custom Configuration
@@ -323,7 +279,7 @@ func shareConfiguration() {
 
 ## Direct Binding Pattern (Recommended)
 
-For SwiftUI applications, use direct property binding instead of the deprecated ConfigurationBindingBuilder:
+For SwiftUI applications, use direct property binding:
 
 ```swift
 struct SettingsView: View {

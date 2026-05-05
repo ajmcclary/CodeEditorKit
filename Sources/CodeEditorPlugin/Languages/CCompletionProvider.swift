@@ -3,13 +3,8 @@ import Foundation
 // MARK: - C/C++ Completion Provider
 
 /// Built-in completion provider for C and C++ languages
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .c)`
-///   or `LanguageProviderFactory.createProvider(for: .cpp)` which returns a `UniversalCompletionProvider`
-///   with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .c) or .cpp instead")
 @MainActor
-public final class CCompletionProvider: BaseCompletionProvider {
+final class CCompletionProvider: BaseCompletionProvider {
     // C keywords
     private let cKeywords = [
         "auto", "break", "case", "char", "const", "continue", "default", "do",
@@ -63,7 +58,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         "#elif", "#endif", "#error", "#pragma", "#warning", "#line"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         // C snippets
         SnippetTemplate(
@@ -172,7 +167,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
 
     private let isCpp: Bool
 
-    public init() {
+    init() {
         self.isCpp = false // Will be determined by context
         super.init(
             id: "c-cpp-builtin",
@@ -184,7 +179,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
 
     // MARK: - CompletionProvider Implementation
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Determine if we're in C++ mode
@@ -270,7 +265,7 @@ public final class CCompletionProvider: BaseCompletionProvider {
         return CContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotOrArrowNotation(from: text)
     }
 

@@ -42,7 +42,7 @@ final class TextKitBridge {
     ///   - capabilities: Platform capabilities (defaults to shared instance)
     init(textView: PlatformTextView, capabilities: PlatformCapabilities? = nil) {
         self.textView = textView
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
 
         // Check platform capabilities and force TextKit2 if supported
         if self.capabilities.preferTextKit2 {

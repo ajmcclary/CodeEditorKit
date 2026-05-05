@@ -11,8 +11,8 @@ import Foundation
 ///
 /// ```swift
 /// @MainActor
-/// final class SwiftCompletionProvider: CompletionProvider {
-///     let id = "swift-provider"
+/// final class CustomCompletionProvider: CompletionProvider {
+///     let id = "custom-provider"
 ///     let supportedLanguages: [Language] = [.swift]
 ///     let triggerCharacters = [".", "(", "[", "<"]
 ///     let supportsSnippets = true
@@ -31,8 +31,8 @@ import Foundation
 ///
 /// ```swift
 /// let manager = CompletionManager()
-/// let swiftProvider = SwiftCompletionProvider()
-/// manager.registerProvider(swiftProvider)
+/// let provider = CustomCompletionProvider()
+/// manager.registerProvider(provider)
 /// ```
 ///
 /// - SeeAlso: ``CompletionItemModel``, ``CompletionContextModel``, ``CompletionManager``

@@ -354,7 +354,7 @@ public enum ConfigurationCodableHelpers {
 /// 
 /// Provides common patterns for configuration builder implementations, including validation
 /// and consistent documentation generation.
-public enum ConfigurationBuilderHelpers {
+enum ConfigurationBuilderHelpers {
     /// Creates a validated configuration update
     /// 
     /// Safely updates a configuration value by validating the new value and handling
@@ -366,7 +366,7 @@ public enum ConfigurationBuilderHelpers {
     ///   - newValue: The proposed new value
     ///   - validator: Function that validates the new value
     /// - Returns: The validated new value, auto-fixed value, or original value on failure
-    public static func updateWithValidation<T>(
+    static func updateWithValidation<T>(
         _ currentValue: T,
         newValue: T,
         validator: (T) -> ConfigurationValidationUtilities.ValidationResult<T>
@@ -402,7 +402,7 @@ public enum ConfigurationBuilderHelpers {
     ///   - description: Description of what this property controls
     ///   - validRange: Optional description of valid value ranges
     /// - Returns: A formatted documentation comment string
-    public static func createDocumentation(
+    static func createDocumentation(
         for property: String,
         description: String,
         validRange: String? = nil

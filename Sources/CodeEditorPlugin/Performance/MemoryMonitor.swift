@@ -133,28 +133,28 @@ import UIKit
 ///
 /// ## Multi-Window Applications
 ///
-/// For apps with multiple editor windows, share a single monitor or coordinate multiple monitors:
+/// For apps with multiple editor windows, inject a monitor through your app's window manager:
 ///
 /// ```swift
-/// // Shared monitor approach (recommended)
 /// @MainActor
 /// class EditorWindowManager {
-///     static let sharedMemoryMonitor = MemoryMonitor()
+///     let memoryMonitor = MemoryMonitor()
 ///     
-///     static func setupSharedMonitor() {
-///         sharedMemoryMonitor.memoryThresholdMB = 500.0  // Higher for multi-window
-///         sharedMemoryMonitor.enableAutomaticCleanup = true
-///         sharedMemoryMonitor.startMonitoring()
+///     func setupMonitor() {
+///         memoryMonitor.memoryThresholdMB = 500.0  // Higher for multi-window
+///         memoryMonitor.enableAutomaticCleanup = true
+///         memoryMonitor.startMonitoring()
 ///     }
 /// }
 ///
-/// // Per-window usage
 /// class EditorWindowController {
+///     let windowManager: EditorWindowManager
+///
 ///     override func windowDidLoad() {
 ///         super.windowDidLoad()
 ///         
 ///         // Register window-specific cleanup
-///         EditorWindowManager.sharedMemoryMonitor.registerCleanupHandler(
+///         windowManager.memoryMonitor.registerCleanupHandler(
 ///             identifier: "window-\(windowID)",
 ///             priority: .low
 ///         ) { [weak self] in
@@ -170,7 +170,7 @@ import UIKit
 ///     
 ///     func windowWillClose(_ notification: Notification) {
 ///         // Unregister this window's cleanup handler
-///         EditorWindowManager.sharedMemoryMonitor.unregisterCleanupHandler(
+///         windowManager.memoryMonitor.unregisterCleanupHandler(
 ///             identifier: "window-\(windowID)"
 ///         )
 ///     }

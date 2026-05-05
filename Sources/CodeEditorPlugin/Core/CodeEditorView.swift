@@ -214,8 +214,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Memory monitor for tracking and managing memory usage
     /// 
     /// Set this property to provide a custom memory monitor instance or to share
-    /// a single monitor across multiple editor views. If not set, the editor creates
-    /// its own instance.
+    /// a single monitor across multiple editor views. If not set, the editor uses
+    /// the configured `swift-dependencies` factory.
     /// 
     /// When changed, all subsystems that use the memory monitor are automatically updated.
     /// 
@@ -232,7 +232,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// let editor2 = CodeEditorView() 
     /// editor2.memoryMonitor = sharedMonitor
     /// ```
-    public var memoryMonitor = MemoryMonitor() {
+    public var memoryMonitor = CodeEditorDependencies.makeMemoryMonitor() {
         didSet {
             // Only update if the monitor actually changed
             guard memoryMonitor !== oldValue else { return }

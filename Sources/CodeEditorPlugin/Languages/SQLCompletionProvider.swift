@@ -3,15 +3,11 @@ import Foundation
 // MARK: - SQL Completion Provider
 
 /// Built-in completion provider for SQL language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .sql)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .sql) instead")
 @MainActor
-public final class SQLCompletionProvider: BaseCompletionProvider {
+final class SQLCompletionProvider: BaseCompletionProvider {
     // MARK: - Override Properties
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         // SQL keywords (standard SQL)
         [
             // DDL
@@ -46,7 +42,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
         ] + mysqlKeywords + postgresKeywords
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         // SQL functions
         [
             // Aggregate functions
@@ -74,7 +70,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         // SQL data types
         [
             "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "DECIMAL", "NUMERIC",
@@ -84,7 +80,7 @@ public final class SQLCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
                 label: "select",
@@ -250,7 +246,7 @@ SELECT * FROM ${1:cte_name};
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "sql-builtin",
             supportedLanguages: [.sql],
@@ -261,7 +257,7 @@ SELECT * FROM ${1:cte_name};
 
     // MARK: - Context Analysis
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.uppercased().trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition)).uppercased()
 
@@ -299,7 +295,7 @@ SELECT * FROM ${1:cte_name};
         return ContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_")).inverted)
         return components.last ?? ""
     }
@@ -372,7 +368,7 @@ SELECT * FROM ${1:cte_name};
 
     // MARK: - Completion Creation Methods
 
-    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -418,7 +414,7 @@ SELECT * FROM ${1:cte_name};
             }
     }
 
-    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+    override func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)
@@ -434,7 +430,7 @@ SELECT * FROM ${1:cte_name};
             }
     }
 
-    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         // For SQL context, types can be either data types or table names
         let dataTypeCompletions = super.createTypeCompletions(filter: filter)
 
@@ -456,7 +452,7 @@ SELECT * FROM ${1:cte_name};
         return dataTypeCompletions + tableCompletions
     }
 
-    override public func createMemberCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for _: String?, filter: String) -> [CompletionItemModel] {
         // In SQL, members are column names
         // In a real implementation, this would query schema information based on the table name
         // For now, return common column names

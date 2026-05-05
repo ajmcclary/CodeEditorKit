@@ -16,7 +16,7 @@ extension ConfigurationValidator {
             ))
         }
 
-        // Gutter width validation (showGutter is controlled by display.showLineNumbers)
+        // Gutter width validation (gutter visibility is controlled by display.isLineNumbersEnabled)
         if layout.gutterWidth < 20.0 {
             issues.append(ValidationIssue(
                 severity: .warning,

@@ -265,30 +265,6 @@ extension EnvironmentValues {
     }
 }
 
-/// Configuration binding builder
-public enum ConfigurationBinding {
-    /// Creates a binding for a configuration property
-    public static func create<T>(
-        keyPath: WritableKeyPath<EditorConfiguration, T>,
-        get: @escaping () -> EditorConfiguration,
-        set: @escaping (EditorConfiguration) -> Void
-    ) -> Binding<T> {
-        // Capture variables as nonisolated to work around Sendable warnings in UI context
-        nonisolated(unsafe) let unsafeGet: () -> EditorConfiguration = get
-        nonisolated(unsafe) let unsafeSet: (EditorConfiguration) -> Void = set
-        nonisolated(unsafe) let unsafeKeyPath: WritableKeyPath<EditorConfiguration, T> = keyPath
-
-        return Binding(
-            get: { unsafeGet()[keyPath: unsafeKeyPath] },
-            set: { newValue in
-                var config = unsafeGet()
-                config[keyPath: unsafeKeyPath] = newValue
-                unsafeSet(config)
-            }
-        )
-    }
-}
-
 // MARK: - Convenience Configuration Controls
 
 extension View {

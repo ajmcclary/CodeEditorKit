@@ -3,14 +3,10 @@ import Foundation
 // MARK: - Rust Completion Provider
 
 /// Built-in completion provider for Rust language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .rust)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .rust) instead")
 @MainActor
-public final class RustCompletionProvider: BaseCompletionProvider {
+final class RustCompletionProvider: BaseCompletionProvider {
     // Rust language elements
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
         "as", "async", "await", "break", "const", "continue", "crate", "dyn",
         "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in",
@@ -22,7 +18,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
         "bool", "char", "f32", "f64", "i8", "i16", "i32", "i64", "i128",
         "isize", "str", "u8", "u16", "u32", "u64", "u128", "usize",
@@ -55,7 +51,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         "std::iter", "std::ops", "std::cmp", "std::convert", "std::marker"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "fn",
@@ -160,7 +156,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    public init() {
+    init() {
         super.init(
             id: "rust-builtin",
             supportedLanguages: [.rust],
@@ -171,7 +167,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
 
     // MARK: - CompletionProvider Implementation
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -269,12 +265,12 @@ public final class RustCompletionProvider: BaseCompletionProvider {
         return RustContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_!'")).inverted)
         return components.last ?? ""
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
@@ -291,7 +287,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Completion Creation Methods
 
-    override public func createTypeCompletions(filter: String) -> [CompletionItemModel] {
+    override func createTypeCompletions(filter: String) -> [CompletionItemModel] {
         types
             .filter { type in
                 filter.isEmpty || type.localizedCaseInsensitiveContains(filter)
@@ -380,7 +376,7 @@ public final class RustCompletionProvider: BaseCompletionProvider {
     /// Delegate to RustMemberCompletions for type-specific member suggestions
     private let rustMemberCompletions = RustMemberCompletions()
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         rustMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 }

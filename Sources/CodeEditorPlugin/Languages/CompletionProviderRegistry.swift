@@ -15,9 +15,9 @@ public final class CompletionProviderRegistry {
 
     /// Creates a new completion provider registry with dependency injection
     /// - Parameter languageMetadataRegistry: The metadata registry to use for creating providers.
-    ///   If nil, falls back to the deprecated shared singleton.
+    ///   If nil, uses the configured dependency factory.
     public init(languageMetadataRegistry: LanguageMetadataRegistry? = nil) {
-        self.languageMetadataRegistry = languageMetadataRegistry ?? .shared
+        self.languageMetadataRegistry = languageMetadataRegistry ?? CodeEditorDependencies.makeLanguageMetadataRegistry()
         loadBuiltInProviders()
     }
 

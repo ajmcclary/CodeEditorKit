@@ -14,9 +14,9 @@ import SwiftUI
 /// CodeEditorPlugin: Production-ready code editor component for Swift applications
 ///
 /// This module provides a comprehensive code editing solution with:
-/// - **17+ programming languages** with syntax highlighting
+/// - **20 programming languages** with syntax highlighting
 /// - **Cross-platform support** for macOS, iOS, and Mac Catalyst
-/// - **Modern Swift 6 concurrency** with actor-based architecture
+/// - **Modern Swift 6.3 concurrency** with actor-based architecture
 /// - **SwiftUI and UIKit/AppKit integration**
 /// - **Performance optimizations** for large files
 /// - **Comprehensive error handling** with recovery mechanisms
@@ -47,22 +47,21 @@ import SwiftUI
 /// editor.text = "logger.debug(\"Hello, World!\")"
 /// ```
 ///
-/// ### Configuration with Builder Pattern
+/// ### Configuration
 /// ```swift
-/// let config = EditorConfigurationBuilder()
-///     .fontSize(16)
-///     .theme(.dark)
-///     .language(.swift)
-///     .build()
+/// var config = EditorConfiguration()
+/// config.display.fontSize = 16
+/// config.display.theme = .dark
 ///
 /// editor.configuration = config
+/// editor.language = .swift
 /// ```
 ///
 /// ## Architecture
 ///
 /// The plugin uses a feature-based architecture with clear separation of concerns:
 /// - **Core**: Main text view and editing functionality
-/// - **Configuration**: Unified configuration system with builder pattern
+/// - **Configuration**: Unified nested configuration values and presets
 /// - **SyntaxHighlighting**: Multi-language highlighting with SwiftSyntax integration
 /// - **Platform**: Cross-platform abstraction layer
 /// - **Extensions**: Utility extensions and helpers
@@ -88,28 +87,5 @@ import SwiftUI
 /// }
 /// ```
 public struct CodeEditorPlugin {
-    /// Current version of the CodeEditorPlugin
-    public static let version = "1.0.0"
-
-    /// Swift version used to build the plugin
-    public static let swiftVersion = "6.0"
-
-    /// Minimum supported macOS version
-    public static let minimumMacOSVersion = "12.0"
-
-    /// Minimum supported iOS version
-    public static let minimumIOSVersion = "16.0"
-
-    /// Supported programming languages count
-    public static let supportedLanguagesCount = 17
-
     private init() {}
 }
-
-// MARK: - Essential Type Aliases
-
-// Main text view types (for backward compatibility)
-/// Legacy type alias for CodeEditorView
-public typealias CodeEditorTextView = CodeEditorView
-/// Legacy type alias for CodeEditorViewDelegate
-public typealias CodeEditorDelegate = CodeEditorViewDelegate

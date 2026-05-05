@@ -28,15 +28,15 @@ Add CodeEditorPlugin to your project using Swift Package Manager.
 Add the dependency to your `Package.swift` file:
 
 ```swift
-// swift-tools-version: 6.0
+// swift-tools-version: 6.3
 import PackageDescription
 
 let package = Package(
     name: "MyApp",
     platforms: [
-        .macOS(.v12),
-        .iOS(.v16),
-        .macCatalyst(.v16)
+        .macOS("26.3"),
+        .iOS("26.3"),
+        .macCatalyst("26.3")
     ],
     dependencies: [
         .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "1.0.0")
@@ -60,9 +60,11 @@ import CodeEditorPlugin
 
 ## Dependencies
 
-CodeEditorPlugin has minimal dependencies:
+CodeEditorPlugin depends on a small set of Swift packages:
 
-- **swift-syntax** (510.0.0+): Used for Swift language syntax highlighting
+- **swift-syntax** (602.0.0+): Used for Swift language syntax highlighting
+- **swift-dependencies**: Dependency injection and test overrides
+- **xctest-dynamic-overlay / IssueReporting**: Developer-visible runtime issue reporting
 
 These dependencies are automatically managed by Swift Package Manager.
 
@@ -70,12 +72,12 @@ These dependencies are automatically managed by Swift Package Manager.
 
 Ensure your project meets these minimum requirements:
 
-- **Swift**: 6.0 or later
-- **Xcode**: 16.0 or later
+- **Swift**: 6.3 or later
+- **Xcode**: 26.3 or later
 - **Deployment Targets**:
-  - macOS 12.0+
-  - iOS 16.0+
-  - Mac Catalyst 16.0+
+  - macOS 26.3+
+  - iOS 26.3+
+  - Mac Catalyst 26.3+
 
 ## Troubleshooting
 
@@ -91,7 +93,7 @@ If you encounter package resolution issues:
 
 If swift-syntax fails to resolve:
 
-1. Ensure you're using Xcode 16.0 or later
+1. Ensure you're using Xcode 26.3 or later
 2. Try specifying the exact swift-syntax version in your Package.swift
 
 ## See Also

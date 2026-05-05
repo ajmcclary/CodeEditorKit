@@ -12,7 +12,7 @@ struct ContentView: View {
                 Text("Display Settings")
                     .font(.headline)
 
-                Toggle("Show Line Numbers", isOn: $config.display.showLineNumbers)
+                Toggle("Show Line Numbers", isOn: $config.display.isLineNumbersEnabled)
 
                 HStack {
                     Text("Font Size: \(Int(config.display.fontSize))")

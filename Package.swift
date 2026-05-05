@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 /// CodeEditorPlugin Package Configuration
@@ -8,11 +8,11 @@
 ///
 /// ## Requirements
 ///
-/// - **Swift**: 6.0 or later
+/// - **Swift**: 6.3 or later
 /// - **Platforms**:
-///   - macOS 14.0+
-///   - iOS 16.0+
-///   - Mac Catalyst 16.0+
+///   - macOS 26.3+
+///   - iOS 26.3+
+///   - Mac Catalyst 26.3+
 ///
 /// ## Installation
 ///
@@ -34,14 +34,15 @@
 
 import PackageDescription
 
-let ksettings: [SwiftSetting] = [
+let swiftSettings: [SwiftSetting] = [
+    .swiftLanguageMode(.v6),
     // Enable strict concurrency checking for Swift 6 compatibility
     .enableExperimentalFeature("StrictConcurrency")
 ]
 
-let kpackage = Package(
+let package = Package(
     name: "CodeEditorPlugin",
-    platforms: [.macOS(.v14), .iOS(.v16), .macCatalyst(.v16)],
+    platforms: [.macOS("26.3"), .iOS("26.3"), .macCatalyst("26.3")],
     products: [
         .library(
             name: "CodeEditorPlugin",
@@ -49,25 +50,38 @@ let kpackage = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "602.0.0"),
-        .package(url: "https://github.com/daikimat/depermaid.git", from: "1.1.0")
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
     ],
     targets: [
         .target(
             name: "CodeEditorPlugin",
             dependencies: [
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax")
             ],
             exclude: [
                 "Info.plist"
             ],
-            swiftSettings: ksettings
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "CodeEditorPluginTests",
-            dependencies: ["CodeEditorPlugin"],
-            swiftSettings: ksettings
+            dependencies: [
+                "CodeEditorPlugin",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+                .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            exclude: [
+                "__Snapshots__"
+            ],
+            swiftSettings: swiftSettings
         )
     ]
 )

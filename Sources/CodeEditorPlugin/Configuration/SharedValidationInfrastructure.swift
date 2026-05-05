@@ -191,7 +191,7 @@ public enum CodableValidationHelpers {
 // MARK: - Builder Pattern Helpers
 
 /// Shared builder pattern infrastructure to reduce boilerplate across configuration builders
-public protocol ConfigurationBuilderProtocol {
+protocol ConfigurationBuilderProtocol {
     /// The configuration type that this builder manages
     associatedtype ConfigurationType
 
@@ -210,7 +210,7 @@ extension ConfigurationBuilderProtocol {
     /// - Parameter mutation: A closure that modifies the configuration
     /// - Returns: Self for method chaining
     @discardableResult
-    public func with(_ mutation: (inout ConfigurationType) -> Void) -> Self {
+    func with(_ mutation: (inout ConfigurationType) -> Void) -> Self {
         var copy = self
 
         mutation(&copy.configuration)
@@ -223,7 +223,7 @@ extension ConfigurationBuilderProtocol {
 extension EditorConfiguration {
     /// Validates the configuration using the shared validation engine
     /// Replaces duplicate validation logic across multiple files
-    public func validated(autoFix: Bool = false) -> (configuration: EditorConfiguration, issues: [ConfigurationValidationEngine.ValidationIssue]) {
+    func validated(autoFix: Bool = false) -> (configuration: EditorConfiguration, issues: [ConfigurationValidationEngine.ValidationIssue]) {
         ConfigurationValidationEngine.validateConfiguration(self, autoFix: autoFix)
     }
 

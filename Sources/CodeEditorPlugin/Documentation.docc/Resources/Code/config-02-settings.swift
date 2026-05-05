@@ -4,7 +4,7 @@ import CodeEditorPlugin
 var config = EditorConfiguration()
 
 // Display settings
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.display.fontSize = 16
 config.display.theme = .vsDark
 config.display.showMinimap = true

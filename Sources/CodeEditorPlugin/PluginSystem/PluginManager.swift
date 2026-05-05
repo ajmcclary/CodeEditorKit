@@ -6,7 +6,9 @@ import Foundation
 /// and managing plugins throughout their lifecycle.
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public final class PluginManager: ObservableObject {
+final class PluginManager: ObservableObject {
+    private static let hostVersion = "1.0.0"
+
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PluginManager")
 
     /// Registered plugins by identifier
@@ -37,10 +39,10 @@ public final class PluginManager: ObservableObject {
     private let statePersistence: PluginStatePersistence
 
     /// Published state for SwiftUI integration
-    @Published public private(set) var loadedPlugins: Set<String> = []
-    @Published public private(set) var failedPlugins: Set<String> = []
+    @Published private(set) var loadedPlugins: Set<String> = []
+    @Published private(set) var failedPlugins: Set<String> = []
 
-    public init(
+    init(
         configuration: EditorConfiguration,
         languageRegistry: LanguageRegistry,
         completionRegistry: CompletionProviderRegistry,
@@ -57,7 +59,7 @@ public final class PluginManager: ObservableObject {
 
     /// Register a plugin type
     /// - Parameter pluginType: The plugin class to register
-    public func registerPlugin<T: Plugin>(_ pluginType: T.Type) async throws {
+    func registerPlugin<T: Plugin>(_ pluginType: T.Type) async throws {
         let identifier = pluginType.identifier
 
         // Check if already registered
@@ -92,7 +94,7 @@ public final class PluginManager: ObservableObject {
     }
 
     /// Load and activate all registered plugins
-    public func loadPlugins() async {
+    func loadPlugins() async {
         // Clear previous state
         loadedPlugins.removeAll()
         failedPlugins.removeAll()
@@ -173,7 +175,7 @@ public final class PluginManager: ObservableObject {
 
     /// Deactivate a plugin
     /// - Parameter identifier: Plugin identifier to deactivate
-    public func deactivatePlugin(identifier: String) async throws {
+    func deactivatePlugin(identifier: String) async throws {
         guard var instance = plugins[identifier],
               case .active = instance.state else {
             throw PluginError.notFound(identifier: identifier)
@@ -210,7 +212,7 @@ public final class PluginManager: ObservableObject {
 
     /// Reload a plugin
     /// - Parameter identifier: Plugin identifier to reload
-    public func reloadPlugin(identifier: String) async throws {
+    func reloadPlugin(identifier: String) async throws {
         if loadedPlugins.contains(identifier) {
             try await deactivatePlugin(identifier: identifier)
         }
@@ -237,7 +239,7 @@ public final class PluginManager: ObservableObject {
     /// - Parameters:
     ///   - commandId: Command identifier
     ///   - pluginId: Plugin identifier
-    public func executeCommand(commandId: String, from pluginId: String) async throws {
+    func executeCommand(commandId: String, from pluginId: String) async throws {
         guard let pluginCommands = commands[pluginId] else {
             throw PluginError.notFound(identifier: pluginId)
         }
@@ -250,7 +252,7 @@ public final class PluginManager: ObservableObject {
     }
 
     /// Get all available commands
-    public func availableCommands() -> [(plugin: String, command: PluginCommand)] {
+    func availableCommands() -> [(plugin: String, command: PluginCommand)] {
         var result: [(String, PluginCommand)] = []
         for (pluginId, pluginCommands) in commands {
             for command in pluginCommands.keys {
@@ -324,7 +326,7 @@ public final class PluginManager: ObservableObject {
     }
 
     private func checkVersionCompatibility(required: String) throws {
-        let currentVersion = CodeEditorPlugin.version
+        let currentVersion = Self.hostVersion
 
         // Simple version comparison (could be enhanced)
         if required > currentVersion {

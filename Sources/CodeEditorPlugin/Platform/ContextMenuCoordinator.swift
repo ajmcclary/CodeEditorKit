@@ -30,7 +30,7 @@ import AppKit
 /// ## Example Usage
 ///
 /// ```swift
-/// let coordinator = ContextMenuCoordinator.shared
+/// let coordinator = ContextMenuCoordinator()
 /// 
 /// // Create context menu for text selection
 /// let menu = coordinator.createContextMenu(
@@ -69,7 +69,7 @@ public final class ContextMenuCoordinator: ObservableObject {
     /// Creates a new ContextMenuCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         logger.debug("ContextMenuCoordinator initialized")
     }
 

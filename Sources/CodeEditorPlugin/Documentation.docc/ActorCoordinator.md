@@ -217,7 +217,7 @@ let result = try await coordinator.errorRecovery.recover(from: error) {
 ## Platform Requirements
 
 ActorCoordinator requires:
-- macOS 13.0+ / iOS 16.0+
+- macOS 26.3+ / iOS 26.3+
 - Swift Concurrency support
 - Uses modern Swift 6 concurrency features
 

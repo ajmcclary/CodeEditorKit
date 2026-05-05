@@ -40,19 +40,18 @@ let editor = CodeEditorView()
 config.apply(to: editor)
 ```
 
-### Using EditorConfigurationBuilder
+### Using Direct Configuration
 
-For a fluent API, use the configuration builder:
+Assign runtime dependencies directly on the configuration:
 
 ```swift
 let monitor = MemoryMonitor()
 monitor.startMonitoring()
 
-let config = EditorConfigurationBuilder()
-    .memoryMonitor(monitor)
-    .showLineNumbers(true)
-    .fontSize(14)
-    .build()
+var config = EditorConfiguration()
+config.performance.memoryMonitor = monitor
+config.display.isLineNumbersEnabled = true
+config.display.fontSize = 14
 
 let editor = CodeEditorView()
 config.apply(to: editor)
@@ -146,14 +145,15 @@ import CodeEditorPlugin
 struct ContentView: View {
     @State private var code = "// Your code here"
     let memoryMonitor = MemoryMonitor()
+    private var configuration: EditorConfiguration {
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = memoryMonitor
+        return config
+    }
     
     var body: some View {
         CodeEditor(text: $code)
-            .environment(\.codeEditorConfiguration, 
-                EditorConfigurationBuilder()
-                    .memoryMonitor(memoryMonitor)
-                    .build()
-            )
+            .environment(\.codeEditorConfiguration, configuration)
     }
 }
 ```
@@ -456,10 +456,10 @@ class DependencyContainer {
     }
     
     func createEditorConfiguration() -> EditorConfiguration {
-        EditorConfigurationBuilder()
-            .memoryMonitor(memoryMonitor)
-            .eventSystem(eventSystem)
-            .build()
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = memoryMonitor
+        config.eventSystem = eventSystem
+        return config
     }
 }
 
@@ -687,9 +687,8 @@ class MultiTabEditorController {
         tabMonitor.memoryThresholdMB = 100.0
         tabMonitors[tabID] = tabMonitor
         
-        let config = EditorConfigurationBuilder()
-            .memoryMonitor(tabMonitor)
-            .build()
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = tabMonitor
         
         let editor = CodeEditorView()
         config.apply(to: editor)
@@ -700,70 +699,6 @@ class MultiTabEditorController {
     private func isTabActive(_ tabID: UUID) -> Bool {
         // Implementation depends on your UI
         return true
-    }
-}
-```
-
-### Plugin System with Memory Management
-
-```swift
-protocol EditorPlugin {
-    var identifier: String { get }
-    var memoryMonitor: MemoryMonitor { get }
-    func activate()
-    func deactivate()
-}
-
-class PluginManager {
-    private let mainMemoryMonitor: MemoryMonitor
-    private var plugins: [String: EditorPlugin] = [:]
-    
-    init(memoryMonitor: MemoryMonitor) {
-        self.mainMemoryMonitor = memoryMonitor
-        setupPluginMemoryManagement()
-    }
-    
-    private func setupPluginMemoryManagement() {
-        mainMemoryMonitor.registerCleanupHandler(
-            identifier: "plugin-manager",
-            priority: .normal
-        ) { @MainActor [weak self] in
-            guard let self else { return CleanupResult(memoryFreedMB: 0, description: "Manager deallocated") }
-            
-            var totalFreed = 0.0
-            
-            // Ask each plugin to clean up
-            for plugin in self.plugins.values {
-                totalFreed += await plugin.memoryMonitor.performCleanup()
-            }
-            
-            return CleanupResult(
-                memoryFreedMB: totalFreed,
-                description: "Cleaned \(self.plugins.count) plugins"
-            )
-        }
-    }
-    
-    func loadPlugin(_ plugin: EditorPlugin) {
-        plugins[plugin.identifier] = plugin
-        
-        // Register plugin-specific cleanup
-        plugin.memoryMonitor.registerCleanupHandler(
-            identifier: "plugin-\(plugin.identifier)",
-            priority: .normal
-        ) { @MainActor [weak plugin] in
-            guard let plugin else { 
-                return CleanupResult(memoryFreedMB: 0, description: "Plugin deallocated")
-            }
-            
-            // Plugin-specific cleanup
-            plugin.deactivate()
-            plugin.activate() // Restart with clean state
-            
-            return CleanupResult(memoryFreedMB: 5.0, description: "Plugin restarted")
-        }
-        
-        plugin.activate()
     }
 }
 ```

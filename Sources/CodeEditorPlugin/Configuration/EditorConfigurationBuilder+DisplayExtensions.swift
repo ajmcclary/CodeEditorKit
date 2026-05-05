@@ -29,7 +29,7 @@ extension EditorConfigurationBuilder {
   ///
   /// - Note: Font sizes outside 8-72 range will trigger validation warnings
   @discardableResult
-  public func fontSize(_ size: CGFloat) -> Self {
+  func fontSize(_ size: CGFloat) -> Self {
     with { $0.display.fontSize = size }
   }
 
@@ -53,7 +53,7 @@ extension EditorConfigurationBuilder {
   /// - Note: This is the preferred method name for consistency with other boolean properties
   /// - SeeAlso: `gutterWidth(_:)` for customizing gutter size
   @discardableResult
-  public func isLineNumbersEnabled(_ enabled: Bool) -> Self {
+  func isLineNumbersEnabled(_ enabled: Bool) -> Self {
     with { $0.display.isLineNumbersEnabled = enabled }
   }
 
@@ -61,7 +61,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to enable syntax highlighting
   /// - Returns: The builder for chaining
   @discardableResult
-  public func enableSyntaxHighlighting(_ enabled: Bool) -> Self {
+  func enableSyntaxHighlighting(_ enabled: Bool) -> Self {
     with { $0.display.enableSyntaxHighlighting = enabled }
   }
 
@@ -69,7 +69,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter highlight: Whether to highlight the selected line
   /// - Returns: The builder for chaining
   @discardableResult
-  public func highlightSelectedLine(_ highlight: Bool) -> Self {
+  func highlightSelectedLine(_ highlight: Bool) -> Self {
     with { $0.display.highlightSelectedLine = highlight }
   }
 
@@ -77,7 +77,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter color: The color to use for highlighting the selected line
   /// - Returns: The builder for chaining
   @discardableResult
-  public func selectedLineHighlightColor(_ color: PlatformColor) -> Self {
+  func selectedLineHighlightColor(_ color: PlatformColor) -> Self {
     with { $0.display.selectedLineHighlightColor = color }
   }
 
@@ -85,7 +85,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to enable annotations
   /// - Returns: The builder for chaining
   @discardableResult
-  public func enableAnnotations(_ enabled: Bool) -> Self {
+  func enableAnnotations(_ enabled: Bool) -> Self {
     with { $0.display.enableAnnotations = enabled }
   }
 
@@ -93,7 +93,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter show: Whether to show invisible characters
   /// - Returns: The builder for chaining
   @discardableResult
-  public func showInvisibleCharacters(_ show: Bool) -> Self {
+  func showInvisibleCharacters(_ show: Bool) -> Self {
     with { $0.display.showInvisibleCharacters = show }
   }
 
@@ -101,7 +101,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter show: Whether to show the minimap
   /// - Returns: The builder for chaining
   @discardableResult
-  public func showMinimap(_ show: Bool) -> Self {
+  func showMinimap(_ show: Bool) -> Self {
     with { $0.display.showMinimap = show }
   }
 
@@ -109,7 +109,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enable: Whether to enable code folding
   /// - Returns: The builder for chaining
   @discardableResult
-  public func enableCodeFolding(_ enable: Bool) -> Self {
+  func enableCodeFolding(_ enable: Bool) -> Self {
     with { $0.display.enableCodeFolding = enable }
   }
 
@@ -117,7 +117,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter show: Whether to show folding controls
   /// - Returns: The builder for chaining
   @discardableResult
-  public func showFoldingControls(_ show: Bool) -> Self {
+  func showFoldingControls(_ show: Bool) -> Self {
     with { $0.display.showFoldingControls = show }
   }
 }

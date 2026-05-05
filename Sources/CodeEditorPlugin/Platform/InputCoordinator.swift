@@ -30,7 +30,7 @@ import AppKit
 /// ## Example Usage
 ///
 /// ```swift
-/// let coordinator = InputCoordinator.shared
+/// let coordinator = InputCoordinator()
 /// 
 /// // Handle a platform input event
 /// let handled = coordinator.handleInput(event, in: textView)
@@ -51,7 +51,7 @@ public final class InputCoordinator: ObservableObject {
     /// Creates a new InputCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         logger.debug("InputCoordinator initialized")
     }
 

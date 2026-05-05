@@ -12,13 +12,13 @@ swift build && swiftlint && swift test --parallel
 # Fix linting issues
 swiftlint --fix
 
-# Run sample app
-swift run
+# Generate package documentation
+swift package generate-documentation --target CodeEditorPlugin
 ```
 
 ### Project Stats
-- **401 Source Files** across **17 directories**
-- **66 Test Files** with comprehensive coverage
+- **437 Source Files** across **18 top-level source directories**
+- **70 Test Files** with comprehensive coverage
 - **20 Languages Supported** (Swift, JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, HTML, CSS, JSON, Markdown, YAML, XML, SQL, Ruby, PHP, Shell, Plain Text)
 - **Zero SwiftLint Violations** maintained
 
@@ -37,6 +37,7 @@ Sources/CodeEditorPlugin/
 ├── Features/                # Optional features
 ├── SwiftUI/                 # SwiftUI integration
 ├── Platform/                # Cross-platform abstractions
+├── PluginSystem/            # Internal plugin infrastructure
 ├── Extensions/              # Type extensions (+Extensions suffix)
 ├── Performance/             # Monitoring & optimization
 ├── LSP/                     # Language Server Protocol
@@ -59,7 +60,7 @@ Sources/CodeEditorPlugin/
 ### Configuration
 ```swift
 // Direct updates (preferred)
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.layout.tabWidth = 4
 
 // Use presets
@@ -67,7 +68,7 @@ let config = EditorConfiguration.minimal
 
 // Batch updates
 appState.updateConfiguration { config in
-    config.display.showLineNumbers = true
+    config.display.isLineNumbersEnabled = true
     config.display.fontSize = 16
 }
 
@@ -83,9 +84,9 @@ CodeEditor(text: $code)
     .environment(\.codeEditorConfiguration, config)
 
 // Direct bindings (✅ RECOMMENDED)
-Toggle("Line Numbers", isOn: $config.display.showLineNumbers)
+Toggle("Line Numbers", isOn: $config.display.isLineNumbersEnabled)
 
-// ❌ AVOID: ConfigurationBindingBuilder (deprecated)
+// Avoid recreating configuration wrappers when a direct binding is available.
 ```
 
 ### Platform Code
@@ -112,7 +113,7 @@ textView.language = .python
 
 ### Must Follow
 - **Swift 6 Concurrency**: Use actors for background work
-- **Extension Naming**: ALL extensions use `+Extensions` suffix
+- **Extension Naming**: ALL extension files use the `+Extensions` suffix; domain-local extension files are preferred when the extension belongs to a specific feature area
 - **Platform Detection**: Use `#if canImport()` NOT `#if os()`
 - **Logging**: Use `CrossPlatformLogger.logger()` not `print()`
 - **Memory**: Clean up in `removeFromSuperview`
@@ -158,9 +159,9 @@ xcodebuild -scheme CodeEditorPlugin -destination 'platform=iOS Simulator,name=iP
 
 ## API Notes
 
-### Deprecated (2025)
-- `ConfigurationBindingBuilder` - Use direct bindings
-- Singleton patterns - Use dependency injection
+### API Notes
+- Use direct bindings for SwiftUI configuration controls.
+- Use dependency injection for services.
 
 ### Key Services
 - `TextEditingService` - Text manipulation

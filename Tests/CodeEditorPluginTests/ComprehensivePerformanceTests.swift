@@ -132,7 +132,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
     }
 
     @MainActor
-    func testSymbolNavigatorPerformance() throws {
+    func testSymbolNavigatorPerformance() async throws {
         let navigator = SymbolNavigator()
         let textView = CodeEditorView(frame: .zero)
 
@@ -186,19 +186,16 @@ final class ComprehensivePerformanceTests: XCTestCase {
         textView.language = .swift
         navigator.attach(to: textView)
 
-        // Skip measure for this test - it's unreliable with async operations
         navigator.updateSymbols()
 
-        // Just verify it completes without errors
-        let expectation = self.expectation(description: "Symbol detection")
-
-        // Use a longer delay to allow symbol detection to complete
-        // Symbol detection is debounced by 0.3s and needs processing time
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            // The test passes if we reach this point without errors
-            expectation.fulfill()
+        for _ in 0..<30 {
+            if !navigator.symbols.isEmpty {
+                return
+            }
+            try await Task.sleep(nanoseconds: 250_000_000)
         }
-        wait(for: [expectation], timeout: 5.0)
+
+        XCTFail("Symbol detection did not produce symbols")
     }
 
     @MainActor
@@ -358,7 +355,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
     @MainActor
     func testPlatformCapabilitiesPerformance() throws {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         measure(options: Self.standardMeasureOptions) {
             // Test frequent capability checks
@@ -374,7 +371,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
     @MainActor
     func testUnifiedPerformanceSystemOverhead() throws {
-        let performanceSystem = UnifiedPerformanceSystem.shared
+        let performanceSystem = CodeEditorDependencies.makeUnifiedPerformanceSystem()
 
         // Test performance tracking overhead
         measure(options: Self.standardMeasureOptions) {
@@ -577,7 +574,8 @@ final class ComprehensivePerformanceTests: XCTestCase {
     @MainActor
     func testConcurrentCompletionRequests() throws {
         let completionManager = CompletionManager(memoryMonitor: MemoryMonitor())
-        completionManager.registerProvider(SwiftCompletionProvider())
+        let provider = try XCTUnwrap(LanguageProviderFactory.createProvider(for: .swift))
+        completionManager.registerProvider(provider)
 
         let contexts = (0..<10).map { index in
             CompletionContextModel(
@@ -657,12 +655,12 @@ final class ComprehensivePerformanceTests: XCTestCase {
                     }
                 }
 
-                // Wait a bit for operations to complete
-                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                // Wait a bit for operations to complete under parallel test load.
+                try? await Task.sleep(nanoseconds: 100_000_000)
                 expectation.fulfill()
             }
 
-            wait(for: [expectation], timeout: 1.0)
+            wait(for: [expectation], timeout: 10.0)
         }
     }
 

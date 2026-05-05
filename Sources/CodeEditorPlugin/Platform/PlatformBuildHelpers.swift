@@ -22,7 +22,7 @@ import Foundation
 // For Mac Catalyst Only:
 // #if targetEnvironment(macCatalyst)
 //
-// For runtime platform detection, use `PlatformCapabilities.shared` instead.
+// For runtime platform detection, inject or create `PlatformCapabilities`.
 //
 // Since Swift doesn't support custom build flags without modifying the build system,
 // we'll provide helper functions that can be used where appropriate.

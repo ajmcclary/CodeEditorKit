@@ -50,7 +50,7 @@ public final class AsyncSyntaxHighlighter {
         self.backgroundHighlighter = BackgroundSyntaxHighlighter(memoryMonitor: memoryMonitor)
         self.debounceInterval = debounceInterval
         self.memoryMonitor = memoryMonitor
-        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
+        self.performanceMetrics = performanceMetrics ?? CodeEditorDependencies.makeProductionPerformanceMetrics()
 
         // Set up periodic cache optimization (can be disabled for tests)
         if enablePeriodicOptimization {

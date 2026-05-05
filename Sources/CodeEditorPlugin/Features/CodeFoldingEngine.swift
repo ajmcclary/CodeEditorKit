@@ -40,7 +40,7 @@ internal class CodeFoldingEngine: ObservableObject {
     // MARK: - Initialization
 
     internal init(performanceMetrics: ProductionPerformanceMetrics? = nil) {
-        self.performanceMetrics = performanceMetrics ?? ProductionPerformanceMetrics.shared
+        self.performanceMetrics = performanceMetrics ?? CodeEditorDependencies.makeProductionPerformanceMetrics()
         // Providers are now initialized in FoldingProviderRegistry
     }
 

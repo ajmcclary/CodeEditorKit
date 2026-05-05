@@ -57,6 +57,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
     // Incremental state
     private var lastHighlightedText: String?
     private var lastHighlightedTokens: [HighlightedToken] = []
+    private var cacheWarmingTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -77,10 +78,14 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
         // Warm cache for common languages if enabled
         if configuration.cacheWarmingEnabled {
-            Task {
-                await warmCache()
+            cacheWarmingTask = Task { [weak self] in
+                await self?.warmCache()
             }
         }
+    }
+
+    deinit {
+        cacheWarmingTask?.cancel()
     }
 
     // MARK: - Public Methods
@@ -440,6 +445,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         ]
 
         for (snippet, language) in commonSnippets {
+            guard !Task.isCancelled else { return }
             _ = await highlight(text: snippet, language: language)
         }
     }

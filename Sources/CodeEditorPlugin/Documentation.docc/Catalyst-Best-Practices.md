@@ -424,7 +424,7 @@ class CatalystEditorViewController: PlatformViewController {
         // Configure
         containerView.configuration = {
             var config = EditorConfiguration.default
-            config.display.showLineNumbers = true
+            config.display.isLineNumbersEnabled = true
             config.display.showMinimap = false // Minimap not recommended on Catalyst
             return config
         }()
@@ -493,7 +493,7 @@ func catalystOptimizedConfiguration() -> EditorConfiguration {
     
     // Display optimizations
     config.display.fontSize = 14.0 // Desktop-appropriate size
-    config.display.showLineNumbers = true
+    config.display.isLineNumbersEnabled = true
     config.display.showMinimap = false // Save screen space
     config.display.highlightSelectedLine = true
     
@@ -539,11 +539,8 @@ When building with Xcode beta, you may see:
 
 **Workarounds:**
 ```bash
-# Build from command line
-xcodebuild -workspace CodeEditorSample.xcworkspace \
-           -scheme CodeEditorSample \
-           -destination 'platform=macOS,variant=Mac Catalyst' \
-           build
+# Build the package from command line
+swift build
 
 # Or suppress warnings in scheme
 # Other Linker Flags: -Xlinker -w

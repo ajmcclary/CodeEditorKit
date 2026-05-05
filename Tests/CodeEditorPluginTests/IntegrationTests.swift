@@ -132,7 +132,7 @@ final class IntegrationTests: CleanupTestCase {
     // MARK: - Platform Capabilities Integration Tests
 
     func testPlatformCapabilitiesWithTextView() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let editor = createCodeEditorView()
 
         // Verify platform-specific features work correctly
@@ -274,7 +274,7 @@ final class IntegrationTests: CleanupTestCase {
     // MARK: - TextKit2 Optimization Integration Tests
 
     func testTextKit2OptimizationWithLargeFile() async throws {
-        guard PlatformCapabilities.shared.supportsTextKit2 else {
+        guard CodeEditorDependencies.makePlatformCapabilities().supportsTextKit2 else {
             throw XCTSkip("TextKit2 not supported on this platform")
         }
 

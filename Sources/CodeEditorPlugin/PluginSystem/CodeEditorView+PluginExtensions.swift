@@ -4,7 +4,7 @@ import Foundation
 @available(macOS 13.0, iOS 16.0, *)
 extension CodeEditorView {
     /// Plugin manager for this editor instance
-    public var pluginManager: PluginManager? {
+    var pluginManager: PluginManager? {
         get {
             objc_getAssociatedObject(self, &kPluginManagerKey) as? PluginManager
         }
@@ -15,7 +15,7 @@ extension CodeEditorView {
 
     /// Initialize plugin system for this editor
     @MainActor
-    public func initializePluginSystem() {
+    func initializePluginSystem() {
         guard pluginManager == nil else { return }
 
         // Create a default event system if none exists in configuration
@@ -67,7 +67,7 @@ import SwiftUI
 @available(macOS 13.0, iOS 16.0, *)
 extension View {
     /// Enable plugin system for the code editor
-    public func codeEditorPlugins(_: Bool = true) -> some View {
+    func codeEditorPlugins(_: Bool = true) -> some View {
         self.onAppear {
             // This would need to be connected to the actual CodeEditorView instance
             // through the environment or view model
@@ -75,7 +75,7 @@ extension View {
     }
 
     /// Configure allowed plugins
-    public func codeEditorAllowedPlugins(_ identifiers: Set<String>) -> some View {
+    func codeEditorAllowedPlugins(_ identifiers: Set<String>) -> some View {
         self.environment(\.allowedPlugins, identifiers)
     }
 }
@@ -100,13 +100,13 @@ extension EnvironmentValues {
 
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public struct PluginDiscoveryView: View {
+struct PluginDiscoveryView: View {
     @StateObject private var viewModel = PluginDiscoveryViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    public init() {}
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             List {
                 ForEach(viewModel.availablePlugins) { plugin in

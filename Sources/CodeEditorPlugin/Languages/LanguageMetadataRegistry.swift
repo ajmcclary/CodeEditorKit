@@ -5,12 +5,6 @@ import Foundation
 /// Centralized registry for all language metadata, eliminating duplication across providers
 @MainActor
 public final class LanguageMetadataRegistry {
-    // MARK: - Singleton
-
-    /// Shared instance for global language metadata access
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = LanguageMetadataRegistry()
-
     /// Public initializer for dependency injection
     public init() {}
 

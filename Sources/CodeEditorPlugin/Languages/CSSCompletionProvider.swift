@@ -3,12 +3,8 @@ import Foundation
 // MARK: - CSS Completion Provider
 
 /// Built-in completion provider for CSS language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .css)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .css) instead")
 @MainActor
-public final class CSSCompletionProvider: BaseCompletionProvider {
+final class CSSCompletionProvider: BaseCompletionProvider {
     // MARK: - CSS-specific properties
 
     // CSS properties
@@ -205,7 +201,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "css-builtin",
             supportedLanguages: [.css],
@@ -216,7 +212,7 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
 
     // MARK: - BaseCompletionProvider Overrides
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         // CSS at-rules and important keywords
         [
             "@media", "@import", "@keyframes", "@font-face", "@supports", "@page",
@@ -226,17 +222,17 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         cssSnippets
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         cssFunctions
     }
 
     // MARK: - Context Analysis Override
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
 
@@ -271,14 +267,14 @@ public final class CSSCompletionProvider: BaseCompletionProvider {
         return ContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-@")).inverted)
         return components.last ?? ""
     }
 
     // MARK: - Custom Completions Override
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide

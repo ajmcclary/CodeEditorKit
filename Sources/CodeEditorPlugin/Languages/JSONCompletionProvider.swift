@@ -3,24 +3,20 @@ import Foundation
 // MARK: - JSON Completion Provider
 
 /// Built-in completion provider for JSON language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .json)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .json) instead")
 @MainActor
-public final class JSONCompletionProvider: BaseCompletionProvider {
+final class JSONCompletionProvider: BaseCompletionProvider {
     // JSON keywords and values (overriding base class property)
-    override public var keywords: [String] {
+    override var keywords: [String] {
         ["true", "false", "null"]
     }
 
     // JSON types (overriding base class property)
-    override public var types: [String] {
+    override var types: [String] {
         ["object", "array", "string", "number", "integer", "boolean", "null"]
     }
 
     // JSON snippets (overriding base class property)
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         JSONCompletionData.snippets
     }
 
@@ -77,7 +73,7 @@ public final class JSONCompletionProvider: BaseCompletionProvider {
         "settings", "overrides", "globals", "ignorePatterns", "root"
     ]
 
-    public init() {
+    init() {
         super.init(
             id: "json-builtin",
             supportedLanguages: [.json],
@@ -88,7 +84,7 @@ public final class JSONCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overridden Completion Method
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -156,7 +152,7 @@ public final class JSONCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overridden Base Methods
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         // Handle quoted strings
         if let lastQuote = text.lastIndex(of: "\"") {
             let afterQuote = String(text[text.index(after: lastQuote)...])

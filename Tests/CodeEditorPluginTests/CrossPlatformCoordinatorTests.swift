@@ -39,7 +39,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
     @MainActor
     func testDependencyInjection() {
         // Create custom dependencies
-        let customCapabilities = PlatformCapabilities.shared
+        let customCapabilities = CodeEditorDependencies.makePlatformCapabilities()
         let customInputCoordinator = InputCoordinator(capabilities: customCapabilities)
         let customToolbarCoordinator = ToolbarCoordinator(capabilities: customCapabilities)
         let customContextMenuCoordinator = ContextMenuCoordinator(capabilities: customCapabilities)

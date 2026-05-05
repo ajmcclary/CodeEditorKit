@@ -327,21 +327,17 @@ config.display.theme = .vsDark
 config.apply(to: editorView)
 ```
 
-### Sample App Integration
+### Configuration Integration
 
-The sample app demonstrates comprehensive theme integration:
+Theme integration is driven by `EditorConfiguration` and SwiftUI environment values:
 
 ```swift
-// In UnifiedConfigurationView.swift
-SearchableSection(
-    id: "Theme",
-    title: "Themes", 
-    keywords: [
-        "theme", "color", "appearance", "dark", "light", "xcode", 
-        "github", "solarized", "minimal", "presentation", "preview"
-    ],
-    content: { AnyView(ThemeConfigurationSection()) }
-)
+var config = EditorConfiguration()
+config.display.theme = .github
+
+CodeEditor(text: $code)
+    .environment(\.codeEditorConfiguration, config)
+```
 
 // In ThemeConfigurationSection.swift
 private func applyTheme(_ theme: ColorTheme) {

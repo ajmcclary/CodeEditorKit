@@ -213,7 +213,7 @@ batcher.queueUpdate { config in
 }
 
 batcher.queueUpdate { config in
-    config.display.showLineNumbers = true
+    config.display.isLineNumbersEnabled = true
     return config
 }
 

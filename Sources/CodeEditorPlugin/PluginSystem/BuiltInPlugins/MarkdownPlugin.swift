@@ -2,12 +2,12 @@ import Foundation
 
 /// Built-in plugin providing enhanced Markdown support
 @available(macOS 13.0, iOS 16.0, *)
-public final class MarkdownPlugin: Plugin {
-    public static let identifier = "com.codeeditorplugin.markdown"
+final class MarkdownPlugin: Plugin {
+    static let identifier = "com.codeeditorplugin.markdown"
 
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "MarkdownPlugin")
 
-    public var metadata: PluginMetadata {
+    var metadata: PluginMetadata {
         PluginMetadata(
             identifier: Self.identifier,
             name: "Enhanced Markdown Support",
@@ -57,10 +57,10 @@ public final class MarkdownPlugin: Plugin {
 
     private let state = InternalState()
 
-    public init() {}
+    init() {}
 
     @MainActor
-    public func activate(context: PluginContext) async throws {
+    func activate(context: PluginContext) async throws {
         logger.info("Activating Markdown plugin")
 
         // Register enhanced Markdown completion provider
@@ -80,7 +80,7 @@ public final class MarkdownPlugin: Plugin {
     }
 
     @MainActor
-    public func deactivate(context: PluginContext) async throws {
+    func deactivate(context: PluginContext) async throws {
         logger.info("Deactivating Markdown plugin")
 
         // Unregister completion provider
@@ -92,14 +92,14 @@ public final class MarkdownPlugin: Plugin {
         // Note: Event system unsubscription would be handled if we were subscribed
     }
 
-    public func saveState() async -> PluginState {
+    func saveState() async -> PluginState {
         PluginState(
             strings: state.savedSnippets,
             doubles: ["lastActivated": Date().timeIntervalSince1970]
         )
     }
 
-    public func restoreState(_ state: PluginState) async {
+    func restoreState(_ state: PluginState) async {
         self.state.savedSnippets = state.strings
     }
 

@@ -3,12 +3,8 @@ import Foundation
 // MARK: - Shell Completion Provider
 
 /// Built-in completion provider for Shell/Bash language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .shell)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .shell) instead")
 @MainActor
-public final class ShellCompletionProvider: BaseCompletionProvider {
+final class ShellCompletionProvider: BaseCompletionProvider {
     // Shell-specific context (stored for use in completions method)
     private var shellContext = ShellContextAnalysisResult(type: .general, filter: "")
 
@@ -314,7 +310,7 @@ fi
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "shell-builtin",
             supportedLanguages: [.shell],
@@ -325,23 +321,23 @@ fi
 
     // MARK: - BaseCompletionProvider Overrides
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         // Shell keywords and built-in commands
         builtinCommands
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         // System commands as functions
         systemCommands
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         shellSnippets
     }
 
     // MARK: - Completions Override
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -388,7 +384,7 @@ fi
 
     // MARK: - Context Analysis Override
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
 
         // Extract current word being typed
@@ -457,7 +453,7 @@ fi
         return ShellContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         // Handle special cases for shell
         if text.hasSuffix("$") {
             return "$"
@@ -518,7 +514,7 @@ fi
 
     // MARK: - Override Keyword Completions
 
-    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -693,7 +689,7 @@ fi
             }
     }
 
-    override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    override func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)

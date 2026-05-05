@@ -174,8 +174,9 @@ final class ConcurrencyTests: XCTestCase {
 
         let duration = Date().timeIntervalSince(startTime)
 
-        // Should complete within reasonable time (adjust based on performance requirements)
-        XCTAssertLessThan(duration, 5.0, "Concurrent editor creation should be efficient")
+        // Should complete within reasonable time. Enforce the stopwatch threshold only in
+        // pinned performance jobs because parallel package tests can add scheduler noise.
+        assertMeasuredDuration(duration, lessThan: 5.0, operation: "concurrent editor creation")
     }
 
     // MARK: - Multiple Editor Views Concurrency

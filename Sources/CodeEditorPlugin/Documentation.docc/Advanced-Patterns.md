@@ -370,38 +370,32 @@ enum CodeEditorError: LocalizedError {
 ### Read-Only Code Viewer
 
 ```swift
-let config = EditorConfigurationBuilder(preset: .readOnly)
-    .fontSize(14)
-    .theme(.github)
-    .language(.swift)
-    .build()
+var config = EditorConfiguration.readOnly
+config.display.fontSize = 14
+config.display.theme = .github
 
 editor.configuration = config
+editor.language = .swift
 ```
 
 ### Markdown Editor
 
 ```swift
-let config = EditorConfigurationBuilder()
-    .language(.markdown)
-    .wrapLines(true)
-    .enableSpellCheck(true)
-    .showLineNumbers(false)
-    .build()
+var config = EditorConfiguration.markdown
+config.layout.wrapLines = true
+config.behavior.isContinuousSpellCheckingEnabled = true
+config.display.isLineNumbersEnabled = false
 ```
 
 ### Presentation Mode
 
 ```swift
-let config = EditorConfigurationBuilder(preset: .presentation)
-    .language(.swift)  // Or your preferred language
-    .build()
+let config = EditorConfiguration.presentation
 
 // Or customize further
-let customPresentation = EditorConfigurationBuilder(preset: .presentation)
-    .fontSize(24)  // Even larger
-    .theme(.dark)
-    .build()
+var customPresentation = EditorConfiguration.presentation
+customPresentation.display.fontSize = 24
+customPresentation.display.theme = .dark
 ```
 
 ### Diff Viewer
@@ -412,11 +406,8 @@ class DiffViewer {
     let rightEditor = CodeEditorView()
     
     func configure() {
-        let config = EditorConfigurationBuilder()
-            .readOnly()
-            .syncScrolling(true)
-            .highlightDifferences(true)
-            .build()
+        var config = EditorConfiguration.readOnly
+        config.display.highlightSelectedLine = false
         
         leftEditor.configuration = config
         rightEditor.configuration = config
@@ -429,9 +420,8 @@ class DiffViewer {
 ### Built-in Themes
 
 ```swift
-let config = EditorConfigurationBuilder()
-    .theme(.dark)    // or .light, .minimal
-    .build()
+var config = EditorConfiguration()
+config.display.theme = .dark    // or .light, .minimal
 ```
 
 ### Custom Colors
@@ -470,10 +460,10 @@ textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
 // New way
 let editor = CodeEditorView()
 editor.text = code
-editor.configuration = EditorConfigurationBuilder()
-    .fontSize(14)
-    .language(.swift)
-    .build()
+var config = EditorConfiguration()
+config.display.fontSize = 14
+editor.configuration = config
+editor.language = .swift
 ```
 
 ### From Other Code Editors
@@ -482,11 +472,10 @@ editor.configuration = EditorConfigurationBuilder()
 // Migrate from Monaco/CodeMirror patterns
 class EditorMigration {
     func migrateFromMonaco(monacoConfig: [String: Any]) -> EditorConfiguration {
-        return EditorConfigurationBuilder()
-            .fontSize(monacoConfig["fontSize"] as? CGFloat ?? 14)
-            .theme(mapMonacoTheme(monacoConfig["theme"] as? String))
-            .language(mapMonacoLanguage(monacoConfig["language"] as? String))
-            .build()
+        var config = EditorConfiguration()
+        config.display.fontSize = monacoConfig["fontSize"] as? CGFloat ?? 14
+        config.display.theme = mapMonacoTheme(monacoConfig["theme"] as? String)
+        return config
     }
 }
 ```
@@ -509,12 +498,10 @@ performance.enableViewportRendering = true
 ### Memory-Conscious Configuration
 
 ```swift
-let memoryOptimizedConfig = EditorConfigurationBuilder()
-    .enableViewportRendering()
-    .maxSyntaxHighlightingLength(50_000)
-    .disableMinimap()
-    .reduceAnimations()
-    .build()
+var memoryOptimizedConfig = EditorConfiguration.minimal
+memoryOptimizedConfig.performance.maxSyntaxHighlightingLength = 50_000
+memoryOptimizedConfig.display.showMinimap = false
+memoryOptimizedConfig.performance.animateCodeFolding = false
 ```
 
 ## Best Practices
@@ -533,6 +520,5 @@ let memoryOptimizedConfig = EditorConfigurationBuilder()
 - <doc:Architecture-Overview>
 - <doc:Performance-Monitoring>
 - <doc:Performance-Optimization-Integration>
-- <doc:Plugin-Architecture>
 - <doc:Troubleshooting>
 - <doc:Configuration-System>

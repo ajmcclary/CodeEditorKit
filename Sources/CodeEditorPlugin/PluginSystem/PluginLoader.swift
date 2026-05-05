@@ -3,12 +3,12 @@ import Foundation
 /// Discovers and loads plugins from designated directories
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public final class PluginLoader {
+final class PluginLoader {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "PluginLoader")
     private let fileManager = FileManager.default
 
     /// Plugin search paths in order of priority
-    public var searchPaths: [URL] {
+    var searchPaths: [URL] {
         var paths: [URL] = []
 
         // User plugins directory
@@ -31,7 +31,7 @@ public final class PluginLoader {
 
     /// Discover available plugins
     /// - Returns: Array of discovered plugin bundles
-    public func discoverPlugins() async -> [PluginBundle] {
+    func discoverPlugins() async -> [PluginBundle] {
         var discoveredPlugins: [PluginBundle] = []
 
         for searchPath in searchPaths {
@@ -107,7 +107,7 @@ public final class PluginLoader {
     /// Install a plugin from a URL
     /// - Parameter sourceURL: URL to the plugin bundle to install
     /// - Returns: Installed plugin bundle
-    public func installPlugin(from sourceURL: URL) async throws -> PluginBundle {
+    func installPlugin(from sourceURL: URL) async throws -> PluginBundle {
         // Load the bundle first to validate
         let bundle = try loadPluginBundle(at: sourceURL)
 
@@ -146,7 +146,7 @@ public final class PluginLoader {
 
     /// Uninstall a plugin
     /// - Parameter identifier: Plugin identifier to uninstall
-    public func uninstallPlugin(identifier: String) async throws {
+    func uninstallPlugin(identifier: String) async throws {
         // Find the plugin
         let plugins = await discoverPlugins()
         guard let plugin = plugins.first(where: { $0.metadata.identifier == identifier }) else {
@@ -183,34 +183,34 @@ public final class PluginLoader {
 
 /// Represents a discovered plugin bundle
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginBundle {
+struct PluginBundle {
     /// URL to the plugin bundle
-    public let url: URL
+    let url: URL
 
     /// Plugin metadata
-    public let metadata: PluginMetadata
+    let metadata: PluginMetadata
 
     /// Original manifest
-    public let manifest: PluginManifest
+    let manifest: PluginManifest
 }
 
 /// Plugin manifest format (plugin.json)
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginManifest: Codable {
-    public let identifier: String
-    public let name: String
-    public let version: String
-    public let author: String
-    public let description: String
-    public let mainClass: String
-    public let capabilities: [String]
-    public let minimumHostVersion: String?
-    public let dependencies: [ManifestDependency]
-    public let platforms: [String]
-    public let infoURL: String?
-    public let enabledByDefault: Bool
-    public let permissions: [String]
-    public let resources: [String]
+struct PluginManifest: Codable {
+    let identifier: String
+    let name: String
+    let version: String
+    let author: String
+    let description: String
+    let mainClass: String
+    let capabilities: [String]
+    let minimumHostVersion: String?
+    let dependencies: [ManifestDependency]
+    let platforms: [String]
+    let infoURL: String?
+    let enabledByDefault: Bool
+    let permissions: [String]
+    let resources: [String]
 
     private enum CodingKeys: String, CodingKey {
         case identifier, name, version, author, description, mainClass
@@ -218,7 +218,7 @@ public struct PluginManifest: Codable {
         case infoURL, enabledByDefault, permissions, resources
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         identifier = try container.decode(String.self, forKey: .identifier)
@@ -240,16 +240,16 @@ public struct PluginManifest: Codable {
 
 /// Dependency in manifest format
 @available(macOS 13.0, iOS 16.0, *)
-public struct ManifestDependency: Codable {
-    public let identifier: String
-    public let minimumVersion: String?
-    public let optional: Bool
+struct ManifestDependency: Codable {
+    let identifier: String
+    let minimumVersion: String?
+    let optional: Bool
 
     private enum CodingKeys: String, CodingKey {
         case identifier, minimumVersion, optional
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         identifier = try container.decode(String.self, forKey: .identifier)
@@ -260,7 +260,7 @@ public struct ManifestDependency: Codable {
 
 /// Plugin loader errors
 @available(macOS 13.0, iOS 16.0, *)
-public enum PluginLoaderError: Error, LocalizedError {
+enum PluginLoaderError: Error, LocalizedError {
     case invalidBundleFormat
     case missingManifest
     case invalidManifest(String)
@@ -270,7 +270,7 @@ public enum PluginLoaderError: Error, LocalizedError {
     case signatureVerificationFailed
     case incompatiblePlatform
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .invalidBundleFormat:
             return "Invalid plugin bundle format"

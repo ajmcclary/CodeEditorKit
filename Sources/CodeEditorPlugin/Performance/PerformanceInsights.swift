@@ -59,7 +59,7 @@ public final class PerformanceInsights: ObservableObject {
     ) {
         self.memoryMonitor = memoryMonitor
         self.performanceMonitor = performanceMonitor ?? PerformanceMonitor()
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         startMonitoring()
     }
 

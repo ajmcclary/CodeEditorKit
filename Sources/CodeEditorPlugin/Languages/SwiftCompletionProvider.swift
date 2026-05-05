@@ -3,15 +3,11 @@ import Foundation
 // MARK: - Swift Completion Provider
 
 /// Built-in completion provider for Swift language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .swift)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .swift) instead")
 @MainActor
-public final class SwiftCompletionProvider: BaseCompletionProvider {
+final class SwiftCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "func", "var", "let", "class", "struct", "enum", "protocol", "extension",
             "import", "if", "else", "for", "while", "do", "switch", "case", "default",
@@ -22,7 +18,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
             "String", "Int", "Double", "Float", "Bool", "Array", "Dictionary", "Set",
             "Optional", "Result", "Data", "URL", "Date", "UUID", "NSString", "NSArray",
@@ -30,11 +26,11 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var literals: [String] {
+    override var literals: [String] {
         ["true", "false", "nil", "self", "super", "Self"]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
                 label: "func",
@@ -111,7 +107,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "swift-builtin",
             supportedLanguages: [.swift],
@@ -122,7 +118,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Context Analysis Override
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
 
@@ -148,7 +144,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Member Completions Override
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         guard let targetType else { return [] }
 
         // Provide common member completions based on type
@@ -169,7 +165,7 @@ public final class SwiftCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Parameter Completions Override
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["completion", "handler", "delegate", "error", "result", "value", "index"]
 
         return commonParameters

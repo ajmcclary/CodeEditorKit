@@ -6,30 +6,30 @@ import Foundation
 /// ensuring plugins can only access functionality they have permission for.
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public final class PluginContext {
+final class PluginContext {
     /// Language registry for registering syntax highlighters
-    public let languageRegistry: LanguageRegistry
+    let languageRegistry: LanguageRegistry
 
     /// Completion provider registry
-    public let completionRegistry: CompletionProviderRegistry
+    let completionRegistry: CompletionProviderRegistry
 
     /// Access to editor configuration
-    public let configuration: EditorConfiguration
+    let configuration: EditorConfiguration
 
     /// Event system for subscribing to editor events
-    public let eventSystem: UnifiedEventSystem
+    let eventSystem: UnifiedEventSystem
 
     /// Logger for plugin-specific logging
-    public let logger: CrossPlatformLogger.Logger
+    let logger: CrossPlatformLogger.Logger
 
     /// Plugin's granted permissions
-    public let permissions: Set<PluginPermission>
+    let permissions: Set<PluginPermission>
 
     /// Plugin's identifier
-    public let pluginIdentifier: String
+    let pluginIdentifier: String
 
     /// Workspace for plugin-specific storage
-    public let workspace: PluginWorkspace
+    let workspace: PluginWorkspace
 
     /// Reference to the plugin manager (weak to avoid cycles)
     private weak var pluginManager: PluginManager?
@@ -61,7 +61,7 @@ public final class PluginContext {
     /// Request a permission that wasn't initially granted
     /// - Parameter permission: The permission to request
     /// - Returns: Whether the permission was granted
-    public func requestPermission(_ permission: PluginPermission) async -> Bool {
+    func requestPermission(_ permission: PluginPermission) async -> Bool {
         guard let pluginManager else { return false }
         return await pluginManager.requestPermission(permission, for: pluginIdentifier)
     }
@@ -69,7 +69,7 @@ public final class PluginContext {
     /// Check if a permission is granted
     /// - Parameter permission: The permission to check
     /// - Returns: Whether the permission is granted
-    public func hasPermission(_ permission: PluginPermission) -> Bool {
+    func hasPermission(_ permission: PluginPermission) -> Bool {
         permissions.contains(permission)
     }
 
@@ -77,7 +77,7 @@ public final class PluginContext {
     /// - Parameters:
     ///   - command: The command to register
     ///   - handler: The handler to execute when the command is invoked
-    public func registerCommand(_ command: PluginCommand, handler: @escaping () async throws -> Void) async throws {
+    func registerCommand(_ command: PluginCommand, handler: @escaping () async throws -> Void) async throws {
         guard hasPermission(.commands) else {
             throw PluginError.securityViolation("Plugin does not have permission to register commands")
         }
@@ -91,7 +91,7 @@ public final class PluginContext {
 
     /// Register a theme provider
     /// - Parameter provider: The theme provider to register
-    public func registerThemeProvider(_ provider: any ThemeProvider) async throws {
+    func registerThemeProvider(_ provider: any ThemeProvider) async throws {
         guard hasPermission(.themes) else {
             throw PluginError.securityViolation("Plugin does not have permission to register themes")
         }
@@ -105,48 +105,44 @@ public final class PluginContext {
 
 /// Permissions that can be granted to plugins
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginPermission: Hashable, Sendable, Codable, RawRepresentable {
-    public let rawValue: String
-
-    public init(rawValue: String) {
-        self.rawValue = rawValue
-    }
+struct PluginPermission: Hashable, Sendable, Codable, RawRepresentable {
+    let rawValue: String
 
     /// Access to language registry
-    public static let languages = Self(rawValue: "languages")
+    static let languages = Self(rawValue: "languages")
 
     /// Access to completion providers
-    public static let completion = Self(rawValue: "completion")
+    static let completion = Self(rawValue: "completion")
 
     /// Access to register commands
-    public static let commands = Self(rawValue: "commands")
+    static let commands = Self(rawValue: "commands")
 
     /// Access to register themes
-    public static let themes = Self(rawValue: "themes")
+    static let themes = Self(rawValue: "themes")
 
     /// Access to file system (sandboxed)
-    public static let fileSystem = Self(rawValue: "fileSystem")
+    static let fileSystem = Self(rawValue: "fileSystem")
 
     /// Access to network (for language servers)
-    public static let network = Self(rawValue: "network")
+    static let network = Self(rawValue: "network")
 
     /// Access to editor configuration
-    public static let configuration = Self(rawValue: "configuration")
+    static let configuration = Self(rawValue: "configuration")
 
     /// Access to diagnostics
-    public static let diagnostics = Self(rawValue: "diagnostics")
+    static let diagnostics = Self(rawValue: "diagnostics")
 }
 
 // MARK: - Plugin Workspace
 
 /// Provides isolated storage for plugins
 @available(macOS 13.0, iOS 16.0, *)
-public final class PluginWorkspace: @unchecked Sendable {
+final class PluginWorkspace: @unchecked Sendable {
     private let pluginIdentifier: String
     private let fileManager = FileManager.default
 
     /// Base directory for plugin storage
-    public var baseDirectory: URL {
+    var baseDirectory: URL {
         guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             // Fallback to temp directory if app support is not available
             return fileManager.temporaryDirectory
@@ -177,7 +173,7 @@ public final class PluginWorkspace: @unchecked Sendable {
     /// Read data from plugin storage
     /// - Parameter filename: Name of the file to read
     /// - Returns: File data if it exists
-    public func readData(filename: String) async throws -> Data {
+    func readData(filename: String) async throws -> Data {
         let url = baseDirectory.appendingPathComponent(filename)
         return try Data(contentsOf: url)
     }
@@ -186,21 +182,21 @@ public final class PluginWorkspace: @unchecked Sendable {
     /// - Parameters:
     ///   - data: Data to write
     ///   - filename: Name of the file to write
-    public func writeData(_ data: Data, filename: String) async throws {
+    func writeData(_ data: Data, filename: String) async throws {
         let url = baseDirectory.appendingPathComponent(filename)
         try data.write(to: url)
     }
 
     /// Delete a file from plugin storage
     /// - Parameter filename: Name of the file to delete
-    public func deleteFile(filename: String) async throws {
+    func deleteFile(filename: String) async throws {
         let url = baseDirectory.appendingPathComponent(filename)
         try fileManager.removeItem(at: url)
     }
 
     /// List files in plugin storage
     /// - Returns: Array of filenames
-    public func listFiles() async throws -> [String] {
+    func listFiles() async throws -> [String] {
         try fileManager.contentsOfDirectory(atPath: baseDirectory.path)
     }
 }
@@ -209,23 +205,23 @@ public final class PluginWorkspace: @unchecked Sendable {
 
 /// Represents a command that can be registered by a plugin
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginCommand: Hashable, Sendable {
+struct PluginCommand: Hashable, Sendable {
     /// Unique identifier for the command
-    public let identifier: String
+    let identifier: String
 
     /// Display title for the command
-    public let title: String
+    let title: String
 
     /// Optional keyboard shortcut
-    public let keyboardShortcut: KeyboardShortcut?
+    let keyboardShortcut: KeyboardShortcut?
 
     /// Category for organizing commands
-    public let category: String
+    let category: String
 
     /// Whether the command is enabled
-    public let isEnabled: Bool
+    let isEnabled: Bool
 
-    public init(
+    init(
         identifier: String,
         title: String,
         keyboardShortcut: KeyboardShortcut? = nil,
@@ -242,11 +238,11 @@ public struct PluginCommand: Hashable, Sendable {
 
 /// Keyboard shortcut for commands
 @available(macOS 13.0, iOS 16.0, *)
-public struct KeyboardShortcut: Hashable, Sendable {
-    public let key: String
-    public let modifiers: KeyboardModifiers
+struct KeyboardShortcut: Hashable, Sendable {
+    let key: String
+    let modifiers: KeyboardModifiers
 
-    public init(key: String, modifiers: KeyboardModifiers = []) {
+    init(key: String, modifiers: KeyboardModifiers = []) {
         self.key = key
         self.modifiers = modifiers
     }
@@ -254,24 +250,20 @@ public struct KeyboardShortcut: Hashable, Sendable {
 
 /// Keyboard modifiers
 @available(macOS 13.0, iOS 16.0, *)
-public struct KeyboardModifiers: OptionSet, Hashable, Sendable {
-    public let rawValue: Int
+struct KeyboardModifiers: OptionSet, Hashable, Sendable {
+    let rawValue: Int
 
-    public init(rawValue: Int) {
-        self.rawValue = rawValue
-    }
-
-    public static let command = Self(rawValue: 1 << 0)
-    public static let shift = Self(rawValue: 1 << 1)
-    public static let option = Self(rawValue: 1 << 2)
-    public static let control = Self(rawValue: 1 << 3)
+    static let command = Self(rawValue: 1 << 0)
+    static let shift = Self(rawValue: 1 << 1)
+    static let option = Self(rawValue: 1 << 2)
+    static let control = Self(rawValue: 1 << 3)
 }
 
 // MARK: - Theme Provider Protocol
 
 /// Protocol for plugins that provide themes
 @available(macOS 13.0, iOS 16.0, *)
-public protocol ThemeProvider: Sendable {
+protocol ThemeProvider: Sendable {
     /// Available themes from this provider
     var themes: [EditorTheme] { get }
 

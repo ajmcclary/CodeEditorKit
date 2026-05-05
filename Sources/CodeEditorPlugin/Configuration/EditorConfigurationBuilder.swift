@@ -31,7 +31,7 @@ import Foundation
 ///
 /// editor.configuration = config
 /// ```
-public struct EditorConfigurationBuilder: Sendable {
+struct EditorConfigurationBuilder: Sendable {
   // MARK: - Properties
 
   private var configuration: EditorConfiguration
@@ -51,7 +51,7 @@ public struct EditorConfigurationBuilder: Sendable {
   ///     .isLineNumbersEnabled(true)
   ///     .build()
   /// ```
-  public init() {
+  init() {
     self.configuration = EditorConfiguration()
   }
 
@@ -76,7 +76,7 @@ public struct EditorConfigurationBuilder: Sendable {
   ///     .theme(.dark)
   ///     .build()
   /// ```
-  public init(base: EditorConfiguration) {
+  init(base: EditorConfiguration) {
     self.configuration = base
   }
 
@@ -95,7 +95,7 @@ public struct EditorConfigurationBuilder: Sendable {
   ///     .enableSyntaxHighlighting(true)
   ///     .build()
   /// ```
-  public init(preset: PresetConfiguration) {
+  init(preset: PresetConfiguration) {
     switch preset {
     case .default:
       self.configuration = .default
@@ -168,7 +168,7 @@ public struct EditorConfigurationBuilder: Sendable {
   ///
   /// - SeeAlso: `EditorConfiguration.validate()`, `EditorConfiguration.apply(to:)`
   @discardableResult
-  public func build() -> EditorConfiguration {
+  func build() -> EditorConfiguration {
     // Validate and auto-fix any issues
     var finalConfig = configuration
     let validator = ConfigurationValidator()
@@ -184,7 +184,7 @@ public struct EditorConfigurationBuilder: Sendable {
   /// automatically fix issues - it returns them for the caller to handle.
   ///
   /// - Returns: A Result containing either the configuration or validation error
-  public func buildWithValidation() -> Result<EditorConfiguration, ConfigurationValidationError> {
+  func buildWithValidation() -> Result<EditorConfiguration, ConfigurationValidationError> {
     let validator = ConfigurationValidator()
     let issues = validator.validate(configuration)
 
@@ -209,7 +209,7 @@ public struct EditorConfigurationBuilder: Sendable {
   /// all issues found and any fixes that were applied.
   ///
   /// - Returns: A tuple containing the configuration and validation report
-  public func buildWithReport() -> (configuration: EditorConfiguration, report: ValidationReport) {
+  func buildWithReport() -> (configuration: EditorConfiguration, report: ValidationReport) {
     let validator = ConfigurationValidator()
     var finalConfig = configuration
 
@@ -248,7 +248,7 @@ public struct EditorConfigurationBuilder: Sendable {
   /// ```
   ///
   /// - Returns: A tuple containing the final configuration and any validation fixes applied
-  public func buildWithFeedback() -> (configuration: EditorConfiguration, fixes: [ValidationFix]) {
+  func buildWithFeedback() -> (configuration: EditorConfiguration, fixes: [ValidationFix]) {
     // Validate and auto-fix any issues
     var finalConfig = configuration
     let validator = ConfigurationValidator()

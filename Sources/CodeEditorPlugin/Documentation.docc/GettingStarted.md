@@ -108,7 +108,7 @@ Use configuration presets for common scenarios:
 ```swift
 // Start with built-in presets
 var config = EditorConfiguration.default
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 
 // Or use specialized presets
 let readOnlyConfig = EditorConfiguration.readOnly

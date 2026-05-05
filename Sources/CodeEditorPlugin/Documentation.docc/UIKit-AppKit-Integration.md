@@ -30,7 +30,7 @@ class EditorViewController: UIViewController {
         
         // Apply configuration
         var config = EditorConfiguration.default
-        config.display.showLineNumbers = true
+        config.display.isLineNumbersEnabled = true
         config.apply(to: editor)
         
         // Add to view hierarchy
@@ -176,7 +176,7 @@ extension EditorViewController: NSToolbarDelegate {
     }
     
     @objc func toggleLineNumbers() {
-        configuration.display.showLineNumbers.toggle()
+        configuration.display.isLineNumbersEnabled.toggle()
         configuration.apply(to: editor)
     }
 }

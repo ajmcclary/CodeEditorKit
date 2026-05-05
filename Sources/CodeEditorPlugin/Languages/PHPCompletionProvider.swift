@@ -3,25 +3,21 @@ import Foundation
 // MARK: - PHP Completion Provider
 
 /// Built-in completion provider for PHP language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .php)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .php) instead")
 @MainActor
-public final class PHPCompletionProvider: BaseCompletionProvider {
+final class PHPCompletionProvider: BaseCompletionProvider {
     // PHP-specific properties
-    public let phpSuperglobals = [
+    let phpSuperglobals = [
         "$GLOBALS", "$_SERVER", "$_GET", "$_POST", "$_FILES", "$_COOKIE",
         "$_SESSION", "$_REQUEST", "$_ENV", "$HTTP_RAW_POST_DATA",
         "$http_response_header", "$argc", "$argv"
     ]
 
-    public let phpMagicConstants = [
+    let phpMagicConstants = [
         "__LINE__", "__FILE__", "__DIR__", "__FUNCTION__", "__CLASS__",
         "__TRAIT__", "__METHOD__", "__NAMESPACE__"
     ]
 
-    public let phpBuiltinClasses = [
+    let phpBuiltinClasses = [
         "Exception", "ErrorException", "Error", "ParseError", "TypeError",
         "ArgumentCountError", "ArithmeticError", "DivisionByZeroError",
         "DateTime", "DateTimeImmutable", "DateInterval", "DateTimeZone",
@@ -35,7 +31,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
     ]
 
     // Override base properties
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "abstract", "and", "array", "as", "break", "callable", "case", "catch",
             "class", "clone", "const", "continue", "declare", "default", "die", "do",
@@ -52,7 +48,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
             "int", "float", "string", "bool", "array", "object", "callable",
             "iterable", "void", "null", "mixed", "never", "false", "true",
@@ -60,7 +56,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         [
         // String functions
         "strlen", "strpos", "strrpos", "substr", "str_replace", "str_repeat",
@@ -100,7 +96,7 @@ public final class PHPCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "php",
@@ -283,7 +279,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         ]
     }
 
-    public init() {
+    init() {
         super.init(
             id: "php-builtin",
             supportedLanguages: [.php],
@@ -294,7 +290,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
 
     // MARK: - Override CompletionProvider
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -406,7 +402,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
         return PHPContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$\\")).inverted)
         return components.last ?? ""
     }
@@ -481,7 +477,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
             }
     }
 
-    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+    override func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         functions
             .filter { function in
                 filter.isEmpty || function.localizedCaseInsensitiveContains(filter)

@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Supporting Types
 
 /// Document symbol representation
-public struct DocumentSymbol: Identifiable {
+public struct DocumentSymbol: Identifiable, Sendable {
     public let id = UUID()
     public var name: String
     public var kind: DocumentSymbolKind
@@ -28,7 +28,7 @@ public struct DocumentSymbol: Identifiable {
 }
 
 /// Document symbol kinds for navigation
-public enum DocumentSymbolKind: String, CaseIterable {
+public enum DocumentSymbolKind: String, CaseIterable, Sendable {
     case file
     case module
     case namespace
@@ -100,14 +100,14 @@ public enum DocumentSymbolKind: String, CaseIterable {
 }
 
 /// Breadcrumb item
-public struct BreadcrumbItem: Identifiable {
+public struct BreadcrumbItem: Identifiable, Sendable {
     public let id = UUID()
     public let symbol: DocumentSymbol
     public let level: Int
 }
 
 /// Symbol navigation configuration
-public struct SymbolNavigationConfiguration {
+public struct SymbolNavigationConfiguration: Sendable {
     /// Whether symbol navigation is enabled
     public var enabled = true
     /// Whether to show symbol markers in the gutter
@@ -123,7 +123,7 @@ public struct SymbolNavigationConfiguration {
 }
 
 /// Protocol for language-specific symbol providers
-public protocol DocumentSymbolProvider {
+public protocol DocumentSymbolProvider: Sendable {
     /// Detects and returns symbols found in the given text
     /// - Parameter text: The source code text to analyze
     /// - Returns: An array of detected document symbols

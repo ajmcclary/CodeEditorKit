@@ -189,10 +189,10 @@ public enum PlatformConfigurations {
     // MARK: - Configuration Selection
 
     /// Get the recommended configuration for the current platform
-    /// - Parameter capabilities: Platform capabilities (defaults to shared instance)
+    /// - Parameter capabilities: Platform capabilities (defaults to dependency factory)
     @MainActor
-    public static func recommended(capabilities: PlatformCapabilities = .shared) -> EditorConfiguration {
-        let capabilities = capabilities
+    public static func recommended(capabilities: PlatformCapabilities? = nil) -> EditorConfiguration {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
 
         // Start with platform base
         var config: EditorConfiguration

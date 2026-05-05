@@ -199,61 +199,12 @@ public final class SmartCompletionEngine: ObservableObject {
     }
 
     private func setupDefaultProviders() {
-        // Register built-in providers
-        let swiftProvider = SwiftCompletionProvider()
-        registerProvider(swiftProvider, for: Language.swift.identifier)
-
-        let pythonProvider = PythonCompletionProvider()
-        registerProvider(pythonProvider, for: Language.python.identifier)
-
-        let javascriptProvider = JavaScriptCompletionProvider()
-        registerProvider(javascriptProvider, for: Language.javascript.identifier)
-
-        let typescriptProvider = TypeScriptCompletionProvider()
-        registerProvider(typescriptProvider, for: Language.typescript.identifier)
-
-        let goProvider = GoCompletionProvider()
-        registerProvider(goProvider, for: Language.go.identifier)
-
-        let rustProvider = RustCompletionProvider()
-        registerProvider(rustProvider, for: Language.rust.identifier)
-
-        let cProvider = CCompletionProvider()
-        registerProvider(cProvider, for: Language.c.identifier)
-        registerProvider(cProvider, for: Language.cpp.identifier)
-
-        let javaProvider = JavaCompletionProvider()
-        registerProvider(javaProvider, for: Language.java.identifier)
-
-        let htmlProvider = HTMLCompletionProvider()
-        registerProvider(htmlProvider, for: Language.html.identifier)
-
-        let cssProvider = CSSCompletionProvider()
-        registerProvider(cssProvider, for: Language.css.identifier)
-
-        let jsonProvider = JSONCompletionProvider()
-        registerProvider(jsonProvider, for: Language.json.identifier)
-
-        let yamlProvider = YAMLCompletionProvider()
-        registerProvider(yamlProvider, for: Language.yaml.identifier)
-
-        let xmlProvider = XMLCompletionProvider()
-        registerProvider(xmlProvider, for: Language.xml.identifier)
-
-        let sqlProvider = SQLCompletionProvider()
-        registerProvider(sqlProvider, for: Language.sql.identifier)
-
-        let rubyProvider = RubyCompletionProvider()
-        registerProvider(rubyProvider, for: Language.ruby.identifier)
-
-        let phpProvider = PHPCompletionProvider()
-        registerProvider(phpProvider, for: Language.php.identifier)
-
-        let shellProvider = ShellCompletionProvider()
-        registerProvider(shellProvider, for: Language.shell.identifier)
-
-        let markdownProvider = MarkdownCompletionProvider()
-        registerProvider(markdownProvider, for: Language.markdown.identifier)
+        for language in LanguageProviderFactory.supportedLanguages.sorted(by: { $0.rawValue < $1.rawValue }) {
+            guard let provider = LanguageProviderFactory.createProvider(for: language) else {
+                continue
+            }
+            registerProvider(provider, for: language.identifier)
+        }
 
         // Register LSP provider as fallback
         // Note: LSPCompletionProvider requires an LSPManager instance

@@ -51,7 +51,7 @@ public final class ToolbarCoordinator: ObservableObject {
     /// Creates a new ToolbarCoordinator instance
     /// - Parameter capabilities: Platform capabilities provider (defaults to shared instance)
     public init(capabilities: PlatformCapabilities? = nil) {
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         logger.debug("ToolbarCoordinator initialized")
     }
 

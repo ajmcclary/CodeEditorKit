@@ -22,7 +22,9 @@ import Foundation
 /// let manager = CompletionManager(memoryMonitor: monitor)
 ///
 /// // Register providers
-/// manager.registerProvider(SwiftCompletionProvider())
+/// if let provider = LanguageProviderFactory.createProvider(for: .swift) {
+///     manager.registerProvider(provider)
+/// }
 /// manager.registerProvider(LSPCompletionProvider())
 ///
 /// // Request completions

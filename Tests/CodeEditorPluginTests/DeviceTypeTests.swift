@@ -203,7 +203,7 @@ final class DeviceTypeTests: XCTestCase {
 
     @MainActor
     func testPlatformCapabilitiesIntegration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let deviceType = capabilities.deviceType
 
         XCTAssertTrue(DeviceType.allCases.contains(deviceType),

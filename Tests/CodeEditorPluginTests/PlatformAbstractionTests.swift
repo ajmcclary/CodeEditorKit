@@ -15,7 +15,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Platform Detection Tests
 
     func testPlatformDetection() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         #if targetEnvironment(macCatalyst)
         XCTAssertEqual(capabilities.currentPlatform, .catalyst)
@@ -27,7 +27,7 @@ final class PlatformAbstractionTests: XCTestCase {
     }
 
     func testSystemVersionDetection() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         XCTAssertFalse(capabilities.systemVersion.isEmpty)
 
@@ -111,7 +111,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Capability Detection Tests
 
     func testTextKitCapabilities() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // macOS 13+ should support TextKit2
@@ -132,7 +132,7 @@ final class PlatformAbstractionTests: XCTestCase {
     }
 
     func testPlatformSpecificCapabilities() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         switch capabilities.currentPlatform {
         case .macOS:
@@ -160,7 +160,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Configuration Tests
 
     func testRecommendedConfiguration() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
 
         XCTAssertNotNil(config)
@@ -257,7 +257,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - MacOS Version Detection Tests
 
     func testMacOSVersionDetection() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let version = capabilities.systemVersionComponents
         XCTAssertGreaterThan(version.major, 0)
 
@@ -278,7 +278,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Memory and Performance Tests
 
     func testPerformanceRecommendations() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         XCTAssertGreaterThan(capabilities.recommendedCacheSize, 0)
         XCTAssertGreaterThan(capabilities.maxRecommendedFileSize, 0)
@@ -290,7 +290,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Feature Status Tests
 
     func testFeatureStatusLogic() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
         // Test full feature availability
         let syntaxHighlighting = capabilities.getFeatureAvailability(.syntaxHighlighting)
@@ -317,7 +317,7 @@ final class PlatformAbstractionTests: XCTestCase {
 extension PlatformAbstractionTests {
     func testCapabilityDetectionPerformance() {
         measure(options: Self.standardMeasureOptions) {
-            let capabilities = PlatformCapabilities.shared
+            let capabilities = CodeEditorDependencies.makePlatformCapabilities()
             _ = capabilities.currentPlatform
             _ = capabilities.supportsTextKit2
             _ = capabilities.supportsHardwareAcceleration
@@ -327,7 +327,7 @@ extension PlatformAbstractionTests {
 
     func testConfigurationCreationPerformance() {
         measure(options: Self.standardMeasureOptions) {
-            let capabilities = PlatformCapabilities.shared
+            let capabilities = CodeEditorDependencies.makePlatformCapabilities()
             _ = capabilities.recommendedConfiguration()
         }
     }

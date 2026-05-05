@@ -7,7 +7,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter enabled: Whether to use hardware acceleration
   /// - Returns: The builder for chaining
   @discardableResult
-  public func useHardwareAcceleration(_ enabled: Bool) -> Self {
+  func useHardwareAcceleration(_ enabled: Bool) -> Self {
     with { $0.performance.useHardwareAcceleration = enabled }
   }
 
@@ -15,7 +15,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter length: Maximum length for highlighting (0 = unlimited)
   /// - Returns: The builder for chaining
   @discardableResult
-  public func maxHighlightingLength(_ length: Int) -> Self {
+  func maxHighlightingLength(_ length: Int) -> Self {
     with { $0.performance.maxSyntaxHighlightingLength = length }
   }
 
@@ -23,7 +23,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter monitor: The memory monitor to use, or nil to use default
   /// - Returns: The builder for chaining
   @discardableResult
-  public func memoryMonitor(_ monitor: MemoryMonitor?) -> Self {
+  func memoryMonitor(_ monitor: MemoryMonitor?) -> Self {
     with { $0.performance.memoryMonitor = monitor }
   }
 }

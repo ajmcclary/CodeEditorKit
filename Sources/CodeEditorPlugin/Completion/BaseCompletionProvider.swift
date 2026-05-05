@@ -14,25 +14,25 @@ import Foundation
 /// ## Usage Example
 ///
 /// ```swift
-/// public final class SwiftCompletionProvider: BaseCompletionProvider {
-///     override public var keywords: [String] {
+/// final class CustomCompletionProvider: BaseCompletionProvider {
+///     override var keywords: [String] {
 ///         ["func", "var", "let", "class", "struct", "enum", "protocol"]
 ///     }
 ///     
-///     override public var types: [String] {
+///     override var types: [String] {
 ///         ["String", "Int", "Double", "Bool", "Array", "Dictionary"]
 ///     }
 ///     
-///     public init() {
+///     init() {
 ///         super.init(
-///             id: "swift-builtin",
+///             id: "custom-provider",
 ///             supportedLanguages: [.swift],
 ///             triggerCharacters: [".", "(", "[", " "],
 ///             supportsSnippets: true
 ///         )
 ///     }
 ///     
-///     override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+///     override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
 ///         // Custom context analysis for Swift
 ///     }
 /// }

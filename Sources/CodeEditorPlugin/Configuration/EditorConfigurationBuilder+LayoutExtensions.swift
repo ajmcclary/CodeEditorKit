@@ -27,7 +27,7 @@ extension EditorConfigurationBuilder {
   ///     .build()
   /// ```
   @discardableResult
-  public func gutterWidth(_ width: CGFloat) -> Self {
+  func gutterWidth(_ width: CGFloat) -> Self {
     with { $0.layout.gutterWidth = width }
   }
 
@@ -35,7 +35,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter width: The tab width (typically 2, 4, or 8)
   /// - Returns: The builder for chaining
   @discardableResult
-  public func tabWidth(_ width: Int) -> Self {
+  func tabWidth(_ width: Int) -> Self {
     with { $0.layout.tabWidth = width }
   }
 
@@ -43,7 +43,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter insertSpaces: Whether to insert spaces for tabs
   /// - Returns: The builder for chaining
   @discardableResult
-  public func insertSpacesForTabs(_ insertSpaces: Bool) -> Self {
+  func insertSpacesForTabs(_ insertSpaces: Bool) -> Self {
     with { $0.layout.insertSpacesForTabs = insertSpaces }
   }
 
@@ -51,7 +51,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter wrap: Whether to wrap long lines
   /// - Returns: The builder for chaining
   @discardableResult
-  public func wrapLines(_ wrap: Bool) -> Self {
+  func wrapLines(_ wrap: Bool) -> Self {
     with { $0.layout.wrapLines = wrap }
   }
 
@@ -59,7 +59,7 @@ extension EditorConfigurationBuilder {
   /// - Parameter spacing: The line spacing multiplier (typically 1.0-1.5)
   /// - Returns: The builder for chaining
   @discardableResult
-  public func lineSpacing(_ spacing: CGFloat) -> Self {
+  func lineSpacing(_ spacing: CGFloat) -> Self {
     with { $0.layout.lineHeightMultiple = spacing }
   }
 }

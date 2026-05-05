@@ -3,15 +3,11 @@ import Foundation
 // MARK: - Go Completion Provider
 
 /// Built-in completion provider for Go language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .go)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .go) instead")
 @MainActor
-public final class GoCompletionProvider: BaseCompletionProvider {
+final class GoCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "break", "case", "chan", "const", "continue", "default", "defer", "else",
             "fallthrough", "for", "func", "go", "goto", "if", "import", "interface",
@@ -20,7 +16,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
             "bool", "byte", "complex64", "complex128", "error", "float32", "float64",
             "int", "int8", "int16", "int32", "int64", "rune", "string", "uint",
@@ -28,14 +24,14 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         [
             "append", "cap", "close", "complex", "copy", "delete", "imag", "len",
             "make", "new", "panic", "print", "println", "real", "recover"
         ]
     }
 
-    override public var literals: [String] {
+    override var literals: [String] {
         ["true", "false", "nil", "iota"]
     }
 
@@ -47,7 +43,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         "filepath", "testing", "flag", "runtime"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "func",
@@ -132,7 +128,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    public init() {
+    init() {
         super.init(
             id: "go-builtin",
             supportedLanguages: [.go],
@@ -143,7 +139,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Context Analysis Override
 
-    override public func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
+    override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
         let beforeCursor = String(context.text.prefix(context.cursorPosition))
 
@@ -179,13 +175,13 @@ public final class GoCompletionProvider: BaseCompletionProvider {
         return ContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Function Completions Override
 
-    override public func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
+    override func createFunctionCompletions(filter: String) -> [CompletionItemModel] {
         // Check if we're in import context
         if filter.contains("import") {
             return createImportCompletions(filter: filter)
@@ -211,7 +207,7 @@ public final class GoCompletionProvider: BaseCompletionProvider {
             }
     }
 
-    override public func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
+    override func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
         literals
             .filter { constant in
                 filter.isEmpty || constant.localizedCaseInsensitiveContains(filter)
@@ -248,13 +244,13 @@ public final class GoCompletionProvider: BaseCompletionProvider {
     /// Delegate to GoMemberCompletions for type-specific member suggestions
     private let goMemberCompletions = GoMemberCompletions()
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         goMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
     // MARK: - Parameter Completions Override
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["ctx context.Context", "err error", "w http.ResponseWriter", "r *http.Request", "data []byte", "id string", "name string", "value interface{}"]
 
         return commonParameters

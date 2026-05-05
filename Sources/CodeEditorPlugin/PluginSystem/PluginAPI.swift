@@ -6,7 +6,7 @@ import Foundation
 /// All breaking changes will follow semantic versioning.
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol PluginAPI {
+protocol PluginAPI {
     /// Current API version
     var apiVersion: String { get }
 
@@ -37,7 +37,7 @@ public protocol PluginAPI {
 /// API for language-related functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol LanguageAPI {
+protocol LanguageAPI {
     /// Register a syntax highlighter
     func registerHighlighter(_ highlighter: any SyntaxHighlighter, for language: Language) async throws
 
@@ -53,26 +53,26 @@ public protocol LanguageAPI {
 
 /// Language configuration
 @available(macOS 13.0, iOS 16.0, *)
-public struct LanguageConfiguration: Sendable {
+struct LanguageConfiguration: Sendable {
     /// Comment configuration
-    public let comments: CommentConfiguration?
+    let comments: CommentConfiguration?
 
     /// Bracket pairs
-    public let brackets: [BracketPair]
+    let brackets: [BracketPair]
 
     /// Auto-closing pairs
-    public let autoClosingPairs: [AutoClosingPair]
+    let autoClosingPairs: [AutoClosingPair]
 
     /// Surrounding pairs
-    public let surroundingPairs: [SurroundingPair]
+    let surroundingPairs: [SurroundingPair]
 
     /// Folding configuration
-    public let folding: FoldingConfiguration?
+    let folding: FoldingConfiguration?
 
     /// Indentation rules
-    public let indentationRules: IndentationRules?
+    let indentationRules: IndentationRules?
 
-    public init(
+    init(
         comments: CommentConfiguration? = nil,
         brackets: [BracketPair] = [],
         autoClosingPairs: [AutoClosingPair] = [],
@@ -94,7 +94,7 @@ public struct LanguageConfiguration: Sendable {
 /// API for code completion functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol CompletionAPI {
+protocol CompletionAPI {
     /// Register a completion provider
     func registerProvider(_ provider: any CompletionProvider, for language: Language) async
 
@@ -110,7 +110,7 @@ public protocol CompletionAPI {
 /// API for command functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol CommandAPI {
+protocol CommandAPI {
     /// Register a command
     func register(_ command: PluginCommand, handler: @escaping () async throws -> Void) async throws
 
@@ -128,39 +128,32 @@ public protocol CommandAPI {
 
 /// Represents an editor theme
 @available(macOS 13.0, iOS 16.0, *)
-public struct EditorTheme: Sendable {
-    public let identifier: String
-    public let name: String
-    public let isDark: Bool
-    public let colors: ThemeColors
-
-    public init(identifier: String, name: String, isDark: Bool, colors: ThemeColors) {
-        self.identifier = identifier
-        self.name = name
-        self.isDark = isDark
-        self.colors = colors
-    }
+struct EditorTheme: Sendable {
+    let identifier: String
+    let name: String
+    let isDark: Bool
+    let colors: ThemeColors
 }
 
 /// Theme color definitions
 @available(macOS 13.0, iOS 16.0, *)
-public struct ThemeColors: Sendable {
-    public let background: String // Hex color
-    public let foreground: String
-    public let keyword: String
-    public let string: String
-    public let comment: String
-    public let type: String
-    public let function: String
-    public let variable: String
-    public let number: String
-    public let `operator`: String
-    public let punctuation: String
-    public let selection: String
-    public let lineNumber: String
-    public let currentLine: String
+struct ThemeColors: Sendable {
+    let background: String // Hex color
+    let foreground: String
+    let keyword: String
+    let string: String
+    let comment: String
+    let type: String
+    let function: String
+    let variable: String
+    let number: String
+    let `operator`: String
+    let punctuation: String
+    let selection: String
+    let lineNumber: String
+    let currentLine: String
 
-    public init(
+    init(
         background: String,
         foreground: String,
         keyword: String,
@@ -196,7 +189,7 @@ public struct ThemeColors: Sendable {
 /// API for theme functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol ThemeAPI {
+protocol ThemeAPI {
     /// Register a theme
     func register(_ theme: EditorTheme) async throws
 
@@ -218,7 +211,7 @@ public protocol ThemeAPI {
 /// API for editor functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol EditorAPI {
+protocol EditorAPI {
     /// Get current text
     func getText() async -> String
 
@@ -255,16 +248,10 @@ public protocol EditorAPI {
 
 /// Cursor position information
 @available(macOS 13.0, iOS 16.0, *)
-public struct CursorPosition: Sendable {
-    public let line: Int
-    public let column: Int
-    public let offset: Int
-
-    public init(line: Int, column: Int, offset: Int) {
-        self.line = line
-        self.column = column
-        self.offset = offset
-    }
+struct CursorPosition: Sendable {
+    let line: Int
+    let column: Int
+    let offset: Int
 }
 
 // MARK: - File System API
@@ -272,7 +259,7 @@ public struct CursorPosition: Sendable {
 /// API for sandboxed file system access
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol FileSystemAPI {
+protocol FileSystemAPI {
     /// Read file from plugin workspace
     func readFile(_ path: String) async throws -> Data
 
@@ -297,7 +284,7 @@ public protocol FileSystemAPI {
 /// API for diagnostic functionality
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
-public protocol DiagnosticAPI {
+protocol DiagnosticAPI {
     /// Report diagnostics
     func report(_ diagnostics: [PluginAPIDiagnostic]) async
 
@@ -310,15 +297,15 @@ public protocol DiagnosticAPI {
 
 /// Diagnostic information
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginAPIDiagnostic: Sendable {
-    public let range: NSRange
-    public let severity: PluginAPIDiagnosticSeverity
-    public let message: String
-    public let code: String?
-    public let source: String?
-    public let relatedInformation: [PluginAPIDiagnosticRelatedInformation]
+struct PluginAPIDiagnostic: Sendable {
+    let range: NSRange
+    let severity: PluginAPIDiagnosticSeverity
+    let message: String
+    let code: String?
+    let source: String?
+    let relatedInformation: [PluginAPIDiagnosticRelatedInformation]
 
-    public init(
+    init(
         range: NSRange,
         severity: PluginAPIDiagnosticSeverity,
         message: String,
@@ -337,7 +324,7 @@ public struct PluginAPIDiagnostic: Sendable {
 
 /// Diagnostic severity levels
 @available(macOS 13.0, iOS 16.0, *)
-public enum PluginAPIDiagnosticSeverity: Int, Sendable {
+enum PluginAPIDiagnosticSeverity: Int, Sendable {
     case error = 1
     case warning = 2
     case information = 3
@@ -346,62 +333,42 @@ public enum PluginAPIDiagnosticSeverity: Int, Sendable {
 
 /// Related diagnostic information
 @available(macOS 13.0, iOS 16.0, *)
-public struct PluginAPIDiagnosticRelatedInformation: Sendable {
-    public let location: DiagnosticLocation
-    public let message: String
-
-    public init(location: DiagnosticLocation, message: String) {
-        self.location = location
-        self.message = message
-    }
+struct PluginAPIDiagnosticRelatedInformation: Sendable {
+    let location: DiagnosticLocation
+    let message: String
 }
 
 /// Diagnostic location
 @available(macOS 13.0, iOS 16.0, *)
-public struct DiagnosticLocation: Sendable {
-    public let uri: String
-    public let range: NSRange
-
-    public init(uri: String, range: NSRange) {
-        self.uri = uri
-        self.range = range
-    }
+struct DiagnosticLocation: Sendable {
+    let uri: String
+    let range: NSRange
 }
 
 // MARK: - Configuration Types
 
 /// Comment configuration
 @available(macOS 13.0, iOS 16.0, *)
-public struct CommentConfiguration: Sendable {
-    public let lineComment: String?
-    public let blockComment: (start: String, end: String)?
-
-    public init(lineComment: String? = nil, blockComment: (start: String, end: String)? = nil) {
-        self.lineComment = lineComment
-        self.blockComment = blockComment
-    }
+struct CommentConfiguration: Sendable {
+    let lineComment: String?
+    let blockComment: (start: String, end: String)?
 }
 
 /// Bracket pair
 @available(macOS 13.0, iOS 16.0, *)
-public struct BracketPair: Sendable {
-    public let open: String
-    public let close: String
-
-    public init(open: String, close: String) {
-        self.open = open
-        self.close = close
-    }
+struct BracketPair: Sendable {
+    let open: String
+    let close: String
 }
 
 /// Auto-closing pair
 @available(macOS 13.0, iOS 16.0, *)
-public struct AutoClosingPair: Sendable {
-    public let open: String
-    public let close: String
-    public let notIn: [String]
+struct AutoClosingPair: Sendable {
+    let open: String
+    let close: String
+    let notIn: [String]
 
-    public init(open: String, close: String, notIn: [String] = []) {
+    init(open: String, close: String, notIn: [String] = []) {
         self.open = open
         self.close = close
         self.notIn = notIn
@@ -410,23 +377,18 @@ public struct AutoClosingPair: Sendable {
 
 /// Surrounding pair
 @available(macOS 13.0, iOS 16.0, *)
-public struct SurroundingPair: Sendable {
-    public let open: String
-    public let close: String
-
-    public init(open: String, close: String) {
-        self.open = open
-        self.close = close
-    }
+struct SurroundingPair: Sendable {
+    let open: String
+    let close: String
 }
 
 /// Folding configuration
 @available(macOS 13.0, iOS 16.0, *)
-public struct FoldingConfiguration: Sendable {
-    public let offSide: Bool
-    public let markers: FoldingMarkers?
+struct FoldingConfiguration: Sendable {
+    let offSide: Bool
+    let markers: FoldingMarkers?
 
-    public init(offSide: Bool = false, markers: FoldingMarkers? = nil) {
+    init(offSide: Bool = false, markers: FoldingMarkers? = nil) {
         self.offSide = offSide
         self.markers = markers
     }
@@ -434,25 +396,20 @@ public struct FoldingConfiguration: Sendable {
 
 /// Folding markers
 @available(macOS 13.0, iOS 16.0, *)
-public struct FoldingMarkers: Sendable {
-    public let start: String
-    public let end: String
-
-    public init(start: String, end: String) {
-        self.start = start
-        self.end = end
-    }
+struct FoldingMarkers: Sendable {
+    let start: String
+    let end: String
 }
 
 /// Indentation rules
 @available(macOS 13.0, iOS 16.0, *)
-public struct IndentationRules: Sendable {
-    public let increaseIndentPattern: String
-    public let decreaseIndentPattern: String
-    public let indentNextLinePattern: String?
-    public let unindentedLinePattern: String?
+struct IndentationRules: Sendable {
+    let increaseIndentPattern: String
+    let decreaseIndentPattern: String
+    let indentNextLinePattern: String?
+    let unindentedLinePattern: String?
 
-    public init(
+    init(
         increaseIndentPattern: String,
         decreaseIndentPattern: String,
         indentNextLinePattern: String? = nil,

@@ -12,16 +12,17 @@ public enum AdaptiveColorSystem {
     /// Adaptive syntax highlighting colors
     /// - Parameters:
     ///   - tokenType: The type of syntax token to color
-    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
+    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to dependency factory)
     public static func syntaxColor(
         for tokenType: TokenType,
-        capabilities: PlatformCapabilities = .shared
+        capabilities: PlatformCapabilities? = nil
     ) -> PlatformColor {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         // Use enhanced colors on macOS 14+ for better contrast
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
-            enhancedColor(for: tokenType)
+            return enhancedColor(for: tokenType)
         } else {
-            traditionalColor(for: tokenType)
+            return traditionalColor(for: tokenType)
         }
     }
 
@@ -130,7 +131,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive background color for text editing areas
     public static var textBackgroundColor: PlatformColor {
-        textBackgroundColor(capabilities: .shared)
+        textBackgroundColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Adaptive background color for text editing areas with injectable capabilities
@@ -145,7 +146,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive selection color
     public static var selectionColor: PlatformColor {
-        selectionColor(capabilities: .shared)
+        selectionColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Adaptive selection color with injectable capabilities
@@ -160,7 +161,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive line number color
     public static var lineNumberColor: PlatformColor {
-        lineNumberColor(capabilities: .shared)
+        lineNumberColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Adaptive line number color with injectable capabilities
@@ -175,7 +176,7 @@ public enum AdaptiveColorSystem {
 
     /// Adaptive gutter background color
     public static var gutterBackgroundColor: PlatformColor {
-        gutterBackgroundColor(capabilities: .shared)
+        gutterBackgroundColor(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Adaptive gutter background color with injectable capabilities
@@ -193,32 +194,33 @@ public enum AdaptiveColorSystem {
     /// Get adaptive color for annotation types
     /// - Parameters:
     ///   - severity: The severity level of the annotation
-    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
+    ///   - capabilities: Platform capabilities for adaptive behavior (defaults to dependency factory)
     public static func annotationColor(
         for severity: AnnotationSeverity,
-        capabilities: PlatformCapabilities = .shared
+        capabilities: PlatformCapabilities? = nil
     ) -> PlatformColor {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             switch severity {
             case .info:
-                PlatformColors.systemBlue.withAlphaComponent(0.75)
+                return PlatformColors.systemBlue.withAlphaComponent(0.75)
 
             case .warning:
-                PlatformColors.systemOrange.withAlphaComponent(0.80)
+                return PlatformColors.systemOrange.withAlphaComponent(0.80)
 
             case .error:
-                PlatformColors.systemRed.withAlphaComponent(0.85)
+                return PlatformColors.systemRed.withAlphaComponent(0.85)
             }
         } else {
             switch severity {
             case .info:
-                PlatformColors.systemBlue.withAlphaComponent(0.60)
+                return PlatformColors.systemBlue.withAlphaComponent(0.60)
 
             case .warning:
-                PlatformColors.systemOrange.withAlphaComponent(0.65)
+                return PlatformColors.systemOrange.withAlphaComponent(0.65)
 
             case .error:
-                PlatformColors.systemRed.withAlphaComponent(0.70)
+                return PlatformColors.systemRed.withAlphaComponent(0.70)
             }
         }
     }

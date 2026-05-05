@@ -3,15 +3,11 @@ import Foundation
 // MARK: - JavaScript Completion Provider
 
 /// Built-in completion provider for JavaScript language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .javascript)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .javascript) instead")
 @MainActor
-public final class JavaScriptCompletionProvider: BaseCompletionProvider {
+final class JavaScriptCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "const", "let", "var", "function", "class", "if", "else", "for", "while",
             "do", "switch", "case", "default", "break", "continue", "return", "try",
@@ -22,7 +18,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         [
             "Object", "Array", "String", "Number", "Boolean", "Function", "Symbol",
             "Date", "RegExp", "Error", "Math", "JSON", "console", "Promise", "Map",
@@ -33,7 +29,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         [
             "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI",
             "encodeURIComponent", "decodeURIComponent", "eval", "setTimeout", "clearTimeout",
@@ -42,7 +38,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var literals: [String] {
+    override var literals: [String] {
         [
             "true", "false", "null", "undefined", "NaN", "Infinity", "globalThis",
             "window", "document", "location", "navigator", "history"
@@ -57,7 +53,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         "mongoose", "sequelize", "graphql", "apollo", "redux", "mobx", "rxjs"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "function",
@@ -154,7 +150,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "javascript-builtin",
             supportedLanguages: [.javascript],
@@ -165,7 +161,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
 
     // MARK: - CompletionProvider Implementation
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -242,18 +238,18 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
         return JavaScriptContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_$")).inverted)
         return components.last ?? ""
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Completion Creation Methods
 
-    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -302,7 +298,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             }
     }
 
-    override public func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
+    override func createLiteralCompletions(filter: String) -> [CompletionItemModel] {
         literals
             .filter { literal in
                 filter.isEmpty || literal.localizedCaseInsensitiveContains(filter)
@@ -334,7 +330,7 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
             }
     }
 
-    override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    override func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)
@@ -354,11 +350,11 @@ public final class JavaScriptCompletionProvider: BaseCompletionProvider {
     /// Delegate to JavaScriptMemberCompletions for type-specific member suggestions
     private let jsMemberCompletions = JavaScriptMemberCompletions()
 
-    override public func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
+    override func createMemberCompletions(for targetType: String?, filter: String) -> [CompletionItemModel] {
         jsMemberCompletions.createMemberCompletions(for: targetType, filter: filter)
     }
 
-    override public func createParameterCompletions(filter: String) -> [CompletionItemModel] {
+    override func createParameterCompletions(filter: String) -> [CompletionItemModel] {
         let commonParameters = ["event", "error", "data", "result", "callback", "options", "config", "request", "response", "next", "done", "resolve", "reject"]
 
         return commonParameters

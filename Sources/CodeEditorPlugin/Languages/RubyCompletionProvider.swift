@@ -3,15 +3,11 @@ import Foundation
 // MARK: - Ruby Completion Provider
 
 /// Built-in completion provider for Ruby language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .ruby)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .ruby) instead")
 @MainActor
-public final class RubyCompletionProvider: BaseCompletionProvider {
+final class RubyCompletionProvider: BaseCompletionProvider {
     // MARK: - Language Elements
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         [
             "alias", "and", "begin", "break", "case", "class", "def", "defined?",
             "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in",
@@ -21,7 +17,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var types: [String] {
+    override var types: [String] {
         // Ruby built-in classes
         [
             "Array", "BasicObject", "Binding", "Class", "Complex", "Dir", "Encoding",
@@ -39,7 +35,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    override public var functions: [String] {
+    override var functions: [String] {
         // Common Ruby methods
         [
         // Object methods
@@ -82,7 +78,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         "respond_to", "format"
     ]
 
-    override public var literals: [String] {
+    override var literals: [String] {
         ["true", "false", "nil", "self", "super", "__FILE__", "__LINE__", "__ENCODING__"]
     }
 
@@ -96,7 +92,7 @@ public final class RubyCompletionProvider: BaseCompletionProvider {
         "$-F", "$-i", "$-I", "$-l", "$-p", "$-v", "$-w"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
         SnippetTemplate(
             label: "class",
@@ -303,7 +299,7 @@ end
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "ruby-builtin",
             supportedLanguages: [.ruby],
@@ -314,7 +310,7 @@ end
 
     // MARK: - CompletionProvider Implementation
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -419,18 +415,18 @@ end
         return RubyContextAnalysisResult(type: .general, filter: filter)
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_@$!?")).inverted)
         return components.last ?? ""
     }
 
-    override public func extractTargetType(from text: String) -> String? {
+    override func extractTargetType(from text: String) -> String? {
         CompletionParsingHelpers.extractTargetForDotNotation(from: text)
     }
 
     // MARK: - Completion Creation Methods
 
-    override public func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
+    override func createKeywordCompletions(filter: String) -> [CompletionItemModel] {
         keywords
             .filter { keyword in
                 filter.isEmpty || keyword.localizedCaseInsensitiveContains(filter)
@@ -607,7 +603,7 @@ end
             }
     }
 
-    override public func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
+    override func createSnippetCompletions(filter: String) -> [CompletionItemModel] {
         snippets
             .filter { snippet in
                 filter.isEmpty || snippet.label.localizedCaseInsensitiveContains(filter)

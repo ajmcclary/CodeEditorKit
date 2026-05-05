@@ -67,7 +67,7 @@ extension EditorConfigurationBuilder {
   ///
   /// - SeeAlso: `CodeEditorSwiftUITheme`, `Theme`, `enableSyntaxHighlighting(_:)`
   @discardableResult
-  public func theme(_ theme: CodeEditorSwiftUITheme) -> Self {
+  func theme(_ theme: CodeEditorSwiftUITheme) -> Self {
     // Note: CodeEditorSwiftUITheme provides colors for SwiftUI environment
     // The actual theme colors are applied through the syntax highlighting system
     // This method configures the editor to match the theme's style
@@ -106,7 +106,7 @@ extension EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   /// - Note: This builder starts from the default preset configuration
   @discardableResult
-  public func presentationMode() -> Self {
+  func presentationMode() -> Self {
     fontSize(18)
       .isLineNumbersEnabled(false)
       .enableAnnotations(false)
@@ -126,7 +126,7 @@ extension EditorConfigurationBuilder {
   /// - Returns: The builder for chaining
   /// - Note: This builder starts from the default preset configuration
   @discardableResult
-  public func codeReviewMode() -> Self {
+  func codeReviewMode() -> Self {
     isEditable(false)
       .isLineNumbersEnabled(true)
       .enableAnnotations(true)
@@ -147,7 +147,7 @@ extension EditorConfigurationBuilder {
   /// 
   /// - Returns: A configuration optimized for Swift development
   /// - Note: Internally calls `build()` which returns a complete configuration
-  public static func swift() -> EditorConfiguration {
+  static func swift() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.swift)
       .fontSize(14)
@@ -164,7 +164,7 @@ extension EditorConfigurationBuilder {
   /// 
   /// - Returns: A configuration optimized for web development
   /// - Note: Internally calls `build()` which returns a complete configuration
-  public static func web() -> EditorConfiguration {
+  static func web() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.javascript)
       .fontSize(14)
@@ -181,7 +181,7 @@ extension EditorConfigurationBuilder {
   /// 
   /// - Returns: A configuration optimized for Python development
   /// - Note: Internally calls `build()` which returns a complete configuration
-  public static func python() -> EditorConfiguration {
+  static func python() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.python)
       .fontSize(14)
@@ -190,7 +190,7 @@ extension EditorConfigurationBuilder {
 
   /// Quick configuration for documentation editing
   /// - Returns: A configuration optimized for documentation
-  public static func documentation() -> EditorConfiguration {
+  static func documentation() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .language(.markdown)
       .fontSize(16)
@@ -201,7 +201,7 @@ extension EditorConfigurationBuilder {
 
   /// Quick configuration for read-only viewing
   /// - Returns: A configuration optimized for viewing code
-  public static func readOnly() -> EditorConfiguration {
+  static func readOnly() -> EditorConfiguration {
     EditorConfigurationBuilder()
       .codeReviewMode()
       .fontSize(14)
@@ -214,13 +214,13 @@ extension EditorConfigurationBuilder {
 extension EditorConfiguration {
   /// Creates a new configuration builder
   /// - Returns: A new EditorConfigurationBuilder
-  public static func builder() -> EditorConfigurationBuilder {
+  static func builder() -> EditorConfigurationBuilder {
     EditorConfigurationBuilder()
   }
 
   /// Creates a configuration builder starting from this configuration
   /// - Returns: A new EditorConfigurationBuilder with this configuration as base
-  public func builder() -> EditorConfigurationBuilder {
+  func builder() -> EditorConfigurationBuilder {
     EditorConfigurationBuilder(base: self)
   }
 }

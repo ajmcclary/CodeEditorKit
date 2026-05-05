@@ -23,7 +23,7 @@ import AppKit
 /// ## Usage
 ///
 /// ```swift
-/// let capabilities = PlatformCapabilities.shared
+/// let capabilities = PlatformCapabilities()
 /// 
 /// // Check platform
 /// if capabilities.currentPlatform == .macOS {
@@ -63,10 +63,6 @@ import AppKit
 /// - SeeAlso: ``EditorConfiguration``, ``EditorFeature``, ``FeatureAvailability``
 @MainActor
 public final class PlatformCapabilities {
-    /// Shared singleton instance for platform capability detection
-    @available(*, deprecated, message: "Use dependency injection via EditorConfiguration instead of singleton access")
-    public static let shared = PlatformCapabilities()
-
     /// Cached platform value since it's determined at compile time
     private let _currentPlatform: Platform
 
@@ -183,7 +179,7 @@ public final class PlatformCapabilities {
     /// let preset = EditorConfiguration.platformOptimized
     /// 
     /// // Runtime-optimized (adapts to iPhone SE vs iPad Pro)
-    /// let optimized = PlatformCapabilities.shared.recommendedConfiguration()
+    /// let optimized = PlatformCapabilities().recommendedConfiguration()
     /// ```
     ///
     /// - Returns: An EditorConfiguration optimized for the current device's capabilities
@@ -220,7 +216,7 @@ public final class PlatformCapabilities {
 extension CodeEditorView {
     /// Apply platform-optimized configuration
     public func applyPlatformOptimizations() {
-        let capabilities = PlatformCapabilities.shared
+        let capabilities = configuration.platformCapabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         let config = capabilities.recommendedConfiguration()
         self.configuration = config
     }

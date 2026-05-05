@@ -37,7 +37,7 @@ let hotReload = ConfigurationHotReload(configuration: customConfig)
 ```swift
 // Direct update
 var newConfig = hotReload.configuration
-newConfig.display.showLineNumbers = true
+newConfig.display.isLineNumbersEnabled = true
 newConfig.display.fontSize = 16
 hotReload.update(newConfig)
 
@@ -45,7 +45,7 @@ hotReload.update(newConfig)
 hotReload.updateProperties(
     ConfigurationUpdates(
         display: EditorConfiguration.Display(
-            showLineNumbers: true,
+            isLineNumbersEnabled: true,
             fontSize: 16
         )
     )
@@ -53,7 +53,7 @@ hotReload.updateProperties(
 
 // Batch updates
 hotReload.batchUpdate { config in
-    config.display.showLineNumbers = true
+    config.display.isLineNumbersEnabled = true
     config.layout.tabWidth = 2
     config.behavior.autoIndent = true
 }
@@ -177,7 +177,7 @@ hotReload.applyPreset(.presentation)
 
 // Apply custom preset
 let myPreset = EditorConfiguration(
-    display: .init(fontSize: 20, showLineNumbers: false),
+    display: .init(fontSize: 20, isLineNumbersEnabled: false),
     layout: .init(showGutter: false, showMinimap: false)
 )
 hotReload.applyPreset(.custom(myPreset))
@@ -195,7 +195,7 @@ struct SettingsView: View {
         VStack {
             // Direct binding to configuration
             Toggle("Show Line Numbers", 
-                   isOn: hotReload.configurationBinding.display.showLineNumbers)
+                   isOn: hotReload.configurationBinding.display.isLineNumbersEnabled)
             
             Slider(value: hotReload.configurationBinding.display.fontSize, 
                    in: 8...72)

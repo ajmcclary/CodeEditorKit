@@ -184,7 +184,7 @@ extension CodeEditorContainerView {
     /// Updates the iOS-specific gutter view with new configuration
     func updateIOSGutter() {
         // Log is commented out to avoid logger dependency
-        // Would log: "🔧 updateIOSGutter called, showLineNumbers: \(self.configuration.display.showLineNumbers), showMinimap: \(self.configuration.display.showMinimap)"
+        // Would log gutter and minimap visibility from the current display configuration.
 
         // Rebuild constraints to handle visibility changes
         rebuildConstraints()

@@ -10,7 +10,7 @@ import os
 enum ModernTextKitHelper {
     /// Check if TextKit2 should be used
     static var shouldUseTextKit2: Bool {
-        shouldUseTextKit2(capabilities: .shared)
+        shouldUseTextKit2(capabilities: CodeEditorDependencies.makePlatformCapabilities())
     }
 
     /// Check if TextKit2 should be used with injectable capabilities
@@ -21,8 +21,9 @@ enum ModernTextKitHelper {
     /// Check if we can opt into TextKit2 for a specific text view
     static func canOptIntoTextKit2(
         for textView: NSTextView,
-        capabilities: PlatformCapabilities = .shared
+        capabilities: PlatformCapabilities? = nil
     ) -> Bool {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         // Basic requirement checks
         guard textView.textContainer != nil else { return false }
 
@@ -38,8 +39,9 @@ enum ModernTextKitHelper {
     /// Force TextKit2 initialization if possible and beneficial
     static func ensureTextKit2(
         for textView: NSTextView,
-        capabilities: PlatformCapabilities = .shared
+        capabilities: PlatformCapabilities? = nil
     ) -> Bool {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         // Check if TextKit2 is already active
         if textView.textLayoutManager != nil {
             return true
@@ -66,8 +68,9 @@ enum ModernTextKitHelper {
     /// Configure NSTextView with optimal settings for the current macOS version
     /// - Parameters:
     ///   - textView: The text view to configure
-    ///   - capabilities: Platform capabilities (defaults to shared instance)
-    static func configureTextView(_ textView: NSTextView, capabilities: PlatformCapabilities = .shared) {
+    ///   - capabilities: Platform capabilities (defaults to dependency factory)
+    static func configureTextView(_ textView: NSTextView, capabilities: PlatformCapabilities? = nil) {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         // Basic configuration that works across all versions
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
@@ -149,8 +152,9 @@ enum ModernTextKitHelper {
     // MARK: - Control Size Support
 
     /// Get the recommended control size based on platform capabilities
-    /// - Parameter capabilities: Platform capabilities (defaults to shared instance)
-    static func recommendedControlSize(capabilities: PlatformCapabilities = .shared) -> NSControl.ControlSize {
+    /// - Parameter capabilities: Platform capabilities (defaults to dependency factory)
+    static func recommendedControlSize(capabilities: PlatformCapabilities? = nil) -> NSControl.ControlSize {
+        let capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         // Use platform capabilities to determine appropriate size
         if capabilities.currentPlatform == .macOS && capabilities.systemVersionComponents.major >= 14 {
             return .regular

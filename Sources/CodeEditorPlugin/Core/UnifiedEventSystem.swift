@@ -47,7 +47,7 @@ public final class UnifiedEventSystem: ObservableObject {
     ///   - enableDefaultFilters: Whether to setup default filters (default: true)
     ///   - capabilities: Platform capabilities for adaptive behavior (defaults to shared instance)
     public init(enableDefaultFilters: Bool = true, capabilities: PlatformCapabilities? = nil) {
-        self.capabilities = capabilities ?? PlatformCapabilities.shared
+        self.capabilities = capabilities ?? CodeEditorDependencies.makePlatformCapabilities()
         if enableDefaultFilters {
             setupDefaultFilters()
         }

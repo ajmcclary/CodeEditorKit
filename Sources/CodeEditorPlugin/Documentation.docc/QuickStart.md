@@ -140,18 +140,17 @@ CodeEditor(text: $code, debounceInterval: .milliseconds(500))
 
 ## Configuration Examples
 
-### Using Configuration Builder
+### Using Direct Configuration
 
 ```swift
-let config = EditorConfigurationBuilder()
-    .fontSize(16)
-    .tabWidth(2)
-    .showLineNumbers(true)
-    .enableCodeFolding(true)
-    .language(.javascript)
-    .build()
+var config = EditorConfiguration()
+config.display.fontSize = 16
+config.layout.tabWidth = 2
+config.display.isLineNumbersEnabled = true
+config.display.enableCodeFolding = true
 
 CodeEditor(text: $code)
+    .codeLanguage(.javascript)
     .environment(\.codeEditorConfiguration, config)
 ```
 

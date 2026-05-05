@@ -162,7 +162,7 @@ final class ParagraphStyleCacheTests: XCTestCase {
     }
 
     func testSharedInstanceAvailability() {
-        let shared = ParagraphStyleCache.shared
+        let shared = CodeEditorDependencies.makeParagraphStyleCache()
         XCTAssertNotNil(shared, "Shared instance should be available")
 
         // Test that shared instance works

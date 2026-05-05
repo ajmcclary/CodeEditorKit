@@ -48,17 +48,16 @@ import UIKit
 ///                      .with(layout: modifiedLayout)
 /// ```
 ///
-/// ## Builder Pattern
+/// ## Direct Configuration
 ///
-/// Use `EditorConfigurationBuilder` for fluent configuration:
+/// Mutate the nested configuration sections directly:
 ///
 /// ```swift
-/// let config = EditorConfigurationBuilder()
-///     .isLineNumbersEnabled(true)
-///     .fontSize(16)
-///     .tabWidth(4)
-///     .wrapLines(false)
-///     .build()
+/// var config = EditorConfiguration()
+/// config.display.isLineNumbersEnabled = true
+/// config.display.fontSize = 16
+/// config.layout.tabWidth = 4
+/// config.layout.wrapLines = false
 /// ```
 ///
 /// ## Validation
@@ -123,23 +122,23 @@ public struct EditorConfiguration: Codable, Sendable {
     // These properties support dependency injection instead of singleton access
 
     /// Platform capabilities provider
-    /// If nil, PlatformCapabilities.shared will be used (deprecated fallback)
+    /// If nil, the configured dependency factory will be used.
     @MainActor public var platformCapabilities: PlatformCapabilities?
 
     /// Unified performance monitoring system
-    /// If nil, UnifiedPerformanceSystem.shared will be used (deprecated fallback)
+    /// If nil, the configured dependency factory will be used.
     @MainActor public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
 
     /// Paragraph style cache for text rendering
-    /// If nil, ParagraphStyleCache.shared will be used (deprecated fallback)
+    /// If nil, the configured dependency factory will be used.
     public var paragraphStyleCache: ParagraphStyleCache?
 
     /// Language metadata registry for completion and highlighting
-    /// If nil, LanguageMetadataRegistry.shared will be used (deprecated fallback)
+    /// If nil, the configured dependency factory will be used.
     @MainActor public var languageMetadataRegistry: LanguageMetadataRegistry?
 
     /// Platform service layer for cross-platform operations
-    /// If nil, PlatformServiceLayer.shared will be used (deprecated fallback)
+    /// If nil, the configured dependency factory will be used.
     @MainActor public var platformServiceLayer: PlatformServiceLayer?
 
     // MARK: - Initialization

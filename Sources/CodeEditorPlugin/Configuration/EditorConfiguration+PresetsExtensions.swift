@@ -52,7 +52,7 @@ extension EditorConfiguration {
     /// ## Runtime Optimization
     /// 
     /// For a configuration that adapts to actual device capabilities at runtime,
-    /// use `PlatformCapabilities.shared.recommendedConfiguration()` instead:
+    /// use `PlatformCapabilities().recommendedConfiguration()` instead:
     /// 
     /// ```swift
     /// // Compile-time preset
@@ -60,7 +60,7 @@ extension EditorConfiguration {
     /// 
     /// // Runtime-optimized
     /// let optimized = await MainActor.run {
-    ///     PlatformCapabilities.shared.recommendedConfiguration()
+    ///     PlatformCapabilities().recommendedConfiguration()
     /// }
     /// ```
     /// 

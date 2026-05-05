@@ -19,7 +19,7 @@ import Foundation
 /// ## Basic Usage
 ///
 /// ```swift
-/// let monitor = PerformanceMonitor.shared
+/// let monitor = PerformanceMonitor()
 /// 
 /// // Manual measurement with tokens
 /// let token = await monitor.startMeasuring("syntax-highlighting")

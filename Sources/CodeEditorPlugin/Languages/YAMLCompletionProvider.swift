@@ -3,12 +3,8 @@ import Foundation
 // MARK: - YAML Completion Provider
 
 /// Built-in completion provider for YAML language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .yaml)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .yaml) instead")
 @MainActor
-public final class YAMLCompletionProvider: BaseCompletionProvider {
+final class YAMLCompletionProvider: BaseCompletionProvider {
     // Reference to static data from YAMLCompletionData
     private let specialSymbols = YAMLCompletionData.specialSymbols
     private let githubActionsKeys = YAMLCompletionData.githubActionsKeys
@@ -19,17 +15,17 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overridden Properties
 
-    override public var keywords: [String] {
+    override var keywords: [String] {
         YAMLCompletionData.keywords
     }
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         YAMLCompletionData.snippets
     }
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         super.init(
             id: "yaml-builtin",
             supportedLanguages: [.yaml],
@@ -40,7 +36,7 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Override BaseCompletionProvider Methods
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -78,7 +74,7 @@ public final class YAMLCompletionProvider: BaseCompletionProvider {
         )
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         let components = text.components(separatedBy: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-*&")).inverted)
         return components.last ?? ""
     }

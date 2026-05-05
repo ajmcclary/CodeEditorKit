@@ -3,12 +3,8 @@ import Foundation
 // MARK: - HTML Completion Provider
 
 /// Built-in completion provider for HTML language
-///
-/// - Important: This individual provider is deprecated. Use `LanguageProviderFactory.createProvider(for: .html)`
-///   which returns a `UniversalCompletionProvider` with centralized metadata from `LanguageStaticMetadata`.
-@available(*, deprecated, message: "Use LanguageProviderFactory.createProvider(for: .html) instead")
 @MainActor
-public final class HTMLCompletionProvider: BaseCompletionProvider {
+final class HTMLCompletionProvider: BaseCompletionProvider {
     // HTML5 elements
     private let elements = [
         // Document metadata
@@ -74,7 +70,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         "&mdash;", "&ndash;", "&hellip;", "&laquo;", "&raquo;", "&ldquo;", "&rdquo;"
     ]
 
-    override public var snippets: [SnippetTemplate] {
+    override var snippets: [SnippetTemplate] {
         [
             SnippetTemplate(
                 label: "html5",
@@ -187,7 +183,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         ]
     }
 
-    public init() {
+    init() {
         super.init(
             id: "html-builtin",
             supportedLanguages: [.html],
@@ -198,7 +194,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
 
     // MARK: - Overrides for HTML-specific completion
 
-    override public func completions(for context: CompletionContextModel) async throws -> CompletionResult {
+    override func completions(for context: CompletionContextModel) async throws -> CompletionResult {
         let startTime = Date()
 
         // Analyze context to determine what kind of completions to provide
@@ -242,7 +238,7 @@ public final class HTMLCompletionProvider: BaseCompletionProvider {
         )
     }
 
-    override public func extractCurrentWord(from text: String) -> String {
+    override func extractCurrentWord(from text: String) -> String {
         if text.hasSuffix("&") {
             return "&"
         }
