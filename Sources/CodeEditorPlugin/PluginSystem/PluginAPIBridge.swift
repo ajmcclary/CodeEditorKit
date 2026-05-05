@@ -160,18 +160,19 @@ private final class CommandAPIImpl: CommandAPI {
 @MainActor
 private final class ThemeAPIImpl: ThemeAPI {
     private let context: PluginContext
-    private var registeredThemes: [String: EditorTheme] = [:]
+    private var registeredThemes: [String: Theme] = [:]
+    private var current: Theme = .lcarsDark
 
     init(context: PluginContext) {
         self.context = context
     }
 
-    func register(_ theme: EditorTheme) async throws {
+    func register(_ theme: Theme) async throws {
         guard context.hasPermission(.themes) else {
             throw PluginError.securityViolation("Missing permission: themes")
         }
 
-        registeredThemes[theme.identifier] = theme
+        registeredThemes[theme.id] = theme
         context.logger.info("Registered theme: \(theme.name)")
     }
 
@@ -179,34 +180,12 @@ private final class ThemeAPIImpl: ThemeAPI {
         registeredThemes.removeValue(forKey: themeId)
     }
 
-    func availableThemes() async -> [EditorTheme] {
-        // Return only registered themes as built-in themes aren't defined yet
+    func availableThemes() async -> [Theme] {
         Array(registeredThemes.values)
     }
 
-    func currentTheme() async -> EditorTheme {
-        // Create a default theme based on current configuration
-        EditorTheme(
-            identifier: "current",
-            name: "Current Theme",
-            isDark: false,
-            colors: ThemeColors(
-                background: "#FFFFFF",
-                foreground: "#000000",
-                keyword: "#0000FF",
-                string: "#FF0000",
-                comment: "#808080",
-                type: "#800080",
-                function: "#FFA500",
-                variable: "#000000",
-                number: "#4B0082",
-                operator: "#000000",
-                punctuation: "#000000",
-                selection: "#B4D8FD",
-                lineNumber: "#808080",
-                currentLine: "#F0F0F0"
-            )
-        )
+    func currentTheme() async -> Theme {
+        current
     }
 
     func setTheme(_ themeId: String) async throws {
@@ -214,8 +193,7 @@ private final class ThemeAPIImpl: ThemeAPI {
             throw PluginError.notFound(identifier: themeId)
         }
 
-        // Store the theme for future reference
-        // Note: The actual theme application would need to be handled by the editor view
+        current = theme
         context.logger.info("Theme set to: \(theme.name)")
     }
 }

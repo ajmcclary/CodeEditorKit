@@ -265,7 +265,7 @@ struct KeyboardModifiers: OptionSet, Hashable, Sendable {
 @available(macOS 13.0, iOS 16.0, *)
 protocol ThemeProvider: Sendable {
     /// Available themes from this provider
-    var themes: [EditorTheme] { get }
+    var themes: [Theme] { get }
 
     /// Provider name
     var name: String { get }

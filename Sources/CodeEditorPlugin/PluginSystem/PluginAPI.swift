@@ -126,83 +126,28 @@ protocol CommandAPI {
 
 // MARK: - Theme API
 
-/// Represents an editor theme
-@available(macOS 13.0, iOS 16.0, *)
-struct EditorTheme: Sendable {
-    let identifier: String
-    let name: String
-    let isDark: Bool
-    let colors: ThemeColors
-}
-
-/// Theme color definitions
-@available(macOS 13.0, iOS 16.0, *)
-struct ThemeColors: Sendable {
-    let background: String // Hex color
-    let foreground: String
-    let keyword: String
-    let string: String
-    let comment: String
-    let type: String
-    let function: String
-    let variable: String
-    let number: String
-    let `operator`: String
-    let punctuation: String
-    let selection: String
-    let lineNumber: String
-    let currentLine: String
-
-    init(
-        background: String,
-        foreground: String,
-        keyword: String,
-        string: String,
-        comment: String,
-        type: String,
-        function: String,
-        variable: String,
-        number: String,
-        operator: String,
-        punctuation: String,
-        selection: String,
-        lineNumber: String,
-        currentLine: String
-    ) {
-        self.background = background
-        self.foreground = foreground
-        self.keyword = keyword
-        self.string = string
-        self.comment = comment
-        self.type = type
-        self.function = function
-        self.variable = variable
-        self.number = number
-        self.`operator` = `operator`
-        self.punctuation = punctuation
-        self.selection = selection
-        self.lineNumber = lineNumber
-        self.currentLine = currentLine
-    }
-}
-
-/// API for theme functionality
+/// API for theme functionality. Sub-project 2 of the design system
+/// migration consolidated three formerly-separate theme-shaped types
+/// (`Theme.Colors`/`Theme.Fonts`, `CodeEditorSwiftUITheme`, and the old
+/// `EditorTheme`/`ThemeColors`) into the single `Theme` value type. This
+/// API now takes/returns `Theme` directly.
 @available(macOS 13.0, iOS 16.0, *)
 @MainActor
 protocol ThemeAPI {
-    /// Register a theme
-    func register(_ theme: EditorTheme) async throws
+    /// Register a theme.
+    func register(_ theme: Theme) async throws
 
-    /// Unregister a theme
+    /// Unregister a theme by id.
     func unregister(themeId: String) async
 
-    /// Get available themes
-    func availableThemes() async -> [EditorTheme]
+    /// Get all registered themes.
+    func availableThemes() async -> [Theme]
 
-    /// Get current theme
-    func currentTheme() async -> EditorTheme
+    /// Get the current theme. Defaults to `Theme.lcarsDark` if none has
+    /// been explicitly set.
+    func currentTheme() async -> Theme
 
-    /// Set current theme
+    /// Set the current theme by id.
     func setTheme(_ themeId: String) async throws
 }
 
