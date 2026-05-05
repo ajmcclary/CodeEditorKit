@@ -20,13 +20,17 @@ extension Tokens {
         /// 40pt — Tahoe window corner radius.
         public static let radiusWindow: Double = 40
         /// 9999pt — fully rounded (pill).
-        public static let radiusFull: Double = 9999
+        public static let radiusFull: Double = 9_999
 
         /// 0.5pt — hairline (system separator).
         public static let strokeHairline: Double = 0.5
+        /// 1pt — thin stroke.
         public static let strokeThin: Double = 1
+        /// 1.5pt — between thin and medium.
         public static let strokeMedLight: Double = 1.5
+        /// 2pt — medium stroke.
         public static let strokeMedium: Double = 2
+        /// 3pt — thick stroke.
         public static let strokeThick: Double = 3
         /// 8pt — focus ring / state ring.
         public static let strokeRing: Double = 8

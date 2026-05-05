@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Palette base values")
 struct PaletteBaseTests {
-
     @Test("Apple systemBlue accent (dark)")
     func accentDark() {
         #expect(Tokens.Palette.Accent.dark == Tokens.Color(hex: 0x0A84FF))
@@ -51,14 +50,13 @@ struct PaletteBaseTests {
 
 @Suite("Tokens.Palette derived accent variants")
 struct PaletteDerivedTests {
-
     @Test("dark hover is darker than dark base")
     func darkHoverDarker() {
         let base = Tokens.Palette.Accent.dark
         let hover = Tokens.Palette.Accent.hoverDark
-        #expect(Int(hover.r) <= Int(base.r))
-        #expect(Int(hover.g) <= Int(base.g))
-        #expect(Int(hover.b) <= Int(base.b))
+        #expect(Int(hover.red) <= Int(base.red))
+        #expect(Int(hover.green) <= Int(base.green))
+        #expect(Int(hover.blue) <= Int(base.blue))
         #expect(hover != base)
     }
 
@@ -66,9 +64,9 @@ struct PaletteDerivedTests {
     func darkPressedDarkerThanHover() {
         let hover = Tokens.Palette.Accent.hoverDark
         let pressed = Tokens.Palette.Accent.pressedDark
-        #expect(Int(pressed.r) <= Int(hover.r))
-        #expect(Int(pressed.g) <= Int(hover.g))
-        #expect(Int(pressed.b) <= Int(hover.b))
+        #expect(Int(pressed.red) <= Int(hover.red))
+        #expect(Int(pressed.green) <= Int(hover.green))
+        #expect(Int(pressed.blue) <= Int(hover.blue))
     }
 
     @Test("derived dark variants match precomputed values")
@@ -91,9 +89,9 @@ struct PaletteDerivedTests {
         let tint20 = Tokens.Palette.Accent.tint20Dark
         let tint25 = Tokens.Palette.Accent.tint25Dark
         for tint in [tint10, tint15, tint20, tint25] {
-            #expect(tint.r == base.r)
-            #expect(tint.g == base.g)
-            #expect(tint.b == base.b)
+            #expect(tint.red == base.red)
+            #expect(tint.green == base.green)
+            #expect(tint.blue == base.blue)
         }
         #expect(abs(tint10.alpha - 0.10) < 1e-9)
         #expect(abs(tint15.alpha - 0.15) < 1e-9)
@@ -111,13 +109,13 @@ struct PaletteDerivedTests {
             Tokens.Palette.Accent.tint25Light
         ]
         for tint in tints {
-            #expect(tint.r == base.r)
-            #expect(tint.g == base.g)
-            #expect(tint.b == base.b)
+            #expect(tint.red == base.red)
+            #expect(tint.green == base.green)
+            #expect(tint.blue == base.blue)
         }
         let alphas = tints.map(\.alpha)
-        for i in 1..<alphas.count {
-            #expect(alphas[i] > alphas[i - 1])
+        for idx in 1..<alphas.count {
+            #expect(alphas[idx] > alphas[idx - 1])
         }
     }
 }

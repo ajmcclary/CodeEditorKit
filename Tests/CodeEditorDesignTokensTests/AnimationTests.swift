@@ -1,10 +1,9 @@
-import Testing
-import Foundation
 @testable import CodeEditorDesignTokens
+import Foundation
+import Testing
 
 @Suite("Tokens.Animation")
 struct AnimationTests {
-
     @Test("durations match CSS milliseconds")
     func durations() {
         #expect(Tokens.Animation.durInstant == .milliseconds(100))
@@ -27,8 +26,8 @@ struct AnimationTests {
             Tokens.Animation.durSection, Tokens.Animation.durScreen,
             Tokens.Animation.durVerySlow
         ]
-        for i in 1..<scale.count {
-            #expect(scale[i] > scale[i - 1])
+        for idx in 1..<scale.count {
+            #expect(scale[idx] > scale[idx - 1])
         }
     }
 

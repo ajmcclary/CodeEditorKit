@@ -4,7 +4,6 @@ extension Tokens {
     /// Type stacks, scale, weights, line heights, and tracking.
     /// Mirrors the typography section of `Design/tokens.css`.
     public enum Typography {
-
         /// SF / system sans stack with Helvetica Neue / Arial fallback.
         public static let fontSansStack: [String] = [
             "-apple-system", "BlinkMacSystemFont", "SF Pro Text", "SF Pro Display",
@@ -33,8 +32,11 @@ extension Tokens {
         public enum Size {
             /// 80pt — onboarding hero.
             public static let displayXL: Double = 80
+            /// 60pt — display large.
             public static let displayLG: Double = 60
+            /// 48pt — display medium.
             public static let displayMD: Double = 48
+            /// 44pt — display small / hero numbers.
             public static let displaySM: Double = 44
             /// 34pt — Apple `.largeTitle`.
             public static let titleXL: Double = 34
@@ -64,16 +66,23 @@ extension Tokens {
 
         /// Numeric font weights matching the SwiftUI/CSS convention.
         public enum Weight {
+            /// 400 — regular body weight.
             public static let regular = 400
+            /// 500 — medium emphasis.
             public static let medium = 500
+            /// 600 — semibold (headlines).
             public static let semibold = 600
+            /// 700 — bold (display).
             public static let bold = 700
         }
 
         /// Line-height multipliers.
         public enum LineHeight {
+            /// 1.0 — tight (headings, single-line UI).
             public static let tight: Double = 1.0
+            /// 1.2 — normal body multiplier.
             public static let normal: Double = 1.2
+            /// 1.5 — relaxed (long-form prose).
             public static let relaxed: Double = 1.5
         }
 

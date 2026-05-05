@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Typography")
 struct TypographyTests {
-
     @Test("font stacks lead with Apple system fonts")
     func fontStacks() {
         #expect(Tokens.Typography.fontSansStack.first == "-apple-system")
@@ -34,8 +33,8 @@ struct TypographyTests {
             Tokens.Typography.Size.titleMD,
             Tokens.Typography.Size.titleSM
         ]
-        for i in 1..<ramp.count {
-            #expect(ramp[i] < ramp[i - 1], "ramp[\(i)]=\(ramp[i]) should be < ramp[\(i-1)]=\(ramp[i-1])")
+        for idx in 1..<ramp.count {
+            #expect(ramp[idx] < ramp[idx - 1], "ramp[\(idx)]=\(ramp[idx]) should be < ramp[\(idx - 1)]=\(ramp[idx - 1])")
         }
     }
 

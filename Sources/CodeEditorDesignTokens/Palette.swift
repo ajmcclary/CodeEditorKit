@@ -5,7 +5,6 @@ extension Tokens {
     /// active. The active palette comes from a loaded `Theme` (sub-project 2).
     /// Mirrors the accent / status / ANSI sections of `Design/tokens.css`.
     public enum Palette {
-
         /// Apple `systemBlue` reference colors with derived hover/pressed/tint
         /// variants. Variants are pre-computed via linear sRGB blend (channel
         /// × X/100) for darker forms, alpha for tints.
@@ -29,13 +28,20 @@ extension Tokens {
 
             /// Accent (dark) at 10% alpha — for hover / row-selected fills.
             public static let tint10Dark = Color(hex: 0x0A84FF, alpha: 0.10)
+            /// Accent (dark) at 15% alpha.
             public static let tint15Dark = Color(hex: 0x0A84FF, alpha: 0.15)
+            /// Accent (dark) at 20% alpha.
             public static let tint20Dark = Color(hex: 0x0A84FF, alpha: 0.20)
+            /// Accent (dark) at 25% alpha.
             public static let tint25Dark = Color(hex: 0x0A84FF, alpha: 0.25)
 
+            /// Accent (light) at 10% alpha.
             public static let tint10Light = Color(hex: 0x007AFF, alpha: 0.10)
+            /// Accent (light) at 15% alpha.
             public static let tint15Light = Color(hex: 0x007AFF, alpha: 0.15)
+            /// Accent (light) at 20% alpha.
             public static let tint20Light = Color(hex: 0x007AFF, alpha: 0.20)
+            /// Accent (light) at 25% alpha.
             public static let tint25Light = Color(hex: 0x007AFF, alpha: 0.25)
         }
 
@@ -64,13 +70,21 @@ extension Tokens {
 
         /// ANSI terminal palette (dark variant — VS Code Bridge terminal).
         public enum ANSI {
+            /// `#1E1E1E` — terminal black.
             public static let black = Color(hex: 0x1E1E1E)
+            /// `#F44747` — terminal red.
             public static let red = Color(hex: 0xF44747)
+            /// `#6A9955` — terminal green.
             public static let green = Color(hex: 0x6A9955)
+            /// `#D7BA7D` — terminal yellow.
             public static let yellow = Color(hex: 0xD7BA7D)
+            /// `#569CD6` — terminal blue.
             public static let blue = Color(hex: 0x569CD6)
+            /// `#C39BD3` — terminal magenta.
             public static let magenta = Color(hex: 0xC39BD3)
+            /// `#4DD0E1` — terminal cyan.
             public static let cyan = Color(hex: 0x4DD0E1)
+            /// `#D4D4D4` — terminal white.
             public static let white = Color(hex: 0xD4D4D4)
         }
     }

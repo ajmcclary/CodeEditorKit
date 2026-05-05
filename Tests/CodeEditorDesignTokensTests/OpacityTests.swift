@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Opacity")
 struct OpacityTests {
-
     @Test("values match CSS source")
     func values() {
         #expect(Tokens.Opacity.faint == 0.03)
@@ -32,8 +31,8 @@ struct OpacityTests {
             Tokens.Opacity.light, Tokens.Opacity.disabled, Tokens.Opacity.medium,
             Tokens.Opacity.strong, Tokens.Opacity.heavy, Tokens.Opacity.near
         ]
-        for i in 1..<scale.count {
-            #expect(scale[i] > scale[i - 1])
+        for idx in 1..<scale.count {
+            #expect(scale[idx] > scale[idx - 1])
         }
     }
 }

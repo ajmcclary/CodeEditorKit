@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Spacing")
 struct SpacingTests {
-
     @Test("scale matches CSS source")
     func values() {
         #expect(Tokens.Spacing.xxxs == 2)
@@ -26,8 +25,8 @@ struct SpacingTests {
             Tokens.Spacing.lg, Tokens.Spacing.xl, Tokens.Spacing.xxl,
             Tokens.Spacing.xxxl
         ]
-        for i in 1..<scale.count {
-            #expect(scale[i] > scale[i - 1])
+        for idx in 1..<scale.count {
+            #expect(scale[idx] > scale[idx - 1])
         }
     }
 

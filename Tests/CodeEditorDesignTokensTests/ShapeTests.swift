@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Shape")
 struct ShapeTests {
-
     @Test("radii match CSS source")
     func radii() {
         #expect(Tokens.Shape.radiusXS == 4)
@@ -14,7 +13,7 @@ struct ShapeTests {
         #expect(Tokens.Shape.radiusXXL == 20)
         #expect(Tokens.Shape.radiusChip == 8)
         #expect(Tokens.Shape.radiusWindow == 40)
-        #expect(Tokens.Shape.radiusFull == 9999)
+        #expect(Tokens.Shape.radiusFull == 9_999)
     }
 
     @Test("strokes match CSS source")
@@ -34,8 +33,8 @@ struct ShapeTests {
             Tokens.Shape.strokeMedLight, Tokens.Shape.strokeMedium,
             Tokens.Shape.strokeThick, Tokens.Shape.strokeRing
         ]
-        for i in 1..<scale.count {
-            #expect(scale[i] > scale[i - 1])
+        for idx in 1..<scale.count {
+            #expect(scale[idx] > scale[idx - 1])
         }
     }
 

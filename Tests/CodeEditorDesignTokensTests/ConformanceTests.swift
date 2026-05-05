@@ -1,12 +1,11 @@
-import Testing
-import Foundation
 @testable import CodeEditorDesignTokens
+import Foundation
+import Testing
 
 /// Compile-time conformance asserts. If any value type loses Sendable,
 /// Hashable, or Codable, this file stops compiling.
 @Suite("Tokens conformance audit")
 struct ConformanceTests {
-
     @Test("Tokens.Color conforms to Sendable, Hashable, Codable")
     func colorConformance() {
         Self.requireConformance(Tokens.Color.self)

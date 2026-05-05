@@ -1,12 +1,11 @@
-import Testing
-import SnapshotTesting
-import Foundation
 @testable import CodeEditorDesignTokens
+import Foundation
+import SnapshotTesting
+import Testing
 
 /// Aggregates every public static token into a single Codable structure.
 /// Snapshot equality of this structure means no token has drifted.
 private struct TokensManifest: Encodable {
-
     let schemaVersion = Tokens.schemaVersion
 
     struct Typography: Encodable {
@@ -178,7 +177,6 @@ private struct TokensManifest: Encodable {
 
 @Suite("Tokens snapshot drift")
 struct TokensSnapshotTests {
-
     @Test("manifest matches committed snapshot")
     func tokensSnapshot() {
         let manifest = TokensManifest()

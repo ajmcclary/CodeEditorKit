@@ -1,9 +1,8 @@
-import Testing
 @testable import CodeEditorDesignTokens
+import Testing
 
 @Suite("Tokens.Size")
 struct SizeTests {
-
     @Test("icon sizes match CSS source")
     func iconSizes() {
         #expect(Tokens.Size.Icon.indicator == 10)
