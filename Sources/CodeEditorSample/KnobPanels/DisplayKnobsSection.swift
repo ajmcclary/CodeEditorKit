@@ -15,6 +15,7 @@ struct DisplayKnobsSection: View {
                     step: 1,
                     format: .number.precision(.fractionLength(0))
                 )
+                ToggleRow(label: "enableSyntaxHighlighting", value: $configuration.display.enableSyntaxHighlighting)
                 ToggleRow(label: "isLineNumbersEnabled", value: $configuration.display.isLineNumbersEnabled)
                 ToggleRow(label: "enableAnnotations", value: $configuration.display.enableAnnotations)
                 ToggleRow(label: "highlightSelectedLine", value: $configuration.display.highlightSelectedLine)
