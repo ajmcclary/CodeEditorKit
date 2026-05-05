@@ -2,6 +2,78 @@
 
 ## Unreleased
 
+### Editor visual restyle — foundations (sub-project 3, partial)
+
+Foundations and architectural skeleton landed; per-component subview
+wiring (gutter, minimap, line highlight, caret, completion popover,
+annotations, indent guides, fold chevrons) deferred to a follow-up
+sprint. See [`docs/superpowers/plans/2026-05-05-editor-visual-restyle.md`](docs/superpowers/plans/2026-05-05-editor-visual-restyle.md)
+Tasks 6–15.
+
+#### Added
+
+- `Theming/Bridges/` directory housing the four token bridges:
+  `Tokens.Color → SwiftUI.Color` (`Color(tokens:)`),
+  `Tokens.Color → NSColor` / `UIColor` (`init(tokens:)`),
+  `Tokens.Easing → SwiftUI.Animation` (`Animation.timingCurve(easing:duration:)`),
+  `Tokens.Animation → SwiftUI.Animation` named convenience
+  (`Tokens.Animation.foldChevron`, the only call site this sub-project
+  will use; later sub-projects' named animations land alongside).
+- `Theme.color(forToken:)` — public hierarchical resolver. Drops
+  trailing dotted segments on miss (`function.method.builtin` →
+  `function.method` → `function` → `style.editor.foreground`); per-Theme
+  `NSLock`-guarded cache keyed by `(name, appearance, foregroundHex)`.
+- `CodeEditorContainerView.apply(theme:)` and
+  `CodeEditorContainerView.appliedTheme` — equality-gated theme push
+  point. Subview fan-out is the empty body for now; later tasks fill it
+  as each subview's draw path migrates from hardcoded `PlatformColors`
+  to theme reads.
+- `CodeEditorRepresentableHelper.updateContainer` calls
+  `container.apply(theme:)` so the SwiftUI environment's `\.codeTheme`
+  flows into the AppKit/UIKit container on every refresh.
+
+#### Changed
+
+- `Theming/SwiftUI/Theme+SwiftUI.swift` moved to
+  `Theming/Bridges/Theme+SwiftUI.swift`; only the `Theme.default` and
+  `Theme.dark` static aliases survive the migration.
+- `CodeEditor+CoordinatorsExtensions.swift` — four call sites
+  (`textView.backgroundColor` / `.textColor` reads) now pull from
+  `style.editor.background` / `.foreground` directly via
+  `PlatformColor(tokens:)`.
+
+#### Removed
+
+- The four legacy `Theme` accessors `backgroundColor`, `textColor`,
+  `lineNumberColor`, `selectedLineColor` (sub-project 2 transition
+  surface). Direct `style.editor.*` reads replace them.
+- `Theming/SwiftUI/` directory (now empty after the migration).
+
+#### Tests
+
+- `ColorBridgesTests` — sRGB roundtrip on SwiftUI / NSColor / UIColor.
+- `AnimationBridgesTests` — `timingCurve(easing:duration:)` curve match,
+  `foldChevron` shape stability.
+- `SyntaxColorLookupTests` — direct hit, hierarchical fallback,
+  full-miss-falls-through, cache stability.
+- `ApplyThemePropagationTests` — container stores applied theme,
+  equality-gate, different-theme replacement.
+
+#### Deferred to future commits (sub-project 3 plan tasks 6–14)
+
+- Subview-level theme reads: `GutterView`, `MinimapView`,
+  `LineHighlightView`, `InsertionPointView`, `TextLayoutFragmentView`,
+  `CompletionCellComponents`, `AnnotationView`/`AnnotationsContentView`.
+- `AnnotationKind.color → color(in:)` retype and call-site migration.
+- Indent guide rendering (new visual surface).
+- Fold chevron rendering with `Tokens.Animation.foldChevron` rotation.
+- `_GlassSurface` frosted-glass wrapper for the completion popover.
+- Selection-color reads from `style.players[0].selection`.
+- `BaseUIComponents.StandardUITheme` removal and
+  `ThemeableUIComponent.theme` retype to `Theme`.
+- DocC `Theme-System.md` example refresh (still references the deleted
+  legacy accessors).
+
 ### Theme rewrite (sub-project 2 of the design system migration)
 
 #### Added
