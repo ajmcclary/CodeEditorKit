@@ -51,6 +51,10 @@ let package = Package(
         .library(
             name: "CodeEditorPlugin",
             targets: ["CodeEditorPlugin"]
+        ),
+        .library(
+            name: "CodeEditorUI",
+            targets: ["CodeEditorUI"]
         )
     ],
     dependencies: [
@@ -86,6 +90,14 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
+        .target(
+            name: "CodeEditorUI",
+            dependencies: [
+                "CodeEditorDesignTokens",
+                "CodeEditorPlugin"
+            ],
+            swiftSettings: swiftSettings
+        ),
         .testTarget(
             name: "CodeEditorPluginTests",
             dependencies: [
@@ -103,6 +115,18 @@ let package = Package(
             name: "CodeEditorDesignTokensTests",
             dependencies: [
                 "CodeEditorDesignTokens",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            exclude: [
+                "__Snapshots__"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorUITests",
+            dependencies: [
+                "CodeEditorUI",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
