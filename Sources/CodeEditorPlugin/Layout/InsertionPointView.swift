@@ -7,6 +7,13 @@ import AppKit
 /// View representing the text insertion point (cursor)
 @MainActor
 public class InsertionPointView: NSView {
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived caret color. Defaults to the system label until
+    /// `apply(theme:)` lands the first theme.
+    public private(set) var themedCaretColor: PlatformColor = PlatformColors.label
+
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -18,20 +25,24 @@ public class InsertionPointView: NSView {
     }
 
     private func setup() {
-        #if canImport(UIKit)
-        backgroundColor = PlatformColors.label
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
         wantsLayer = true
-        layer?.backgroundColor = PlatformColors.label.cgColor
-        #endif
+        layer?.backgroundColor = themedCaretColor.cgColor
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    /// Apply a theme to the insertion point. Equality-gated: a second call
+    /// with the same theme is a no-op.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedCaretColor = PlatformColor(tokens: theme.style.players[0].cursor)
+        wantsLayer = true
+        layer?.backgroundColor = themedCaretColor.cgColor
+    }
+
     /// Text views need a flipped coordinate system on macOS
     override public var isFlipped: Bool {
         true
     }
-    #endif
 
     deinit {
         // Cleanup if needed
@@ -46,6 +57,13 @@ import UIKit
 /// Stub implementation for iOS
 @MainActor
 public class InsertionPointView: UIView {
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived caret color. Defaults to the system label until
+    /// `apply(theme:)` lands the first theme.
+    public private(set) var themedCaretColor: PlatformColor = PlatformColors.label
+
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
@@ -57,7 +75,16 @@ public class InsertionPointView: UIView {
     }
 
     private func setup() {
-        backgroundColor = .label
+        backgroundColor = themedCaretColor
+    }
+
+    /// Apply a theme to the insertion point. Equality-gated: a second call
+    /// with the same theme is a no-op.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedCaretColor = PlatformColor(tokens: theme.style.players[0].cursor)
+        backgroundColor = themedCaretColor
     }
 
     deinit {

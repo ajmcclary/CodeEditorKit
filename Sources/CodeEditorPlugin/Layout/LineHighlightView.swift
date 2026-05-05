@@ -13,6 +13,13 @@ public class LineHighlightView: UIView {
         }
     }
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived active-line fill color. Defaults to `.clear` until
+    /// `apply(theme:)` lands the first theme.
+    public private(set) var themedFillColor: PlatformColor = .clear
+
     override public init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         setup()
@@ -25,6 +32,15 @@ public class LineHighlightView: UIView {
 
     private func setup() {
         backgroundColor = highlightColor
+    }
+
+    /// Apply a theme to the line highlight view. Equality-gated: a second
+    /// call with the same theme is a no-op.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedFillColor = PlatformColor(tokens: theme.style.editor.activeLineBackground)
+        highlightColor = themedFillColor
     }
 
     deinit {
@@ -47,6 +63,13 @@ public class LineHighlightView: NSView {
         }
     }
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived active-line fill color. Defaults to `.clear` until
+    /// `apply(theme:)` lands the first theme.
+    public private(set) var themedFillColor: PlatformColor = .clear
+
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -60,6 +83,15 @@ public class LineHighlightView: NSView {
     private func setup() {
         wantsLayer = true
         layer?.backgroundColor = highlightColor.cgColor
+    }
+
+    /// Apply a theme to the line highlight view. Equality-gated: a second
+    /// call with the same theme is a no-op.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedFillColor = PlatformColor(tokens: theme.style.editor.activeLineBackground)
+        highlightColor = themedFillColor
     }
 
     /// Text views need a flipped coordinate system on macOS
