@@ -36,6 +36,21 @@ public final class CodeEditorContainerView: PlatformView {
         }
     }
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    /// Sub-project 3 establishes the storage; per-subview fan-out lands in
+    /// later tasks (subviews currently use hardcoded PlatformColors).
+    public private(set) var appliedTheme: Theme?
+
+    /// Apply a theme to the container. Equality-gated — no-ops on identical
+    /// re-application. Subview fan-out (gutter, minimap, line highlight,
+    /// caret, completion popover, annotations) is added incrementally as
+    /// each subview gets its own apply(theme:) override.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        // Subview fan-out lands as each subview gets wired in later tasks.
+    }
+
     // MARK: - Initialization
 
     override public init(frame: CGRect) {

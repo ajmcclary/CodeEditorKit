@@ -72,6 +72,11 @@ enum CodeEditorRepresentableHelper {
         parameters: UpdateParameters,
         coordinator: CodeEditorCoordinator
     ) {
+        // Push the current theme into the container's equality-gated apply path.
+        // The container is the single fan-out point for subview theme propagation
+        // — sub-project 3 task 5 establishes the route; later tasks wire each subview.
+        container.apply(theme: parameters.theme)
+
         coordinator.updateContainer(container, text: parameters.text, language: parameters.language, theme: parameters.theme, configuration: parameters.configuration)
 
         // Handle focus request from environment using coordinator's tracking
