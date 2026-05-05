@@ -50,6 +50,7 @@ public final class CodeEditorContainerView: PlatformView {
         appliedTheme = theme
         gutterView.apply(theme: theme)
         minimapView.apply(theme: theme)
+        textView.apply(theme: theme)
     }
 
     // MARK: - Initialization

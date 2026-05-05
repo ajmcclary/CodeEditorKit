@@ -1,6 +1,7 @@
 // swiftlint:disable object_literal
 // This file uses programmatic color definitions for cross-platform compatibility
 
+import CodeEditorDesignTokens
 import Foundation
 
 #if canImport(UIKit)
@@ -171,6 +172,19 @@ public struct SyntaxColorScheme: Sendable {
         )
         #endif
     }()
+}
+
+extension SyntaxColorScheme {
+    /// Resolve a token-name to its themed `PlatformColor`. Routes through
+    /// `Theme.color(forToken:)`, which performs hierarchical dotted
+    /// fallback over `style.syntax` and ends at `style.editor.foreground`.
+    /// This is the recommended entry point for any new syntax-highlight
+    /// call site; the per-appearance baked schemes (`.default`, `.dark`,
+    /// `.light`) are kept in place as transitional defaults for existing
+    /// callers.
+    public static func color(forToken token: TokenName, in theme: Theme) -> PlatformColor {
+        PlatformColor(tokens: theme.color(forToken: token))
+    }
 }
 
 // swiftlint:enable object_literal
