@@ -74,6 +74,38 @@ Tasks 6–15.
 - DocC `Theme-System.md` example refresh (still references the deleted
   legacy accessors).
 
+### CodeEditorUI chrome primitives (sub-project 4, 11 of 12 tasks)
+
+Eight chrome components, two SwiftUI Style protocols, the
+`EditorState @Observable` class + environment key in
+`CodeEditorPlugin`, and 50 baseline PNG snapshots across two themes.
+Build clean, lint zero violations, every test green. Task 12
+(conformance audit + DocC sweep + this CHANGELOG entry's tail) is
+the only remaining item — small, ~10–15 minutes when picked up.
+
+#### Done (commits)
+
+| Task | Commit | Description |
+|---|---|---|
+| 1 | `ad91963` | `EditorState` + value types in `CodeEditorPlugin` |
+| 2 | `ccda1fc` | `CodeEditorUI` target skeleton + `Package.swift` |
+| 3 | `9417cfa` | `Theme+Chrome` + `Theme+Glass` bridges |
+| 4 | `a897a4f` | `PlatformGlassSurface` + snapshot scaffolding |
+| 5 | `7c92c08` | `EditorTrafficLights` + `EditorTitleBar` |
+| 6 | `50cd969` | `EditorBreadcrumbView` |
+| 7 | `44118e2` | `EditorStatusBar` |
+| 8 | `1d6ffd3` | `EditorTabStrip` + Style |
+| 9 | `ce60ad8` | `EditorSidebarShell` |
+| 10 | `fc1646c` | `EditorCommandPalette` + Style + Row |
+| 11 | `013721e` | `EditorStateBridge` helper (coordinator wiring deferred) |
+
+#### Deferred to Task 12
+
+- Compile-time conformance audit test for `CodeEditorUI`.
+- DocC sweep across the chrome primitives' public symbols.
+- Final CHANGELOG entry tail (acceptance-criteria checklist + Task 12
+  sign-off).
+
 ### Theme rewrite (sub-project 2 of the design system migration)
 
 #### Added
