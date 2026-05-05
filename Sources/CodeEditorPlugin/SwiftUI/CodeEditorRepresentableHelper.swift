@@ -25,7 +25,7 @@ enum CodeEditorRepresentableHelper {
     struct ContainerParameters {
         let text: String
         let language: Language
-        let theme: CodeEditorSwiftUITheme
+        let theme: Theme
         let configuration: EditorConfiguration
         let memoryMonitor: MemoryMonitor
         let onTextChange: ((String) -> Void)?
@@ -35,7 +35,7 @@ enum CodeEditorRepresentableHelper {
     struct UpdateParameters {
         let text: String
         let language: Language
-        let theme: CodeEditorSwiftUITheme
+        let theme: Theme
         let configuration: EditorConfiguration
         let environment: EnvironmentValues
     }

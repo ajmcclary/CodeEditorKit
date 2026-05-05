@@ -26,7 +26,7 @@ public struct CodeEditorEnvironment: Sendable {
     public var language: Language
 
     /// The theme for visual styling
-    public var theme: CodeEditorSwiftUITheme
+    public var theme: Theme
 
     /// The editor configuration settings
     public var configuration: EditorConfiguration
@@ -43,7 +43,7 @@ public struct CodeEditorEnvironment: Sendable {
     /// Creates a new CodeEditor environment configuration
     public init(
         language: Language = .plainText,
-        theme: CodeEditorSwiftUITheme = .default,
+        theme: Theme = .default,
         configuration: EditorConfiguration = EditorConfiguration(),
         becomeFirstResponder: Bool = false,
         memoryMonitor: MemoryMonitor? = nil,
@@ -63,7 +63,7 @@ public struct CodeEditorEnvironment: Sendable {
     /// Creates a copy with updated values
     public func with(
         language: Language? = nil,
-        theme: CodeEditorSwiftUITheme? = nil,
+        theme: Theme? = nil,
         configuration: EditorConfiguration? = nil,
         becomeFirstResponder: BecomeFirstResponderOption = .unchanged,
         memoryMonitor: MemoryMonitor? = nil,
@@ -102,7 +102,7 @@ extension EnvironmentValues {
     // MARK: - Legacy Support (Computed Properties)
 
     /// Legacy: Access the theme directly
-    public var codeEditorTheme: CodeEditorSwiftUITheme {
+    public var codeEditorTheme: Theme {
         get { codeEditorEnvironment.theme }
         set { codeEditorEnvironment = codeEditorEnvironment.with(theme: newValue) }
     }
@@ -157,7 +157,7 @@ extension View {
     /// Update specific properties of the CodeEditor environment
     public func codeEditorEnvironment(
         language: Language? = nil,
-        theme: CodeEditorSwiftUITheme? = nil,
+        theme: Theme? = nil,
         configuration: EditorConfiguration? = nil,
         becomeFirstResponder: BecomeFirstResponderOption = .unchanged,
         memoryMonitor: MemoryMonitor? = nil,

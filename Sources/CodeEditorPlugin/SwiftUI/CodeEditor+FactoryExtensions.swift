@@ -19,7 +19,7 @@ extension CodeEditor {
     public static func withLanguage(
         _ text: Binding<String>,
         language: Language,
-        theme: CodeEditorSwiftUITheme = .default,
+        theme: Theme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) -> some View {
         CodeEditor(text: text, debounceInterval: debounceInterval)
@@ -43,7 +43,7 @@ extension CodeEditor {
         _ text: Binding<String>,
         configuration: EditorConfiguration,
         language: Language = .plainText,
-        theme: CodeEditorSwiftUITheme = .default,
+        theme: Theme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) -> some View {
         CodeEditor(text: text, debounceInterval: debounceInterval)

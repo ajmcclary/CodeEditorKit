@@ -65,14 +65,8 @@ final class SwiftUIModifierTests: XCTestCase {
         let darkEditor = CodeEditor(text: binding)
             .codeTheme(.dark)
 
-        // Test custom theme
-        let customTheme = CodeEditorSwiftUITheme(
-            name: "test",
-            backgroundColor: Color.white,
-            textColor: Color.black,
-            lineNumberColor: Color.gray,
-            selectedLineColor: Color.blue.opacity(0.1)
-        )
+        // Test custom theme — use the light fallback as a custom-shaped Theme.
+        let customTheme = Theme.fallback(appearance: .light)
 
         let customEditor = CodeEditor(text: binding)
             .codeTheme(customTheme)
@@ -238,7 +232,7 @@ final class SwiftUIModifierTests: XCTestCase {
     @MainActor
     func testDynamicModifiers() {
         @State var language = Language.swift
-        @State var theme = CodeEditorSwiftUITheme.default
+        @State var theme = Theme.default
         @State var isFocused = false
 
         let binding = Binding<String>(

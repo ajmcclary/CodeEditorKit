@@ -18,7 +18,7 @@ extension View {
     ///     .codeTheme(.monokai)
     ///     .codeTheme(customTheme)
     /// ```
-    public func codeTheme(_ theme: CodeEditorSwiftUITheme) -> some View {
+    public func codeTheme(_ theme: Theme) -> some View {
         environment(\.codeEditorTheme, theme)
     }
 

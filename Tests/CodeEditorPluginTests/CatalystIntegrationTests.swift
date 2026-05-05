@@ -248,7 +248,7 @@ final class CatalystIntegrationTests: XCTestCase {
         // This tests the actual consolidated color handling in the coordinator
         let coordinator = CodeEditorBaseCoordinator()
         let container = CodeEditorContainerView()
-        let theme = CodeEditorSwiftUITheme.dark
+        let theme = Theme.dark
 
         // Setup container with theme
         coordinator.setupContainer(
@@ -261,7 +261,7 @@ final class CatalystIntegrationTests: XCTestCase {
         )
 
         // Update container with new theme
-        let newTheme = CodeEditorSwiftUITheme.default
+        let newTheme = Theme.default
         coordinator.updateContainer(
             container,
             text: "Updated text",

@@ -8,7 +8,7 @@ import UIKit
 struct CodeEditorRepresentable: UIViewRepresentable {
     @Binding var text: String
     let language: Language
-    let theme: CodeEditorSwiftUITheme
+    let theme: Theme
     let configuration: EditorConfiguration
     let memoryMonitor: MemoryMonitor
     @Binding var isFocused: Bool

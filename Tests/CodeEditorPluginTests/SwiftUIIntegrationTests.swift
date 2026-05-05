@@ -325,14 +325,8 @@ final class SwiftUIIntegrationTests: XCTestCase {
         let darkEditor = CodeEditor(text: binding)
             .codeTheme(.dark)
 
-        // Test custom theme
-        let customTheme = CodeEditorSwiftUITheme(
-            name: "custom",
-            backgroundColor: Color.white,
-            textColor: Color.blue,
-            lineNumberColor: Color.gray,
-            selectedLineColor: Color.gray.opacity(0.1)
-        )
+        // Test custom theme — use the light fallback as a custom-shaped Theme.
+        let customTheme = Theme.fallback(appearance: .light)
 
         let customEditor = CodeEditor(text: binding)
             .codeTheme(customTheme)

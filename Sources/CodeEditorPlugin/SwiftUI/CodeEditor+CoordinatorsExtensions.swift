@@ -298,7 +298,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
     /// Apply theme colors for Mac Catalyst
     #if targetEnvironment(macCatalyst)
-    func applyCatalystThemeColors(theme: CodeEditorSwiftUITheme, to textView: CodeEditorView) {
+    func applyCatalystThemeColors(theme: Theme, to textView: CodeEditorView) {
         let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: theme.textColor)
         Task { @MainActor in
             CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
@@ -313,7 +313,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme: CodeEditorSwiftUITheme,
+        theme: Theme,
         configuration: EditorConfiguration,
         memoryMonitor: MemoryMonitor,
         onTextChange: ((String) -> Void)? = nil,
@@ -373,7 +373,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme: CodeEditorSwiftUITheme,
+        theme: Theme,
         configuration: EditorConfiguration
     ) {
         // Check if we need to update

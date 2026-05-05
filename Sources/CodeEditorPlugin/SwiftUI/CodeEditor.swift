@@ -161,7 +161,7 @@ public struct CodeEditor: View {
 
     // Initial values from convenience initializers
     private var initialLanguage: Language?
-    private var initialTheme: CodeEditorSwiftUITheme?
+    private var initialTheme: Theme?
 
     // Callbacks
     internal var onTextChange: (@Sendable (String) -> Void)?
@@ -228,7 +228,7 @@ public struct CodeEditor: View {
     public init(
         text: Binding<String>,
         language: Language,
-        theme: CodeEditorSwiftUITheme = .default,
+        theme: Theme = .default,
         debounceInterval: Duration = .milliseconds(100)
     ) {
         self._text = text
