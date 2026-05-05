@@ -19,22 +19,50 @@ struct RootWindow: View {
         // inside body so `$documents.tabs` / `$documents.activeTabID`
         // produce real Bindings rather than Binding<DocumentStore>.
         @Bindable var documents = documentStore
-        VStack(spacing: 0) {
-            EditorTitleBar(title: "CodeEditorSample")
-            EditorTabStrip(
-                tabs: $documents.tabs,
-                activeTabID: $documents.activeTabID
-            )
-            WindowBody(
-                theme: $theme,
-                configuration: $configuration,
-                documents: documentStore,
-                settingsVisible: $settingsVisible,
-                inspectorVisible: $inspectorVisible
-            )
-            EditorStatusBar()
+        let (items, dispatch) = CommandPaletteCatalog.build(
+            theme: $theme,
+            configuration: $configuration,
+            documents: documentStore,
+            settingsVisible: $settingsVisible,
+            inspectorVisible: $inspectorVisible
+        )
+        return ZStack {
+            VStack(spacing: 0) {
+                EditorTitleBar(title: "CodeEditorSample")
+                EditorTabStrip(
+                    tabs: $documents.tabs,
+                    activeTabID: $documents.activeTabID
+                )
+                WindowBody(
+                    theme: $theme,
+                    configuration: $configuration,
+                    documents: documentStore,
+                    settingsVisible: $settingsVisible,
+                    inspectorVisible: $inspectorVisible
+                )
+                EditorStatusBar()
+            }
+
+            if paletteVisible {
+                EditorCommandPalette(
+                    isPresented: $paletteVisible,
+                    items: items,
+                    onSelect: dispatch
+                )
+                .frame(maxWidth: 480)
+                .padding(.top, 80)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
         }
         .codeTheme(theme)
         .environment(\.codeEditorConfiguration, configuration)
+        .background(togglePaletteShortcut)
+    }
+
+    private var togglePaletteShortcut: some View {
+        Button("Toggle Palette") { paletteVisible.toggle() }
+            .keyboardShortcut("p", modifiers: [.command, .shift])
+            .opacity(0)
+            .frame(width: 0, height: 0)
     }
 }
