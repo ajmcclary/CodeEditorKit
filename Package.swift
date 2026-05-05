@@ -81,6 +81,9 @@ let package = Package(
             exclude: [
                 "Info.plist"
             ],
+            resources: [
+                .process("Resources/Themes")
+            ],
             swiftSettings: swiftSettings
         ),
         .testTarget(
