@@ -43,10 +43,27 @@ public class GutterView: PlatformView, GutterViewProtocol {
     internal var observers: [NSObjectProtocol] = []
 
     /// The renderer responsible for drawing line numbers
-    private let renderer = GutterViewRenderer()
+    let renderer = GutterViewRenderer()
 
     /// The interaction handler for clicks/taps
     private var interactionHandler: GutterInteractionHandler?
+
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived gutter background color. `.clear` until first apply.
+    public private(set) var themedBackgroundColor: PlatformColor = .clear
+
+    /// Apply a theme to the gutter. Equality-gated: a second call with the
+    /// same theme is a no-op. Updates the renderer's themed colors and
+    /// triggers a redraw.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.gutterBackground)
+        renderer.apply(theme: theme)
+        setNeedsDisplayLineNumbers()
+    }
 
     #if canImport(UIKit)
     private var displayLink: CADisplayLink?

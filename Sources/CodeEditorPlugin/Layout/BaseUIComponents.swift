@@ -12,7 +12,6 @@ public typealias PlatformAccessibilityTraits = UIAccessibilityTraits
 // MARK: - Base UI Component Infrastructure
 
 /// Protocol for configurable UI components
-/// Protocol for UI components that can be configured with data
 @MainActor
 public protocol ConfigurableUIComponent {
     /// Configuration type for this component
@@ -22,270 +21,29 @@ public protocol ConfigurableUIComponent {
     func configure(with configuration: Configuration)
 }
 
-/// Protocol for themeable UI components
-/// Protocol for UI components that support theming
+/// Protocol for UI components that consume the editor's `Theme` value type.
+///
+/// Conformers expose `appliedTheme` storage and an equality-gated
+/// `apply(theme:)` method. The editor's container view fans theme
+/// application out to subviews; each subview's `apply(theme:)` reads the
+/// fields it needs from the supplied `Theme`.
 @MainActor
-public protocol ThemeableUIComponent {
-    /// Theme type for this component
-    associatedtype Theme
+public protocol ThemeableUIComponent: AnyObject {
+    /// The theme last applied via `apply(theme:)`. nil before the first
+    /// apply.
+    var appliedTheme: Theme? { get }
 
-    /// Current theme applied to the component
-    var theme: Theme { get set }
-
-    /// Applies the specified theme to the component
-    /// - Parameter theme: Theme to apply
-    func applyTheme(_ theme: Theme)
+    /// Apply a theme. Implementations should early-return when the new
+    /// theme equals the previously-applied theme to avoid redundant
+    /// redraws.
+    func apply(theme: Theme)
 }
 
 /// Protocol for reusable UI components that can be reset to initial state
-/// Protocol for UI components that can be reused and reset
 @MainActor
 public protocol ReusableUIComponent {
     /// Prepares the component for reuse by resetting its state
     func prepareForReuse()
-}
-
-/// Base theme protocol defining common styling properties
-public protocol BaseUITheme {
-    /// Primary accent color for the theme
-    var primaryColor: PlatformColor { get }
-    /// Secondary color for less prominent elements
-    var secondaryColor: PlatformColor { get }
-    /// Background color for themed components
-    var backgroundColor: PlatformColor { get }
-    /// Text color for themed components
-    var textColor: PlatformColor { get }
-    /// Default font for themed components
-    var font: PlatformFont { get }
-}
-
-/// Standard theme implementation
-public struct StandardUITheme: BaseUITheme, @unchecked Sendable {
-    public let primaryColor: PlatformColor
-    public let secondaryColor: PlatformColor
-    public let backgroundColor: PlatformColor
-    public let textColor: PlatformColor
-    public let font: PlatformFont
-
-    public static let `default` = Self(
-        primaryColor: PlatformColors.systemBlue,
-        secondaryColor: PlatformColors.secondaryLabel,
-        backgroundColor: PlatformColors.controlBackground,
-        textColor: PlatformColors.label,
-        font: PlatformFonts.systemFont(ofSize: 14)
-    )
-
-    public static let compact = Self(
-        primaryColor: PlatformColors.systemBlue,
-        secondaryColor: PlatformColors.secondaryLabel,
-        backgroundColor: PlatformColors.controlBackground,
-        textColor: PlatformColors.label,
-        font: PlatformFonts.systemFont(ofSize: 12)
-    )
-}
-
-// MARK: - Base View Components
-
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-
-/// Base configurable view for AppKit
-open class BaseConfigurableView<Config, Theme: BaseUITheme>: NSView, ConfigurableUIComponent, ThemeableUIComponent {
-    public typealias Configuration = Config
-
-    private var _theme: Theme
-    public var theme: Theme {
-        get { _theme }
-        set {
-            _theme = newValue
-            applyTheme(newValue)
-        }
-    }
-
-    public init(theme: Theme) {
-        self._theme = theme
-        super.init(frame: .zero)
-        setupView()
-        applyTheme(theme)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    /// Override to setup view hierarchy and constraints
-    open func setupView() {
-        // Override in subclasses
-    }
-
-    /// Override to configure the view with data
-    open func configure(with _: Config) {
-        // Override in subclasses
-    }
-
-    /// Override to apply theme changes
-    open func applyTheme(_: Theme) {
-        // Override in subclasses
-    }
-}
-
-/// Base reusable table cell view for AppKit
-open class BaseReusableTableCellView<Config, Theme: BaseUITheme>: NSTableCellView, ConfigurableUIComponent, ThemeableUIComponent, ReusableUIComponent {
-    public typealias Configuration = Config
-
-    private var _theme: Theme
-    public var theme: Theme {
-        get { _theme }
-        set {
-            _theme = newValue
-            applyTheme(newValue)
-        }
-    }
-
-    public init(theme: Theme) {
-        self._theme = theme
-        super.init(frame: .zero)
-        setupView()
-        applyTheme(theme)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    /// Override to setup view hierarchy and constraints
-    open func setupView() {
-        // Override in subclasses
-    }
-
-    /// Override to configure the view with data
-    open func configure(with _: Config) {
-        // Override in subclasses
-    }
-
-    /// Override to apply theme changes
-    open func applyTheme(_: Theme) {
-        // Override in subclasses
-    }
-}
-
-#elseif canImport(UIKit)
-
-/// Base configurable view for UIKit
-open class BaseConfigurableView<Config, Theme: BaseUITheme>: UIView, ConfigurableUIComponent, ThemeableUIComponent {
-    public typealias Configuration = Config
-
-    private var _theme: Theme
-    public var theme: Theme {
-        get { _theme }
-        set {
-            _theme = newValue
-            applyTheme(newValue)
-        }
-    }
-
-    public init(theme: Theme) {
-        self._theme = theme
-        super.init(frame: .zero)
-        setupView()
-        applyTheme(theme)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    /// Override to setup view hierarchy and constraints
-    open func setupView() {
-        // Override in subclasses
-    }
-
-    /// Override to configure the view with data
-    open func configure(with _: Config) {
-        // Override in subclasses
-    }
-
-    /// Override to apply theme changes
-    open func applyTheme(_ theme: Theme) {
-        backgroundColor = theme.backgroundColor
-    }
-}
-
-/// Base reusable table cell view for UIKit
-open class BaseReusableTableViewCell<Config, Theme: BaseUITheme>: UITableViewCell, ConfigurableUIComponent, ThemeableUIComponent, ReusableUIComponent {
-    public typealias Configuration = Config
-
-    private var _theme: Theme
-    public var theme: Theme {
-        get { _theme }
-        set {
-            _theme = newValue
-            applyTheme(newValue)
-        }
-    }
-
-    public init(theme: Theme, reuseIdentifier: String?) {
-        self._theme = theme
-        super.init(style: .default, reuseIdentifier: reuseIdentifier)
-        setupView()
-        applyTheme(theme)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    /// Override to setup view hierarchy and constraints
-    open func setupView() {
-        // Override in subclasses
-    }
-
-    /// Override to configure the view with data
-    open func configure(with _: Config) {
-        // Override in subclasses
-    }
-
-    /// Override to apply theme changes
-    open func applyTheme(_ theme: Theme) {
-        backgroundColor = theme.backgroundColor
-        contentView.backgroundColor = theme.backgroundColor
-    }
-}
-
-#endif
-
-// MARK: - UI Component Factory
-
-/// Factory for creating reusable UI components
-public enum UIComponentFactory {
-    /// Theme registry for component themes
-    @MainActor
-    private static var themeRegistry: [String: Any] = [:]
-
-    /// Registers a theme for a component type
-    @MainActor
-    public static func registerTheme<T>(_ theme: T, for componentType: String) {
-        themeRegistry[componentType] = theme
-    }
-
-    /// Gets a registered theme for a component type
-    @MainActor
-    public static func getTheme<T>(for componentType: String, as _: T.Type) -> T? {
-        themeRegistry[componentType] as? T
-    }
-
-    /// Creates a themed component
-    @available(*, unavailable)
-    public static func createComponent<Component, Theme>(
-        type _: Component.Type,
-        theme _: Theme
-    ) -> Component where Component: ThemeableUIComponent, Component.Theme == Theme {
-        // This would need specific implementations for each component type
-        fatalError("createComponent must be implemented for specific component types")
-    }
 }
 
 // MARK: - Layout Utility Components

@@ -1,5 +1,5 @@
-@testable import CodeEditorPlugin
 import CodeEditorDesignTokens
+@testable import CodeEditorPlugin
 import Foundation
 import SwiftUI
 import Testing
@@ -13,7 +13,6 @@ import UIKit
 
 @Suite("Tokens.Color bridges")
 struct ColorBridgesTests {
-
     @Test("SwiftUI.Color preserves sRGB components")
     func swiftUIColorPreservesSRGB() {
         let token = Tokens.Color(hex: 0x0A84FF)
@@ -35,11 +34,11 @@ struct ColorBridgesTests {
         let nsColor = NSColor(tokens: token)
         let inSRGB = nsColor.usingColorSpace(.sRGB)
         #expect(inSRGB != nil)
-        if let c = inSRGB {
-            #expect(abs(c.redComponent - 0x0A / 255.0) < 0.005)
-            #expect(abs(c.greenComponent - 0x84 / 255.0) < 0.005)
-            #expect(abs(c.blueComponent - 0xFF / 255.0) < 0.005)
-            #expect(abs(c.alphaComponent - 1.0) < 0.005)
+        if let inSRGB {
+            #expect(abs(inSRGB.redComponent - 0x0A / 255.0) < 0.005)
+            #expect(abs(inSRGB.greenComponent - 0x84 / 255.0) < 0.005)
+            #expect(abs(inSRGB.blueComponent - 0xFF / 255.0) < 0.005)
+            #expect(abs(inSRGB.alphaComponent - 1.0) < 0.005)
         }
     }
     #endif
@@ -49,12 +48,15 @@ struct ColorBridgesTests {
     func uiColorPreservesSRGB() {
         let token = Tokens.Color(hex: 0x0A84FF, alpha: 0.5)
         let uiColor = UIColor(tokens: token)
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
-        #expect(abs(r - 0x0A / 255.0) < 0.005)
-        #expect(abs(g - 0x84 / 255.0) < 0.005)
-        #expect(abs(b - 0xFF / 255.0) < 0.005)
-        #expect(abs(a - 0.5) < 0.005)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        #expect(abs(red - 0x0A / 255.0) < 0.005)
+        #expect(abs(green - 0x84 / 255.0) < 0.005)
+        #expect(abs(blue - 0xFF / 255.0) < 0.005)
+        #expect(abs(alpha - 0.5) < 0.005)
     }
     #endif
 }

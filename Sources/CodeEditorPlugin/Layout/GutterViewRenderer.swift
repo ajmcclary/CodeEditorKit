@@ -16,16 +16,46 @@ import UIKit
 public class GutterViewRenderer {
     // MARK: - Properties
 
-    /// The color used for line numbers
-    private let textColor = PlatformColors.secondaryLabel
+    /// The color used for inactive line numbers. Defaults to the system
+    /// secondary label; replaced by `themedLineNumberColor` after a theme
+    /// is applied.
+    private var textColor: PlatformColor = PlatformColors.secondaryLabel
 
     /// Padding from the right edge of the gutter
     private let rightPadding: CGFloat = 8
 
+    /// Theme-derived inactive line-number color. Defaults to the system
+    /// secondary label; refreshed by `apply(theme:)`.
+    public private(set) var themedLineNumberColor: PlatformColor = PlatformColors.secondaryLabel
+
+    /// Theme-derived active line-number color. Defaults to the system
+    /// label; refreshed by `apply(theme:)`.
+    public private(set) var themedActiveLineNumberColor: PlatformColor = PlatformColors.label
+
+    /// Theme-derived gutter background fill (UIKit only). `.clear` until a
+    /// theme is applied; the draw path falls back to the system control
+    /// background while this remains transparent.
+    private var themedBackgroundFillColor: PlatformColor = .clear
+
     // MARK: - Initialization
+
+    /// Creates a renderer with system-default colors. Themed colors are
+    /// installed via `apply(theme:)`; before that call the inactive line
+    /// numbers use the system secondary label color.
+    public init() {}
 
     deinit {
         // Required by SwiftLint
+    }
+
+    /// Apply a theme to the renderer. The renderer is not a view, so no
+    /// `setNeedsDisplay`; the owning `GutterView` triggers redraw via its
+    /// `apply(theme:)` override.
+    public func apply(theme: Theme) {
+        themedLineNumberColor = PlatformColor(tokens: theme.style.editor.lineNumber)
+        themedActiveLineNumberColor = PlatformColor(tokens: theme.style.editor.activeLineNumber)
+        themedBackgroundFillColor = PlatformColor(tokens: theme.style.editor.gutterBackground)
+        textColor = themedLineNumberColor
     }
 
     // MARK: - Public Interface
@@ -44,9 +74,17 @@ public class GutterViewRenderer {
         gutterBounds: CGRect,
         fillBackground: Bool = false
     ) {
-        // Fill background if requested (UIKit needs this)
+        // Fill background if requested (UIKit needs this). Theme-applied
+        // gutters use the editor's gutter background color; otherwise fall
+        // back to the system control background.
         if fillBackground {
-            context.setFillColor(PlatformColors.controlBackground.cgColor)
+            let fillColor: PlatformColor
+            if themedBackgroundFillColor.cgColor.alpha > 0 {
+                fillColor = themedBackgroundFillColor
+            } else {
+                fillColor = PlatformColors.controlBackground
+            }
+            context.setFillColor(fillColor.cgColor)
             context.fill(rect)
         }
 

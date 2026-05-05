@@ -205,9 +205,35 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
 
     private var trackingArea: NSTrackingArea?
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived minimap background color. `.clear` until first apply.
+    public private(set) var themedBackgroundColor: PlatformColor = .clear
+
+    /// Theme-derived viewport indicator color. `.clear` until first apply.
+    public private(set) var themedViewportIndicatorColor: PlatformColor = .clear
+
+    /// Theme-derived viewport track color. `.clear` until first apply.
+    public private(set) var themedTrackColor: PlatformColor = .clear
+
     // Mark view as opaque for proper rendering
     override public var isOpaque: Bool {
         true
+    }
+
+    /// Apply a theme to the minimap. Equality-gated; updates the layer
+    /// background and triggers a redraw.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.background)
+        themedViewportIndicatorColor = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
+        themedTrackColor = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
+        if wantsLayer {
+            layer?.backgroundColor = themedBackgroundColor.cgColor
+        }
+        needsDisplay = true
     }
 
     override public init(frame frameRect: NSRect) {
@@ -263,8 +289,12 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        // Always fill the entire background first
-        MinimapConfiguration.defaultBackgroundColor.setFill()
+        // Always fill the entire background first; theme-applied fill wins
+        // over the system control fallback.
+        let backgroundFill = appliedTheme != nil
+            ? themedBackgroundColor
+            : MinimapConfiguration.defaultBackgroundColor
+        backgroundFill.setFill()
         bounds.fill()
 
         // Draw a subtle border to make the minimap visible even without content
@@ -329,11 +359,19 @@ public final class AppKitMinimapView: NSView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
 
+        // Theme-applied indicator/track colors win over the static fallback.
+        let indicatorColor = appliedTheme != nil
+            ? themedViewportIndicatorColor
+            : MinimapConfiguration.defaultViewportColor
+        let trackColor = appliedTheme != nil
+            ? themedTrackColor
+            : MinimapConfiguration.defaultViewportBorderColor
+
         // Use UnifiedDrawingCoordinator for viewport indicator
         UnifiedDrawingCoordinator.drawViewportIndicator(
             in: viewportRect,
-            backgroundColor: MinimapConfiguration.defaultViewportColor,
-            borderColor: MinimapConfiguration.defaultViewportBorderColor,
+            backgroundColor: indicatorColor,
+            borderColor: trackColor,
             borderWidth: 1.0
         )
     }
@@ -378,9 +416,33 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
 
     public var onNavigate: ((Int) -> Void)?
 
+    /// Theme last applied via `apply(theme:)`. nil before first apply.
+    public private(set) var appliedTheme: Theme?
+
+    /// Theme-derived minimap background color. `.clear` until first apply.
+    public private(set) var themedBackgroundColor: PlatformColor = .clear
+
+    /// Theme-derived viewport indicator color. `.clear` until first apply.
+    public private(set) var themedViewportIndicatorColor: PlatformColor = .clear
+
+    /// Theme-derived viewport track color. `.clear` until first apply.
+    public private(set) var themedTrackColor: PlatformColor = .clear
+
     override public init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
+    }
+
+    /// Apply a theme to the minimap. Equality-gated; refreshes the
+    /// background fill and triggers a redraw.
+    public func apply(theme: Theme) {
+        if appliedTheme == theme { return }
+        appliedTheme = theme
+        themedBackgroundColor = PlatformColor(tokens: theme.style.editor.background)
+        themedViewportIndicatorColor = PlatformColor(tokens: theme.style.scrollbar.thumbBackground)
+        themedTrackColor = PlatformColor(tokens: theme.style.scrollbar.trackBackground)
+        backgroundColor = themedBackgroundColor
+        setNeedsDisplay()
     }
 
     public required init?(coder: NSCoder) {
@@ -408,8 +470,12 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
 
         guard let context = UIGraphicsGetCurrentContext() else { return }
 
-        // Always fill the entire background first
-        context.setFillColor(MinimapConfiguration.defaultBackgroundColor.cgColor)
+        // Always fill the entire background first; theme-applied fill wins
+        // over the system control fallback.
+        let backgroundFill = appliedTheme != nil
+            ? themedBackgroundColor
+            : MinimapConfiguration.defaultBackgroundColor
+        context.setFillColor(backgroundFill.cgColor)
         context.fill(bounds)
 
         // Draw a subtle border to make the minimap visible even without content
@@ -473,11 +539,19 @@ public final class UIKitMinimapView: UIView, MinimapViewProtocol {
             minimapHeight: bounds.height
         )
 
+        // Theme-applied indicator/track colors win over the static fallback.
+        let indicatorColor = appliedTheme != nil
+            ? themedViewportIndicatorColor
+            : MinimapConfiguration.defaultViewportColor
+        let trackColor = appliedTheme != nil
+            ? themedTrackColor
+            : MinimapConfiguration.defaultViewportBorderColor
+
         // Use UnifiedDrawingCoordinator for viewport indicator
         UnifiedDrawingCoordinator.drawViewportIndicator(
             in: viewportRect,
-            backgroundColor: MinimapConfiguration.defaultViewportColor,
-            borderColor: MinimapConfiguration.defaultViewportBorderColor,
+            backgroundColor: indicatorColor,
+            borderColor: trackColor,
             borderWidth: 1.0
         )
     }

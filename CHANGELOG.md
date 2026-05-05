@@ -2,13 +2,15 @@
 
 ## Unreleased
 
-### Editor visual restyle — foundations (sub-project 3, partial)
+### Editor visual restyle (sub-project 3 of the design system migration)
 
-Foundations and architectural skeleton landed; per-component subview
-wiring (gutter, minimap, line highlight, caret, completion popover,
-annotations, indent guides, fold chevrons) deferred to a follow-up
-sprint. See [`docs/superpowers/plans/2026-05-05-editor-visual-restyle.md`](docs/superpowers/plans/2026-05-05-editor-visual-restyle.md)
-Tasks 6–15.
+Push-model theme propagation landed end-to-end. Every editor-internal
+rendering surface (gutter, minimap, line highlight, caret, annotations,
+selection fill, completion popover) now reads colors from `Theme` via an
+equality-gated `apply(theme:)` chain that the SwiftUI representable
+forwards from `\.codeTheme` on every refresh. New visual surfaces —
+indent guides and fold chevrons — ship as pure-value primitives ready to
+plug into the fragment renderer in a follow-up.
 
 #### Added
 
@@ -17,20 +19,56 @@ Tasks 6–15.
   `Tokens.Color → NSColor` / `UIColor` (`init(tokens:)`),
   `Tokens.Easing → SwiftUI.Animation` (`Animation.timingCurve(easing:duration:)`),
   `Tokens.Animation → SwiftUI.Animation` named convenience
-  (`Tokens.Animation.foldChevron`, the only call site this sub-project
-  will use; later sub-projects' named animations land alongside).
+  (`Tokens.Animation.foldChevron`).
 - `Theme.color(forToken:)` — public hierarchical resolver. Drops
   trailing dotted segments on miss (`function.method.builtin` →
   `function.method` → `function` → `style.editor.foreground`); per-Theme
   `NSLock`-guarded cache keyed by `(name, appearance, foregroundHex)`.
+- `SyntaxColorScheme.color(forToken:in:)` — recommended entry point for
+  per-run color decisions; routes through `Theme.color(forToken:)` so
+  call sites get hierarchical dotted fallback over `style.syntax`.
 - `CodeEditorContainerView.apply(theme:)` and
   `CodeEditorContainerView.appliedTheme` — equality-gated theme push
-  point. Subview fan-out is the empty body for now; later tasks fill it
-  as each subview's draw path migrates from hardcoded `PlatformColors`
-  to theme reads.
-- `CodeEditorRepresentableHelper.updateContainer` calls
-  `container.apply(theme:)` so the SwiftUI environment's `\.codeTheme`
-  flows into the AppKit/UIKit container on every refresh.
+  point that fans out to `gutterView`, `minimapView`, and `textView`.
+- `CodeEditorView.apply(theme:)` — sets the macOS
+  `selectedTextAttributes[.backgroundColor]` to
+  `style.players[0].selection` and the iOS `tintColor` to
+  `style.players[0].cursor`.
+- `GutterView` + `GutterViewRenderer` `apply(theme:)`. Background from
+  `style.editor.gutterBackground`; inactive line numbers from
+  `style.editor.lineNumber`; active number from
+  `style.editor.activeLineNumber`.
+- `LineHighlightView.apply(theme:)` — fill from
+  `style.editor.activeLineBackground`.
+- `InsertionPointView.apply(theme:)` — caret from
+  `style.players[0].cursor`.
+- `MinimapView.apply(theme:)` (both AppKit and UIKit variants) —
+  background from `style.editor.background`; viewport indicator from
+  `style.scrollbar.thumbBackground`; track from
+  `style.scrollbar.trackBackground`.
+- `AnnotationKind.color(in:)` reads from `style.status.{info,warning,
+  error}.base`. `AnnotationView.apply(theme:)` and
+  `AnnotationsContentView.apply(theme:)` fan-out.
+- `IndentGuideGeometry` — pure-value indent column arithmetic
+  (leading whitespace × `tabWidth`, tabs counted as `tabWidth` spaces;
+  blank-line continuity inherits prior depth).
+- `FoldChevronAnimation` — animation gate keyed off
+  `config.performance.animateCodeFolding`; `FoldChevronHitTester` —
+  16×lineHeight hit-rect at the leading edge of the gutter, plus a
+  `chevronHit(at:lineHeight:visibleLineYs:)` lookup.
+- `CompletionPopoverThemeMetrics` — value-typed bundle of theme-derived
+  popover metrics (selected-row, primary/secondary text, border, corner
+  radius). `UnifiedCompletionCellView` /
+  `UnifiedCompletionTableViewCell` gain `apply(theme:)` that updates
+  label colors from these metrics.
+- `Layout/Glass/_GlassSurface` — internal frosted-glass wrapper backing
+  the AppKit/UIKit completion popover. Tinted from
+  `theme.platform.glass.tint @ glass.opacity`.
+- `ThemeableUIComponent` — retyped to expose the editor's `Theme` value
+  type directly via `appliedTheme` + `apply(theme:)`. Empty-extension
+  conformances on `GutterView`, `LineHighlightView`,
+  `InsertionPointView`, `AnnotationsContentView`, `AnnotationView`, and
+  the platform-specific minimap views.
 
 #### Changed
 
@@ -41,6 +79,9 @@ Tasks 6–15.
   (`textView.backgroundColor` / `.textColor` reads) now pull from
   `style.editor.background` / `.foreground` directly via
   `PlatformColor(tokens:)`.
+- Minimap draw paths (AppKit + UIKit) prefer the themed background /
+  viewport / track colors when a theme is in flight, falling back to
+  `MinimapConfiguration`'s static defaults otherwise.
 
 #### Removed
 
@@ -48,6 +89,10 @@ Tasks 6–15.
   `lineNumberColor`, `selectedLineColor` (sub-project 2 transition
   surface). Direct `style.editor.*` reads replace them.
 - `Theming/SwiftUI/` directory (now empty after the migration).
+- `BaseUIComponents.StandardUITheme`, `BaseUITheme`, the generic
+  `BaseConfigurableView` / `BaseReusableTableCellView` /
+  `BaseReusableTableViewCell` infrastructure, and `UIComponentFactory`.
+  None had consumers inside or outside the package.
 
 #### Tests
 
@@ -58,19 +103,33 @@ Tasks 6–15.
   full-miss-falls-through, cache stability.
 - `ApplyThemePropagationTests` — container stores applied theme,
   equality-gate, different-theme replacement.
+- `GutterViewThemeTests` — gutter background, inactive/active line
+  numbers, equality gate.
+- `LineHighlightInsertionPointThemeTests` — fill / caret reads.
+- `MinimapViewThemeTests` — background / viewport / track reads.
+- `AnnotationThemeTests` — `AnnotationKind.color(in:)` mappings;
+  `AnnotationView` / `AnnotationsContentView` propagation.
+- `SyntaxColorAndSelectionTests` — `SyntaxColorScheme.color(forToken:in:)`
+  and macOS / iOS selection paths.
+- `IndentGuideTests` — geometry, blank-line continuity, disabled-when-
+  zero.
+- `FoldChevronTests` — animation gate behavior, hit-rect geometry, hit
+  lookup.
+- `CompletionCellGlassTests` — popover metrics, `_GlassSurface` tint,
+  cell `apply(theme:)`.
+- `ThemeableUIComponentTests` — `ThemeableUIComponent` conformance for
+  the wired views.
 
-#### Deferred to future commits (sub-project 3 plan tasks 6–14)
+#### Deferred to follow-up commits
 
-- Subview-level theme reads: `GutterView`, `MinimapView`,
-  `LineHighlightView`, `InsertionPointView`, `TextLayoutFragmentView`,
-  `CompletionCellComponents`, `AnnotationView`/`AnnotationsContentView`.
-- `AnnotationKind.color → color(in:)` retype and call-site migration.
-- Indent guide rendering (new visual surface).
-- Fold chevron rendering with `Tokens.Animation.foldChevron` rotation.
-- `_GlassSurface` frosted-glass wrapper for the completion popover.
-- Selection-color reads from `style.players[0].selection`.
-- `BaseUIComponents.StandardUITheme` removal and
-  `ThemeableUIComponent.theme` retype to `Theme`.
+- Token-colored minimap bars (the minimap renderer doesn't yet carry
+  `TokenName` into its draw routine).
+- `TextLayoutFragmentView` rendering of indent guides / per-run colors —
+  the geometry primitives ship; the fragment-render plumbing (active-
+  column recompute on selection-change, font-advance probes) is its own
+  concern.
+- `GutterView` migration from triangle-glyph fold control to SF Symbol
+  chevron rotation that consumes the new animation/hit-test primitives.
 - DocC `Theme-System.md` example refresh (still references the deleted
   legacy accessors).
 

@@ -1,11 +1,10 @@
-@testable import CodeEditorPlugin
 import CodeEditorDesignTokens
+@testable import CodeEditorPlugin
 import Foundation
 import Testing
 
 @Suite("apply(theme:) propagation")
 struct ApplyThemePropagationTests {
-
     @Test("CodeEditorContainerView stores the applied theme")
     @MainActor
     func storesAppliedTheme() {
