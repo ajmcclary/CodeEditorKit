@@ -200,8 +200,13 @@ public final class AsyncSyntaxHighlighter {
                     )
                 }
                 return
+            } catch is CancellationError {
+                clearHighlighting(for: textView)
+                return
             } catch {
-                // If recovery fails, clear highlighting
+                CrossPlatformLogger.logger().error(
+                    "AsyncSyntaxHighlighter recovery path failed: \(error.localizedDescription); clearing highlighting"
+                )
                 clearHighlighting(for: textView)
                 return
             }
@@ -528,17 +533,21 @@ public final class AsyncSyntaxHighlighter {
     // MARK: - Cache Management
 
     private func setupPeriodicCacheOptimization() {
-        // Set up task to periodically optimize cache (every 5 minutes)
+        // Set up task to periodically optimize cache (every 5 minutes).
+        // Cancellation breaks the loop; transient errors are logged so a single
+        // failure doesn't kill the periodic optimisation forever.
         periodicOptimizationTask = Task { [weak self] in
             while !Task.isCancelled {
                 do {
-                    try await Task.sleep(for: .seconds(300)) // 5 minutes
-
-                    // Optimize cache directly without nested tasks
+                    try await Task.sleep(for: .seconds(300))
                     await self?.optimizeCache()
-                } catch {
-                    // Task was cancelled
+                } catch is CancellationError {
                     break
+                } catch {
+                    CrossPlatformLogger.logger().error(
+                        "AsyncSyntaxHighlighter periodic cache optimisation: \(error.localizedDescription); continuing"
+                    )
+                    continue
                 }
             }
         }

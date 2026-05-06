@@ -407,8 +407,12 @@ extension EditorContainerViewModel {
 
                     self.updateLayout(containerBounds: layoutFrames.containerFrame, animated: true)
                 }
+            } catch is CancellationError {
+                return
             } catch {
-                // Task was cancelled
+                CrossPlatformLogger.logger().error(
+                    "EditorContainerViewModel layout debounce sleep failed: \(error.localizedDescription)"
+                )
             }
         }
     }
@@ -425,8 +429,12 @@ extension EditorContainerViewModel {
                 await MainActor.run {
                     action()
                 }
+            } catch is CancellationError {
+                return
             } catch {
-                // Task was cancelled
+                CrossPlatformLogger.logger().error(
+                    "EditorContainerViewModel debounce sleep failed: \(error.localizedDescription)"
+                )
             }
         }
     }

@@ -423,7 +423,7 @@ extension RegexSyntaxHighlighter {
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
             rule(#"\b\d+\.?\d*\b"#, .number, 8),
             rule(#"\b(true|false|null)\b"#, .keyword, 7),
-            rule(#"[{}\[\],:}"#, .punctuation, 6)
+            rule(#"[{}\[\],:]"#, .punctuation, 6)
         ].compactMap(\.self)
 
         return RegexLanguageDefinition(name: "JSON", fileExtensions: ["json", "jsonc"], rules: rules)

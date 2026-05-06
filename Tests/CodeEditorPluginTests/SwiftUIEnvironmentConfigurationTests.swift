@@ -271,22 +271,20 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
     // MARK: - Builder Pattern Tests
 
     @MainActor
-    func testEditorConfigurationBuilderIntegration() {
+    func testEditorConfigurationDirectIntegration() {
         let binding = Binding<String>(
             get: { "test" },
             set: { _ in }
         )
 
-        // Create configuration using builder
-        let config = EditorConfigurationBuilder()
-            .fontSize(18)
-            .isLineNumbersEnabled(true)
-            .isSelectedLineHighlighted(true)
-            .isEditable(false)
-            .tabWidth(2)
-            .isMinimapVisible(true)
-            .isCodeFoldingEnabled(true)
-            .build()
+        var config = EditorConfiguration()
+        config.display.fontSize = 18
+        config.display.isLineNumbersEnabled = true
+        config.display.isSelectedLineHighlighted = true
+        config.behavior.isEditable = false
+        config.layout.tabWidth = 2
+        config.display.isMinimapVisible = true
+        config.display.isCodeFoldingEnabled = true
 
         let editor = CodeEditor(text: binding)
             .environment(\.codeEditorConfiguration, config)
@@ -443,14 +441,13 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         let eventSystem = UnifiedEventSystem()
 
         // Create custom configuration
-        let config = EditorConfigurationBuilder()
-            .fontSize(20)
-            .isLineNumbersEnabled(true)
-            .isSelectedLineHighlighted(true)
-            .tabWidth(2)
-            .isMinimapVisible(false)
-            .isCodeFoldingEnabled(true)
-            .build()
+        var config = EditorConfiguration()
+        config.display.fontSize = 20
+        config.display.isLineNumbersEnabled = true
+        config.display.isSelectedLineHighlighted = true
+        config.layout.tabWidth = 2
+        config.display.isMinimapVisible = false
+        config.display.isCodeFoldingEnabled = true
 
         // Create comprehensive environment
         let environment = CodeEditorEnvironment(

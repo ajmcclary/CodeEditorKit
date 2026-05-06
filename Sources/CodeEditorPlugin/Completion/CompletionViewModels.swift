@@ -79,7 +79,7 @@ public struct CompletionContext: Sendable {
 // MARK: - Completion Item
 
 /// Simplified completion item for UI presentation
-public struct CompletionItem: Identifiable, Hashable {
+public struct CompletionItem: Identifiable, Hashable, Sendable {
     public let id = UUID()
     public let text: String
     public let kind: CompletionItemKind

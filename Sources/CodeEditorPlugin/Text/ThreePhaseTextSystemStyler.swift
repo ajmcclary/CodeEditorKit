@@ -4,7 +4,7 @@ import Foundation
 /// This class manages primary validation, fallback handling, and secondary validation phases.
 @MainActor
 @preconcurrency
-public final class ThreePhaseTextSystemStyler<Interface: TextSystemInterface> where Interface: Sendable {
+public final class ThreePhaseTextSystemStyler<Interface: TextSystem> where Interface: Sendable {
     /// Type alias for fallback token providers that handle immediate styling needs.
     public typealias FallbackTokenProvider = @Sendable (NSRange) -> TokenApplication
     /// Type alias for secondary validation providers that perform background validation.

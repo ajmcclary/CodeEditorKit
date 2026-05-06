@@ -1,7 +1,7 @@
 import Foundation
 
 /// Validator for token system that manages validation operations for text content with token-based processing.
-public final class TokenSystemValidator<Interface: TextSystemInterface> {
+public final class TokenSystemValidator<Interface: TextSystem> {
     /// The text system interface used for content management.
     public let textSystem: Interface
     /// The token provider used for generating tokens during validation.

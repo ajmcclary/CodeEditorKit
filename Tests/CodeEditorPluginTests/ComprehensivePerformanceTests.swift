@@ -306,11 +306,8 @@ final class ComprehensivePerformanceTests: XCTestCase {
     // MARK: - Configuration Performance
 
     @MainActor
-    func testConfigurationValidatorPerformance() throws {
-        let validator = ConfigurationValidator()
+    func testConfigurationValidationPerformance() throws {
         var configuration = EditorConfiguration()
-
-        // Create complex configuration
         configuration.display.fontSize = 16
         configuration.display.isLineNumbersEnabled = true
         configuration.display.isSelectedLineHighlighted = true
@@ -319,37 +316,15 @@ final class ComprehensivePerformanceTests: XCTestCase {
         configuration.performance.useHardwareAcceleration = true
 
         measure(options: Self.standardMeasureOptions) {
-            // Validate many times
             for _ in 0..<10_000 {
-                let issues = validator.validate(configuration)
-                _ = issues.isEmpty
+                let errors = configuration.validate()
+                _ = errors.isEmpty
             }
         }
     }
 
-    @MainActor
-    func testConfigurationMigrationPerformance() throws {
-        let migrator = ConfigurationMigrator()
-
-        // Create old configuration format
-        let oldConfig: [String: Any] = [
-            "fontSize": 14.0,
-            "showLineNumbers": true,
-            "tabWidth": 4,
-            "theme": "dark"
-        ]
-
-        measure(options: Self.standardMeasureOptions) {
-            let expectation = self.expectation(description: "Configuration migration")
-            Task {
-                for _ in 0..<1_000 {
-                    _ = migrator.migrate(from: oldConfig, version: "1.0")
-                }
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 2.0)
-        }
-    }
+    // The previous `ConfigurationMigrator` benchmark was retired together with
+    // the migration framework — the framework had no public-API consumers.
 
     // MARK: - Platform Performance
 

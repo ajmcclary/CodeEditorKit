@@ -219,18 +219,14 @@ final class MinimapIntegrationTests: XCTestCase {
 
     @available(iOS 16.0, macOS 13.0, *)
     @MainActor
-    func testMinimapConfigurationBuilder() {
-        let config = EditorConfigurationBuilder()
-            .isMinimapVisible(true)
-            .build()
+    func testMinimapDirectConfigurationToggle() {
+        var config = EditorConfiguration()
+        config.display.isMinimapVisible = true
+        XCTAssertTrue(config.display.isMinimapVisible, "Minimap should be enabled via direct config")
 
-        XCTAssertTrue(config.display.isMinimapVisible, "Minimap should be enabled via builder")
-
-        let disabledConfig = EditorConfigurationBuilder()
-            .isMinimapVisible(false)
-            .build()
-
-        XCTAssertFalse(disabledConfig.display.isMinimapVisible, "Minimap should be disabled via builder")
+        var disabledConfig = EditorConfiguration()
+        disabledConfig.display.isMinimapVisible = false
+        XCTAssertFalse(disabledConfig.display.isMinimapVisible, "Minimap should be disabled via direct config")
     }
     #endif
 

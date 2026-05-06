@@ -3,7 +3,7 @@ import Foundation
 /// A text system styler that provides single-phase styling operations for text interfaces.
 @MainActor
 @preconcurrency
-public final class TextSystemStyler<Interface: TextSystemInterface> {
+public final class TextSystemStyler<Interface: TextSystem> {
     private let textSystem: Interface
     private let tokenProvider: TokenProvider
     private let validator: SinglePhaseRangeValidator<Interface.Content>
