@@ -21,7 +21,6 @@ var config = EditorConfiguration()
 config.display.fontSize = 16
 config.display.isLineNumbersEnabled = true
 config.layout.tabWidth = 4
-config.display.theme = .dark
 
 // Start from presets
 var minimal = EditorConfiguration.minimal
@@ -100,7 +99,6 @@ struct MyEditor: View {
             .environment(\.codeEditorConfiguration, configuration)
             .onAppear {
                 configuration.display.isLineNumbersEnabled = true
-                configuration.display.theme = .xcodeDark
             }
     }
 }
@@ -135,7 +133,6 @@ var markdownConfig = EditorConfiguration.markdown
 // Custom configuration
 var customConfig = EditorConfiguration()
 customConfig.display.fontSize = 16
-customConfig.display.theme = .dark
 customConfig.layout.tabWidth = 4
 customConfig.behavior.enableCodeCompletion = true
 customConfig.layout.wrapLines = false
@@ -166,18 +163,17 @@ let demoConfig = EditorConfiguration.presentation
 
 ### Theme Integration
 
-Apply themes to your configuration:
+Themes are applied separately from configuration. Use configuration for behavior and layout, and use `.codeTheme(_:)` for the visual theme:
 
 ```swift
-// Use built-in themes
-config.display.theme = .xcode
-config.display.theme = .vsDark
-config.display.theme = .github
-config.display.theme = .solarizedDark
-config.display.theme = .minimal
-config.display.theme = .presentation
+var config = EditorConfiguration.default
+config.display.isLineNumbersEnabled = true
 
-// Themes automatically configure colors for:
+CodeEditor(text: $code)
+    .environment(\.codeEditorConfiguration, config)
+    .codeTheme(.dark)
+
+// Themes configure colors for:
 // - Background and text
 // - Syntax highlighting (keywords, strings, comments)
 // - UI elements (selection, gutter, line numbers)
@@ -200,7 +196,6 @@ Changes apply immediately without view recreation:
 
 ```swift
 // This updates the editor instantly
-configuration.display.theme = .vsDark
 configuration.display.isLineNumbersEnabled.toggle()
 ```
 

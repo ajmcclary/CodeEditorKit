@@ -28,8 +28,10 @@ struct ContentView: View {
         .catch(err => console.error(err));
     """
 
-    @State private var config = EditorConfiguration()
     @State private var isDarkMode = true
+    private var selectedTheme: Theme {
+        isDarkMode ? .dark : Theme.fallback(appearance: .light)
+    }
 
     var body: some View {
         VStack {
@@ -39,14 +41,10 @@ struct ContentView: View {
 
             Toggle("Dark Mode", isOn: $isDarkMode)
                 .padding(.horizontal)
-                .onChange(of: isDarkMode) { newValue in
-                    // Switch between themes
-                    config.display.theme = newValue ? .oneDark : .xcode
-                }
 
             CodeEditor(text: $code)
                 .codeLanguage(.typescript)
-                .environment(\.codeEditorConfiguration, config)
+                .codeTheme(selectedTheme)
                 .frame(minHeight: 400)
                 .padding()
                 .background(isDarkMode ? Color.black : Color.gray.opacity(0.1))
@@ -54,9 +52,5 @@ struct ContentView: View {
                 .padding()
         }
         .preferredColorScheme(isDarkMode ? .dark : .light)
-        .onAppear {
-            // Start with dark theme
-            config.display.theme = .oneDark
-        }
     }
 }

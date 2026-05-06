@@ -155,7 +155,7 @@ public func exampleMethod(parameter1: String, parameter2: Int) throws -> Bool
 /// ```swift
 /// var config = EditorConfiguration()
 /// config.display.fontSize = 16
-/// config.display.theme = .dark
+/// config.display.isLineNumbersEnabled = true
 /// ```
 ```
 

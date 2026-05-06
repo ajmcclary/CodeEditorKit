@@ -8,4 +8,4 @@ let kLogger = CrossPlatformLogger.logger()
 
 kLogger.debug("Show line numbers: \(kConfig.display.isLineNumbersEnabled)")  // true
 kLogger.debug("Font size: \(kConfig.display.fontSize)")          // 13.0
-kLogger.debug("Theme: \(kConfig.display.theme)")             // .xcode
+kLogger.debug("Minimap visible: \(kConfig.display.showMinimap)")             // false

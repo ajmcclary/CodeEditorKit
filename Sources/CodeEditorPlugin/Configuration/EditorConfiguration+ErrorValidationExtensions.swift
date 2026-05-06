@@ -22,7 +22,7 @@ extension EditorConfiguration {
     /// - Parameters:
     ///   - keyPath: The key path to the property to validate
     ///   - value: The value to validate
-    /// - Throws: `ConfigurationError` with specific error details
+    /// - Throws: `ConfigurationDomainError` with specific error details
     public func validateProperty<T>(_ keyPath: KeyPath<EditorConfiguration, T>, value: T) throws {
         switch keyPath {
         case \EditorConfiguration.display.fontSize:
@@ -82,7 +82,7 @@ extension EditorConfiguration {
     }
 
     /// Checks for incompatible settings and throws if found
-    /// - Throws: `ConfigurationError.incompatibleSettings` if incompatible settings are detected
+    /// - Throws: `ConfigurationDomainError.incompatibleSettings` if incompatible settings are detected
     public func checkCompatibility() throws {
         // Check for incompatible settings
         if behavior.isEditable == false && behavior.enableCodeCompletion == true {
@@ -108,7 +108,7 @@ extension EditorConfiguration {
 extension EditorConfiguration {
     /// Attempts to fix validation errors automatically
     /// - Returns: A new configuration with fixes applied
-    /// - Throws: `ConfigurationError` if fixes cannot be applied
+    /// - Throws: `ConfigurationDomainError` if fixes cannot be applied
     public func withAutoFixes() throws -> EditorConfiguration {
         var fixed = self
 

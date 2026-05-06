@@ -372,10 +372,10 @@ enum CodeEditorError: LocalizedError {
 ```swift
 var config = EditorConfiguration.readOnly
 config.display.fontSize = 14
-config.display.theme = .github
 
 editor.configuration = config
 editor.language = .swift
+editor.apply(theme: .lcarsDark)
 ```
 
 ### Markdown Editor
@@ -395,7 +395,6 @@ let config = EditorConfiguration.presentation
 // Or customize further
 var customPresentation = EditorConfiguration.presentation
 customPresentation.display.fontSize = 24
-customPresentation.display.theme = .dark
 ```
 
 ### Diff Viewer
@@ -417,11 +416,14 @@ class DiffViewer {
 
 ## Theme Customization
 
-### Built-in Themes
+### Bundled Themes
 
 ```swift
-var config = EditorConfiguration()
-config.display.theme = .dark    // or .light, .minimal
+CodeEditor(text: $code)
+    .codeTheme(.dark)
+
+let editor = CodeEditorView()
+editor.apply(theme: .lcarsDark)
 ```
 
 ### Custom Colors
@@ -434,17 +436,11 @@ editor.selectedLineHighlightColor = PlatformColor.selectedLineHighlight
 ### Creating Custom Themes
 
 ```swift
-struct MyCustomTheme: Theme {
-    var backgroundColor: PlatformColor { .black }
-    var textColor: PlatformColor { .white }
-    var lineNumberColor: PlatformColor { .gray }
-    var selectedLineColor: PlatformColor { PlatformColor.blue.withAlphaComponent(0.1) }
-    
-    // Syntax colors
-    var keywordColor: PlatformColor { .purple }
-    var stringColor: PlatformColor { .red }
-    var commentColor: PlatformColor { .green }
-}
+let family = try ThemeFamily(contentsOf: themeURL)
+let theme = family.theme(named: "My Theme") ?? .lcarsDark
+
+CodeEditor(text: $code)
+    .codeTheme(theme)
 ```
 
 ## Migration Patterns
@@ -471,11 +467,14 @@ editor.language = .swift
 ```swift
 // Migrate from Monaco/CodeMirror patterns
 class EditorMigration {
-    func migrateFromMonaco(monacoConfig: [String: Any]) -> EditorConfiguration {
+    func migrateConfigurationFromMonaco(monacoConfig: [String: Any]) -> EditorConfiguration {
         var config = EditorConfiguration()
         config.display.fontSize = monacoConfig["fontSize"] as? CGFloat ?? 14
-        config.display.theme = mapMonacoTheme(monacoConfig["theme"] as? String)
         return config
+    }
+
+    func migrateThemeFromMonaco(monacoConfig: [String: Any]) -> Theme {
+        mapMonacoTheme(monacoConfig["theme"] as? String) ?? .lcarsDark
     }
 }
 ```

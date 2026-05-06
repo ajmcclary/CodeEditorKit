@@ -187,7 +187,7 @@ extension EditorViewController: NSToolbarDelegate {
             item.toolTip = "Change editor theme"
             
             let menu = NSMenu()
-            for theme in Theme.allCases {
+            for theme in ThemeFamily.bundled("zed-trek")?.themes ?? [.lcarsDark] {
                 menu.addItem(NSMenuItem(title: theme.name, representedObject: theme))
             }
             

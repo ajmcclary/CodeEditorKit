@@ -128,7 +128,7 @@ Add custom validation rules to ensure configuration integrity:
 hotReload.addValidationRule { config in
     // Ensure tab width is reasonable for the font size
     if config.layout.tabWidth > 8 && config.display.fontSize < 12 {
-        return ConfigurationError.incompatibleSettings(
+        return HotReloadValidationError.incompatibleSettings(
             "Large tab width with small font size may cause display issues"
         )
     }
@@ -224,8 +224,8 @@ let cancellable = codeEditorView.setupHotReload(with: hotReload)
 
 // The editor will automatically update when configuration changes
 hotReload.batchUpdate { config in
-    config.display.theme = .dark
     config.display.fontSize = 14
+    config.display.isLineNumbersEnabled = true
 }
 
 // Remember to store the cancellable to maintain the subscription
@@ -260,4 +260,4 @@ ConfigurationHotReload works across all platforms with some considerations:
 - ``ConfigurationEvent``
 - ``ConfigurationObserver``
 - ``ConfigurationPreset``
-- ``ConfigurationError``
+- ``HotReloadValidationError``

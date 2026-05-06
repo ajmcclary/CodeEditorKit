@@ -41,7 +41,6 @@ struct MyEditor: View {
         var config = EditorConfiguration()
         config.display.fontSize = 16
         config.display.isLineNumbersEnabled = true
-        config.display.theme = .xcodeDark
         config.display.enableSyntaxHighlighting = true
         return config
     }()
@@ -49,6 +48,7 @@ struct MyEditor: View {
     var body: some View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
+            .codeTheme(.dark)
             .environment(\.codeEditorConfiguration, configuration)
     }
 }
@@ -65,7 +65,6 @@ minimalConfig.display.fontSize = 14
 
 // Read-only editor for code display
 var readOnlyConfig = EditorConfiguration.readOnly
-readOnlyConfig.display.theme = .github
 
 // Platform-optimized configuration
 var platformConfig = EditorConfiguration.platformOptimized
@@ -87,7 +86,6 @@ struct MyEditor: View {
             .environment(\.codeEditorConfiguration, configuration)
             .onAppear {
                 configuration.display.isLineNumbersEnabled = true
-                configuration.display.theme = .xcodeDark
             }
     }
 }
@@ -171,15 +169,14 @@ struct UnifiedConfigurationView: View {
 
 // Theme selection with preview
 struct ThemeConfigurationSection: View {
-    @EnvironmentObject var appState: AppState
-    @State private var selectedTheme: ColorTheme = .xcode
+    @State private var selectedTheme = Theme.lcarsDark
+    private let themes = ThemeFamily.bundled("zed-trek")?.themes ?? [.lcarsDark]
     
     var body: some View {
         VStack {
-            ForEach(ColorTheme.allCases, id: \.self) { theme in
+            ForEach(themes, id: \.id) { theme in
                 ThemeRow(theme: theme, isSelected: selectedTheme == theme) {
                     selectedTheme = theme
-                    applyTheme(theme)
                 }
             }
             
@@ -198,6 +195,7 @@ The recommended approach for configuration in SwiftUI is to use direct property 
 ```swift
 struct ConfigurationView: View {
     @EnvironmentObject var appState: AppState
+    @Binding var selectedTheme: Theme
     
     var body: some View {
         Form {
@@ -211,9 +209,9 @@ struct ConfigurationView: View {
                 Text("Font Size")
             }
             
-            Picker("Theme", selection: $appState.currentConfiguration.display.theme) {
-                ForEach(Theme.allCases, id: \.self) { theme in
-                    Text(theme.displayName).tag(theme)
+            Picker("Theme", selection: $selectedTheme) {
+                ForEach(ThemeFamily.bundled("zed-trek")?.themes ?? [.lcarsDark], id: \.id) { theme in
+                    Text(theme.name).tag(theme)
                 }
             }
         }
@@ -464,7 +462,7 @@ Extend the environment for your needs:
 
 ```swift
 private struct EditorThemeKey: EnvironmentKey {
-    static let defaultValue = Theme.xcode
+    static let defaultValue = Theme.lcarsDark
 }
 
 extension EnvironmentValues {

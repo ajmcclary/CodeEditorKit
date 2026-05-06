@@ -153,7 +153,7 @@ struct EditorConfigurationBuilder: Sendable {
   ///     .fontSize(14)
   ///     .isLineNumbersEnabled(true)
   ///     .tabWidth(4)
-  ///     .theme(.monokai)
+  ///     .theme(.dark)
   ///     .language(.python)
   ///     .build()  // Returns the final configuration
   ///

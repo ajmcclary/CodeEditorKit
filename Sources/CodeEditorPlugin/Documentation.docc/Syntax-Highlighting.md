@@ -79,7 +79,9 @@ editor.language = language
 Syntax highlighting adapts to the current theme:
 
 ```swift
-config.display.theme = .vsDark
+CodeEditor(text: $code)
+    .codeLanguage(.swift)
+    .codeTheme(.dark)
 // Syntax colors automatically update
 ```
 

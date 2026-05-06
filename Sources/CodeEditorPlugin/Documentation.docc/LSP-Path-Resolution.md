@@ -1,4 +1,4 @@
-# LSPPathResolver
+# LSP Path Resolution
 
 @Metadata {
     @PageColor(purple)

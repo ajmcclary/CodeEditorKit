@@ -230,7 +230,6 @@ extension EditorConfiguration {
         config.display.isLineNumbersEnabled = true
         config.display.fontSize = 12
         config.display.showMinimap = true
-        config.display.theme = .vsDark
         
         // Layout settings
         config.layout.tabWidth = 2

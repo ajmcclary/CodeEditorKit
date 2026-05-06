@@ -64,10 +64,10 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
-        // TEMP: pinned to ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
-        // for upstream PR pointfreeco/swift-snapshot-testing#1090 (Swift 6.3
-        // Attachable conformances). Revert to upstream `from: "1.0.0"` once
-        // that PR ships in a tagged release.
+        // TEMP: using ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable
+        // because upstream 1.19.x fails to build under Swift 6.3's Testing
+        // Attachment APIs. Revert to upstream after pointfreeco/swift-snapshot-testing#1090
+        // lands in a tagged release.
         .package(url: "https://github.com/ajmcclary/swift-snapshot-testing", branch: "fix-swift-6.3-attachable"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),

@@ -239,11 +239,9 @@ swift test --filter TestName
 
 ## 📚 Documentation
 
-Build the DocC documentation:
-
-```bash
-swift package generate-documentation --target CodeEditorPlugin
-```
+DocC documentation lives in `Sources/CodeEditorPlugin/Documentation.docc`.
+Build it from Xcode's documentation workflow, or add the Swift-DocC plugin locally
+if you need CLI archive generation.
 
 Key documentation files:
 - `GettingStarted.md` - Quick setup guide

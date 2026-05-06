@@ -201,9 +201,9 @@ extension EditorViewController {
         let viewMenu = NSApp.mainMenu?.item(withTitle: "View")
         
         let themeSubmenu = NSMenu(title: "Theme")
-        for theme in Theme.allCases {
+        for theme in ThemeFamily.bundled("zed-trek")?.themes ?? [.lcarsDark] {
             let item = NSMenuItem(
-                title: theme.displayName,
+                title: theme.name,
                 action: #selector(changeTheme(_:)),
                 keyEquivalent: ""
             )
@@ -218,8 +218,7 @@ extension EditorViewController {
     
     @objc func changeTheme(_ sender: NSMenuItem) {
         if let theme = sender.representedObject as? Theme {
-            configuration.display.theme = theme
-            configuration.apply(to: editor)
+            editor.apply(theme: theme)
         }
     }
 }
