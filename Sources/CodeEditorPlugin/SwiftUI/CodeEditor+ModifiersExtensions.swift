@@ -196,7 +196,7 @@ extension CodeEditor {
     /// // Use default debouncing (100ms)
     /// CodeEditor(text: $code)
     ///     .onTextChange { newText in
-    ///         logger.debug("Text changed: \(newText.count) characters")
+    ///         print("Text changed: \(newText.count) characters")
     ///     }
     /// 
     /// // Or specify custom debouncing in initializer
@@ -230,9 +230,9 @@ extension CodeEditor {
     ///     .onSelectionChange { range in
     ///         if let range = range {
     ///             let selectedText = String(code[range])
-    ///             logger.debug("Selected: \(selectedText)")
+    ///             print("Selected: \(selectedText)")
     ///         } else {
-    ///             logger.debug("No selection")
+    ///             print("No selection")
     ///         }
     ///     }
     /// ```

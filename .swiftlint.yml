@@ -13,6 +13,8 @@ excluded:
   - .build
   - Sources/**/*.generated.swift
   - Tests/**/*.generated.swift
+  # DocC tutorial code snippets — illustrative, not part of the framework.
+  - Sources/CodeEditorPlugin/Documentation.docc/Resources/Code
 
 # ===========================
 # MARK: - Analyzer Rules
@@ -256,7 +258,10 @@ custom_rules:
     included: '.*\.swift'
     excluded: '.*Tests\.swift'
     name: "No print statements"
-    regex: '\bprint\('
+    # Match `print(` only in real code; skip doc-comment example lines
+    # that start with `///`, which SwiftLint cannot easily exclude via
+    # `match_kinds` for custom rules under all configurations.
+    regex: '^(?!\s*///)[^\n]*\bprint\('
     message: "Use CrossPlatformLogger.logger() instead of print statements"
     severity: warning
 

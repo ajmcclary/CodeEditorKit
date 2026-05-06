@@ -70,7 +70,7 @@ import UIKit
 ///     config.apply(to: editor)
 /// } else {
 ///     // Handle configuration errors appropriately
-///     logger.error("Configuration errors: \(errors)")
+///     print("Configuration errors: \(errors)")
 /// }
 /// 
 /// // Or throw on validation failure

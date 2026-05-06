@@ -41,11 +41,11 @@ import UIKit
 ///     func handle(_ event: EditorEvent) {
 ///         switch event {
 ///         case .textDidChange(let newText):
-///             logger.debug("Text changed: \(newText)")
+///             print("Text changed: \(newText)")
 ///         case .textSelectionDidChange(let range):
-///             logger.debug("Selection: \(range)")
+///             print("Selection: \(range)")
 ///         case .error(let error):
-///             logger.debug("Error: \(error)")
+///             print("Error: \(error)")
 ///         default:
 ///             break
 ///         }
@@ -67,7 +67,7 @@ import UIKit
 /// // Type-safe event filtering
 /// editor.eventPublisher.publisher(for: TextDidChangeEvent.self)
 ///     .sink { event in
-///         logger.debug("Text: \(event.text)")
+///         print("Text: \(event.text)")
 ///     }
 ///     .store(in: &cancellables)
 /// ```

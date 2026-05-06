@@ -330,7 +330,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
                     let processingTime = Date().timeIntervalSince(startTime)
                     self.statistics.recordError(processingTime: processingTime)
 
-                    let finalError = error is CancellationError ? HighlightingError.cancelled : error
+                    let finalError = error is CancellationError ? SyntaxHighlightingError.cancelled : error
                     request.completion(.failure(finalError))
                     self.pendingRequests.removeValue(forKey: request.id)
                     self.activeTasks.removeValue(forKey: request.id)
@@ -349,7 +349,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
         return try await withThrowingTaskGroup(of: (Int, [HighlightedToken]).self) { group in
             for (index, chunk) in chunks.enumerated() {
                 group.addTask { [weak self] in
-                    guard let self else { throw HighlightingError.cancelled }
+                    guard let self else { throw SyntaxHighlightingError.cancelled }
 
                     let chunkTokens = try await self.highlightingActor.highlight(
                         text: chunk.text,

@@ -28,7 +28,6 @@ struct DisplayKnobsSection: View {
                     value: $configuration.display.minimumFoldableLines,
                     range: 1...100
                 )
-                ToggleRow(label: "animateCodeFolding", value: $configuration.display.animateCodeFolding)
                 ToggleRow(label: "showMinimap", value: $configuration.display.showMinimap)
             }
             .padding(.vertical, 4)

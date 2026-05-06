@@ -69,9 +69,6 @@ enum ConfigurationCodeFormatter {
         if live.minimumFoldableLines != base.minimumFoldableLines {
             lines.append("\(prefix).minimumFoldableLines = \(live.minimumFoldableLines)")
         }
-        if live.animateCodeFolding != base.animateCodeFolding {
-            lines.append("\(prefix).animateCodeFolding = \(live.animateCodeFolding)")
-        }
         if live.showMinimap != base.showMinimap {
             lines.append("\(prefix).showMinimap = \(live.showMinimap)")
         }

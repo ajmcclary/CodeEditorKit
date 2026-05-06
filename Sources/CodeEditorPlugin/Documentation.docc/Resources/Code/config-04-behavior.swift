@@ -7,7 +7,7 @@ struct ContentView: View {
         // Auto-indent and bracket matching will help here
         for item in items {
             if item.count > 0 {
-                logger.debug(item)
+                print(item)
             }
         }
     }

@@ -17,7 +17,7 @@ struct ContentView: View {
     }
 
     let user = User(name: "Alice", age: 30)
-    logger.debug(user.greet())
+    print(user.greet())
     """
 
     var body: some View {

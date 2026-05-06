@@ -24,7 +24,7 @@ extension View {
 /// struct ContentView: View {
 ///     @State private var code = """
 ///         func greet(name: String) {
-///             logger.debug("Hello, \\(name)!")
+///             print("Hello, \\(name)!")
 ///         }
 ///         """
 ///     
@@ -81,10 +81,10 @@ extension View {
 ///     .tabWidth(4)
 ///     .showInvisibleCharacters(false)
 ///     .onTextChange { newText in
-///         logger.debug("Text changed: \\(newText.count) characters")
+///         print("Text changed: \\(newText.count) characters")
 ///     }
 ///     .onSelectionChange { range in
-///         logger.debug("Selection changed: \\(range?.description ?? "nil")")
+///         print("Selection changed: \\(range?.description ?? "nil")")
 ///     }
 /// ```
 ///
@@ -169,7 +169,7 @@ public struct CodeEditor: View {
     internal var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
 
     // Debouncing
-    private let textDebounceInterval: Duration
+    private let textDebounceInterval: Duration?
 
     // MARK: - Initialization
 
@@ -177,13 +177,14 @@ public struct CodeEditor: View {
     ///
     /// - Parameters:
     ///   - text: A binding to the text content of the editor
-    ///   - debounceInterval: Time interval to debounce text change events (default: 100ms)
+    ///   - debounceInterval: Time interval to debounce text change events.
+    ///     Pass `nil` (the default) to use the value from `EditorConfiguration.performance.textChangeDebounceInterval`.
     ///
     /// ## Example
     ///
     /// ```swift
     /// @State private var code = "// Enter code here"
-    /// 
+    ///
     /// var body: some View {
     ///     CodeEditor(
     ///         text: $code,
@@ -193,7 +194,7 @@ public struct CodeEditor: View {
     /// ```
     public init(
         text: Binding<String>,
-        debounceInterval: Duration = .milliseconds(100)
+        debounceInterval: Duration? = nil
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
@@ -210,13 +211,14 @@ public struct CodeEditor: View {
     ///   - text: A binding to the text content of the editor
     ///   - language: The programming language for syntax highlighting
     ///   - theme: The color theme to apply
-    ///   - debounceInterval: Time interval to debounce text change events (default: 100ms)
+    ///   - debounceInterval: Time interval to debounce text change events.
+    ///     Pass `nil` (the default) to use the value from `EditorConfiguration.performance.textChangeDebounceInterval`.
     ///
     /// ## Example
     ///
     /// ```swift
     /// @State private var code = "// Hello, World!"
-    /// 
+    ///
     /// var body: some View {
     ///     CodeEditor(
     ///         text: $code,
@@ -229,7 +231,7 @@ public struct CodeEditor: View {
         text: Binding<String>,
         language: Language,
         theme: Theme = .default,
-        debounceInterval: Duration = .milliseconds(100)
+        debounceInterval: Duration? = nil
     ) {
         self._text = text
         self.textDebounceInterval = debounceInterval
@@ -250,10 +252,9 @@ public struct CodeEditor: View {
             effectiveConfiguration.eventSystem = eventSystem
         }
 
-        // Use configuration's debounce interval if not overridden
-        let effectiveDebounceInterval = textDebounceInterval == .milliseconds(100)
-            ? effectiveConfiguration.performance.textChangeDebounceInterval
-            : textDebounceInterval
+        // Use configuration's debounce interval when no explicit override was passed.
+        let effectiveDebounceInterval = textDebounceInterval
+            ?? effectiveConfiguration.performance.textChangeDebounceInterval
 
         return CodeEditorRepresentable(
             text: $text,  // Pass the binding directly

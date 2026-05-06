@@ -22,7 +22,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Toggle folding at line 25
     /// if editor.toggleFold(at: 25) {
-    ///     logger.debug("Folding toggled successfully")
+    ///     print("Folding toggled successfully")
     /// }
     /// ```
     public func toggleFold(at lineNumber: Int) -> Bool {
@@ -44,7 +44,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Fold function at line 42
     /// if editor.fold(at: 42) {
-    ///     logger.debug("Function folded")
+    ///     print("Function folded")
     /// }
     /// ```
     public func fold(at lineNumber: Int) -> Bool {
@@ -68,7 +68,7 @@ extension CodeEditorView {
     /// ```swift
     /// // Unfold code at line 42
     /// if editor.unfold(at: 42) {
-    ///     logger.debug("Code unfolded")
+    ///     print("Code unfolded")
     /// }
     /// ```
     public func unfold(at lineNumber: Int) -> Bool {
@@ -110,7 +110,7 @@ extension CodeEditorView {
     ///
     /// ```swift
     /// if editor.isFolded(at: 25) {
-    ///     logger.debug("Line 25 is currently folded")
+    ///     print("Line 25 is currently folded")
     /// }
     /// ```
     public func isFolded(at lineNumber: Int) -> Bool {
@@ -173,7 +173,7 @@ extension CodeEditorView {
     /// ```swift
     /// let regions = editor.foldableRegions
     /// for region in regions {
-    ///     logger.debug("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
+    ///     print("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
     /// }
     /// ```
     internal var foldableRegions: [FoldableRegion] {

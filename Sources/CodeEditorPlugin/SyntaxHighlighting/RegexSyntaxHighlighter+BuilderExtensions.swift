@@ -103,15 +103,17 @@ extension RegexSyntaxHighlighter {
             RegexLanguageDefinition(name: name, fileExtensions: fileExtensions, rules: rules)
         }
 
-        /// Helper method to create rules (same as the outer rule method)
-        private static func rule(_ pattern: String, _ tokenType: RegexSyntaxTokenType, _ priority: Int) -> RegexHighlightRule? {
-            do {
-                return try RegexHighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
-            } catch {
-                // Silently fail - invalid regex patterns should not crash
-                // In production, this would be logged by the caller
-                return nil
-            }
+        /// Helper method to create rules. Delegates to the outer
+        /// `RegexSyntaxHighlighter.rule(_:_:_:)`, which logs a fault and trips
+        /// `assertionFailure` in debug when the pattern is invalid.
+        private static func rule(
+            _ pattern: String,
+            _ tokenType: RegexSyntaxTokenType,
+            _ priority: Int,
+            file: StaticString = #fileID,
+            line: UInt = #line
+        ) -> RegexHighlightRule? {
+            RegexSyntaxHighlighter.rule(pattern, tokenType, priority, file: file, line: line)
         }
     }
 }

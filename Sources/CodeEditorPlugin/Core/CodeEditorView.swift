@@ -25,7 +25,7 @@ import AppKit
 ///
 /// ```swift
 /// let editor = CodeEditorView()
-/// editor.string = "func hello() {\n    logger.debug(\"Hello, World!\")\n}"
+/// editor.string = "func hello() {\n    print(\"Hello, World!\")\n}"
 /// editor.language = .swift
 /// editor.isLineNumbersEnabled = true
 /// editor.isCodeCompletionEnabled = true
@@ -110,7 +110,7 @@ import AppKit
 /// do {
 ///     let hover = try await editor.requestHoverSafe(at: position)
 /// } catch let error as CodeEditorError {
-///     logger.error("Error: \(error.localizedDescription)")
+///     print("Error: \(error.localizedDescription)")
 /// }
 /// ```
 @objc @MainActor

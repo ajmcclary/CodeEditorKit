@@ -34,20 +34,9 @@ extension CodeEditorView {
         }
     }
 
-    /// Current text selection as a Swift range
-    public var selection: Range<String.Index>? {
-        get {
-            let nsRange = selectedRange
-            return Range(nsRange, in: content)
-        }
-        set {
-            if let range = newValue {
-                selectedRange = NSRange(range, in: content)
-            }
-        }
-    }
-
-    // selectedRange is already implemented in CodeEditorView
+    // selectedRange is already implemented in CodeEditorView. The previous
+    // dual `selection: Range<String.Index>?` API was removed; convert through
+    // `Range(selectedRange, in: content)` at call sites that need a Swift range.
 
     // MARK: - Configuration
 

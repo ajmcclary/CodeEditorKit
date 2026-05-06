@@ -10,11 +10,12 @@ import Observation
 /// `lineCount`; the host writes the rest (`documentName`, `documentURL`,
 /// `tabs`, `activeTabID`, `breadcrumbPath`, `workspaceName`).
 ///
-/// **MainActor-bound by convention.** `@Observable` does not synthesize
-/// `Sendable`. Mutation from non-main contexts is unsupported. Read access
-/// from any context is safe.
+/// MainActor-isolated. `@Observable` does not synthesize `Sendable`, so
+/// access is gated by the actor instead of a hand-written `@unchecked
+/// Sendable` conformance.
+@MainActor
 @Observable
-public final class EditorState: @unchecked Sendable {
+public final class EditorState {
     // MARK: Editor-written
 
     /// Caret/selection in the active document; nil before the editor mounts.

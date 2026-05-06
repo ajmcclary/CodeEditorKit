@@ -178,7 +178,7 @@ Add metrics collection to track improvements:
 let startTime = CFAbsoluteTimeGetCurrent()
 let results = matcher.match(pattern: pattern, candidates: candidates)
 let duration = CFAbsoluteTimeGetCurrent() - startTime
-logger.info("Fuzzy matching took \(duration)s for \(candidates.count) candidates")
+print("Fuzzy matching took \(duration)s for \(candidates.count) candidates")
 ```
 
 ## Migration Checklist

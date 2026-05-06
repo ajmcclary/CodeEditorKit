@@ -77,9 +77,6 @@ public enum PlatformConstants {
     /// Minimum foldable lines
     public static let minimumFoldableLines: Int = 3
 
-    /// Maximum history size for configuration hot reload
-    public static let maxConfigurationHistorySize: Int = 50
-
     /// Default animation duration (seconds)
     public static let defaultAnimationDuration: TimeInterval = 0.3
 

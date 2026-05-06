@@ -47,9 +47,6 @@ extension EditorConfiguration {
         /// Minimum number of lines required for folding
         public var minimumFoldableLines: Int = PlatformConstants.minimumFoldableLines
 
-        /// Whether to animate code folding/unfolding
-        public var animateCodeFolding: Bool = true
-
         /// Whether to show a minimap
         public var showMinimap: Bool = false
 
@@ -75,7 +72,6 @@ extension EditorConfiguration.Display: Codable {
         case enableCodeFolding
         case showFoldingControls
         case minimumFoldableLines
-        case animateCodeFolding
         case showMinimap
     }
 
@@ -101,7 +97,6 @@ extension EditorConfiguration.Display: Codable {
         enableCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .enableCodeFolding) ?? false
         showFoldingControls = try container.decodeIfPresent(Bool.self, forKey: .showFoldingControls) ?? false
         minimumFoldableLines = try container.decodeIfPresent(Int.self, forKey: .minimumFoldableLines) ?? 3
-        animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
         showMinimap = try container.decodeIfPresent(Bool.self, forKey: .showMinimap) ?? false
     }
 
@@ -118,7 +113,6 @@ extension EditorConfiguration.Display: Codable {
         try container.encode(enableCodeFolding, forKey: .enableCodeFolding)
         try container.encode(showFoldingControls, forKey: .showFoldingControls)
         try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)
-        try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
         try container.encode(showMinimap, forKey: .showMinimap)
     }
 }

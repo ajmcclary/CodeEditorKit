@@ -150,13 +150,13 @@ do {
     try editor.setLanguage(.swift)
 } catch let error as CodeEditorError {
     // Handle specific editor errors
-    logger.error("Editor error: \(error.localizedDescription)")
+    print("Editor error: \(error.localizedDescription)")
     
     // Attempt automatic recovery
     editor.attemptErrorRecovery(from: error)
 } catch {
     // Handle unexpected errors
-    logger.error("Unexpected error: \(error)")
+    print("Unexpected error: \(error)")
 }
 ```
 
@@ -170,7 +170,7 @@ func applyConfiguration(_ config: EditorConfiguration) {
         editor.configuration = config
     } else {
         // Log errors and use safe defaults
-        logger.warning("Invalid configuration: \(errors)")
+        print("Invalid configuration: \(errors)")
         editor.configuration = .default
     }
 }

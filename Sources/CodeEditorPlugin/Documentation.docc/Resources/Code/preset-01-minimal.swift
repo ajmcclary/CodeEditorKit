@@ -9,7 +9,7 @@ struct ContentView: View {
     // - Minimal UI distractions
 
     func greet(name: String) {
-        logger.debug("Hello, \\(name)!")
+        print("Hello, \\(name)!")
     }
     """
 

@@ -39,7 +39,7 @@ import AppKit
 /// editor.configuration = .default
 /// 
 /// // Set content
-/// editor.content = "func hello() {\n    logger.debug(\"Hello, World!\")\n}"
+/// editor.content = "func hello() {\n    print(\"Hello, World!\")\n}"
 /// 
 /// // Subscribe to events
 /// editor.subscribe(MyEventHandler())
@@ -61,10 +61,8 @@ public protocol CodeEditorAPI: AnyObject {
     /// The attributed text content (if supported)
     var attributedContent: NSAttributedString? { get set }
 
-    /// Current text selection as a Swift range
-    var selection: Range<String.Index>? { get set }
-
-    /// Current text selection as NSRange (for compatibility)
+    /// Current text selection as `NSRange`. This is the canonical selection
+    /// representation used throughout the editor and TextKit.
     var selectedRange: NSRange { get set }
 
     // MARK: - Configuration
@@ -252,7 +250,7 @@ extension CodeEditorAPI {
     }
 
     func moveCursor(by offset: Int) {
-        guard let currentPosition = selection?.lowerBound else { return }
+        guard let currentPosition = Range(selectedRange, in: content)?.lowerBound else { return }
         let index = content.index(currentPosition, offsetBy: offset, limitedBy: content.endIndex) ?? content.endIndex
         moveCursor(to: index)
     }
@@ -321,7 +319,7 @@ extension CodeEditorAPI {
 
     /// Get selected text
     var selectedText: String? {
-        guard let range = selection else { return nil }
+        guard let range = Range(selectedRange, in: content) else { return nil }
         return String(content[range])
     }
 }

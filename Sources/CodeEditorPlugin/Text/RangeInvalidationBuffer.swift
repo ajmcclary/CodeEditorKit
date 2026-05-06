@@ -43,18 +43,28 @@ public final class RangeInvalidationBuffer {
 
     /// Ends a buffering operation and processes collected invalidation events if this is the final nesting level.
     /// This method must be called once for each corresponding `beginBuffering()` call.
+    /// Unbalanced calls (`endBuffering` without a matching `beginBuffering`) are
+    /// logged and ignored rather than crashing.
     public func endBuffering() {
         switch state {
         case .idle:
-            preconditionFailure()
+            CrossPlatformLogger.logger().error(
+                "RangeInvalidationBuffer.endBuffering called while idle; ignoring unbalanced call"
+            )
 
         case let .buffering(set, 1):
             invalidationHandler(set)
             state = .idle
 
-        case let .buffering(set, count):
-            precondition(count > 1)
+        case let .buffering(set, count) where count > 1:
             state = .buffering(set, count - 1)
+
+        case let .buffering(set, count):
+            CrossPlatformLogger.logger().fault(
+                "RangeInvalidationBuffer in invalid buffering state count=\(count); resetting to idle"
+            )
+            invalidationHandler(set)
+            state = .idle
         }
     }
 
