@@ -156,7 +156,7 @@ The optimizer preserves original settings:
 ```swift
 // Original values are stored when optimizations begin:
 // - maxSyntaxHighlightingLength
-// - enableSyntaxHighlighting
+// - isSyntaxHighlightingEnabled
 // - adaptivePerformanceMode
 
 // When disabled, all settings are restored
@@ -209,7 +209,7 @@ if optimizer.currentMode != .normal {
 optimizer.disableOptimizations()
 
 // Verify restoration
-assert(codeEditorView.configuration.display.enableSyntaxHighlighting)
+assert(codeEditorView.configuration.display.isSyntaxHighlightingEnabled)
 ```
 
 ## Performance Tips

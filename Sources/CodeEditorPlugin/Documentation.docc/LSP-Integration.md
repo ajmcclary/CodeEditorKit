@@ -752,7 +752,7 @@ class WASMLSPProvider {
 ```swift
 // Configuration for iOS/Catalyst without LSP
 let config = EditorConfiguration()
-config.behavior.enableCodeCompletion = true  // Uses local providers
+config.behavior.isCodeCompletionEnabled = true  // Uses local providers
 config.behavior.enableLSP = false            // Disable LSP features
 config.display.showCompletionPopup = true    // Local completions still work
 ```

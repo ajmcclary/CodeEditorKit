@@ -8,8 +8,9 @@ import SwiftUI
 /// `.environment(\.editorState, state)`. Hosts without chrome can ignore
 /// this key — the editor writes to the env's default (a fresh empty
 /// instance per access) and observation no-ops because no view is reading.
-public struct EditorStateEnvironmentKey: EnvironmentKey {
-    public static let defaultValue = EditorState()
+@MainActor
+public struct EditorStateEnvironmentKey: @preconcurrency EnvironmentKey {
+    public static var defaultValue: EditorState { EditorState() }
 
     public typealias Value = EditorState
 }

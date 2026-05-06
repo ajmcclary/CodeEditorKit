@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// Protocol for text system interface
-public protocol TextSystemInterface: Sendable {
+public protocol TextSystem: Sendable {
     associatedtype Content: VersionedContent
 
     var textContentManager: NSTextContentManager { get }
@@ -16,7 +16,7 @@ public protocol TextSystemInterface: Sendable {
 
 // MARK: - Validation Support
 
-extension TextSystemInterface {
+extension TextSystem {
     typealias Provider = ThreePhaseRangeValidator<Content>.Provider
     typealias ContentRange = ThreePhaseRangeValidator<Content>.ContentRange
 
@@ -68,7 +68,7 @@ extension TextSystemInterface {
 
 // MARK: - Styling Support
 
-extension TextSystemInterface {
+extension TextSystem {
     typealias Styler = ThreePhaseTextSystemStyler<Self>
     typealias FallbackHandler = ThreePhaseRangeValidator<Self.Content>.FallbackHandler
     typealias SecondaryValidationProvider = ThreePhaseRangeValidator<Self.Content>.SecondaryValidationProvider

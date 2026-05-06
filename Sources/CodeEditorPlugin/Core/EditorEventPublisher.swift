@@ -31,7 +31,7 @@ import UIKit
 /// // Subscribe to all events
 /// eventPublisher.publisher()
 ///     .sink { event in
-///         logger.debug("Event: \(event)")
+///         print("Event: \(event)")
 ///     }
 ///     .store(in: &cancellables)
 ///
@@ -40,7 +40,7 @@ import UIKit
 ///     .map { $0.text }
 ///     .removeDuplicates()
 ///     .sink { text in
-///         logger.debug("Unique text: \(text)")
+///         print("Unique text: \(text)")
 ///     }
 ///     .store(in: &cancellables)
 /// ```

@@ -193,7 +193,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         // Common expectations
         XCTAssertNotNil(config)
         XCTAssertTrue(config.display.isLineNumbersEnabled)
-        XCTAssertTrue(config.display.highlightSelectedLine)
+        XCTAssertTrue(config.display.isSelectedLineHighlighted)
 
         // Platform-specific expectations
         switch platform {
@@ -359,19 +359,19 @@ final class PlatformCapabilitiesTests: XCTestCase {
         case .iPhone:
             XCTAssertEqual(config.display.fontSize, 16.0, "iPhone should use 16pt font")
             XCTAssertEqual(config.layout.gutterWidth, 50.0, "iPhone should use 50pt gutter")
-            XCTAssertFalse(config.display.showMinimap, "iPhone should not show minimap")
+            XCTAssertFalse(config.display.isMinimapVisible, "iPhone should not show minimap")
 
         case .iPad:
             // Catalyst on iPad has different settings than native iPad
             if capabilities.currentPlatform == .catalyst {
                 XCTAssertEqual(config.display.fontSize, 15.0, "Catalyst iPad should use 15pt font")
                 XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst iPad should use 45pt gutter")
-                XCTAssertFalse(config.display.showMinimap, "Catalyst iPad should not show minimap")
+                XCTAssertFalse(config.display.isMinimapVisible, "Catalyst iPad should not show minimap")
             } else {
                 XCTAssertEqual(config.display.fontSize, 16.0, "iPad should use 16pt font")
                 XCTAssertEqual(config.layout.gutterWidth, 45.0, "iPad should use 45pt gutter")
                 // iPad configuration enables minimap since it has enough screen space
-                XCTAssertTrue(config.display.showMinimap, "iPad should show minimap")
+                XCTAssertTrue(config.display.isMinimapVisible, "iPad should show minimap")
             }
 
         default:
@@ -410,7 +410,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
             .syntaxHighlighting, .lineNumbers, .codeFolding, .minimap,
             .multipleCursors, .languageServerProtocol, .goToDefinition,
             .findReplace, .codeCompletion, .symbolNavigation,
-            .hardwareAcceleration, .autoIndent
+            .hardwareAcceleration, .isAutoIndentEnabled
         ]
 
         for feature in features {
@@ -558,7 +558,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
         // Catalyst should use desktop-optimized settings
         XCTAssertTrue(config.display.isLineNumbersEnabled,
                      "Catalyst should show line numbers by default")
-        XCTAssertTrue(config.display.highlightSelectedLine,
+        XCTAssertTrue(config.display.isSelectedLineHighlighted,
                      "Catalyst should highlight selected line")
         XCTAssertTrue(config.performance.useHardwareAcceleration,
                      "Catalyst should use hardware acceleration")

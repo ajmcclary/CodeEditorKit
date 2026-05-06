@@ -7,7 +7,7 @@ struct ContentView: View {
         // Auto-indent and bracket matching will help here
         for item in items {
             if item.count > 0 {
-                logger.debug(item)
+                print(item)
             }
         }
     }
@@ -22,7 +22,7 @@ struct ContentView: View {
                 Text("Behavior Settings")
                     .font(.headline)
 
-                Toggle("Auto Indent", isOn: $config.behavior.autoIndent)
+                Toggle("Auto Indent", isOn: $config.behavior.isAutoIndentEnabled)
 
                 Toggle("Auto-closing Brackets", isOn: $config.behavior.autoClosingBrackets)
 

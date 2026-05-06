@@ -13,45 +13,42 @@ extension EditorConfiguration {
     public struct Display: Equatable, Sendable {
         // MARK: - Properties
 
-        /// Whether to enable syntax highlighting
-        public var enableSyntaxHighlighting: Bool = true
+        /// Whether syntax highlighting is enabled.
+        public var isSyntaxHighlightingEnabled: Bool = true
 
-        /// Font size for the editor text
+        /// Font size for the editor text.
         public var fontSize: CGFloat = PlatformConstants.defaultFontSize
 
-        /// Whether to enable line numbers in the gutter
+        /// Whether line numbers are enabled in the gutter.
         public var isLineNumbersEnabled: Bool = true
 
-        /// Whether to enable annotations support
-        public var enableAnnotations: Bool = true
+        /// Whether annotations support is enabled.
+        public var areAnnotationsEnabled: Bool = true
 
-        /// Whether to highlight the currently selected line
-        public var highlightSelectedLine: Bool = true
+        /// Whether the currently selected line is highlighted.
+        public var isSelectedLineHighlighted: Bool = true
 
-        /// Color used to highlight the selected line
+        /// Color used to highlight the selected line.
         public var selectedLineHighlightColor: PlatformColor = PlatformColors.selectedLineHighlight
 
-        /// Number of lines visible in the editor
+        /// Number of lines visible in the editor.
         public var visibleLines: Int = PlatformConstants.defaultVisibleLines
 
-        /// Whether to show invisible characters (spaces, tabs)
+        /// Whether invisible characters (spaces, tabs) are visible.
         /// - Note: Only supported on macOS. Not available on iOS or Mac Catalyst due to TextKit limitations.
-        public var showInvisibleCharacters: Bool = false
+        public var areInvisibleCharactersVisible: Bool = false
 
-        /// Whether to enable code folding functionality
-        public var enableCodeFolding: Bool = false
+        /// Whether code folding functionality is enabled.
+        public var isCodeFoldingEnabled: Bool = false
 
-        /// Whether to show folding controls in the gutter
-        public var showFoldingControls: Bool = false
+        /// Whether folding controls are visible in the gutter.
+        public var areFoldingControlsVisible: Bool = false
 
-        /// Minimum number of lines required for folding
+        /// Minimum number of lines required for folding.
         public var minimumFoldableLines: Int = PlatformConstants.minimumFoldableLines
 
-        /// Whether to animate code folding/unfolding
-        public var animateCodeFolding: Bool = true
-
-        /// Whether to show a minimap
-        public var showMinimap: Bool = false
+        /// Whether the minimap is visible.
+        public var isMinimapVisible: Bool = false
 
         // MARK: - Initialization
 
@@ -63,62 +60,53 @@ extension EditorConfiguration {
 
 extension EditorConfiguration.Display: Codable {
     private enum CodingKeys: String, CodingKey {
-        case enableSyntaxHighlighting
+        case isSyntaxHighlightingEnabled
         case fontSize
-        case showLineNumbers // Keep for backward compatibility in decoding
         case isLineNumbersEnabled
-        case enableAnnotations
-        case highlightSelectedLine
+        case areAnnotationsEnabled
+        case isSelectedLineHighlighted
         case selectedLineHighlightColor
         case visibleLines
-        case showInvisibleCharacters
-        case enableCodeFolding
-        case showFoldingControls
+        case areInvisibleCharactersVisible
+        case isCodeFoldingEnabled
+        case areFoldingControlsVisible
         case minimumFoldableLines
-        case animateCodeFolding
-        case showMinimap
+        case isMinimapVisible
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        enableSyntaxHighlighting = try container.decodeIfPresent(Bool.self, forKey: .enableSyntaxHighlighting) ?? true
+        isSyntaxHighlightingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isSyntaxHighlightingEnabled) ?? true
         fontSize = try container.decodeIfPresent(CGFloat.self, forKey: .fontSize) ?? 14
-        // Try new key first, fall back to old key for backward compatibility
-        if let value = try container.decodeIfPresent(Bool.self, forKey: .isLineNumbersEnabled) {
-            isLineNumbersEnabled = value
-        } else {
-            isLineNumbersEnabled = try container.decodeIfPresent(Bool.self, forKey: .showLineNumbers) ?? true
-        }
-        enableAnnotations = try container.decodeIfPresent(Bool.self, forKey: .enableAnnotations) ?? true
-        highlightSelectedLine = try container.decodeIfPresent(Bool.self, forKey: .highlightSelectedLine) ?? true
+        isLineNumbersEnabled = try container.decodeIfPresent(Bool.self, forKey: .isLineNumbersEnabled) ?? true
+        areAnnotationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .areAnnotationsEnabled) ?? true
+        isSelectedLineHighlighted = try container.decodeIfPresent(Bool.self, forKey: .isSelectedLineHighlighted) ?? true
         if let colorData = try container.decodeIfPresent(CodableColor.self, forKey: .selectedLineHighlightColor) {
             selectedLineHighlightColor = colorData.platformColor
         } else {
             selectedLineHighlightColor = PlatformColors.selectedLineHighlight
         }
         visibleLines = try container.decodeIfPresent(Int.self, forKey: .visibleLines) ?? 50
-        showInvisibleCharacters = try container.decodeIfPresent(Bool.self, forKey: .showInvisibleCharacters) ?? false
-        enableCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .enableCodeFolding) ?? false
-        showFoldingControls = try container.decodeIfPresent(Bool.self, forKey: .showFoldingControls) ?? false
+        areInvisibleCharactersVisible = try container.decodeIfPresent(Bool.self, forKey: .areInvisibleCharactersVisible) ?? false
+        isCodeFoldingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isCodeFoldingEnabled) ?? false
+        areFoldingControlsVisible = try container.decodeIfPresent(Bool.self, forKey: .areFoldingControlsVisible) ?? false
         minimumFoldableLines = try container.decodeIfPresent(Int.self, forKey: .minimumFoldableLines) ?? 3
-        animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
-        showMinimap = try container.decodeIfPresent(Bool.self, forKey: .showMinimap) ?? false
+        isMinimapVisible = try container.decodeIfPresent(Bool.self, forKey: .isMinimapVisible) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(enableSyntaxHighlighting, forKey: .enableSyntaxHighlighting)
+        try container.encode(isSyntaxHighlightingEnabled, forKey: .isSyntaxHighlightingEnabled)
         try container.encode(fontSize, forKey: .fontSize)
         try container.encode(isLineNumbersEnabled, forKey: .isLineNumbersEnabled)
-        try container.encode(enableAnnotations, forKey: .enableAnnotations)
-        try container.encode(highlightSelectedLine, forKey: .highlightSelectedLine)
+        try container.encode(areAnnotationsEnabled, forKey: .areAnnotationsEnabled)
+        try container.encode(isSelectedLineHighlighted, forKey: .isSelectedLineHighlighted)
         try container.encode(CodableColor(color: selectedLineHighlightColor), forKey: .selectedLineHighlightColor)
         try container.encode(visibleLines, forKey: .visibleLines)
-        try container.encode(showInvisibleCharacters, forKey: .showInvisibleCharacters)
-        try container.encode(enableCodeFolding, forKey: .enableCodeFolding)
-        try container.encode(showFoldingControls, forKey: .showFoldingControls)
+        try container.encode(areInvisibleCharactersVisible, forKey: .areInvisibleCharactersVisible)
+        try container.encode(isCodeFoldingEnabled, forKey: .isCodeFoldingEnabled)
+        try container.encode(areFoldingControlsVisible, forKey: .areFoldingControlsVisible)
         try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)
-        try container.encode(animateCodeFolding, forKey: .animateCodeFolding)
-        try container.encode(showMinimap, forKey: .showMinimap)
+        try container.encode(isMinimapVisible, forKey: .isMinimapVisible)
     }
 }

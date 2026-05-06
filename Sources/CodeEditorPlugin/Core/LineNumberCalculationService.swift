@@ -439,7 +439,7 @@ extension LineNumberCalculationService {
         // Base padding plus any configuration-specific adjustments
         let basePadding: CGFloat = 16.0 // 8pt on each side
 
-        if configuration.display.showInvisibleCharacters {
+        if configuration.display.areInvisibleCharactersVisible {
             return basePadding + 4.0 // Extra space for invisible character indicators
         }
 
@@ -487,6 +487,6 @@ extension EditorConfiguration: Hashable {
         hasher.combine(display.fontSize)
         // hasher.combine(layout.lineHeight) // Property doesn't exist
         hasher.combine(display.isLineNumbersEnabled)
-        hasher.combine(display.showInvisibleCharacters)
+        hasher.combine(display.areInvisibleCharactersVisible)
     }
 }

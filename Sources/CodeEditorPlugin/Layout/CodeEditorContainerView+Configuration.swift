@@ -33,10 +33,10 @@ extension CodeEditorContainerView {
         showsLineNumbers = configuration.display.isLineNumbersEnabled
 
         // Update minimap visibility
-        minimapView.isHidden = !configuration.display.showMinimap
+        minimapView.isHidden = !configuration.display.isMinimapVisible
 
         // Force minimap to redraw when shown
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             minimapView.needsDisplay = true
             #else
@@ -63,12 +63,12 @@ extension CodeEditorContainerView {
         }
         // Don't set horizontal resizability here - it will be handled in layoutViews
         // based on minimap visibility
-        if !configuration.display.showMinimap {
+        if !configuration.display.isMinimapVisible {
             textView.isHorizontallyResizable = !configuration.layout.wrapLines
             textView.textContainer?.widthTracksTextView = configuration.layout.wrapLines
         }
 
-        if !configuration.layout.wrapLines && !configuration.display.showMinimap {
+        if !configuration.layout.wrapLines && !configuration.display.isMinimapVisible {
             // Only set infinite width if minimap is not shown
             // When minimap is shown, layoutViews will handle the sizing
             textView.textContainer?.containerSize = NSSize(
@@ -90,7 +90,7 @@ extension CodeEditorContainerView {
         #endif
 
         // Update minimap if it's now visible
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             updateMinimap()
         }
 
@@ -109,7 +109,7 @@ extension CodeEditorContainerView {
     internal func updateTextContainerInsets() {
         let padding = configuration.layout.lineNumberPadding
         let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
-        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        let minimapWidth = configuration.display.isMinimapVisible ? configuration.layout.minimapWidth : 0
 
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         // On macOS, we use ruler view for line numbers, so text container insets work differently

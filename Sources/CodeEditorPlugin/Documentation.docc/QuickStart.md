@@ -91,8 +91,8 @@ struct CodeViewerView: View {
 CodeEditor(text: $code)
     .codeTheme(.dark)
     .lineNumbers(true)
-    .highlightSelectedLine(true)
-    .showMinimap(true)
+    .isSelectedLineHighlighted(true)
+    .isMinimapVisible(true)
 ```
 
 ### Platform-Optimized Editor
@@ -147,7 +147,7 @@ var config = EditorConfiguration()
 config.display.fontSize = 16
 config.layout.tabWidth = 2
 config.display.isLineNumbersEnabled = true
-config.display.enableCodeFolding = true
+config.display.isCodeFoldingEnabled = true
 
 CodeEditor(text: $code)
     .codeLanguage(.javascript)

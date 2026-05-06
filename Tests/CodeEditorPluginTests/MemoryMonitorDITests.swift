@@ -76,10 +76,9 @@ final class MemoryMonitorDITests: XCTestCase {
         let customMonitor = MemoryMonitor()
         customMonitor.memoryThresholdMB = 250.0
 
-        // Create configuration using builder
-        let config = EditorConfigurationBuilder()
-            .memoryMonitor(customMonitor)
-            .build()
+        // Inject the custom monitor through the configuration directly.
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = customMonitor
 
         // Create editor view
         let editor = CodeEditorView()

@@ -193,12 +193,12 @@ public final class GutterSizingService {
         var adjustedWidth = baseWidth
 
         // Add space for folding controls if enabled
-        if configuration.display.enableCodeFolding && configuration.display.showFoldingControls {
+        if configuration.display.isCodeFoldingEnabled && configuration.display.areFoldingControlsVisible {
             adjustedWidth += calculateFoldingControlSpace(configuration: configuration)
         }
 
         // Add space for annotations if enabled
-        if configuration.display.enableAnnotations {
+        if configuration.display.areAnnotationsEnabled {
             adjustedWidth += calculateAnnotationSpace(configuration: configuration)
         }
 

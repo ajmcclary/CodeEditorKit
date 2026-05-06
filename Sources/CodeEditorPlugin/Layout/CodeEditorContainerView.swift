@@ -209,7 +209,7 @@ public final class CodeEditorContainerView: PlatformView {
         gutterView.setNeedsDisplayLineNumbers()
 
         // Update minimap if shown
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             updateMinimap()
         }
     }

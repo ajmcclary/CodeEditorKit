@@ -1,8 +1,10 @@
 import SwiftUI
 
-// MARK: - Configuration Binding System
-// Note: ConfigurationBindingBuilder was removed as it was unused and caused Sendable warnings.
-// The codebase uses direct binding patterns like: $appState.currentConfiguration.display.property
+// MARK: - Configuration Form Controls
+//
+// Reusable SwiftUI controls (toggle, slider, …) that wire directly to a
+// `Binding<EditorConfiguration>` field via key path. Hosts construct these
+// inline; there's intentionally no builder/observer machinery wrapping them.
 
 // MARK: - Configuration View Components
 

@@ -172,8 +172,8 @@ class LineNumberRulerView: NSRulerView {
 
                 // Draw folding control if enabled
                 if let codeEditor = textView as? CodeEditorView,
-                   codeEditor.configuration.display.enableCodeFolding &&
-                   codeEditor.configuration.display.showFoldingControls {
+                   codeEditor.configuration.display.isCodeFoldingEnabled &&
+                   codeEditor.configuration.display.areFoldingControlsVisible {
                     drawFoldingControl(at: lineNumber, in: NSRect(
                         x: 0,
                         y: adjustedY,
@@ -302,7 +302,7 @@ extension CodeEditorContainerView {
     /// Layout views using AppKit-specific logic
     func layoutViewsAppKit() {
         // Calculate layout dimensions
-        let minimapWidth = configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        let minimapWidth = configuration.display.isMinimapVisible ? configuration.layout.minimapWidth : 0
 
         // Position scroll view to fill entire width (ruler view is inside the scroll view)
         scrollView.frame = CGRect(
@@ -313,7 +313,7 @@ extension CodeEditorContainerView {
         )
 
         // Position minimap on the right
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             // Position minimap on the right edge of the container
             let minimapX = bounds.width - minimapWidth
             minimapView.frame = CGRect(
@@ -516,7 +516,7 @@ extension LineNumberRulerView {
 
     override func mouseDown(with event: NSEvent) {
         guard let textView = textView as? CodeEditorView,
-              textView.configuration.display.enableCodeFolding else {
+              textView.configuration.display.isCodeFoldingEnabled else {
             super.mouseDown(with: event)
             return
         }

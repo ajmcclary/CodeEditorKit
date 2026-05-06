@@ -115,8 +115,8 @@ public class GutterViewRenderer {
             )
 
             // Draw folding controls if enabled
-            if textView.configuration.display.enableCodeFolding &&
-               textView.configuration.display.showFoldingControls {
+            if textView.configuration.display.isCodeFoldingEnabled &&
+               textView.configuration.display.areFoldingControlsVisible {
                 drawFoldingControl(
                     for: lineNumber,
                     lineRange: lineRange,

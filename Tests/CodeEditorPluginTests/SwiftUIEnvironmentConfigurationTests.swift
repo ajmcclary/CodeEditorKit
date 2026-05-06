@@ -21,7 +21,7 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         var customConfig = EditorConfiguration()
         customConfig.display.fontSize = 18.0
         customConfig.display.isLineNumbersEnabled = false
-        customConfig.display.highlightSelectedLine = true
+        customConfig.display.isSelectedLineHighlighted = true
         customConfig.behavior.isEditable = false
         customConfig.layout.tabWidth = 2
 
@@ -135,11 +135,11 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         var config = EditorConfiguration()
         config.layout.tabWidth = 4
         config.display.fontSize = 16.0
-        config.display.showInvisibleCharacters = false
-        config.display.showMinimap = true
+        config.display.areInvisibleCharactersVisible = false
+        config.display.isMinimapVisible = true
         config.behavior.autoScrollToCursor = true
-        config.display.enableCodeFolding = true
-        config.display.showFoldingControls = true
+        config.display.isCodeFoldingEnabled = true
+        config.display.areFoldingControlsVisible = true
         config.display.minimumFoldableLines = 5
 
         let editor = CodeEditor(text: binding)
@@ -271,22 +271,20 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
     // MARK: - Builder Pattern Tests
 
     @MainActor
-    func testEditorConfigurationBuilderIntegration() {
+    func testEditorConfigurationDirectIntegration() {
         let binding = Binding<String>(
             get: { "test" },
             set: { _ in }
         )
 
-        // Create configuration using builder
-        let config = EditorConfigurationBuilder()
-            .fontSize(18)
-            .isLineNumbersEnabled(true)
-            .highlightSelectedLine(true)
-            .isEditable(false)
-            .tabWidth(2)
-            .showMinimap(true)
-            .enableCodeFolding(true)
-            .build()
+        var config = EditorConfiguration()
+        config.display.fontSize = 18
+        config.display.isLineNumbersEnabled = true
+        config.display.isSelectedLineHighlighted = true
+        config.behavior.isEditable = false
+        config.layout.tabWidth = 2
+        config.display.isMinimapVisible = true
+        config.display.isCodeFoldingEnabled = true
 
         let editor = CodeEditor(text: binding)
             .environment(\.codeEditorConfiguration, config)
@@ -443,14 +441,13 @@ final class SwiftUIEnvironmentConfigurationTests: XCTestCase {
         let eventSystem = UnifiedEventSystem()
 
         // Create custom configuration
-        let config = EditorConfigurationBuilder()
-            .fontSize(20)
-            .isLineNumbersEnabled(true)
-            .highlightSelectedLine(true)
-            .tabWidth(2)
-            .showMinimap(false)
-            .enableCodeFolding(true)
-            .build()
+        var config = EditorConfiguration()
+        config.display.fontSize = 20
+        config.display.isLineNumbersEnabled = true
+        config.display.isSelectedLineHighlighted = true
+        config.layout.tabWidth = 2
+        config.display.isMinimapVisible = false
+        config.display.isCodeFoldingEnabled = true
 
         // Create comprehensive environment
         let environment = CodeEditorEnvironment(

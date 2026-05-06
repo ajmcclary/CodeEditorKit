@@ -22,11 +22,11 @@ extension CodeEditorView {
     /// ```swift
     /// // Toggle folding at line 25
     /// if editor.toggleFold(at: 25) {
-    ///     logger.debug("Folding toggled successfully")
+    ///     print("Folding toggled successfully")
     /// }
     /// ```
     public func toggleFold(at lineNumber: Int) -> Bool {
-        guard configuration.display.enableCodeFolding else { return false }
+        guard configuration.display.isCodeFoldingEnabled else { return false }
 
         return codeFoldingEngine.toggleFold(at: lineNumber)
     }
@@ -44,11 +44,11 @@ extension CodeEditorView {
     /// ```swift
     /// // Fold function at line 42
     /// if editor.fold(at: 42) {
-    ///     logger.debug("Function folded")
+    ///     print("Function folded")
     /// }
     /// ```
     public func fold(at lineNumber: Int) -> Bool {
-        guard configuration.display.enableCodeFolding else { return false }
+        guard configuration.display.isCodeFoldingEnabled else { return false }
 
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
             return codeFoldingEngine.fold(region)
@@ -68,11 +68,11 @@ extension CodeEditorView {
     /// ```swift
     /// // Unfold code at line 42
     /// if editor.unfold(at: 42) {
-    ///     logger.debug("Code unfolded")
+    ///     print("Code unfolded")
     /// }
     /// ```
     public func unfold(at lineNumber: Int) -> Bool {
-        guard configuration.display.enableCodeFolding else { return false }
+        guard configuration.display.isCodeFoldingEnabled else { return false }
 
         if let region = codeFoldingEngine.foldableRegion(at: lineNumber) {
             return codeFoldingEngine.unfold(region)
@@ -97,7 +97,7 @@ extension CodeEditorView {
     /// }
     /// ```
     public func isFoldable(at lineNumber: Int) -> Bool {
-        guard configuration.display.enableCodeFolding else { return false }
+        guard configuration.display.isCodeFoldingEnabled else { return false }
         return codeFoldingEngine.isStartOfFoldableRegion(lineNumber)
     }
 
@@ -110,11 +110,11 @@ extension CodeEditorView {
     ///
     /// ```swift
     /// if editor.isFolded(at: 25) {
-    ///     logger.debug("Line 25 is currently folded")
+    ///     print("Line 25 is currently folded")
     /// }
     /// ```
     public func isFolded(at lineNumber: Int) -> Bool {
-        guard configuration.display.enableCodeFolding else { return false }
+        guard configuration.display.isCodeFoldingEnabled else { return false }
         return codeFoldingEngine.isLineFolded(lineNumber)
     }
 
@@ -138,7 +138,7 @@ extension CodeEditorView {
     /// editor.foldAll(type: .comment)
     /// ```
     internal func foldAll(type: FoldingType) {
-        guard configuration.display.enableCodeFolding else { return }
+        guard configuration.display.isCodeFoldingEnabled else { return }
 
         let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
         for region in regionsToFold {
@@ -157,7 +157,7 @@ extension CodeEditorView {
     /// editor.unfoldAll()
     /// ```
     internal func unfoldAll() {
-        guard configuration.display.enableCodeFolding else { return }
+        guard configuration.display.isCodeFoldingEnabled else { return }
         codeFoldingEngine.unfoldAll()
     }
 
@@ -173,11 +173,11 @@ extension CodeEditorView {
     /// ```swift
     /// let regions = editor.foldableRegions
     /// for region in regions {
-    ///     logger.debug("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
+    ///     print("Foldable \(region.type) at lines \(region.startLine)-\(region.endLine)")
     /// }
     /// ```
     internal var foldableRegions: [FoldableRegion] {
-        guard configuration.display.enableCodeFolding else { return [] }
+        guard configuration.display.isCodeFoldingEnabled else { return [] }
         return codeFoldingEngine.foldableRegions
     }
 
@@ -185,7 +185,7 @@ extension CodeEditorView {
     ///
     /// - Returns: Array of currently folded regions
     internal var foldedRegions: [FoldableRegion] {
-        guard configuration.display.enableCodeFolding else { return [] }
+        guard configuration.display.isCodeFoldingEnabled else { return [] }
         return codeFoldingEngine.foldableRegions.filter { region in
             codeFoldingEngine.foldedRegions.contains(region.id)
         }

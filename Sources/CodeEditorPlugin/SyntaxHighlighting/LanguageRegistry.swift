@@ -187,13 +187,13 @@ struct PythonLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "#.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"\"\"[\\s\\S]*?\"\"\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'''[\\s\\S]*?'''", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\\b", tokenType: .keyword, priority: 6)
+            RegexSyntaxHighlighter.rule("#.*$", .comment, 10),
+            RegexSyntaxHighlighter.rule("\"\"\"[\\s\\S]*?\"\"\"", .string, 9),
+            RegexSyntaxHighlighter.rule("'''[\\s\\S]*?'''", .string, 9),
+            RegexSyntaxHighlighter.rule("\"(?:[^\"\\\\]|\\\\.)*\"", .string, 8),
+            RegexSyntaxHighlighter.rule("'(?:[^'\\\\]|\\\\.)*'", .string, 8),
+            RegexSyntaxHighlighter.rule("\\b\\d+\\.?\\d*\\b", .number, 7),
+            RegexSyntaxHighlighter.rule("\\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|break|continue|pass|global|nonlocal|lambda|and|or|not|in|is|True|False|None)\\b", .keyword, 6)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -215,13 +215,13 @@ struct JavaScriptLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "//.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "/\\*[\\s\\S]*?\\*/", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'(?:[^'\\\\]|\\\\.)*'", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "`(?:[^`\\\\]|\\\\.)*`", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof|new|this|super)\\b", tokenType: .keyword, priority: 7)
+            RegexSyntaxHighlighter.rule("//.*$", .comment, 10),
+            RegexSyntaxHighlighter.rule("/\\*[\\s\\S]*?\\*/", .comment, 10),
+            RegexSyntaxHighlighter.rule("\"(?:[^\"\\\\]|\\\\.)*\"", .string, 9),
+            RegexSyntaxHighlighter.rule("'(?:[^'\\\\]|\\\\.)*'", .string, 9),
+            RegexSyntaxHighlighter.rule("`(?:[^`\\\\]|\\\\.)*`", .string, 9),
+            RegexSyntaxHighlighter.rule("\\b\\d+\\.?\\d*\\b", .number, 8),
+            RegexSyntaxHighlighter.rule("\\b(const|let|var|function|class|if|else|for|while|do|switch|case|default|break|continue|return|try|catch|finally|throw|async|await|import|export|from|as|typeof|instanceof|new|this|super)\\b", .keyword, 7)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -243,10 +243,10 @@ struct JSONLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b-?\\d+\\.?\\d*([eE][+-]?\\d+)?\\b", tokenType: .number, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null)\\b", tokenType: .keyword, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "[{}\\[\\],:]", tokenType: .punctuation, priority: 6)
+            RegexSyntaxHighlighter.rule("\"(?:[^\"\\\\]|\\\\.)*\"", .string, 9),
+            RegexSyntaxHighlighter.rule("\\b-?\\d+\\.?\\d*([eE][+-]?\\d+)?\\b", .number, 8),
+            RegexSyntaxHighlighter.rule("\\b(true|false|null)\\b", .keyword, 7),
+            RegexSyntaxHighlighter.rule("[{}\\[\\],:]", .punctuation, 6)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -268,11 +268,11 @@ struct HTMLLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "<!--[\\s\\S]*?-->", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "</?\\w+", tokenType: .keyword, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\w+(?==)", tokenType: .property, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 6),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6)
+            RegexSyntaxHighlighter.rule("<!--[\\s\\S]*?-->", .comment, 10),
+            RegexSyntaxHighlighter.rule("</?\\w+", .keyword, 8),
+            RegexSyntaxHighlighter.rule("\\w+(?==)", .property, 7),
+            RegexSyntaxHighlighter.rule("\"[^\"]*\"", .string, 6),
+            RegexSyntaxHighlighter.rule("'[^']*'", .string, 6)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -294,13 +294,13 @@ struct CSSLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "/\\*[\\s\\S]*?\\*/", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "//.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "[.#]?[a-zA-Z][\\w-]*(?=\\s*\\{)", tokenType: .type, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "[a-zA-Z-]+(?=\\s*:)", tokenType: .property, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 6),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+(\\.\\d+)?(px|em|rem|%|vh|vw)?\\b", tokenType: .number, priority: 5)
+            RegexSyntaxHighlighter.rule("/\\*[\\s\\S]*?\\*/", .comment, 10),
+            RegexSyntaxHighlighter.rule("//.*$", .comment, 10),
+            RegexSyntaxHighlighter.rule("[.#]?[a-zA-Z][\\w-]*(?=\\s*\\{)", .type, 8),
+            RegexSyntaxHighlighter.rule("[a-zA-Z-]+(?=\\s*:)", .property, 7),
+            RegexSyntaxHighlighter.rule("\"[^\"]*\"", .string, 6),
+            RegexSyntaxHighlighter.rule("'[^']*'", .string, 6),
+            RegexSyntaxHighlighter.rule("\\b\\d+(\\.\\d+)?(px|em|rem|%|vh|vw)?\\b", .number, 5)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -322,14 +322,14 @@ struct MarkdownLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "^#{1,6}\\s.*$", tokenType: .keyword, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\*\\*[^*]+\\*\\*", tokenType: .keyword, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "__[^_]+__", tokenType: .keyword, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\*[^*]+\\*", tokenType: .property, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "_[^_]+_", tokenType: .property, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "`[^`]+`", tokenType: .string, priority: 9),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "```[\\s\\S]*?```", tokenType: .string, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\[[^\\]]+\\]\\([^)]+\\)", tokenType: .function, priority: 6)
+            RegexSyntaxHighlighter.rule("^#{1,6}\\s.*$", .keyword, 10),
+            RegexSyntaxHighlighter.rule("\\*\\*[^*]+\\*\\*", .keyword, 8),
+            RegexSyntaxHighlighter.rule("__[^_]+__", .keyword, 8),
+            RegexSyntaxHighlighter.rule("\\*[^*]+\\*", .property, 7),
+            RegexSyntaxHighlighter.rule("_[^_]+_", .property, 7),
+            RegexSyntaxHighlighter.rule("`[^`]+`", .string, 9),
+            RegexSyntaxHighlighter.rule("```[\\s\\S]*?```", .string, 10),
+            RegexSyntaxHighlighter.rule("\\[[^\\]]+\\]\\([^)]+\\)", .function, 6)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -351,11 +351,11 @@ struct XMLLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "<!--[\\s\\S]*?-->", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "</?\\w+", tokenType: .keyword, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\w+(?==)", tokenType: .property, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 6),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 6)
+            RegexSyntaxHighlighter.rule("<!--[\\s\\S]*?-->", .comment, 10),
+            RegexSyntaxHighlighter.rule("</?\\w+", .keyword, 8),
+            RegexSyntaxHighlighter.rule("\\w+(?==)", .property, 7),
+            RegexSyntaxHighlighter.rule("\"[^\"]*\"", .string, 6),
+            RegexSyntaxHighlighter.rule("'[^']*'", .string, 6)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(
@@ -377,12 +377,12 @@ struct YAMLLanguageProvider: LanguageProvider {
     @MainActor
     func createHighlighter() -> any SyntaxHighlighter {
         let rules: [RegexSyntaxHighlighter.HighlightRule] = [
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "#.*$", tokenType: .comment, priority: 10),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "^\\s*[\\w-]+(?=:)", tokenType: .property, priority: 8),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\"[^\"]*\"", tokenType: .string, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "'[^']*'", tokenType: .string, priority: 7),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b(true|false|null|yes|no|on|off)\\b", tokenType: .keyword, priority: 6),
-            try? RegexSyntaxHighlighter.HighlightRule(pattern: "\\b\\d+\\.?\\d*\\b", tokenType: .number, priority: 5)
+            RegexSyntaxHighlighter.rule("#.*$", .comment, 10),
+            RegexSyntaxHighlighter.rule("^\\s*[\\w-]+(?=:)", .property, 8),
+            RegexSyntaxHighlighter.rule("\"[^\"]*\"", .string, 7),
+            RegexSyntaxHighlighter.rule("'[^']*'", .string, 7),
+            RegexSyntaxHighlighter.rule("\\b(true|false|null|yes|no|on|off)\\b", .keyword, 6),
+            RegexSyntaxHighlighter.rule("\\b\\d+\\.?\\d*\\b", .number, 5)
         ].compactMap { $0 }
 
         let definition = RegexSyntaxHighlighter.LanguageDefinition(

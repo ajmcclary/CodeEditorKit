@@ -14,7 +14,7 @@ struct ContentView: View {
 
     # Test the function
     for i in range(10):
-        logger.debug(f"F({i}) = {fibonacci(i)}")
+        print(f"F({i}) = {fibonacci(i)}")
     """
 
     @State private var fileName = "fibonacci.py"

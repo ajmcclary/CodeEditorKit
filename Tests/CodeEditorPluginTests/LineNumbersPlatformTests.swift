@@ -261,7 +261,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         let containerView = createContainerView()
         var config = containerView.configuration
         config.display.isLineNumbersEnabled = true
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         containerView.configuration = config
 
         // Then: Both features should work independently

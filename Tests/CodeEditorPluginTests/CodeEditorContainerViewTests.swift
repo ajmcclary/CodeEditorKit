@@ -90,7 +90,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
 
         var config = EditorConfiguration()
         config.display.isLineNumbersEnabled = true
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         config.behavior.isEditable = false
 
         containerView.configuration = config
@@ -193,7 +193,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
             throw XCTSkip("UI tests not supported in this environment")
         }
         var config = containerView.configuration
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         containerView.configuration = config
         #if canImport(UIKit)
         containerView.layoutSubviews()
@@ -303,7 +303,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
             throw XCTSkip("UI tests not supported in this environment")
         }
         var config = containerView.configuration
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         containerView.configuration = config
 
         // Add some text
@@ -358,7 +358,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         measure(options: Self.standardMeasureOptions) {
             for index in 0..<100 {
                 config.display.isLineNumbersEnabled = index.isMultiple(of: 2)
-                config.display.showMinimap = index.isMultiple(of: 3)
+                config.display.isMinimapVisible = index.isMultiple(of: 3)
                 containerView.configuration = config
             }
         }

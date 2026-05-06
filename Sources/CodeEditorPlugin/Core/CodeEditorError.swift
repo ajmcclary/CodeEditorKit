@@ -50,9 +50,9 @@ import Foundation
 /// do {
 ///     try editor.performOperation()
 /// } catch let error as CodeEditorError {
-///     logger.debug("Error: \(error.errorDescription ?? "Unknown")")
-///     logger.debug("Reason: \(error.failureReason ?? "Unknown")")
-///     logger.debug("Recovery: \(error.recoverySuggestion ?? "None")")
+///     print("Error: \(error.errorDescription ?? "Unknown")")
+///     print("Reason: \(error.failureReason ?? "Unknown")")
+///     print("Recovery: \(error.recoverySuggestion ?? "None")")
 ///     
 ///     if error.isRecoverable {
 ///         // Attempt recovery
@@ -64,8 +64,8 @@ import Foundation
 ///
 /// ```swift
 /// let error = CodeEditorError.fileTooLarge(1_000_000, maxSize: 500_000)
-/// logger.debug(error.category)        // "FileSystem"
-/// logger.debug("\(error.isRecoverable)")   // false
+/// print(error.category)        // "FileSystem"
+/// print("\(error.isRecoverable)")   // false
 /// ```
 ///
 /// - SeeAlso: ``ValidationError``, ``CodeEditorResult``
@@ -303,7 +303,7 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
 ///     value: -1,
 ///     constraint: "must be greater than 0"
 /// )
-/// logger.debug(error) // "fontSize: '-1' violates constraint 'must be greater than 0'"
+/// print(error) // "fontSize: '-1' violates constraint 'must be greater than 0'"
 /// ```
 ///
 /// - SeeAlso: ``CodeEditorError``, ``EditorConfiguration``
@@ -342,9 +342,6 @@ public struct ValidationError: CustomStringConvertible, Equatable, Sendable {
 
 /// Result type for operations that can fail with CodeEditor errors
 public typealias CodeEditorResult<T> = Result<T, CodeEditorError>
-
-/// Result type for async operations
-public typealias AsyncCodeEditorResult<T> = CodeEditorResult<T>
 
 // MARK: - Error Extensions
 

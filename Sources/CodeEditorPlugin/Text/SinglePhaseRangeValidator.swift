@@ -143,7 +143,10 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
 
     private func validateRangeOnActor() async {
         guard let operation = eventQueue.next() else {
-            preconditionFailure("There must always be a next operation to process")
+            CrossPlatformLogger.logger().error(
+                "SinglePhaseRangeValidator.validateRangeOnActor called with empty event queue; skipping"
+            )
+            return
         }
 
         let validation = await configuration.provider.async(isolation: self, operation.contentRange)
@@ -156,7 +159,10 @@ public actor SinglePhaseRangeValidator<Content: VersionedContent> {
         let operation = await getNextOperation()
 
         guard let operation else {
-            preconditionFailure("There must always be a next operation to process")
+            CrossPlatformLogger.logger().error(
+                "SinglePhaseRangeValidator.performValidateRangeAsync called with empty event queue; skipping"
+            )
+            return
         }
 
         let validation = await configuration.provider.async(isolation: isolation, operation.contentRange)

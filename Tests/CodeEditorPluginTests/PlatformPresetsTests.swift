@@ -8,7 +8,7 @@ final class PlatformPresetsTests: XCTestCase {
         // Verify iOS optimizations
         XCTAssertEqual(config.display.fontSize, 16.0, "iOS should have larger font size for touch")
         XCTAssertEqual(config.layout.gutterWidth, 50.0, "iOS should have wider gutter for touch targets")
-        XCTAssertTrue(config.behavior.enableCodeCompletion, "iOS should support code completion")
+        XCTAssertTrue(config.behavior.isCodeCompletionEnabled, "iOS should support code completion")
         XCTAssertFalse(config.behavior.isAutomaticTextReplacementEnabled, "iOS should disable auto text replacement for performance")
         XCTAssertEqual(config.performance.maxSyntaxHighlightingLength, 100_000, "iOS should have smaller syntax highlighting limit")
         XCTAssertTrue(config.performance.smoothScrolling, "iOS should enable smooth scrolling")
@@ -20,7 +20,7 @@ final class PlatformPresetsTests: XCTestCase {
         // Verify Catalyst optimizations
         XCTAssertEqual(config.display.fontSize, 14.0, "Catalyst should have medium font size")
         XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst should have slightly wider gutter")
-        XCTAssertTrue(config.behavior.enableCodeCompletion, "Catalyst should support code completion")
+        XCTAssertTrue(config.behavior.isCodeCompletionEnabled, "Catalyst should support code completion")
         XCTAssertTrue(config.performance.useHardwareAcceleration, "Catalyst should use hardware acceleration")
         XCTAssertEqual(config.performance.maxSyntaxHighlightingLength, 250_000, "Catalyst should have medium syntax highlighting limit")
         XCTAssertFalse(config.behavior.isAutomaticQuoteSubstitutionEnabled, "Catalyst should disable auto quote substitution")
@@ -33,7 +33,7 @@ final class PlatformPresetsTests: XCTestCase {
         // Verify macOS optimizations
         XCTAssertEqual(config.display.fontSize, 13.0, "macOS should have standard font size")
         XCTAssertEqual(config.layout.gutterWidth, 40.0, "macOS should have standard gutter width")
-        XCTAssertTrue(config.behavior.enableCodeCompletion, "macOS should support code completion")
+        XCTAssertTrue(config.behavior.isCodeCompletionEnabled, "macOS should support code completion")
         XCTAssertTrue(config.behavior.isAutomaticTextReplacementEnabled, "macOS should enable auto text replacement")
         XCTAssertTrue(config.behavior.isAutomaticQuoteSubstitutionEnabled, "macOS should enable auto quote substitution")
         XCTAssertTrue(config.performance.useHardwareAcceleration, "macOS should use hardware acceleration")

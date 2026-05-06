@@ -27,7 +27,7 @@ import UIKit
 ///             
 ///         case .error(let error):
 ///             // Log or display errors
-///             logger.error("Editor error: \(error)")
+///             print("Editor error: \(error)")
 ///             
 ///         default:
 ///             // Handle other events as needed
@@ -73,9 +73,9 @@ public protocol EditorEventHandler: AnyObject, Sendable {
 /// let handler = ClosureEventHandler { event in
 ///     switch event {
 ///     case .textDidChange(let text):
-///         logger.debug("New text: \(text)")
+///         print("New text: \(text)")
 ///     case .error(let error):
-///         logger.debug("Error: \(error)")
+///         print("Error: \(error)")
 ///     default:
 ///         break
 ///     }

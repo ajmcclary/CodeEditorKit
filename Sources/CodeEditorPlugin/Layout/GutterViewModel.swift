@@ -481,7 +481,7 @@ extension GutterViewModel {
 
             // Calculate fold control layout if folding is enabled
             var foldControlLayout: CodeFoldingCoordinatorService.FoldControlLayout?
-            if configuration.display.enableCodeFolding {
+            if configuration.display.isCodeFoldingEnabled {
                 foldControlLayout = codeFoldingService.calculateFoldControlPosition(
                     for: lineNumber,
                     in: frame,

@@ -40,7 +40,7 @@ public struct PlatformAdjustments: Sendable {
     // MARK: - UI Adjustments
 
     /// Whether to show the minimap
-    public let showMinimap: Bool
+    public let isMinimapVisible: Bool
 
     /// Whether to enable multi-cursor editing
     public let enableMultiCursor: Bool
@@ -57,7 +57,7 @@ public struct PlatformAdjustments: Sendable {
         self.minimumTouchTargetSize = 24.0
         self.maxFileSize = 10_000_000 // 10MB
         self.maxSyntaxHighlightingLength = 1_000_000
-        self.showMinimap = true
+        self.isMinimapVisible = true
         self.enableMultiCursor = true
         #else
         // iOS/Catalyst adjustments
@@ -67,7 +67,7 @@ public struct PlatformAdjustments: Sendable {
         self.minimumTouchTargetSize = 44.0 // iOS HIG recommendation
         self.maxFileSize = 5_000_000 // 5MB for iOS
         self.maxSyntaxHighlightingLength = 500_000 // Less for iOS
-        self.showMinimap = false // Not supported on iOS
+        self.isMinimapVisible = false // Not supported on iOS
         self.enableMultiCursor = false // Simplified for iOS
         #endif
     }
@@ -80,7 +80,7 @@ public struct PlatformAdjustments: Sendable {
         minimumTouchTargetSize: CGFloat,
         maxFileSize: Int,
         maxSyntaxHighlightingLength: Int,
-        showMinimap: Bool,
+        isMinimapVisible: Bool,
         enableMultiCursor: Bool
     ) {
         self.defaultFontSize = defaultFontSize
@@ -89,7 +89,7 @@ public struct PlatformAdjustments: Sendable {
         self.minimumTouchTargetSize = minimumTouchTargetSize
         self.maxFileSize = maxFileSize
         self.maxSyntaxHighlightingLength = maxSyntaxHighlightingLength
-        self.showMinimap = showMinimap
+        self.isMinimapVisible = isMinimapVisible
         self.enableMultiCursor = enableMultiCursor
     }
 
@@ -111,7 +111,7 @@ public struct PlatformAdjustments: Sendable {
                 minimumTouchTargetSize: 44.0,
                 maxFileSize: 8_000_000, // 8MB for iPad
                 maxSyntaxHighlightingLength: 750_000,
-                showMinimap: UIDevice.current.userInterfaceIdiom == .pad && UIKitScreenMetrics.bounds.width > 1_000,
+                isMinimapVisible: UIDevice.current.userInterfaceIdiom == .pad && UIKitScreenMetrics.bounds.width > 1_000,
                 enableMultiCursor: false
             )
         } else if UIDevice.current.userInterfaceIdiom == .phone {
@@ -123,7 +123,7 @@ public struct PlatformAdjustments: Sendable {
                 minimumTouchTargetSize: 44.0,
                 maxFileSize: 3_000_000, // 3MB for iPhone
                 maxSyntaxHighlightingLength: 250_000,
-                showMinimap: false,
+                isMinimapVisible: false,
                 enableMultiCursor: false
             )
         }
@@ -141,7 +141,7 @@ extension PlatformAdjustments {
         configuration.display.fontSize = defaultFontSize
         configuration.layout.lineHeightMultiple = lineSpacing
         configuration.layout.gutterWidth = gutterWidth
-        configuration.display.showMinimap = showMinimap
+        configuration.display.isMinimapVisible = isMinimapVisible
         configuration.performance.maxSyntaxHighlightingLength = maxSyntaxHighlightingLength
         // Only apply maxFileSize if not already configured (0 means use platform default)
         if configuration.performance.maxFileSize == 0 {

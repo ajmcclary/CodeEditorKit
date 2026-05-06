@@ -273,7 +273,7 @@ final class LargeFilePerformanceTests: XCTestCase {
 
         // Enable code folding
         var config = EditorConfiguration()
-        config.display.enableCodeFolding = true
+        config.display.isCodeFoldingEnabled = true
         config.apply(to: textView)
 
         textView.text = largeFile

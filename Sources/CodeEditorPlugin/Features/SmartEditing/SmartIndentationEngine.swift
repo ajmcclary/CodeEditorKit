@@ -20,7 +20,7 @@ public enum SmartIndentationEngine {
         rules: [AutoIndentRule],
         configuration: SmartEditingConfiguration
     ) -> String {
-        guard configuration.autoIndent else { return "" }
+        guard configuration.isAutoIndentEnabled else { return "" }
 
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard let textStorage = textView.textStorage else { return "" }

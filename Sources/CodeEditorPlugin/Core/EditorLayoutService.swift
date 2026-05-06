@@ -281,7 +281,7 @@ public final class EditorLayoutService {
 
         switch mode {
         case .minimal:
-            adjustedConfiguration.display.showMinimap = false
+            adjustedConfiguration.display.isMinimapVisible = false
             adjustedConfiguration.display.isLineNumbersEnabled = false
 
         case .standard:
@@ -290,11 +290,11 @@ public final class EditorLayoutService {
 
         case .presentation:
             adjustedConfiguration.display.fontSize = max(configuration.display.fontSize, 18)
-            adjustedConfiguration.display.showMinimap = true
+            adjustedConfiguration.display.isMinimapVisible = true
 
         case .debugging:
             adjustedConfiguration.display.isLineNumbersEnabled = true
-            adjustedConfiguration.display.enableAnnotations = true
+            adjustedConfiguration.display.areAnnotationsEnabled = true
         }
 
         return calculateComponentFrames(

@@ -31,7 +31,7 @@ public enum LayoutOptimizer {
         let hasLimitedHeight = availableSpace.height < limitedHeightThreshold
 
         return EditorLayoutService.LayoutOptimizations(
-            useMinimapOptimization: configuration.display.showMinimap && !hasLimitedWidth,
+            useMinimapOptimization: configuration.display.isMinimapVisible && !hasLimitedWidth,
             useGutterOptimization: configuration.display.isLineNumbersEnabled,
             useScrollOptimization: !hasLimitedHeight,
             recommendedAnimationDuration: calculateOptimalAnimationDuration(for: configuration)
@@ -59,7 +59,7 @@ public enum LayoutOptimizer {
     ) -> Bool {
         // Don't animate if fundamental display properties changed
         if oldConfiguration.display.isLineNumbersEnabled != newConfiguration.display.isLineNumbersEnabled ||
-           oldConfiguration.display.showMinimap != newConfiguration.display.showMinimap {
+           oldConfiguration.display.isMinimapVisible != newConfiguration.display.isMinimapVisible {
             return false
         }
 

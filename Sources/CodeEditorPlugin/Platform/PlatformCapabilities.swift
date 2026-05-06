@@ -242,7 +242,7 @@ extension PlatformCapabilities {
         case .multipleCursors:
             return currentPlatform == .macOS
 
-        case .smartBrackets, .autoIndent:
+        case .smartBrackets, .isAutoIndentEnabled:
             return true // Always available
 
         case .findReplace:
@@ -481,7 +481,7 @@ extension PlatformCapabilities {
     /// Advanced text manipulation capabilities:
     /// - `multipleCursors`: Edit multiple locations simultaneously
     /// - `smartBrackets`: Auto-close brackets and quotes
-    /// - `autoIndent`: Intelligent indentation
+    /// - `isAutoIndentEnabled`: Intelligent indentation
     /// - `findReplace`: Search and replace functionality
     /// - `columnSelection`: Rectangle/column selection mode
     ///
@@ -542,7 +542,7 @@ extension PlatformCapabilities {
         /// Automatic bracket matching and insertion
         case smartBrackets
         /// Automatic code indentation
-        case autoIndent
+        case isAutoIndentEnabled
         /// Find and replace functionality
         case findReplace
         /// Column/block selection mode

@@ -263,7 +263,7 @@ do {
     )
 } catch {
     // Only handle non-recoverable errors
-    logger.error("Unrecoverable error: \(error)")
+    print("Unrecoverable error: \(error)")
 }
 ```
 

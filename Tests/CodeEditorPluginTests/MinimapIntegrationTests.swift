@@ -120,17 +120,17 @@ final class MinimapIntegrationTests: XCTestCase {
         let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
 
         // Test initial state
-        XCTAssertEqual(viewModel.minimapState.isVisible, config.display.showMinimap, "Visibility should match config")
+        XCTAssertEqual(viewModel.minimapState.isVisible, config.display.isMinimapVisible, "Visibility should match config")
         XCTAssertTrue(viewModel.minimapState.needsRedraw, "Should need redraw initially")
         XCTAssertTrue(viewModel.renderInfo.isEmpty, "Render info should be empty initially")
 
         // Test visibility toggle
         var newConfig = config
-        newConfig.display.showMinimap = true
+        newConfig.display.isMinimapVisible = true
         viewModel.updateConfiguration(newConfig)
         XCTAssertTrue(viewModel.minimapState.isVisible, "Should be visible after update")
 
-        newConfig.display.showMinimap = false
+        newConfig.display.isMinimapVisible = false
         viewModel.updateConfiguration(newConfig)
         XCTAssertFalse(viewModel.minimapState.isVisible, "Should be hidden after update")
     }
@@ -139,7 +139,7 @@ final class MinimapIntegrationTests: XCTestCase {
     @MainActor
     func testMinimapViewModelTextChange() async {
         var config = EditorConfiguration()
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         let services = BusinessLogicServiceRegistry()
         let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
 
@@ -158,7 +158,7 @@ final class MinimapIntegrationTests: XCTestCase {
     @MainActor
     func testMinimapViewModelInteraction() async {
         var config = EditorConfiguration()
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         let services = BusinessLogicServiceRegistry()
         let viewModel = MinimapViewModel(configuration: config, businessLogicServices: services)
 
@@ -190,14 +190,14 @@ final class MinimapIntegrationTests: XCTestCase {
         var config = EditorConfiguration()
 
         // Test showing minimap
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         config.apply(to: textView)
-        XCTAssertTrue(textView.configuration.display.showMinimap, "Minimap should be visible")
+        XCTAssertTrue(textView.configuration.display.isMinimapVisible, "Minimap should be visible")
 
         // Test hiding minimap
-        config.display.showMinimap = false
+        config.display.isMinimapVisible = false
         config.apply(to: textView)
-        XCTAssertFalse(textView.configuration.display.showMinimap, "Minimap should be hidden")
+        XCTAssertFalse(textView.configuration.display.isMinimapVisible, "Minimap should be hidden")
     }
 
     // MARK: - SwiftUI Integration Tests
@@ -210,7 +210,7 @@ final class MinimapIntegrationTests: XCTestCase {
 
         // Test that the modifier compiles and can be used
         let view = CodeEditor(text: .constant(codeText))
-            .showMinimap(true)
+            .isMinimapVisible(true)
             .frame(width: 600, height: 400)
 
         // This is a compile-time test to ensure the modifier exists
@@ -219,18 +219,14 @@ final class MinimapIntegrationTests: XCTestCase {
 
     @available(iOS 16.0, macOS 13.0, *)
     @MainActor
-    func testMinimapConfigurationBuilder() {
-        let config = EditorConfigurationBuilder()
-            .showMinimap(true)
-            .build()
+    func testMinimapDirectConfigurationToggle() {
+        var config = EditorConfiguration()
+        config.display.isMinimapVisible = true
+        XCTAssertTrue(config.display.isMinimapVisible, "Minimap should be enabled via direct config")
 
-        XCTAssertTrue(config.display.showMinimap, "Minimap should be enabled via builder")
-
-        let disabledConfig = EditorConfigurationBuilder()
-            .showMinimap(false)
-            .build()
-
-        XCTAssertFalse(disabledConfig.display.showMinimap, "Minimap should be disabled via builder")
+        var disabledConfig = EditorConfiguration()
+        disabledConfig.display.isMinimapVisible = false
+        XCTAssertFalse(disabledConfig.display.isMinimapVisible, "Minimap should be disabled via direct config")
     }
     #endif
 

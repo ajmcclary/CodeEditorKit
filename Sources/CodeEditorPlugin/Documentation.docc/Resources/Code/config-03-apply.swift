@@ -13,7 +13,7 @@ struct ContentView: View {
             configuration.display.syntaxHighlighting = true
             configuration.display.fontSize = 14
             configuration.layout.tabWidth = 4
-            configuration.behavior.autoIndent = true
+            configuration.behavior.isAutoIndentEnabled = true
             return configuration
         }())
     }

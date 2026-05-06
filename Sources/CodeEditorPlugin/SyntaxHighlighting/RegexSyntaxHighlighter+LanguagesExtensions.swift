@@ -3,9 +3,30 @@ import Foundation
 // MARK: - Language Definition Factory Methods
 
 extension RegexSyntaxHighlighter {
-    /// Safely creates a HighlightRule, returning nil if the pattern is invalid
-    internal static func rule(_ pattern: String, _ tokenType: RegexSyntaxTokenType, _ priority: Int = 0) -> RegexHighlightRule? {
-        try? RegexHighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
+    /// Constructs a HighlightRule, logging a fault and returning nil if the
+    /// pattern fails to compile. In debug builds an `assertionFailure` surfaces
+    /// the broken pattern so it gets fixed before shipping; in release the
+    /// rule is dropped and highlighting continues with the remaining rules.
+    internal static func rule(
+        _ pattern: String,
+        _ tokenType: RegexSyntaxTokenType,
+        _ priority: Int = 0,
+        file: StaticString = #fileID,
+        line: UInt = #line
+    ) -> RegexHighlightRule? {
+        do {
+            return try RegexHighlightRule(pattern: pattern, tokenType: tokenType, priority: priority)
+        } catch {
+            CrossPlatformLogger.logger().fault(
+                "RegexSyntaxHighlighter: failed to compile pattern \"\(pattern)\": \(error.localizedDescription)"
+            )
+            assertionFailure(
+                "RegexSyntaxHighlighter: failed to compile pattern \"\(pattern)\": \(error)",
+                file: file,
+                line: line
+            )
+            return nil
+        }
     }
 
     internal static func createLanguageDefinitions() -> [String: RegexLanguageDefinition] {
@@ -402,7 +423,7 @@ extension RegexSyntaxHighlighter {
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
             rule(#"\b\d+\.?\d*\b"#, .number, 8),
             rule(#"\b(true|false|null)\b"#, .keyword, 7),
-            rule(#"[{}\[\],:}"#, .punctuation, 6)
+            rule(#"[{}\[\],:]"#, .punctuation, 6)
         ].compactMap(\.self)
 
         return RegexLanguageDefinition(name: "JSON", fileExtensions: ["json", "jsonc"], rules: rules)

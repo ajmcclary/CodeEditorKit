@@ -66,7 +66,7 @@ public final class EditorContainerViewModel {
         /// Whether to show the line number gutter
         public var showGutter: Bool
         /// Whether to show the minimap component
-        public var showMinimap: Bool
+        public var isMinimapVisible: Bool
         /// Whether to show scrollbars
         public var showScrollbar: Bool
         /// Whether to show the status bar
@@ -77,19 +77,19 @@ public final class EditorContainerViewModel {
         /// Initializes component visibility settings
         /// - Parameters:
         ///   - showGutter: Whether to show the line number gutter
-        ///   - showMinimap: Whether to show the minimap
+        ///   - isMinimapVisible: Whether to show the minimap
         ///   - showScrollbar: Whether to show scrollbars
         ///   - showStatusBar: Whether to show the status bar
         ///   - showCompletionPopup: Whether to show the completion popup
         public init(
             showGutter: Bool = true,
-            showMinimap: Bool = false,
+            isMinimapVisible: Bool = false,
             showScrollbar: Bool = true,
             showStatusBar: Bool = false,
             showCompletionPopup: Bool = false
         ) {
             self.showGutter = showGutter
-            self.showMinimap = showMinimap
+            self.isMinimapVisible = isMinimapVisible
             self.showScrollbar = showScrollbar
             self.showStatusBar = showStatusBar
             self.showCompletionPopup = showCompletionPopup
@@ -331,7 +331,7 @@ public final class EditorContainerViewModel {
 extension EditorContainerViewModel {
     func updateComponentVisibility() {
         componentVisibility.showGutter = configuration.display.isLineNumbersEnabled
-        componentVisibility.showMinimap = configuration.display.showMinimap
+        componentVisibility.isMinimapVisible = configuration.display.isMinimapVisible
         componentVisibility.showScrollbar = true // Always show for now
         componentVisibility.showStatusBar = false // Configurable in future
     }
@@ -407,8 +407,12 @@ extension EditorContainerViewModel {
 
                     self.updateLayout(containerBounds: layoutFrames.containerFrame, animated: true)
                 }
+            } catch is CancellationError {
+                return
             } catch {
-                // Task was cancelled
+                CrossPlatformLogger.logger().error(
+                    "EditorContainerViewModel layout debounce sleep failed: \(error.localizedDescription)"
+                )
             }
         }
     }
@@ -425,8 +429,12 @@ extension EditorContainerViewModel {
                 await MainActor.run {
                     action()
                 }
+            } catch is CancellationError {
+                return
             } catch {
-                // Task was cancelled
+                CrossPlatformLogger.logger().error(
+                    "EditorContainerViewModel debounce sleep failed: \(error.localizedDescription)"
+                )
             }
         }
     }

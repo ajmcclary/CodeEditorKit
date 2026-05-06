@@ -13,7 +13,7 @@ internal enum ContainerLayoutHelper {
 
     /// Calculate the width for the minimap
     static func minimapWidth(for configuration: EditorConfiguration) -> CGFloat {
-        configuration.display.showMinimap ? configuration.layout.minimapWidth : 0
+        configuration.display.isMinimapVisible ? configuration.layout.minimapWidth : 0
     }
 
     /// Calculate the frame for the scroll view
@@ -36,7 +36,7 @@ internal enum ContainerLayoutHelper {
         containerBounds: CGRect,
         configuration: EditorConfiguration
     ) -> CGRect? {
-        guard configuration.display.showMinimap else { return nil }
+        guard configuration.display.isMinimapVisible else { return nil }
 
         let minimapWidth = self.minimapWidth(for: configuration)
         let minimapX = containerBounds.width - minimapWidth
@@ -101,7 +101,7 @@ internal enum ContainerLayoutHelper {
         var width = containerWidth
 
         // Subtract minimap width if visible
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             width -= configuration.layout.minimapWidth
         }
 
@@ -200,7 +200,7 @@ internal enum ContainerLayoutHelper {
         ])
 
         // Scroll view trailing constraint depends on minimap visibility
-        let scrollViewTrailingConstraint = configuration.display.showMinimap ?
+        let scrollViewTrailingConstraint = configuration.display.isMinimapVisible ?
             scrollView.trailingAnchor.constraint(equalTo: minimapView.leadingAnchor) :
             scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor)
 

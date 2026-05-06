@@ -139,7 +139,7 @@ extension CodeEditorContainerView {
             textView.leadingAnchor.constraint(equalTo: gutterView.trailingAnchor) :
             textView.leadingAnchor.constraint(equalTo: leadingAnchor)
 
-        let textViewTrailing = configuration.display.showMinimap ?
+        let textViewTrailing = configuration.display.isMinimapVisible ?
             textView.trailingAnchor.constraint(equalTo: minimapView.leadingAnchor) :
             textView.trailingAnchor.constraint(equalTo: trailingAnchor)
 
@@ -155,7 +155,7 @@ extension CodeEditorContainerView {
         ]
 
         // Configure minimap constraints if minimap is shown
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             newMinimapConstraints = [
                 minimapView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 minimapView.topAnchor.constraint(equalTo: topAnchor),
@@ -195,7 +195,7 @@ extension CodeEditorContainerView {
         }
 
         // Update minimap if visible
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             updateMinimap()
             // Force minimap to redraw
             minimapView.setNeedsDisplay()
@@ -218,8 +218,8 @@ extension CodeEditorContainerView {
         }
 
         // Update minimap visibility
-        minimapView.isHidden = !configuration.display.showMinimap
-        if configuration.display.showMinimap {
+        minimapView.isHidden = !configuration.display.isMinimapVisible
+        if configuration.display.isMinimapVisible {
             // Force minimap to display
             minimapView.setNeedsDisplay()
             // Ensure it's on top for event handling

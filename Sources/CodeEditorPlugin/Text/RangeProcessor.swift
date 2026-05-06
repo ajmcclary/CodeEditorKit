@@ -247,11 +247,24 @@ public final class RangeProcessor: @unchecked Sendable {
         processedVersion += 1
 
         guard let first = pendingEventQueue.next() else {
-            preconditionFailure()
+            CrossPlatformLogger.logger().fault(
+                "RangeProcessor.completeContentChanged: pending event queue empty; skipping mutation \(String(describing: mutation))"
+            )
+            return
         }
 
-        precondition(first.version == processedVersion, "changes must always be completed in order")
-        precondition(first.value == mutation, "completed mutation does not match the expected value")
+        guard first.version == processedVersion else {
+            CrossPlatformLogger.logger().fault(
+                "RangeProcessor: out-of-order completion (queued v\(first.version), expected v\(processedVersion)); skipping"
+            )
+            return
+        }
+        guard first.value == mutation else {
+            CrossPlatformLogger.logger().fault(
+                "RangeProcessor: completed mutation does not match queued; skipping"
+            )
+            return
+        }
 
         updateProcessedLocation(by: mutation.delta)
 

@@ -227,7 +227,7 @@ extension CrossPlatformCoordinator {
                 minimumTouchTargetSize: 40,
                 maxFileSize: platformAdjustments.maxFileSize,
                 maxSyntaxHighlightingLength: platformAdjustments.maxSyntaxHighlightingLength,
-                showMinimap: platformAdjustments.showMinimap,
+                isMinimapVisible: platformAdjustments.isMinimapVisible,
                 enableMultiCursor: platformAdjustments.enableMultiCursor
             )
         } else {
@@ -239,7 +239,7 @@ extension CrossPlatformCoordinator {
                 minimumTouchTargetSize: 44,
                 maxFileSize: platformAdjustments.maxFileSize,
                 maxSyntaxHighlightingLength: platformAdjustments.maxSyntaxHighlightingLength,
-                showMinimap: platformAdjustments.showMinimap,
+                isMinimapVisible: platformAdjustments.isMinimapVisible,
                 enableMultiCursor: platformAdjustments.enableMultiCursor
             )
         }

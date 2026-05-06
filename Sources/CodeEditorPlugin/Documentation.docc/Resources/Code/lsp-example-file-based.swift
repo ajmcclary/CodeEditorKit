@@ -77,7 +77,7 @@ struct LSPFileExampleView: View {
             // Language is set via the CodeEditor modifier, not configuration
 
             // Enable LSP features
-            configuration.behavior.enableCodeCompletion = true
+            configuration.behavior.isCodeCompletionEnabled = true
 
             // In a real app, you would log this information
             // CrossPlatformLogger.logger().debug("Loaded file: \(url.path)")

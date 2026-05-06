@@ -165,27 +165,8 @@ public final class BackgroundHighlightingStatistics: ObservableObject {
 }
 
 // MARK: - Errors
-
-/// Background highlighting errors
-public enum HighlightingError: Error, LocalizedError {
-    case cancelled
-    case timeout
-    case invalidInput
-    case processingFailed(String)
-
-    public var errorDescription: String? {
-        switch self {
-        case .cancelled:
-            return "Highlighting operation was cancelled"
-
-        case .timeout:
-            return "Highlighting operation timed out"
-
-        case .invalidInput:
-            return "Invalid input provided for highlighting"
-
-        case .processingFailed(let reason):
-            return "Highlighting processing failed: \(reason)"
-        }
-    }
-}
+//
+// `HighlightingError` was retired in favor of `SyntaxHighlightingError` in
+// `Core/AsyncOperationErrors.swift`, which conforms to `RecoverableAsyncError`
+// and carries recovery strategies. Background highlighting paths now throw
+// `SyntaxHighlightingError.cancelled`/`.timeout`/`.parsingFailed`/etc.

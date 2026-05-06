@@ -279,7 +279,7 @@ extension BusinessLogicServiceRegistry {
         }
 
         // Update folding state if code folding is enabled
-        if configuration.display.enableCodeFolding {
+        if configuration.display.isCodeFoldingEnabled {
             self.codeFoldingCoordinatorService.updateFoldingState(
                 for: textView,
                 configuration: configuration

@@ -219,40 +219,6 @@ actor IncrementalParser {
 }
 ```
 
-## Plugin Development Patterns
-
-### Plugin Host
-
-```swift
-class PluginHost {
-    private var plugins: [PluginIdentifier: Plugin] = [:]
-    private let sandbox = PluginSandbox()
-    
-    func loadPlugin(at url: URL) async throws {
-        let bundle = try PluginBundle(url: url)
-        let plugin = try bundle.instantiate()
-        
-        // Initialize in sandbox
-        let context = PluginContext(
-            editor: editorProxy,
-            storage: sandboxedStorage,
-            networking: restrictedNetworking
-        )
-        
-        try await plugin.activate(context: context)
-        plugins[plugin.identifier] = plugin
-    }
-    
-    func broadcast(_ event: EditorEvent) {
-        for plugin in plugins.values {
-            Task {
-                try? await plugin.handle(event)
-            }
-        }
-    }
-}
-```
-
 ## Custom Rendering
 
 ### Custom Line Decorations
@@ -406,7 +372,7 @@ class DiffViewer {
     
     func configure() {
         var config = EditorConfiguration.readOnly
-        config.display.highlightSelectedLine = false
+        config.display.isSelectedLineHighlighted = false
         
         leftEditor.configuration = config
         rightEditor.configuration = config
@@ -499,7 +465,7 @@ performance.enableViewportRendering = true
 ```swift
 var memoryOptimizedConfig = EditorConfiguration.minimal
 memoryOptimizedConfig.performance.maxSyntaxHighlightingLength = 50_000
-memoryOptimizedConfig.display.showMinimap = false
+memoryOptimizedConfig.display.isMinimapVisible = false
 memoryOptimizedConfig.performance.animateCodeFolding = false
 ```
 

@@ -102,11 +102,10 @@ final class SwiftUIModifierTests: XCTestCase {
         }
 
         // Test with custom configuration
-        let customConfig = EditorConfigurationBuilder()
-            .fontSize(20)
-            .isLineNumbersEnabled(false)
-            .enableSyntaxHighlighting(false)
-            .build()
+        var customConfig = EditorConfiguration()
+        customConfig.display.fontSize = 20
+        customConfig.display.isLineNumbersEnabled = false
+        customConfig.display.isSyntaxHighlightingEnabled = false
 
         let customEditor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: customConfig)
@@ -216,13 +215,11 @@ final class SwiftUIModifierTests: XCTestCase {
         let isDarkMode = Bool.random() // Use random to avoid compiler optimization
         let showLineNumbers = false
 
+        var configurationForTheme = EditorConfiguration()
+        configurationForTheme.display.isLineNumbersEnabled = showLineNumbers
         let editor = CodeEditor(text: binding)
             .codeTheme(isDarkMode ? .dark : .default)
-            .codeEditorEnvironment(
-                configuration: EditorConfigurationBuilder()
-                    .isLineNumbersEnabled(showLineNumbers)
-                    .build()
-            )
+            .codeEditorEnvironment(configuration: configurationForTheme)
 
         XCTAssertNotNil(editor)
     }
@@ -264,11 +261,10 @@ final class SwiftUIModifierTests: XCTestCase {
             set: { _ in }
         )
 
-        let config = EditorConfigurationBuilder()
-            .showMinimap(true)
-            .enableCodeFolding(true)
-            .useHardwareAcceleration(true)
-            .build()
+        var config = EditorConfiguration()
+        config.display.isMinimapVisible = true
+        config.display.isCodeFoldingEnabled = true
+        config.performance.useHardwareAcceleration = true
 
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
@@ -288,7 +284,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let config = EditorConfigurationBuilder()
             .wrapLines(true)
             .fontSize(16)
-            .showMinimap(false)
+            .isMinimapVisible(false)
             .build()
 
         let editor = CodeEditor(text: binding)

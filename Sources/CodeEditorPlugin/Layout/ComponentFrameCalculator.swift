@@ -75,7 +75,7 @@ public enum ComponentFrameCalculator {
         constraints: EditorLayoutService.LayoutConstraints,
         gutterFrame: CGRect
     ) -> CGRect {
-        guard configuration.display.showMinimap else {
+        guard configuration.display.isMinimapVisible else {
             return .zero
         }
 

@@ -184,7 +184,7 @@ Extended documentation for CodeEditorView with additional examples and use cases
 
 ### Configuring Display
 - ``showsLineNumbers``
-- ``highlightSelectedLine``
+- ``isSelectedLineHighlighted``
 ```
 
 ### Tutorials

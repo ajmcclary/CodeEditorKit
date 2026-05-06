@@ -40,7 +40,7 @@ package protocol CodeEditorViewProtocol {
     var heightTracksTextView: Bool { get set }
     var isVerticallyResizable: Bool { get set }
 
-    var highlightSelectedLine: Bool { get set }
+    var isSelectedLineHighlighted: Bool { get set }
     var selectedLineHighlightColor: Color { get set }
 
     var isLineNumbersEnabled: Bool { get set }

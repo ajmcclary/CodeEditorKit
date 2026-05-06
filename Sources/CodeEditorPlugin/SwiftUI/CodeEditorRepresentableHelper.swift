@@ -228,7 +228,7 @@ enum CodeEditorRepresentableHelper {
             adjustedSize.width += configuration.layout.gutterWidth
         }
 
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             adjustedSize.width += configuration.layout.minimapWidth
         }
 

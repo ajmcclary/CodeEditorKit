@@ -157,7 +157,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
             // Medium screen space with touch
             var config = EditorConfiguration.default
             config.display.isLineNumbersEnabled = true
-            config.display.showMinimap = false // Save horizontal space
+            config.display.isMinimapVisible = false // Save horizontal space
             config.display.fontSize = 14
             return config
 

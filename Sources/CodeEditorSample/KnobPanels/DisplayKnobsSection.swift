@@ -15,21 +15,20 @@ struct DisplayKnobsSection: View {
                     step: 1,
                     format: .number.precision(.fractionLength(0))
                 )
-                ToggleRow(label: "enableSyntaxHighlighting", value: $configuration.display.enableSyntaxHighlighting)
+                ToggleRow(label: "isSyntaxHighlightingEnabled", value: $configuration.display.isSyntaxHighlightingEnabled)
                 ToggleRow(label: "isLineNumbersEnabled", value: $configuration.display.isLineNumbersEnabled)
-                ToggleRow(label: "enableAnnotations", value: $configuration.display.enableAnnotations)
-                ToggleRow(label: "highlightSelectedLine", value: $configuration.display.highlightSelectedLine)
+                ToggleRow(label: "areAnnotationsEnabled", value: $configuration.display.areAnnotationsEnabled)
+                ToggleRow(label: "isSelectedLineHighlighted", value: $configuration.display.isSelectedLineHighlighted)
                 ColorRow(label: "selectedLineHighlightColor", value: $configuration.display.selectedLineHighlightColor)
-                ToggleRow(label: "showInvisibleCharacters", value: $configuration.display.showInvisibleCharacters)
-                ToggleRow(label: "enableCodeFolding", value: $configuration.display.enableCodeFolding)
-                ToggleRow(label: "showFoldingControls", value: $configuration.display.showFoldingControls)
+                ToggleRow(label: "areInvisibleCharactersVisible", value: $configuration.display.areInvisibleCharactersVisible)
+                ToggleRow(label: "isCodeFoldingEnabled", value: $configuration.display.isCodeFoldingEnabled)
+                ToggleRow(label: "areFoldingControlsVisible", value: $configuration.display.areFoldingControlsVisible)
                 StepperRow(
                     label: "minimumFoldableLines",
                     value: $configuration.display.minimumFoldableLines,
                     range: 1...100
                 )
-                ToggleRow(label: "animateCodeFolding", value: $configuration.display.animateCodeFolding)
-                ToggleRow(label: "showMinimap", value: $configuration.display.showMinimap)
+                ToggleRow(label: "isMinimapVisible", value: $configuration.display.isMinimapVisible)
             }
             .padding(.vertical, 4)
         }

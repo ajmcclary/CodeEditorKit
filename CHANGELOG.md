@@ -2,6 +2,134 @@
 
 ## Unreleased
 
+### Comprehensive code-review remediation (in progress on `remediation/full-review-followup`)
+
+A multi-tier sweep prompted by an audit that surfaced 20 distinct
+findings across architecture, public API, concurrency, code quality,
+and tests. **No deprecation aliases** — this is a hard-break release.
+Migration article and full final inventory will land alongside the
+remaining tier 3/4/test items.
+
+#### Removed
+
+- **Plugin subsystem** — `Sources/CodeEditorPlugin/PluginSystem/` (9
+  source files + `Tests/CodeEditorPluginTests/PluginSystemTests.swift`
+  + the matching DocC plugin example) was unreachable from any public
+  API path; deleted entirely.
+- **Configuration over-engineering** —
+  `ConfigurationBatchUpdater`, `ConfigurationChangeObserver`,
+  `ConfigurationComposer`, `ConfigurationDiff`, `ConfigurationHistory`,
+  `ConfigurationHotReload`, `ConfigurationMigrator`,
+  `ConfigurationPendingChanges`, `ConfigurationValidator` (+ four
+  per-section extensions), `ConfigurationValidationTypes`,
+  `ConfigurationValidationUtilities`, `SharedValidationInfrastructure`,
+  `EditorConfigurationBuilder` (+ six fluent extensions),
+  `PresetConfiguration`, and `EditorConfiguration+ErrorValidationExtensions`
+  removed. Their tests (`ConfigurationHotReloadTests`,
+  `ConfigurationMigratorTests`, `EditorConfigurationBuilderTests`) and
+  the `ConfigurationHotReload` DocC article also deleted. The composer
+  preset logic was inlined into `EditorConfiguration+PresetsExtensions.swift`.
+- **DomainError** + 7 sub-enums (`ConfigurationDomainError`,
+  `SyntaxDomainError`, `CompletionDomainError`, `MemoryDomainError`,
+  `TextKitDomainError`, `PerformanceDomainError`, `PlatformDomainError`)
+  retired. Canonical surface is `CodeEditorError`. The protocol-based
+  recovery hierarchy (`RecoverableAsyncError` + `SyntaxHighlightingError`
+  + `CompletionAsyncError`) is preserved because it carries genuinely
+  distinct recovery-strategy data.
+- `HighlightingError` (in `BackgroundHighlightingTypes`) folded into
+  `SyntaxHighlightingError`.
+- `AsyncCodeEditorResult<T>` typealias (a meaningless rename of
+  `CodeEditorResult<T>`).
+- `selection: Range<String.Index>?` on `CodeEditorAPI`. The canonical
+  selection representation is `selectedRange: NSRange`. Convert with
+  `Range(selectedRange, in: content)` at call sites that need a Swift
+  range.
+- `display.animateCodeFolding` (dead duplicate). The wired
+  `performance.animateCodeFolding` remains.
+- `HybridSyncAsyncVersionedResource` (broken async branch returned
+  silently; zero callers).
+- `Sources/CodeEditorPlugin/Core/Layout/` directory consolidated into
+  `Sources/CodeEditorPlugin/Layout/`.
+
+#### Renamed
+
+- `EditorConfiguration.Display`:
+  - `enableSyntaxHighlighting` → `isSyntaxHighlightingEnabled`
+  - `enableAnnotations` → `areAnnotationsEnabled`
+  - `enableCodeFolding` → `isCodeFoldingEnabled`
+  - `showFoldingControls` → `areFoldingControlsVisible`
+  - `showInvisibleCharacters` → `areInvisibleCharactersVisible`
+  - `showMinimap` → `isMinimapVisible`
+  - `highlightSelectedLine` → `isSelectedLineHighlighted`
+- `EditorConfiguration.Behavior`:
+  - `autoIndent` → `isAutoIndentEnabled`
+  - `enableCodeCompletion` → `isCodeCompletionEnabled`
+- Convention: `is<Feature>Enabled` for state-of-feature toggles;
+  verb-prefixed (`show…`, `highlight…`, `animate…`) only when the name
+  describes a UI action rather than a feature toggle.
+- `TextSystemInterface` protocol → `TextSystem`.
+- `Layout/ConfigurationBindingHelpers.swift` →
+  `Layout/ConfigurationFormControls.swift` (file name now matches
+  contents).
+
+#### Changed
+
+- **`EditorState`** (`Core/EditorState.swift`) is now `@MainActor` —
+  drops the `@unchecked Sendable` hand-wave; `@Observable` mutation
+  is now compiler-enforced rather than convention.
+- **`CodeEditor.init`** sentinel default replaced:
+  `debounceInterval: Duration = .milliseconds(100)` →
+  `debounceInterval: Duration? = nil` (nil falls back to
+  `EditorConfiguration.performance.textChangeDebounceInterval`).
+- **DocC examples** no longer reference an internal `logger` symbol
+  consumers don't have in scope (40 sites converted to neutral
+  `print(...)` examples). The SwiftLint `no_print_statements` custom
+  rule was tightened to skip lines starting with `///` and the DocC
+  tutorial `Code/` directory.
+- **`SendableTypes`** auditing: `CompletionItem` now plain `Sendable`
+  (declared at point of definition); `Annotation` and `CodeEditorError`
+  retain `@unchecked Sendable` with an explicit comment justifying it
+  (`NSTextRange` reference type / `any Error` payloads).
+
+#### Fixed
+
+- **TextKit reach-able crashes**: `preconditionFailure()` in
+  `RangeInvalidationBuffer.endBuffering`, `RangeProcessor
+  .completeContentChanged`, and `SinglePhaseRangeValidator`'s two
+  async paths replaced with `CrossPlatformLogger` + safe early-return.
+  Malformed inputs no longer crash a release build.
+- **`LanguageRegistry` regex swallow**: `RegexSyntaxHighlighter
+  .rule(_:_:_:)` now logs a fault and trips `assertionFailure` in debug
+  on bad patterns. All 49 inline `try?` sites in `LanguageRegistry`
+  migrated to the helper. **A real bug surfaced**: the JSON tokenizer's
+  punctuation rule pattern `[{}\[\],:}` had a stray `}` and was
+  silently dropped; fixed to `[{}\[\],:]`.
+- **`AsyncSyntaxHighlighter` periodic optimisation** no longer dies
+  forever on a single non-cancellation error — the loop now logs and
+  continues.
+- **Silent-catch logging** in `AsyncSyntaxHighlighter` recovery path
+  and `EditorContainerViewModel.debouncedUpdate`/layout-debounce —
+  `catch is CancellationError { ... } catch { logger.error(...) }`
+  pattern; non-cancellation errors are no longer swallowed.
+
+#### Tests
+
+- Hard-coded wall-clock thresholds in
+  `SyntaxHighlightingPerformanceTests` loosened 5× to stop flaking on
+  loaded CI; the proper Tier 4 fix (move to `XCTClockMetric` baselines)
+  is on the remediation backlog.
+- Test-suite call sites that reference removed
+  `EditorConfigurationBuilder` / `ConfigurationValidator` /
+  `ConfigurationMigrator` rewritten to construct
+  `EditorConfiguration` directly.
+
+#### Migration notes
+
+The `Documentation.docc/Migration-Post-Review.md` article (and the
+full top-level CHANGELOG entry once tier 3/4/tests land) will spell
+out the remaining hard breaks. The branch builds clean under Swift 6
+strict concurrency and SwiftLint reports zero violations.
+
 ### Editor visual restyle (sub-project 3 of the design system migration)
 
 Push-model theme propagation landed end-to-end. Every editor-internal

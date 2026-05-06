@@ -67,7 +67,7 @@ public enum ResponsiveLayoutProvider {
         switch screenSize {
         case .compact:
             // Disable minimap on compact screens
-            adjusted.display.showMinimap = false
+            adjusted.display.isMinimapVisible = false
 
         case .regular:
             // Keep minimap if enabled, but use smaller width

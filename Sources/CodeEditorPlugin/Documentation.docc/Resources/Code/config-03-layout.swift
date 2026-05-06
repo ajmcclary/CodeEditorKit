@@ -8,7 +8,7 @@ struct ContentView: View {
         var age: Int
 
         func greet() {
-            logger.debug("Hello, my name is \\(name)")
+            print("Hello, my name is \\(name)")
         }
     }
     """

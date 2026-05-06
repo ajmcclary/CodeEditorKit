@@ -23,7 +23,7 @@ struct BehaviorKnobsSection: View {
     private var editingRows: some View {
         ToggleRow(label: "isEditable", value: $configuration.behavior.isEditable)
         ToggleRow(label: "isSelectable", value: $configuration.behavior.isSelectable)
-        ToggleRow(label: "autoIndent", value: $configuration.behavior.autoIndent)
+        ToggleRow(label: "isAutoIndentEnabled", value: $configuration.behavior.isAutoIndentEnabled)
         ToggleRow(label: "autoScrollToCursor", value: $configuration.behavior.autoScrollToCursor)
     }
 
@@ -67,7 +67,7 @@ struct BehaviorKnobsSection: View {
 
     @ViewBuilder
     private var completionRows: some View {
-        ToggleRow(label: "enableCodeCompletion", value: $configuration.behavior.enableCodeCompletion)
+        ToggleRow(label: "isCodeCompletionEnabled", value: $configuration.behavior.isCodeCompletionEnabled)
         ToggleRow(
             label: "isAutomaticTextCompletionEnabled",
             value: $configuration.behavior.isAutomaticTextCompletionEnabled

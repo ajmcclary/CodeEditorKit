@@ -154,7 +154,7 @@ Configuration uses direct nested values:
 ```swift
 var config = EditorConfiguration()
 config.display.isLineNumbersEnabled = true
-config.display.enableSyntaxHighlighting = true
+config.display.isSyntaxHighlightingEnabled = true
 config.layout.tabWidth = 4
 ```
 

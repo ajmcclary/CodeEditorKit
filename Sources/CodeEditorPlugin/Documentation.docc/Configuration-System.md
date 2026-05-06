@@ -25,7 +25,7 @@ config.layout.tabWidth = 4
 // Start from presets
 var minimal = EditorConfiguration.minimal
 minimal.display.fontSize = 14
-minimal.display.enableSyntaxHighlighting = true
+minimal.display.isSyntaxHighlightingEnabled = true
 ```
 
 ## Configuration Structure
@@ -38,12 +38,12 @@ Controls visual appearance:
 
 ```swift
 config.display.isLineNumbersEnabled = true
-config.display.highlightSelectedLine = true
+config.display.isSelectedLineHighlighted = true
 config.display.fontSize = 14.0
 config.display.fontName = "SF Mono"
-config.display.enableAnnotations = true
-config.display.showMinimap = false
-config.display.showInvisibleCharacters = false
+config.display.areAnnotationsEnabled = true
+config.display.isMinimapVisible = false
+config.display.areInvisibleCharactersVisible = false
 ```
 
 ### Layout Settings
@@ -65,8 +65,8 @@ Controls editing behavior:
 
 ```swift
 config.behavior.isEditable = true
-config.behavior.autoIndent = true
-config.behavior.enableCodeCompletion = true
+config.behavior.isAutoIndentEnabled = true
+config.behavior.isCodeCompletionEnabled = true
 config.behavior.enableBraceMatching = true
 config.behavior.autoCloseBrackets = true
 config.behavior.enableSpellChecking = false
@@ -134,10 +134,10 @@ var markdownConfig = EditorConfiguration.markdown
 var customConfig = EditorConfiguration()
 customConfig.display.fontSize = 16
 customConfig.layout.tabWidth = 4
-customConfig.behavior.enableCodeCompletion = true
+customConfig.behavior.isCodeCompletionEnabled = true
 customConfig.layout.wrapLines = false
 customConfig.display.isLineNumbersEnabled = true
-customConfig.display.enableAnnotations = true
+customConfig.display.areAnnotationsEnabled = true
 ```
 
 ## Configuration Presets
@@ -210,7 +210,7 @@ extension EditorConfiguration {
         config.display.fontSize = 13
         config.display.fontName = "JetBrains Mono"
         config.layout.tabWidth = 3
-        config.behavior.autoIndent = true
+        config.behavior.isAutoIndentEnabled = true
         return config
     }
 }
@@ -305,10 +305,10 @@ struct SettingsView: View {
             
             Section("Behavior") {
                 Toggle("Auto Indent",
-                       isOn: $appState.currentConfiguration.behavior.autoIndent)
+                       isOn: $appState.currentConfiguration.behavior.isAutoIndentEnabled)
                 
                 Toggle("Code Completion",
-                       isOn: $appState.currentConfiguration.behavior.enableCodeCompletion)
+                       isOn: $appState.currentConfiguration.behavior.isCodeCompletionEnabled)
             }
         }
     }

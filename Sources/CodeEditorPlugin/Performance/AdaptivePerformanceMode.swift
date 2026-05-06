@@ -45,8 +45,8 @@ public final class AdaptivePerformanceMode: ObservableObject {
     public func applyConfiguration(to config: inout EditorConfiguration) {
         // Display settings
         config.display.isLineNumbersEnabled = configuration.isLineNumbersEnabled
-        config.display.enableCodeFolding = configuration.enableCodeFolding
-        config.display.enableSyntaxHighlighting = configuration.enableSyntaxHighlighting
+        config.display.isCodeFoldingEnabled = configuration.isCodeFoldingEnabled
+        config.display.isSyntaxHighlightingEnabled = configuration.isSyntaxHighlightingEnabled
 
         // Performance settings
         config.performance.maxSyntaxHighlightingLength = configuration.maxSyntaxHighlightingLength
@@ -125,8 +125,8 @@ public struct PerformanceModeConfiguration: Sendable {
 
     // Display features
     public let isLineNumbersEnabled: Bool
-    public let enableCodeFolding: Bool
-    public let enableSyntaxHighlighting: Bool
+    public let isCodeFoldingEnabled: Bool
+    public let isSyntaxHighlightingEnabled: Bool
     public let enableMinimap: Bool
 
     // Performance settings
@@ -147,8 +147,8 @@ public struct PerformanceModeConfiguration: Sendable {
         case .highQuality:
             // All features enabled, minimal debouncing
             isLineNumbersEnabled = true
-            enableCodeFolding = true
-            enableSyntaxHighlighting = true
+            isCodeFoldingEnabled = true
+            isSyntaxHighlightingEnabled = true
             enableMinimap = true
             highlightingDebounce = .milliseconds(100)
             maxSyntaxHighlightingLength = 1_000_000 // 1MB
@@ -161,8 +161,8 @@ public struct PerformanceModeConfiguration: Sendable {
         case .balanced:
             // Most features enabled, moderate debouncing
             isLineNumbersEnabled = true
-            enableCodeFolding = true
-            enableSyntaxHighlighting = true
+            isCodeFoldingEnabled = true
+            isSyntaxHighlightingEnabled = true
             enableMinimap = false
             highlightingDebounce = .milliseconds(300)
             maxSyntaxHighlightingLength = 500_000 // 500KB
@@ -175,8 +175,8 @@ public struct PerformanceModeConfiguration: Sendable {
         case .performance:
             // Minimal features, aggressive optimization
             isLineNumbersEnabled = true
-            enableCodeFolding = false
-            enableSyntaxHighlighting = true // But with limits
+            isCodeFoldingEnabled = false
+            isSyntaxHighlightingEnabled = true // But with limits
             enableMinimap = false
             highlightingDebounce = .milliseconds(500)
             maxSyntaxHighlightingLength = 100_000 // 100KB

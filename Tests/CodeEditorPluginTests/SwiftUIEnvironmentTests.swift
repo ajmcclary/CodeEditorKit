@@ -203,13 +203,13 @@ final class SwiftUIEnvironmentTests: XCTestCase {
             set: { _ in }
         )
 
+        var customConfig = EditorConfiguration()
+        customConfig.display.fontSize = 18
+        customConfig.display.isLineNumbersEnabled = false
         let customEnv = CodeEditorEnvironment(
             language: .php,
             theme: .dark,
-            configuration: EditorConfiguration.builder()
-                .fontSize(18)
-                .isLineNumbersEnabled(false)
-                .build()
+            configuration: customConfig
         )
 
         let editor = CodeEditor(text: binding)

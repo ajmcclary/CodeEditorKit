@@ -153,11 +153,11 @@ public final class IOSLargeFileOptimizer: ObservableObject {
             // Store original values before changing
             if originalMaxSyntaxHighlightingLength == nil {
                 originalMaxSyntaxHighlightingLength = config.performance.maxSyntaxHighlightingLength
-                originalEnableSyntaxHighlighting = config.display.enableSyntaxHighlighting
+                originalEnableSyntaxHighlighting = config.display.isSyntaxHighlightingEnabled
                 originalAdaptiveMode = codeEditorView.adaptivePerformanceMode.currentMode
             }
 
-            config.display.enableSyntaxHighlighting = false
+            config.display.isSyntaxHighlightingEnabled = false
             config.performance.maxSyntaxHighlightingLength = maxHighlightingRange
             codeEditorView.configuration = config
         }
@@ -213,7 +213,7 @@ public final class IOSLargeFileOptimizer: ObservableObject {
 
             // Restore to original values or defaults
             let targetMaxLength = originalMaxSyntaxHighlightingLength ?? PlatformConstants.maxSyntaxHighlightingLength
-            config.display.enableSyntaxHighlighting = originalEnableSyntaxHighlighting
+            config.display.isSyntaxHighlightingEnabled = originalEnableSyntaxHighlighting
             config.performance.maxSyntaxHighlightingLength = targetMaxLength
 
             // Apply configuration first

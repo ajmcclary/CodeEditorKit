@@ -152,7 +152,7 @@ final class DeviceTypeTests: XCTestCase {
         // iPad should have custom config
         let iPadConfig = DeviceType.iPad.recommendedConfiguration()
         XCTAssertTrue(iPadConfig.display.isLineNumbersEnabled)
-        XCTAssertFalse(iPadConfig.display.showMinimap)
+        XCTAssertFalse(iPadConfig.display.isMinimapVisible)
         XCTAssertEqual(iPadConfig.display.fontSize, 14)
 
         // Vision Pro should have comfort-optimized config

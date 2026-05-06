@@ -389,7 +389,7 @@ public final class MinimapViewModel {
 @available(iOS 17.0, macOS 14.0, *)
 extension MinimapViewModel {
     func updateVisibilityState() {
-        minimapState.isVisible = configuration.display.showMinimap
+        minimapState.isVisible = configuration.display.isMinimapVisible
 
         if !minimapState.isVisible {
             // Clear state when hidden
@@ -598,7 +598,7 @@ extension MinimapViewModel {
         Binding(
             get: { self.minimapState.isVisible },
             set: { newValue in
-                self.configuration.display.showMinimap = newValue
+                self.configuration.display.isMinimapVisible = newValue
                 self.updateVisibilityState()
             }
         )
