@@ -6,6 +6,7 @@ import SwiftUI
 /// Right sidebar: live `EditorConfiguration` rendered as Swift source,
 /// with a Copy button.
 struct InspectorSidebar: View {
+    @Environment(\.codeEditorTheme) private var theme
     let configuration: EditorConfiguration
 
     var body: some View {
@@ -15,6 +16,7 @@ struct InspectorSidebar: View {
                 ScrollView {
                     Text(rendered)
                         .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(Color(tokens: theme.style.text.base))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .padding(12)

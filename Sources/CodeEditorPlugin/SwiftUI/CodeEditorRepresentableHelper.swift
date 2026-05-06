@@ -186,6 +186,13 @@ enum CodeEditorRepresentableHelper {
         proposal: ProposedViewSize,
         configuration: EditorConfiguration
     ) -> CGSize? {
+        // If proposal has explicit dimensions, respect them — the editor is a
+        // flex container and should fill the space its parent offers, not
+        // collapse to its (possibly empty) text content.
+        if let proposedWidth = proposal.width, let proposedHeight = proposal.height {
+            return CGSize(width: proposedWidth, height: proposedHeight)
+        }
+
         // Calculate intrinsic content size based on text
         let textContainer = textView.textContainer
         let layoutManager = textView.layoutManager
