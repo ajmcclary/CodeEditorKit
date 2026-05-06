@@ -112,7 +112,7 @@ public final class TextEditingService {
         forNewLineAfter previousLine: String,
         configuration: EditorConfiguration
     ) -> String {
-        guard configuration.behavior.autoIndent else {
+        guard configuration.behavior.isAutoIndentEnabled else {
             return ""
         }
 
@@ -176,7 +176,7 @@ public final class TextEditingService {
         for character: Character,
         configuration: EditorConfiguration
     ) -> Bool {
-        guard configuration.behavior.autoIndent else {
+        guard configuration.behavior.isAutoIndentEnabled else {
             return false
         }
 

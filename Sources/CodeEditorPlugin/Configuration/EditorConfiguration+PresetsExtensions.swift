@@ -10,13 +10,13 @@ extension EditorConfiguration {
     /// Minimal configuration for lightweight editing
     public static let minimal: EditorConfiguration = {
         var config = EditorConfiguration()
-        config.display.enableSyntaxHighlighting = false
+        config.display.isSyntaxHighlightingEnabled = false
         config.display.isLineNumbersEnabled = false
-        config.display.enableAnnotations = false
-        config.display.enableCodeFolding = false
-        config.display.showMinimap = false
-        config.display.showFoldingControls = false
-        config.behavior.enableCodeCompletion = false
+        config.display.areAnnotationsEnabled = false
+        config.display.isCodeFoldingEnabled = false
+        config.display.isMinimapVisible = false
+        config.display.areFoldingControlsVisible = false
+        config.behavior.isCodeCompletionEnabled = false
         return config
     }()
 
@@ -24,8 +24,8 @@ extension EditorConfiguration {
     public static let readOnly: EditorConfiguration = {
         var config = EditorConfiguration()
         config.behavior.isEditable = false
-        config.behavior.enableCodeCompletion = false
-        config.behavior.autoIndent = false
+        config.behavior.isCodeCompletionEnabled = false
+        config.behavior.isAutoIndentEnabled = false
         config.behavior.isAutomaticQuoteSubstitutionEnabled = false
         config.behavior.isAutomaticDashSubstitutionEnabled = false
         config.behavior.isAutomaticTextReplacementEnabled = false
@@ -40,7 +40,7 @@ extension EditorConfiguration {
         config.behavior.isAutomaticLinkDetectionEnabled = true
         config.behavior.isAutomaticQuoteSubstitutionEnabled = true
         config.behavior.isAutomaticDashSubstitutionEnabled = true
-        config.display.enableCodeFolding = false
+        config.display.isCodeFoldingEnabled = false
         return config
     }()
 
@@ -49,8 +49,8 @@ extension EditorConfiguration {
         var config = readOnly
         config.display.fontSize = 18.0
         config.display.isLineNumbersEnabled = false
-        config.display.enableAnnotations = false
-        config.display.highlightSelectedLine = false
+        config.display.areAnnotationsEnabled = false
+        config.display.isSelectedLineHighlighted = false
         config.layout.wrapLines = true
         return config
     }()

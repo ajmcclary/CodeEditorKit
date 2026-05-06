@@ -35,13 +35,13 @@ extension CodeEditorView {
         updateGutterVisibility()
         #endif
 
-        if configuration.display.highlightSelectedLine {
+        if configuration.display.isSelectedLineHighlighted {
             updateSelectedLineHighlight()
         } else {
             removeLineHighlight()
         }
 
-        if configuration.display.enableSyntaxHighlighting {
+        if configuration.display.isSyntaxHighlightingEnabled {
             applySyntaxHighlighting()
         } else {
             removeSyntaxHighlighting()
@@ -260,7 +260,7 @@ extension CodeEditorView {
         codeFoldingEngine.configuration = configuration.createCodeFoldingConfiguration()
 
         // Update folding regions if folding is enabled
-        if configuration.display.enableCodeFolding {
+        if configuration.display.isCodeFoldingEnabled {
             // Update the folding engine with current language
             codeFoldingEngine.attach(to: self)
         }

@@ -313,9 +313,9 @@ final class ComprehensivePerformanceTests: XCTestCase {
         // Create complex configuration
         configuration.display.fontSize = 16
         configuration.display.isLineNumbersEnabled = true
-        configuration.display.highlightSelectedLine = true
+        configuration.display.isSelectedLineHighlighted = true
         configuration.layout.tabWidth = 4
-        configuration.behavior.autoIndent = true
+        configuration.behavior.isAutoIndentEnabled = true
         configuration.performance.useHardwareAcceleration = true
 
         measure(options: Self.standardMeasureOptions) {

@@ -85,9 +85,9 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Apply complex display configuration
         var config = EditorConfiguration()
         config.display.isLineNumbersEnabled = true
-        config.display.showInvisibleCharacters = true
-        config.display.highlightSelectedLine = true
-        config.display.enableSyntaxHighlighting = true
+        config.display.areInvisibleCharactersVisible = true
+        config.display.isSelectedLineHighlighted = true
+        config.display.isSyntaxHighlightingEnabled = true
         config.display.fontSize = 16.0
 
         // Note: defaultParagraphStyle is not available in EditorConfiguration
@@ -116,7 +116,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         var config = EditorConfiguration()
         config.behavior.isEditable = true
         config.behavior.isSelectable = true
-        config.behavior.autoIndent = true
+        config.behavior.isAutoIndentEnabled = true
         config.behavior.autoCloseBrackets = true
 
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -282,7 +282,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
 
         // Set up code with syntax highlighting
         var config = EditorConfiguration()
-        config.display.enableSyntaxHighlighting = true
+        config.display.isSyntaxHighlightingEnabled = true
         config.display.fontSize = 14.0
 
         // Note: usesFindBar and displaysLinkToolTips are not available in EditorConfiguration

@@ -372,7 +372,7 @@ class DiffViewer {
     
     func configure() {
         var config = EditorConfiguration.readOnly
-        config.display.highlightSelectedLine = false
+        config.display.isSelectedLineHighlighted = false
         
         leftEditor.configuration = config
         rightEditor.configuration = config
@@ -465,7 +465,7 @@ performance.enableViewportRendering = true
 ```swift
 var memoryOptimizedConfig = EditorConfiguration.minimal
 memoryOptimizedConfig.performance.maxSyntaxHighlightingLength = 50_000
-memoryOptimizedConfig.display.showMinimap = false
+memoryOptimizedConfig.display.isMinimapVisible = false
 memoryOptimizedConfig.performance.animateCodeFolding = false
 ```
 

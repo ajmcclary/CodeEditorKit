@@ -22,7 +22,7 @@ import UIKit
 /// config.display.fontSize = 16
 /// config.display.syntaxHighlighting = true
 /// config.layout.tabWidth = 4
-/// config.behavior.autoIndent = true
+/// config.behavior.isAutoIndentEnabled = true
 /// 
 /// // Apply to an editor
 /// config.apply(to: editor)
@@ -332,8 +332,8 @@ public struct EditorConfiguration: Codable, Sendable {
     /// - Returns: A configured CodeFoldingConfiguration instance
     internal func createCodeFoldingConfiguration() -> CodeFoldingConfiguration {
         var config = CodeFoldingConfiguration()
-        config.enabled = display.enableCodeFolding
-        config.showGutterControls = display.showFoldingControls
+        config.enabled = display.isCodeFoldingEnabled
+        config.showGutterControls = display.areFoldingControlsVisible
         config.minimumLineCount = display.minimumFoldableLines
         config.animatesFolding = performance.animateCodeFolding
         return config

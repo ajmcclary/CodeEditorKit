@@ -41,7 +41,7 @@ struct MyEditor: View {
         var config = EditorConfiguration()
         config.display.fontSize = 16
         config.display.isLineNumbersEnabled = true
-        config.display.enableSyntaxHighlighting = true
+        config.display.isSyntaxHighlightingEnabled = true
         return config
     }()
     
@@ -68,7 +68,7 @@ var readOnlyConfig = EditorConfiguration.readOnly
 
 // Platform-optimized configuration
 var platformConfig = EditorConfiguration.platformOptimized
-platformConfig.behavior.enableCodeCompletion = true
+platformConfig.behavior.isCodeCompletionEnabled = true
 ```
 
 ### Using Environment

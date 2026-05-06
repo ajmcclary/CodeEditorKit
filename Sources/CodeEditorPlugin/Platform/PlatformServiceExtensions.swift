@@ -159,11 +159,11 @@ extension PlatformDeviceService {
     public var preferredEditorConfiguration: EditorConfigurationHints {
         EditorConfigurationHints(
             showLineNumbers: !isIPhone, // Hide on iPhone for space
-            showMinimap: isMacOS || (isIPad && !isMacCatalyst), // Desktop and large screens
+            isMinimapVisible: isMacOS || (isIPad && !isMacCatalyst), // Desktop and large screens
             enableWordWrap: isIPhone || prefersCompactUI, // Mobile-friendly
             fontSize: preferredTextSize,
             tabWidth: isIOS ? 2 : 4, // Smaller tabs on mobile
-            showInvisibleCharacters: !isIOS // Desktop feature
+            areInvisibleCharactersVisible: !isIOS // Desktop feature
         )
     }
 
@@ -195,7 +195,7 @@ public struct EditorConfigurationHints {
     public let showLineNumbers: Bool
 
     /// Whether the minimap should be shown
-    public let showMinimap: Bool
+    public let isMinimapVisible: Bool
 
     /// Whether word wrapping should be enabled
     public let enableWordWrap: Bool
@@ -207,29 +207,29 @@ public struct EditorConfigurationHints {
     public let tabWidth: Int
 
     /// Whether invisible characters should be displayed
-    public let showInvisibleCharacters: Bool
+    public let areInvisibleCharactersVisible: Bool
 
     /// Creates editor configuration hints with specified values
     /// - Parameters:
     ///   - showLineNumbers: Whether to show line numbers
-    ///   - showMinimap: Whether to show minimap
+    ///   - isMinimapVisible: Whether to show minimap
     ///   - enableWordWrap: Whether to enable word wrap
     ///   - fontSize: Font size to use
     ///   - tabWidth: Tab width in spaces
-    ///   - showInvisibleCharacters: Whether to show invisible characters
+    ///   - areInvisibleCharactersVisible: Whether to show invisible characters
     public init(
         showLineNumbers: Bool,
-        showMinimap: Bool,
+        isMinimapVisible: Bool,
         enableWordWrap: Bool,
         fontSize: CGFloat,
         tabWidth: Int,
-        showInvisibleCharacters: Bool
+        areInvisibleCharactersVisible: Bool
     ) {
         self.showLineNumbers = showLineNumbers
-        self.showMinimap = showMinimap
+        self.isMinimapVisible = isMinimapVisible
         self.enableWordWrap = enableWordWrap
         self.fontSize = fontSize
         self.tabWidth = tabWidth
-        self.showInvisibleCharacters = showInvisibleCharacters
+        self.areInvisibleCharactersVisible = areInvisibleCharactersVisible
     }
 }

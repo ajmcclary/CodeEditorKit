@@ -164,8 +164,8 @@ The folding system provides visual feedback:
 ```swift
 // Enable folding controls in the gutter
 var config = editor.configuration
-config.display.enableCodeFolding = true
-config.display.showFoldingControls = true
+config.display.isCodeFoldingEnabled = true
+config.display.areFoldingControlsVisible = true
 config.apply(to: editor)
 
 // Folding indicators:
@@ -273,7 +273,7 @@ If folding operations return false:
 
 ```swift
 // Debug folding state
-print("Folding enabled: \(editor.configuration.display.enableCodeFolding)")
+print("Folding enabled: \(editor.configuration.display.isCodeFoldingEnabled)")
 print("Language: \(editor.language)")
 print("Foldable regions: \(editor.allFoldableRegions().count)")
 ```

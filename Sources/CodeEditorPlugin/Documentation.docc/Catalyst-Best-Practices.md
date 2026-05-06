@@ -395,7 +395,7 @@ class CatalystViewController: PlatformViewController {
         // Catalyst-specific adjustments
         config.display.fontSize = 14.0 // Slightly larger for desktop
         config.layout.gutterWidth = 50.0 // Wider gutter for mouse targets
-        config.behavior.enableCodeCompletion = true
+        config.behavior.isCodeCompletionEnabled = true
         
         // Apply configuration
         config.apply(to: editorView)
@@ -425,7 +425,7 @@ class CatalystEditorViewController: PlatformViewController {
         containerView.configuration = {
             var config = EditorConfiguration.default
             config.display.isLineNumbersEnabled = true
-            config.display.showMinimap = false // Minimap not recommended on Catalyst
+            config.display.isMinimapVisible = false // Minimap not recommended on Catalyst
             return config
         }()
         
@@ -494,8 +494,8 @@ func catalystOptimizedConfiguration() -> EditorConfiguration {
     // Display optimizations
     config.display.fontSize = 14.0 // Desktop-appropriate size
     config.display.isLineNumbersEnabled = true
-    config.display.showMinimap = false // Save screen space
-    config.display.highlightSelectedLine = true
+    config.display.isMinimapVisible = false // Save screen space
+    config.display.isSelectedLineHighlighted = true
     
     // Layout optimizations
     config.layout.lineSpacing = 1.3 // Better readability
@@ -503,8 +503,8 @@ func catalystOptimizedConfiguration() -> EditorConfiguration {
     config.layout.tabWidth = 4
     
     // Behavior optimizations
-    config.behavior.autoIndent = true
-    config.behavior.enableCodeCompletion = true
+    config.behavior.isAutoIndentEnabled = true
+    config.behavior.isCodeCompletionEnabled = true
     config.behavior.continuousSpellCheckingEnabled = false
     
     // Performance optimizations
@@ -584,7 +584,7 @@ class CatalystEditorTests: XCTestCase {
         // Verify Catalyst-specific settings
         XCTAssertEqual(config.display.fontSize, 14.0)
         XCTAssertEqual(config.layout.gutterWidth, 50.0)
-        XCTAssertFalse(config.display.showMinimap)
+        XCTAssertFalse(config.display.isMinimapVisible)
     }
     
     func testContextMenuOnCatalyst() {

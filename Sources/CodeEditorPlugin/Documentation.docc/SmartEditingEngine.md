@@ -28,7 +28,7 @@ smartEngine.attach(to: codeEditorView)
 
 // Configure features
 smartEngine.configuration.autoInsertBrackets = true
-smartEngine.configuration.autoIndent = true
+smartEngine.configuration.isAutoIndentEnabled = true
 smartEngine.configuration.enableMultiCursor = true
 ```
 
@@ -104,7 +104,7 @@ smartEngine.$cursors
 
 ```swift
 // Configure indentation behavior
-smartEngine.configuration.autoIndent = true
+smartEngine.configuration.isAutoIndentEnabled = true
 smartEngine.configuration.insertSpacesForTabs = true
 smartEngine.configuration.tabWidth = 4
 smartEngine.configuration.detectIndentation = true
@@ -219,7 +219,7 @@ config.wrapSelection = true  // Wrap selected text with brackets
 config.enableMultiCursor = true
 
 // Auto-indentation
-config.autoIndent = true
+config.isAutoIndentEnabled = true
 config.insertSpacesForTabs = true
 config.tabWidth = 4
 config.detectIndentation = true  // Detect from file
@@ -298,7 +298,7 @@ assert(codeEditorView.delegate === smartEngine)
 
 ```swift
 // Ensure auto-indent is enabled
-assert(smartEngine.configuration.autoIndent)
+assert(smartEngine.configuration.isAutoIndentEnabled)
 
 // Check for conflicting delegate
 // SmartEditingEngine must be the text view delegate

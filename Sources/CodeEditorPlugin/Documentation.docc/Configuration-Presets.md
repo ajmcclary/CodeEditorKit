@@ -229,7 +229,7 @@ extension EditorConfiguration {
         // Display settings
         config.display.isLineNumbersEnabled = true
         config.display.fontSize = 12
-        config.display.showMinimap = true
+        config.display.isMinimapVisible = true
         
         // Layout settings
         config.layout.tabWidth = 2
@@ -237,7 +237,7 @@ extension EditorConfiguration {
         config.layout.gutterWidth = 40
         
         // Behavior settings
-        config.behavior.autoIndent = true
+        config.behavior.isAutoIndentEnabled = true
         config.behavior.autoCloseBrackets = true
         
         return config

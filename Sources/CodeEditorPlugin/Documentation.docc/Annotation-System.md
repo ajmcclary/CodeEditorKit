@@ -58,7 +58,7 @@ struct AnnotatedEditor: View {
     var body: some View {
         CodeEditor(text: $code)
             .onAppear {
-                config.display.enableAnnotations = true
+                config.display.areAnnotationsEnabled = true
             }
             .environment(\.codeEditorConfiguration, config)
     }
@@ -70,7 +70,7 @@ struct AnnotatedEditor: View {
 ```swift
 let editor = CodeEditorView()
 var config = EditorConfiguration()
-config.display.enableAnnotations = true
+config.display.areAnnotationsEnabled = true
 config.apply(to: editor)
 ```
 

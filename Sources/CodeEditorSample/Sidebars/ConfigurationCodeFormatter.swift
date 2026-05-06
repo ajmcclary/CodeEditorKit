@@ -45,32 +45,32 @@ enum ConfigurationCodeFormatter {
         if live.fontSize != base.fontSize {
             lines.append("\(prefix).fontSize = \(formatCGFloat(live.fontSize))")
         }
-        if live.enableSyntaxHighlighting != base.enableSyntaxHighlighting {
-            lines.append("\(prefix).enableSyntaxHighlighting = \(live.enableSyntaxHighlighting)")
+        if live.isSyntaxHighlightingEnabled != base.isSyntaxHighlightingEnabled {
+            lines.append("\(prefix).isSyntaxHighlightingEnabled = \(live.isSyntaxHighlightingEnabled)")
         }
         if live.isLineNumbersEnabled != base.isLineNumbersEnabled {
             lines.append("\(prefix).isLineNumbersEnabled = \(live.isLineNumbersEnabled)")
         }
-        if live.enableAnnotations != base.enableAnnotations {
-            lines.append("\(prefix).enableAnnotations = \(live.enableAnnotations)")
+        if live.areAnnotationsEnabled != base.areAnnotationsEnabled {
+            lines.append("\(prefix).areAnnotationsEnabled = \(live.areAnnotationsEnabled)")
         }
-        if live.highlightSelectedLine != base.highlightSelectedLine {
-            lines.append("\(prefix).highlightSelectedLine = \(live.highlightSelectedLine)")
+        if live.isSelectedLineHighlighted != base.isSelectedLineHighlighted {
+            lines.append("\(prefix).isSelectedLineHighlighted = \(live.isSelectedLineHighlighted)")
         }
-        if live.showInvisibleCharacters != base.showInvisibleCharacters {
-            lines.append("\(prefix).showInvisibleCharacters = \(live.showInvisibleCharacters)")
+        if live.areInvisibleCharactersVisible != base.areInvisibleCharactersVisible {
+            lines.append("\(prefix).areInvisibleCharactersVisible = \(live.areInvisibleCharactersVisible)")
         }
-        if live.enableCodeFolding != base.enableCodeFolding {
-            lines.append("\(prefix).enableCodeFolding = \(live.enableCodeFolding)")
+        if live.isCodeFoldingEnabled != base.isCodeFoldingEnabled {
+            lines.append("\(prefix).isCodeFoldingEnabled = \(live.isCodeFoldingEnabled)")
         }
-        if live.showFoldingControls != base.showFoldingControls {
-            lines.append("\(prefix).showFoldingControls = \(live.showFoldingControls)")
+        if live.areFoldingControlsVisible != base.areFoldingControlsVisible {
+            lines.append("\(prefix).areFoldingControlsVisible = \(live.areFoldingControlsVisible)")
         }
         if live.minimumFoldableLines != base.minimumFoldableLines {
             lines.append("\(prefix).minimumFoldableLines = \(live.minimumFoldableLines)")
         }
-        if live.showMinimap != base.showMinimap {
-            lines.append("\(prefix).showMinimap = \(live.showMinimap)")
+        if live.isMinimapVisible != base.isMinimapVisible {
+            lines.append("\(prefix).isMinimapVisible = \(live.isMinimapVisible)")
         }
         if live.selectedLineHighlightColor != base.selectedLineHighlightColor {
             lines.append("\(prefix).selectedLineHighlightColor = /* custom */")
@@ -147,11 +147,11 @@ enum ConfigurationCodeFormatter {
         if live.isSelectable != base.isSelectable {
             lines.append("\(prefix).isSelectable = \(live.isSelectable)")
         }
-        if live.autoIndent != base.autoIndent {
-            lines.append("\(prefix).autoIndent = \(live.autoIndent)")
+        if live.isAutoIndentEnabled != base.isAutoIndentEnabled {
+            lines.append("\(prefix).isAutoIndentEnabled = \(live.isAutoIndentEnabled)")
         }
-        if live.enableCodeCompletion != base.enableCodeCompletion {
-            lines.append("\(prefix).enableCodeCompletion = \(live.enableCodeCompletion)")
+        if live.isCodeCompletionEnabled != base.isCodeCompletionEnabled {
+            lines.append("\(prefix).isCodeCompletionEnabled = \(live.isCodeCompletionEnabled)")
         }
         if live.isAutomaticLinkDetectionEnabled != base.isAutomaticLinkDetectionEnabled {
             lines.append("\(prefix).isAutomaticLinkDetectionEnabled = \(live.isAutomaticLinkDetectionEnabled)")

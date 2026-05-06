@@ -53,7 +53,7 @@ struct ContentView: View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
             .lineNumbers(true)
-            .enableSyntaxHighlighting(true)
+            .isSyntaxHighlightingEnabled(true)
             .frame(minHeight: 400)
     }
 }

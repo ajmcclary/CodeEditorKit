@@ -231,7 +231,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
             .codeEditorEnvironment(configuration: config)
 
         // Verify macOS-specific configuration
-        XCTAssertTrue(config.display.showMinimap)
+        XCTAssertTrue(config.display.isMinimapVisible)
         XCTAssertTrue(config.performance.useHardwareAcceleration)
     }
     #endif
@@ -249,7 +249,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
             .codeEditorEnvironment(configuration: config)
 
         // Verify iOS-specific configuration
-        XCTAssertFalse(config.display.showMinimap)
+        XCTAssertFalse(config.display.isMinimapVisible)
         XCTAssertTrue(config.layout.wrapLines)
     }
     #endif

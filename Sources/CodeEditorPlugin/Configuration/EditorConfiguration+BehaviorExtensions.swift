@@ -14,11 +14,11 @@ extension EditorConfiguration {
         /// Whether the editor is selectable
         public var isSelectable: Bool = true
 
-        /// Whether to enable auto indentation
-        public var autoIndent: Bool = true
+        /// Whether auto-indentation is enabled.
+        public var isAutoIndentEnabled: Bool = true
 
-        /// Whether to enable code completion
-        public var enableCodeCompletion: Bool = true
+        /// Whether code completion is enabled.
+        public var isCodeCompletionEnabled: Bool = true
 
         /// Whether to detect links in text
         public var isAutomaticLinkDetectionEnabled: Bool = false
@@ -80,8 +80,8 @@ extension EditorConfiguration.Behavior: Codable {
     private enum CodingKeys: String, CodingKey {
         case isEditable
         case isSelectable
-        case autoIndent
-        case enableCodeCompletion
+        case isAutoIndentEnabled
+        case isCodeCompletionEnabled
         case isAutomaticLinkDetectionEnabled
         case isAutomaticQuoteSubstitutionEnabled
         case isAutomaticDashSubstitutionEnabled
@@ -101,8 +101,8 @@ extension EditorConfiguration.Behavior: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEditable = try container.decodeIfPresent(Bool.self, forKey: .isEditable) ?? true
         isSelectable = try container.decodeIfPresent(Bool.self, forKey: .isSelectable) ?? true
-        autoIndent = try container.decodeIfPresent(Bool.self, forKey: .autoIndent) ?? true
-        enableCodeCompletion = try container.decodeIfPresent(Bool.self, forKey: .enableCodeCompletion) ?? true
+        isAutoIndentEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutoIndentEnabled) ?? true
+        isCodeCompletionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isCodeCompletionEnabled) ?? true
         isAutomaticLinkDetectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticLinkDetectionEnabled) ?? false
         isAutomaticQuoteSubstitutionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticQuoteSubstitutionEnabled) ?? false
         isAutomaticDashSubstitutionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticDashSubstitutionEnabled) ?? false
@@ -129,8 +129,8 @@ extension EditorConfiguration.Behavior: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isEditable, forKey: .isEditable)
         try container.encode(isSelectable, forKey: .isSelectable)
-        try container.encode(autoIndent, forKey: .autoIndent)
-        try container.encode(enableCodeCompletion, forKey: .enableCodeCompletion)
+        try container.encode(isAutoIndentEnabled, forKey: .isAutoIndentEnabled)
+        try container.encode(isCodeCompletionEnabled, forKey: .isCodeCompletionEnabled)
         try container.encode(isAutomaticLinkDetectionEnabled, forKey: .isAutomaticLinkDetectionEnabled)
         try container.encode(isAutomaticQuoteSubstitutionEnabled, forKey: .isAutomaticQuoteSubstitutionEnabled)
         try container.encode(isAutomaticDashSubstitutionEnabled, forKey: .isAutomaticDashSubstitutionEnabled)

@@ -56,7 +56,7 @@ import AppKit
 /// config.display.fontSize = 16
 /// config.display.syntaxHighlighting = true
 /// config.layout.tabWidth = 4
-/// config.behavior.autoIndent = true
+/// config.behavior.isAutoIndentEnabled = true
 /// config.apply(to: editor)
 /// ```
 ///

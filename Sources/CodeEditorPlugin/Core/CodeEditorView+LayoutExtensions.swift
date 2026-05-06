@@ -178,7 +178,7 @@ extension CodeEditorView {
         guard let textContainer = self.textContainer else { return }
 
         // If we're in a container view with minimap visible, let the container handle the sizing
-        if let container = containerView, container.configuration.display.showMinimap {
+        if let container = containerView, container.configuration.display.isMinimapVisible {
             // The container view's layoutViewsAppKit method will handle text container sizing
             // We should not override it here
             return

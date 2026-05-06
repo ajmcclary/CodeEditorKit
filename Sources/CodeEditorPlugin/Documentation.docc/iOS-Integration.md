@@ -291,7 +291,7 @@ class EditorViewController: UIViewController {
         containerView.configuration = {
             var config = EditorConfiguration.default
             config.display.isLineNumbersEnabled = true
-            config.display.showMinimap = false // Not recommended on iPhone
+            config.display.isMinimapVisible = false // Not recommended on iPhone
             return config
         }()
         

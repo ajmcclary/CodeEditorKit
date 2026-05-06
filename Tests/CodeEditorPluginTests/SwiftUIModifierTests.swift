@@ -105,7 +105,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let customConfig = EditorConfigurationBuilder()
             .fontSize(20)
             .isLineNumbersEnabled(false)
-            .enableSyntaxHighlighting(false)
+            .isSyntaxHighlightingEnabled(false)
             .build()
 
         let customEditor = CodeEditor(text: binding)
@@ -265,8 +265,8 @@ final class SwiftUIModifierTests: XCTestCase {
         )
 
         let config = EditorConfigurationBuilder()
-            .showMinimap(true)
-            .enableCodeFolding(true)
+            .isMinimapVisible(true)
+            .isCodeFoldingEnabled(true)
             .useHardwareAcceleration(true)
             .build()
 
@@ -288,7 +288,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let config = EditorConfigurationBuilder()
             .wrapLines(true)
             .fontSize(16)
-            .showMinimap(false)
+            .isMinimapVisible(false)
             .build()
 
         let editor = CodeEditor(text: binding)

@@ -169,7 +169,7 @@ extension SmartEditingEngine: NSTextViewDelegate {
         }
 
         // Handle enter key for auto-indentation
-        if text == "\n" && configuration.autoIndent {
+        if text == "\n" && configuration.isAutoIndentEnabled {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
                 guard let textStorage = codeEditorView.textStorage else { return true }
@@ -220,7 +220,7 @@ extension SmartEditingEngine: UITextViewDelegate {
         }
 
         // Handle enter key for auto-indentation
-        if text == "\n" && configuration.autoIndent {
+        if text == "\n" && configuration.isAutoIndentEnabled {
             let indentation = calculateIndentation(at: range.location)
             if !indentation.isEmpty {
                 let textStorage = codeEditorView.textStorage
@@ -329,7 +329,7 @@ public struct SmartEditingConfiguration {
 
     // Auto-indentation
     /// Whether automatic indentation is enabled
-    public var autoIndent = true
+    public var isAutoIndentEnabled = true
     /// Whether to insert spaces instead of tab characters
     public var insertSpacesForTabs = true
     /// The number of spaces per tab level

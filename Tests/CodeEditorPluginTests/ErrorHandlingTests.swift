@@ -153,7 +153,7 @@ final class ErrorHandlingTests: XCTestCase {
         // Test feature availability checks don't crash with edge cases
         let allFeatures: [PlatformCapabilities.EditorFeature] = [
             .syntaxHighlighting, .codeCompletion, .lineNumbers, .codeFolding,
-            .minimap, .multipleCursors, .smartBrackets, .autoIndent, .findReplace,
+            .minimap, .multipleCursors, .smartBrackets, .isAutoIndentEnabled, .findReplace,
             .columnSelection, .symbolNavigation, .breadcrumbs, .goToDefinition,
             .quickOpen, .hardwareAcceleration, .virtualScrolling, .incrementalParsing,
             .backgroundProcessing, .languageServerProtocol, .pluginSystem,
@@ -304,7 +304,7 @@ final class ErrorHandlingTests: XCTestCase {
             var config = EditorConfiguration.default
             config.display.fontSize = CGFloat(10 + (index % 20))
             config.layout.tabWidth = 2 + (index % 6)
-            config.display.highlightSelectedLine = index.isMultiple(of: 2)
+            config.display.isSelectedLineHighlighted = index.isMultiple(of: 2)
 
             editorView.configuration = config
         }

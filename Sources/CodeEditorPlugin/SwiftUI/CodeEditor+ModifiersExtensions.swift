@@ -152,12 +152,12 @@ extension CodeEditor {
     ///
     /// ```swift
     /// CodeEditor(text: $code)
-    ///     .highlightSelectedLine(true)  // Highlight current line
-    ///     .highlightSelectedLine(false) // No line highlighting
+    ///     .isSelectedLineHighlighted(true)  // Highlight current line
+    ///     .isSelectedLineHighlighted(false) // No line highlighting
     /// ```
-    public func highlightSelectedLine(_ highlight: Bool = true) -> some View {
+    public func isSelectedLineHighlighted(_ highlight: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.highlightSelectedLine = highlight
+            config.display.isSelectedLineHighlighted = highlight
         }
     }
 
@@ -329,12 +329,12 @@ extension CodeEditor {
     ///
     /// ```swift
     /// CodeEditor(text: $code)
-    ///     .showInvisibleCharacters(true)   // Show whitespace characters
-    ///     .showInvisibleCharacters(false)  // Hide whitespace characters
+    ///     .areInvisibleCharactersVisible(true)   // Show whitespace characters
+    ///     .areInvisibleCharactersVisible(false)  // Hide whitespace characters
     /// ```
-    public func showInvisibleCharacters(_ show: Bool = true) -> some View {
+    public func areInvisibleCharactersVisible(_ show: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.showInvisibleCharacters = show
+            config.display.areInvisibleCharactersVisible = show
         }
     }
 
@@ -350,12 +350,12 @@ extension CodeEditor {
     ///
     /// ```swift
     /// CodeEditor(text: $code)
-    ///     .showMinimap(true)   // Show minimap for navigation
-    ///     .showMinimap(false)  // Hide minimap to save space
+    ///     .isMinimapVisible(true)   // Show minimap for navigation
+    ///     .isMinimapVisible(false)  // Hide minimap to save space
     /// ```
-    public func showMinimap(_ show: Bool = true) -> some View {
+    public func isMinimapVisible(_ show: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.showMinimap = show
+            config.display.isMinimapVisible = show
         }
     }
 
@@ -394,12 +394,12 @@ extension CodeEditor {
     ///
     /// ```swift
     /// CodeEditor(text: $code)
-    ///     .enableCodeFolding(true)   // Enable code folding
-    ///     .enableCodeFolding(false)  // Disable code folding
+    ///     .isCodeFoldingEnabled(true)   // Enable code folding
+    ///     .isCodeFoldingEnabled(false)  // Disable code folding
     /// ```
-    public func enableCodeFolding(_ enable: Bool = true) -> some View {
+    public func isCodeFoldingEnabled(_ enable: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.enableCodeFolding = enable
+            config.display.isCodeFoldingEnabled = enable
         }
     }
 
@@ -415,12 +415,12 @@ extension CodeEditor {
     ///
     /// ```swift
     /// CodeEditor(text: $code)
-    ///     .showFoldingControls(true)   // Show folding controls
-    ///     .showFoldingControls(false)  // Hide folding controls
+    ///     .areFoldingControlsVisible(true)   // Show folding controls
+    ///     .areFoldingControlsVisible(false)  // Hide folding controls
     /// ```
-    public func showFoldingControls(_ show: Bool = true) -> some View {
+    public func areFoldingControlsVisible(_ show: Bool = true) -> some View {
         transformEnvironment(\.codeEditorConfiguration) { config in
-            config.display.showFoldingControls = show
+            config.display.areFoldingControlsVisible = show
         }
     }
 

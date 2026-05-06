@@ -32,7 +32,7 @@ extension View {
 ///         CodeEditor(text: $code)
 ///             .codeLanguage(.swift)
 ///             .lineNumbers(true)
-///             .highlightSelectedLine(true)
+///             .isSelectedLineHighlighted(true)
 ///             .frame(height: 400)
 ///     }
 /// }
@@ -75,11 +75,11 @@ extension View {
 /// CodeEditor(text: $code)
 ///     .codeLanguage(.swift)
 ///     .lineNumbers(true)
-///     .highlightSelectedLine(true)
+///     .isSelectedLineHighlighted(true)
 ///     .editable(true)
 ///     .codeFontSize(16)
 ///     .tabWidth(4)
-///     .showInvisibleCharacters(false)
+///     .areInvisibleCharactersVisible(false)
 ///     .onTextChange { newText in
 ///         print("Text changed: \\(newText.count) characters")
 ///     }

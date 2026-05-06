@@ -94,8 +94,8 @@ public final class GutterInteractionHandler {
               gutterView != nil else { return false }
 
         // Check if code folding is enabled
-        guard textView.configuration.display.enableCodeFolding,
-              textView.configuration.display.showFoldingControls else {
+        guard textView.configuration.display.isCodeFoldingEnabled,
+              textView.configuration.display.areFoldingControlsVisible else {
             return false
         }
 

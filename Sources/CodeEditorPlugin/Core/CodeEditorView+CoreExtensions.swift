@@ -87,10 +87,10 @@ extension CodeEditorView {
 
     /// Controls whether syntax highlighting is enabled (convenience property)
     public var isSyntaxHighlightingEnabled: Bool {
-        get { configuration.display.enableSyntaxHighlighting }
+        get { configuration.display.isSyntaxHighlightingEnabled }
         set {
             var display = configuration.display
-            display.enableSyntaxHighlighting = newValue
+            display.isSyntaxHighlightingEnabled = newValue
             configuration = configuration.with(display: display)
         }
     }
@@ -107,40 +107,40 @@ extension CodeEditorView {
 
     /// Controls whether the current line is highlighted (convenience property)
     public var isSelectedLineHighlightEnabled: Bool {
-        get { configuration.display.highlightSelectedLine }
+        get { configuration.display.isSelectedLineHighlighted }
         set {
             var display = configuration.display
-            display.highlightSelectedLine = newValue
+            display.isSelectedLineHighlighted = newValue
             configuration = configuration.with(display: display)
         }
     }
 
     /// Controls whether invisible characters are shown (convenience property)
     public var isInvisibleCharactersEnabled: Bool {
-        get { configuration.display.showInvisibleCharacters }
+        get { configuration.display.areInvisibleCharactersVisible }
         set {
             var display = configuration.display
-            display.showInvisibleCharacters = newValue
+            display.areInvisibleCharactersVisible = newValue
             configuration = configuration.with(display: display)
         }
     }
 
     /// Controls whether code folding is enabled (convenience property)
     public var isCodeFoldingEnabled: Bool {
-        get { configuration.display.enableCodeFolding }
+        get { configuration.display.isCodeFoldingEnabled }
         set {
             var display = configuration.display
-            display.enableCodeFolding = newValue
+            display.isCodeFoldingEnabled = newValue
             configuration = configuration.with(display: display)
         }
     }
 
     /// Controls whether folding controls are shown in the gutter (convenience property)
     public var isFoldingControlsEnabled: Bool {
-        get { configuration.display.showFoldingControls }
+        get { configuration.display.areFoldingControlsVisible }
         set {
             var display = configuration.display
-            display.showFoldingControls = newValue
+            display.areFoldingControlsVisible = newValue
             configuration = configuration.with(display: display)
         }
     }
@@ -149,10 +149,10 @@ extension CodeEditorView {
 
     /// Controls whether code completion is enabled (convenience property)
     public var isCodeCompletionEnabled: Bool {
-        get { configuration.behavior.enableCodeCompletion }
+        get { configuration.behavior.isCodeCompletionEnabled }
         set {
             var behavior = configuration.behavior
-            behavior.enableCodeCompletion = newValue
+            behavior.isCodeCompletionEnabled = newValue
             configuration = configuration.with(behavior: behavior)
         }
     }

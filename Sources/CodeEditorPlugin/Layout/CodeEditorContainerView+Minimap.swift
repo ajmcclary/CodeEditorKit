@@ -20,10 +20,10 @@ extension CodeEditorContainerView {
         }
 
         // Initially hidden based on configuration
-        minimapView.isHidden = !configuration.display.showMinimap
+        minimapView.isHidden = !configuration.display.isMinimapVisible
 
         // Generate initial minimap data
-        if configuration.display.showMinimap {
+        if configuration.display.isMinimapVisible {
             updateMinimap()
         }
 
@@ -72,7 +72,7 @@ extension CodeEditorContainerView {
     // MARK: - Minimap Updates
 
     func updateMinimap() {
-        guard configuration.display.showMinimap,
+        guard configuration.display.isMinimapVisible,
               let dataProvider = minimapDataProvider else {
             return
         }

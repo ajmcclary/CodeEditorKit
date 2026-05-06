@@ -198,7 +198,7 @@ public final class CodeFoldingCoordinatorService {
         textView: CodeEditorView,
         configuration: EditorConfiguration
     ) -> FoldControlLayout? {
-        guard configuration.display.enableCodeFolding && configuration.display.showFoldingControls else {
+        guard configuration.display.isCodeFoldingEnabled && configuration.display.areFoldingControlsVisible else {
             return nil
         }
 
@@ -259,7 +259,7 @@ public final class CodeFoldingCoordinatorService {
 
     /// Updates folding state based on text changes
     public func updateFoldingState(for textView: CodeEditorView, configuration: EditorConfiguration) {
-        guard configuration.display.enableCodeFolding else {
+        guard configuration.display.isCodeFoldingEnabled else {
             clearAllFolds()
             return
         }

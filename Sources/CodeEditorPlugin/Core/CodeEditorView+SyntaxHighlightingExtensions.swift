@@ -51,7 +51,7 @@ extension CodeEditorView {
         #endif
 
         // Apply syntax highlighting to the edited range if enabled
-        if configuration.display.enableSyntaxHighlighting {
+        if configuration.display.isSyntaxHighlightingEnabled {
             let editedRange = textStorage.editedRange
             if editedRange.location != NSNotFound {
                 applySyntaxHighlighting(in: editedRange)
@@ -107,16 +107,16 @@ extension CodeEditorView {
 
         // Store user preferences before adaptive mode overwrites them
         let userLineNumbersSetting = configuration.display.isLineNumbersEnabled
-        let userCodeFoldingSetting = configuration.display.enableCodeFolding
-        let userSyntaxHighlightingSetting = configuration.display.enableSyntaxHighlighting
+        let userCodeFoldingSetting = configuration.display.isCodeFoldingEnabled
+        let userSyntaxHighlightingSetting = configuration.display.isSyntaxHighlightingEnabled
 
         adaptivePerformanceMode.applyConfiguration(to: &updatedConfig)
 
         // Restore user-specified settings - adaptive mode should not override explicit user choices
         // Only apply adaptive performance to performance-related settings, not UI preferences
         updatedConfig.display.isLineNumbersEnabled = userLineNumbersSetting
-        updatedConfig.display.enableCodeFolding = userCodeFoldingSetting
-        updatedConfig.display.enableSyntaxHighlighting = userSyntaxHighlightingSetting
+        updatedConfig.display.isCodeFoldingEnabled = userCodeFoldingSetting
+        updatedConfig.display.isSyntaxHighlightingEnabled = userSyntaxHighlightingSetting
 
         // Only update configuration if it actually changed to prevent feedback loops
         if configuration != updatedConfig {
@@ -216,7 +216,7 @@ extension CodeEditorView {
                 textStorage.addAttribute(.foregroundColor, value: baseColor, range: fullRange)
 
                 // If syntax highlighting is enabled, re-apply it
-                if configuration.display.enableSyntaxHighlighting {
+                if configuration.display.isSyntaxHighlightingEnabled {
                     // This will trigger the async highlighter to apply token colors
                     applySyntaxHighlighting()
                 }

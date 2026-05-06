@@ -55,8 +55,8 @@ struct LSPExampleView: View {
 
     private func setupConfiguration() {
         // Enable features that benefit from LSP
-        configuration.behavior.enableCodeCompletion = true
-        configuration.display.enableSyntaxHighlighting = true
+        configuration.behavior.isCodeCompletionEnabled = true
+        configuration.display.isSyntaxHighlightingEnabled = true
 
         // Set workspace root for LSP
         configuration.workspaceRoot = getProjectRoot()

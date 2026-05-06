@@ -74,7 +74,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(adjustments.minimumTouchTargetSize, 24.0)
         XCTAssertEqual(adjustments.maxFileSize, 10_000_000)
         XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 1_000_000)
-        XCTAssertTrue(adjustments.showMinimap)
+        XCTAssertTrue(adjustments.isMinimapVisible)
         XCTAssertTrue(adjustments.enableMultiCursor)
         #else
         // iOS/Catalyst - values may be adjusted for iPad
@@ -89,9 +89,9 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 750_000) // iPad: 750K
             // Minimap depends on screen width
             if UIScreen.main.bounds.width > 1_000 {
-                XCTAssertTrue(adjustments.showMinimap)
+                XCTAssertTrue(adjustments.isMinimapVisible)
             } else {
-                XCTAssertFalse(adjustments.showMinimap)
+                XCTAssertFalse(adjustments.isMinimapVisible)
             }
             XCTAssertFalse(adjustments.enableMultiCursor)
         } else {
@@ -102,7 +102,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             XCTAssertEqual(adjustments.minimumTouchTargetSize, 44.0)
             XCTAssertEqual(adjustments.maxFileSize, 5_000_000)
             XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 500_000)
-            XCTAssertFalse(adjustments.showMinimap)
+            XCTAssertFalse(adjustments.isMinimapVisible)
             XCTAssertFalse(adjustments.enableMultiCursor)
         }
         #else
@@ -113,7 +113,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertEqual(adjustments.minimumTouchTargetSize, 44.0)
         XCTAssertEqual(adjustments.maxFileSize, 5_000_000)
         XCTAssertEqual(adjustments.maxSyntaxHighlightingLength, 500_000)
-        XCTAssertFalse(adjustments.showMinimap)
+        XCTAssertFalse(adjustments.isMinimapVisible)
         XCTAssertFalse(adjustments.enableMultiCursor)
         #endif
         #endif

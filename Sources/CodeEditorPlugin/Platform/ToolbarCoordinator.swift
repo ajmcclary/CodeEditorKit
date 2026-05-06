@@ -232,7 +232,7 @@ public final class ToolbarCoordinator: ObservableObject {
             return capabilities.isFeatureAvailable(.symbolNavigation)
 
         case .format:
-            return capabilities.isFeatureAvailable(.autoIndent)
+            return capabilities.isFeatureAvailable(.isAutoIndentEnabled)
 
         case .toggleLineNumbers:
             return true
@@ -438,7 +438,7 @@ extension ToolbarCoordinator {
         case .toggleMinimap:
             // Toggle minimap
             var config = textView.configuration
-            config.display.showMinimap.toggle()
+            config.display.isMinimapVisible.toggle()
             textView.configuration = config
             logger.debug("Toggle minimap action triggered")
 
