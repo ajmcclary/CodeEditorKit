@@ -217,7 +217,7 @@ public final class GutterSizingService {
 
         // Increase width for better accessibility on smaller screens
         #if canImport(UIKit)
-        let screenScale = UIScreen.main.scale
+        let screenScale = UIKitScreenMetrics.scale
         if screenScale > 2.0 {
             optimizedWidth *= 1.1 // 10% increase for high-resolution displays
         }

@@ -174,7 +174,7 @@ public final class PlatformDeviceService {
     /// Main screen scale factor
     public var screenScale: CGFloat {
         #if canImport(UIKit)
-        return UIScreen.main.scale
+        return UIKitScreenMetrics.scale
         #elseif canImport(AppKit)
         return NSScreen.main?.backingScaleFactor ?? 1.0
         #else
@@ -185,7 +185,7 @@ public final class PlatformDeviceService {
     /// Main screen bounds
     public var screenBounds: CGRect {
         #if canImport(UIKit)
-        return UIScreen.main.bounds
+        return UIKitScreenMetrics.bounds
         #elseif canImport(AppKit)
         return NSScreen.main?.frame ?? .zero
         #else

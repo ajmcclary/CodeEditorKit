@@ -259,7 +259,7 @@ public enum PlatformConfigurations {
         // Apply display-specific adjustments
         #if canImport(UIKit) && !targetEnvironment(macCatalyst)
         // Enable smooth scrolling for ProMotion displays
-        if UIScreen.main.maximumFramesPerSecond > 60 {
+        if UIKitScreenMetrics.maximumFramesPerSecond > 60 {
             config.performance.smoothScrolling = true
         }
         #elseif targetEnvironment(macCatalyst)

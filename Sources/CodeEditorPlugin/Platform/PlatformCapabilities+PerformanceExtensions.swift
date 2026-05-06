@@ -182,7 +182,7 @@ extension PlatformCapabilities {
         return true
         #elseif canImport(UIKit)
         // iOS devices with ProMotion
-        return UIScreen.main.maximumFramesPerSecond > 60
+        return UIKitScreenMetrics.maximumFramesPerSecond > 60
         #else
         return false
         #endif

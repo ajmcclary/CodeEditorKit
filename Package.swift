@@ -120,7 +120,8 @@ let package = Package(
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             exclude: [
-                "__Snapshots__"
+                "__Snapshots__",
+                "Theming/__Snapshots__"
             ],
             swiftSettings: swiftSettings
         ),
@@ -144,7 +145,7 @@ let package = Package(
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             exclude: [
-                "__Snapshots__"
+                "Snapshots"
             ],
             swiftSettings: swiftSettings
         )

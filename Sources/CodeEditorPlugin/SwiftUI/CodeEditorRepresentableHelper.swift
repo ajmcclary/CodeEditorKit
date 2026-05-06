@@ -141,7 +141,7 @@ enum CodeEditorRepresentableHelper {
         let originalFrame = textView.frame
 
         // Set a temporary width for size calculation
-        let width = proposal.width ?? UIScreen.main.bounds.width
+        let width = proposal.width ?? UIKitScreenMetrics.bounds(for: textView).width
         textView.frame.size.width = width
 
         // Calculate content size

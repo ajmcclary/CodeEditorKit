@@ -32,6 +32,11 @@ extension CodeEditorView {
 
         // Support for larger text sizes
         adjustsFontForContentSizeCategory = true
+        if #available(iOS 17.0, macCatalyst 17.0, *) {
+            registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (editor: Self, _) in
+                editor.applyDynamicTypeScaling()
+            }
+        }
 
         // Configure text input traits for better accessibility
         #if !targetEnvironment(macCatalyst)
@@ -250,6 +255,8 @@ extension CodeEditorView {
     }
 
     // Override trait collection changes to respond to Dynamic Type
+    @available(iOS, introduced: 8.0, deprecated: 17.0)
+    @available(macCatalyst, introduced: 13.0, deprecated: 17.0)
     override open func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
 

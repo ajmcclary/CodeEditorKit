@@ -1,10 +1,10 @@
 # CodeEditorPlugin
 
-[![Tests](https://img.shields.io/badge/test%20files-66-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/test%20files-125-brightgreen)](#testing)
 [![SwiftLint](https://img.shields.io/badge/SwiftLint-0%20violations-brightgreen)](#testing)
 [![Swift](https://img.shields.io/badge/Swift-6.3%2B-orange)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
-[![Files](https://img.shields.io/badge/source%20files-437-blue)](#architecture)
+[![Files](https://img.shields.io/badge/source%20files-481-blue)](#architecture)
 
 A powerful, production-ready code editor component for macOS, iOS, and Mac Catalyst. Built with Swift 6.3 and featuring syntax highlighting for 20 languages, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
@@ -14,9 +14,9 @@ A powerful, production-ready code editor component for macOS, iOS, and Mac Catal
 - **Cross-Platform**: Native performance on macOS, iOS, and Mac Catalyst 
 - **Swift 6 Concurrency**: Actor-based architecture for thread safety and performance
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation
-- **Themeable**: Built-in themes (Xcode, VS Code Dark, GitHub, Solarized)
+- **Themeable**: Bundled LCARS Dark theme plus Zed-compatible JSON theme loading
 - **SwiftUI Native**: First-class SwiftUI integration with environment-based configuration
-- **Extensible**: Language Server Protocol support with local servers on macOS and remote servers on all supported platforms
+- **Extensible**: Language Server Protocol support with local server management on macOS and remote WebSocket clients on all supported platforms
 
 ## 🚀 Quick Start
 
@@ -147,11 +147,11 @@ CodeEditor(text: $code)
 
 ### Themes
 
-Built-in themes adapt to light/dark mode:
+The bundled default theme is LCARS Dark. Additional Zed-compatible theme JSON can be decoded through the theme loader APIs.
 
 ```swift
 CodeEditor(text: $code)
-    .codeTheme(.xcode)      // or .vsDark, .github, .solarized
+    .codeTheme(.dark)       // .default and .dark resolve to LCARS Dark
 ```
 
 ## 🔧 Advanced Usage
@@ -208,23 +208,18 @@ textView.language = .python
 
 ### Language Server Protocol (LSP)
 
-The plugin now supports LSP on all platforms through remote WebSocket connections:
+Local LSP server management is macOS-only. Remote WebSocket LSP clients are available on every supported platform.
 
 ```swift
-// Local LSP (macOS only)
-config.lsp.servers["swift"] = LSPServerConfiguration.local(
-    LocalLSPConfiguration(
-        executablePath: "/usr/bin/sourcekit-lsp"
-    )
-)
-
-// Remote LSP (all platforms)
-config.lsp.servers["swift"] = LSPServerConfiguration.remote(
+let client = await LSPClient.createAndSetup()
+let server = LSPServerConfiguration.remote(
     RemoteLSPConfiguration(
         serverURL: URL(string: "wss://lsp.example.com/swift")!,
         authentication: .bearerToken("your-token")
     )
 )
+
+try await client.connect(configuration: server, language: .swift)
 ```
 
 ## 🧪 Testing

@@ -11,6 +11,47 @@ import AppKit
 import UIKit
 #endif
 
+#if canImport(UIKit)
+@MainActor
+private final class GutterDisplayLinkTarget: NSObject {
+    weak var gutterView: GutterView?
+
+    init(gutterView: GutterView) {
+        self.gutterView = gutterView
+    }
+
+    @objc func displayLinkFired() {
+        gutterView?.displayLinkFired()
+    }
+}
+
+private final class GutterDisplayLinkHandle: @unchecked Sendable {
+    private let target: GutterDisplayLinkTarget
+    private var displayLink: CADisplayLink?
+
+    @MainActor
+    init(gutterView: GutterView) {
+        let target = GutterDisplayLinkTarget(gutterView: gutterView)
+        let displayLink = CADisplayLink(target: target, selector: #selector(GutterDisplayLinkTarget.displayLinkFired))
+
+        displayLink.add(to: .main, forMode: .common)
+        displayLink.isPaused = true
+
+        self.target = target
+        self.displayLink = displayLink
+    }
+
+    @MainActor
+    func setPaused(_ isPaused: Bool) {
+        displayLink?.isPaused = isPaused
+    }
+
+    deinit {
+        displayLink?.invalidate()
+    }
+}
+#endif
+
 // MARK: - GutterView Protocol
 
 /// Protocol defining the common interface for gutter view functionality
@@ -66,7 +107,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     }
 
     #if canImport(UIKit)
-    private var displayLink: CADisplayLink?
+    private var displayLinkHandle: GutterDisplayLinkHandle?
     private var lastContentOffset: CGPoint = .zero
     private var pauseTask: Task<Void, Never>?
     #endif
@@ -160,12 +201,10 @@ public class GutterView: PlatformView, GutterViewProtocol {
 
     #if canImport(UIKit)
     private func setupDisplayLink() {
-        displayLink = CADisplayLink(target: self, selector: #selector(displayLinkFired))
-        displayLink?.add(to: .main, forMode: .common)
-        displayLink?.isPaused = true
+        displayLinkHandle = GutterDisplayLinkHandle(gutterView: self)
     }
 
-    @objc private func displayLinkFired() {
+    func displayLinkFired() {
         guard let scrollView = textView?.crossPlatformEnclosingScrollView else { return }
         let currentOffset = scrollView.contentOffset
 
@@ -183,7 +222,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
                 try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
                 // Only pause if we haven't moved recently
                 if self?.lastContentOffset == scrollView.contentOffset {
-                    self?.displayLink?.isPaused = true
+                    self?.displayLinkHandle?.setPaused(true)
                     self?.pauseTask = nil
                 }
             } catch {
@@ -199,8 +238,6 @@ public class GutterView: PlatformView, GutterViewProtocol {
         #if canImport(UIKit)
         pauseTask?.cancel()
         pauseTask = nil
-        displayLink?.invalidate()
-        displayLink = nil
         #endif
 
         // Observer cleanup is handled by NotificationCenter automatically on deallocation
@@ -374,7 +411,7 @@ extension GutterView {
 extension GutterView: UITextViewDelegate {
     @objc public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // Activate display link for smooth updates during scrolling
-        displayLink?.isPaused = false
+        displayLinkHandle?.setPaused(false)
 
         // Store the current offset
         lastContentOffset = scrollView.contentOffset
@@ -398,13 +435,13 @@ extension GutterView: UITextViewDelegate {
 
     @objc public func scrollViewWillBeginDragging(_: UIScrollView) {
         // Start display link when scrolling begins
-        displayLink?.isPaused = false
+        displayLinkHandle?.setPaused(false)
     }
 
     public func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
         if !decelerate {
             // Pause display link when scrolling stops without deceleration
-            displayLink?.isPaused = true
+            displayLinkHandle?.setPaused(true)
             // Ensure final update
             setNeedsDisplay()
         }
@@ -412,7 +449,7 @@ extension GutterView: UITextViewDelegate {
 
     public func scrollViewDidEndDecelerating(_: UIScrollView) {
         // Pause display link when scrolling completely stops
-        displayLink?.isPaused = true
+        displayLinkHandle?.setPaused(true)
         // Ensure final update
         setNeedsDisplay()
     }

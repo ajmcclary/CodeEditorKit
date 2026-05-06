@@ -111,7 +111,7 @@ public struct PlatformAdjustments: Sendable {
                 minimumTouchTargetSize: 44.0,
                 maxFileSize: 8_000_000, // 8MB for iPad
                 maxSyntaxHighlightingLength: 750_000,
-                showMinimap: UIDevice.current.userInterfaceIdiom == .pad && UIScreen.main.bounds.width > 1_000,
+                showMinimap: UIDevice.current.userInterfaceIdiom == .pad && UIKitScreenMetrics.bounds.width > 1_000,
                 enableMultiCursor: false
             )
         } else if UIDevice.current.userInterfaceIdiom == .phone {

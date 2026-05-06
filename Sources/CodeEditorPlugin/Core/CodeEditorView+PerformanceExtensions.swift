@@ -48,7 +48,7 @@ extension CodeEditorView {
         wantsLayer = true
         #elseif canImport(UIKit)
         layer.shouldRasterize = false // Let the system decide
-        layer.rasterizationScale = UIScreen.main.scale
+        layer.rasterizationScale = UIKitScreenMetrics.scale(for: self)
         #endif
     }
 

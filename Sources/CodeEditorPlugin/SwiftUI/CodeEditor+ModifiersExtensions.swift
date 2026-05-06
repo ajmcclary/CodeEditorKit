@@ -15,7 +15,7 @@ extension View {
     /// ```swift
     /// CodeEditor(text: $code)
     ///     .codeTheme(.default)
-    ///     .codeTheme(.monokai)
+    ///     .codeTheme(.dark)
     ///     .codeTheme(customTheme)
     /// ```
     public func codeTheme(_ theme: Theme) -> some View {

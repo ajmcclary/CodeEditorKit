@@ -46,10 +46,10 @@ extension View {
 /// // Using modifiers (recommended)
 /// CodeEditor(text: $code)
 ///     .codeLanguage(.swift)
-///     .codeTheme(.monokai)
+///     .codeTheme(.dark)
 ///
 /// // Using factory method
-/// CodeEditor.withLanguage($code, language: .swift, theme: .monokai)
+/// CodeEditor.withLanguage($code, language: .swift, theme: .dark)
 /// ```
 ///
 /// ## Environment-Based Configuration

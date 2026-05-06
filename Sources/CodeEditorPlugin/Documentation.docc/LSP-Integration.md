@@ -222,15 +222,22 @@ editor.referencesAction = { position in
 ```swift
 // SwiftUI
 struct LSPEditor: View {
-    @State private var config = EditorConfiguration()
+    @State private var lspClient: LSPClient?
+    @State private var code = ""
     
     var body: some View {
         CodeEditor(text: $code)
-            .onAppear {
-                config.lsp.enabled = true
-                config.lsp.serverPath = "/usr/bin/sourcekit-lsp"
+            .task {
+                let client = await LSPClient.createAndSetup()
+                let server = LSPServerConfiguration.remote(
+                    RemoteLSPConfiguration.publicServer(
+                        url: URL(string: "wss://lsp.example.com/swift")!
+                    )
+                )
+
+                try? await client.connect(configuration: server, language: .swift)
+                lspClient = client
             }
-            .environment(\.codeEditorConfiguration, config)
     }
 }
 ```
@@ -240,26 +247,25 @@ struct LSPEditor: View {
 Configure specific language servers:
 
 ```swift
-// Swift
-config.lsp.servers["swift"] = LSPServerConfig(
-    executable: "/usr/bin/sourcekit-lsp",
-    arguments: [],
-    rootPath: projectPath
-)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+let manager = LSPManager(memoryMonitor: MemoryMonitor(), workspaceRoot: projectPath)
 
-// TypeScript
-config.lsp.servers["typescript"] = LSPServerConfig(
-    executable: "typescript-language-server",
-    arguments: ["--stdio"],
-    rootPath: projectPath
-)
+// Swift local server
+manager.registerLanguageServer(LanguageServerConfig(
+    languageId: "swift",
+    serverPath: "/usr/bin/sourcekit-lsp",
+    fileExtensions: ["swift"]
+))
 
-// Python
-config.lsp.servers["python"] = LSPServerConfig(
-    executable: "pylsp",
-    arguments: [],
-    rootPath: projectPath
-)
+try await manager.startLanguageServer(for: "swift")
+
+// Python local server
+manager.registerLanguageServer(LanguageServerConfig(
+    languageId: "python",
+    serverPath: "pylsp",
+    fileExtensions: ["py", "pyw"]
+))
+#endif
 ```
 
 ### Remote LSP Configuration (iOS/Catalyst Compatible)
@@ -268,7 +274,8 @@ For platforms without local process support, use remote LSP servers:
 
 ```swift
 // Remote LSP for iOS/Catalyst
-config.lsp.servers["swift"] = LSPServerConfig.remote(
+let client = await LSPClient.createAndSetup()
+let server = LSPServerConfiguration.remote(
     RemoteLSPConfiguration(
         serverURL: URL(string: "wss://lsp.example.com/swift")!,
         authentication: .bearerToken("your-token"),
@@ -276,22 +283,26 @@ config.lsp.servers["swift"] = LSPServerConfig.remote(
     )
 )
 
+try await client.connect(configuration: server, language: .swift)
+
 // SwiftUI example for iOS
 struct IOSLSPEditor: View {
-    @State private var config = EditorConfiguration()
+    @State private var lspClient: LSPClient?
+    @State private var code = ""
     
     var body: some View {
         CodeEditor(text: $code)
-            .onAppear {
+            .task {
                 // Remote LSP works on all platforms
-                config.lsp.enabled = true
-                config.lsp.servers["typescript"] = .remote(
+                let client = await LSPClient.createAndSetup()
+                let server = LSPServerConfiguration.remote(
                     RemoteLSPConfiguration.publicServer(
                         url: URL(string: "wss://typescript-lsp.cloud.com")!
                     )
                 )
+                try? await client.connect(configuration: server, language: .typescript)
+                lspClient = client
             }
-            .environment(\.codeEditorConfiguration, config)
     }
 }
 ```

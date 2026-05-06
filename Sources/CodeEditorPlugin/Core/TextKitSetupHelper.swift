@@ -243,7 +243,7 @@ public enum TextKitSetupHelper {
         #else
         // iOS performance optimizations
         textView.layer.shouldRasterize = false
-        textView.layer.rasterizationScale = UIScreen.main.scale
+        textView.layer.rasterizationScale = UIKitScreenMetrics.scale(for: textView)
         #endif
     }
 
