@@ -154,6 +154,9 @@ public struct CodeEditor: View {
     internal var onSelectionChange: (@Sendable (Range<String.Index>?) -> Void)?
     internal var completionProvider: (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
 
+    // Interaction state (opt-in, two-way binding)
+    internal var interactionState: Binding<EditorInteractionState> = .constant(EditorInteractionState())
+
     // Debouncing
     private let textDebounceInterval: Duration?
 
@@ -223,6 +226,20 @@ public struct CodeEditor: View {
         self.textDebounceInterval = debounceInterval
         self.initialLanguage = language
         self.initialTheme = theme
+    }
+
+    // MARK: - Modifiers
+
+    /// Binds editor interaction state (cursor, scroll, find, folds) for
+    /// persistence and restoration. The binding is two-way — the editor
+    /// updates it on user interaction, and external writes are reflected
+    /// in the editor.
+    ///
+    /// Set to `nil` (the default) to disable interaction state tracking.
+    public func editorInteractionState(_ binding: Binding<EditorInteractionState>) -> Self {
+        var copy = self
+        copy.interactionState = binding
+        return copy
     }
 
     // MARK: - Body
