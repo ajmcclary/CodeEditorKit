@@ -211,6 +211,12 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Line index cache for optimized line number calculations
     internal let lineIndexCache = LineIndexCache()
 
+    /// Text edit event hub for broadcasting edit notifications to observers.
+    /// Consumers (RangeStore sync, highlighting, folding, gutter) subscribe
+    /// to receive canonical edit events instead of watching `NSTextStorage`
+    /// notifications independently.
+    internal let textEditEventHub = TextEditEventHub()
+
     /// Memory monitor for tracking and managing memory usage
     /// 
     /// Set this property to provide a custom memory monitor instance or to share

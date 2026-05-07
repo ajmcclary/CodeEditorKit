@@ -19,6 +19,20 @@ extension CodeEditorView {
             return
         }
 
+        // Publish a canonical edit event for all observers.
+        let editedMask = textStorage.editedMask
+        let editedRange = textStorage.editedRange
+        if editedRange.location != NSNotFound {
+            let changeInLength = textStorage.changeInLength
+            let event = TextEditEvent(
+                editedRange: editedRange,
+                changeInLength: changeInLength,
+                documentLength: textStorage.length,
+                editedCharacters: editedMask.contains(.editedCharacters)
+            )
+            textEditEventHub.publish(event)
+        }
+
         // Invalidate line index cache when text changes
         lineIndexCache.invalidate()
 
@@ -68,7 +82,6 @@ extension CodeEditorView {
         #endif
 
         // Publish text changed event
-        let editedRange = textStorage.editedRange
         if editedRange.location != NSNotFound {
             #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             eventPublisher.publishSync(.textDidChange(string))
