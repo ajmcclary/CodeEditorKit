@@ -8,6 +8,31 @@ import UIKit
 /// Asynchronous syntax highlighter with debouncing and cancellation support
 @MainActor
 public final class AsyncSyntaxHighlighter {
+    // MARK: - Adaptive editor text color
+
+    /// Dynamic foreground for unhighlighted code (identifier / unknown
+    /// tokens). Cream on dark appearance, near-black on light. Resolves
+    /// at draw time, so theme/appearance flips repaint without needing a
+    /// fresh highlight pass.
+    static let editorAdaptiveTextColor: PlatformColor = {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        return NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .vibrantDark]) != nil
+            return isDark
+                ? NSColor(srgbRed: 242.0 / 255.0, green: 231.0 / 255.0, blue: 216.0 / 255.0, alpha: 1.0)
+                : NSColor(srgbRed: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
+        }
+        #elseif canImport(UIKit)
+        return UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 242.0 / 255.0, green: 231.0 / 255.0, blue: 216.0 / 255.0, alpha: 1.0)
+                : UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
+        }
+        #else
+        return PlatformColors.label
+        #endif
+    }()
+
     // MARK: - Properties
 
     private let coordinator: SyntaxHighlightingCoordinator
@@ -390,8 +415,14 @@ public final class AsyncSyntaxHighlighter {
         // Update text storage efficiently with both TextKit1 and TextKit2 support
         textStorage.beginEditing()
 
-        // First, apply base text color to the entire range
-        let baseTextColor = textView.textColor ?? PlatformColors.label
+        // First, apply base text color to the entire range. Use an
+        // explicitly dynamic NSColor whose provider closure runs at draw
+        // time against the textView's effective appearance so the editor
+        // tracks Light/Dark theme switching without re-highlighting.
+        // We don't trust NSColor.textColor here because the system color's
+        // resolution path through NSAttributedString proved unreliable
+        // (rendered as a baked, mis-tinted value in practice).
+        let baseTextColor: PlatformColor = Self.editorAdaptiveTextColor
 
         #if targetEnvironment(macCatalyst)
         // On Mac Catalyst with TextKit1, we need to ensure the base color is visible
@@ -419,6 +450,20 @@ public final class AsyncSyntaxHighlighter {
                 token.range.location < textStorage.length,
                 token.range.location + token.range.length <= textStorage.length
             else {
+                continue
+            }
+
+            // .identifier / .unknown / .punctuation render in the base
+            // editor text color. Their hardcoded adaptiveColors use
+            // NSColor.{label,secondaryLabel}.withAlphaComponent, which
+            // collapses to a static color resolved against the *system*
+            // appearance and produces invisible dark-on-dark (or
+            // washed-out light-on-light) when the active theme's
+            // appearance disagrees with the system's.
+            if token.type == .identifier
+                || token.type == .unknown
+                || token.type == .punctuation {
+                tokensByColor[baseTextColor, default: []].append(token.range)
                 continue
             }
 
@@ -472,9 +517,8 @@ public final class AsyncSyntaxHighlighter {
 
         textStorage.beginEditing()
 
-        // Instead of removing the color, reset to the base text color
-        let baseTextColor = textView.textColor ?? PlatformColors.label
-        textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: range)
+        // Reset to the adaptive editor text color (matches applyTokens).
+        textStorage.addAttribute(.foregroundColor, value: Self.editorAdaptiveTextColor, range: range)
 
         textStorage.endEditing()
     }

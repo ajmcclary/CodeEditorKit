@@ -5,19 +5,25 @@ import SwiftUI
 // MARK: - Toggle
 
 struct ToggleRow: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: Bool
 
     var body: some View {
-        Toggle(isOn: $value) { Text(label).font(.system(size: 11)) }
-            .toggleStyle(.switch)
-            .controlSize(.mini)
+        Toggle(isOn: $value) {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
+        }
+        .toggleStyle(.switch)
+        .controlSize(.mini)
     }
 }
 
 // MARK: - Stepper (Int)
 
 struct StepperRow: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: Int
     let range: ClosedRange<Int>
@@ -25,7 +31,9 @@ struct StepperRow: View {
 
     var body: some View {
         HStack {
-            Text(label).font(.system(size: 11))
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Spacer()
             Stepper(value: $value, in: range, step: step) {
                 Text("\(value)").font(.system(size: 11, design: .monospaced))
@@ -34,6 +42,7 @@ struct StepperRow: View {
             .labelsHidden()
             Text("\(value)")
                 .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
                 .frame(width: 56, alignment: .trailing)
         }
     }
@@ -42,6 +51,7 @@ struct StepperRow: View {
 // MARK: - Slider (Double)
 
 struct SliderRow: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -51,9 +61,13 @@ struct SliderRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
-                Text(label).font(.system(size: 11))
+                Text(label)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(tokens: theme.style.text.base))
                 Spacer()
-                Text(value, format: format).font(.system(size: 11, design: .monospaced))
+                Text(value, format: format)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(Color(tokens: theme.style.text.base))
             }
             if step > 0 {
                 Slider(value: $value, in: range, step: step)
@@ -87,6 +101,7 @@ struct CGFloatSliderRow: View {
 // MARK: - Picker (generic)
 
 struct PickerRow<T: Hashable & Sendable>: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: T
     let cases: [T]
@@ -94,7 +109,9 @@ struct PickerRow<T: Hashable & Sendable>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 11, weight: .semibold))
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Picker(label, selection: $value) {
                 ForEach(cases, id: \.self) { item in
                     Text(display(item)).tag(item)
@@ -109,12 +126,15 @@ struct PickerRow<T: Hashable & Sendable>: View {
 // MARK: - Color (PlatformColor)
 
 struct ColorRow: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: PlatformColor
 
     var body: some View {
         HStack {
-            Text(label).font(.system(size: 11))
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Spacer()
             ColorPicker(label, selection: bridgedBinding, supportsOpacity: true)
                 .labelsHidden()
@@ -132,13 +152,16 @@ struct ColorRow: View {
 // MARK: - Char-set (Set<Character>)
 
 struct CharSetRow: View {
+    @Environment(\.codeEditorTheme) private var theme
     let label: String
     @Binding var value: Set<Character>
     @State private var editing: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 11, weight: .semibold))
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             TextField("comma-separated", text: $editing)
                 .font(.system(size: 11, design: .monospaced))
                 .textFieldStyle(.roundedBorder)

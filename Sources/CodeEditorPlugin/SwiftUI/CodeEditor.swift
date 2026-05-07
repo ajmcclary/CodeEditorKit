@@ -1,17 +1,6 @@
 #if canImport(SwiftUI)
 @preconcurrency import SwiftUI
 
-extension View {
-    @ViewBuilder
-    func codeEditorFocusable() -> some View {
-        if #available(macOS 14.0, iOS 17.0, macCatalyst 17.0, *) {
-            self.focusable()
-        } else {
-            self
-        }
-    }
-}
-
 /// Modern, idiomatic SwiftUI code editor with declarative configuration.
 ///
 /// `CodeEditor` provides a native SwiftUI interface for code editing with full integration
@@ -146,9 +135,6 @@ public struct CodeEditor: View {
 
     @Binding private var text: String
 
-    // Focus management
-    @FocusState private var isFocused: Bool
-
     // Search
     @State private var searchText = ""
     @State private var isSearching = false
@@ -262,17 +248,11 @@ public struct CodeEditor: View {
             theme: effectiveTheme,
             configuration: effectiveConfiguration,
             memoryMonitor: effectiveMemoryMonitor,
-            isFocused: Binding(
-                get: { isFocused },
-                set: { isFocused = $0 }
-            ),
             textDebounceInterval: effectiveDebounceInterval,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )
         .searchable(text: $searchText)
-        .codeEditorFocusable()
-        .focused($isFocused)
         .environment(\.codeEditorLanguage, effectiveLanguage)
         .environment(\.codeEditorTheme, effectiveTheme)
         .environment(\.codeEditorConfiguration, environment.configuration)

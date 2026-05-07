@@ -38,9 +38,9 @@ public struct PlatformGlassSurface: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
+            .background(theme.glassTintColor.opacity(scaledOpacity))
             .background(roleBackground)
             .background(.regularMaterial)
-            .overlay(theme.glassTintColor.opacity(scaledOpacity))
             .shadow(
                 color: shadowColor,
                 radius: shadowRadius,

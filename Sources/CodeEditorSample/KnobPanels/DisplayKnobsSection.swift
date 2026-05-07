@@ -2,11 +2,14 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct DisplayKnobsSection: View {
+    @Environment(\.codeEditorTheme) private var theme
     @Binding var configuration: EditorConfiguration
     @State private var expanded: Bool = true
 
     var body: some View {
-        DisclosureGroup("Display", isExpanded: $expanded) {
+        DisclosureGroup(
+            isExpanded: $expanded,
+            content: {
             VStack(alignment: .leading, spacing: 8) {
                 CGFloatSliderRow(
                     label: "fontSize",
@@ -31,8 +34,13 @@ struct DisplayKnobsSection: View {
                 ToggleRow(label: "isMinimapVisible", value: $configuration.display.isMinimapVisible)
             }
             .padding(.vertical, 4)
-        }
-        .font(.system(size: 11, weight: .semibold))
+            },
+            label: {
+                Text("Display")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(tokens: theme.style.text.base))
+            }
+        )
         .padding(.horizontal, 12)
     }
 }

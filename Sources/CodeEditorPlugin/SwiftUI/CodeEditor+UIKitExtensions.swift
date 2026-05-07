@@ -11,7 +11,6 @@ struct CodeEditorRepresentable: UIViewRepresentable {
     let theme: Theme
     let configuration: EditorConfiguration
     let memoryMonitor: MemoryMonitor
-    @Binding var isFocused: Bool
     let textDebounceInterval: Duration
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?

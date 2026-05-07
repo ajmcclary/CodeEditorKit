@@ -20,7 +20,9 @@ struct SwitcherSection: View {
 
     private var themePicker: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Theme").font(.system(size: 11, weight: .semibold))
+            Text("Theme")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Picker("Theme", selection: themeBinding) {
                 ForEach(ThemeCatalog.all, id: \.name) { theme in
                     Text(theme.name).tag(theme.name)
@@ -33,7 +35,9 @@ struct SwitcherSection: View {
 
     private var languagePicker: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Language").font(.system(size: 11, weight: .semibold))
+            Text("Language")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Picker("Language", selection: languageBinding) {
                 ForEach(LanguageCatalog.all, id: \.self) { language in
                     Text(language.name).tag(language)
@@ -47,7 +51,9 @@ struct SwitcherSection: View {
 
     private var presetPicker: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Preset").font(.system(size: 11, weight: .semibold))
+            Text("Preset")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
             Picker("Preset", selection: presetBinding) {
                 ForEach(PresetCatalog.all) { preset in
                     Text(preset.name).tag(preset.id)

@@ -2,19 +2,27 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct PerformanceKnobsSection: View {
+    @Environment(\.codeEditorTheme) private var theme
     @Binding var configuration: EditorConfiguration
     @State private var expanded: Bool = false
 
     var body: some View {
-        DisclosureGroup("Performance", isExpanded: $expanded) {
-            VStack(alignment: .leading, spacing: 8) {
-                limitRows
-                strategyRows
-                debounceRows
+        DisclosureGroup(
+            isExpanded: $expanded,
+            content: {
+                VStack(alignment: .leading, spacing: 8) {
+                    limitRows
+                    strategyRows
+                    debounceRows
+                }
+                .padding(.vertical, 4)
+            },
+            label: {
+                Text("Performance")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(tokens: theme.style.text.base))
             }
-            .padding(.vertical, 4)
-        }
-        .font(.system(size: 11, weight: .semibold))
+        )
         .padding(.horizontal, 12)
     }
 

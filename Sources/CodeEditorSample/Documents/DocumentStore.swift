@@ -22,14 +22,34 @@ final class DocumentStore {
     /// Counter for `Untitled-N.swift` naming.
     private var untitledCounter: Int
 
-    /// Boot state: one empty `Untitled-1.swift` tab, active.
+    /// Boot state: one `Untitled-1.swift` tab seeded with a small Swift
+    /// snippet so the syntax highlighter and theme have something to
+    /// render on first launch.
     init() {
         let first = TabModel(name: "Untitled-1.swift", language: .swift)
         self.tabs = [first]
         self.activeTabID = first.id
-        self.texts = [first.id: ""]
+        self.texts = [first.id: Self.sampleSwift]
         self.untitledCounter = 1
     }
+
+    private static let sampleSwift = """
+    import Foundation
+
+    /// Greets the named person and returns the rendered string.
+    func greet(_ name: String, times: Int = 1) -> String {
+        var lines: [String] = []
+        for index in 0..<times {
+            lines.append("Hello, \\(name)! (\\(index + 1))")
+        }
+        return lines.joined(separator: "\\n")
+    }
+
+    let names = ["Ada", "Grace", "Linus"]
+    for name in names {
+        print(greet(name, times: 2))
+    }
+    """
 
     // MARK: - Tab lifecycle
 

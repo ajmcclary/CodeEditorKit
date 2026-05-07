@@ -339,14 +339,20 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // Set language
         textView.language = language
 
-        // Apply theme colors
-        textView.backgroundColor = PlatformColor(tokens: theme.style.editor.background)
-
-        // Apply text color
-        #if targetEnvironment(macCatalyst)
+        // Editor background + foreground intentionally use system-adaptive
+        // colors so they follow the SwiftUI .preferredColorScheme tied to
+        // the active theme's appearance. This keeps the canvas legible
+        // when switching between dark and light theme variants without
+        // baking specific theme tokens (some are near-black even for
+        // "light" theme families).
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textView.backgroundColor = .textBackgroundColor
+        textView.textColor = .textColor
+        #elseif targetEnvironment(macCatalyst)
         applyCatalystThemeColors(theme: theme, to: textView)
         #else
-        textView.textColor = PlatformColor(tokens: theme.style.editor.foreground)
+        textView.backgroundColor = .systemBackground
+        textView.textColor = .label
         #endif
 
         // Apply initial configuration
@@ -406,14 +412,16 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
             textView.language = language
         }
 
-        // Apply theme colors
-        textView.backgroundColor = PlatformColor(tokens: theme.style.editor.background)
-
-        // Apply text color
-        #if targetEnvironment(macCatalyst)
+        // Re-assert system-adaptive editor colors so the canvas tracks
+        // the theme appearance via .preferredColorScheme on every update.
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textView.backgroundColor = .textBackgroundColor
+        textView.textColor = .textColor
+        #elseif targetEnvironment(macCatalyst)
         applyCatalystThemeColors(theme: theme, to: textView)
         #else
-        textView.textColor = PlatformColor(tokens: theme.style.editor.foreground)
+        textView.backgroundColor = .systemBackground
+        textView.textColor = .label
         #endif
 
         // Update configuration if changed

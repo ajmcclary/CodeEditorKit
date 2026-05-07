@@ -2,12 +2,26 @@ import SwiftUI
 
 @main
 struct CodeEditorSampleApp: App {
+    #if canImport(AppKit)
+    @NSApplicationDelegateAdaptor(CodeEditorSampleAppDelegate.self) private var appDelegate
+    #endif
+
+    /// Shared @Observable state for the whole app — main window and
+    /// Settings (cmd-,) window read and mutate the same instance.
+    @State private var appState = AppState()
+
     var body: some Scene {
         WindowGroup("CodeEditorSample") {
-            RootWindow()
+            RootWindow(appState: appState)
                 .frame(minWidth: 980, minHeight: 640)
                 .frame(width: 1_380, height: 880)
         }
         .windowResizability(.contentSize)
+
+        #if canImport(AppKit)
+        Settings {
+            SettingsScene(appState: appState)
+        }
+        #endif
     }
 }
