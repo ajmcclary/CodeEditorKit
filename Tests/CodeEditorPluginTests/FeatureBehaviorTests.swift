@@ -48,12 +48,26 @@ final class FeatureBehaviorTests: CleanupTestCase {
         engine.updateFoldableRegions()
 
         let region = try await waitForFoldableRegion(in: engine)
+        XCTAssertEqual(engine.folds(in: region.range).first?.range, region.range)
+
         XCTAssertTrue(engine.fold(region))
         XCTAssertTrue(engine.foldedRegions.contains(region.id))
+        XCTAssertEqual(engine.folds(in: region.range).first?.isCollapsed, true)
         XCTAssertFalse(engine.fold(region))
 
         XCTAssertTrue(engine.unfold(region))
         XCTAssertFalse(engine.foldedRegions.contains(region.id))
+        XCTAssertEqual(engine.folds(in: region.range).first?.isCollapsed, false)
+
+        editor.textEditEventHub.publish(TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 2,
+            documentLength: TextRangeUtilities.utf16Length(of: editor.text ?? "") + 2,
+            editedCharacters: true
+        ))
+        let shiftedFold = engine.folds(in: NSRange(location: 0, length: NSMaxRange(region.range) + 2))
+            .first { $0.id == region.id.uuidString }
+        XCTAssertEqual(shiftedFold?.range.location, region.range.location + 2)
     }
 
     private func waitForFoldableRegion(in engine: CodeFoldingEngine) async throws -> FoldableRegion {

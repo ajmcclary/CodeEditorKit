@@ -12,6 +12,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
     let configuration: EditorConfiguration
     let memoryMonitor: MemoryMonitor
     let textDebounceInterval: Duration
+    let interactionState: Binding<EditorInteractionState>
     let onTextChange: ((String) -> Void)?
     let onSelectionChange: ((NSRange) -> Void)?
 
@@ -22,6 +23,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             theme: theme,
             configuration: configuration,
             memoryMonitor: memoryMonitor,
+            interactionState: interactionState,
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange
         )
@@ -38,6 +40,7 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             language: language,
             theme: theme,
             configuration: configuration,
+            interactionState: interactionState,
             environment: context.environment
         )
 
@@ -66,7 +69,8 @@ struct CodeEditorRepresentable: NSViewRepresentable {
             text: $text,
             onTextChange: onTextChange,
             onSelectionChange: onSelectionChange,
-            textDebounceInterval: textDebounceInterval
+            textDebounceInterval: textDebounceInterval,
+            interactionState: interactionState
         )
     }
 

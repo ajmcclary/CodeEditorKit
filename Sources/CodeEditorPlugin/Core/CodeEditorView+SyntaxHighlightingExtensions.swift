@@ -24,8 +24,9 @@ extension CodeEditorView {
         let editedRange = textStorage.editedRange
         if editedRange.location != NSNotFound {
             let changeInLength = textStorage.changeInLength
+            let oldLength = max(0, editedRange.length - changeInLength)
             let event = TextEditEvent(
-                editedRange: editedRange,
+                editedRange: NSRange(location: editedRange.location, length: oldLength),
                 changeInLength: changeInLength,
                 documentLength: textStorage.length,
                 editedCharacters: editedMask.contains(.editedCharacters)
@@ -105,6 +106,7 @@ extension CodeEditorView {
     // MARK: - Apply Highlighting
 
     internal func applySyntaxHighlighting() {
+        updateRangeBasedHighlightingConfiguration()
         let syntaxService = businessLogicServices.syntaxHighlightingService
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let textLength = textStorage?.length ?? 0

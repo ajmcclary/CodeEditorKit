@@ -34,17 +34,13 @@ internal final class SyntaxHighlighterRangeAdapter: RangeHighlightProviding {
         let source = textView.textStorage?.string ?? ""
         guard !source.isEmpty else { return [] }
 
-        // Clamp range to valid bounds
-        let clampedLocation = max(0, min(range.location, source.utf16.count))
-        let maxLength = source.utf16.count - clampedLocation
-        let clampedLength = max(0, min(range.length, maxLength))
-        let clampedRange = NSRange(location: clampedLocation, length: clampedLength)
-
+        let sourceLength = TextRangeUtilities.utf16Length(of: source)
+        let clampedRange = TextRangeUtilities.clampRange(range, toTextLength: sourceLength)
         guard clampedRange.length > 0 else { return [] }
 
-        // Extract chunk text
-        guard let swiftRange = Range(clampedRange, in: source) else { return [] }
-        let chunkText = String(source[swiftRange])
+        guard let chunkText = TextRangeUtilities.substring(inUTF16Range: clampedRange, from: source) else {
+            return []
+        }
 
         let tokens = highlighter.highlight(source: chunkText)
 

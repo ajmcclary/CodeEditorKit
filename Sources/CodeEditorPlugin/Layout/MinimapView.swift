@@ -76,13 +76,17 @@ public struct MinimapData: Sendable {
     /// Line height in the minimap font
     public let lineHeight: CGFloat
 
+    /// Syntax/style runs for minimap rendering, expressed in UTF-16 document ranges.
+    public let styleRuns: [MinimapStyleRun]
+
     public init(
         totalLines: Int,
         visibleLineRange: Range<Int>,
         displayLines: [String],
         displayStartLine: Int,
         characterWidth: CGFloat,
-        lineHeight: CGFloat
+        lineHeight: CGFloat,
+        styleRuns: [MinimapStyleRun] = []
     ) {
         self.totalLines = totalLines
         self.visibleLineRange = visibleLineRange
@@ -90,6 +94,7 @@ public struct MinimapData: Sendable {
         self.displayStartLine = displayStartLine
         self.characterWidth = characterWidth
         self.lineHeight = lineHeight
+        self.styleRuns = styleRuns
     }
 }
 
@@ -584,6 +589,9 @@ public typealias MinimapView = UIKitMinimapView
     private weak var textView: CodeEditorView?
     private let configuration: MinimapConfiguration
 
+    /// Optional source of syntax/style runs included in generated minimap data.
+    public var styleDataSource: (any MinimapStyleDataSource)?
+
     /// Initializes a minimap data provider
     /// - Parameters:
     ///   - textView: The text view to provide minimap data for
@@ -629,6 +637,8 @@ public typealias MinimapView = UIKitMinimapView
         let truncatedLines = displayLines.map { line in
             line.count > 100 ? String(line.prefix(100)) : line
         }
+        let fullRange = NSRange(location: 0, length: TextRangeUtilities.utf16Length(of: text))
+        let styleRuns = styleDataSource?.styleRuns(in: fullRange) ?? []
 
         return MinimapData(
             totalLines: lines.count,
@@ -636,7 +646,8 @@ public typealias MinimapView = UIKitMinimapView
             displayLines: truncatedLines,
             displayStartLine: displayStartLine,
             characterWidth: metrics.averageCharacterWidth,
-            lineHeight: lineHeight
+            lineHeight: lineHeight,
+            styleRuns: styleRuns
         )
     }
 

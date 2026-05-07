@@ -1,5 +1,6 @@
 @testable import CodeEditorPlugin
 import Foundation
+import IssueReporting
 import Testing
 
 // MARK: - Test adapters
@@ -11,10 +12,16 @@ private struct TestElement: RangeStoreElement {
 
 @MainActor
 private final class MockRangeHighlightProvider: RangeHighlightProviding {
+    enum MockError: Error {
+        case persistentFailure
+    }
+
     var setupCalled = false
     var editCalls: [(range: NSRange, delta: Int)] = []
     var highlightResults: [NSRange: [HighlightedToken]] = [:]
     var nextInvalidation = IndexSet()
+    var shouldThrow = false
+    var queryCount = 0
 
     func setUp(textView _: CodeEditorView, language _: Language) {
         setupCalled = true
@@ -26,7 +33,24 @@ private final class MockRangeHighlightProvider: RangeHighlightProviding {
     }
 
     func queryHighlights(textView _: CodeEditorView, range: NSRange) async throws -> [HighlightedToken] {
-        highlightResults[range] ?? []
+        queryCount += 1
+        if shouldThrow {
+            throw MockError.persistentFailure
+        }
+        return highlightResults[range] ?? []
+    }
+}
+
+@MainActor
+private final class RelativeRangeHighlighter: SyntaxHighlighter {
+    func highlight(source _: String) -> [HighlightedToken] {
+        [
+            HighlightedToken(
+                range: NSRange(location: 0, length: 3),
+                type: .keyword,
+                text: "let"
+            )
+        ]
     }
 }
 
@@ -115,6 +139,76 @@ struct StyledRangeContainerTests {
         #expect(!runs.isEmpty)
     }
 
+    @Test("lower numeric provider priority wins over higher numeric priority")
+    @MainActor
+    func mergedRunsProviderPriorityWins() {
+        let container = StyledRangeContainer(documentLength: 10)
+        let highPriority = container.registerProvider(priority: 0)
+        let lowPriority = container.registerProvider(priority: 10)
+
+        container.applyHighlightResult(
+            providerID: highPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 0, length: 6), type: .keyword, text: "high")],
+            range: NSRange(location: 0, length: 10)
+        )
+        container.applyHighlightResult(
+            providerID: lowPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 0, length: 6), type: .string, text: "low")],
+            range: NSRange(location: 0, length: 10)
+        )
+
+        let runs = container.mergedRuns(in: NSRange(location: 0, length: 6))
+        #expect(runs.count == 1)
+        #expect(runs[0].length == 6)
+        #expect(runs[0].value?.capture == "keyword")
+    }
+
+    @Test("lower priority provider fills gaps left by higher priority provider")
+    @MainActor
+    func mergedRunsLowerPriorityFillsGaps() {
+        let container = StyledRangeContainer(documentLength: 10)
+        let highPriority = container.registerProvider(priority: 0)
+        let lowPriority = container.registerProvider(priority: 10)
+
+        container.applyHighlightResult(
+            providerID: highPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 0, length: 3), type: .keyword, text: "let")],
+            range: NSRange(location: 0, length: 10)
+        )
+        container.applyHighlightResult(
+            providerID: lowPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 3, length: 3), type: .string, text: "foo")],
+            range: NSRange(location: 0, length: 10)
+        )
+
+        let runs = container.mergedRuns(in: NSRange(location: 0, length: 6))
+        #expect(runs.map(\.length) == [3, 3])
+        #expect(runs.map { $0.value?.capture } == ["keyword", "string"])
+    }
+
+    @Test("mergedRuns consumes partial provider runs without stretching them")
+    @MainActor
+    func mergedRunsConsumesPartialProviderRuns() {
+        let container = StyledRangeContainer(documentLength: 10)
+        let highPriority = container.registerProvider(priority: 0)
+        let lowPriority = container.registerProvider(priority: 10)
+
+        container.applyHighlightResult(
+            providerID: highPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 0, length: 3), type: .keyword, text: "aaa")],
+            range: NSRange(location: 0, length: 10)
+        )
+        container.applyHighlightResult(
+            providerID: lowPriority,
+            highlights: [HighlightedToken(range: NSRange(location: 0, length: 5), type: .identifier, text: "bbbbb")],
+            range: NSRange(location: 0, length: 10)
+        )
+
+        let runs = container.mergedRuns(in: NSRange(location: 0, length: 10))
+        #expect(runs.map(\.length) == [3, 2, 5])
+        #expect(runs.map { $0.value?.capture } == ["keyword", "identifier", nil])
+    }
+
     @Test("storageUpdated adjusts document length and runs reflect it")
     @MainActor
     func storageUpdatedLength() {
@@ -146,15 +240,15 @@ struct VisibleRangeProviderTests {
     func initNoCrash() {
         let textView = CodeEditorView()
         let provider = VisibleRangeProvider(textView: textView)
-        #expect(!provider.visibleIndices.isEmpty || provider.visibleIndices.isEmpty)
+        #expect(provider.visibleIndices.isEmpty)
     }
 }
 
 @Suite("HighlightProviderState")
 struct HighlightProviderStateTests {
-    @Test("init sets initial state")
+    @Test("nextRange is nil before any visible range is set")
     @MainActor
-    func initState() throws {
+    func nextRangeNilBeforeVisibleRange() throws {
         let mock = MockRangeHighlightProvider()
         let container = StyledRangeContainer(documentLength: 100)
         let textView = CodeEditorView()
@@ -165,9 +259,111 @@ struct HighlightProviderStateTests {
             textView: textView,
             documentLength: 100
         )
-        // Initial state: no visible range, so nextRange returns nil
-        let next = state.nextRange()
-        #expect(next == nil || next != nil) // Just ensure compute doesn't crash
+        #expect(state.nextRange() == nil)
+    }
+
+    @Test("nextRange returns the full contiguous visible range up to maxChunk")
+    @MainActor
+    func nextRangeUsesContiguousVisibleRun() {
+        let mock = MockRangeHighlightProvider()
+        let container = StyledRangeContainer(documentLength: 100)
+        let textView = CodeEditorView()
+        let state = HighlightProviderState(
+            provider: mock,
+            providerID: 0,
+            container: container,
+            textView: textView,
+            documentLength: 100,
+            maxChunk: 20
+        )
+
+        state.updateVisibleSet(IndexSet(integersIn: 10..<21), schedulesHighlighting: false)
+
+        #expect(state.nextRange() == NSRange(location: 10, length: 11))
+    }
+
+    @Test("nextRange clamps visible chunks to maxChunk")
+    @MainActor
+    func nextRangeClampsToMaxChunk() {
+        let mock = MockRangeHighlightProvider()
+        let container = StyledRangeContainer(documentLength: 100)
+        let textView = CodeEditorView()
+        let state = HighlightProviderState(
+            provider: mock,
+            providerID: 0,
+            container: container,
+            textView: textView,
+            documentLength: 100,
+            maxChunk: 20
+        )
+
+        state.updateVisibleSet(IndexSet(integersIn: 10..<80), schedulesHighlighting: false)
+
+        #expect(state.nextRange() == NSRange(location: 10, length: 20))
+    }
+
+    @Test("persistent provider errors are not retried in a tight loop")
+    @MainActor
+    func persistentProviderErrorIsMarkedHandled() async {
+        let mock = MockRangeHighlightProvider()
+        mock.shouldThrow = true
+        let container = StyledRangeContainer(documentLength: 100)
+        let textView = CodeEditorView()
+        let state = HighlightProviderState(
+            provider: mock,
+            providerID: 0,
+            container: container,
+            textView: textView,
+            documentLength: 100,
+            maxChunk: 20
+        )
+
+        await withExpectedIssue("Provider errors are surfaced through IssueReporting") {
+            state.updateVisibleSet(IndexSet(integersIn: 10..<21), schedulesHighlighting: false)
+            await state.highlightInvalidRanges()
+            try? await Task.sleep(for: .milliseconds(20))
+            state.cancel()
+        }
+
+        #expect(mock.queryCount == 1)
+        #expect(state.nextRange() == nil)
+    }
+}
+
+@Suite("SyntaxHighlighterRangeAdapter")
+struct SyntaxHighlighterRangeAdapterTests {
+    @Test("queryHighlights shifts substring-relative UTF-16 ranges after non-ASCII prefix")
+    @MainActor
+    func queryHighlightsShiftsUTF16Ranges() async throws {
+        let textView = CodeEditorView()
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textView.string = "🙂\nlet value = 1"
+        #else
+        textView.text = "🙂\nlet value = 1"
+        #endif
+
+        let adapter = SyntaxHighlighterRangeAdapter(highlighter: RelativeRangeHighlighter())
+        let tokens = try await adapter.queryHighlights(
+            textView: textView,
+            range: NSRange(location: 3, length: 3)
+        )
+
+        #expect(tokens.map(\.range) == [NSRange(location: 3, length: 3)])
+    }
+}
+
+@Suite("Range-based highlighting production wiring")
+struct RangeBasedHighlightingWiringTests {
+    @Test("range-based highlighting flag installs style data source")
+    @MainActor
+    func flagInstallsStyleDataSource() {
+        let textView = CodeEditorView()
+        var config = EditorConfiguration()
+        config.performance.usesRangeBasedHighlighting = true
+        textView.configuration = config
+        textView.applyConfiguration()
+
+        #expect(textView.rangeBasedHighlightingStyleDataSourceForTesting != nil)
     }
 }
 

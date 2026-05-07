@@ -29,6 +29,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Text binding for SwiftUI integration
     var textBinding: Binding<String>?
 
+    /// Optional interaction-state binding for cursor persistence/restoration.
+    var interactionStateBinding: Binding<EditorInteractionState>?
+
     #if targetEnvironment(macCatalyst)
     /// Task manager for structured color application on Catalyst
     private let catalystColorTaskManager = CatalystColorTaskManager()
@@ -183,6 +186,68 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func handleSelectionChange(_ range: NSRange) {
         onSelectionChange?(range)
         onSelectionChangeCallback?(range)
+        updateInteractionStateCursor(from: range)
+    }
+
+    func updateInteractionStateBinding(_ binding: Binding<EditorInteractionState>) {
+        interactionStateBinding = binding
+    }
+
+    func applyInteractionState(to textView: CodeEditorView) {
+        guard let cursor = interactionStateBinding?.wrappedValue.cursorPositions?.first else {
+            return
+        }
+
+        let editorText = text(from: textView)
+        let offset = Self.utf16Offset(for: cursor, in: editorText)
+        let targetRange = NSRange(location: offset, length: 0)
+        guard textView.selectedRange != targetRange else { return }
+        textView.setSelectedRangeWithoutScrolling(targetRange)
+    }
+
+    private func updateInteractionStateCursor(from range: NSRange) {
+        guard var state = interactionStateBinding?.wrappedValue else { return }
+        let selection = EditorStateBridge.deriveSelection(from: range, in: currentText)
+        let cursor = EditorCursorPosition(line: selection.line, column: selection.column)
+        guard state.cursorPositions != [cursor] else { return }
+        state.cursorPositions = [cursor]
+        interactionStateBinding?.wrappedValue = state
+    }
+
+    private func text(from textView: CodeEditorView) -> String {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textView.string
+        #else
+        textView.text ?? ""
+        #endif
+    }
+
+    private static func utf16Offset(for cursor: EditorCursorPosition, in text: String) -> Int {
+        let targetLine = max(1, cursor.line)
+        let targetColumn = max(1, cursor.column)
+        var line = 1
+        var column = 1
+        var offset = 0
+
+        for character in text {
+            if line == targetLine && column == targetColumn {
+                return offset
+            }
+
+            if character == "\n" {
+                if line == targetLine {
+                    return offset
+                }
+                line += 1
+                column = 1
+            } else {
+                column += 1
+            }
+
+            offset += String(character).utf16.count
+        }
+
+        return TextRangeUtilities.utf16Length(of: text)
     }
 
     // MARK: - Notification Management
@@ -473,9 +538,15 @@ extension CodeEditorBaseCoordinator {
 /// macOS-specific coordinator for CodeEditor
 @MainActor
 final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
-    init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
+    init(
+        text: Binding<String>,
+        onTextChange: ((String) -> Void)?,
+        onSelectionChange: ((NSRange) -> Void)?,
+        interactionState: Binding<EditorInteractionState>? = nil
+    ) {
         super.init()
         self.textBinding = text
+        self.interactionStateBinding = interactionState
         self.onTextChange = onTextChange
         self.onTextChangeCallback = onTextChange
         self.onSelectionChange = onSelectionChange
@@ -488,9 +559,15 @@ final class CodeEditorCoordinator: CodeEditorBaseCoordinator {
 /// iOS-specific coordinator for CodeEditor
 @MainActor
 final class CodeEditorCoordinator: CodeEditorBaseCoordinator, UITextViewDelegate {
-    init(text: Binding<String>, onTextChange: ((String) -> Void)?, onSelectionChange: ((NSRange) -> Void)?) {
+    init(
+        text: Binding<String>,
+        onTextChange: ((String) -> Void)?,
+        onSelectionChange: ((NSRange) -> Void)?,
+        interactionState: Binding<EditorInteractionState>? = nil
+    ) {
         super.init()
         self.textBinding = text
+        self.interactionStateBinding = interactionState
         self.onTextChange = onTextChange
         self.onTextChangeCallback = onTextChange
         self.onSelectionChange = onSelectionChange

@@ -609,8 +609,8 @@ public enum TokenType: String, CaseIterable, Sendable {
 public struct HighlightedToken: Sendable {
     /// The range of the token in the source text.
     ///
-    /// This range is relative to the full source string and uses
-    /// `NSRange` for compatibility with `NSTextStorage`.
+    /// This range is relative to the highlighter input and uses UTF-16
+    /// `NSRange` offsets for compatibility with `NSTextStorage`.
     public let range: NSRange
 
     /// The syntactic type of the token.

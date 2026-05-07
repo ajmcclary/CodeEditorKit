@@ -230,12 +230,12 @@ public struct CodeEditor: View {
 
     // MARK: - Modifiers
 
-    /// Binds editor interaction state (cursor, scroll, find, folds) for
-    /// persistence and restoration. The binding is two-way — the editor
-    /// updates it on user interaction, and external writes are reflected
-    /// in the editor.
+    /// Binds editor interaction state for persistence and restoration.
     ///
-    /// Set to `nil` (the default) to disable interaction state tracking.
+    /// The current implementation provides two-way cursor-position sync:
+    /// selection changes update `cursorPositions`, and external writes to
+    /// `cursorPositions` move the editor caret. Other fields are retained
+    /// for host persistence and future editor integrations.
     public func editorInteractionState(_ binding: Binding<EditorInteractionState>) -> Self {
         var copy = self
         copy.interactionState = binding
@@ -266,6 +266,7 @@ public struct CodeEditor: View {
             configuration: effectiveConfiguration,
             memoryMonitor: effectiveMemoryMonitor,
             textDebounceInterval: effectiveDebounceInterval,
+            interactionState: interactionState,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )

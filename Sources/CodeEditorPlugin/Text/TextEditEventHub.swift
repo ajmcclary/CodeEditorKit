@@ -4,7 +4,7 @@ import Foundation
 /// an edit. Consumers (highlighting, folding, gutter) subscribe to avoid
 /// duplicating edit-detection logic.
 internal struct TextEditEvent: Sendable, Equatable {
-    /// The affected character range (in UTF-16 code units).
+    /// The replaced character range in the pre-edit document (UTF-16 code units).
     internal var editedRange: NSRange
 
     /// The delta between the new length and the old length of the edited range.

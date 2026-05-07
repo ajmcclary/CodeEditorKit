@@ -65,6 +65,25 @@ struct LineFoldStorageTests {
         #expect(!folds[0].isCollapsed)
     }
 
+    @Test("folds returns canonical fold range for a clipped query")
+    func foldsReturnCanonicalRangeForPartialQuery() {
+        var storage = LineFoldStorage(documentLength: 100)
+        var region = FoldableRegion(
+            range: NSRange(location: 10, length: 40),
+            title: "func",
+            type: .function
+        )
+        region.level = 2
+        storage.updateFolds(from: [region], collapsedIDs: [])
+
+        let folds = storage.folds(in: NSRange(location: 20, length: 5))
+
+        #expect(folds.count == 1)
+        #expect(folds[0].range == NSRange(location: 10, length: 40))
+        #expect(folds[0].depth == 2)
+        #expect(folds[0].kind == .function)
+    }
+
     @Test("updateFolds preserves collapse state")
     func preserveCollapse() {
         var storage = LineFoldStorage(documentLength: 100)
@@ -99,6 +118,99 @@ struct LineFoldStorageTests {
         #expect(folds.count == 1)
         // Fold should have shifted from 10..<30 to 15..<35
         #expect(folds[0].range.location == 15)
+        #expect(folds[0].range.length == 20)
+    }
+
+    @Test("storageUpdated removes folds fully consumed by deletion")
+    func storageUpdatedRemovesConsumedFold() {
+        var storage = LineFoldStorage(documentLength: 100)
+        var region = FoldableRegion(
+            range: NSRange(location: 10, length: 20),
+            title: "func",
+            type: .function
+        )
+        region.level = 0
+        storage.updateFolds(from: [region], collapsedIDs: [])
+
+        storage.storageUpdated(replacedCharactersIn: 0..<100, withCount: 0)
+
+        #expect(storage.documentLength == 0)
+        #expect(storage.folds(in: NSRange(location: 0, length: 100)).isEmpty)
+    }
+
+    @Test("toggleCollapse flips state and preserves existing metadata")
+    func toggleCollapsePreservesMetadata() {
+        var storage = LineFoldStorage(documentLength: 100)
+        var region = FoldableRegion(
+            range: NSRange(location: 10, length: 20),
+            title: "func",
+            type: .function
+        )
+        region.level = 3
+        storage.updateFolds(from: [region], collapsedIDs: [])
+
+        storage.toggleCollapse(foldID: region.id.uuidString, range: region.range)
+        var folds = storage.folds(in: NSRange(location: 0, length: 100))
+        #expect(folds.count == 1)
+        #expect(folds[0].isCollapsed)
+        #expect(folds[0].depth == 3)
+        #expect(folds[0].kind == .function)
+
+        storage.toggleCollapse(foldID: region.id.uuidString, range: region.range)
+        folds = storage.folds(in: NSRange(location: 0, length: 100))
+        #expect(folds.count == 1)
+        #expect(!folds[0].isCollapsed)
+        #expect(folds[0].depth == 3)
+        #expect(folds[0].kind == .function)
+    }
+
+    @Test("setCollapsed sets explicit state and preserves metadata")
+    func setCollapsedPreservesMetadata() {
+        var storage = LineFoldStorage(documentLength: 100)
+        var region = FoldableRegion(
+            range: NSRange(location: 10, length: 20),
+            title: "block",
+            type: .block
+        )
+        region.level = 1
+        storage.updateFolds(from: [region], collapsedIDs: [])
+
+        storage.setCollapsed(foldID: region.id.uuidString, collapsed: true)
+        var folds = storage.folds(in: NSRange(location: 0, length: 100))
+        #expect(folds.count == 1)
+        #expect(folds[0].isCollapsed)
+        #expect(folds[0].depth == 1)
+        #expect(folds[0].kind == .block)
+
+        storage.setCollapsed(foldID: region.id.uuidString, collapsed: false)
+        folds = storage.folds(in: NSRange(location: 0, length: 100))
+        #expect(folds.count == 1)
+        #expect(!folds[0].isCollapsed)
+        #expect(folds[0].depth == 1)
+        #expect(folds[0].kind == .block)
+    }
+
+    @Test("updateFolds preserves indexed collapse state by fold ID")
+    func updateFoldsPreservesIndexedCollapseState() {
+        var storage = LineFoldStorage(documentLength: 100)
+        var region = FoldableRegion(
+            range: NSRange(location: 10, length: 20),
+            title: "func",
+            type: .function
+        )
+        region.level = 1
+        storage.updateFolds(from: [region], collapsedIDs: [])
+        storage.setCollapsed(foldID: region.id.uuidString, collapsed: true)
+
+        region.range = NSRange(location: 12, length: 25)
+        region.level = 2
+        storage.updateFolds(from: [region], collapsedIDs: [])
+
+        let folds = storage.folds(in: NSRange(location: 0, length: 100))
+        #expect(folds.count == 1)
+        #expect(folds[0].range == NSRange(location: 12, length: 25))
+        #expect(folds[0].depth == 2)
+        #expect(folds[0].isCollapsed)
     }
 
     @Test("folds partial query returns only intersecting folds")

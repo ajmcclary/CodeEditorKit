@@ -1,4 +1,5 @@
 import Foundation
+import IssueReporting
 
 /// Manages the valid/pending/visible state for a single highlight provider.
 ///
@@ -17,6 +18,7 @@ internal final class HighlightProviderState {
 
     private var validSet = IndexSet()
     private var pendingSet = IndexSet()
+    private var failedSet = IndexSet()
     private var visibleSet = IndexSet()
     private var documentLength: Int
     private let provider: any RangeHighlightProviding
@@ -24,6 +26,7 @@ internal final class HighlightProviderState {
     private weak var container: StyledRangeContainer?
     private weak var textView: CodeEditorView?
     private let maxChunk: Int
+    private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "HighlightProviderState")
 
     private var chunkTask: Task<Void, Never>?
 
@@ -65,8 +68,9 @@ internal final class HighlightProviderState {
     // MARK: - Visible region
 
     /// Update the visible set (e.g. after scrolling).
-    func updateVisibleSet(_ newVisible: IndexSet) {
+    func updateVisibleSet(_ newVisible: IndexSet, schedulesHighlighting: Bool = true) {
         visibleSet = newVisible
+        guard schedulesHighlighting else { return }
         Task { [weak self] in
             await self?.highlightInvalidRanges()
         }
@@ -78,6 +82,7 @@ internal final class HighlightProviderState {
     func invalidate(_ indices: IndexSet) {
         validSet.subtract(indices)
         pendingSet.subtract(indices)
+        failedSet.subtract(indices)
     }
 
     /// Compute the next range to highlight using:
@@ -87,15 +92,14 @@ internal final class HighlightProviderState {
         var invalid = documentIndices.subtracting(validSet)
         invalid.formIntersection(visibleSet)
         invalid.subtract(pendingSet)
+        invalid.subtract(failedSet)
 
-        guard let first = invalid.first else { return nil }
+        guard let range = invalid.rangeView.first else { return nil }
 
-        var length = min(maxChunk, documentLength - first)
-        if let visibleEnd = visibleSet.integerGreaterThan(first),
-           visibleEnd - first < maxChunk {
-            length = visibleEnd - first
-        }
-        length = min(length, maxChunk)
+        let first = range.lowerBound
+        let upperBound = min(range.upperBound, first + maxChunk, documentLength)
+        let length = upperBound - first
+        guard length > 0 else { return nil }
 
         return NSRange(location: first, length: length)
     }
@@ -123,10 +127,16 @@ internal final class HighlightProviderState {
                 range: range
             )
             container.applyHighlightResult(providerID: providerID, highlights: highlights, range: range)
-            pendingSet.remove(integersIn: range.location..<(range.location + range.length))
-            validSet.insert(integersIn: range.location..<(range.location + range.length))
+            let indices = IndexSet(integersIn: range.location..<(range.location + range.length))
+            pendingSet.subtract(indices)
+            validSet.formUnion(indices)
+            failedSet.subtract(indices)
         } catch {
-            pendingSet.remove(integersIn: range.location..<(range.location + range.length))
+            let indices = IndexSet(integersIn: range.location..<(range.location + range.length))
+            pendingSet.subtract(indices)
+            failedSet.formUnion(indices)
+            logger.error("Highlight provider failed for range \(range): \(error.localizedDescription)")
+            reportIssue("Highlight provider failed for range \(range): \(error.localizedDescription)")
         }
     }
 

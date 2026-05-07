@@ -217,6 +217,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// notifications independently.
     internal let textEditEventHub = TextEditEventHub()
 
+    /// Range-store-backed highlighting pipeline used by opt-in visible-range
+    /// invalidation and minimap style data.
+    internal var rangeBasedHighlightingController: RangeBasedHighlightingController?
+
+    internal var rangeBasedHighlightingStyleDataSourceForTesting: (any MinimapStyleDataSource)? {
+        rangeBasedHighlightingController?.styleDataSource
+    }
+
     /// Memory monitor for tracking and managing memory usage
     /// 
     /// Set this property to provide a custom memory monitor instance or to share
@@ -428,6 +436,8 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         completionManager.cancelCurrentRequest()
 
         // Clean up code folding - no cleanup method available
+        rangeBasedHighlightingController?.detach()
+        rangeBasedHighlightingController = nil
 
         // Clean up syntax highlighting
         Task {

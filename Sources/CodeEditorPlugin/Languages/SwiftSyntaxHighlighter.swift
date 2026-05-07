@@ -144,44 +144,41 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
     private(set) var tokens: [HighlightedToken] = []
     private var processedRanges: Set<NSRange> = []
 
-    /// Precomputed UTF-8 to UTF-16 offset mapping for the source string.
-    /// Indexed by UTF-16 offset, each entry stores the corresponding UTF-8 offset.
-    private let utf16ToUTF8Offsets: [Int]
+    /// Precomputed UTF-8 to UTF-16 offset mapping for token-boundary lookups.
+    private let utf8ToUTF16Offsets: [Int: Int]
 
     init(source: String) {
         self.source = source
-        self.utf16ToUTF8Offsets = Self.computeUTF16ToUTF8Offsets(for: source)
+        self.utf8ToUTF16Offsets = Self.computeUTF8ToUTF16Offsets(for: source)
         super.init(viewMode: .sourceAccurate)
     }
 
-    /// Builds an array where `result[utf16Index]` gives the UTF-8 offset
-    /// at that UTF-16 code unit. This allows constant-time conversion from
-    /// UTF-16 offsets to UTF-8 offsets (for range validation) and O(n)
-    /// reverse mapping from UTF-8 to UTF-16 (used below).
-    private static func computeUTF16ToUTF8Offsets(for source: String) -> [Int] {
-        var offsets: [Int] = []
-        offsets.reserveCapacity(source.utf16.count)
+    /// Builds a direct map from UTF-8 byte offsets to UTF-16 code-unit offsets.
+    /// SwiftSyntax positions are UTF-8 offsets, while TextKit consumes UTF-16.
+    private static func computeUTF8ToUTF16Offsets(for source: String) -> [Int: Int] {
+        var offsets: [Int: Int] = [:]
+        offsets.reserveCapacity(source.utf16.count + 1)
         var utf8Offset = 0
+        var utf16Offset = 0
+        offsets[utf8Offset] = utf16Offset
+
         for char in source {
-            let charUTF16Count = char.utf16.count
-            let charUTF8Count = char.utf8.count
-            for _ in 0..<charUTF16Count {
-                offsets.append(utf8Offset)
-            }
-            utf8Offset += charUTF8Count
+            utf8Offset += char.utf8.count
+            utf16Offset += char.utf16.count
+            offsets[utf8Offset] = utf16Offset
         }
-        // Append final position for end-of-string lookups
-        offsets.append(utf8Offset)
+
         return offsets
     }
 
     /// Converts a UTF-8 offset to a UTF-16 offset using the precomputed table.
     /// Falls back to walking the string if the offset is beyond the table.
     private func utf16Offset(forUTF8Offset utf8Offset: Int) -> Int {
-        if let index = utf16ToUTF8Offsets.firstIndex(of: utf8Offset) {
-            return index
+        if let offset = utf8ToUTF16Offsets[utf8Offset] {
+            return offset
         }
-        // Fallback for offsets beyond precomputed range
+
+        // Fallback for unexpected offsets that land inside a multi-byte scalar.
         var utf8Count = 0
         var utf16Count = 0
         for char in source {

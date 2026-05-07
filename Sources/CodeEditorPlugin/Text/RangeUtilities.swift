@@ -126,6 +126,18 @@ public enum TextRangeUtilities {
         clampRange(range, to: NSRange(location: 0, length: textLength))
     }
 
+    /// Returns the UTF-16 code-unit length used by `NSRange`, `NSTextStorage`,
+    /// and TextKit APIs throughout the editor.
+    public static func utf16Length(of text: String) -> Int {
+        text.utf16.count
+    }
+
+    /// Converts a UTF-16 `NSRange` into a Swift substring.
+    public static func substring(inUTF16Range range: NSRange, from text: String) -> String? {
+        guard let swiftRange = Range(range, in: text) else { return nil }
+        return String(text[swiftRange])
+    }
+
     /// Normalizes a range by ensuring valid bounds and handling edge cases
     public static func normalizeRange(_ range: NSRange, textLength: Int) -> NSRange {
         let location = max(0, min(range.location, textLength))

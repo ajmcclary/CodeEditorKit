@@ -37,7 +37,11 @@ extension LanguageProvider {
 /// Protocol for syntax highlighters
 @MainActor
 public protocol SyntaxHighlighter {
-    /// Highlight the given source code
+    /// Highlight the given source code.
+    ///
+    /// Returned `HighlightedToken.range` values must be UTF-16 `NSRange`
+    /// offsets relative to the provided `source`, matching `NSTextStorage`
+    /// and the rest of TextKit.
     func highlight(source: String) -> [HighlightedToken]
 
     /// Check if incremental highlighting is supported

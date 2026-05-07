@@ -11,6 +11,19 @@ import AppKit
 import UIKit
 #endif
 
+@MainActor
+private final class FixedMinimapStyleDataSource: MinimapStyleDataSource {
+    let runs: [MinimapStyleRun]
+
+    init(runs: [MinimapStyleRun]) {
+        self.runs = runs
+    }
+
+    func styleRuns(in _: NSRange) -> [MinimapStyleRun] {
+        runs
+    }
+}
+
 @Suite("MinimapStyleDataSource")
 struct MinimapStyleDataSourceTests {
     @Test("MinimapStyleRun is Equatable")
@@ -42,10 +55,54 @@ struct MinimapStyleDataSourceTests {
         )
         container.applyHighlightResult(providerID: id, highlights: [token], range: NSRange(location: 0, length: 100))
 
-        let ds = StyledMinimapStyleDataSource(container: container)
+        let expectedColor = PlatformColors.systemBlue
+        let ds = StyledMinimapStyleDataSource(container: container) { capture in
+            capture == "keyword" ? expectedColor : PlatformColors.label
+        }
         let runs = ds.styleRuns(in: NSRange(location: 5, length: 20))
-        let keywordRuns = runs.filter { $0.color == PlatformColors.label || true }
-        #expect(!runs.isEmpty)
+        #expect(runs == [
+            MinimapStyleRun(range: NSRange(location: 10, length: 5), color: expectedColor)
+        ])
+    }
+
+    @Test("MinimapData carries style runs")
+    func minimapDataCarriesStyleRuns() {
+        let styleRun = MinimapStyleRun(
+            range: NSRange(location: 4, length: 3),
+            color: PlatformColors.systemGreen
+        )
+        let data = MinimapData(
+            totalLines: 2,
+            visibleLineRange: 0..<1,
+            displayLines: ["let x = 1"],
+            displayStartLine: 0,
+            characterWidth: 2,
+            lineHeight: 4,
+            styleRuns: [styleRun]
+        )
+
+        #expect(data.styleRuns == [styleRun])
+    }
+
+    @Test("MinimapDataProvider emits style runs from its data source")
+    @MainActor
+    func dataProviderEmitsStyleRuns() {
+        let textView = CodeEditorView()
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        textView.string = "let value = 1"
+        #else
+        textView.text = "let value = 1"
+        #endif
+        let styleRun = MinimapStyleRun(
+            range: NSRange(location: 0, length: 3),
+            color: PlatformColors.systemBlue
+        )
+        let provider = MinimapDataProvider(textView: textView)
+        provider.styleDataSource = FixedMinimapStyleDataSource(runs: [styleRun])
+
+        let data = provider.generateData()
+
+        #expect(data?.styleRuns == [styleRun])
     }
 }
 

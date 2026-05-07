@@ -21,6 +21,7 @@ internal final class FoldingOperationsService {
 
     /// Attach to a text view
     internal func attach(to textView: CodeEditorView) {
+        guard self.textView !== textView else { return }
         self.textView = textView
     }
 

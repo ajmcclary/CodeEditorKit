@@ -91,6 +91,7 @@ extension CodeEditorView {
 
         // Update code folding configuration
         updateCodeFoldingConfiguration()
+        updateRangeBasedHighlightingConfiguration()
 
         // Force layout update
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)

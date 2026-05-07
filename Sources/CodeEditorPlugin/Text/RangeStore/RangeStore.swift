@@ -19,7 +19,6 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
 
     private var _runs: [StoredRun]
     private var _documentLength: Int
-    private var _cache: (range: Range<Int>, runs: [RangeStoreRun<Element>])?
 
     // MARK: - Lifecycle
 
@@ -38,13 +37,9 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
 
     /// Returns all runs that intersect the given character range.
     internal func runs(in range: Range<Int>) -> [RangeStoreRun<Element>] {
-        if let cache = _cache, cache.range == range {
-            return cache.runs
-        }
-
         guard !range.isEmpty else { return [] }
-        let clampedLower = max(0, range.lowerBound)
-        let clampedUpper = min(_documentLength, range.upperBound)
+        let clampedLower = max(0, min(range.lowerBound, _documentLength))
+        let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
         guard clampedLower < clampedUpper else { return [] }
 
         var result: [RangeStoreRun<Element>] = []
@@ -79,13 +74,14 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
 
     /// Replace a character range with a sequence of runs.
     internal mutating func set(runs newRuns: [RangeStoreRun<Element>], for range: Range<Int>) {
-        _cache = nil
-        let clampedLower = max(0, range.lowerBound)
-        let clampedUpper = min(_documentLength, range.upperBound)
+        let clampedLower = max(0, min(range.lowerBound, _documentLength))
+        let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
         guard clampedLower < clampedUpper else { return }
+        let replacementLength = newRuns.reduce(0) { $0 + $1.length }
+        precondition(replacementLength == clampedUpper - clampedLower, "RangeStore replacement runs must exactly cover the target range")
 
         _runs = replaceSubrange(clampedLower ..< clampedUpper, with: newRuns)
-        coalesceNearby(around: clampedLower ..< (clampedLower + newRuns.reduce(0) { $0 + $1.length }))
+        coalesceNearby(around: clampedLower ..< (clampedLower + replacementLength))
     }
 
     /// Notify the store that the underlying document was edited.
@@ -93,28 +89,28 @@ internal struct RangeStore<Element: RangeStoreElement>: Sendable {
     /// - Parameter range: The character range that was replaced.
     /// - Parameter newLength: The length of the replacement text (0 for deletions).
     internal mutating func storageUpdated(replacedCharactersIn range: Range<Int>, withCount newLength: Int) {
-        _cache = nil
-        let clampedLower = max(0, range.lowerBound)
-        let clampedUpper = min(_documentLength, range.upperBound)
+        let clampedLower = max(0, min(range.lowerBound, _documentLength))
+        let clampedUpper = max(clampedLower, min(_documentLength, range.upperBound))
         let oldLength = clampedUpper - clampedLower
-        let delta = newLength - oldLength
+        let replacementLength = max(0, newLength)
+        let delta = replacementLength - oldLength
         _documentLength += delta
 
-        if newLength == 0 {
+        if replacementLength == 0 {
             // Deletion: remove the range.
             _runs = replaceSubrange(clampedLower ..< clampedUpper, with: [])
         } else {
-            // Insertion or replacement: put an empty gap of `newLength`.
-            _runs = replaceSubrange(clampedLower ..< clampedUpper, with: [.empty(length: newLength)])
+            // Insertion or replacement: put an empty gap of `replacementLength`.
+            _runs = replaceSubrange(clampedLower ..< clampedUpper, with: [.empty(length: replacementLength)])
         }
-        coalesceNearby(around: clampedLower ..< (clampedLower + max(0, newLength)))
+        coalesceNearby(around: clampedLower ..< (clampedLower + replacementLength))
     }
 
     // MARK: - Internals
 
     private func clamped(_ range: Range<Int>) -> Range<Int> {
-        let lower = max(0, range.lowerBound)
-        let upper = min(_documentLength, range.upperBound)
+        let lower = max(0, min(range.lowerBound, _documentLength))
+        let upper = max(lower, min(_documentLength, range.upperBound))
         return lower..<upper
     }
 
