@@ -24,9 +24,11 @@ public final class AsyncSyntaxHighlighter {
         }
         #elseif canImport(UIKit)
         return UIColor { trait in
+            // swiftlint:disable object_literal
             trait.userInterfaceStyle == .dark
                 ? UIColor(red: 242.0 / 255.0, green: 231.0 / 255.0, blue: 216.0 / 255.0, alpha: 1.0)
                 : UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
+            // swiftlint:enable object_literal
         }
         #else
         return PlatformColors.label

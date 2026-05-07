@@ -29,27 +29,9 @@ final class DocumentStore {
         let first = TabModel(name: "Untitled-1.swift", language: .swift)
         self.tabs = [first]
         self.activeTabID = first.id
-        self.texts = [first.id: Self.sampleSwift]
+        self.texts = [first.id: SampleCodeCatalog.text(for: .swift)]
         self.untitledCounter = 1
     }
-
-    private static let sampleSwift = """
-    import Foundation
-
-    /// Greets the named person and returns the rendered string.
-    func greet(_ name: String, times: Int = 1) -> String {
-        var lines: [String] = []
-        for index in 0..<times {
-            lines.append("Hello, \\(name)! (\\(index + 1))")
-        }
-        return lines.joined(separator: "\\n")
-    }
-
-    let names = ["Ada", "Grace", "Linus"]
-    for name in names {
-        print(greet(name, times: 2))
-    }
-    """
 
     // MARK: - Tab lifecycle
 
@@ -106,10 +88,33 @@ final class DocumentStore {
         )
     }
 
-    /// Set the language of a tab in-place. No-op for unknown ids.
+    /// Set the language of a tab in-place and reload the editor with the
+    /// canonical sample for that language. The tab's filename is updated
+    /// to the language's primary extension and the dirty flag is cleared,
+    /// since the new content is a fresh sample rather than user input.
+    /// No-op for unknown ids.
     func setLanguage(_ language: Language, of id: TabModel.ID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         tabs[index].language = language
+        tabs[index].name = Self.renamedTab(tabs[index].name, for: language)
+        tabs[index].isDirty = false
+        texts[id] = SampleCodeCatalog.text(for: language)
+    }
+
+    /// Replace the file extension on a tab name with the language's
+    /// primary extension. `MyFile.swift` + `.python` → `MyFile.py`;
+    /// `Untitled` + `.go` → `Untitled.go`.
+    private static func renamedTab(_ name: String, for language: Language) -> String {
+        let basename: String = {
+            // Strip the trailing extension (everything after the last dot),
+            // unless the name has no dot or starts with one (`.gitignore`).
+            if let dot = name.lastIndex(of: "."), dot != name.startIndex {
+                return String(name[..<dot])
+            }
+            return name
+        }()
+        let ext = language.fileExtensions.first ?? "txt"
+        return "\(basename).\(ext)"
     }
 
     /// Convenience: the language of the active tab, or nil.

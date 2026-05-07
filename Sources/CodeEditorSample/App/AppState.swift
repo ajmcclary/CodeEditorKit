@@ -20,5 +20,5 @@ final class AppState {
     /// Multi-tab document store backing `EditorTabStrip` and the editor
     /// pane. Lives here (rather than as `@State` inside `RootWindow`) so
     /// the Settings window can observe and mutate the active language.
-    let documents: DocumentStore = DocumentStore()
+    let documents = DocumentStore()
 }
