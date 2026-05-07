@@ -1,0 +1,138 @@
+import Foundation
+
+/// Manages the valid/pending/visible state for a single highlight provider.
+///
+/// The state machine tracks three IndexSets:
+/// - **validSet**: character indices known to have current highlights.
+/// - **pendingSet**: indices currently being queried (requested but not yet applied).
+/// - **visibleSet**: indices currently in the text view's viewport.
+///
+/// New ranges to highlight are computed as:
+/// ```
+/// (document - validSet) ∩ visibleSet - pendingSet
+/// ```
+@MainActor
+internal final class HighlightProviderState {
+    // MARK: - State
+
+    private var validSet = IndexSet()
+    private var pendingSet = IndexSet()
+    private var visibleSet = IndexSet()
+    private var documentLength: Int
+    private let provider: any RangeHighlightProviding
+    private let providerID: Int
+    private weak var container: StyledRangeContainer?
+    private weak var textView: CodeEditorView?
+    private let maxChunk: Int
+
+    private var chunkTask: Task<Void, Never>?
+
+    init(
+        provider: any RangeHighlightProviding,
+        providerID: Int,
+        container: StyledRangeContainer,
+        textView: CodeEditorView,
+        documentLength: Int,
+        maxChunk: Int = 4_096
+    ) {
+        self.provider = provider
+        self.providerID = providerID
+        self.container = container
+        self.textView = textView
+        self.documentLength = documentLength
+        self.maxChunk = maxChunk
+    }
+
+    // MARK: - Edit handling
+
+    /// Called after text storage processes an edit.
+    func storageDidUpdate(range editedRange: NSRange, delta: Int) {
+        documentLength += delta
+
+        guard let textView else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            let invalidated = await self.provider.applyEdit(
+                textView: textView,
+                range: editedRange,
+                delta: delta
+            )
+            self.invalidate(invalidated)
+            await self.highlightInvalidRanges()
+        }
+    }
+
+    // MARK: - Visible region
+
+    /// Update the visible set (e.g. after scrolling).
+    func updateVisibleSet(_ newVisible: IndexSet) {
+        visibleSet = newVisible
+        Task { [weak self] in
+            await self?.highlightInvalidRanges()
+        }
+    }
+
+    // MARK: - Invalidation
+
+    /// Invalidate a set of indices (remove from valid/pending).
+    func invalidate(_ indices: IndexSet) {
+        validSet.subtract(indices)
+        pendingSet.subtract(indices)
+    }
+
+    /// Compute the next range to highlight using:
+    /// `(documentSet - validSet) ∩ visibleSet - pendingSet`
+    func nextRange() -> NSRange? {
+        let documentIndices = IndexSet(integersIn: 0..<documentLength)
+        var invalid = documentIndices.subtracting(validSet)
+        invalid.formIntersection(visibleSet)
+        invalid.subtract(pendingSet)
+
+        guard let first = invalid.first else { return nil }
+
+        var length = min(maxChunk, documentLength - first)
+        if let visibleEnd = visibleSet.integerGreaterThan(first),
+           visibleEnd - first < maxChunk {
+            length = visibleEnd - first
+        }
+        length = min(length, maxChunk)
+
+        return NSRange(location: first, length: length)
+    }
+
+    /// Start highlighting invalid ranges.
+    func highlightInvalidRanges() async {
+        chunkTask?.cancel()
+        chunkTask = Task { [weak self] in
+            guard let self else { return }
+            while let range = self.nextRange(), !Task.isCancelled {
+                self.pendingSet.insert(integersIn: range.location..<(range.location + range.length))
+                await self.queryHighlights(for: range)
+            }
+        }
+    }
+
+    // MARK: - Query
+
+    private func queryHighlights(for range: NSRange) async {
+        guard let container, let textView else { return }
+
+        do {
+            let highlights = try await provider.queryHighlights(
+                textView: textView,
+                range: range
+            )
+            container.applyHighlightResult(providerID: providerID, highlights: highlights, range: range)
+            pendingSet.remove(integersIn: range.location..<(range.location + range.length))
+            validSet.insert(integersIn: range.location..<(range.location + range.length))
+        } catch {
+            pendingSet.remove(integersIn: range.location..<(range.location + range.length))
+        }
+    }
+
+    /// Cancel pending work.
+    func cancel() {
+        chunkTask?.cancel()
+        chunkTask = nil
+    }
+}
