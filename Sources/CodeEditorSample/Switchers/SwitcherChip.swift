@@ -1,9 +1,9 @@
 import CodeEditorPlugin
 import SwiftUI
 
-/// A single row inside the switcher card: leading SF Symbol, small-caps
-/// label, current value, trailing chevron. Wraps a `Menu` so tapping
-/// opens the option list.
+/// A single row inside the switcher card. Two-line layout: small-caps
+/// category label on top, current value as the dominant text below,
+/// trailing chevron on the right edge. Tapping opens a `Menu` of options.
 struct SwitcherChip<Option: Hashable>: View {
     @Environment(\.codeEditorTheme) private var theme
 
@@ -28,34 +28,44 @@ struct SwitcherChip<Option: Hashable>: View {
                 }
             }
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color(tokens: theme.style.icon.muted))
-                    .frame(width: 18, height: 18)
+            chipBody
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .disabled(disabled)
+        .opacity(disabled ? 0.45 : 1)
+    }
+
+    private var chipBody: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color(tokens: theme.style.icon.muted))
+                .frame(width: 22, height: 22)
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(label.uppercased())
                     .font(.system(size: 9, weight: .bold))
-                    .tracking(0.8)
+                    .tracking(0.9)
                     .foregroundStyle(Color(tokens: theme.style.text.muted))
-                    .frame(width: 64, alignment: .leading)
-                Spacer(minLength: 4)
                 Text(currentValueText)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12.5, weight: .medium))
                     .foregroundStyle(Color(tokens: theme.style.text.base))
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(Color(tokens: theme.style.text.muted))
             }
-            .padding(.horizontal, 12)
-            .frame(height: 40)
-            .contentShape(Rectangle())
+
+            Spacer(minLength: 4)
+
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color(tokens: theme.style.text.muted))
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .disabled(disabled)
-        .opacity(disabled ? 0.5 : 1)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     private var currentValueText: String {
