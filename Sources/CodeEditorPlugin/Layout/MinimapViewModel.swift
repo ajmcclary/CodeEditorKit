@@ -168,6 +168,11 @@ public final class MinimapViewModel {
     // Rendering preferences
     /// Whether to show syntax highlighting in the minimap
     public var showSyntaxHighlighting: Bool = true
+
+    /// Optional style data source for syntax-colored minimap rendering.
+    /// When `nil` (default), the minimap renders raw text. When set,
+    /// the minimap queries this source for per-character style colors.
+    public var styleDataSource: (any MinimapStyleDataSource)?
     /// Whether to show the viewport indicator overlay
     public var showViewportIndicator: Bool = true
     /// Whether to animate scrolling transitions
