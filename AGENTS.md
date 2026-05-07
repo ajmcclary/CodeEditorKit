@@ -37,7 +37,7 @@ Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay`
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 4 test targets.
+Tests mix both XCTest and Swift Testing frameworks across 3 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`).
 
 ## Source Tree
 
@@ -48,7 +48,7 @@ Sources/CodeEditorPlugin/
 ├── Layout/                  # UI components + co-located ViewModels
 ├── Configuration/           # Settings, presets, validation
 ├── SyntaxHighlighting/      # Language highlighting engine
-├── Languages/               # Language-specific providers (20 languages)
+├── Languages/               # Language-specific providers (18 languages)
 ├── Theming/                 # Theme system, color tokens, appearance
 ├── Completion/              # Code completion providers
 ├── Features/                # Optional features (folding, annotations, etc.)
@@ -100,14 +100,25 @@ config.display.isLineNumbersEnabled = true
 // Presets
 let config = EditorConfiguration.minimal
 
-// Batch mutation
-appState.updateConfiguration { config in
-    config.display.isLineNumbersEnabled = true
-}
+// Batch mutation (immutable chaining)
+let updated = config
+    .with(display: modifiedDisplay)
+    .with(behavior: modifiedBehavior)
 ```
 
 ### Testing
 Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Package.swift` excludes). When adding snapshot tests, record with `isRecording: true`, then commit the generated images. Tests use a mix of `import XCTest` and `import Testing`.
+
+## Diagrams
+
+Architecture diagrams live in `Diagrams/`. They use Mermaid syntax and should be kept in sync with the actual codebase. When adding new features or renaming classes, update the relevant diagrams.
+
+**Key things to watch:**
+- Language count is 18 (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell), not 20
+- The plugin system (`Diagram 27`) is a design document — not yet implemented
+- `20-debugging-integration-architecture.md` is the extended design document; `20-debugging-integration.md` reflects current implementation
+- `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code
+- No `depermaid`, `ConfigurationBatchUpdater`, `AppState`, `PluginManager`, or `ServiceLifecycle` classes exist
 
 ## What Will Go Wrong
 
