@@ -173,3 +173,37 @@ CodeEditSourceEditor should not be treated as a drop-in architecture:
 ## Main Takeaway
 
 CodeEditSourceEditor's strongest lesson is not that we should copy its structure wholesale. The lesson is that editor features should share a semantic and range-oriented core. Parsing, highlighting, folding, diagnostics, minimap rendering, and annotations should all consume the same underlying range/run model instead of each feature rebuilding its own partial view of the document.
+
+## Migration Status (2026-05-07)
+
+Phases 0-6 complete. Phase 7 (Parser-Backed Providers) skipped — Tree-sitter gate (`defer`). Phase 8 (Integration) in progress.
+
+| Phase | Status | Key Deliverable |
+|-------|--------|----------------|
+| 0 — Gates | Complete | 4 architecture decision docs |
+| 1 — Correctness | Complete | UTF-8/UTF-16 fix, stub removal, EditorStateBridge cache |
+| 2 — Range Storage | Complete | `RangeStore` (array-backed), `TextEditEventHub` |
+| 3 — Highlighting Overlay | Complete | `RangeHighlightProviding`, `VisibleRangeProvider`, `HighlightProviderState`, `StyledRangeContainer` |
+| 4 — Interaction State | Complete | `EditorInteractionState` + `EditorCursorPosition`, opt-in binding |
+| 5 — Folding | Complete | `FoldStoreElement`, `LineFoldStorage`, `FoldPresentationStrategy`, facade refactor |
+| 6 — Syntax-Aware Minimap | Complete | `MinimapStyleDataSource` protocol, `StyledMinimapStyleDataSource` |
+| 7 — Parser-Backed | Skipped | Gate B = `defer` (Tree-sitter decision pending) |
+| 8 — Integration | In Progress | Build/lint/test matrix, docs, benchmarks |
+
+**Cumulative:** 77 tests across 17 suites. `swift build` clean. `swiftlint` 0 violations.
+
+### New Files Created (57)
+
+- `Documentation/Architecture/` — 5 decision docs + 1 audit
+- `Text/RangeStore/` — `RangeStoreElement`, `RangeStoreRun`, `RangeStore`
+- `Text/TextEditEventHub.swift`
+- `SyntaxHighlighting/` — `RangeHighlightProviding`, `SyntaxHighlighterRangeAdapter`, `VisibleRangeProvider`, `HighlightProviderState`, `StyleElement`, `StyledRangeContainer`
+- `Core/EditorInteractionState.swift`
+- `Features/` — `FoldStoreElement`, `LineFoldStorage`, `FoldRegionAdapter`, `FoldPresentationStrategy`
+- `Layout/MinimapStyleDataSource.swift`
+- 8 test files across Core, Features, Layout, SyntaxHighlighting, SwiftUI, Text directories
+
+### Feature Flags
+
+- `EditorConfiguration.Performance.usesRangeBasedHighlighting` (default `false`) — gates range-based highlighting
+- `CodeEditor.editorInteractionState(_:)` — opt-in binding modifier
