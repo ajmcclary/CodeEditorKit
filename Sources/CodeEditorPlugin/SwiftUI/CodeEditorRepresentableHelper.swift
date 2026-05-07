@@ -28,6 +28,7 @@ enum CodeEditorRepresentableHelper {
         let theme: Theme
         let configuration: EditorConfiguration
         let memoryMonitor: MemoryMonitor
+        let interactionState: Binding<EditorInteractionState>
         let onTextChange: ((String) -> Void)?
         let onSelectionChange: ((NSRange) -> Void)?
     }
@@ -37,6 +38,7 @@ enum CodeEditorRepresentableHelper {
         let language: Language
         let theme: Theme
         let configuration: EditorConfiguration
+        let interactionState: Binding<EditorInteractionState>
         let environment: EnvironmentValues
     }
 
@@ -49,6 +51,7 @@ enum CodeEditorRepresentableHelper {
     ) -> CodeEditorContainerView {
         let container = CodeEditorContainerView()
 
+        coordinator.updateInteractionStateBinding(parameters.interactionState)
         coordinator.setupContainer(
             container,
             text: parameters.text,
@@ -59,6 +62,7 @@ enum CodeEditorRepresentableHelper {
             onTextChange: parameters.onTextChange,
             onSelectionChange: parameters.onSelectionChange
         )
+        coordinator.applyInteractionState(to: container.textView)
 
         // Platform-specific setup
         setupPlatformSpecificFeatures(container: container, coordinator: coordinator)
@@ -77,7 +81,15 @@ enum CodeEditorRepresentableHelper {
         // — sub-project 3 task 5 establishes the route; later tasks wire each subview.
         container.apply(theme: parameters.theme)
 
-        coordinator.updateContainer(container, text: parameters.text, language: parameters.language, theme: parameters.theme, configuration: parameters.configuration)
+        coordinator.updateInteractionStateBinding(parameters.interactionState)
+        coordinator.updateContainer(
+            container,
+            text: parameters.text,
+            language: parameters.language,
+            theme: parameters.theme,
+            configuration: parameters.configuration
+        )
+        coordinator.applyInteractionState(to: container.textView)
 
         // Handle focus request from environment using coordinator's tracking
         coordinator.requestFocusIfNeeded(
@@ -276,12 +288,14 @@ enum CodeEditorRepresentableHelper {
         text: Binding<String>,
         onTextChange: ((String) -> Void)?,
         onSelectionChange: ((NSRange) -> Void)?,
-        textDebounceInterval: Duration
+        textDebounceInterval: Duration,
+        interactionState: Binding<EditorInteractionState> = .constant(EditorInteractionState())
     ) -> CodeEditorCoordinator {
         let coordinator = CodeEditorCoordinator(
             text: text,
             onTextChange: onTextChange,
-            onSelectionChange: onSelectionChange
+            onSelectionChange: onSelectionChange,
+            interactionState: interactionState
         )
         coordinator.textDebounceInterval = textDebounceInterval
         return coordinator

@@ -11,13 +11,14 @@ internal final class FoldRegionAdapter {
 
     func buildStorage(from text: String, existingStorage: LineFoldStorage? = nil) async -> LineFoldStorage {
         let regions = await provider.detectFoldableRegions(in: text)
+        let documentLength = TextRangeUtilities.utf16Length(of: text)
         let collapsedIDs: Set<String> = Set(
-            existingStorage?.folds(in: NSRange(location: 0, length: text.utf16.count))
+            existingStorage?.folds(in: NSRange(location: 0, length: documentLength))
                 .filter(\.isCollapsed)
                 .map(\.id) ?? []
         )
 
-        var storage = LineFoldStorage(documentLength: text.utf16.count)
+        var storage = LineFoldStorage(documentLength: documentLength)
         storage.updateFolds(from: regions, collapsedIDs: collapsedIDs)
         return storage
     }

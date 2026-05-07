@@ -7,7 +7,10 @@ import UIKit
 #endif
 
 /// A single style run for minimap rendering — a character range with a color.
-public struct MinimapStyleRun: Sendable, Equatable {
+///
+/// `PlatformColor` is UI value data that this code treats as immutable after
+/// creation, so the wrapper opts into sendability for cross-actor snapshots.
+public struct MinimapStyleRun: Equatable, @unchecked Sendable {
     public var range: NSRange
     public var color: PlatformColor
 

@@ -7,7 +7,7 @@ import UIKit
 
 /// Engine for managing code folding in the editor
 @MainActor
-internal class CodeFoldingEngine: ObservableObject {
+internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "CodeFoldingEngine")
 
     // MARK: - Published Properties
@@ -67,9 +67,19 @@ internal class CodeFoldingEngine: ObservableObject {
 
     /// Attach to a text view
     internal func attach(to textView: CodeEditorView) {
+        if self.textView !== textView {
+            self.textView?.textEditEventHub.removeObserver(self)
+        }
         self.textView = textView
         operationsService.attach(to: textView)
+        textView.textEditEventHub.addObserver(self)
         updateFoldableRegions()
+    }
+
+    internal func textStorageDidApplyEdit(_ event: TextEditEvent) {
+        guard event.editedCharacters else { return }
+        syncFoldStorage(editedRange: event.editedRange, changeInLength: event.changeInLength)
+        updateFoldableRegions(in: event.editedRange, changeInLength: event.changeInLength)
     }
 
     // MARK: - Provider Management
@@ -84,36 +94,55 @@ internal class CodeFoldingEngine: ObservableObject {
     /// Toggle fold at line
     /// - Returns: `true` if fold state was changed, `false` if no foldable region exists
     internal func toggleFold(at line: Int) -> Bool {
-        operationsService.toggleFold(at: line, regions: foldableRegions, foldedRegions: &foldedRegions)
+        guard let region = foldableRegion(at: line) else { return false }
+        let changed = operationsService.toggleFold(at: line, regions: foldableRegions, foldedRegions: &foldedRegions)
+        if changed {
+            foldStorage.setCollapsed(
+                foldID: region.id.uuidString,
+                collapsed: foldedRegions.contains(region.id)
+            )
+        }
+        return changed
     }
 
     /// Fold a specific region
     /// - Returns: `true` if the region was folded, `false` if it was already folded or textView is nil
     @discardableResult
     internal func fold(_ region: FoldableRegion) -> Bool {
-        operationsService.fold(region, foldedRegions: &foldedRegions, configuration: configuration)
+        let changed = operationsService.fold(region, foldedRegions: &foldedRegions, configuration: configuration)
+        if changed {
+            foldStorage.setCollapsed(foldID: region.id.uuidString, collapsed: true)
+        }
+        return changed
     }
 
     /// Unfold a specific region
     /// - Returns: `true` if the region was unfolded, `false` if it wasn't folded or textView is nil
     @discardableResult
     internal func unfold(_ region: FoldableRegion) -> Bool {
-        operationsService.unfold(region, foldedRegions: &foldedRegions, configuration: configuration)
+        let changed = operationsService.unfold(region, foldedRegions: &foldedRegions, configuration: configuration)
+        if changed {
+            foldStorage.setCollapsed(foldID: region.id.uuidString, collapsed: false)
+        }
+        return changed
     }
 
     /// Fold all regions
     internal func foldAll() {
         operationsService.foldAll(regions: foldableRegions, foldedRegions: &foldedRegions, configuration: configuration)
+        syncFoldStorageCollapseStates()
     }
 
     /// Unfold all regions
     internal func unfoldAll() {
         operationsService.unfoldAll(regions: foldableRegions, foldedRegions: &foldedRegions, configuration: configuration)
+        syncFoldStorageCollapseStates()
     }
 
     /// Fold all regions at a specific level
     internal func foldLevel(_ level: Int) {
         operationsService.foldLevel(level, regions: foldableRegions, foldedRegions: &foldedRegions, configuration: configuration)
+        syncFoldStorageCollapseStates()
     }
 
     /// Get foldable region at line
@@ -218,6 +247,7 @@ internal class CodeFoldingEngine: ObservableObject {
         foldableRegions = adjustedRegions.filter { region in
             region.range.location >= 0 && region.range.length > 0
         }
+        foldStorage.updateFolds(from: foldableRegions, collapsedIDs: collapsedFoldIDs)
 
         // Clear cache as text has changed
         lastTextHash = 0
@@ -261,6 +291,7 @@ internal class CodeFoldingEngine: ObservableObject {
         isProcessing = true
         defer { isProcessing = false }
 
+        let documentLength = TextRangeUtilities.utf16Length(of: text)
         let regions = await provider.detectFoldableRegions(in: text)
 
         // Filter and sort regions
@@ -268,7 +299,7 @@ internal class CodeFoldingEngine: ObservableObject {
             .filter { region in
                 // Validate region
                 region.range.location >= 0 &&
-                NSMaxRange(region.range) <= text.count &&
+                NSMaxRange(region.range) <= documentLength &&
                 region.range.length >= configuration.minimumLineCount
             }
             .sorted { $0.range.location < $1.range.location }
@@ -286,14 +317,15 @@ internal class CodeFoldingEngine: ObservableObject {
         updateRegions(hierarchicalRegions)
 
         // Populate range-store-backed fold storage.
-        foldStorage.updateFolds(from: hierarchicalRegions, collapsedIDs: foldedRegions.map(\.uuidString).reduce(into: Set()) { $0.insert($1) })
+        foldStorage = LineFoldStorage(documentLength: documentLength)
+        foldStorage.updateFolds(from: hierarchicalRegions, collapsedIDs: collapsedFoldIDs)
 
         // Track performance metrics
         let endTime = CFAbsoluteTimeGetCurrent()
         await performanceMetrics.trackCodeFolding(
             duration: endTime - startTime,
             regionCount: hierarchicalRegions.count,
-            fileSize: text.count
+            fileSize: documentLength
         )
     }
 
@@ -337,6 +369,19 @@ internal class CodeFoldingEngine: ObservableObject {
 
         foldableRegions = newRegions
         foldedRegions = newFoldedRegions
+    }
+
+    private var collapsedFoldIDs: Set<String> {
+        Set(foldedRegions.map(\.uuidString))
+    }
+
+    private func syncFoldStorageCollapseStates() {
+        for region in foldableRegions {
+            foldStorage.setCollapsed(
+                foldID: region.id.uuidString,
+                collapsed: foldedRegions.contains(region.id)
+            )
+        }
     }
 
     deinit {

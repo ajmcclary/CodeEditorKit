@@ -15,6 +15,7 @@ internal final class VisibleRangeProvider {
     private weak var textView: CodeEditorView?
     private var visibleSet = IndexSet()
     private var observerTokens: [NSObjectProtocol] = []
+    var onVisibleSetChange: ((IndexSet) -> Void)?
 
     init(textView: CodeEditorView) {
         self.textView = textView
@@ -22,14 +23,15 @@ internal final class VisibleRangeProvider {
         updateVisibleSet()
     }
 
-    nonisolated deinit {
-        // Observers are cleaned up by the notification center when this object deallocs.
-        // We registered with weak self, so no explicit removal is needed.
-    }
-
     /// The current visible character indices.
     var visibleIndices: IndexSet {
         visibleSet
+    }
+
+    /// Explicitly unregister notification observers.
+    func stopObserving() {
+        observerTokens.forEach { NotificationCenter.default.removeObserver($0) }
+        observerTokens.removeAll()
     }
 
     /// Call when text changes — inserts the edited range into the visible set.
@@ -48,7 +50,10 @@ internal final class VisibleRangeProvider {
         let storageLength = textView.textStorage?.length ?? 0
         let end = min(storageLength, range.location + range.length)
         guard range.location >= 0, end > range.location else { return }
-        visibleSet = IndexSet(integersIn: range.location..<end)
+        let updated = IndexSet(integersIn: range.location..<end)
+        guard updated != visibleSet else { return }
+        visibleSet = updated
+        onVisibleSetChange?(updated)
     }
 
     // MARK: - Observers

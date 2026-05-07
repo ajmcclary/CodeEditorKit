@@ -14,10 +14,11 @@ extension EditorConfiguration {
         /// Maximum file length for syntax highlighting (0 = unlimited)
         public var maxSyntaxHighlightingLength: Int = PlatformConstants.maxSyntaxHighlightingLength
 
-        /// Enable range-based highlighting (valid/pending/visible state machine).
-        /// When `false` (default), the existing full-document highlighting path is used.
-        /// When `true`, highlighting operates on visible invalid ranges using `RangeStore`
-        /// and `HighlightProviderState`.
+        /// Enable the range-store-backed style pipeline for visible invalidation
+        /// and minimap style data.
+        ///
+        /// The legacy attributed-text highlighter remains active until a
+        /// dedicated range-based text attribute applier is available.
         public var usesRangeBasedHighlighting: Bool = false
 
         /// Whether to use hardware acceleration

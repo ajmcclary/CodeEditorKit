@@ -9,6 +9,7 @@ final class CodeEditorSnapshotTests: XCTestCase {
     func testCodeEditorRendersSwiftSnippet() {
         let size = CGSize(width: 480, height: 240)
         let container = CodeEditorContainerView(frame: CGRect(origin: .zero, size: size))
+        container.appearance = NSAppearance(named: .aqua)
 
         var configuration = EditorConfiguration.minimal
         configuration.display.fontSize = 13

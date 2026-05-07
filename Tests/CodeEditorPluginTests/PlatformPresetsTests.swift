@@ -31,7 +31,7 @@ final class PlatformPresetsTests: XCTestCase {
         let config = EditorConfiguration.macOS
 
         // Verify macOS optimizations
-        XCTAssertEqual(config.display.fontSize, 13.0, "macOS should have standard font size")
+        XCTAssertEqual(config.display.fontSize, 14.0, "macOS should have standard font size")
         XCTAssertEqual(config.layout.gutterWidth, 40.0, "macOS should have standard gutter width")
         XCTAssertTrue(config.behavior.isCodeCompletionEnabled, "macOS should support code completion")
         XCTAssertTrue(config.behavior.isAutomaticTextReplacementEnabled, "macOS should enable auto text replacement")
@@ -52,7 +52,7 @@ final class PlatformPresetsTests: XCTestCase {
         #elseif targetEnvironment(macCatalyst)
         XCTAssertEqual(config.display.fontSize, 14.0)
         #elseif canImport(AppKit)
-        XCTAssertEqual(config.display.fontSize, 13.0)
+        XCTAssertEqual(config.display.fontSize, 14.0)
         #else
         XCTAssertEqual(config.display.fontSize, 13.0) // default fontSize
         #endif

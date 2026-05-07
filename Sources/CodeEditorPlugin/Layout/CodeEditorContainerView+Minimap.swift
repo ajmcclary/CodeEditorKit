@@ -13,6 +13,7 @@ extension CodeEditorContainerView {
     internal func setupMinimap() {
         // Create data provider
         minimapDataProvider = MinimapDataProvider(textView: textView)
+        minimapDataProvider?.styleDataSource = textView.rangeBasedHighlightingStyleDataSourceForTesting
 
         // Set up navigation callback
         minimapView.onNavigate = { [weak self] lineNumber in
