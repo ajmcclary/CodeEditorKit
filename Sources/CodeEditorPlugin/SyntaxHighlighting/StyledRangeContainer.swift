@@ -101,18 +101,14 @@ internal final class StyledRangeContainer {
             // Determine the merged value at this segment.
             for idx in allRuns.indices {
                 let runs = allRuns[idx].runs
-                var runIdx = allRuns[idx].index
-                while runIdx < runs.count, runIdx < runs.count {
-                    let run = runs[runIdx]
-                    let runStart = queryRange.lowerBound + (allRuns[idx].index > 0 ? 0 : 0)
-                    if let value = run.value {
-                        if let current = bestValue {
-                            bestValue = current.combineHigherPriority(value)
-                        } else {
-                            bestValue = value
-                        }
-                    }
-                    break
+                let runIdx = allRuns[idx].index
+                guard runIdx < runs.count, let value = runs[runIdx].value else {
+                    continue
+                }
+                if let current = bestValue {
+                    bestValue = current.combineHigherPriority(value)
+                } else {
+                    bestValue = value
                 }
             }
 
