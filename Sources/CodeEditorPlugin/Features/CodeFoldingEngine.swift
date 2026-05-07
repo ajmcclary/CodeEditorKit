@@ -24,6 +24,27 @@ internal class CodeFoldingEngine: ObservableObject {
     private let operationsService = FoldingOperationsService()
     private var updateTask: Task<Void, Never>?
 
+    // MARK: - New architecture (Phase 5)
+
+    /// Range-store-backed fold metadata, separate from text attributes.
+    private var foldStorage = LineFoldStorage(documentLength: 0)
+
+    /// Presentation strategy for collapse/expand visuals.
+    private var presentationStrategy: any FoldPresentationStrategy = AttributeFoldPresentationStrategy()
+
+    /// Returns folds from the range-store-backed storage for the given range.
+    internal func folds(in range: NSRange) -> [FoldInfo] {
+        foldStorage.folds(in: range)
+    }
+
+    /// Update fold storage after a text edit.
+    internal func syncFoldStorage(editedRange: NSRange, changeInLength: Int) {
+        foldStorage.storageUpdated(
+            replacedCharactersIn: editedRange.location..<(editedRange.location + editedRange.length),
+            withCount: editedRange.length + changeInLength
+        )
+    }
+
     // MARK: - Caching
 
     private var foldRegionCache: [Int: [FoldableRegion]] = [:] // Hash -> Regions
@@ -263,6 +284,9 @@ internal class CodeFoldingEngine: ObservableObject {
 
         // Update regions, preserving fold state
         updateRegions(hierarchicalRegions)
+
+        // Populate range-store-backed fold storage.
+        foldStorage.updateFolds(from: hierarchicalRegions, collapsedIDs: foldedRegions.map(\.uuidString).reduce(into: Set()) { $0.insert($1) })
 
         // Track performance metrics
         let endTime = CFAbsoluteTimeGetCurrent()
