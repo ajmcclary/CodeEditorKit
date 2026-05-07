@@ -1,184 +1,124 @@
 # CLAUDE.md
 
-AI assistant guidance for CodeEditorPlugin - a TextKit2-based code editor framework for Apple platforms.
+AI assistant guidance for CodeEditorPlugin — a TextKit2-based code editor framework for Apple platforms.
 
-## Quick Reference
+## Commands
 
-### Essential Commands
 ```bash
-# Build, lint, and test
+# Build, lint, test (in order — lint catches issues tests may miss)
 swift build && swiftlint && swift test --parallel
 
-# Fix linting issues
+# Fix auto-correctable lint violations
 swiftlint --fix
 
-# Generate package documentation
-swift package generate-documentation --target CodeEditorPlugin
+# Run a single test (matches by name substring)
+swift test --filter TestName
+
+# Build/run the sample app (target, not a separate package)
+swift build --target CodeEditorSample
+swift run CodeEditorSample
+
+# Build a single target
+swift build --target CodeEditorPlugin
 ```
 
-### Project Stats
-- **437 Source Files** across **18 top-level source directories**
-- **70 Test Files** with comprehensive coverage
-- **20 Languages Supported** (Swift, JavaScript, TypeScript, Python, Go, Rust, C, C++, Java, HTML, CSS, JSON, Markdown, YAML, XML, SQL, Ruby, PHP, Shell, Plain Text)
-- **Zero SwiftLint Violations** maintained
+## Package Structure
 
-## Architecture
+**Swift 6.3** with `StrictConcurrency` enabled. 4 products defined in `Package.swift`:
 
-### Directory Structure
+| Product | Type | Purpose |
+|---|---|---|
+| `CodeEditorPlugin` | library | Main editor framework |
+| `CodeEditorUI` | library | Optional SwiftUI components |
+| `CodeEditorDesignTokens` | library | Design tokens (colors, spacing, typography) |
+| `CodeEditorSample` | executable | Demo app |
+
+Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay` (IssueReporting), `swift-snapshot-testing` (tests only), `swift-custom-dump` (tests only).
+
+The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
+
+Tests mix both XCTest and Swift Testing frameworks across 4 test targets.
+
+## Source Tree
+
 ```
 Sources/CodeEditorPlugin/
 ├── Core/                    # Main APIs, services, event system
-├── Text/                    # TextKit handling, layout, processing
-├── Layout/                  # UI components + ViewModels
-├── Configuration/           # Settings & presets
-├── SyntaxHighlighting/      # Language highlighting
-├── Languages/               # Language-specific providers
-├── Completion/              # Code completion
-├── Features/                # Optional features
-├── SwiftUI/                 # SwiftUI integration
-├── Platform/                # Cross-platform abstractions
-├── PluginSystem/            # Internal plugin infrastructure
-├── Extensions/              # Type extensions (+Extensions suffix)
-├── Performance/             # Monitoring & optimization
-├── LSP/                     # Language Server Protocol
-├── Annotations/             # Code annotations
-├── Models/                  # Data models
-├── Utilities/               # Shared utilities
-└── Documentation.docc/      # DocC documentation
+├── Text/                    # TextKit2 handling, layout, processing
+├── Layout/                  # UI components + co-located ViewModels
+├── Configuration/           # Settings, presets, validation
+├── SyntaxHighlighting/      # Language highlighting engine
+├── Languages/               # Language-specific providers (20 languages)
+├── Theming/                 # Theme system, color tokens, appearance
+├── Completion/              # Code completion providers
+├── Features/                # Optional features (folding, annotations, etc.)
+├── SwiftUI/                 # SwiftUI wrappers and modifiers
+├── Platform/                # Cross-platform color/font/view abstractions
+├── Extensions/              # Type extensions (all use +Extensions suffix)
+├── Performance/             # Monitoring, profiling, memory tracking
+├── LSP/                     # Language Server Protocol support
+├── Annotations/             # Code annotation detection (TODO, FIXME, etc.)
+├── Models/                  # Shared data models
+├── Utilities/               # Shared helpers
+└── Documentation.docc/      # DocC catalog
 ```
 
-### Core Components
+~19 functional directories, ~445 Swift source files in the main target.
 
-- **CodeEditorView**: Main TextKit2 text view with cross-platform support
-- **EditorConfiguration**: Nested config (`display`, `layout`, `behavior`, `performance`)
-- **Platform Abstraction**: `PlatformColor`, `PlatformFont`, `PlatformView`
-- **Services**: `TextEditingService`, `LanguageDetectionService`, `SyntaxHighlightingService`
-- **Event System**: `UnifiedEventSystem`, `CrossPlatformCoordinator`
+## Conventions
 
-## Key Patterns
-
-### Configuration
+### Platform Detection
 ```swift
-// Direct updates (preferred)
-config.display.isLineNumbersEnabled = true
-config.layout.tabWidth = 4
-
-// Use presets
-let config = EditorConfiguration.minimal
-
-// Batch updates
-appState.updateConfiguration { config in
-    config.display.isLineNumbersEnabled = true
-    config.display.fontSize = 16
-}
-
-// Dependency injection for ActorCoordinator
-var config = EditorConfiguration()
-config.actorCoordinator = ActorCoordinator.create()
-```
-
-### SwiftUI Integration
-```swift
-CodeEditor(text: $code)
-    .codeLanguage(.swift)
-    .environment(\.codeEditorConfiguration, config)
-
-// Direct bindings (✅ RECOMMENDED)
-Toggle("Line Numbers", isOn: $config.display.isLineNumbersEnabled)
-
-// Avoid recreating configuration wrappers when a direct binding is available.
-```
-
-### Platform Code
-```swift
-// ✅ CORRECT: Use canImport
+// CORRECT
 #if canImport(AppKit)
 import AppKit
 #endif
 
-// ❌ WRONG: Don't use os()
+// WRONG
 #if os(macOS)  // Don't do this
 ```
 
-### Language Detection
+### Logging
+Never use `print()`. Use `CrossPlatformLogger.logger()` instead. This is enforced by a custom SwiftLint rule.
+
+### Force Unwraps
+Never use `!`. Always safe-unwrap. Enforced by SwiftLint `force_unwrapping` rule.
+
+### Extension Files
+All extension files use the `+Extensions` suffix: `String+Extensions.swift`, `NSParagraphStyle+Extensions.swift`, etc. When an extension is specific to a domain (e.g., text layout helpers), co-locate it in that domain's directory rather than the global `Extensions/` folder.
+
+### Dependency Injection
+No singletons. Pass dependencies through `EditorConfiguration` or service initializers:
+- `ActorCoordinator`: `config.actorCoordinator = ActorCoordinator.create()`
+- `MemoryMonitor`: inject through configuration or environment
+
+### Configuration
 ```swift
-// Auto-detect
-textView.setLanguage(fileExtension: "swift")
+// Direct updates (preferred for SwiftUI bindings)
+config.display.isLineNumbersEnabled = true
 
-// Direct
-textView.language = .python
+// Presets
+let config = EditorConfiguration.minimal
+
+// Batch mutation
+appState.updateConfiguration { config in
+    config.display.isLineNumbersEnabled = true
+}
 ```
 
-## Development Rules
+### Testing
+Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Package.swift` excludes). When adding snapshot tests, record with `isRecording: true`, then commit the generated images. Tests use a mix of `import XCTest` and `import Testing`.
 
-### Must Follow
-- **Swift 6 Concurrency**: Use actors for background work
-- **Extension Naming**: ALL extension files use the `+Extensions` suffix; domain-local extension files are preferred when the extension belongs to a specific feature area
-- **Platform Detection**: Use `#if canImport()` NOT `#if os()`
-- **Logging**: Use `CrossPlatformLogger.logger()` not `print()`
-- **Memory**: Clean up in `removeFromSuperview`
-- **Force Unwraps**: Never use `!` - always safe unwrap
-- **SwiftLint**: Zero violations (run `swiftlint --fix`)
+## What Will Go Wrong
 
-### Architecture Guidelines
-- **UI/Logic Separation**: Business logic in services, not views
-- **ViewModels**: Co-located with features (e.g., `GutterViewModel` in `Layout/`)
-- **Dependency Injection**: No singletons - use DI for all services
-  - ActorCoordinator: Pass via `EditorConfiguration.actorCoordinator`
-  - MemoryMonitor: Inject through configuration
-- **Error Handling**: Comprehensive error types, no silent failures
-- **Testing**: Test new features (53+ test files exist)
+- **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
 
-### Performance Targets
-- **60fps** rendering during all operations
-- **500KB+** file support without lag
-- **Async** syntax highlighting with LRU cache
-- **Background** processing for expensive operations
+- **`swift package generate-documentation`** requires the Swift-DocC plugin installed separately — this is not a standard Swift CLI command.
 
-## Common Tasks
+- **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.
 
-### Add Configuration Option
-1. Add property to config section
-2. Update presets if needed
-3. Add SwiftUI modifier
-4. Update DocC documentation
+- **Custom lint rule `no_print_statements`** matches the doc comment lines in Documentation.docc but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
 
-### Add Platform Feature
-1. Create abstraction in `Platform/`
-2. Update `PlatformCapabilities`
-3. Test on all platforms (macOS, iOS, Catalyst)
+- **`canImport` conventions are enforced across ~275 files**. Adding a new `#if os()` is a regression.
 
-### Debug Issues
-```bash
-# Run specific test
-swift test --filter TestName
-
-# Platform testing
-xcodebuild -scheme CodeEditorPlugin -destination 'platform=iOS Simulator,name=iPhone 15'
-```
-
-## API Notes
-
-### API Notes
-- Use direct bindings for SwiftUI configuration controls.
-- Use dependency injection for services.
-
-### Key Services
-- `TextEditingService` - Text manipulation
-- `LanguageDetectionService` - File type detection  
-- `SyntaxHighlightingService` - Highlighting coordination
-- `UniversalCompletionProvider` - Completion factory
-
-### Important Files
-- `CodeEditorAPI.swift` - Public API protocol
-- `EditorConfiguration.swift` - Config structure
-- `PlatformCapabilities.swift` - Runtime detection
-- `UnifiedEventSystem.swift` - Event handling
-
-## Testing Checklist
-- [ ] Builds without warnings
-- [ ] SwiftLint passes
-- [ ] Tests pass on all platforms
-- [ ] 60fps performance maintained
-- [ ] Memory properly managed
-- [ ] Documentation updated
+- **Test count varies**: the codebase uses both `@Suite` (Swift Testing) and `XCTestCase` (XCTest). Counting "tests" depends on framework — `swift test --parallel` runs all of them regardless.
