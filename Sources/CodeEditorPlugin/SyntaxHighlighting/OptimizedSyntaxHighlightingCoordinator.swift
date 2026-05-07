@@ -55,8 +55,6 @@ public final class OptimizedSyntaxHighlightingCoordinator {
     private var lastCircuitBreakerReset = Date()
 
     // Incremental state
-    private var lastHighlightedText: String?
-    private var lastHighlightedTokens: [HighlightedToken] = []
     private var cacheWarmingTask: Task<Void, Never>?
 
     // MARK: - Initialization
@@ -157,13 +155,6 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 cacheCheckTime: cacheCheckTime,
                 totalStartTime: startTime
             )
-        } else if configuration.enableIncrementalHighlighting && canUseIncrementalHighlighting(text: text) {
-            tokens = await highlightIncrementally(
-                text: text,
-                language: language,
-                cacheCheckTime: cacheCheckTime,
-                totalStartTime: startTime
-            )
         } else {
             tokens = await highlightFull(
                 text: text,
@@ -181,10 +172,6 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             computationTime: Duration.seconds(totalTime),
             viewportRange: visibleRange
         )
-
-        // Update incremental state
-        lastHighlightedText = text
-        lastHighlightedTokens = tokens
 
         return tokens
     }
@@ -290,22 +277,6 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         return tokens
     }
 
-    private func highlightIncrementally(
-        text: String,
-        language: Language,
-        cacheCheckTime: TimeInterval,
-        totalStartTime: TimeInterval
-    ) async -> [HighlightedToken] {
-        // TODO: Implement incremental highlighting
-        // For now, fall back to full highlighting
-        await highlightFull(
-            text: text,
-            language: language,
-            cacheCheckTime: cacheCheckTime,
-            totalStartTime: totalStartTime
-        )
-    }
-
     private func highlightFull(
         text: String,
         language: Language,
@@ -384,14 +355,6 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
             return tokens
         }
-    }
-
-    private func canUseIncrementalHighlighting(text: String) -> Bool {
-        guard let lastText = lastHighlightedText else { return false }
-
-        // Simple heuristic: use incremental if texts are similar in length
-        let lengthDiff = abs(text.count - lastText.count)
-        return lengthDiff < 1_000 && lengthDiff < lastText.count / 10
     }
 
     private func shouldTripCircuitBreaker() -> Bool {

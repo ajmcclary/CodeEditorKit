@@ -37,6 +37,17 @@ final class LineIndexCache {
         return left + 1 // Convert to 1-based line numbers
     }
 
+    /// Get 1-based line number and 1-based column for a character position.
+    /// O(log n) using the cached line offsets.
+    func lineAndColumn(at position: Int, in text: String) -> (line: Int, column: Int) {
+        let line = lineNumber(at: position, in: text)
+        let entry = ensureCacheValid(for: text)
+        let lineIndex = line - 1
+        let lineStart = entry.lineOffsets[lineIndex]
+        let column = position - lineStart + 1
+        return (line: line, column: column)
+    }
+
     /// Get line number for a String.Index position
     func lineNumber(at position: String.Index, in text: String) -> Int {
         let offset = text.distance(from: text.startIndex, to: position)

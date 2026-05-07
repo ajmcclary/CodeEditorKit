@@ -144,41 +144,90 @@ private final class SyntaxHighlightVisitor: SyntaxVisitor {
     private(set) var tokens: [HighlightedToken] = []
     private var processedRanges: Set<NSRange> = []
 
+    /// Precomputed UTF-8 to UTF-16 offset mapping for the source string.
+    /// Indexed by UTF-16 offset, each entry stores the corresponding UTF-8 offset.
+    private let utf16ToUTF8Offsets: [Int]
+
     init(source: String) {
         self.source = source
+        self.utf16ToUTF8Offsets = Self.computeUTF16ToUTF8Offsets(for: source)
         super.init(viewMode: .sourceAccurate)
     }
 
-    private func addToken(for syntax: some SyntaxProtocol, type: SwiftSyntaxHighlighter.TokenType) {
-        let startOffset = syntax.position.utf8Offset
-        let endOffset = syntax.endPosition.utf8Offset
-        let length = endOffset - startOffset
+    /// Builds an array where `result[utf16Index]` gives the UTF-8 offset
+    /// at that UTF-16 code unit. This allows constant-time conversion from
+    /// UTF-16 offsets to UTF-8 offsets (for range validation) and O(n)
+    /// reverse mapping from UTF-8 to UTF-16 (used below).
+    private static func computeUTF16ToUTF8Offsets(for source: String) -> [Int] {
+        var offsets: [Int] = []
+        offsets.reserveCapacity(source.utf16.count)
+        var utf8Offset = 0
+        for char in source {
+            let charUTF16Count = char.utf16.count
+            let charUTF8Count = char.utf8.count
+            for _ in 0..<charUTF16Count {
+                offsets.append(utf8Offset)
+            }
+            utf8Offset += charUTF8Count
+        }
+        // Append final position for end-of-string lookups
+        offsets.append(utf8Offset)
+        return offsets
+    }
 
-        // Skip empty tokens
+    /// Converts a UTF-8 offset to a UTF-16 offset using the precomputed table.
+    /// Falls back to walking the string if the offset is beyond the table.
+    private func utf16Offset(forUTF8Offset utf8Offset: Int) -> Int {
+        if let index = utf16ToUTF8Offsets.firstIndex(of: utf8Offset) {
+            return index
+        }
+        // Fallback for offsets beyond precomputed range
+        var utf8Count = 0
+        var utf16Count = 0
+        for char in source {
+            if utf8Count >= utf8Offset { break }
+            utf8Count += char.utf8.count
+            utf16Count += char.utf16.count
+        }
+        return utf16Count
+    }
+
+    private func addToken(for syntax: some SyntaxProtocol, type: SwiftSyntaxHighlighter.TokenType) {
+        let utf8Start = syntax.position.utf8Offset
+        let utf8End = syntax.endPosition.utf8Offset
+        let length = utf8End - utf8Start
+
         guard length > 0 else {
             return
         }
 
-        let range = NSRange(location: startOffset, length: length)
+        let utf16Start = utf16Offset(forUTF8Offset: utf8Start)
+        let utf16Length = utf16Offset(forUTF8Offset: utf8End) - utf16Start
+        guard utf16Length > 0 else { return }
 
-        // Skip if we've already processed this range
+        let range = NSRange(location: utf16Start, length: utf16Length)
+
         guard !processedRanges.contains(range) else {
             return
         }
         processedRanges.insert(range)
 
-        // Extract text from the syntax node
         let text = syntax.description
 
         tokens.append(HighlightedToken(range: range, type: TokenType(fromSwiftType: type), text: text))
     }
 
     private func addTriviaToken(piece: TriviaPiece, node: TokenSyntax, type: SwiftSyntaxHighlighter.TokenType) {
-        let offset = node.position.utf8Offset - node.leadingTriviaLength.utf8Length
-        let length = piece.sourceLength.utf8Length
-        let range = NSRange(location: offset, length: length)
+        let utf8Offset = node.position.utf8Offset - node.leadingTriviaLength.utf8Length
+        let utf8Length = piece.sourceLength.utf8Length
 
-        // Extract text from trivia piece
+        let utf16Start = utf16Offset(forUTF8Offset: utf8Offset)
+        let utf16End = utf16Offset(forUTF8Offset: utf8Offset + utf8Length)
+        let utf16Length = utf16End - utf16Start
+        guard utf16Length > 0 else { return }
+
+        let range = NSRange(location: utf16Start, length: utf16Length)
+
         let text: String = switch piece {
         case let .lineComment(comment):
             comment
