@@ -1,3 +1,4 @@
+import CodeEditorDesignTokens
 import CodeEditorPlugin
 import SwiftUI
 
@@ -50,23 +51,7 @@ public struct DefaultEditorTabStripStyle: EditorTabStripStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(configuration.tabs) { tab in
-                    EditorTab(
-                        tab: tab,
-                        isActive: tab.id == configuration.activeTabID,
-                        onSelect: { configuration.setActive(tab.id) },
-                        onClose: { configuration.close(tab.id) }
-                    )
-                    Divider()
-                        .frame(height: 16)
-                        .opacity(0.3)
-                }
-            }
-        }
-        .frame(height: 36)
-        .platformGlassSurface(.tabBar)
+        DefaultTabStripBody(configuration: configuration)
     }
 }
 
@@ -76,6 +61,45 @@ public struct CompactEditorTabStripStyle: EditorTabStripStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
+        CompactTabStripBody(configuration: configuration)
+    }
+}
+
+private struct DefaultTabStripBody: View {
+    @Environment(\.codeEditorTheme) private var theme
+    let configuration: EditorTabStripStyleConfiguration
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(configuration.tabs) { tab in
+                    EditorTab(
+                        tab: tab,
+                        isActive: tab.id == configuration.activeTabID,
+                        onSelect: { configuration.setActive(tab.id) },
+                        onClose: { configuration.close(tab.id) }
+                    )
+                    Rectangle()
+                        .fill(Color(tokens: theme.style.borders.variant))
+                        .frame(width: 0.5, height: 16)
+                }
+            }
+        }
+        .frame(height: 36)
+        .platformGlassSurface(.tabBar)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color(tokens: theme.style.borders.base).opacity(0.5))
+                .frame(height: 0.5)
+        }
+    }
+}
+
+private struct CompactTabStripBody: View {
+    @Environment(\.codeEditorTheme) private var theme
+    let configuration: EditorTabStripStyleConfiguration
+
+    var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 4) {
                 ForEach(configuration.tabs) { tab in
@@ -91,6 +115,11 @@ public struct CompactEditorTabStripStyle: EditorTabStripStyle {
         }
         .frame(height: 28)
         .platformGlassSurface(.tabBar)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color(tokens: theme.style.borders.base).opacity(0.5))
+                .frame(height: 0.5)
+        }
     }
 }
 

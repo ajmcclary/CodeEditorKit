@@ -46,7 +46,7 @@ public struct EditorTab: View {
         .padding(.horizontal, 10)
         .frame(height: 28)
         .background(background)
-        .overlay(activeIndicator, alignment: .bottom)
+        .overlay(activeIndicator, alignment: .top)
         .contentShape(Rectangle())
         .accessibilityAddTraits(.isButton)
         .onTapGesture(perform: onSelect)
@@ -63,7 +63,7 @@ public struct EditorTab: View {
         if isActive {
             Rectangle()
                 .fill(Color(tokens: theme.style.text.accent))
-                .frame(height: 2)
+                .frame(height: 1.5)
         }
     }
 

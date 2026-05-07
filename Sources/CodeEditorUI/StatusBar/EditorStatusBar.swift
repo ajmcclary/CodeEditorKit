@@ -36,6 +36,11 @@ public struct EditorStatusBar<Trailing: View>: View {
         .padding(.vertical, 4)
         .frame(height: 28)
         .platformGlassSurface(.statusBar)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color(tokens: theme.style.borders.base).opacity(0.5))
+                .frame(height: 0.5)
+        }
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(Color(tokens: theme.style.text.muted))
     }

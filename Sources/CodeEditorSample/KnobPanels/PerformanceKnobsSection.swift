@@ -10,9 +10,11 @@ struct PerformanceKnobsSection: View {
         DisclosureGroup(
             isExpanded: $expanded,
             content: {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
                     limitRows
+                    KnobRowSeparator()
                     strategyRows
+                    KnobRowSeparator()
                     debounceRows
                 }
                 .padding(.vertical, 4)
@@ -34,18 +36,21 @@ struct PerformanceKnobsSection: View {
             range: 1_024...10_485_760,
             step: 1_024
         )
+        KnobRowSeparator()
         StepperRow(
             label: "maxVisibleLines",
             value: $configuration.performance.maxVisibleLines,
             range: 1...100_000,
             step: 100
         )
+        KnobRowSeparator()
         StepperRow(
             label: "maxFileSize",
             value: $configuration.performance.maxFileSize,
             range: 0...100_000_000,
             step: 1_024
         )
+        KnobRowSeparator()
         StepperRow(
             label: "maxEventsPerSecond",
             value: $configuration.performance.maxEventsPerSecond,
@@ -59,14 +64,17 @@ struct PerformanceKnobsSection: View {
             label: "useHardwareAcceleration",
             value: $configuration.performance.useHardwareAcceleration
         )
+        KnobRowSeparator()
         ToggleRow(
             label: "smoothScrolling",
             value: $configuration.performance.smoothScrolling
         )
+        KnobRowSeparator()
         ToggleRow(
             label: "animateCodeFolding (perf)",
             value: $configuration.performance.animateCodeFolding
         )
+        KnobRowSeparator()
         PickerRow(
             label: "renderingUpdateStrategy",
             value: $configuration.performance.renderingUpdateStrategy,
@@ -83,6 +91,7 @@ struct PerformanceKnobsSection: View {
             value: $configuration.performance.highlightingDebounceInterval,
             rangeMS: 0...1_000
         )
+        KnobRowSeparator()
         DurationRow(
             label: "textChangeDebounceInterval",
             value: $configuration.performance.textChangeDebounceInterval,

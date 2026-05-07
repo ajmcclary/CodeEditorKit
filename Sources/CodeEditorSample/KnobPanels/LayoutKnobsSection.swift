@@ -10,10 +10,13 @@ struct LayoutKnobsSection: View {
         DisclosureGroup(
             isExpanded: $expanded,
             content: {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
                     tabRows
+                    KnobRowSeparator()
                     spacingRows
+                    KnobRowSeparator()
                     widthAndBadgeRows
+                    KnobRowSeparator()
                     minimapAndFoldingRows
                 }
                 .padding(.vertical, 4)
@@ -30,7 +33,9 @@ struct LayoutKnobsSection: View {
     @ViewBuilder
     private var tabRows: some View {
         StepperRow(label: "tabWidth", value: $configuration.layout.tabWidth, range: 1...8)
+        KnobRowSeparator()
         ToggleRow(label: "insertSpacesForTabs", value: $configuration.layout.insertSpacesForTabs)
+        KnobRowSeparator()
         ToggleRow(label: "wrapLines", value: $configuration.layout.wrapLines)
     }
 
@@ -42,18 +47,21 @@ struct LayoutKnobsSection: View {
             range: 0...80,
             step: 0.5
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "lineNumberPadding",
             value: $configuration.layout.lineNumberPadding,
             range: 0...40,
             step: 0.5
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "lineHeightMultiple",
             value: $configuration.layout.lineHeightMultiple,
             range: 0.0...2.0,
             step: 0.05
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "characterSpacing",
             value: $configuration.layout.characterSpacing,
@@ -70,12 +78,14 @@ struct LayoutKnobsSection: View {
             range: 0.5...1.0,
             step: 0.05
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "annotationBadgeSize",
             value: $configuration.layout.annotationBadgeSize,
             range: 6...32,
             step: 0.5
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "annotationBadgePadding",
             value: $configuration.layout.annotationBadgePadding,
@@ -92,12 +102,14 @@ struct LayoutKnobsSection: View {
             range: 40...240,
             step: 1
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "foldingControlSize",
             value: $configuration.layout.foldingControlSize,
             range: 6...24,
             step: 0.5
         )
+        KnobRowSeparator()
         CGFloatSliderRow(
             label: "foldingControlPadding",
             value: $configuration.layout.foldingControlPadding,

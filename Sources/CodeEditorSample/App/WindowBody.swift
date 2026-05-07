@@ -1,9 +1,11 @@
+import CodeEditorDesignTokens
 import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
 /// Horizontal split: settings | editor | inspector.
 struct WindowBody: View {
+    @Environment(\.codeEditorTheme) private var editorTheme
     @Binding var theme: Theme
     @Binding var configuration: EditorConfiguration
     @Bindable var documents: DocumentStore
@@ -18,12 +20,21 @@ struct WindowBody: View {
                     configuration: $configuration,
                     documents: documents
                 )
+                columnSeparator
             }
             editorPane
             if inspectorVisible {
+                columnSeparator
                 InspectorSidebar(configuration: configuration)
             }
         }
+    }
+
+    private var columnSeparator: some View {
+        Rectangle()
+            .fill(Color(tokens: editorTheme.style.borders.variant))
+            .frame(width: 0.5)
+            .frame(maxHeight: .infinity)
     }
 
     @ViewBuilder

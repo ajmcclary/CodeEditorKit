@@ -10,7 +10,7 @@ struct DisplayKnobsSection: View {
         DisclosureGroup(
             isExpanded: $expanded,
             content: {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
                 CGFloatSliderRow(
                     label: "fontSize",
                     value: $configuration.display.fontSize,
@@ -18,19 +18,29 @@ struct DisplayKnobsSection: View {
                     step: 1,
                     format: .number.precision(.fractionLength(0))
                 )
+                KnobRowSeparator()
                 ToggleRow(label: "isSyntaxHighlightingEnabled", value: $configuration.display.isSyntaxHighlightingEnabled)
+                KnobRowSeparator()
                 ToggleRow(label: "isLineNumbersEnabled", value: $configuration.display.isLineNumbersEnabled)
+                KnobRowSeparator()
                 ToggleRow(label: "areAnnotationsEnabled", value: $configuration.display.areAnnotationsEnabled)
+                KnobRowSeparator()
                 ToggleRow(label: "isSelectedLineHighlighted", value: $configuration.display.isSelectedLineHighlighted)
+                KnobRowSeparator()
                 ColorRow(label: "selectedLineHighlightColor", value: $configuration.display.selectedLineHighlightColor)
+                KnobRowSeparator()
                 ToggleRow(label: "areInvisibleCharactersVisible", value: $configuration.display.areInvisibleCharactersVisible)
+                KnobRowSeparator()
                 ToggleRow(label: "isCodeFoldingEnabled", value: $configuration.display.isCodeFoldingEnabled)
+                KnobRowSeparator()
                 ToggleRow(label: "areFoldingControlsVisible", value: $configuration.display.areFoldingControlsVisible)
+                KnobRowSeparator()
                 StepperRow(
                     label: "minimumFoldableLines",
                     value: $configuration.display.minimumFoldableLines,
                     range: 1...100
                 )
+                KnobRowSeparator()
                 ToggleRow(label: "isMinimapVisible", value: $configuration.display.isMinimapVisible)
             }
             .padding(.vertical, 4)

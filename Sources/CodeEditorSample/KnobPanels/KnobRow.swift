@@ -2,6 +2,20 @@ import CodeEditorDesignTokens
 import CodeEditorPlugin
 import SwiftUI
 
+// MARK: - Separator
+
+/// Hairline rule used between knob rows; tinted by the active theme.
+struct KnobRowSeparator: View {
+    @Environment(\.codeEditorTheme) private var theme
+
+    var body: some View {
+        Rectangle()
+            .fill(Color(tokens: theme.style.borders.variant))
+            .frame(height: 0.5)
+            .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Toggle
 
 struct ToggleRow: View {
