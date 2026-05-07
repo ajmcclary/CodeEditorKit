@@ -1,5 +1,7 @@
 # Debugging Integration Detailed Architecture
 
+> **Note:** The `DebugAdapter` protocol is defined but concrete adapter implementations (LLDB, Node.js, Python) are planned and not yet shipped.
+
 This diagram shows the comprehensive debugging integration system that provides Debug Adapter Protocol (DAP) support, breakpoint management, variable inspection, and cross-platform debugging capabilities within the code editor.
 
 ```mermaid
@@ -71,45 +73,25 @@ classDiagram
         +disconnect() async
     }
 
-    class BaseDebugAdapter {
-        <<base DAP implementation>>
-        +eventSubject PassthroughSubject~DebugEvent~
-        +process Process?
-        +stdin Pipe?
-        +stdout Pipe?
-        +stderr Pipe?
-        +isInitialized Bool
-        +nextSequence Int
-        +pendingRequests [Int: CheckedContinuation]
-        +sendRequest() async
-        +sendEvent()
-        +parseBreakpoint()
-        +parseStackFrame()
-        +parseScope()
-        +parseVariable()
-    }
-
-    class LLDBAdapter {
-        <<LLDB DAP adapter>>
+    %% Future adapter implementations (planned, not yet shipped)
+    class LLDBAdapter_planned {
+        <<future - not shipped>>
         +adapterID "lldb"
-        +adapterPath "/usr/bin/lldb-vscode"
     }
 
-    class NodeDebugAdapter {
-        <<Node.js DAP adapter>>
+    class NodeDebugAdapter_planned {
+        <<future - not shipped>>
         +adapterID "node"
-        +adapterPath "/usr/local/bin/node-debug2"
     }
 
-    class PythonDebugAdapter {
-        <<Python DAP adapter>>
+    class PythonDebugAdapter_planned {
+        <<future - not shipped>>
         +adapterID "debugpy"
-        +adapterPath "/usr/local/bin/debugpy"
     }
 
     %% Row 3 - Breakpoint Management System
-    class BreakpointExtensions {
-        <<breakpoint management>>
+    class DebuggerIntegration_Breakpoints {
+        <<extension on DebuggerIntegrationCore>>
         +addBreakpoint() async
         +removeBreakpoint() async
         +toggleBreakpoint() async
@@ -149,8 +131,8 @@ classDiagram
     }
 
     %% Row 4 - Execution Control & Variable System
-    class ExecutionExtensions {
-        <<execution control>>
+    class DebuggerIntegration_Execution {
+        <<extension on DebuggerIntegrationCore>>
         +continueExecution() async
         +stepOver() async
         +stepInto() async
@@ -159,8 +141,8 @@ classDiagram
         +restart() async
     }
 
-    class EvaluationExtensions {
-        <<variable evaluation>>
+    class DebuggerIntegration_Evaluation {
+        <<extension on DebuggerIntegrationCore>>
         +evaluate() async
         +getVariableChildren() async
         +getInlineValues() async
@@ -348,7 +330,7 @@ classDiagram
         +closeDocument() async
     }
 
-    %% Row 9 - Error Handling & Configuration
+    %% Row 9 - Error Handling
     class DebugError {
         <<sendable error>>
         noAdapterForLanguage(String)
@@ -365,17 +347,6 @@ classDiagram
         timeout
     }
 
-    class ConfigurationSystem {
-        <<debug configuration>>
-        +enableInlineValues Bool
-        +enableHoverEvaluation Bool
-        +enableConditionalBreakpoints Bool
-        +enableLogpoints Bool
-        +maxInlineValueLength Int
-        +maxVariableDepth Int
-        +autoExpandVariables Bool
-    }
-
     %% Key Relationships - Core System
     DebuggerIntegrationCore --> DebugSession : manages
     DebuggerIntegrationCore --> DebugAdapter : uses
@@ -389,20 +360,19 @@ classDiagram
     DebugSession --> SessionState : has state
     
     %% Debug Adapter Protocol Relationships
-    DebugAdapter <|-- BaseDebugAdapter : implements
-    BaseDebugAdapter <|-- LLDBAdapter : specializes to
-    BaseDebugAdapter <|-- NodeDebugAdapter : specializes to  
-    BaseDebugAdapter <|-- PythonDebugAdapter : specializes to
+    DebugAdapter ..> LLDBAdapter_planned : future impl
+    DebugAdapter ..> NodeDebugAdapter_planned : future impl
+    DebugAdapter ..> PythonDebugAdapter_planned : future impl
     
     DebugAdapter --> DebugEvent : publishes
     DebugAdapter --> DebugCapabilities : declares
     DebugAdapter --> SourceBreakpoint : accepts
     DebugAdapter --> Breakpoint : returns
     
-    %% Extension Relationships
-    DebuggerIntegrationCore <-- BreakpointExtensions : extends
-    DebuggerIntegrationCore <-- ExecutionExtensions : extends
-    DebuggerIntegrationCore <-- EvaluationExtensions : extends
+    %% Extension Relationships (separate files, extend same class)
+    DebuggerIntegrationCore <.. DebuggerIntegration_Breakpoints : extends
+    DebuggerIntegrationCore <.. DebuggerIntegration_Execution : extends
+    DebuggerIntegrationCore <.. DebuggerIntegration_Evaluation : extends
     
     %% Data Model Relationships
     Breakpoint --> Source : references
@@ -412,10 +382,10 @@ classDiagram
     Scope --> Variable : references
     
     %% Advanced Feature Relationships
-    EvaluationExtensions --> InlineValue : generates
-    EvaluationExtensions --> HoverEvaluation : provides
+    DebuggerIntegration_Evaluation --> InlineValue : generates
+    DebuggerIntegration_Evaluation --> HoverEvaluation : provides
     DebugEvent --> StoppedReason : uses
-    EvaluationExtensions --> EvaluateContext : uses
+    DebuggerIntegration_Evaluation --> EvaluateContext : uses
     
     %% Platform & Performance Integration
     DebuggerIntegrationCore --> PerformanceMonitor : monitored by
@@ -429,14 +399,12 @@ classDiagram
     
     %% Error Handling
     DebuggerIntegrationCore --> DebugError : throws
-    BaseDebugAdapter --> AdapterError : throws
-    
-    %% Configuration
-    DebuggerIntegrationCore --> ConfigurationSystem : configured by
+    DebuggerIntegrationCore --> AdapterError : throws
 
     %% Styling - Modern debug-focused theme
     classDef coreSystem fill:#1E3A8A,stroke:#3B82F6,stroke-width:3px,color:#FFFFFF
     classDef dapProtocol fill:#7C3AED,stroke:#A855F7,stroke-width:2px,color:#FFFFFF
+    classDef planned fill:#6B7280,stroke:#9CA3AF,stroke-width:1px,color:#FFFFFF,stroke-dasharray:5 5
     classDef breakpointMgmt fill:#059669,stroke:#10B981,stroke-width:2px,color:#FFFFFF
     classDef execution fill:#DC2626,stroke:#EF4444,stroke-width:2px,color:#FFFFFF
     classDef dataModel fill:#D97706,stroke:#F59E0B,stroke-width:2px,color:#FFFFFF
@@ -445,25 +413,24 @@ classDiagram
     classDef platform fill:#4338CA,stroke:#6366F1,stroke-width:2px,color:#FFFFFF
     classDef performance fill:#9333EA,stroke:#A855F7,stroke-width:2px,color:#FFFFFF
     classDef error fill:#B91C1C,stroke:#DC2626,stroke-width:2px,color:#FFFFFF
-    classDef config fill:#7C2D12,stroke:#EA580C,stroke-width:2px,color:#FFFFFF
+    classDef extensions fill:#374151,stroke:#6B7280,stroke-width:2px,color:#E5E7EB,stroke-dasharray:4 4
 
     class DebuggerIntegrationCore coreSystem
     class DebugSession coreSystem
     class LaunchConfiguration coreSystem
     
     class DebugAdapter dapProtocol
-    class BaseDebugAdapter dapProtocol
-    class LLDBAdapter dapProtocol
-    class NodeDebugAdapter dapProtocol
-    class PythonDebugAdapter dapProtocol
+    class LLDBAdapter_planned planned
+    class NodeDebugAdapter_planned planned
+    class PythonDebugAdapter_planned planned
     
-    class BreakpointExtensions breakpointMgmt
+    class DebuggerIntegration_Breakpoints extensions
     class Breakpoint breakpointMgmt
     class SourceBreakpoint breakpointMgmt
     class Source breakpointMgmt
     
-    class ExecutionExtensions execution
-    class EvaluationExtensions execution
+    class DebuggerIntegration_Execution extensions
+    class DebuggerIntegration_Evaluation extensions
     
     class Variable dataModel
     class StackFrame dataModel
@@ -489,8 +456,6 @@ classDiagram
     
     class DebugError error
     class AdapterError error
-    
-    class ConfigurationSystem config
 ```
 
 ## Debug Integration Architecture Flow
@@ -569,9 +534,9 @@ sequenceDiagram
 ## Key Debugging Integration Features
 
 ### 1. Debug Adapter Protocol (DAP) Compliance
-- **Standardized Protocol**: Full DAP implementation for interoperability
-- **Multiple Adapters**: LLDB, Python debugpy, Node.js debug adapters
-- **Process Management**: Handles stdin/stdout/stderr communication
+- **Standardized Protocol**: Full DAP protocol definition via `DebugAdapter` protocol
+- **Pluggable Adapters**: Protocol-based design supports future adapter implementations
+- **Planned Adapters**: LLDB, Python debugpy, Node.js debug adapters (not yet shipped)
 - **Async Communication**: Non-blocking request/response handling
 
 ### 2. Advanced Breakpoint Management
@@ -648,3 +613,5 @@ sequenceDiagram
 - **Performance First**: Integrated performance monitoring and memory management
 - **Sendable Types**: All debug models are Sendable for safe concurrent access
 - **Error Recovery**: Comprehensive error handling with graceful degradation
+- **Extension Architecture**: Features organized in separate file extensions (`DebuggerIntegration+Breakpoints.swift`, `DebuggerIntegration+Evaluation.swift`, `DebuggerIntegration+Execution.swift`)
+- **Protocol-Driven**: `DebugAdapter` protocol enables future adapter implementations without coupling to concrete types

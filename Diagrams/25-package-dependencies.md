@@ -5,94 +5,71 @@ This diagram shows the package dependencies for the main CodeEditorPlugin framew
 ## Overview
 
 **Runtime Dependencies:**
-- **SwiftSyntax 601.0.1** - Apple's Swift source code manipulation library
+- **SwiftSyntax 602.0.0+** - Apple's Swift source code manipulation library
 - **SwiftParser** - Swift source code parsing (part of swift-syntax)
+- **swift-dependencies** - Dependency management library (Point-Free)
+- **xctest-dynamic-overlay** - Runtime issue reporting
 
 **Development Dependencies:**
-- **depermaid 1.1.0** - Mermaid diagram generation tool (build-time only)
+- **swift-custom-dump** - Custom pretty-printing and diffing (Point-Free)
+- **swift-snapshot-testing** - Snapshot testing (Point-Free, ajmcclary fork for Swift 6.3 compat)
 
-**Security Status:** ✅ Low risk - Apple-maintained dependencies, no external services
-**Platform Support:** macOS 14.0+, iOS 16.0+, Mac Catalyst 16.0+ (with SwiftSyntax fallbacks)
+**Security Status:** Low risk - All dependencies from Apple or Point-Free
+**Platform Support:** macOS 26.3+, iOS 26.3+, Mac Catalyst 26.3+
 
 ## Default View (Products Only)
 
 ```mermaid
 flowchart LR
+    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax 602+]]
     CodeEditorPlugin-->SwiftParser[[SwiftParser]]
-    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax]]
-    
+    CodeEditorPlugin-->Dependencies[[swift-dependencies]]
+    CodeEditorPlugin-->IssueReporting[[IssueReporting]]
+
     style SwiftSyntax fill:#e1f5fe
     style SwiftParser fill:#e1f5fe
     style CodeEditorPlugin fill:#f3e5f5
+    style Dependencies fill:#fff3e0
+    style IssueReporting fill:#fff3e0
 ```
 
 ## Complete View (Including Test Targets)
 
 ```mermaid
 flowchart LR
+    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax 602+]]
     CodeEditorPlugin-->SwiftParser[[SwiftParser]]
-    CodeEditorPlugin-->SwiftSyntax[[SwiftSyntax]]
+    CodeEditorPlugin-->Dependencies[[swift-dependencies]]
+    CodeEditorPlugin-->IssueReporting[[IssueReporting]]
     CodeEditorPluginTests{{CodeEditorPluginTests}}-->CodeEditorPlugin
-    
+    CodeEditorPluginTests-->CustomDump[[swift-custom-dump]]
+    CodeEditorPluginTests-->SnapshotTesting[[swift-snapshot-testing]]
+    CodeEditorDesignTokensTests{{DesignTokensTests}}-->CodeEditorDesignTokens
+    CodeEditorUITests{{CodeEditorUITests}}-->CodeEditorUI
+
     style SwiftSyntax fill:#e1f5fe
     style SwiftParser fill:#e1f5fe
     style CodeEditorPlugin fill:#f3e5f5
     style CodeEditorPluginTests fill:#fff3e0
-```
-
-## Dependency Details
-
-```mermaid
-flowchart TD
-    subgraph "External Dependencies"
-        SwiftSyntax["SwiftSyntax 601.0.1<br/>🏢 Apple Official<br/>🔒 Secure<br/>📅 Latest Stable"]
-        SwiftParser["SwiftParser<br/>🔗 Part of swift-syntax<br/>🎯 AST Parsing"]
-        depermaid["depermaid 1.1.0<br/>🛠️ Dev Tool Only<br/>📊 Diagram Generation<br/>🔒 No Security Issues"]
-    end
-    
-    subgraph "CodeEditorPlugin Features"
-        SyntaxHighlighter["Swift Syntax Highlighting<br/>🎨 AST-based<br/>⚡ Real-time"]
-        PlatformSupport["Cross-Platform Support<br/>🍎 macOS, iOS, Catalyst<br/>🔄 Conditional Compilation"]
-        Performance["Performance Optimized<br/>📈 60fps target<br/>🚀 Async processing"]
-    end
-    
-    SwiftSyntax --> SyntaxHighlighter
-    SwiftParser --> SyntaxHighlighter
-    SyntaxHighlighter --> PlatformSupport
-    SyntaxHighlighter --> Performance
-    
-    style SwiftSyntax fill:#e8f5e8
-    style SwiftParser fill:#e8f5e8
-    style depermaid fill:#fff9c4
-    style SyntaxHighlighter fill:#f3e5f5
-    style PlatformSupport fill:#e3f2fd
-    style Performance fill:#fce4ec
+    style CodeEditorDesignTokensTests fill:#fff3e0
+    style CodeEditorUITests fill:#fff3e0
 ```
 
 ## Platform Compatibility Matrix
 
 | Dependency | macOS | iOS | Mac Catalyst | Notes |
 |------------|-------|-----|--------------|-------|
-| SwiftSyntax | ✅ | ✅ | ❌ | Fallback implementation provided |
-| SwiftParser | ✅ | ✅ | ❌ | Included with SwiftSyntax |
-| depermaid | ✅ | ✅ | ✅ | Build-time only |
+| SwiftSyntax | ✅ | ✅ | ✅ | 602.0.0+ |
+| SwiftParser | ✅ | ✅ | ✅ | Included with SwiftSyntax |
+| swift-dependencies | ✅ | ✅ | ✅ | Point-Free |
+| IssueReporting | ✅ | ✅ | ✅ | xctest-dynamic-overlay |
+| swift-custom-dump | ✅ | ✅ | ✅ | Test-only |
+| swift-snapshot-testing | ✅ | ✅ | ✅ | Test-only, ajmcclary fork |
 
-## Security & Performance Notes
+## Performance Notes
 
-**Security:**
-- All dependencies maintained by Apple or have clean security profiles
-- No network dependencies or external services
-- Regular security updates available for SwiftSyntax
-- depermaid is development-only with no runtime impact
-
-**Performance:**
 - SwiftSyntax provides efficient AST-based parsing
-- Background processing prevents UI blocking
-- Conditional compilation minimizes overhead on Mac Catalyst
-- LRU caching for syntax highlighting results
-
-**Dependency Injection:**
-- ActorCoordinator injected via EditorConfiguration
-- MemoryMonitor injected through configuration
-- No singleton patterns used
-- Full testability through protocol abstractions
+- Background processing via AsyncSyntaxHighlighter prevents UI blocking
+- SmartTokenCache with LRU eviction for syntax highlighting results
+- ActorCoordinator injected via EditorConfiguration for concurrency management
+- MemoryMonitor injected through configuration for resource tracking

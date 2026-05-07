@@ -1,196 +1,145 @@
 # Configuration System Diagram
 
-This diagram illustrates the comprehensive configuration system used throughout the CodeEditorPlugin framework, including batch update management for minimizing change notifications.
+This diagram illustrates the configuration system used throughout the CodeEditorPlugin framework, including nested configuration sections, presets, and SwiftUI environment integration.
 
 ```mermaid
 classDiagram
     direction LR
-    
-    %% Top Row - Root Configuration
+
+    %% Root Configuration
     class EditorConfiguration {
-        &lt;&lt;configuration root&gt;&gt;
-        +display DisplayConfiguration
-        +layout LayoutConfiguration
-        +behavior BehaviorConfiguration
-        +performance PerformanceConfiguration
+        &lt;&lt;configuration root&gt;&gt; Codable, Sendable
+        +display Display
+        +layout Layout
+        +behavior Behavior
+        +performance Performance
         +eventSystem UnifiedEventSystem?
         +actorCoordinator ActorCoordinator?
         +workspaceRoot URL?
-        +allowedPlugins Set~String~
-        +pluginSettings [String: Any]
-        +validate()
-        +copy()
-        +updateConfiguration()
+        +platformCapabilities PlatformCapabilities?
+        +unifiedPerformanceSystem UnifiedPerformanceSystem?
+        +paragraphStyleCache ParagraphStyleCache?
+        +languageMetadataRegistry LanguageMetadataRegistry?
+        +platformServiceLayer PlatformServiceLayer?
+        +validate() [ValidationError]
+        +validateAndThrow()
+        +with(layout:) Self
+        +with(display:) Self
+        +with(behavior:) Self
+        +with(performance:) Self
+        +with(eventSystem:) Self
+        +apply(to:)
     }
 
-    class ConfigurationPresets {
-        &lt;&lt;preset factory&gt;&gt;
-        +minimal()
-        +standard()
-        +performance()
-        +accessibility()
-        +custom()
-    }
-
-    class ConfigurationValidator {
-        &lt;&lt;validation logic&gt;&gt;
-        +validate()
-        +validateFontSize()
-        +validateTabWidth()
-        +validateCacheSize()
-        +autoFixSuggestions()
-        +detailedReporting()
-    }
-
-    %% New Configuration Features
-    class ConfigurationDSL {
-        &lt;&lt;result builder&gt;&gt;
-        +buildBlock()
-        +buildExpression()
-        +createConfiguration()
-    }
-
-    class ConfigurationHotReload {
-        &lt;&lt;ObservableObject&gt;&gt;
-        +isEnabled Bool
-        +reloadHistory [ConfigurationSnapshot]
-        +undoStack [EditorConfiguration]
-        +enableHotReload()
-        +revertChanges()
-        +clearHistory()
-    }
-
-    class ConfigurationMigrator {
-        &lt;&lt;version management&gt;&gt;
-        +currentVersion String
-        +migrate()
-        +validateVersion()
-        +backup()
-    }
-
-    %% Second Row - Core Configuration Sections
-    class DisplayConfiguration {
-        &lt;&lt;visual settings&gt;&gt;
+    %% Nested Configuration Sections
+    class EditorConfigurationDisplay {
+        &lt;&lt;display settings&gt;&gt; Equatable, Sendable
+        +isSyntaxHighlightingEnabled Bool
         +fontSize CGFloat
-        +fontName String?
-        +showLineNumbers Bool
-        +showInvisibles Bool
-        +showMinimap Bool
-        +theme ThemeConfiguration
+        +isLineNumbersEnabled Bool
+        +areAnnotationsEnabled Bool
+        +isSelectedLineHighlighted Bool
+        +selectedLineHighlightColor PlatformColor
+        +visibleLines Int
+        +areInvisibleCharactersVisible Bool
+        +isCodeFoldingEnabled Bool
+        +areFoldingControlsVisible Bool
+        +minimumFoldableLines Int
+        +isMinimapVisible Bool
     }
 
-    class LayoutConfiguration {
-        &lt;&lt;layout settings&gt;&gt;
+    class EditorConfigurationLayout {
+        &lt;&lt;layout settings&gt;&gt; Equatable, Sendable
         +tabWidth Int
-        +indentStyle IndentStyle
-        +lineWrapping LineWrappingMode
-        +gutterWidth CGFloat?
+        +insertSpacesForTabs Bool
+        +wrapLines Bool
+        +gutterWidth CGFloat
+        +lineNumberPadding CGFloat
+        +textContainerInset EdgeInsets
+        +lineHeightMultiple CGFloat
+        +characterSpacing CGFloat
+        +textContainerWidthFraction CGFloat
+        +annotationBadgeSize CGFloat
         +minimapWidth CGFloat
-        +lineSpacing CGFloat
+        +foldingControlSize CGFloat
+        +foldingControlPadding CGFloat
     }
 
-    class BehaviorConfiguration {
-        &lt;&lt;editing behavior&gt;&gt;
-        +autoIndent Bool
+    class EditorConfigurationBehavior {
+        &lt;&lt;editing behavior&gt;&gt; Equatable, Sendable
+        +isEditable Bool
+        +isSelectable Bool
+        +isAutoIndentEnabled Bool
+        +isCodeCompletionEnabled Bool
+        +isAutomaticLinkDetectionEnabled Bool
+        +isAutomaticQuoteSubstitutionEnabled Bool
+        +isAutomaticDashSubstitutionEnabled Bool
         +autoCloseBrackets Bool
-        +highlightMatchingBrackets Bool
-        +enableCompletions Bool
-        +tabKeyBehavior TabKeyBehavior
+        +autoCloseQuotes Bool
+        +isContinuousSpellCheckingEnabled Bool
+        +isGrammarCheckingEnabled Bool
+        +isAutomaticTextReplacementEnabled Bool
+        +isAutomaticSpellingCorrectionEnabled Bool
+        +isAutomaticTextCompletionEnabled Bool
+        +showInlineCompletionSuggestions Bool
+        +completionTriggerCharacters Set~Character~
+        +autoScrollToCursor Bool
     }
 
-    %% Third Row - Performance & Themes
-    class PerformanceConfiguration {
-        &lt;&lt;performance tuning&gt;&gt;
-        +asyncHighlighting Bool
-        +highlightingDebounce TimeInterval
-        +maxHighlightingLength Int
-        +enableLineCache Bool
-        +cacheSize Int
-        +virtualScrolling Bool
-        +iOSLargeFileOptimization Bool
-        +chunkSize Int
-        +memoryThreshold Double
-    }
-
-    class ThemeConfiguration {
-        &lt;&lt;color theme&gt;&gt;
-        +backgroundColor Color
-        +textColor Color
-        +lineNumberColor Color
-        +selectionColor Color
-        +cursorColor Color
-        +syntaxColors SyntaxColorScheme
-    }
-
-    class SyntaxColorScheme {
-        &lt;&lt;syntax coloring&gt;&gt;
-        +keyword Color
-        +string Color
-        +comment Color
-        +number Color
-        +function Color
-        +type Color
-    }
-
-    %% Fourth Row - Enumerations
-    class IndentStyle {
-        &lt;&lt;enumeration&gt;&gt;
-        spaces(Int)
-        tabs
-    }
-
-    class LineWrappingMode {
-        &lt;&lt;enumeration&gt;&gt;
-        none
-        word
-        character
-    }
-
-    class TabKeyBehavior {
-        &lt;&lt;enumeration&gt;&gt;
-        insertTab
-        insertSpaces
-        triggerCompletion
-    }
-
-    %% Fifth Row - Plugin & System Configuration
-    class PluginConfiguration {
-        &lt;&lt;plugin settings&gt;&gt;
-        +enabledPlugins Set~String~
-        +pluginPermissions [String: Set~PluginPermission~]
-        +pluginSettings [String: Any]
-        +autoLoadPlugins Bool
-        +pluginSearchPaths [URL]
-    }
-
-    class SystemConfiguration {
-        &lt;&lt;system integration&gt;&gt;
-        +eventSystem UnifiedEventSystem?
-        +actorCoordinator ActorCoordinator?
+    class EditorConfigurationPerformance {
+        &lt;&lt;performance tuning&gt;&gt; Sendable
+        +maxSyntaxHighlightingLength Int
+        +usesRangeBasedHighlighting Bool
+        +useHardwareAcceleration Bool
+        +renderingUpdateStrategy RenderingUpdateStrategy
+        +maxVisibleLines Int
+        +maxFileSize Int
+        +highlightingDebounceInterval Duration
+        +smoothScrolling Bool
+        +textChangeDebounceInterval Duration
+        +animateCodeFolding Bool
+        +maxEventsPerSecond Int
+        +enableIOSOptimizations Bool
+        +iOSLargeFileThreshold Int
+        +iOSMaxHighlightingChunk Int
         +memoryMonitor MemoryMonitor?
-        +languageRegistry LanguageRegistry
-        +completionRegistry CompletionProviderRegistry
     }
 
-    %% Sixth Row - SwiftUI Integration & Persistence
-    class AppState {
-        &lt;&lt;ObservableObject&gt;&gt;
-        @Published configuration EditorConfiguration
-        +updateConfiguration()
-        +resetToDefault()
-        +loadFromUserDefaults()
-        +saveToUserDefaults()
+    class RenderingUpdateStrategy {
+        &lt;&lt;enumeration&gt;&gt; String, Codable, Sendable
+        immediate
+        batched
+        adaptive
     }
 
+    %% Syntax Highlighting
+    class SyntaxColorScheme {
+        &lt;&lt;syntax coloring&gt;&gt; Sendable
+        +keyword PlatformColor
+        +identifier PlatformColor
+        +string PlatformColor
+        +number PlatformColor
+        +comment PlatformColor
+        +type PlatformColor
+        +function PlatformColor
+        +property PlatformColor
+        +operator PlatformColor
+        +punctuation PlatformColor
+        +preprocessor PlatformColor
+        +error PlatformColor
+        +plain PlatformColor
+    }
+
+    %% SwiftUI Environment
     class CodeEditorEnvironment {
-        &lt;&lt;consolidated environment&gt;&gt;
+        &lt;&lt;consolidated environment&gt;&gt; Sendable
         +language Language
-        +theme CodeEditorSwiftUITheme
+        +theme Theme
         +configuration EditorConfiguration
         +becomeFirstResponder Bool
         +memoryMonitor MemoryMonitor?
         +eventSystem UnifiedEventSystem?
-        +with() CodeEditorEnvironment
+        +with() Self
     }
 
     class CodeEditorEnvironmentKey {
@@ -198,63 +147,39 @@ classDiagram
         +defaultValue CodeEditorEnvironment
     }
 
-    class ConfigurationPersistence {
-        &lt;&lt;data persistence&gt;&gt;
-        +save() throws
-        +load() throws
-        +encodeJSON() throws
-        +decodeJSON() throws
+    class ConfigurationEnvironmentKey {
+        &lt;&lt;EnvironmentKey&gt;&gt;
+        +defaultValue EditorConfiguration
     }
 
-    %% Seventh Row - Configuration Update Management
-    class ConfigurationBatchUpdater {
-        &lt;&lt;batch updates&gt;&gt;
-        +pendingUpdates [(EditorConfiguration) -> EditorConfiguration]
-        +updateTimer Timer?
-        +updateDelay TimeInterval
-        +onUpdate (EditorConfiguration) -> Void
-        +lazyEvaluation Bool
-        +validationCaching Bool
-        +batchUpdate()
-        +flushUpdates()
-        +queueUpdate()
-        +applyPendingUpdates()
-        +scheduleUpdate()
+    %% Presets (via EditorConfiguration extension)
+    class Presets {
+        &lt;&lt;static presets&gt;&gt;
+        +default EditorConfiguration
+        +minimal EditorConfiguration
+        +readOnly EditorConfiguration
+        +markdown EditorConfiguration
+        +presentation EditorConfiguration
+        +iOS EditorConfiguration
+        +catalyst EditorConfiguration
+        +macOS EditorConfiguration
+        +platformOptimized EditorConfiguration
     }
 
     %% Relationships
-    EditorConfiguration *-- DisplayConfiguration : contains
-    EditorConfiguration *-- LayoutConfiguration : contains
-    EditorConfiguration *-- BehaviorConfiguration : contains
-    EditorConfiguration *-- PerformanceConfiguration : contains
-    EditorConfiguration --> SystemConfiguration : integrates
-    EditorConfiguration --> PluginConfiguration : includes
-    
-    DisplayConfiguration *-- ThemeConfiguration : contains
-    ThemeConfiguration *-- SyntaxColorScheme : contains
-    
-    LayoutConfiguration --> IndentStyle : uses
-    LayoutConfiguration --> LineWrappingMode : uses
-    
-    BehaviorConfiguration --> TabKeyBehavior : uses
-    
-    ConfigurationValidator --> EditorConfiguration : validates
-    ConfigurationPresets --> EditorConfiguration : creates
-    ConfigurationDSL --> EditorConfiguration : builds
-    ConfigurationMigrator --> EditorConfiguration : upgrades
-    ConfigurationHotReload --> EditorConfiguration : observes
-    
-    AppState --> EditorConfiguration : manages
-    AppState --> ConfigurationPersistence : uses
-    AppState --> ConfigurationBatchUpdater : uses
-    
+    EditorConfiguration *-- EditorConfigurationDisplay : contains
+    EditorConfiguration *-- EditorConfigurationLayout : contains
+    EditorConfiguration *-- EditorConfigurationBehavior : contains
+    EditorConfiguration *-- EditorConfigurationPerformance : contains
+
+    EditorConfigurationPerformance *-- RenderingUpdateStrategy : contains
+
     CodeEditorEnvironment --> EditorConfiguration : wraps
     CodeEditorEnvironmentKey --> CodeEditorEnvironment : provides
-    
-    ConfigurationBatchUpdater --> EditorConfiguration : batches updates
-    
     ConfigurationEnvironmentKey --> EditorConfiguration : provides
-    
+
+    Presets --> EditorConfiguration : creates
+
     %% Styling - Light/Dark mode compatible colors
     classDef main fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
     classDef section fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
@@ -262,70 +187,68 @@ classDiagram
     classDef enum fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef util fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef swiftui fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    
+
     class EditorConfiguration main
-    class DisplayConfiguration section
-    class LayoutConfiguration section
-    class BehaviorConfiguration section
-    class PerformanceConfiguration section
-    class ThemeConfiguration theme
+    class EditorConfigurationDisplay section
+    class EditorConfigurationLayout section
+    class EditorConfigurationBehavior section
+    class EditorConfigurationPerformance section
     class SyntaxColorScheme theme
-    class IndentStyle enum
-    class LineWrappingMode enum
-    class PluginConfiguration integration
-    class SystemConfiguration integration
-    class PluginPermission enum
-    class TabKeyBehavior enum
-    class ConfigurationValidator util
-    class ConfigurationPresets util
-    class ConfigurationPersistence util
-    class ConfigurationBatchUpdater util
+    class RenderingUpdateStrategy enum
+    class Presets util
+    class CodeEditorEnvironment swiftui
+    class CodeEditorEnvironmentKey swiftui
     class ConfigurationEnvironmentKey swiftui
-    class AppState swiftui
 ```
 
 ## Configuration Usage Patterns
 
 ### Direct Property Access
 ```swift
-config.display.showLineNumbers = true
+config.display.isLineNumbersEnabled = true
 config.layout.tabWidth = 4
+config.behavior.isAutoIndentEnabled = true
+config.performance.maxSyntaxHighlightingLength = 500_000
 ```
 
-### Batch Updates
+### Immutable Updates via with()
 ```swift
-appState.updateConfiguration { config in
-    config.display.fontSize = 16
-    config.behavior.autoIndent = true
-}
+let config = EditorConfiguration()
+let updated = config
+    .with(display: modifiedDisplay)
+    .with(layout: modifiedLayout)
+    .with(behavior: modifiedBehavior)
 ```
 
-### Batch Updates with Updater
+### Presets
 ```swift
-let batchUpdater = ConfigurationBatchUpdater { updatedConfig in
-    appState.configuration = updatedConfig
-}
+let defaultConfig = EditorConfiguration.default
+let minimalConfig = EditorConfiguration.minimal
+let readOnlyConfig = EditorConfiguration.readOnly
+let markdownConfig = EditorConfiguration.markdown
+let presentationConfig = EditorConfiguration.presentation
+let platformConfig = EditorConfiguration.platformOptimized
 
-// Queue multiple updates
-batchUpdater.queueUpdate { config in
-    config.display.fontSize = 16
-}
-
-batchUpdater.queueUpdate { config in
-    config.behavior.autoIndent = true
-}
-
-// Updates are automatically batched and applied after delay
+// Platform-specific presets
+let iOSConfig = EditorConfiguration.iOS
+let catalystConfig = EditorConfiguration.catalyst
+let macOSConfig = EditorConfiguration.macOS
 ```
 
 ### Environment Integration
 ```swift
 CodeEditor(text: $code)
-    .environment(\.codeEditorConfiguration, customConfig)
-```
+    .codeEditorEnvironment(
+        language: .swift,
+        theme: .default,
+        configuration: customConfig
+    )
 
-### Presets
-```swift
-let minimalConfig = EditorConfiguration.minimal
-let performanceConfig = EditorConfiguration.performance
+// Or set the full environment directly
+CodeEditor(text: $code)
+    .environment(\.codeEditorEnvironment, CodeEditorEnvironment(
+        language: .swift,
+        theme: .dark,
+        configuration: myConfig
+    ))
 ```

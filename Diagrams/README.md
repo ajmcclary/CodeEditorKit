@@ -1,6 +1,6 @@
 # CodeEditorPlugin Architecture Diagrams
 
-This directory contains **29 comprehensive architectural diagrams** for the CodeEditorPlugin framework. These diagrams provide complete coverage of all major components, systems, and integrations, illustrating their relationships and data flows throughout the entire system.
+This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
 
 ## Index of Diagrams
 
@@ -11,13 +11,13 @@ Overview of the entire CodeEditorPlugin framework showing main layers and their 
 Detailed class diagram of the main components including CodeEditorView, CodeEditorAPI protocol, UnifiedEventSystem, BusinessLogicServiceRegistry, and their relationships. Shows the protocol-oriented design and delegation patterns.
 
 ### 3. [Configuration System](03-configuration-system.md)
-Complete configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, persistence, SwiftUI environment integration, and batch update management with ConfigurationBatchUpdater.
+Configuration architecture including EditorConfiguration structure with Display, Layout, Behavior, and Performance sections. Shows presets, validation, and SwiftUI environment integration.
 
 ### 4. [Service Architecture](04-service-architecture.md)
-Service-oriented architecture diagram showing BusinessLogicServiceRegistry and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionManager, MemoryMonitor). Includes lifecycle management and event integration.
+Service-oriented architecture diagram showing BusinessLogicServiceRegistry and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionProviderRegistry, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
 
 ### 5. [Event System Flow](05-event-system-flow.md)
-Unified event system flow diagram illustrating event sources, creation, filtering, queuing, dispatching, and handler execution. Shows priority-based processing and async support.
+Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), creation, filtering, queuing, dispatching, and handler execution. Shows priority-based processing, throttling, debouncing, and async support.
 
 ### 6. [Language Support & Syntax Highlighting Pipeline](06-language-syntax-highlighting-pipeline.md)
 Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, rendering stages, and enhanced performance optimization with OptimizedSyntaxHighlightingCoordinator, performance tracking, chunking, and circuit breaker pattern.
@@ -47,7 +47,7 @@ Advanced performance monitoring with adaptive optimization, memory management, a
 Symbol navigation and code intelligence system with multi-language support, cross-reference tracking, and intelligent navigation. Includes definition lookup, reference finding, and workspace symbol search.
 
 ### 15. [Language Provider Complete Ecosystem](15-language-provider-ecosystem.md)
-Comprehensive language provider ecosystem supporting 17+ languages with completion, symbols, folding, and data providers. Shows the complete matrix of supported languages and their capabilities.
+Language provider ecosystem supporting 18 languages with completion, symbols, folding, and data providers. Shows the matrix of supported languages and their capabilities.
 
 ### 16. [Annotation System Detailed Architecture](16-annotation-system-architecture.md)
 Comprehensive annotation system providing code annotations, diagnostics, and contextual information overlay capabilities. Includes multi-source annotation support, interactive features, and visual customization.
@@ -61,35 +61,35 @@ Comprehensive data models and type system forming the foundation of CodeEditorPl
 ### 19. [SwiftUI Integration Complete Ecosystem](19-swiftui-integration-ecosystem.md)
 Complete SwiftUI integration ecosystem providing seamless integration between CodeEditorPlugin and SwiftUI applications. Includes platform-specific representables, environment management, and animation coordination.
 
-### 20. [Debugging Integration Detailed Architecture](20-debugging-integration-architecture.md)
-Comprehensive debugging integration system providing breakpoint management, debug session control, and debugging visualization capabilities. Supports multiple debuggers including LLDB, GDB, and Debug Adapter Protocol.
+### 20. [Debugging Integration Architecture (Design Document)](20-debugging-integration-architecture.md)
+Planned debugging integration system design. The currently implemented debugging system is documented in [`20-debugging-integration.md`](20-debugging-integration.md).
 
 ### 21. [Utility Systems & Extensions Network](21-utility-systems-extensions.md)
-Comprehensive utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes file system helpers, cryptography, networking, performance utilities, and extension management.
+Utility systems and extensions network providing shared utilities, cross-platform helpers, and extensibility infrastructure. Includes async operation management, logging, caching, and extension management.
 
 ### 22. [Advanced Layout & UI Components Architecture](22-advanced-layout-ui-components.md)
 Advanced layout system and UI component architecture handling positioning, responsive design, and complex component interactions. Includes flexbox/grid layouts, constraint solving, animation coordination, and accessibility integration.
 
 ### 23. [Multi-Language Support Matrix](23-multi-language-support-matrix.md)
-Comprehensive matrix view of language support capabilities across all 17+ supported languages. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
+Matrix view of language support capabilities across 18 supported languages. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
 
 ### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
 Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
 
 ### 25. [Package Dependencies](25-package-dependencies.md)
-Automatically generated package dependency diagram for CodeEditorPlugin showing the relationship between the main package and its dependencies (SwiftSyntax, SwiftParser). Generated using depermaid plugin.
+Package dependency diagram showing the main CodeEditorPlugin framework's dependencies on SwiftSyntax, SwiftParser, swift-dependencies, and xctest-dynamic-overlay, plus test target dependencies.
 
 ### 26. [Sample App Dependencies](26-sample-dependencies.md)
-Automatically generated package dependency diagram for CodeEditorSample demonstration app showing its dependencies on CodeEditorPlugin and test target relationships. Generated using depermaid plugin.
+CodeEditorSample demonstration app architecture showing dependencies on CodeEditorPlugin, CodeEditorUI, and CodeEditorDesignTokens, with sample code and configuration management.
 
-### 27. [Plugin System Architecture](27-plugin-system-architecture.md)
-Comprehensive plugin system architecture providing extensibility through a stable API with controlled access. Includes plugin lifecycle management, security model with permissions, dependency resolution, and event-based communication between plugins and the core system.
+### 27. [Plugin System Architecture (Design Document)](27-plugin-system-architecture.md)
+Planned plugin system architecture design. Not yet implemented in the current codebase.
 
 ### 28. [Performance Budget System](28-performance-budget-system.md)
 Comprehensive performance budget system that monitors and enforces performance targets across all operations. Includes budget definitions, status tracking, violation reporting, test integration, and enforcement configuration with support for warning, critical, and exceeded thresholds.
 
-### 29. [Enhanced Syntax Highlighting Architecture](29-enhanced-syntax-highlighting-architecture.md)
-Optimized syntax highlighting system with advanced performance features including viewport optimization, chunking strategy, circuit breaker pattern, smart caching with prefetching, incremental updates, and comprehensive performance tracking. Shows the complete architecture for handling files from 1 line to 1M+ lines efficiently.
+### 29. [Syntax Highlighting Architecture (Updated)](29-enhanced-syntax-highlighting-architecture-updated.md)
+Current optimized syntax highlighting system with actor-based concurrency, streaming highlighter for large files, circuit breaker patterns, and comprehensive performance tracking. The original design document is at [`29-enhanced-syntax-highlighting-architecture.md`](29-enhanced-syntax-highlighting-architecture.md).
 
 ## How to View These Diagrams
 
@@ -101,14 +101,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-The dependency diagrams (25 and 26) are automatically generated using the depermaid Swift package plugin. To regenerate these diagrams after package changes:
-
-```bash
-# From the project root
-./Scripts/generate-dependency-diagrams.sh
-```
-
-This will update both package dependency diagrams with the latest dependency information.
+Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. These diagrams reflect the actual dependencies declared in the package manifest — direct runtime dependencies (SwiftSyntax, SwiftParser, swift-dependencies, xctest-dynamic-overlay), internal product dependencies (CodeEditorDesignTokens, CodeEditorUI), and test target dependencies (swift-custom-dump, swift-snapshot-testing).
 
 ## Diagram Conventions
 

@@ -1,6 +1,8 @@
-# Plugin System Architecture
+# Plugin System Architecture (Design Document)
 
-This diagram shows the comprehensive plugin system architecture that provides extensibility, security, and lifecycle management for third-party and built-in plugins within the CodeEditorPlugin framework.
+> **Note:** The plugin system is a future design feature. No `PluginManager`, `PluginAPI`, `PluginContext`, or `MarkdownPlugin` classes currently exist in the codebase. This diagram represents the planned architecture for a plugin-based extensibility layer. Implementation work has not yet begun.
+
+This diagram shows the planned plugin system architecture that provides extensibility, security, and lifecycle management for third-party and built-in plugins within the CodeEditorPlugin framework.
 
 ```mermaid
 classDiagram

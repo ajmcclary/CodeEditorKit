@@ -12,7 +12,7 @@ graph TD
         MOD["View Modifiers<br/>Customization"]
     end
 
-    %% Core Framework Layer  
+    %% Core Framework Layer
     subgraph CORE [" Core Framework "]
         direction TB
         API["CodeEditorAPI<br/>Main Protocol"]
@@ -52,7 +52,7 @@ graph TD
         subgraph PERF_COMP [" Performance Components "]
             ADAPTIVE["Adaptive<br/>Performance"]
             BUDGETS["Performance<br/>Budgets"]
-            MONITOR["Real-time<br/>Monitoring"]
+            MONITOR["Memory<br/>Monitor"]
             OPTIMIZER["Large File<br/>Optimizer"]
         end
     end
@@ -63,13 +63,14 @@ graph TD
         BLS["Service Registry<br/>Dependency Injection"]
         subgraph SRVS [" Core Services "]
             TES["Text Editing<br/>Operations"]
-            LDS["Language<br/>Detection"] 
+            LDS["Language<br/>Detection"]
             SHS["Syntax<br/>Highlighting"]
             CMS["Code<br/>Completion"]
             MMS["Memory<br/>Management"]
             LNCS["Line Number<br/>Calculation"]
             GSS["Gutter<br/>Sizing"]
             CFCS["Code Folding<br/>Coordinator"]
+            ELS["Editor Layout<br/>Service"]
         end
     end
 
@@ -80,9 +81,8 @@ graph TD
         subgraph CFGS [" Config Modules "]
             DC["Display<br/>Settings"]
             LC["Layout<br/>Options"]
-            BC["Behavior<br/>Rules"] 
+            BC["Behavior<br/>Rules"]
             PC["Performance<br/>Tuning"]
-            PLGC["Plugin<br/>Settings"]
         end
     end
 
@@ -125,7 +125,7 @@ graph TD
         LP["Language Provider<br/>Framework"]
         subgraph LANG_COMP [" Language Components "]
             SHL["Syntax<br/>Highlighters"]
-            CP["Completion<br/>Providers"] 
+            CP["Completion<br/>Providers"]
             TOK["Language<br/>Tokenizers"]
         end
     end
@@ -133,14 +133,15 @@ graph TD
     %% External Integrations
     subgraph EXTERNAL [" External Integrations "]
         direction TB
-        LSP["LSP Client<br/>Language Servers"]
-        PLG["Plugin System<br/>Extensibility"]
+        LSP["LSP Client<br/>& Manager"]
         SS["SwiftSyntax<br/>Swift AST"]
-        subgraph PLUGINS [" Plugin Architecture "]
-            PAPI["Plugin API<br/>Stable Interface"]
-            PCTX["Plugin Context<br/>Controlled Access"]
-            PEVT["Plugin Events<br/>Communication"]
-        end
+    end
+
+    %% Separate Products
+    subgraph PRODUCTS [" Separate Products "]
+        direction TB
+        CDT["Design Tokens<br/>CodeEditorDesignTokens"]
+        CUI["SwiftUI Components<br/>CodeEditorUI"]
     end
 
     %% Main Architecture Flow
@@ -151,50 +152,47 @@ graph TD
     PERFORMANCE --> SERVICES
     SERVICES --> CONFIG
     CORE --> PLATFORM
-    
+
     %% Detailed Connections
     SE --> API
     ENV --> EC
     MOD --> EC
-    
+
     API --> CEV
     CEV --> CCV
     CEV --> UES
     CEV --> AC
-    
+
     UES --> AOM
     AOM --> ASYNC_COMP
     ASYNC_COMP --> ADVANCED
-    
+
     UPS --> PERF_COMP
     PERF_COMP --> BLS
     UES --> BLS
     BLS --> SRVS
     AC --> SRVS
     AC --> AOM
-    
+
     EC --> CFGS
     EC --> AC
     EC --> UES
     PAB --> PLATS
     PAB --> COORDS
     CPC --> COORDS
-    
+
     CCV --> UI_FEAT
     CEV --> EDIT_FEAT
-    
+
     SHS --> LP
     LP --> LANG_COMP
-    
+
     CMS --> LSP
     SHL --> SS
-    PM --> PLG
-    PLG --> PLUGINS
-    PAPI --> PCTX
-    PCTX --> BLS
-    PEVT --> UES
-    
-    %% Styling - Light/Dark mode compatible colors  
+
+    CORE --> PRODUCTS
+
+    %% Styling - Light/Dark mode compatible colors
     classDef swiftui fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef core fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef async fill:#5856D620,stroke:#5856D6,stroke-width:2px,color:#1D1D1F
@@ -206,7 +204,8 @@ graph TD
     classDef feature fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
     classDef lang fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef external fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
-    
+    classDef product fill:#0A84FF20,stroke:#0A84FF,stroke-width:2px,color:#1D1D1F
+
     %% Apply styling to components
     class SE swiftui
     class ENV swiftui
@@ -241,12 +240,12 @@ graph TD
     class LNCS service
     class GSS service
     class CFCS service
+    class ELS service
     class EC config
     class DC config
     class LC config
     class BC config
     class PC config
-    class PLGC config
     class PAB platform
     class PV platform
     class PF platform
@@ -267,11 +266,9 @@ graph TD
     class CP lang
     class TOK lang
     class LSP external
-    class PLG external
     class SS external
-    class PAPI external
-    class PCTX external
-    class PEVT external
+    class CDT product
+    class CUI product
 ```
 
 ## Key Architectural Principles
@@ -283,6 +280,6 @@ graph TD
 5. **Platform Agnostic**: Platform-specific code isolated in abstraction layer
 6. **Event-Driven**: Unified event system for decoupled communication
 7. **Configurable**: Comprehensive configuration system with environment integration
-8. **Extensible**: Plugin system with stable API and controlled access
-9. **Concurrent**: ActorCoordinator manages safe concurrent operations
-10. **Memory Efficient**: Active memory monitoring and iOS-specific optimizations
+8. **Concurrent**: ActorCoordinator manages safe concurrent operations
+9. **Memory Efficient**: Active memory monitoring and platform-specific optimizations
+10. **Modular**: Separate product targets for design tokens and SwiftUI components

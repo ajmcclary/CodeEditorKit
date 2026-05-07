@@ -30,9 +30,7 @@ classDiagram
         +language LanguageConfig?
         +eventSystem UnifiedEventSystem
         +serviceRegistry BusinessLogicServiceRegistry
-        +pluginManager PluginManager?
         +performTextEdit()
-        +initializePluginSystem()
     }
 
     class CodeEditorContainerView {
@@ -147,7 +145,14 @@ classDiagram
         +validateProviders()
     }
 
-    %% New Service Classes
+    class CompletionManager {
+        &lt;&lt;completion orchestration&gt;&gt;
+        +registerProvider()
+        +requestCompletions()
+        +invalidateCache()
+        +clearCache()
+    }
+
     class LineNumberCalculationService {
         &lt;&lt;line positioning&gt;&gt;
         +calculateVisibleLineRanges()
@@ -223,16 +228,7 @@ classDiagram
         +syncWithEditor()
     }
 
-    %% Eighth Row - Plugin System
-    class PluginManager {
-        &lt;&lt;plugin management&gt;&gt;
-        +loadedPlugins Set~String~
-        +registerPlugin()
-        +activatePlugin()
-        +deactivatePlugin()
-        +loadPlugins()
-    }
-
+    %% Eighth Row - Concurrency
     class ActorCoordinator {
         &lt;&lt;concurrency&gt;&gt;
         +backgroundQueue DispatchQueue
@@ -279,7 +275,6 @@ classDiagram
     CodeEditorView --> LineIndexCache : maintains
     CodeEditorView --> EditorConfiguration : configured by
     CodeEditorView --> LanguageConfig : uses
-    CodeEditorView --> PluginManager : manages
     
     CodeEditorContainerView --> CodeEditorView : contains
     CodeEditorContainerView --> GutterView : contains
@@ -315,8 +310,7 @@ classDiagram
     EditorConfiguration --> ActorCoordinator : includes
     EditorConfiguration --> UnifiedEventSystem : includes
     
-    PluginManager --> Plugin : manages
-    PluginManager --> EditorConfiguration : uses
+    MemoryManagementCoordinator --> CompletionManager : creates
     
     Event --> EventType : categorized by
     Event --> TextChange : may contain
@@ -356,6 +350,7 @@ classDiagram
     class TextEditingService service
     class SyntaxHighlightingService service
     class LanguageDetectionService service
+    class CompletionProviderRegistry service
     class CompletionManager service
     class MemoryMonitor service
     class CodeEditorLayoutManager layout
@@ -369,9 +364,7 @@ classDiagram
     class CompletionContext support
     class CompletionItem support
     class EventType enum
-    class PluginManager service
     class ActorCoordinator service
-    class Plugin protocol
 ```
 
 ## Key Design Patterns
@@ -381,8 +374,7 @@ classDiagram
 3. **Service Locator**: `BusinessLogicServiceRegistry` manages all services
 4. **Dependency Injection**: No singletons - services injected via configuration
 5. **Observer Pattern**: `UnifiedEventSystem` for decoupled event handling
-6. **Plugin Architecture**: `PluginManager` enables extensibility
-7. **Composite Pattern**: `CodeEditorContainerView` composes multiple views
-8. **Bridge Pattern**: `CodeEditor` SwiftUI wrapper bridges to AppKit/UIKit
-9. **Cache Pattern**: `LineIndexCache` for performance optimization
-10. **Actor Pattern**: `ActorCoordinator` for safe concurrency
+6. **Composite Pattern**: `CodeEditorContainerView` composes multiple views
+7. **Bridge Pattern**: `CodeEditor` SwiftUI wrapper bridges to AppKit/UIKit
+8. **Cache Pattern**: `LineIndexCache` for performance optimization
+9. **Actor Pattern**: `ActorCoordinator` for safe concurrency

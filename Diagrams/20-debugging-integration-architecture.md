@@ -1,6 +1,8 @@
-# Debugging Integration Detailed Architecture
+# Debugging Integration Architecture (Design Document)
 
-This diagram shows the comprehensive debugging integration system that provides breakpoint management, debug session control, and debugging visualization capabilities within the code editor.
+> **Note:** This diagram represents a planned/extended debugging architecture. The currently implemented debugging system is documented in [`20-debugging-integration.md`](20-debugging-integration.md). Only `DebugAdapter.swift`, `DebuggerIntegrationCore.swift`, `DebuggerIntegration+Breakpoints.swift`, `DebuggerIntegration+Evaluation.swift`, `DebuggerIntegration+Execution.swift`, and `DebuggerModels.swift` are implemented. Classes like `DebugIntegrationSystem`, `DebugSessionManager`, `DebugSessionFactory`, `DebugProtocolManager`, `DebugStateManager`, etc. are aspirational.
+
+This diagram shows the planned comprehensive debugging integration system that provides breakpoint management, debug session control, and debugging visualization capabilities within the code editor.
 
 ```mermaid
 classDiagram

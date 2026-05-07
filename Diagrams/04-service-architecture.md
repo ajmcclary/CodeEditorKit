@@ -9,7 +9,7 @@ classDiagram
     %% Top Row - Central Registry & Core Services
     class BusinessLogicServiceRegistry {
         &lt;&lt;dependency injection&gt;&gt;
-        -services Dictionary&lt;String, ServiceLifecycle&gt;
+        -services Dictionary&lt;String, Any&gt;
         -eventSystem UnifiedEventSystem
         -coordinator MemoryManagementCoordinator
         +register()
@@ -20,25 +20,6 @@ classDiagram
         +getServiceStatus()
         +clearAllCaches()
         +resetAllServices()
-    }
-
-    class ServiceDependencies {
-        &lt;&lt;dependency container&gt;&gt;
-        +eventSystem UnifiedEventSystem
-        +configuration EditorConfiguration
-        +logger CrossPlatformLogger
-        +cache CacheManager
-        +actorCoordinator ActorCoordinator
-        +memoryCoordinator MemoryManagementCoordinator
-    }
-
-    class ServiceEventHandler {
-        &lt;&lt;event dispatcher&gt;&gt;
-        -registry BusinessLogicServiceRegistry
-        +handleTextChange()
-        +handleLanguageChange()
-        +handleConfigurationChange()
-        +handleMemoryWarning()
     }
 
     %% Second Row - Core Text & Language Services
@@ -157,7 +138,6 @@ classDiagram
         +startMonitoring()
         +stopMonitoring()
         +currentMemoryUsage()
-        +⚠️ DEPRECATED: Use MemoryManagementCoordinator
     }
 
     class CacheManager {
@@ -200,14 +180,6 @@ classDiagram
         +items [CompletionItem]
         +isActive Bool
         +cancel()
-    }
-
-    class ServiceLifecycle {
-        &lt;&lt;lifecycle protocol&gt;&gt;
-        +initialize()
-        +shutdown()
-        +suspend()
-        +resume()
     }
 
     class CodeFoldingEngine {
@@ -332,14 +304,6 @@ classDiagram
         +create()$ ActorCoordinator
     }
 
-    class PluginIntegration {
-        &lt;&lt;plugin service bridge&gt;&gt;
-        +pluginManager PluginManager
-        +serviceRegistry BusinessLogicServiceRegistry
-        +bridgeServices()
-        +exposeServicesToPlugins()
-    }
-
     %% Tenth Row - Basic Support Types
     class LanguageConfig {
         &lt;&lt;language definition&gt;&gt;
@@ -383,8 +347,6 @@ classDiagram
     BusinessLogicServiceRegistry *-- EditorLayoutService : manages
     
     %% Central coordination
-    BusinessLogicServiceRegistry --> ServiceDependencies : uses
-    BusinessLogicServiceRegistry --> ServiceEventHandler : uses
     BusinessLogicServiceRegistry --> MemoryManagementCoordinator : coordinates
     
     %% Service dependencies and relationships
@@ -397,16 +359,6 @@ classDiagram
     MemoryManagementCoordinator --> MemoryMonitor : manages
     MemoryManagementCoordinator --> CacheManager : coordinates
     MemoryManagementCoordinator --> ActorCoordinator : uses
-    
-    %% Service lifecycle implementations
-    TextEditingService ..|> ServiceLifecycle : implements
-    SyntaxHighlightingService ..|> ServiceLifecycle : implements
-    LanguageDetectionService ..|> ServiceLifecycle : implements
-    CompletionProviderRegistry ..|> ServiceLifecycle : implements
-    LineNumberCalculationService ..|> ServiceLifecycle : implements
-    GutterSizingService ..|> ServiceLifecycle : implements
-    CodeFoldingCoordinatorService ..|> ServiceLifecycle : implements
-    EditorLayoutService ..|> ServiceLifecycle : implements
     
     %% Core service relationships
     TextEditingService --> EditAction : uses
@@ -433,24 +385,13 @@ classDiagram
     
     CodeFoldingEngine --> FoldingPattern : uses
     
-    %% Deprecated singleton warnings
+    %% Memory monitor coordination
     MemoryMonitor --> ActorCoordinator : uses
-    
-    %% Dependency injection
-    ServiceDependencies --> CrossPlatformLogger : includes
-    ServiceDependencies --> CacheManager : includes
-    ServiceDependencies --> ActorCoordinator : includes
-    ServiceDependencies --> MemoryManagementCoordinator : includes
-    
-    %% Plugin integration
-    PluginIntegration --> BusinessLogicServiceRegistry : bridges
-    PluginIntegration --> PluginManager : coordinates
     
     %% Styling - Light/Dark mode compatible colors
     classDef registry fill:#007AFF20,stroke:#007AFF,stroke-width:3px,color:#1D1D1F
     classDef service fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
     classDef coordinator fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
-    classDef lifecycle fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef support fill:#FF950020,stroke:#FF9500,stroke-width:2px,color:#1D1D1F
     classDef enum fill:#007AFF20,stroke:#007AFF,stroke-width:2px,color:#1D1D1F
     classDef protocol fill:#FF3B3020,stroke:#FF3B30,stroke-width:2px,color:#1D1D1F
@@ -473,10 +414,7 @@ classDiagram
     class UniversalCompletionProvider coordinator
     class CompletionSession coordinator
     class CodeFoldingEngine coordinator
-    class ServiceLifecycle lifecycle
-    class ServiceDependencies support
     class CacheManager support
-    class ServiceEventHandler support
     class Debouncer support
     class CrossPlatformLogger support
     class EditAction enum
@@ -501,8 +439,6 @@ classDiagram
     class LineNumberInfo completion
     class FoldingPattern completion
     class ActorCoordinator coordinator
-    class PluginIntegration coordinator
-    class PluginManager service
 ```
 
 ## Service Architecture Principles
@@ -526,19 +462,12 @@ The CodeEditorPlugin framework now implements a sophisticated service architectu
 
 1. **Enhanced Service Registry**: Central registry with **configureForEditor()**, **getServiceStatus()**, **clearAllCaches()**, and **resetAllServices()** methods
 2. **Memory Management Coordination**: **MemoryManagementCoordinator** provides centralized memory oversight and cleanup coordination
-3. **Dependency Injection**: All services receive dependencies through constructor injection - **no singletons** (deprecated pattern warnings included)
+3. **Dependency Injection**: All services receive dependencies through constructor injection - **no singletons**
 4. **Service Interdependencies**: 
    - GutterSizingService → LineNumberCalculationService
    - EditorLayoutService → GutterSizingService  
    - CodeFoldingCoordinatorService → LineNumberCalculationService + CodeFoldingEngine
-5. **Lifecycle Management**: All 8 services implement ServiceLifecycle protocol
-6. **Event-Driven Communication**: Services communicate through UnifiedEventSystem
-7. **Plugin Integration**: Services exposed to plugins through secure API bridge
-8. **Enhanced Caching**: Extended cache manager with specialized caches (line numbers, gutter sizing, etc.)
-9. **Async Operations**: Heavy operations coordinated through ActorCoordinator
-10. **Memory Optimization**: Automatic cleanup via MemoryManagementCoordinator with weak reference management
-
-#### Deprecation Warnings
-
-- **MemoryMonitor**: Direct usage deprecated - use **MemoryManagementCoordinator** for centralized memory management
-- **Singleton Patterns**: All singleton usage deprecated in favor of dependency injection
+5. **Event-Driven Communication**: Services communicate through UnifiedEventSystem
+6. **Enhanced Caching**: Extended cache manager with specialized caches (line numbers, gutter sizing, etc.)
+7. **Async Operations**: Heavy operations coordinated through ActorCoordinator
+8. **Memory Optimization**: Automatic cleanup via MemoryManagementCoordinator with weak reference management

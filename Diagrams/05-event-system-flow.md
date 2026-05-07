@@ -1,6 +1,6 @@
 # Event System Flow Diagram
 
-This diagram illustrates the enhanced unified event system with modern async processing, plugin integration, and performance monitoring.
+This diagram illustrates the enhanced unified event system with modern async processing and performance monitoring.
 
 ```mermaid
 flowchart TB
@@ -11,7 +11,6 @@ flowchart TB
         SYS[System Events<br/>Memory, Focus, Resize]
         SERV[Service Events<br/>Completion, Highlight]
         CONF[Configuration<br/>Theme, Settings]
-        PLUGIN[Plugin Events<br/>Lifecycle, Commands, Diagnostics]
     end
 
     %% Event Creation & Injection
@@ -19,7 +18,6 @@ flowchart TB
         INJECT[EditorConfiguration<br/>Dependency Injection]
         CREATE[Event Factory<br/>Type-safe Creation]
         EVENT[EditorEvent Enum<br/>Type-safe Event Creation]
-        PLUGIN_EVENT[PluginEvent Protocol<br/>- eventId: UUID<br/>- eventTimestamp: Date]
     end
 
     %% Enhanced Event System Core
@@ -57,7 +55,6 @@ flowchart TB
     %% Event Types (Expanded)
     subgraph "Event Type Hierarchy"
         CORE_EVENTS[Core Events<br/>textDidChange<br/>textSelectionDidChange<br/>completionRequested<br/>performanceWarning]
-        PLUGIN_EVENTS[Plugin Events<br/>PluginLifecycleEvent<br/>PluginDiscoveryEvent<br/>PluginCommandEvent<br/>PluginDiagnosticEvent]
         TYPED_EXTRACT[Type Extraction<br/>TextDidChangeEvent<br/>TextSelectionDidChangeEvent<br/>Custom Event Types]
     end
 
@@ -75,51 +72,47 @@ flowchart TB
     SYS --> CREATE
     SERV --> CREATE
     CONF --> CREATE
-    PLUGIN --> PLUGIN_EVENT
-    
+
     INJECT --> CREATE
     CREATE --> EVENT
-    PLUGIN_EVENT -.->|Bridge via| EVENT
-    
+
     EVENT --> PUBLISH
     EVENT --> BATCH_PUB
-    
+
     PUBLISH --> FILTER
     BATCH_PUB --> FILTER
     FILTER -->|Pass| THROTTLE
     FILTER -->|Block| METRICS
-    
+
     THROTTLE --> HISTORY
     THROTTLE --> TYPED
     THROTTLE --> METRICS
-    
+
     HISTORY --> HANDLER_REG
     TYPED --> COMBINE
     COMBINE --> TYPE_SAFE
-    
+
     HANDLER_REG --> TOKEN
     HANDLER_REG --> DEBOUNCE
     DEBOUNCE --> COMPLETION
     COMPLETION --> ASYNC_MGR
-    
+
     ASYNC_MGR --> CORE_EVENTS
-    ASYNC_MGR --> PLUGIN_EVENTS
     CORE_EVENTS --> TYPED_EXTRACT
-    
+
     %% Performance Integration
     METRICS --> PERF_SYS
     PERF_SYS --> INSIGHTS
     INSIGHTS -.->|Optimization| THROTTLE
-    
+
     %% Cross-platform Integration
     INPUT_COORD -.->|Events| EVENT
     TOOLBAR_COORD -.->|Events| EVENT
     CONTEXT_COORD -.->|Events| EVENT
     PLATFORM_EVENTS -.->|Events| EVENT
-    
+
     %% Feedback Loops
     ASYNC_MGR -.->|New Events| CREATE
-    PLUGIN_EVENTS -.->|System Events| CREATE
     INSIGHTS -.->|Config Changes| CONF
 
     %% Enhanced Styling
@@ -129,9 +122,9 @@ flowchart TB
     classDef process fill:#AF52DE20,stroke:#AF52DE,stroke-width:2px,color:#1D1D1F
     classDef performance fill:#FF9F0A20,stroke:#FF9F0A,stroke-width:2px,color:#1D1D1F
     classDef coordination fill:#FF375F20,stroke:#FF375F,stroke-width:2px,color:#1D1D1F
-    
-    class UI,TEXT,SYS,SERV,CONF,PLUGIN source
-    class INJECT,CREATE,EVENT,PLUGIN_EVENT system
+
+    class UI,TEXT,SYS,SERV,CONF source
+    class INJECT,CREATE,EVENT system
     class PUBLISH,BATCH_PUB,TYPED,FILTER,THROTTLE,HISTORY system
     class HANDLER_REG,TOKEN,COMBINE,TYPE_SAFE handler
     class DEBOUNCE,COMPLETION,ASYNC_MGR process
@@ -152,24 +145,6 @@ public enum EditorEvent: Sendable {
     case completionItemSelected(any CompletionItemView)
     case performanceWarning(message: String)
     case error(Error)
-}
-
-// Plugin events with separate hierarchy
-public protocol PluginEvent: Sendable {
-    var eventId: UUID { get }
-    var eventTimestamp: Date { get }
-}
-
-public struct PluginLifecycleEvent: PluginEvent {
-    public enum EventType: Sendable {
-        case activated(pluginId: String)
-        case deactivated(pluginId: String)
-        case failed(pluginId: String, error: Error)
-    }
-    
-    public let type: EventType
-    public let eventId = UUID()
-    public let eventTimestamp = Date()
 }
 ```
 
@@ -203,7 +178,7 @@ struct MyEventHandler: EventHandler {
             return false
         }
     }
-    
+
     func handle(_ event: EditorEvent) {
         switch event {
         case .textDidChange(let text):
@@ -324,24 +299,19 @@ if metrics.eventsPerSecond > 50 {
 11. **Async Operation Management**: Integration with `AsyncOperationManager` for concurrency control
 12. **Error Recovery**: Comprehensive error handling with recoverable error patterns
 
-### Plugin System Integration
-13. **Plugin Events**: Separate `PluginEvent` hierarchy for plugin lifecycle, commands, and diagnostics
-14. **Event Bridging**: Seamless integration between core and plugin event systems
-15. **Plugin Discovery**: Automatic event publishing for plugin lifecycle management
-
 ### Cross-Platform Support
-16. **Platform Event Filtering**: `PlatformEventFilter` for platform-specific event handling
-17. **Coordinator Integration**: Events from `InputCoordinator`, `ToolbarCoordinator`, `ContextMenuCoordinator`
-18. **Platform Abstraction**: Unified event handling across macOS, iOS, and Catalyst
+13. **Platform Event Filtering**: `PlatformEventFilter` for platform-specific event handling
+14. **Coordinator Integration**: Events from `InputCoordinator`, `ToolbarCoordinator`, `ContextMenuCoordinator`
+15. **Platform Abstraction**: Unified event handling across macOS, iOS, and Catalyst
 
 ### Developer Experience
-19. **Token-Based Unregistration**: Safe handler cleanup with `EventHandlerToken`
-20. **Type Extraction**: `EditorEventType` protocol for type-safe event filtering
-21. **Debugging Support**: Event history inspection and performance insights
-22. **SwiftUI Integration**: Environment-based configuration and typed publishers
+16. **Token-Based Unregistration**: Safe handler cleanup with `EventHandlerToken`
+17. **Type Extraction**: `EditorEventType` protocol for type-safe event filtering
+18. **Debugging Support**: Event history inspection and performance insights
+19. **SwiftUI Integration**: Environment-based configuration and typed publishers
 
 ### Performance Optimization
-23. **Automatic Optimization**: Integration with `UnifiedPerformanceSystem` for adaptive throttling
-24. **Smart Filtering**: Multiple filter layers including performance and platform filters
-25. **Typing Pattern Analysis**: Dynamic debouncing based on user typing behavior
-26. **Resource Management**: Automatic cleanup and memory management for long-running applications
+20. **Automatic Optimization**: Integration with `UnifiedPerformanceSystem` for adaptive throttling
+21. **Smart Filtering**: Multiple filter layers including performance and platform filters
+22. **Typing Pattern Analysis**: Dynamic debouncing based on user typing behavior
+23. **Resource Management**: Automatic cleanup and memory management for long-running applications
