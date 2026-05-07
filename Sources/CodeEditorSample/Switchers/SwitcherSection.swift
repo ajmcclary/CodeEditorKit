@@ -1,75 +1,69 @@
 import CodeEditorPlugin
 import SwiftUI
 
-/// Three Picker rows wired to environment + DocumentStore + binding.
-/// Sits at the top of the settings sidebar above the knob playground.
+/// Single rounded card containing three switcher chips: Theme, Language,
+/// Preset. Replaces the previous trio of stacked `Picker(.menu)` blocks.
 struct SwitcherSection: View {
     @Binding var theme: Theme
     @Binding var configuration: EditorConfiguration
     @Bindable var documents: DocumentStore
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            themePicker
-            languagePicker
-            presetPicker
+        VStack(spacing: 0) {
+            SwitcherChip(
+                icon: "paintbrush.pointed",
+                label: "Theme",
+                options: ThemeCatalog.all,
+                optionLabel: { $0.name },
+                selection: themeBinding
+            )
+
+            divider
+
+            SwitcherChip(
+                icon: "chevron.left.forwardslash.chevron.right",
+                label: "Language",
+                options: LanguageCatalog.all,
+                optionLabel: { $0.name },
+                selection: languageBinding,
+                disabled: documents.activeTabID == nil
+            )
+
+            divider
+
+            SwitcherChip(
+                icon: "slider.horizontal.3",
+                label: "Preset",
+                options: PresetCatalog.all,
+                optionLabel: { $0.name },
+                selection: presetBinding
+            )
         }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(tokens: theme.style.chrome.elevatedSurfaceBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color(tokens: theme.style.borders.base), lineWidth: 0.5)
+        )
         .padding(.horizontal, 12)
-        .padding(.top, 8)
+        .padding(.top, 12)
     }
 
-    private var themePicker: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Theme")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(tokens: theme.style.text.base))
-            Picker("Theme", selection: themeBinding) {
-                ForEach(ThemeCatalog.all, id: \.name) { theme in
-                    Text(theme.name).tag(theme.name)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-        }
-    }
-
-    private var languagePicker: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Language")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(tokens: theme.style.text.base))
-            Picker("Language", selection: languageBinding) {
-                ForEach(LanguageCatalog.all, id: \.self) { language in
-                    Text(language.name).tag(language)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .disabled(documents.activeTabID == nil)
-        }
-    }
-
-    private var presetPicker: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Preset")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(tokens: theme.style.text.base))
-            Picker("Preset", selection: presetBinding) {
-                ForEach(PresetCatalog.all) { preset in
-                    Text(preset.name).tag(preset.id)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-        }
+    private var divider: some View {
+        Rectangle()
+            .fill(Color(tokens: theme.style.borders.variant))
+            .frame(height: 0.5)
+            .padding(.horizontal, 12)
     }
 
     // MARK: - Bindings
 
-    private var themeBinding: Binding<String> {
+    private var themeBinding: Binding<Theme> {
         Binding(
-            get: { theme.name },
-            set: { theme = ThemeCatalog.theme(named: $0) }
+            get: { theme },
+            set: { newValue in theme = ThemeCatalog.theme(named: newValue.name) }
         )
     }
 
@@ -83,17 +77,13 @@ struct SwitcherSection: View {
         )
     }
 
-    private var presetBinding: Binding<String> {
+    private var presetBinding: Binding<ConfigurationPreset> {
         Binding(
             get: {
-                PresetCatalog.all.first { $0.configuration == configuration }?.id
-                    ?? PresetCatalog.default.id
+                PresetCatalog.all.first { $0.configuration == configuration }
+                    ?? PresetCatalog.default
             },
-            set: { newID in
-                if let preset = PresetCatalog.all.first(where: { $0.id == newID }) {
-                    configuration = preset.configuration
-                }
-            }
+            set: { newValue in configuration = newValue.configuration }
         )
     }
 }

@@ -2,55 +2,48 @@ import CodeEditorPlugin
 import SwiftUI
 
 struct PerformanceKnobsSection: View {
-    @Environment(\.codeEditorTheme) private var theme
     @Binding var configuration: EditorConfiguration
     @State private var expanded: Bool = false
+    var expansion: KnobSectionExpansion = .toggleable
 
     var body: some View {
-        DisclosureGroup(
-            isExpanded: $expanded,
-            content: {
-                VStack(alignment: .leading, spacing: 0) {
-                    limitRows
-                    KnobRowSeparator()
-                    strategyRows
-                    KnobRowSeparator()
-                    debounceRows
-                }
-                .padding(.vertical, 4)
-            },
-            label: {
-                Text("Performance")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color(tokens: theme.style.text.base))
+        KnobSection(
+            title: "Performance",
+            icon: "gauge.with.dots.needle.bottom.50percent",
+            accentIndex: 3,
+            expanded: $expanded,
+            expansion: expansion
+        ) {
+            VStack(alignment: .leading, spacing: 0) {
+                limitsSection
+                strategySection
+                debounceSection
             }
-        )
+        }
         .padding(.horizontal, 12)
     }
 
     @ViewBuilder
-    private var limitRows: some View {
+    private var limitsSection: some View {
+        KnobSubsection(title: "Limits")
         StepperRow(
             label: "maxSyntaxHighlightingLength",
             value: $configuration.performance.maxSyntaxHighlightingLength,
             range: 1_024...10_485_760,
             step: 1_024
         )
-        KnobRowSeparator()
         StepperRow(
             label: "maxVisibleLines",
             value: $configuration.performance.maxVisibleLines,
             range: 1...100_000,
             step: 100
         )
-        KnobRowSeparator()
         StepperRow(
             label: "maxFileSize",
             value: $configuration.performance.maxFileSize,
             range: 0...100_000_000,
             step: 1_024
         )
-        KnobRowSeparator()
         StepperRow(
             label: "maxEventsPerSecond",
             value: $configuration.performance.maxEventsPerSecond,
@@ -59,39 +52,34 @@ struct PerformanceKnobsSection: View {
     }
 
     @ViewBuilder
-    private var strategyRows: some View {
+    private var strategySection: some View {
+        KnobSubsection(title: "Strategy")
         ToggleRow(
             label: "useHardwareAcceleration",
             value: $configuration.performance.useHardwareAcceleration
         )
-        KnobRowSeparator()
-        ToggleRow(
-            label: "smoothScrolling",
-            value: $configuration.performance.smoothScrolling
-        )
-        KnobRowSeparator()
+        ToggleRow(label: "smoothScrolling", value: $configuration.performance.smoothScrolling)
         ToggleRow(
             label: "animateCodeFolding (perf)",
             value: $configuration.performance.animateCodeFolding
         )
-        KnobRowSeparator()
         PickerRow(
             label: "renderingUpdateStrategy",
             value: $configuration.performance.renderingUpdateStrategy,
             cases: [.adaptive, .immediate, .batched]
         ) {
-            String(describing: $0)
+            String(describing: $0).capitalized
         }
     }
 
     @ViewBuilder
-    private var debounceRows: some View {
+    private var debounceSection: some View {
+        KnobSubsection(title: "Debounce")
         DurationRow(
             label: "highlightingDebounceInterval",
             value: $configuration.performance.highlightingDebounceInterval,
             rangeMS: 0...1_000
         )
-        KnobRowSeparator()
         DurationRow(
             label: "textChangeDebounceInterval",
             value: $configuration.performance.textChangeDebounceInterval,

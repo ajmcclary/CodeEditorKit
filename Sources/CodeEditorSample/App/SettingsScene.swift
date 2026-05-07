@@ -6,77 +6,140 @@ import SwiftUI
 /// shared `AppState` that the main window reads, so any change here is
 /// reflected immediately in the editor and vice versa.
 ///
-/// Tab layout follows macOS conventions (Display / Layout / Behavior /
-/// Performance / Theme), reusing the existing knob sections — no second
-/// implementation of the controls.
+/// The window uses a `NavigationSplitView` with a sidebar listing the
+/// five categories (Display, Layout, Behavior, Performance, Theme) and
+/// a detail pane that reuses the same knob sections rendered in always-
+/// expanded mode.
 struct SettingsScene: View {
     @Bindable var appState: AppState
+    @State private var selection: Category = .display
+
+    enum Category: String, CaseIterable, Identifiable {
+        case display, layout, behavior, performance, theme
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .display: return "Display"
+            case .layout: return "Layout"
+            case .behavior: return "Behavior"
+            case .performance: return "Performance"
+            case .theme: return "Theme"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .display: return "square.grid.2x2"
+            case .layout: return "rectangle.split.3x1"
+            case .behavior: return "wand.and.stars"
+            case .performance: return "gauge.with.dots.needle.bottom.50percent"
+            case .theme: return "paintbrush"
+            }
+        }
+    }
 
     var body: some View {
-        TabView {
-            displayTab
-                .tabItem { Label("Display", systemImage: "rectangle.lefthalf.inset.filled") }
-
-            layoutTab
-                .tabItem { Label("Layout", systemImage: "rectangle.split.3x1") }
-
-            behaviorTab
-                .tabItem { Label("Behavior", systemImage: "wand.and.stars") }
-
-            performanceTab
-                .tabItem { Label("Performance", systemImage: "speedometer") }
-
-            themeTab
-                .tabItem { Label("Theme", systemImage: "paintbrush") }
+        NavigationSplitView {
+            sidebarList
+                .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
+        } detail: {
+            detail
         }
+        .navigationSplitViewStyle(.balanced)
         .codeTheme(appState.theme)
         .environment(\.codeEditorConfiguration, appState.configuration)
         .preferredColorScheme(appState.theme.appearance == .dark ? .dark : .light)
-        .frame(minWidth: 480, idealWidth: 540, minHeight: 380, idealHeight: 520)
-        .padding(20)
+        .frame(minWidth: 760, idealWidth: 880, minHeight: 540, idealHeight: 660)
     }
 
     @ViewBuilder
-    private var displayTab: some View {
-        ScrollView {
-            DisplayKnobsSection(configuration: $appState.configuration)
-                .padding(.vertical, 8)
+    private var sidebarList: some View {
+        List(Category.allCases, selection: $selection) { category in
+            CategoryRow(category: category, isSelected: selection == category)
+                .tag(category)
         }
+        .listStyle(.sidebar)
+        .navigationTitle("Settings")
     }
 
     @ViewBuilder
-    private var layoutTab: some View {
+    private var detail: some View {
         ScrollView {
-            LayoutKnobsSection(configuration: $appState.configuration)
-                .padding(.vertical, 8)
+            VStack(alignment: .leading, spacing: 0) {
+                detailContent
+            }
+            .frame(maxWidth: 600, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 24)
         }
+        .navigationTitle(selection.title)
     }
 
     @ViewBuilder
-    private var behaviorTab: some View {
-        ScrollView {
-            BehaviorKnobsSection(configuration: $appState.configuration)
-                .padding(.vertical, 8)
-        }
-    }
+    private var detailContent: some View {
+        switch selection {
+        case .display:
+            DisplayKnobsSection(configuration: $appState.configuration, expansion: .always)
 
-    @ViewBuilder
-    private var performanceTab: some View {
-        ScrollView {
-            PerformanceKnobsSection(configuration: $appState.configuration)
-                .padding(.vertical, 8)
-        }
-    }
+        case .layout:
+            LayoutKnobsSection(configuration: $appState.configuration, expansion: .always)
 
-    @ViewBuilder
-    private var themeTab: some View {
-        ScrollView {
+        case .behavior:
+            BehaviorKnobsSection(configuration: $appState.configuration, expansion: .always)
+
+        case .performance:
+            PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
+
+        case .theme:
             SwitcherSection(
                 theme: $appState.theme,
                 configuration: $appState.configuration,
                 documents: appState.documents
             )
-            .padding(.vertical, 8)
+            .padding(.top, 4)
+        }
+    }
+}
+
+/// One sidebar row: SF Symbol + title, with hover/selection treatment.
+private struct CategoryRow: View {
+    @Environment(\.codeEditorTheme) private var theme
+
+    let category: SettingsScene.Category
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: category.icon)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(iconColor)
+                .frame(width: 22, height: 22)
+            Text(category.title)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(Color(tokens: theme.style.text.base))
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 6)
+    }
+
+    private var iconColor: Color {
+        let palette = theme.style.accents
+        guard !palette.isEmpty else { return Color(tokens: theme.style.icon.muted) }
+        let accent = palette[index % palette.count]
+        return Color(tokens: accent)
+    }
+
+    private var index: Int {
+        switch category {
+        case .display: return 0
+        case .layout: return 1
+        case .behavior: return 2
+        case .performance: return 3
+        case .theme: return 4
         }
     }
 }

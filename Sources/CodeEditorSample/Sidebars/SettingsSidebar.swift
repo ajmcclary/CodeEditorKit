@@ -2,33 +2,43 @@ import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
-/// Left sidebar shell: switchers on top, four knob sections below.
+/// Left sidebar shell: prominent header with active preset subtitle,
+/// switcher card, then the four knob sections.
 struct SettingsSidebar: View {
     @Binding var theme: Theme
     @Binding var configuration: EditorConfiguration
     @Bindable var documents: DocumentStore
 
     var body: some View {
-        EditorSidebarShell(sectionTitle: "Settings") {
+        EditorSidebarShell(
+            prominentTitle: "Editor",
+            prominentSubtitle: subtitle,
+            onReset: { configuration = PresetCatalog.default.configuration }
+        ) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
                     SwitcherSection(
                         theme: $theme,
                         configuration: $configuration,
                         documents: documents
                     )
                     knobSections
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 12)
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, 16)
             }
         }
-        .frame(width: 280)
+        .frame(width: 300)
+    }
+
+    private var subtitle: String {
+        let activePreset = PresetCatalog.all.first { $0.configuration == configuration }
+        return "\(activePreset?.name ?? "Custom") preset"
     }
 
     @ViewBuilder
     private var knobSections: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             DisplayKnobsSection(configuration: $configuration)
             LayoutKnobsSection(configuration: $configuration)
             BehaviorKnobsSection(configuration: $configuration)
