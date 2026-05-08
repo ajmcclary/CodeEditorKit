@@ -1,0 +1,2620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WORKSPACE 0214 — Navigation Refactor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,200..900,0..100,0..1;1,9..144,200..900,0..100,0..1&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..125,200..800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper:        #F2EDE2;
+      --paper-bright: #FBF8F1;
+      --paper-deep:   #E8E0CE;
+      --paper-edge:   #D8CFB9;
+      --ink:          #1A1410;
+      --ink-2:        #3D352B;
+      --ink-3:        #6E6354;
+      --ink-4:        #9C9180;
+      --rule:         #B8AC93;
+      --rule-soft:    #D4C9B3;
+      --rule-faint:   #E2D9C5;
+
+      --accent:       #C8341B;
+      --accent-2:     #A12612;
+      --accent-bg:    rgba(200, 52, 27, 0.10);
+      --accent-stamp: rgba(200, 52, 27, 0.92);
+
+      --green:        #5A7437;
+      --green-bg:     rgba(90, 116, 55, 0.10);
+      --blueprint:    #1E3A8A;
+      --blueprint-bg: rgba(30, 58, 138, 0.08);
+      --amber:        #A8742C;
+      --amber-bg:     rgba(168, 116, 44, 0.12);
+
+      --serif: 'Fraunces', 'Times New Roman', serif;
+      --sans:  'Bricolage Grotesque', system-ui, sans-serif;
+      --mono:  'JetBrains Mono', ui-monospace, monospace;
+
+      --tracking-tight: -0.01em;
+      --tracking-wide:  0.18em;
+      --tracking-xwide: 0.32em;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 13.5px;
+      font-feature-settings: "ss01", "ss02", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
+
+    body {
+      background-image:
+        repeating-linear-gradient(0deg,  transparent 0 39px, rgba(184, 172, 147, 0.10) 39px 40px),
+        repeating-linear-gradient(90deg, transparent 0 39px, rgba(184, 172, 147, 0.10) 39px 40px);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.55;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
+    }
+
+    .app {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100vh;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* TOP BAR                                                    */
+    /* ────────────────────────────────────────────────────────── */
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 360px 1fr 360px;
+      align-items: stretch;
+      border-bottom: 1px solid var(--rule);
+      background: var(--paper-bright);
+      height: 64px;
+      position: relative;
+    }
+
+    .topbar::before, .topbar::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: var(--ink);
+      opacity: 0.16;
+    }
+    .topbar::before { top: 0; }
+    .topbar::after  { bottom: -3px; height: 1px; background: var(--rule-soft); }
+
+    .topbar__id {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 22px;
+      border-right: 1px solid var(--rule-soft);
+      position: relative;
+    }
+
+    .id-stamp {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: var(--tracking-xwide);
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      padding: 4px 8px 3px;
+      transform: rotate(-1.4deg);
+      background: var(--paper-bright);
+      box-shadow: 0 0.5px 0 rgba(200, 52, 27, 0.2);
+    }
+
+    .id-meta { line-height: 1.1; }
+
+    .id-meta__title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 28, "SOFT" 30, "wght" 460;
+      font-size: 18px;
+      letter-spacing: -0.012em;
+    }
+
+    .id-meta__sub {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    .topbar__lineage {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .lineage-label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      margin-right: 12px;
+      white-space: nowrap;
+    }
+
+    .lineage-trail {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lineage-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.04em;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: color 120ms ease;
+      white-space: nowrap;
+    }
+
+    .lineage-node[data-active="true"] {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .lineage-node[data-active="true"] .lineage-dot {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+    }
+
+    .lineage-node:hover { color: var(--ink); }
+
+    .lineage-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--ink-4);
+      border: 1px solid var(--ink-3);
+    }
+
+    .lineage-node[data-state="stale"] .lineage-dot { background: var(--amber); border-color: var(--amber); }
+    .lineage-node[data-state="modified"] .lineage-dot { background: var(--accent); border-color: var(--accent); }
+    .lineage-node[data-state="waiting"] .lineage-dot { background: var(--blueprint); border-color: var(--blueprint); }
+
+    .lineage-arrow {
+      width: 14px;
+      height: 1px;
+      background: var(--rule);
+      position: relative;
+    }
+    .lineage-arrow::after {
+      content: '';
+      position: absolute;
+      right: 0; top: -2px;
+      border: 3px solid transparent;
+      border-left-color: var(--rule);
+      transform: translateY(-1px);
+    }
+
+    .topbar__user {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      padding: 0 22px;
+      border-left: 1px solid var(--rule-soft);
+    }
+
+    .density-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--rule);
+      padding: 0;
+      background: var(--paper);
+    }
+    .density-toggle button {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 0;
+      color: var(--ink-3);
+      padding: 7px 10px;
+      cursor: pointer;
+      border-right: 1px solid var(--rule-soft);
+    }
+    .density-toggle button:last-child { border-right: 0; }
+    .density-toggle button.is-on {
+      background: var(--ink);
+      color: var(--paper-bright);
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--paper-bright);
+      display: grid; place-items: center;
+      font-family: var(--serif);
+      font-size: 13px;
+      font-variation-settings: "wght" 500;
+      letter-spacing: 0.02em;
+    }
+    .user-meta { line-height: 1.1; }
+    .user-name {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-tight);
+    }
+    .user-org {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      margin-top: 1px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* RULER STRIP                                                */
+    /* ────────────────────────────────────────────────────────── */
+
+    .ruler {
+      height: 22px;
+      background: var(--paper-bright);
+      border-bottom: 1px solid var(--rule);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding-left: 24px;
+    }
+
+    .ruler::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(90deg,
+          transparent 0 19px,
+          var(--ink-4) 19px 19.5px,
+          transparent 19.5px 40px);
+      opacity: 0.32;
+    }
+    .ruler::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(90deg,
+          transparent 0 99px,
+          var(--ink-2) 99px 100px,
+          transparent 100px 200px);
+      opacity: 0.45;
+    }
+
+    .ruler-marker {
+      position: absolute;
+      top: 0; bottom: 0;
+      display: flex; align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--paper-bright);
+      z-index: 1;
+    }
+    .ruler-marker--anchor { left: 0; padding-left: 24px; }
+    .ruler-marker__line { width: 24px; height: 1px; background: var(--accent); }
+
+    .ruler-meta {
+      margin-left: auto;
+      padding: 0 18px;
+      background: var(--paper-bright);
+      z-index: 1;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .ruler-meta b { color: var(--ink); font-weight: 500; }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* WORKSPACE BODY                                             */
+    /* ────────────────────────────────────────────────────────── */
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stack-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      position: relative;
+    }
+
+    .stack-scroll::-webkit-scrollbar { height: 8px; }
+    .stack-scroll::-webkit-scrollbar-track { background: var(--paper-bright); border-top: 1px solid var(--rule-soft); }
+    .stack-scroll::-webkit-scrollbar-thumb { background: var(--rule); border: 2px solid var(--paper-bright); border-radius: 0; }
+
+    .stack {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(440px, auto);
+      height: 100%;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PANEL — base                                               */
+    /* ────────────────────────────────────────────────────────── */
+
+    .panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100%;
+      min-height: 0;
+      background: var(--paper);
+      border-right: 1px solid var(--rule);
+      overflow: hidden;
+      transition: background 200ms ease;
+    }
+
+    .panel--chat    { width: 460px; }
+    .panel--plan    { width: 480px; }
+    .panel--file    { width: 600px; }
+    .panel--diff    { width: 640px; }
+    .panel--approve { width: 460px; }
+
+    .panel[data-active="true"] {
+      background: var(--paper-bright);
+      box-shadow:
+        inset 4px 0 0 -3px var(--accent),
+        inset -4px 0 0 -3px var(--accent);
+    }
+
+    .panel[data-active="true"] .panel__corners span { opacity: 1; }
+
+    .panel__corners span {
+      position: absolute;
+      width: 14px; height: 14px;
+      pointer-events: none;
+      opacity: 0.6;
+      transition: opacity 120ms ease;
+    }
+    .panel__corners span::before, .panel__corners span::after {
+      content: ''; position: absolute; background: var(--accent);
+    }
+    .panel__corners span::before { width: 14px; height: 1.5px; }
+    .panel__corners span::after  { width: 1.5px; height: 14px; }
+
+    .panel__corners .tl { top: 6px;    left: 6px; }
+    .panel__corners .tr { top: 6px;    right: 6px; }
+    .panel__corners .tr::before { right: 0; }
+    .panel__corners .tr::after  { right: 0; }
+    .panel__corners .bl { bottom: 6px; left: 6px; }
+    .panel__corners .bl::before { bottom: 0; }
+    .panel__corners .bl::after  { bottom: 0; }
+    .panel__corners .br { bottom: 6px; right: 6px; }
+    .panel__corners .br::before { right: 0; bottom: 0; }
+    .panel__corners .br::after  { right: 0; bottom: 0; }
+
+    .panel__resize {
+      position: absolute;
+      top: 0; bottom: 0; right: -3px;
+      width: 6px;
+      cursor: col-resize;
+      z-index: 4;
+    }
+    .panel__resize::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1px; height: 28px;
+      background: var(--rule);
+    }
+    .panel__resize:hover::before { background: var(--accent); height: 60px; }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PANEL — header                                             */
+    /* ────────────────────────────────────────────────────────── */
+
+    .panel__head {
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--rule-soft);
+      position: relative;
+      background: linear-gradient(to bottom, var(--paper-bright), transparent);
+    }
+
+    .panel__topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 8px;
+    }
+
+    .panel__index {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .panel__index b {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .panel__type {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .panel__type-icon {
+      width: 12px; height: 12px;
+      stroke: var(--ink-2);
+      stroke-width: 1.6;
+      fill: none;
+    }
+
+    .panel__title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .panel__title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 36, "SOFT" 50, "wght" 480;
+      font-size: 22px;
+      letter-spacing: -0.014em;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    .panel__title em {
+      font-variation-settings: "opsz" 36, "SOFT" 50, "wght" 480, "WONK" 1;
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .panel__title code {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      background: var(--paper-deep);
+      padding: 0 6px;
+      color: var(--ink);
+    }
+
+    .panel__byline {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .panel__byline > span { display: inline-flex; align-items: center; gap: 5px; }
+    .byline-sep { color: var(--rule); }
+
+    .panel__actions {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid var(--rule);
+      background: var(--paper-bright);
+    }
+
+    .panel__action {
+      width: 28px; height: 26px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      border: 0;
+      border-right: 1px solid var(--rule-soft);
+      cursor: pointer;
+      color: var(--ink-3);
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .panel__action:last-child { border-right: 0; }
+    .panel__action:hover { background: var(--paper-deep); color: var(--ink); }
+    .panel__action svg { width: 13px; height: 13px; }
+    .panel__action--accent:hover { color: var(--accent); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* STATUS BADGES                                              */
+    /* ────────────────────────────────────────────────────────── */
+
+    .stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px 2px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      border: 1px solid currentColor;
+      line-height: 1.1;
+    }
+    .stamp--accent { color: var(--accent); }
+    .stamp--green  { color: var(--green); }
+    .stamp--blue   { color: var(--blueprint); }
+    .stamp--amber  { color: var(--amber); }
+    .stamp--ink    { color: var(--ink-2); }
+
+    .stamp::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    .stamp--rotate {
+      transform: rotate(-2deg);
+      border-width: 1.5px;
+      box-shadow: 0 0.5px 0 currentColor;
+      padding: 4px 10px 3px;
+    }
+
+    .stamp--filled {
+      background: var(--accent);
+      color: var(--paper-bright);
+      border-color: var(--accent);
+    }
+    .stamp--filled::before { background: var(--paper-bright); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* META BAR (origin disclosure)                               */
+    /* ────────────────────────────────────────────────────────── */
+
+    .panel__meta {
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--rule-faint);
+      background: var(--paper);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+      flex-wrap: wrap;
+    }
+
+    .panel__meta-label {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      font-size: 9px;
+    }
+
+    .panel__meta a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--accent);
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PANEL BODY                                                 */
+    /* ────────────────────────────────────────────────────────── */
+
+    .panel__body {
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+      position: relative;
+    }
+
+    .panel__body::-webkit-scrollbar { width: 6px; }
+    .panel__body::-webkit-scrollbar-thumb { background: var(--rule); }
+    .panel__body::-webkit-scrollbar-track { background: transparent; }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* CHAT                                                       */
+    /* ────────────────────────────────────────────────────────── */
+
+    .chat {
+      padding: 18px 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .msg {
+      position: relative;
+      padding-left: 56px;
+    }
+    .msg__gutter {
+      position: absolute;
+      left: 0; top: 1px;
+      width: 48px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--ink-4);
+      line-height: 1.4;
+      text-align: right;
+      padding-right: 8px;
+      border-right: 1px solid var(--rule-faint);
+    }
+    .msg__gutter b {
+      display: block;
+      color: var(--ink-2);
+      font-weight: 500;
+      margin-bottom: 1px;
+    }
+
+    .msg__role {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .msg__role::before {
+      content: '';
+      width: 16px; height: 1px;
+      background: var(--ink-3);
+    }
+
+    .msg--user .msg__role  { color: var(--ink); }
+    .msg--user .msg__role::before { background: var(--ink); }
+    .msg--agent .msg__role { color: var(--accent); }
+    .msg--agent .msg__role::before { background: var(--accent); }
+
+    .msg__body {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+    }
+
+    .msg--user .msg__body {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 14, "SOFT" 40, "wght" 380;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    .msg__body p + p { margin-top: 8px; }
+
+    .drop-cap::first-letter {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 144, "SOFT" 60, "wght" 600;
+      float: left;
+      font-size: 44px;
+      line-height: 0.84;
+      padding: 4px 8px 0 0;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+    }
+
+    .artifact-row {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    .artifact-card {
+      grid-column: span 1;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px 9px 8px;
+      border: 1px solid var(--rule);
+      background: var(--paper-bright);
+      cursor: pointer;
+      transition: all 140ms ease;
+      position: relative;
+    }
+    .artifact-card:hover {
+      border-color: var(--ink);
+      transform: translateX(1px);
+    }
+    .artifact-card[data-state="open"] {
+      border-color: var(--accent);
+      background: linear-gradient(to right, var(--accent-bg) 0, var(--accent-bg) 4px, var(--paper-bright) 4px);
+    }
+    .artifact-card[data-state="open"]::before {
+      content: '◉';
+      position: absolute;
+      left: -1px; top: -1px;
+      font-size: 10px;
+      color: var(--accent);
+      background: var(--paper-bright);
+      padding: 1px 4px 0;
+      border: 1px solid var(--accent);
+    }
+
+    .artifact-card__icon {
+      width: 28px; height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--rule-soft);
+      background: var(--paper);
+    }
+    .artifact-card__icon svg { width: 14px; height: 14px; stroke: var(--ink-2); fill: none; stroke-width: 1.5; }
+
+    .artifact-card__body { min-width: 0; }
+    .artifact-card__title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .artifact-card__sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      margin-top: 2px;
+    }
+    .artifact-card__meta {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--ink-3);
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+
+    .artifact-row--full .artifact-card { grid-column: span 2; }
+
+    .stream-caret {
+      display: inline-block;
+      width: 7px;
+      height: 14px;
+      background: var(--accent);
+      vertical-align: -2px;
+      margin-left: 1px;
+      animation: blink 1.1s steps(2, end) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .footnote {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-left: 2px solid var(--accent);
+      background: var(--accent-bg);
+      font-size: 11.5px;
+      color: var(--ink-2);
+      font-style: italic;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 14;
+    }
+    .footnote b {
+      font-style: normal;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* COMPOSER                                                   */
+    /* ────────────────────────────────────────────────────────── */
+
+    .composer {
+      border-top: 1px solid var(--rule);
+      background: var(--paper-bright);
+      position: relative;
+    }
+
+    .composer__strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      border-bottom: 1px solid var(--rule-faint);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .composer__strip b { color: var(--ink); }
+
+    .composer__chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px 4px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px 4px 6px;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      color: var(--ink-2);
+      cursor: default;
+    }
+    .chip__pin {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border: 1px solid var(--accent-2);
+    }
+    .chip__close {
+      margin-left: 2px;
+      color: var(--ink-4);
+      font-size: 11px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .chip__close:hover { color: var(--accent); }
+    .chip--add {
+      border-style: dashed;
+      color: var(--ink-3);
+      cursor: pointer;
+    }
+    .chip--add:hover { color: var(--ink); border-color: var(--ink); }
+
+    .composer__field {
+      padding: 8px 14px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .composer__textarea {
+      width: 100%;
+      min-height: 56px;
+      max-height: 130px;
+      resize: none;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      padding: 9px 11px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 14, "SOFT" 50, "wght" 400;
+      font-size: 14.5px;
+      line-height: 1.45;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+      outline: none;
+    }
+    .composer__textarea:focus { border-color: var(--ink); background: var(--paper-bright); }
+    .composer__textarea::placeholder { color: var(--ink-4); font-style: italic; }
+
+    .composer__send {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .send-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--paper-bright);
+      border: 1px solid var(--ink);
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .send-btn:hover { background: var(--accent); border-color: var(--accent); }
+    .send-btn--ghost {
+      background: transparent;
+      color: var(--ink);
+    }
+    .send-btn--ghost:hover { background: var(--paper-deep); color: var(--ink); border-color: var(--ink); }
+
+    .send-btn kbd {
+      font-family: var(--mono);
+      font-size: 9px;
+      background: rgba(255,255,255,0.12);
+      padding: 2px 5px;
+      border-radius: 1px;
+      color: rgba(255,255,255,0.7);
+    }
+    .send-btn--ghost kbd { background: var(--paper-deep); color: var(--ink-3); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PLAN                                                       */
+    /* ────────────────────────────────────────────────────────── */
+
+    .plan-list {
+      padding: 18px 20px 24px;
+      counter-reset: plan;
+    }
+
+    .plan-list__step {
+      display: grid;
+      grid-template-columns: 28px 18px 1fr;
+      align-items: start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--rule-faint);
+      counter-increment: plan;
+    }
+    .plan-list__step:last-child { border-bottom: 0; }
+
+    .plan-list__num {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--ink-4);
+    }
+    .plan-list__num::before { content: counter(plan, decimal-leading-zero); }
+
+    .plan-list__check {
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--ink-3);
+      display: grid; place-items: center;
+      margin-top: 2px;
+      background: var(--paper-bright);
+    }
+    .plan-list__check svg { width: 10px; height: 10px; stroke: var(--accent); stroke-width: 2; fill: none; opacity: 0; }
+
+    .plan-list__step[data-state="done"] .plan-list__check { border-color: var(--accent); background: var(--accent-bg); }
+    .plan-list__step[data-state="done"] .plan-list__check svg { opacity: 1; }
+    .plan-list__step[data-state="done"] .plan-list__title { text-decoration: line-through; text-decoration-color: var(--ink-4); color: var(--ink-3); }
+
+    .plan-list__step[data-state="active"] .plan-list__check {
+      border-color: var(--accent);
+      animation: pulse-stamp 1.6s ease-in-out infinite;
+    }
+    .plan-list__step[data-state="active"] .plan-list__check::after {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+    }
+    @keyframes pulse-stamp { 50% { box-shadow: 0 0 0 4px var(--accent-bg); } }
+
+    .plan-list__title {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 18, "SOFT" 50, "wght" 480;
+      font-size: 15.5px;
+      line-height: 1.32;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+    }
+    .plan-list__title code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--paper-deep);
+      padding: 0 5px;
+    }
+    .plan-list__sub {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--ink-3);
+      line-height: 1.45;
+      letter-spacing: -0.005em;
+    }
+    .plan-list__sub a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+
+    .plan-summary {
+      margin: 18px 20px 0;
+      padding: 12px 14px;
+      background: var(--paper-deep);
+      border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .plan-summary__cell {
+      border-right: 1px solid var(--rule-soft);
+      padding-right: 12px;
+    }
+    .plan-summary__cell:last-child { border-right: 0; }
+    .plan-summary__label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      margin-bottom: 4px;
+    }
+    .plan-summary__value {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 28, "SOFT" 60, "wght" 540;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .plan-summary__value small {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      margin-left: 4px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* FILE PANEL                                                 */
+    /* ────────────────────────────────────────────────────────── */
+
+    .stale-banner {
+      margin: 12px 16px 0;
+      padding: 8px 12px;
+      border: 1px dashed var(--amber);
+      background: var(--amber-bg);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .stale-banner__msg {
+      font-size: 11.5px;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+    .stale-banner__msg b {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .stale-banner__actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mini-btn {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 5px 9px 4px;
+      background: var(--paper-bright);
+      border: 1px solid var(--ink-3);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .mini-btn:hover { background: var(--ink); color: var(--paper-bright); }
+    .mini-btn--accent { border-color: var(--accent); color: var(--accent); }
+    .mini-btn--accent:hover { background: var(--accent); color: var(--paper-bright); }
+
+    .code {
+      padding: 14px 0 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--ink-2);
+      letter-spacing: -0.005em;
+      counter-reset: line;
+    }
+
+    .code__line {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: start;
+      counter-increment: line;
+      position: relative;
+    }
+    .code__line::before {
+      content: counter(line, decimal-leading-zero);
+      grid-column: 1;
+      padding: 0 12px 0 18px;
+      color: var(--ink-4);
+      font-size: 10.5px;
+      text-align: right;
+      letter-spacing: 0.04em;
+    }
+    .code__line[data-modified="true"]::before { color: var(--accent); }
+    .code__line[data-modified="true"] {
+      background: var(--accent-bg);
+    }
+    .code__line[data-modified="true"]::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+    .code__line[data-selected="true"] {
+      background: rgba(168, 116, 44, 0.16);
+    }
+    .code__line[data-selected="true"]::after {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--amber);
+    }
+
+    .code__text {
+      padding-right: 18px;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    .tk-key   { color: var(--accent); font-weight: 500; }
+    .tk-fn    { color: #2A4F8F; }
+    .tk-str   { color: var(--green); }
+    .tk-cmt   { color: var(--ink-4); font-style: italic; }
+    .tk-num   { color: var(--amber); }
+    .tk-tag   { color: #7A2A6B; }
+    .tk-attr  { color: #2A4F8F; }
+    .tk-punct { color: var(--ink-3); }
+
+    .code__diagnostic {
+      grid-column: 2;
+      margin: 4px 16px 4px 0;
+      padding: 6px 10px;
+      border-left: 2px solid var(--accent);
+      background: var(--accent-bg);
+      font-family: var(--sans);
+      font-size: 11px;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+    .code__diagnostic b {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 1px;
+    }
+
+    .code__selection-tag {
+      position: absolute;
+      right: 6px;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--paper-bright);
+      background: var(--amber);
+      padding: 2px 6px 1px;
+      pointer-events: none;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* DIFF                                                       */
+    /* ────────────────────────────────────────────────────────── */
+
+    .diff-summary {
+      padding: 12px 18px;
+      background: var(--paper-deep);
+      border-bottom: 1px solid var(--rule-soft);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .diff-summary__cell {
+      border-right: 1px solid var(--rule-soft);
+      padding-right: 12px;
+    }
+    .diff-summary__cell:last-child { border-right: 0; }
+    .diff-summary__num {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 28, "SOFT" 50, "wght" 540;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .diff-summary__num--add { color: var(--green); }
+    .diff-summary__num--del { color: var(--accent); }
+    .diff-summary__lbl {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 4px;
+    }
+
+    .hunk {
+      border-top: 1px dashed var(--rule);
+      padding: 0;
+    }
+    .hunk__head {
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(to right, var(--paper-bright), var(--paper));
+    }
+    .hunk__locator {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .hunk__file {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .hunk__range {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .hunk__actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .hunk__body {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+      letter-spacing: -0.005em;
+    }
+
+    .diff-line {
+      display: grid;
+      grid-template-columns: 36px 36px 18px 1fr;
+      padding-right: 18px;
+    }
+    .diff-line__a, .diff-line__b {
+      text-align: right;
+      padding: 0 8px;
+      color: var(--ink-4);
+      font-size: 10px;
+      border-right: 1px solid var(--rule-faint);
+    }
+    .diff-line__sign {
+      text-align: center;
+      padding: 0 4px;
+      color: var(--ink-3);
+    }
+    .diff-line__text {
+      padding-left: 6px;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    .diff-line[data-kind="add"] {
+      background: var(--green-bg);
+    }
+    .diff-line[data-kind="add"] .diff-line__sign { color: var(--green); }
+    .diff-line[data-kind="add"] .diff-line__text { color: var(--ink); }
+
+    .diff-line[data-kind="del"] {
+      background: var(--accent-bg);
+    }
+    .diff-line[data-kind="del"] .diff-line__sign { color: var(--accent); }
+    .diff-line[data-kind="del"] .diff-line__text { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--accent); }
+
+    .diff-line[data-kind="ctx"] .diff-line__text { color: var(--ink-3); }
+
+    .hunk__comment {
+      grid-column: 4;
+      margin: 4px 18px 8px 90px;
+      padding: 8px 12px;
+      background: var(--paper-bright);
+      border: 1px solid var(--rule);
+      font-family: var(--sans);
+      font-size: 11.5px;
+      color: var(--ink-2);
+      line-height: 1.45;
+      position: relative;
+    }
+    .hunk__comment::before {
+      content: '';
+      position: absolute;
+      top: -7px; left: 12px;
+      width: 12px; height: 12px;
+      background: var(--paper-bright);
+      border-left: 1px solid var(--rule);
+      border-top: 1px solid var(--rule);
+      transform: rotate(45deg);
+    }
+    .hunk__comment b {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* APPROVAL PANEL                                             */
+    /* ────────────────────────────────────────────────────────── */
+
+    .approval {
+      padding: 22px 22px 18px;
+      position: relative;
+    }
+
+    .approval__stamp-wrap {
+      position: absolute;
+      top: 12px;
+      right: 18px;
+      transform: rotate(8deg);
+      pointer-events: none;
+    }
+    .approval__stamp {
+      border: 2.5px solid var(--accent);
+      color: var(--accent);
+      padding: 7px 14px 5px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      background: var(--paper-bright);
+      box-shadow: 0 0 0 2px var(--paper-bright), 0 0 0 3px var(--accent-bg);
+      position: relative;
+    }
+    .approval__stamp::before, .approval__stamp::after {
+      content: '';
+      position: absolute;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+    .approval__stamp::before {
+      top: -5px; left: 50%; transform: translateX(-50%);
+      width: 1.5px; height: 6px;
+    }
+    .approval__stamp::after {
+      bottom: -5px; left: 50%; transform: translateX(-50%);
+      width: 1.5px; height: 6px;
+    }
+
+    .approval__lead {
+      max-width: 340px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 36, "SOFT" 50, "wght" 460;
+      font-size: 18px;
+      line-height: 1.32;
+      color: var(--ink);
+      letter-spacing: -0.012em;
+      margin-bottom: 14px;
+    }
+
+    .approval__section {
+      margin-top: 16px;
+    }
+    .approval__lbl {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .approval__lbl::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule-soft);
+    }
+
+    .approval__files {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .approval__file {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 8px;
+      padding: 5px 8px;
+      background: var(--paper-bright);
+      border: 1px solid var(--rule-soft);
+      color: var(--ink);
+    }
+    .approval__file-flag {
+      text-align: center;
+      color: var(--accent);
+    }
+    .approval__file-meta {
+      color: var(--ink-3);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .risk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .risk-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 11.5px;
+      color: var(--ink-2);
+      line-height: 1.4;
+      padding: 6px 0;
+      border-bottom: 1px dotted var(--rule-soft);
+    }
+    .risk-item:last-child { border-bottom: 0; }
+    .risk-item__lvl {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 2px 6px 1px;
+      border: 1px solid;
+      text-align: center;
+      align-self: start;
+    }
+    .risk-item__lvl--high { color: var(--accent); }
+    .risk-item__lvl--med  { color: var(--amber); }
+    .risk-item__lvl--low  { color: var(--ink-3); }
+
+    .approval__cta {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper-bright);
+      cursor: pointer;
+      transition: all 140ms ease;
+      text-align: left;
+    }
+    .cta-btn:hover { background: var(--accent); border-color: var(--accent); }
+    .cta-btn--ghost {
+      background: transparent;
+      color: var(--ink);
+    }
+    .cta-btn--ghost:hover { background: var(--paper-deep); color: var(--ink); border-color: var(--ink); }
+
+    .cta-btn__lead {
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 18, "SOFT" 50, "wght" 460;
+      font-size: 14px;
+      letter-spacing: -0.005em;
+      line-height: 1.1;
+    }
+    .cta-btn__sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(251, 248, 241, 0.6);
+      margin-top: 2px;
+    }
+    .cta-btn--ghost .cta-btn__sub { color: var(--ink-3); }
+
+    .cta-btn__kbd {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.06em;
+      padding: 4px 8px 3px;
+      background: rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .cta-btn--ghost .cta-btn__kbd { background: var(--paper-bright); color: var(--ink-3); border-color: var(--rule); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PANEL RAIL                                                 */
+    /* ────────────────────────────────────────────────────────── */
+
+    .rail {
+      border-left: 1px solid var(--rule);
+      background: var(--paper-deep);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px 0;
+      position: relative;
+    }
+
+    .rail__title {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      align-self: center;
+      margin-bottom: 12px;
+      padding: 4px 0;
+    }
+
+    .rail__list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 6px;
+    }
+
+    .rail-item {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--rule);
+      background: var(--paper-bright);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: all 140ms ease;
+    }
+    .rail-item:hover { border-color: var(--ink); }
+
+    .rail-item[data-active="true"] {
+      border-color: var(--accent);
+      border-width: 1.5px;
+      background: var(--paper-bright);
+      box-shadow: -3px 0 0 var(--accent);
+    }
+
+    .rail-item__num {
+      position: absolute;
+      top: -2px; left: -2px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.06em;
+      background: var(--paper-deep);
+      padding: 1px 4px 0;
+      color: var(--ink-3);
+    }
+    .rail-item[data-active="true"] .rail-item__num { background: var(--accent); color: var(--paper-bright); }
+
+    .rail-item svg {
+      width: 18px; height: 18px;
+      stroke: var(--ink-2);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    .rail-item[data-active="true"] svg { stroke: var(--accent); }
+
+    .rail-item__dot {
+      position: absolute;
+      bottom: 4px; right: 4px;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .rail-item__dot--accent { background: var(--accent); }
+    .rail-item__dot--green  { background: var(--green); }
+    .rail-item__dot--amber  { background: var(--amber); }
+    .rail-item__dot--blue   { background: var(--blueprint); }
+
+    .rail__divider {
+      height: 1px;
+      background: var(--rule);
+      margin: 12px 8px;
+    }
+
+    .rail__shortcuts {
+      margin-top: auto;
+      padding: 0 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rail-key {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+      text-align: center;
+      padding: 6px 0;
+      border: 1px dashed var(--rule-soft);
+      cursor: help;
+    }
+    .rail-key:hover { color: var(--ink); border-style: solid; border-color: var(--rule); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* STATUS FOOTER                                              */
+    /* ────────────────────────────────────────────────────────── */
+
+    .statusbar {
+      height: 28px;
+      background: var(--ink);
+      color: var(--paper);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .statusbar__group {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .statusbar__group span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(244, 239, 229, 0.75);
+    }
+    .statusbar__group b { color: var(--paper-bright); font-weight: 400; }
+    .statusbar__pulse {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 var(--accent);
+      animation: pulse 1.4s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(200, 52, 27, 0.6); }
+      100% { box-shadow: 0 0 0 8px rgba(200, 52, 27, 0); }
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* MARGIN NOTES                                               */
+    /* ────────────────────────────────────────────────────────── */
+
+    .margin-note {
+      position: absolute;
+      right: 14px;
+      max-width: 130px;
+      font-family: var(--serif);
+      font-variation-settings: "opsz" 12, "SOFT" 60, "wght" 400;
+      font-style: italic;
+      font-size: 11px;
+      line-height: 1.32;
+      color: var(--ink-3);
+      pointer-events: none;
+    }
+    .margin-note::before {
+      content: '';
+      position: absolute;
+      top: 6px; left: -16px;
+      width: 12px; height: 1px;
+      background: var(--accent);
+    }
+
+    /* hide on small panels — purely decorative */
+    @media (max-width: 1500px) { .margin-note { display: none; } }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* MISC                                                       */
+    /* ────────────────────────────────────────────────────────── */
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 36px;
+      right: 80px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--paper-bright);
+      border: 1px solid var(--rule);
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      z-index: 5;
+    }
+    .scroll-hint kbd {
+      background: var(--paper-deep);
+      padding: 2px 5px;
+      border: 1px solid var(--rule);
+    }
+
+    /* tiny utility */
+    .vrule {
+      width: 1px;
+      align-self: stretch;
+      background: var(--rule-soft);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ╔══════════════════════════════════════════════════════════╗ -->
+  <!-- ║ TOP BAR                                                   ║ -->
+  <!-- ╚══════════════════════════════════════════════════════════╝ -->
+  <header class="topbar">
+    <div class="topbar__id">
+      <div class="id-stamp">FILE №&nbsp;0214</div>
+      <div class="id-meta">
+        <div class="id-meta__title">Navigation Refactor</div>
+        <div class="id-meta__sub">Workspace · Branch <b style="color:var(--ink-2)">feature/nav-v2</b></div>
+      </div>
+    </div>
+
+    <nav class="topbar__lineage" aria-label="Panel lineage">
+      <span class="lineage-label">Lineage —</span>
+      <div class="lineage-trail">
+        <a class="lineage-node" data-active="false">
+          <span class="lineage-dot"></span>Chat · 0214
+        </a>
+        <span class="lineage-arrow"></span>
+        <a class="lineage-node" data-active="false" data-state="modified">
+          <span class="lineage-dot"></span>Plan
+        </a>
+        <span class="lineage-arrow"></span>
+        <a class="lineage-node" data-active="true" data-state="stale">
+          <span class="lineage-dot"></span>navigation.tsx
+        </a>
+        <span class="lineage-arrow"></span>
+        <a class="lineage-node" data-active="false" data-state="modified">
+          <span class="lineage-dot"></span>Diff · 3 hunks
+        </a>
+        <span class="lineage-arrow"></span>
+        <a class="lineage-node" data-active="false" data-state="waiting">
+          <span class="lineage-dot"></span>Approval
+        </a>
+      </div>
+    </nav>
+
+    <div class="topbar__user">
+      <div class="density-toggle" role="group" aria-label="Density">
+        <button>Comf</button>
+        <button class="is-on">Compact</button>
+        <button>Focus</button>
+      </div>
+      <div class="user-chip">
+        <div class="user-meta" style="text-align:right">
+          <div class="user-name">A. McClary</div>
+          <div class="user-org">Editor · Lead</div>
+        </div>
+        <div class="user-avatar">A</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ╔══════════════════════════════════════════════════════════╗ -->
+  <!-- ║ RULER                                                    ║ -->
+  <!-- ╚══════════════════════════════════════════════════════════╝ -->
+  <div class="ruler" aria-hidden="true">
+    <span class="ruler-marker ruler-marker--anchor">
+      <span>Conv. Anchor</span>
+      <span class="ruler-marker__line"></span>
+    </span>
+    <div class="ruler-meta">
+      Stack <b>5 panels</b> · Active <b>03 / file</b> · <b>2 dirty</b> · <b>1 stale</b> · <b>1 waiting</b>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════════════╗ -->
+  <!-- ║ WORKSPACE                                                ║ -->
+  <!-- ╚══════════════════════════════════════════════════════════╝ -->
+  <main class="workspace">
+
+    <div class="stack-scroll" id="stackScroll">
+      <div class="stack">
+
+        <!-- ─────── PANEL 1 — CHAT ─────── -->
+        <section class="panel panel--chat" data-active="false" data-panel-id="chat">
+          <div class="panel__corners"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+          <header class="panel__head">
+            <div class="panel__topline">
+              <span class="panel__index">PANEL <b>01</b></span>
+              <span class="panel__type">
+                <svg class="panel__type-icon" viewBox="0 0 16 16"><path d="M2 4h12v8H4l-2 2V4z"/></svg>
+                Chat thread
+              </span>
+            </div>
+            <div class="panel__title-row">
+              <h2 class="panel__title">A conversation, <em>spatially anchored</em>.</h2>
+            </div>
+            <div class="panel__byline">
+              <span>SESSION 0214</span>
+              <span class="byline-sep">·</span>
+              <span>Started 14:02</span>
+              <span class="byline-sep">·</span>
+              <span>3 prompts</span>
+              <span class="stamp stamp--green" style="margin-left:auto">Active</span>
+            </div>
+
+            <div class="panel__actions">
+              <button class="panel__action" title="Pin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1l2 4 5 1-3.5 3.5 1 5L8 12l-4.5 2.5 1-5L1 6l5-1z"/></svg></button>
+              <button class="panel__action" title="Collapse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M3 8h10M3 12h10"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-label">Origin</span>
+            <span>User-initiated</span>
+            <span class="byline-sep">·</span>
+            <span class="panel__meta-label">Context</span>
+            <a href="#">Project / dashboard / nav</a>
+          </div>
+
+          <div class="panel__body">
+            <div class="chat">
+
+              <!-- USER MSG 1 -->
+              <article class="msg msg--user">
+                <div class="msg__gutter"><b>14:02</b>U·01</div>
+                <div class="msg__role">You</div>
+                <div class="msg__body drop-cap">
+                  Refactor the dashboard navigation to use the new routing primitives. Keep the mobile breakpoint untouched, and surface a diff before applying anything.
+                </div>
+              </article>
+
+              <!-- AGENT MSG 1 -->
+              <article class="msg msg--agent">
+                <div class="msg__gutter"><b>14:02</b>A·01</div>
+                <div class="msg__role">Agent · run #14</div>
+                <div class="msg__body">
+                  <p>I drafted a three-step plan, opened it as a panel, and prepared a proposed diff across three files. The mobile breakpoint logic in <code style="font-family:var(--mono);font-size:11px;background:var(--paper-deep);padding:0 4px">useResponsive.ts</code> is untouched.</p>
+
+                  <div class="artifact-row">
+                    <div class="artifact-card" data-state="open">
+                      <div class="artifact-card__icon"><svg viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/></svg></div>
+                      <div class="artifact-card__body">
+                        <div class="artifact-card__title">Plan.md</div>
+                        <div class="artifact-card__sub">Plan · 3 steps · <b style="color:var(--accent)">modified</b></div>
+                      </div>
+                      <div class="artifact-card__meta">P·02</div>
+                    </div>
+                    <div class="artifact-card" data-state="open">
+                      <div class="artifact-card__icon"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12"/><path d="M5 6h6M5 9h4"/></svg></div>
+                      <div class="artifact-card__body">
+                        <div class="artifact-card__title">navigation.tsx</div>
+                        <div class="artifact-card__sub">File · <b style="color:var(--amber)">stale</b></div>
+                      </div>
+                      <div class="artifact-card__meta">P·03</div>
+                    </div>
+                    <div class="artifact-card" data-state="open">
+                      <div class="artifact-card__icon"><svg viewBox="0 0 16 16"><path d="M3 8l4-4M3 8l4 4M13 8l-4-4M13 8l-4 4"/></svg></div>
+                      <div class="artifact-card__body">
+                        <div class="artifact-card__title">Diff · 3 files</div>
+                        <div class="artifact-card__sub">Δ · +12 −6 · <b style="color:var(--accent)">unapplied</b></div>
+                      </div>
+                      <div class="artifact-card__meta">P·04</div>
+                    </div>
+                    <div class="artifact-card">
+                      <div class="artifact-card__icon"><svg viewBox="0 0 16 16"><path d="M2 13h12M4 11l3-6 3 4 2-2"/></svg></div>
+                      <div class="artifact-card__body">
+                        <div class="artifact-card__title">Test output</div>
+                        <div class="artifact-card__sub">7 passed · <b style="color:var(--accent)">1 failed</b></div>
+                      </div>
+                      <div class="artifact-card__meta">→ open</div>
+                    </div>
+                  </div>
+
+                  <div class="footnote">
+                    <b>Confidence note —</b> The route-matching change in <code style="font-family:var(--mono);font-size:11px">routes.ts:67</code> may shift the order in which sibling routes resolve. Worth a glance before approving.
+                  </div>
+                </div>
+              </article>
+
+              <!-- USER MSG 2 -->
+              <article class="msg msg--user">
+                <div class="msg__gutter"><b>14:09</b>U·02</div>
+                <div class="msg__role">You</div>
+                <div class="msg__body" style="font-size:15px">
+                  Why did you change line 67 in <code style="font-family:var(--mono);font-size:13px;background:var(--paper-deep);padding:0 4px">routes.ts</code>? The old order looked correct to me.
+                </div>
+              </article>
+
+              <!-- AGENT MSG 2 — STREAMING -->
+              <article class="msg msg--agent">
+                <div class="msg__gutter"><b>14:09</b>A·02</div>
+                <div class="msg__role">Agent · streaming</div>
+                <div class="msg__body">
+                  <p>The old order placed the catch-all <code style="font-family:var(--mono);font-size:11px;background:var(--paper-deep);padding:0 4px">/dashboard/*</code> before the specific <code style="font-family:var(--mono);font-size:11px;background:var(--paper-deep);padding:0 4px">/dashboard/settings</code>, so the new router would shadow the settings route. I lifted settings above the wildcard and left the rest of the file alone<span class="stream-caret"></span></p>
+                </div>
+              </article>
+
+            </div>
+          </div>
+
+          <!-- COMPOSER -->
+          <footer class="composer">
+            <div class="composer__strip">
+              <span>Targeting <b style="color:var(--accent)">P·03 navigation.tsx · L42–88</b></span>
+              <span>⌘↵ submit · ⌘⇧↵ workspace</span>
+            </div>
+            <div class="composer__chips">
+              <span class="chip"><span class="chip__pin"></span>Active panel · <b>navigation.tsx</b><span class="chip__close">×</span></span>
+              <span class="chip">Selection · L42–88<span class="chip__close">×</span></span>
+              <span class="chip">+ Plan.md<span class="chip__close">×</span></span>
+              <span class="chip chip--add">+ Add context</span>
+            </div>
+            <div class="composer__field">
+              <textarea class="composer__textarea" placeholder="Ask about the active panel, a selection, or the entire workspace…"></textarea>
+              <div class="composer__send">
+                <button class="send-btn">Send <kbd>⌘↵</kbd></button>
+                <button class="send-btn send-btn--ghost">Workspace <kbd>⌘⇧↵</kbd></button>
+              </div>
+            </div>
+          </footer>
+        </section>
+
+        <!-- ─────── PANEL 2 — PLAN ─────── -->
+        <section class="panel panel--plan" data-active="false" data-panel-id="plan">
+          <div class="panel__corners"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+          <header class="panel__head">
+            <div class="panel__topline">
+              <span class="panel__index">PANEL <b>02</b></span>
+              <span class="panel__type">
+                <svg class="panel__type-icon" viewBox="0 0 16 16"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+                Plan / artifact
+              </span>
+            </div>
+            <div class="panel__title-row">
+              <h2 class="panel__title">Plan.md</h2>
+              <span class="stamp stamp--accent stamp--rotate">Modified</span>
+              <span class="stamp stamp--ink">v3</span>
+            </div>
+            <div class="panel__byline">
+              <span>From <a href="#" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">"Refactor the dashboard nav…"</a></span>
+              <span class="byline-sep">·</span>
+              <span>Updated 14:08 (1m ago)</span>
+            </div>
+            <div class="panel__actions">
+              <button class="panel__action panel__action--accent" title="Regenerate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8a6 6 0 1 0 1.7-4.2L2 5"/><path d="M2 2v3h3"/></svg></button>
+              <button class="panel__action" title="Versions"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg></button>
+              <button class="panel__action" title="Collapse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M3 8h10M3 12h10"/></svg></button>
+              <button class="panel__action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-label">Source</span>
+            <span>Generated · Agent run #14</span>
+            <span class="byline-sep">·</span>
+            <span class="panel__meta-label">Edits</span>
+            <span><b style="color:var(--ink-2)">2</b> by you, <b style="color:var(--ink-2)">1</b> by agent</span>
+          </div>
+
+          <div class="panel__body">
+
+            <div class="plan-summary">
+              <div class="plan-summary__cell">
+                <div class="plan-summary__label">Steps</div>
+                <div class="plan-summary__value">3<small>total</small></div>
+              </div>
+              <div class="plan-summary__cell">
+                <div class="plan-summary__label">Files</div>
+                <div class="plan-summary__value">3<small>changed</small></div>
+              </div>
+              <div class="plan-summary__cell">
+                <div class="plan-summary__label">Tests</div>
+                <div class="plan-summary__value">7<small>+ 1 fail</small></div>
+              </div>
+            </div>
+
+            <div class="plan-list">
+              <div class="plan-list__step" data-state="done">
+                <span class="plan-list__num"></span>
+                <div class="plan-list__check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div>
+                  <div class="plan-list__title">Lift <code>/dashboard/settings</code> above the wildcard route in <code>routes.ts</code>.</div>
+                  <div class="plan-list__sub">Touches <a href="#">routes.ts:64–71</a> · order change only.</div>
+                </div>
+              </div>
+              <div class="plan-list__step" data-state="active">
+                <span class="plan-list__num"></span>
+                <div class="plan-list__check"></div>
+                <div>
+                  <div class="plan-list__title">Replace <code>useNavigate()</code> with the new <code>useRouterPrimitive()</code> across <code>navigation.tsx</code>.</div>
+                  <div class="plan-list__sub">Touches <a href="#">navigation.tsx:42–88</a> · keeps mobile breakpoint via <code>useResponsive</code>. <span style="color:var(--accent);text-transform:uppercase;letter-spacing:0.18em;font-size:9px;margin-left:6px">⏵ in progress</span></div>
+                </div>
+              </div>
+              <div class="plan-list__step">
+                <span class="plan-list__num"></span>
+                <div class="plan-list__check"></div>
+                <div>
+                  <div class="plan-list__title">Add a regression test for sibling-route ordering in <code>navigation.test.ts</code>.</div>
+                  <div class="plan-list__sub">New file section · ~40 lines.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 3 — FILE (ACTIVE) ─────── -->
+        <section class="panel panel--file" data-active="true" data-panel-id="file">
+          <div class="panel__corners"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+          <header class="panel__head">
+            <div class="panel__topline">
+              <span class="panel__index">PANEL <b>03</b> <span style="color:var(--accent);margin-left:6px">— ACTIVE</span></span>
+              <span class="panel__type">
+                <svg class="panel__type-icon" viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/></svg>
+                Source file
+              </span>
+            </div>
+            <div class="panel__title-row">
+              <h2 class="panel__title"><code>navigation.tsx</code></h2>
+              <span class="stamp stamp--amber stamp--rotate">Stale</span>
+              <span class="stamp stamp--accent">Modified</span>
+            </div>
+            <div class="panel__byline">
+              <span>src/components/Navigation.tsx</span>
+              <span class="byline-sep">·</span>
+              <span>112 lines</span>
+              <span class="byline-sep">·</span>
+              <span>TypeScript / React</span>
+              <span class="byline-sep">·</span>
+              <span>Branch <b style="color:var(--ink-2)">feature/nav-v2</b></span>
+            </div>
+            <div class="panel__actions">
+              <button class="panel__action panel__action--accent" title="Refresh"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8a6 6 0 1 0 1.7-4.2L2 5"/><path d="M2 2v3h3"/></svg></button>
+              <button class="panel__action" title="Compare"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8l3-3M3 8l3 3M13 8l-3-3M13 8l-3 3"/></svg></button>
+              <button class="panel__action" title="Reveal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l3-2 3 2h6v8H2z"/></svg></button>
+              <button class="panel__action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-label">Origin</span>
+            <span>Opened from <a href="#">"navigation.tsx" reference</a></span>
+            <span class="byline-sep">·</span>
+            <span class="panel__meta-label">Last edit</span>
+            <span>Agent · 14:08</span>
+            <span class="byline-sep">·</span>
+            <span class="panel__meta-label">Diagnostic</span>
+            <span style="color:var(--accent)"><b>1 warning</b></span>
+          </div>
+
+          <div class="panel__body">
+
+            <div class="stale-banner">
+              <div class="stale-banner__msg">
+                <b>Stale source · changed on disk 14:08</b>
+                The agent regenerated this file 18 seconds ago. Your viewing copy is from 14:07.
+              </div>
+              <div class="stale-banner__actions">
+                <button class="mini-btn mini-btn--accent">Refresh</button>
+                <button class="mini-btn">Compare</button>
+                <button class="mini-btn">Keep mine</button>
+              </div>
+            </div>
+
+            <div class="code">
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> <span class="tk-punct">{</span> useRouterPrimitive <span class="tk-punct">}</span> <span class="tk-key">from</span> <span class="tk-str">'@/router'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> <span class="tk-punct">{</span> useResponsive <span class="tk-punct">}</span> <span class="tk-key">from</span> <span class="tk-str">'@/hooks/useResponsive'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> SidebarItem <span class="tk-key">from</span> <span class="tk-str">'./SidebarItem'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-cmt">// Mobile breakpoint logic preserved — see useResponsive.ts</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">export const</span> <span class="tk-fn">Navigation</span> <span class="tk-punct">= (</span><span class="tk-punct">) =&gt; {</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-key">const</span> <span class="tk-punct">{</span> isMobile <span class="tk-punct">} =</span> <span class="tk-fn">useResponsive</span><span class="tk-punct">();</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-key">const</span> <span class="tk-punct">{</span> matchRoute, navigate <span class="tk-punct">} =</span> <span class="tk-fn">useRouterPrimitive</span><span class="tk-punct">();</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">  <span class="tk-key">const</span> sections <span class="tk-punct">= [</span></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">    <span class="tk-punct">{</span> id<span class="tk-punct">:</span> <span class="tk-str">'overview'</span>, label<span class="tk-punct">:</span> <span class="tk-str">'Overview'</span>, route<span class="tk-punct">:</span> <span class="tk-str">'/dashboard'</span> <span class="tk-punct">},</span></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">    <span class="tk-punct">{</span> id<span class="tk-punct">:</span> <span class="tk-str">'settings'</span>, label<span class="tk-punct">:</span> <span class="tk-str">'Settings'</span>, route<span class="tk-punct">:</span> <span class="tk-str">'/dashboard/settings'</span> <span class="tk-punct">},</span></span></div>
+              <div class="code__line"><span class="code__text">    <span class="tk-punct">{</span> id<span class="tk-punct">:</span> <span class="tk-str">'team'</span>, label<span class="tk-punct">:</span> <span class="tk-str">'Team'</span>, route<span class="tk-punct">:</span> <span class="tk-str">'/dashboard/team'</span> <span class="tk-punct">},</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-punct">];</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">  <span class="tk-key">return</span> <span class="tk-punct">(</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">    <span class="tk-punct">&lt;</span><span class="tk-tag">nav</span> <span class="tk-attr">className</span><span class="tk-punct">=</span><span class="tk-punct">{</span>isMobile <span class="tk-punct">?</span> <span class="tk-str">'nav-stack'</span> <span class="tk-punct">:</span> <span class="tk-str">'nav-row'</span><span class="tk-punct">}&gt;</span></span>
+                <span class="code__selection-tag">L42–88 selected</span>
+              </div>
+              <div class="code__line" data-selected="true"><span class="code__text">      <span class="tk-punct">{</span>sections<span class="tk-punct">.</span><span class="tk-fn">map</span><span class="tk-punct">((</span>s<span class="tk-punct">) =&gt; (</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">        <span class="tk-punct">&lt;</span><span class="tk-tag">SidebarItem</span></span></div>
+              <div class="code__line" data-selected="true" data-modified="true"><span class="code__text">          <span class="tk-attr">key</span><span class="tk-punct">=</span><span class="tk-punct">{</span>s<span class="tk-punct">.</span>id<span class="tk-punct">}</span></span></div>
+              <div class="code__line" data-selected="true" data-modified="true"><span class="code__text">          <span class="tk-attr">active</span><span class="tk-punct">=</span><span class="tk-punct">{</span><span class="tk-fn">matchRoute</span><span class="tk-punct">(</span>s<span class="tk-punct">.</span>route<span class="tk-punct">)}</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">          <span class="tk-attr">onSelect</span><span class="tk-punct">=</span><span class="tk-punct">{() =&gt;</span> <span class="tk-fn">navigate</span><span class="tk-punct">(</span>s<span class="tk-punct">.</span>route<span class="tk-punct">)}</span></span></div>
+              <div class="code__line"><span class="code__diagnostic"><b>warning · ts(2304)</b>'matchRoute' returns <code style="font-family:var(--mono);font-size:10px;background:var(--paper-deep);padding:0 3px">RouteMatch | null</code> — coerce to boolean before passing to <code style="font-family:var(--mono);font-size:10px;background:var(--paper-deep);padding:0 3px">active</code>.</span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">        <span class="tk-punct">/&gt;</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">      <span class="tk-punct">))}</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">    <span class="tk-punct">&lt;/</span><span class="tk-tag">nav</span><span class="tk-punct">&gt;</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-punct">);</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-punct">};</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">export default</span> Navigation<span class="tk-punct">;</span></span></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 4 — DIFF ─────── -->
+        <section class="panel panel--diff" data-active="false" data-panel-id="diff">
+          <div class="panel__corners"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+          <header class="panel__head">
+            <div class="panel__topline">
+              <span class="panel__index">PANEL <b>04</b></span>
+              <span class="panel__type">
+                <svg class="panel__type-icon" viewBox="0 0 16 16"><path d="M3 2v12M13 2v12M3 6h10M3 10h10"/></svg>
+                Diff / proposed
+              </span>
+            </div>
+            <div class="panel__title-row">
+              <h2 class="panel__title">Diff &nbsp;<em>—</em>&nbsp; nav refactor</h2>
+              <span class="stamp stamp--accent stamp--rotate">Unapplied</span>
+            </div>
+            <div class="panel__byline">
+              <span>3 files</span>
+              <span class="byline-sep">·</span>
+              <span>3 hunks</span>
+              <span class="byline-sep">·</span>
+              <span>From <a href="#" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">Plan step 02</a></span>
+            </div>
+            <div class="panel__actions">
+              <button class="panel__action panel__action--accent" title="Apply all"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8l3 3 7-7"/></svg></button>
+              <button class="panel__action" title="Reject all"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+              <button class="panel__action" title="Comment"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3h12v9H7l-3 3v-3H2z"/></svg></button>
+              <button class="panel__action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="diff-summary">
+            <div class="diff-summary__cell">
+              <div class="diff-summary__num">03</div>
+              <div class="diff-summary__lbl">files</div>
+            </div>
+            <div class="diff-summary__cell">
+              <div class="diff-summary__num diff-summary__num--add">+12</div>
+              <div class="diff-summary__lbl">additions</div>
+            </div>
+            <div class="diff-summary__cell">
+              <div class="diff-summary__num diff-summary__num--del">−06</div>
+              <div class="diff-summary__lbl">deletions</div>
+            </div>
+            <div class="diff-summary__cell">
+              <div class="diff-summary__num" style="color:var(--amber)">M</div>
+              <div class="diff-summary__lbl">risk · medium</div>
+            </div>
+          </div>
+
+          <div class="panel__body">
+
+            <!-- HUNK 1 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">src/router/routes.ts</span>
+                  <span class="hunk__range">@@ −63,5 +64,7 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="mini-btn mini-btn--accent">Accept hunk</button>
+                  <button class="mini-btn">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">63</span><span class="diff-line__b">63</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text">  { path: '/dashboard', element: &lt;Overview /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">64</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  { path: '/dashboard/*', element: &lt;CatchAll /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">65</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  { path: '/dashboard/settings', element: &lt;Settings /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">64</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/settings', element: &lt;Settings /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">65</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/team',     element: &lt;Team /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">66</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/*',        element: &lt;CatchAll /&gt; },</span>
+                </div>
+                <div class="hunk__comment">
+                  <b>Agent — rationale</b> Specific routes lifted above the wildcard so the new router resolves them first. No behaviour change for the catch-all itself.
+                </div>
+              </div>
+            </div>
+
+            <!-- HUNK 2 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">src/components/Navigation.tsx</span>
+                  <span class="hunk__range">@@ −51,8 +51,10 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="mini-btn mini-btn--accent">Accept hunk</button>
+                  <button class="mini-btn">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">51</span><span class="diff-line__b">51</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text">  const { isMobile } = useResponsive();</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">52</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  const navigate = useNavigate();</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">52</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const { matchRoute, navigate } = useRouterPrimitive();</span>
+                </div>
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">53</span><span class="diff-line__b">53</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text"></span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">54</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const sections = [/* see file panel */];</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- HUNK 3 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">tests/navigation.test.ts</span>
+                  <span class="hunk__range">@@ −0,0 +12,8 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="mini-btn">Accept hunk</button>
+                  <button class="mini-btn">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">12</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">test('settings resolves above wildcard', () =&gt; {</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">13</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const m = matchRoute('/dashboard/settings');</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">14</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  expect(m?.element.type).toBe(Settings);</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">15</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">});</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 5 — APPROVAL ─────── -->
+        <section class="panel panel--approve" data-active="false" data-panel-id="approve">
+          <div class="panel__corners"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+          <header class="panel__head">
+            <div class="panel__topline">
+              <span class="panel__index">PANEL <b>05</b></span>
+              <span class="panel__type">
+                <svg class="panel__type-icon" viewBox="0 0 16 16"><path d="M8 1l1.8 4.2L14 6l-3.4 2.8L11.6 13 8 10.6 4.4 13l1-4.2L2 6l4.2-.8L8 1z"/></svg>
+                Approval gate
+              </span>
+            </div>
+            <div class="panel__title-row">
+              <h2 class="panel__title">Apply &nbsp;<em>3 file</em>&nbsp; changes?</h2>
+            </div>
+            <div class="panel__byline">
+              <span>From P·04 / Diff</span>
+              <span class="byline-sep">·</span>
+              <span>Awaiting decision</span>
+            </div>
+            <div class="panel__actions">
+              <button class="panel__action" title="Defer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg></button>
+              <button class="panel__action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-label">Risk</span>
+            <span style="color:var(--amber)"><b>Medium</b></span>
+            <span class="byline-sep">·</span>
+            <span class="panel__meta-label">Reversible</span>
+            <span>Yes (1-click revert)</span>
+          </div>
+
+          <div class="panel__body">
+            <div class="approval">
+
+              <div class="approval__stamp-wrap">
+                <div class="approval__stamp">Awaiting<br>Approval</div>
+              </div>
+
+              <p class="approval__lead">
+                The agent will modify <em style="font-style:italic;color:var(--accent);font-variation-settings:'opsz' 36, 'SOFT' 50, 'wght' 480, 'WONK' 1">three</em> source files in your working tree. Nothing is committed; nothing leaves this machine.
+              </p>
+
+              <div class="approval__section">
+                <div class="approval__lbl">Files affected</div>
+                <div class="approval__files">
+                  <div class="approval__file">
+                    <span class="approval__file-flag">M</span>
+                    <span>src/router/routes.ts</span>
+                    <span class="approval__file-meta">+3 −2</span>
+                  </div>
+                  <div class="approval__file">
+                    <span class="approval__file-flag">M</span>
+                    <span>src/components/Navigation.tsx</span>
+                    <span class="approval__file-meta">+5 −4</span>
+                  </div>
+                  <div class="approval__file">
+                    <span class="approval__file-flag" style="color:var(--green)">A</span>
+                    <span>tests/navigation.test.ts</span>
+                    <span class="approval__file-meta">+4 −0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="approval__section">
+                <div class="approval__lbl">Risk areas</div>
+                <div class="risk-list">
+                  <div class="risk-item">
+                    <span class="risk-item__lvl risk-item__lvl--med">Med</span>
+                    <span>Route resolution order changes — sibling specificity now matters.</span>
+                  </div>
+                  <div class="risk-item">
+                    <span class="risk-item__lvl risk-item__lvl--low">Low</span>
+                    <span>Sidebar layout: 1 unrelated test currently failing on snapshot. Unrelated to this change.</span>
+                  </div>
+                  <div class="risk-item">
+                    <span class="risk-item__lvl risk-item__lvl--low">Low</span>
+                    <span>Mobile breakpoint untouched. Verified by inspection of <code style="font-family:var(--mono);font-size:10px;background:var(--paper-deep);padding:0 3px">useResponsive.ts</code>.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="approval__cta">
+                <button class="cta-btn">
+                  <span>
+                    <span class="cta-btn__lead">Apply changes</span>
+                    <span class="cta-btn__sub">3 files · revert with ⌘Z</span>
+                  </span>
+                  <span class="cta-btn__kbd">⌘↵</span>
+                </button>
+                <button class="cta-btn cta-btn--ghost">
+                  <span>
+                    <span class="cta-btn__lead">Review diff first</span>
+                    <span class="cta-btn__sub">Focus P·04 / Diff</span>
+                  </span>
+                  <span class="cta-btn__kbd">D</span>
+                </button>
+                <button class="cta-btn cta-btn--ghost">
+                  <span>
+                    <span class="cta-btn__lead">Cancel</span>
+                    <span class="cta-btn__sub">Keep diff, do not apply</span>
+                  </span>
+                  <span class="cta-btn__kbd">Esc</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ╔══════════════════════════════════════════════════════════╗ -->
+    <!-- ║ RAIL                                                     ║ -->
+    <!-- ╚══════════════════════════════════════════════════════════╝ -->
+    <aside class="rail" aria-label="Panel rail">
+      <div class="rail__title">Stack 0214</div>
+      <div class="rail__list">
+        <button class="rail-item" data-active="false" title="P·01 Chat" data-target="chat">
+          <span class="rail-item__num">01</span>
+          <svg viewBox="0 0 16 16"><path d="M2 4h12v8H4l-2 2V4z"/></svg>
+          <span class="rail-item__dot rail-item__dot--green"></span>
+        </button>
+        <button class="rail-item" data-active="false" title="P·02 Plan · modified" data-target="plan">
+          <span class="rail-item__num">02</span>
+          <svg viewBox="0 0 16 16"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+          <span class="rail-item__dot rail-item__dot--accent"></span>
+        </button>
+        <button class="rail-item" data-active="true" title="P·03 navigation.tsx · stale" data-target="file">
+          <span class="rail-item__num">03</span>
+          <svg viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/></svg>
+          <span class="rail-item__dot rail-item__dot--amber"></span>
+        </button>
+        <button class="rail-item" data-active="false" title="P·04 Diff · unapplied" data-target="diff">
+          <span class="rail-item__num">04</span>
+          <svg viewBox="0 0 16 16"><path d="M3 2v12M13 2v12M3 6h10M3 10h10"/></svg>
+          <span class="rail-item__dot rail-item__dot--accent"></span>
+        </button>
+        <button class="rail-item" data-active="false" title="P·05 Approval · waiting" data-target="approve">
+          <span class="rail-item__num">05</span>
+          <svg viewBox="0 0 16 16"><path d="M8 1l1.8 4.2L14 6l-3.4 2.8L11.6 13 8 10.6 4.4 13l1-4.2L2 6l4.2-.8L8 1z"/></svg>
+          <span class="rail-item__dot rail-item__dot--blue"></span>
+        </button>
+      </div>
+
+      <div class="rail__divider"></div>
+
+      <div class="rail__shortcuts" aria-label="Keyboard shortcuts">
+        <div class="rail-key" title="Focus next panel">⌘⌥→</div>
+        <div class="rail-key" title="Focus parent">⌘⌥↑</div>
+        <div class="rail-key" title="Open switcher">⌘K</div>
+        <div class="rail-key" title="Close active">⌘W</div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- ╔══════════════════════════════════════════════════════════╗ -->
+  <!-- ║ STATUS BAR                                               ║ -->
+  <!-- ╚══════════════════════════════════════════════════════════╝ -->
+  <footer class="statusbar">
+    <div class="statusbar__group">
+      <span><span class="statusbar__pulse"></span>Agent · run #14 · <b>streaming</b></span>
+      <span>Active <b>P·03</b></span>
+      <span>Selection <b>L42–88</b></span>
+      <span>Context <b>3 chips</b></span>
+    </div>
+    <div class="statusbar__group">
+      <span>Ledger <b>auto-restore</b></span>
+      <span>Memory <b>14% · 3.1MB</b></span>
+      <span>Branch <b>feature/nav-v2</b></span>
+      <span>v0.41.2</span>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║ SCROLL HINT                                              ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div class="scroll-hint">
+  <span>Drag horizontally · or</span>
+  <kbd>⌘⌥→</kbd>
+</div>
+
+<script>
+  // Lightweight interactivity — set active panel from rail or panel header click,
+  // ensure focus scroll, and demonstrate rail / lineage state sync.
+
+  const panels = document.querySelectorAll('.panel');
+  const railItems = document.querySelectorAll('.rail-item');
+  const lineageNodes = document.querySelectorAll('.lineage-node');
+  const stackScroll = document.getElementById('stackScroll');
+
+  const setActive = (panelId) => {
+    panels.forEach(p => {
+      p.dataset.active = (p.dataset.panelId === panelId).toString();
+    });
+    railItems.forEach(r => {
+      r.dataset.active = (r.dataset.target === panelId).toString();
+    });
+    // sync lineage trail by index
+    const order = ['chat','plan','file','diff','approve'];
+    const idx = order.indexOf(panelId);
+    lineageNodes.forEach((n, i) => {
+      n.dataset.active = (i === idx).toString();
+    });
+    // scroll into view
+    const target = document.querySelector(`.panel[data-panel-id="${panelId}"]`);
+    if (target) {
+      const left = target.offsetLeft - 80;
+      stackScroll.scrollTo({ left, behavior: 'smooth' });
+    }
+  };
+
+  railItems.forEach(r => {
+    r.addEventListener('click', () => setActive(r.dataset.target));
+  });
+
+  panels.forEach(p => {
+    p.addEventListener('mousedown', (e) => {
+      // don't steal focus from form controls
+      if (e.target.closest('button, textarea, input, a')) return;
+      setActive(p.dataset.panelId);
+    });
+  });
+
+  lineageNodes.forEach((n, i) => {
+    const order = ['chat','plan','file','diff','approve'];
+    n.addEventListener('click', () => setActive(order[i]));
+  });
+
+  // keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!(e.metaKey && e.altKey)) return;
+    const order = ['chat','plan','file','diff','approve'];
+    const current = Array.from(panels).findIndex(p => p.dataset.active === 'true');
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setActive(order[Math.min(current + 1, order.length - 1)]);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setActive(order[Math.max(current - 1, 0)]);
+    }
+  });
+</script>
+
+</body>
+</html>
