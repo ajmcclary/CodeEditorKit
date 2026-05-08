@@ -200,7 +200,7 @@ Use `.codeTheme(_:)` in SwiftUI and `apply(theme:)` for lower-level views.
 
 Use `ThemeFamily.loaded(...)` when importing user-supplied JSON so warnings can be surfaced without rejecting an otherwise usable theme.
 
-Verify custom themes on macOS, iOS, and Mac Catalyst because selection rendering and text system details differ by platform.
+Verify custom themes on macOS and iOS because selection rendering and text-system details differ by platform.
 
 ## See Also
 

@@ -195,11 +195,7 @@ final class AsyncSyntaxHighlighterCacheTests: XCTestCase {
 
         let statsAfter = await highlighter.getCacheStatistics()
 
-        #if targetEnvironment(macCatalyst)
-        // On Catalyst, cache eviction timing can be less predictable
-        // Just ensure at least one entry was removed
-        XCTAssertLessThan(statsAfter.cacheSize, statsBefore.cacheSize, "At least some stale entries should be removed")
-        #else
+        #if true
         // Accept that at least one entry was removed due to timing sensitivity
         // The test confirms the optimization mechanism works
         XCTAssertLessThan(statsAfter.cacheSize, statsBefore.cacheSize, "At least some stale entries should be removed")

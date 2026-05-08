@@ -1,14 +1,14 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
 extension CGRect {
     /// Returns a pixel-aligned rect
     var pixelAligned: CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSIntegralRectWithOptions(self, .alignAllEdgesNearest)
         #else
         return integral

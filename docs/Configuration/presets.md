@@ -118,24 +118,6 @@ Features:
 
 Best for: iOS applications
 
-### Mac Catalyst
-
-Tailored for Mac Catalyst apps:
-
-```swift
-let config = EditorConfiguration.catalyst
-```
-
-Features:
-- Hybrid UI optimizations
-- Mac-like font sizing
-- Keyboard-focused interaction
-- Full feature set enabled
-- Native Mac feel
-- Catalyst-specific adjustments
-
-Best for: Mac Catalyst applications
-
 ### macOS
 
 Native macOS configuration:
@@ -166,7 +148,6 @@ Features:
 - Compile-time platform detection
 - Returns appropriate preset:
   - iOS builds → `.iOS`
-  - Catalyst builds → `.catalyst`
   - macOS builds → `.macOS`
   - Other platforms → `.default`
 

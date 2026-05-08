@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @testable import CodeEditorPlugin
 @testable import CodeEditorUI
 import SnapshotTesting

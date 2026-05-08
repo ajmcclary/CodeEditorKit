@@ -222,13 +222,13 @@ final class ComprehensivePerformanceTests: XCTestCase {
                 for index in 0..<200 { // Reduced count for combined test
                     let range = NSRange(location: textView.text?.count ?? 0, length: 0)
                     if index.isMultiple(of: 2) {
-                        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                        #if canImport(AppKit)
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: open)
                         #else
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementText: open)
                         #endif
                     } else {
-                        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                        #if canImport(AppKit)
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementString: close)
                         #else
                         _ = engine.textView(textView, shouldChangeTextIn: range, replacementText: close)
@@ -463,7 +463,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
 
     // MARK: - LSP Performance
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @MainActor
     func testLSPManagerPerformance() throws {
         let lspManager = LSPManager(memoryMonitor: MemoryMonitor())
@@ -578,7 +578,7 @@ final class ComprehensivePerformanceTests: XCTestCase {
             wait(for: [expectation], timeout: 5.0)
         }
     }
-    #endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #endif // canImport(AppKit)
 
     @MainActor
     func testAsyncOperationManagerPerformance() throws {

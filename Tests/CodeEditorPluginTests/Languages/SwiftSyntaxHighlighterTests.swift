@@ -1,12 +1,9 @@
 @testable import CodeEditorPlugin
 import Foundation
-#if !targetEnvironment(macCatalyst)
 import SwiftParser
 import SwiftSyntax
-#endif
 import Testing
 
-#if !targetEnvironment(macCatalyst)
 @Suite("SwiftSyntaxHighlighter UTF-8 to UTF-16 range conversion")
 struct SwiftSyntaxHighlighterTests {
     // MARK: - Multi-byte character tests
@@ -165,4 +162,3 @@ struct SwiftSyntaxHighlighterTests {
         #expect(tokens.isEmpty)
     }
 }
-#endif

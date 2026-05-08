@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -42,7 +42,7 @@ extension CodeEditorView {
         if textStorage.editedMask.contains(.editedCharacters) {
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 // For macOS, use visible rect to determine character range
                 if let layoutManager = self.layoutManager,
                    let textContainer = self.textContainer,
@@ -89,7 +89,7 @@ extension CodeEditorView {
             return fullString[editedSubstring].contains("\n")
         }()
         if mightChangeLineCount {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             gutterViewStorage?.needsDisplay = true
             #else
             gutterViewStorage?.setNeedsDisplay()
@@ -105,17 +105,10 @@ extension CodeEditorView {
         }
 
         // On Mac Catalyst, ensure text remains visible after edits
-        #if targetEnvironment(macCatalyst)
-        if textStorage.length > 0 && textStorage.editedMask.contains(.editedCharacters) {
-            // Apply base text color to ensure visibility
-            let baseColor = textColor ?? PlatformColors.label
-            textStorage.addAttribute(.foregroundColor, value: baseColor, range: textStorage.editedRange)
-        }
-        #endif
 
         // Publish text changed event
         if editedRange.location != NSNotFound {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             eventPublisher.publishSync(.textDidChange(string))
             #else
             eventPublisher.publishSync(.textDidChange(text ?? ""))
@@ -139,7 +132,7 @@ extension CodeEditorView {
     internal func applySyntaxHighlighting() {
         updateRangeBasedHighlightingConfiguration()
         let syntaxService = businessLogicServices.syntaxHighlightingService
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textStorage?.length ?? 0
         #else
         let textLength = textStorage.length
@@ -188,7 +181,7 @@ extension CodeEditorView {
 
     internal func applySyntaxHighlighting(in range: NSRange) {
         let syntaxService = businessLogicServices.syntaxHighlightingService
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textStorage?.length ?? 0
         #else
         let textLength = textStorage.length
@@ -213,96 +206,4 @@ extension CodeEditorView {
             visibleRange: range
         )
     }
-
-    // MARK: - Mac Catalyst Support
-
-    #if targetEnvironment(macCatalyst)
-    /// Apply text color specifically for Mac Catalyst
-    /// This ensures text is visible by applying color attributes to all text
-    public func applyTextColorForMacCatalyst() {
-        let syntaxService = businessLogicServices.syntaxHighlightingService
-        let textStorage = self.textStorage
-
-        // Get the text view's setup result to check TextKit version
-        let setupResult = TextKitSetupHelper.setupTextKit(for: self)
-        let isUsingTextKit1 = !setupResult.isUsingTextKit2
-
-        let attributes = syntaxService.createCatalystTextAttributes(
-            textColor: self.textColor,
-            font: self.font,
-            configuration: configuration
-        )
-
-        Self.logger.debug("Mac Catalyst: Text storage length: \(textStorage.length)")
-        Self.logger.debug("Mac Catalyst: Current text sample: \(String(describing: self.text?.prefix(50)))")
-        Self.logger.debug("Mac Catalyst: Using TextKit\(isUsingTextKit1 ? "1" : "2")")
-
-        // Apply to existing text with aggressive attribute application
-        if textStorage.length > 0 {
-            textStorage.beginEditing()
-
-            // For TextKit1 on Mac Catalyst, we need a different approach
-            if isUsingTextKit1 {
-                // First, ensure we have a visible base color
-                let baseColor = PlatformColors.label.resolvedColor(with: self.traitCollection)
-
-                // Apply attributes more aggressively for TextKit1
-                let fullRange = NSRange(location: 0, length: textStorage.length)
-
-                // Remove existing attributes that might interfere
-                textStorage.removeAttribute(.foregroundColor, range: fullRange)
-                textStorage.removeAttribute(.backgroundColor, range: fullRange)
-
-                // Apply font first - this is critical for TextKit1
-                if let font = self.font {
-                    textStorage.addAttribute(.font, value: font, range: fullRange)
-                }
-
-                // Apply color with resolved value
-                textStorage.addAttribute(.foregroundColor, value: baseColor, range: fullRange)
-
-                // If syntax highlighting is enabled, re-apply it
-                if configuration.display.isSyntaxHighlightingEnabled {
-                    // This will trigger the async highlighter to apply token colors
-                    applySyntaxHighlighting()
-                }
-            } else {
-                // TextKit2 path - use the standard approach
-                textStorage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: textStorage.length))
-                textStorage.removeAttribute(.backgroundColor, range: NSRange(location: 0, length: textStorage.length))
-                textStorage.addAttributes(attributes, range: NSRange(location: 0, length: textStorage.length))
-            }
-
-            textStorage.endEditing()
-
-            Self.logger.debug("Mac Catalyst: Applied attributes to \(textStorage.length) characters")
-        } else {
-            Self.logger.debug("Mac Catalyst: No text content to apply color to")
-        }
-
-        // Update typing attributes for new text
-        self.typingAttributes = attributes
-
-        // Force comprehensive redraw
-        self.setNeedsDisplay()
-        self.setNeedsLayout()
-
-        // For TextKit1, we need more aggressive invalidation
-        if isUsingTextKit1 {
-            // Access layoutManager is OK here since we're already in TextKit1 mode
-            // On Mac Catalyst, layoutManager is not optional
-            self.layoutManager.invalidateDisplay(forCharacterRange: NSRange(location: 0, length: textStorage.length))
-        }
-
-        // Force text redraw by invalidating intrinsic content size
-        self.invalidateIntrinsicContentSize()
-
-        // Additional force refresh for Mac Catalyst
-        if let superview = self.superview {
-            superview.setNeedsLayout()
-        }
-
-        Self.logger.debug("Mac Catalyst: Applied text color to all text.")
-    }
-    #endif
 }

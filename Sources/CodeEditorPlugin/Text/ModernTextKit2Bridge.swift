@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #else
 import UIKit
@@ -14,7 +14,7 @@ internal class ModernTextKit2Bridge: NSObject {
     private var textLayoutManager: NSTextLayoutManager? { textView?.textLayoutManager }
     private var textContentManager: NSTextContentManager? { textLayoutManager?.textContentManager }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private var textViewVisibleRect: CGRect? {
         textView?.visibleRect
     }

@@ -2,7 +2,7 @@
 
 Configure robust retry behavior for Language Server Protocol connections to ensure reliability.
 
-> Important: LSP functionality is only available on macOS. This documentation does not apply to iOS or Mac Catalyst builds.
+> Important: LSP functionality is only available on macOS. This documentation does not apply to iOS builds.
 
 ## Overview
 

@@ -150,7 +150,7 @@ extension CodeEditorView {
         with processorType: TextProcessingActor.TextProcessor.ProcessorType,
         priority: TaskPriority = .high
     ) async throws {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let currentText = string
         #else
         let currentText = text ?? ""
@@ -163,7 +163,7 @@ extension CodeEditorView {
         )
 
         // Update text on main actor
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         string = processedText
         #else
         text = processedText

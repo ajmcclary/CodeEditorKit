@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -179,7 +179,7 @@ extension CodeEditorView {
         // Calculate inline annotation position using configuration values
         let badgeSize = configuration.layout.annotationBadgeSize
         let badgePadding = configuration.layout.annotationBadgePadding
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let inlineX = textContainerInset.width + segmentFrame.maxX + badgePadding
         let inlineY = textContainerInset.height + segmentFrame.midY - (badgeSize / 2)
         #else
@@ -205,7 +205,7 @@ extension CodeEditorView {
             annotationViews[annotation.id] = annotationView
 
             // Force view update
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             annotationView.needsDisplay = true
             needsDisplay = true
             #else

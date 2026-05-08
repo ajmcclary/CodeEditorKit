@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -90,9 +90,6 @@ extension PlatformCapabilities {
             #else
             layoutStyle = .adaptive
             #endif
-
-        case .catalyst:
-            layoutStyle = .adaptive
         }
 
         return UICapabilities(
@@ -119,7 +116,7 @@ extension PlatformCapabilities {
     /// - Returns: True if minimap is available
     public var supportsMinimap: Bool {
         // Currently only implemented for iOS platforms
-        currentPlatform == .iOS || currentPlatform == .catalyst
+        currentPlatform == .iOS
     }
 
     /// Whether multiple windows are supported
@@ -136,7 +133,7 @@ extension PlatformCapabilities {
     /// - Returns: True if multiple windows are supported
     public var supportsMultipleWindows: Bool {
         switch currentPlatform {
-        case .macOS, .catalyst:
+        case .macOS:
             return true
 
         case .iOS:
@@ -161,7 +158,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if Touch Bar is available
     public var supportsTouchBar: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return true // Runtime detection would be more accurate
         #else
         return false
@@ -180,7 +177,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if context menus are available
     public var supportsContextMenus: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return true
         #elseif canImport(UIKit)
         // iOS 13.0+ supports context menus
@@ -202,7 +199,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if vibrant materials are available
     public var supportsVibrantMaterials: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return true
         #elseif canImport(UIKit)
         // iOS 13.0+ supports modern materials
@@ -226,7 +223,7 @@ extension PlatformCapabilities {
     /// - Returns: True if floating panels are supported
     public var supportsFloatingPanels: Bool {
         switch currentPlatform {
-        case .macOS, .catalyst:
+        case .macOS:
             return true
 
         case .iOS:
@@ -250,7 +247,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if device has display cutouts
     public var hasNotch: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         if #available(iOS 13.0, *) {
             guard let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
@@ -306,13 +303,6 @@ extension PlatformCapabilities {
 
             config.enableVibrantMaterials = supportsVibrantMaterials
             config.respectSafeAreas = true
-
-        case .catalyst:
-            config.layoutStyle = .adaptive
-            config.enableVibrantMaterials = supportsVibrantMaterials
-            config.enableFloatingPanels = true
-            config.showFullToolbar = true
-            config.enableHybridInteraction = true
         }
 
         // Feature-based adjustments
@@ -402,9 +392,6 @@ extension PlatformCapabilities {
 
         case .iOS:
             return NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
-
-        case .catalyst:
-            return NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
         }
     }
 
@@ -422,8 +409,6 @@ extension PlatformCapabilities {
         case .iOS:
             return CGSize(width: 44, height: 44) // iOS HIG
 
-        case .catalyst:
-            return CGSize(width: 32, height: 32) // Hybrid approach
         }
     }
 }

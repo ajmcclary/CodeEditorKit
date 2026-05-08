@@ -1,13 +1,13 @@
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
 // MARK: - TextLayoutManager
 
 public class TextLayoutManager: NSTextLayoutManager {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Posted when the selected range of characters changes.
     public static let didChangeSelectionNotification = NSTextView.didChangeSelectionNotification
     #else

@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -50,7 +50,7 @@ internal enum ContainerLayoutHelper {
     }
 
     /// Calculate the frame for the gutter view (AppKit only)
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     static func gutterFrame(
         scrollViewBounds: CGRect,
         configuration: EditorConfiguration
@@ -75,7 +75,7 @@ internal enum ContainerLayoutHelper {
     ) -> EdgeInsets {
         var insets = configuration.layout.textContainerInset
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On AppKit, gutter is inside scroll view so we add to insets
         if gutterVisible {
             insets = EdgeInsets(
@@ -105,7 +105,7 @@ internal enum ContainerLayoutHelper {
             width -= configuration.layout.minimapWidth
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On AppKit, gutter is inside scroll view
         if gutterVisible {
             width -= configuration.layout.gutterWidth
@@ -124,7 +124,7 @@ internal enum ContainerLayoutHelper {
         static let minimap: CGFloat = 100
         static let minimapHighlight: CGFloat = 101
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Higher z-positions for AppKit to ensure visibility
         static let minimapAppKit: CGFloat = 1_000
         #endif
@@ -132,7 +132,7 @@ internal enum ContainerLayoutHelper {
 
     /// Apply standard z-position to a view's layer
     static func applyZPosition(_ position: CGFloat, to view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.layer?.zPosition = position
         #else
         view.layer.zPosition = position
@@ -150,7 +150,7 @@ internal enum ContainerLayoutHelper {
         view.isHidden = !isVisible
 
         if isVisible && forceDisplay {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             view.needsDisplay = true
             #else
             view.setNeedsDisplay()

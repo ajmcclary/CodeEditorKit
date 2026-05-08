@@ -10,7 +10,7 @@ CodeEditorPlugin provides comprehensive iOS support with touch-optimized interac
 
 ### Using Platform Types
 
-Always use the platform abstraction types for cross-platform compatibility. As of the 2025 refactoring, all platform detection uses `#if canImport()` patterns:
+Always use the platform abstraction types for cross-platform compatibility. Platform detection uses `#if canImport()` patterns throughout the codebase. (Mac Catalyst support was retired in 0.2.0 — the framework targets macOS and iOS / iPadOS only.)
 
 ```swift
 import CodeEditorPlugin
@@ -380,4 +380,3 @@ Tune for your target device class — older iPhones benefit from lower threshold
 - [SwiftUI-Integration](../SwiftUI/integration.md)
 - [UIKit-AppKit-Integration](uikit-appkit.md)
 - [macOS-Integration](macos.md)
-- [Catalyst-Best-Practices](catalyst.md)

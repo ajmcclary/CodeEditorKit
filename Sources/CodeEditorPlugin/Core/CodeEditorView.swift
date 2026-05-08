@@ -3,7 +3,7 @@ import ObjectiveC
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -150,13 +150,6 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Flag to prevent recursive configuration updates
     internal var isApplyingConfiguration = false
 
-    #if targetEnvironment(macCatalyst)
-    /// Track word wrap state to prevent TextKit1 compatibility mode from resetting it
-    internal var preservedWordWrapState: Bool = false
-    /// Flag to indicate if we have captured the initial word wrap state
-    internal var hasPreservedWordWrapState: Bool = false
-    #endif
-
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
@@ -195,7 +188,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal let performanceMonitor = TextKit2PerformanceMonitor()
 
     /// LSP manager for language server integration
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
     #endif
 
@@ -325,7 +318,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     internal var completionViewController: (any CompletionViewControllerRepresentable)?
 
     /// Completion popup window/container
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     internal var completionWindow: NSWindow?
     #else
     internal var completionPopover: PlatformViewController?
@@ -342,7 +335,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     // MARK: - Initialization
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
         setupTextView()
@@ -450,7 +443,7 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         }
 
         // Remove any gutter view
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         gutterViewStorage?.removeFromSuperview()
         #endif
 

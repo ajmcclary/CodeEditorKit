@@ -3,7 +3,7 @@ import CodeEditorDesignTokens
 import Foundation
 import Testing
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -59,7 +59,7 @@ struct CompletionCellGlassTests {
     @Test("UnifiedCompletionCellView.apply(theme:) refreshes colors from theme")
     @MainActor
     func cellViewAppliesTheme() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let cell = UnifiedCompletionCellView()
         let theme = Theme.lcarsDark
         cell.apply(theme: theme)

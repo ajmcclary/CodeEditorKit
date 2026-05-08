@@ -1,14 +1,12 @@
 import Foundation
 
 // SwiftSyntax is not compatible with Mac Catalyst
-#if !targetEnvironment(macCatalyst)
 import SwiftParser
 import SwiftSyntax
-#endif
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -476,7 +474,7 @@ public enum TokenType: String, CaseIterable, Sendable {
     /// - Important: Always use this property instead of hardcoded colors
     ///              to ensure proper appearance across platforms.
     @MainActor public var adaptiveColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         AdaptiveColorSystem.syntaxColor(for: self)
         #else
         defaultColor

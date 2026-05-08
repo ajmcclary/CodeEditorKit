@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -33,7 +33,7 @@ final class ContextMenuTests: XCTestCase {
     func testEmptyMenu() async {
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 0)
         #else
         XCTAssertEqual(menu.children.count, 0)
@@ -48,7 +48,7 @@ final class ContextMenuTests: XCTestCase {
         builder.addAction(action)
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 1)
         XCTAssertEqual(menu.items[0].title, "Cut")
         #else
@@ -67,7 +67,7 @@ final class ContextMenuTests: XCTestCase {
 
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 3)
         XCTAssertEqual(menu.items[0].title, "Cut")
         XCTAssertEqual(menu.items[1].title, "Copy")
@@ -87,7 +87,7 @@ final class ContextMenuTests: XCTestCase {
 
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 3)
         XCTAssertEqual(menu.items[0].title, "Cut")
         XCTAssertTrue(menu.items[1].isSeparatorItem)
@@ -112,7 +112,7 @@ final class ContextMenuTests: XCTestCase {
 
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 5)
         XCTAssertTrue(menu.items[1].isSeparatorItem)
         XCTAssertTrue(menu.items[3].isSeparatorItem)
@@ -134,7 +134,7 @@ final class ContextMenuTests: XCTestCase {
         builder.addAction(action)
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 1)
         XCTAssertEqual(menu.items[0].keyEquivalent, "c")
         XCTAssertTrue(menu.items[0].keyEquivalentModifierMask.contains(.command))
@@ -152,7 +152,7 @@ final class ContextMenuTests: XCTestCase {
 
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 2)
         XCTAssertFalse(menu.items[0].isEnabled)
         XCTAssertTrue(menu.items[1].isEnabled)
@@ -179,7 +179,7 @@ final class ContextMenuTests: XCTestCase {
         builder.addAction(ContextMenuAction(title: "Item 2") {})
         let menu2 = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu1.items.count, 1)
         XCTAssertEqual(menu2.items.count, 2)
         #else
@@ -200,7 +200,7 @@ final class ContextMenuTests: XCTestCase {
         builder.addAction(customAction)
         let menu = builder.build()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(menu.items.count, 1)
         XCTAssertEqual(menu.items[0].title, "Custom Action")
 
@@ -228,7 +228,7 @@ final class ContextMenuTests: XCTestCase {
     }
     #endif
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @MainActor
     func testNSMenuProperties() async {
         builder.addAction(ContextMenuAction(title: "Test Item") {})

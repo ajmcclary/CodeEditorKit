@@ -522,7 +522,7 @@ public final class ViewportManager: ObservableObject {
 
 ### Cross-Platform Excellence
 22. **PlatformCapabilities**: Runtime detection of TextKit2 support and feature availability
-23. **CrossPlatformCoordinator**: Unified event coordination across macOS, iOS, and Catalyst
+23. **CrossPlatformCoordinator**: Unified event coordination across macOS and iOS
 24. **Platform Abstractions**: Seamless text processing across different Apple platforms
 25. **Capability-Driven Optimization**: Automatic feature enablement based on platform capabilities
 

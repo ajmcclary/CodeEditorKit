@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -50,7 +50,7 @@ public class SearchReplaceEngine: ObservableObject {
         isSearching = true
         defer { isSearching = false }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = textView.string
         #else
         let text = textView.text ?? ""
@@ -134,7 +134,7 @@ public class SearchReplaceEngine: ObservableObject {
         let result = currentSearchResults[index]
 
         // Perform replacement
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.replaceCharacters(in: result.range, with: replacement)
         #else
         if let text = textView.text,
@@ -169,7 +169,7 @@ public class SearchReplaceEngine: ObservableObject {
 
         var replacementCount = 0
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return 0 }
 
         // Begin grouped undo
@@ -305,7 +305,7 @@ public class SearchReplaceEngine: ObservableObject {
     private func highlightSearchResults(_ results: [SearchResult]) {
         guard let textView else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         let fullRange = NSRange(location: 0, length: textView.string.count)
         #else
@@ -348,7 +348,7 @@ public class SearchReplaceEngine: ObservableObject {
     private func flashRange(_ range: NSRange) {
         guard let textView else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         #else
         let textStorage = textView.textStorage

@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -134,7 +134,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if hardware acceleration is available
     public var supportsHardwareAcceleration: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Metal is available on all supported macOS versions
         return true
         #elseif canImport(UIKit)
@@ -174,11 +174,8 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if smooth scrolling is available
     public var supportsSmoothScrolling: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // ProMotion displays and smooth scrolling
-        return true
-        #elseif targetEnvironment(macCatalyst)
-        // Catalyst should support smooth scrolling like macOS
         return true
         #elseif canImport(UIKit)
         // iOS devices with ProMotion
@@ -200,9 +197,9 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if CADisplayLink is available
     public var supportsCADisplayLink: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return true
-        #elseif canImport(AppKit) || targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return systemVersionComponents.major >= 14
         #else
         return false
@@ -217,7 +214,7 @@ extension PlatformCapabilities {
     /// - Returns: Current processor architecture
     public var processorArchitecture: ProcessorArchitecture {
         #if arch(arm64)
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return .appleSilicon
             #else
             return .arm64
@@ -366,10 +363,6 @@ extension PlatformCapabilities {
             // iOS needs to be more conservative for battery life
             config.enableAgressiveOptimizations = false
             config.respectBatteryState = true
-
-        case .catalyst:
-            // Catalyst can use desktop-class optimizations
-            config.enableAgressiveOptimizations = true
         }
 
         // Display-specific optimizations
@@ -495,7 +488,7 @@ extension PlatformCapabilities {
     }
 
     private func isLowPowerModeEnabled() -> Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return ProcessInfo.processInfo.isLowPowerModeEnabled
         #else
         return false
@@ -503,7 +496,7 @@ extension PlatformCapabilities {
     }
 
     private func getBatteryLevel() -> Float? {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         UIDevice.current.isBatteryMonitoringEnabled = true
         let level = UIDevice.current.batteryLevel
         return level >= 0 ? level : nil

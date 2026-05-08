@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -56,7 +56,7 @@ internal final class FoldingOperationsService {
         }
 
         // Update gutter
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.setNeedsDisplay(textView.bounds)
         #else
         textView.setNeedsDisplay()
@@ -84,7 +84,7 @@ internal final class FoldingOperationsService {
         }
 
         // Update gutter
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.setNeedsDisplay(textView.bounds)
         #else
         textView.setNeedsDisplay()
@@ -213,7 +213,7 @@ internal final class FoldingOperationsService {
             textStorage.addAttribute(.font, value: font, range: contentRange)
 
             // Force layout update to properly display unfolded content
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             textView.setNeedsDisplay(textView.bounds)
             textView.needsLayout = true
             textView.layoutSubtreeIfNeeded()

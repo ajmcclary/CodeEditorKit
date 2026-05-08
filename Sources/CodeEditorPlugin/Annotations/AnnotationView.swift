@@ -4,7 +4,7 @@
 // both iOS and macOS platforms, eliminating code duplication.
 
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -38,7 +38,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     /// applied yet (matches the historical default).
     public private(set) var themedBadgeColor: PlatformColor = PlatformColors.systemBlue
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private var trackingArea: NSTrackingArea?
     private var nsPopover: NSPopover?
     #else
@@ -70,7 +70,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
 
     private func setupAppearance() {
         // Create circular badge
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         wantsLayer = true
         layer?.cornerRadius = bounds.width / 2
         layer?.backgroundColor = annotationColor.cgColor
@@ -88,7 +88,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     private func createIconView() -> PlatformImageView {
         let iconView = PlatformImageView(frame: bounds.insetBy(dx: 4, dy: 4))
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         iconView.image = NSImage(systemSymbolName: iconName, accessibilityDescription: annotationType)
         iconView.contentTintColor = PlatformColors.white
         iconView.imageScaling = .scaleProportionallyUpOrDown
@@ -102,7 +102,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     }
 
     private func setupInteraction() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Set up cursor
         addCursorRect(bounds, cursor: .pointingHand)
         #else
@@ -155,7 +155,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         if appliedTheme == theme { return }
         appliedTheme = theme
         themedBadgeColor = annotationKind.color(in: theme)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         wantsLayer = true
         layer?.backgroundColor = themedBadgeColor.cgColor
         #else
@@ -170,7 +170,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     // MARK: - Popup Management
 
     public func showPopup(detachable: Bool = false) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         showPopupMacOS(detachable: detachable)
         #else
         showPopupIOS(detachable: detachable)
@@ -178,7 +178,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     }
 
     public func hidePopup() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         nsPopover?.close()
         nsPopover = nil
         #else
@@ -191,7 +191,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
 
     // MARK: - Platform-Specific Popup Implementation
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private func showPopupMacOS(detachable: Bool) {
         guard nsPopover == nil else { return }
 
@@ -443,7 +443,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
 
     // MARK: - Mouse/Touch Tracking
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func updateTrackingAreas() {
         super.updateTrackingAreas()
 
@@ -512,7 +512,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
     private func setupAccessibility() {
         #if canImport(UIKit)
         setupAccessibilityUIKit()
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         setupAccessibilityAppKit()
         #endif
     }
@@ -548,7 +548,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
         UIAccessibility.post(notification: .announcement, argument: announcement)
     }
 
-    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #elseif canImport(AppKit)
     private func setupAccessibilityAppKit() {
         setAccessibilityRole(.button)
         setAccessibilityRoleDescription("Code annotation")
@@ -580,7 +580,7 @@ public class AnnotationView: PlatformView, AnnotationViewProtocol {
 
     // MARK: - Cleanup
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func removeFromSuperview() {
         // Clean up before removal
         if let trackingArea {

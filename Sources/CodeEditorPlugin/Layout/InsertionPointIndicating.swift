@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @preconcurrency import AppKit
 
 /// Custom insertion point indicator view. Optional.

@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(UIKit) && !targetEnvironment(macCatalyst)
+#if canImport(UIKit)
 import UIKit
 
 /// iOS-specific optimizations for large file handling
@@ -316,11 +316,11 @@ public final class IOSLargeFileOptimizer: ObservableObject {
         )
     }
 }
-#endif // canImport(UIKit) && !targetEnvironment(macCatalyst)
+#endif // canImport(UIKit)
 
 // MARK: - SwiftUI Integration
 
-#if canImport(SwiftUI) && canImport(UIKit) && !targetEnvironment(macCatalyst)
+#if canImport(SwiftUI) && canImport(UIKit)
 import SwiftUI
 
 @available(iOS 13.0, *)

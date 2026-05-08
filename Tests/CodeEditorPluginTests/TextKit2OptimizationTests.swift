@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -325,7 +325,7 @@ final class TextKit2OptimizationTests: IsolatedTestCase {
 
         // Simulate a large file
         let largeText = String(repeating: "This is a line of code that represents a large file.\n", count: 2_000)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         codeEditorView.string = largeText
         #elseif canImport(UIKit)
         codeEditorView.text = largeText
@@ -338,7 +338,7 @@ final class TextKit2OptimizationTests: IsolatedTestCase {
         codeEditorView.configuration = config
 
         // Verify text was set
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(codeEditorView.string.count, largeText.count)
         #elseif canImport(UIKit)
         XCTAssertEqual(codeEditorView.text.count, largeText.count)

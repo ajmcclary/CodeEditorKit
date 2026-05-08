@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -202,7 +202,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         var builder = ContextMenuBuilder()
 
         // Only show refactoring on platforms that support it well
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if capabilities.currentPlatform == .macOS { // Refactoring only on macOS
             builder.addAction(ContextMenuAction(
                 title: "Rename Symbol",
@@ -253,7 +253,7 @@ public final class ContextMenuCoordinator: ObservableObject {
     ///   - location: The location to show the menu
     ///   - textView: The target text view
     public func showContextMenu(_ menu: PlatformContextMenu, at location: CGPoint, in textView: CodeEditorView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         showMacOSContextMenu(menu, at: location, in: textView)
         #else
         showIOSContextMenu(menu, at: location, in: textView)
@@ -302,7 +302,7 @@ public final class ContextMenuCoordinator: ObservableObject {
             }
 
             // Platform-specific advanced actions
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             addMacOSAdvancedActions(to: &builder, range: range, textView: textView)
             #endif
         }
@@ -324,7 +324,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         })
 
         // Platform-specific empty area actions
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         builder.addSeparator()
 
         builder.addAction(ContextMenuAction(
@@ -438,7 +438,7 @@ public final class ContextMenuCoordinator: ObservableObject {
         })
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private func addMacOSAdvancedActions(to builder: inout ContextMenuBuilder, range: NSRange, textView: CodeEditorView) {
         if capabilities.currentPlatform == .macOS { // Refactoring only on macOS
             builder.addSeparator()
@@ -514,7 +514,7 @@ public final class ContextMenuCoordinator: ObservableObject {
 
     // MARK: - Platform-Specific Display
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private func showMacOSContextMenu(_ menu: PlatformContextMenu, at location: CGPoint, in textView: CodeEditorView) {
         // Show the NSMenu directly
         menu.popUp(positioning: nil, at: location, in: textView)

@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -47,7 +47,7 @@ internal final class VisibleRangeProvider {
     func updateVisibleSet() {
         guard let textView else { return }
         let range: NSRange = textView.visibleRange()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let storageLength = textView.textStorage?.length ?? 0
         #else
         let storageLength = textView.textStorage.length
@@ -64,7 +64,7 @@ internal final class VisibleRangeProvider {
 
     private func setupObservers() {
         let center = NotificationCenter.default
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let scrollView = textView?.enclosingScrollView {
             let tok1 = center.addObserver(
                 forName: NSView.boundsDidChangeNotification,

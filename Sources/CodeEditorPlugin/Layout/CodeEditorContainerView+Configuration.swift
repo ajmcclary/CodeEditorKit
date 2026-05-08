@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -37,7 +37,7 @@ extension CodeEditorContainerView {
 
         // Force minimap to redraw when shown
         if configuration.display.isMinimapVisible {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             minimapView.needsDisplay = true
             #else
             minimapView.setNeedsDisplay()
@@ -50,7 +50,7 @@ extension CodeEditorContainerView {
         #endif
 
         // Update scroll view settings on macOS
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         scrollView.hasHorizontalScroller = !configuration.layout.wrapLines
 
         // Update ruler visibility and settings
@@ -83,7 +83,7 @@ extension CodeEditorContainerView {
         updateTextContainerInsets()
 
         // Request layout update without forcing immediate layout
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         needsLayout = true
         #else
         setNeedsLayout()
@@ -95,7 +95,7 @@ extension CodeEditorContainerView {
         }
 
         // Force redraw of all subviews
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         needsDisplay = true
         scrollView.needsDisplay = true
         textView.needsDisplay = true
@@ -111,7 +111,7 @@ extension CodeEditorContainerView {
         let gutterWidth = showsLineNumbers ? configuration.layout.gutterWidth : 0
         let minimapWidth = configuration.display.isMinimapVisible ? configuration.layout.minimapWidth : 0
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, we use ruler view for line numbers, so text container insets work differently
         // When line numbers are shown: ruler view handles the spacing, minimal text inset needed
         // When line numbers are hidden: no ruler view, so minimal padding only
@@ -125,16 +125,7 @@ extension CodeEditorContainerView {
         // On iOS/Catalyst, update edge insets
         let currentInsets = textView.textContainerEdgeInsets
 
-        #if targetEnvironment(macCatalyst)
-        // For Mac Catalyst, the text view is positioned after the gutter
-        // so we only need padding, not gutterWidth + padding
-        let newInsets = EdgeInsets(
-            top: currentInsets.top,
-            left: padding,  // Only padding since text view is positioned after gutter
-            bottom: currentInsets.bottom,
-            right: minimapWidth + padding
-        )
-        #else
+        #if true
         // For iOS, only include gutter width if line numbers are actually shown
         let leftInset = showsLineNumbers ? (gutterWidth + padding) : padding
         let newInsets = EdgeInsets(

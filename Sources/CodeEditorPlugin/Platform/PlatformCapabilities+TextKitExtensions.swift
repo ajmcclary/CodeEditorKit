@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -64,7 +64,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if TextKit2 is available
     public var supportsTextKit2: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // TextKit2 is stable on macOS 13.0+
         let (major, minor, _) = systemVersionComponents
         return major > 13 || (major == 13 && minor >= 0)
@@ -89,7 +89,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if TextKit2 should be used by default
     public var preferTextKit2: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Prefer TextKit2 on macOS 14.0+ for better stability
         let (major, minor, _) = systemVersionComponents
         return major > 14 || (major == 14 && minor >= 0)
@@ -152,12 +152,6 @@ extension PlatformCapabilities {
             config.maxRenderingLength = 500_000 // 500KB
             config.incrementalRendering = true
             config.enableBackgroundParsing = supportsBackgroundProcessing
-
-        case .catalyst:
-            // Balanced approach for Catalyst
-            config.maxRenderingLength = 750_000 // 750KB
-            config.incrementalRendering = true
-            config.enableBackgroundParsing = true
         }
 
         // Memory-based adjustments

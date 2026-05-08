@@ -5,7 +5,7 @@ A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict 
 ## Start here
 
 → **[Getting Started](GettingStarted.md)** — install, integrate, and configure in five minutes.
-→ **[Feature Matrix](FeatureMatrix.md)** — what works on macOS / iOS / Catalyst.
+→ **[Feature Matrix](FeatureMatrix.md)** — what works on macOS / iOS.
 
 ## Platform Requirements
 
@@ -14,11 +14,12 @@ This package targets the current Apple OS family deliberately:
 | Platform | Minimum |
 |---|---|
 | macOS | 26.3 |
-| iOS | 26.3 |
-| Mac Catalyst | 26.3 |
+| iOS / iPadOS | 26.3 |
 | Swift toolchain | 6.3 |
 
 The floor is intentional, not aspirational — the editor uses APIs introduced in this release window and exercising them on older OSes would require deprecation paths the project explicitly rejected during the most recent remediation pass. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
+
+**Mac Catalyst is not supported** as of 0.2.0. The framework is pure SwiftUI plus native AppKit (macOS) / UIKit (iOS) — Catalyst's UIKit-on-Mac hosting layer added compilation and maintenance complexity without any feature the native paths don't already provide. See `CHANGELOG.md` for the rationale.
 
 ## Distribution
 
@@ -49,7 +50,6 @@ The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https
 
 - [iOS](Platform/ios.md) — touch, keyboard, large-file handling
 - [macOS](Platform/macos.md)
-- [Mac Catalyst](Platform/catalyst.md)
 - [UIKit ↔ AppKit](Platform/uikit-appkit.md)
 - [Platform abstraction](Platform/platform-abstraction.md)
 

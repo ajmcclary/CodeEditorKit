@@ -28,7 +28,7 @@ import Foundation
 /// ## Example Usage
 /// ```swift
 /// // Local server (macOS only)
-/// #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+/// #if canImport(AppKit)
 /// let localConfig = LSPServerConfiguration.local(...)
 /// #endif
 ///
@@ -451,7 +451,7 @@ public final class LSPClient: ObservableObject {
 
 // MARK: - Conditional Extensions for Process-based LSP
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension LSPClient {
     /// Legacy process-based connection for backward compatibility
     /// Use LSPServerConfiguration instead for new code

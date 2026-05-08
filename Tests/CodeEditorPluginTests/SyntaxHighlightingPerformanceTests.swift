@@ -1,7 +1,7 @@
 @testable import CodeEditorPlugin
 import XCTest
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -111,7 +111,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -137,7 +137,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -162,7 +162,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -189,7 +189,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         editorView.language = .javascript
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -215,7 +215,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         editorView.language = .python
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -239,7 +239,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let initialCode = generateSwiftCode(lines: 100)  // Reduced from 1000
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = initialCode
         #else
         editorView.text = initialCode
@@ -260,7 +260,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             "\n    // New comment inserted\n" +
             String(initialCode.suffix(initialCode.count - insertionPoint))
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = modifiedCode
         #else
         editorView.text = modifiedCode
@@ -276,11 +276,9 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
 
         // Incremental updates should be fast, but stopwatch timings are enforced only in
         // pinned performance jobs because parallel package tests can introduce scheduler noise.
-        #if targetEnvironment(macCatalyst)
-        assertMeasuredDuration(duration, lessThan: 3.0, operation: "incremental highlighting")
-        #elseif targetEnvironment(simulator)
+        #if targetEnvironment(simulator)
         assertMeasuredDuration(duration, lessThan: 5.0, operation: "incremental highlighting")
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         // Native macOS may need slightly more time for incremental updates
         assertMeasuredDuration(duration, lessThan: 4.0, operation: "incremental highlighting")
         #else
@@ -299,7 +297,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let baselineMemory = memoryMonitor.getCurrentMemoryUsage()
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -336,7 +334,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         // Rapidly switch between languages
         for _ in 0..<3 {
             editorView.language = .swift
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             editorView.string = swiftCode
             #else
             editorView.text = swiftCode
@@ -347,7 +345,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             )
 
             editorView.language = .javascript
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             editorView.string = jsCode
             #else
             editorView.text = jsCode
@@ -358,7 +356,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             )
 
             editorView.language = .python
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             editorView.string = pythonCode
             #else
             editorView.text = pythonCode
@@ -397,7 +395,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
         let code = generateSwiftCode(lines: 200)  // Reduced from 10000
 
         editorView.language = .swift
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = code
         #else
         editorView.text = code
@@ -433,7 +431,7 @@ final class SyntaxHighlightingPerformanceTests: XCTestCase {
             // testView uses its own internal memoryMonitor
             testView.language = .swift
 
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             testView.string = code
             #else
             testView.text = code

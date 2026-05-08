@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -64,10 +64,8 @@ public final class ToolbarCoordinator: ObservableObject {
     ///
     /// - Returns: Array of toolbar items appropriate for the current platform
     public func createToolbarItems() -> [ToolbarItem] {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return createMacOSToolbar()
-        #elseif targetEnvironment(macCatalyst)
-        return createCatalystToolbar()
         #else
         return createIOSToolbar()
         #endif
@@ -83,7 +81,7 @@ public final class ToolbarCoordinator: ObservableObject {
         let configuredItem = item
 
         // Platform-specific configuration
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS supports full keyboard shortcuts
         #elseif canImport(UIKit)
         // iOS may need different icons or actions
@@ -124,7 +122,7 @@ public final class ToolbarCoordinator: ObservableObject {
         ))
 
         // Platform-specific additions
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         items.append(ToolbarItem(
             title: "Replace",
             icon: "arrow.left.arrow.right",
@@ -166,7 +164,7 @@ public final class ToolbarCoordinator: ObservableObject {
             id: "format"
         ))
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS gets additional development tools
         items.append(ToolbarItem(
             title: "Console",
@@ -222,8 +220,7 @@ public final class ToolbarCoordinator: ObservableObject {
 
         case .replace:
             #if canImport(UIKit)
-            // Replace is available on iPad and Mac Catalyst
-            return UIDevice.current.userInterfaceIdiom == .pad || capabilities.currentPlatform == .catalyst
+            return UIDevice.current.userInterfaceIdiom == .pad
             #else
             return true
             #endif

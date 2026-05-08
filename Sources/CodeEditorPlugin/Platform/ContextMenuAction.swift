@@ -6,7 +6,7 @@
 //
 
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -106,14 +106,14 @@ public struct ContextMenuBuilder: Sendable {
     /// Build the platform-specific menu
     @MainActor
     public func build() -> PlatformContextMenu {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return buildAppKitMenu()
         #else
         return buildUIKitMenu()
         #endif
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @MainActor
     private func buildAppKitMenu() -> NSMenu {
         let menu = NSMenu()
@@ -168,7 +168,7 @@ public struct ContextMenuBuilder: Sendable {
     #endif
 }
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 /// Target object for handling NSMenuItem actions
 @MainActor
 private class ContextMenuActionTarget: NSObject {

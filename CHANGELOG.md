@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+## [0.2.0] — 2026-05-08
+
+### Removed
+
+- **Mac Catalyst support.** The `.macCatalyst("26.3")` platform declaration in
+  `Package.swift` is gone. The framework targets macOS and iOS / iPadOS only.
+  Apple Silicon Macs can run the iOS build directly when an iPad-shape app on
+  Mac is needed; native macOS uses the AppKit-backed SwiftUI path. Catalyst's
+  UIKit-on-Mac hosting layer added compilation and maintenance complexity
+  without delivering a feature the native paths don't already provide.
+  - Deleted Catalyst-only files: `CatalystColorHelper`,
+    `CatalystColorTaskManager`, `CodeEditorView+MacCatalystExtensions`,
+    `CatalystIntegrationTests`, `docs/Platform/catalyst.md`, and the
+    unused `PlatformBuildHelpers` shim.
+  - Deleted `EditorConfiguration.catalyst` preset (the runtime
+    preset-picker now exposes 7 entries instead of 8).
+  - Deleted the `Platform.catalyst` enum case on `PlatformCapabilities`.
+  - Roughly 880 line-level Catalyst conditional references collapsed —
+    most via mechanical simplification of
+    `#if canImport(AppKit) && !targetEnvironment(macCatalyst)` to
+    `#if canImport(AppKit)`, plus deletion of `#if`/`#elseif
+    targetEnvironment(macCatalyst)` blocks.
+
+- **TextKit1 fallback paths.** With Catalyst gone and the platform floor at
+  macOS / iOS 26.3, TextKit2 is the only supported layout system on every
+  supported platform. Removing the dual-path complexity simplified several
+  hot paths:
+  - `TextKitBridge` rewritten as a TextKit2-only convenience wrapper for
+    `NSRange ↔ NSTextRange` conversion and TextKit2 layout calls. The
+    `Version` enum now only carries `.textKit2`; `version` is a constant.
+    Removed `~200` lines of dual-path branching.
+  - `TextKitSetupHelper`: removed `detectTextKitVersion`, the `preferTextKit2`
+    option, the `isUsingTextKit2` field on `SetupResult`, and the
+    `applyTextKit1Optimizations` path.
+  - `CodeEditorView.shouldChangeText(in:)` and `replaceCharacters(in:with:)`
+    no longer branch — they go through `TextKitBridge` unconditionally.
+  - `CodeEditorView.detectTextKitVersion()` and `validateTextKit2Usage()`
+    retained as compatibility shims that always report TextKit2.
+  - `TextKitLineNumberHelper.lineNumberTextKit1(...)` deleted; the `lineNumber`
+    public method falls back to a line-height estimate if `textLayoutManager`
+    is unexpectedly nil rather than dispatching to a TextKit1 implementation.
+
+### Changed
+
+- Sample app's `PresetCatalog` now lists 7 presets (Default / Minimal /
+  Read-only / Markdown / Presentation / macOS / iOS).
+- `docs/README.md`, `docs/FeatureMatrix.md`: updated platform requirements
+  and capability tables to reflect the Mac-Catalyst-free world.
+- `Package.swift` header doc-comment now documents the deliberate macOS / iOS
+  scope and references this 0.2.0 release for the rationale.
+
+### Notes for consumers
+
+- `EditorConfiguration.catalyst` is gone — replace with `.macOS` (for native
+  Mac targets) or `.iOS` (for iPad targets).
+- `PlatformCapabilities.Platform.catalyst` is gone — drop any switches that
+  branched on it.
+- The `targetEnvironment(macCatalyst)` build configuration no longer evaluates
+  to `true` against this package; it's safe to remove from any consumer code
+  that was bridging to the framework.
+
 ## [0.1.0] — 2026-05-08
 
 ### Added — Distribution & Consumability

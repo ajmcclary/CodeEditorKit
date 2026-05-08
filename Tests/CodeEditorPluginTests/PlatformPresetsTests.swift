@@ -14,19 +14,6 @@ final class PlatformPresetsTests: XCTestCase {
         XCTAssertTrue(config.performance.smoothScrolling, "iOS should enable smooth scrolling")
     }
 
-    func testCatalystPreset() {
-        let config = EditorConfiguration.catalyst
-
-        // Verify Catalyst optimizations
-        XCTAssertEqual(config.display.fontSize, 14.0, "Catalyst should have medium font size")
-        XCTAssertEqual(config.layout.gutterWidth, 45.0, "Catalyst should have slightly wider gutter")
-        XCTAssertTrue(config.behavior.isCodeCompletionEnabled, "Catalyst should support code completion")
-        XCTAssertTrue(config.performance.useHardwareAcceleration, "Catalyst should use hardware acceleration")
-        XCTAssertEqual(config.performance.maxSyntaxHighlightingLength, 250_000, "Catalyst should have medium syntax highlighting limit")
-        XCTAssertFalse(config.behavior.isAutomaticQuoteSubstitutionEnabled, "Catalyst should disable auto quote substitution")
-        XCTAssertFalse(config.behavior.isAutomaticDashSubstitutionEnabled, "Catalyst should disable auto dash substitution")
-    }
-
     func testMacOSPreset() {
         let config = EditorConfiguration.macOS
 
@@ -47,10 +34,8 @@ final class PlatformPresetsTests: XCTestCase {
         XCTAssertNotNil(config)
 
         // Should have platform-appropriate settings based on compile-time platform
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         XCTAssertEqual(config.display.fontSize, 16.0)
-        #elseif targetEnvironment(macCatalyst)
-        XCTAssertEqual(config.display.fontSize, 14.0)
         #elseif canImport(AppKit)
         XCTAssertEqual(config.display.fontSize, 14.0)
         #else
@@ -63,7 +48,7 @@ final class PlatformPresetsTests: XCTestCase {
 
         // Each platform preset should differ from default
         XCTAssertNotEqual(EditorConfiguration.iOS.display.fontSize, defaultConfig.display.fontSize)
-        XCTAssertNotEqual(EditorConfiguration.catalyst.layout.gutterWidth, defaultConfig.layout.gutterWidth)
+        XCTAssertNotEqual(EditorConfiguration.macOS.layout.gutterWidth, defaultConfig.layout.gutterWidth)
 
         // Platform presets should have distinct characteristics
         XCTAssertNotEqual(EditorConfiguration.iOS.display.fontSize, EditorConfiguration.macOS.display.fontSize)

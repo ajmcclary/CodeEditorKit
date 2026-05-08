@@ -437,7 +437,7 @@ sequenceDiagram
    - Comprehensive `PluginAPI` with specialized sub-APIs
    - `PluginAPIBridge` providing stable implementation
    - Language, completion, command, theme, editor, filesystem, and diagnostic APIs
-   - Cross-platform compatibility (macOS, iOS, Catalyst, visionOS)
+   - Cross-platform compatibility (macOS, iOS / iPadOS)
 
 5. **Built-in Plugin System**
    - Complete `MarkdownPlugin` implementation with commands and completion

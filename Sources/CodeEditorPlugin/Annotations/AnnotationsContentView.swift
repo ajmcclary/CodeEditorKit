@@ -4,7 +4,7 @@
 // both iOS and macOS platforms, eliminating code duplication.
 
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -63,7 +63,7 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
     // MARK: - Setup
 
     private func setup() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         wantsLayer = true
         layer?.backgroundColor = PlatformColors.clear.cgColor
         #else
@@ -74,7 +74,7 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
     // MARK: - Display Updates
 
     public func setNeedsDisplayAnnotations() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         needsDisplay = true
         #else
         setNeedsDisplay()
@@ -127,14 +127,14 @@ public class AnnotationsContentView: PlatformView, AnnotationsContentViewProtoco
 
     // MARK: - Platform-Specific Overrides
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Text views need a flipped coordinate system on macOS
     override nonisolated public var isFlipped: Bool { true }
     #endif
 
     // MARK: - Layout
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {

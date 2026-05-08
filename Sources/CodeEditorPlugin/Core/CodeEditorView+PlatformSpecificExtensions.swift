@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -63,32 +63,11 @@ extension CodeEditorView {
     // MARK: - IOS Specific Methods
 
     #if canImport(UIKit)
-    override open func didMoveToWindow() {
-        super.didMoveToWindow()
-
-        #if targetEnvironment(macCatalyst)
-        // On Mac Catalyst, we need to reapply text color when the view is added to window
-        if window != nil {
-            // Apply immediately
-            applyTextColorForMacCatalyst()
-
-            // Also apply after a short delay to ensure view hierarchy is ready
-            Task { @MainActor [weak self] in
-                do {
-                    try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-                    self?.applyTextColorForMacCatalyst()
-                } catch {
-                    // Sleep was cancelled, ignore
-                }
-            }
-        }
-        #endif
-    }
     #endif
 
     // MARK: - MacOS Specific Methods
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func toggleRuler(_: Any?) {
         isLineNumbersEnabled.toggle()
     }
@@ -96,7 +75,7 @@ extension CodeEditorView {
 
     // MARK: - Tab Handling
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Handle tab key press for macOS
     override public func insertTab(_ sender: Any?) {
         if configuration.layout.insertSpacesForTabs {

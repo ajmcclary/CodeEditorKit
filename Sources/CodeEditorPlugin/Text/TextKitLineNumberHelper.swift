@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -40,7 +40,7 @@ public final class TextKitLineNumberHelper {
         }
 
         // Calculate line ranges from the text itself
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else {
             return []
         }
@@ -69,7 +69,7 @@ public final class TextKitLineNumberHelper {
         }
 
         // For TextKit 1 (macOS only), we can safely use layoutManager
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let layoutManager = textView.layoutManager {
             let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
             return layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
@@ -84,7 +84,7 @@ public final class TextKitLineNumberHelper {
     public func getVisibleRect() -> CGRect {
         guard let textView else { return .zero }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS: Use the visible rect
         return textView.visibleRect
         #else
@@ -106,20 +106,12 @@ public final class TextKitLineNumberHelper {
         // Adjust point for text container inset
         let adjustedPoint = adjustPoint(point)
 
-        // For TextKit 2, use text layout manager
         if let textLayoutManager = textView.textLayoutManager {
             return lineNumberTextKit2(at: adjustedPoint, textLayoutManager: textLayoutManager, text: text)
         }
 
-        // For TextKit 1 (macOS only)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let layoutManager = textView.layoutManager,
-           let textContainer = textView.textContainer {
-            return lineNumberTextKit1(at: adjustedPoint, layoutManager: layoutManager, textContainer: textContainer, text: text)
-        }
-        #endif
-
-        // Fallback: estimate based on line height
+        // Defensive: textLayoutManager should always be present (TextKit2-only
+        // since 0.2.0). Estimate by line height if it isn't.
         return estimateLineNumber(at: adjustedPoint, text: text)
     }
 
@@ -175,7 +167,7 @@ public final class TextKitLineNumberHelper {
     private func adjustPoint(_ point: CGPoint) -> CGPoint {
         guard let textView else { return point }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS: Point is already in the correct coordinate system
         return point
         #else
@@ -242,24 +234,6 @@ public final class TextKitLineNumberHelper {
 
         return foundLine
     }
-
-    /// Calculate line number using TextKit 1 (macOS only)
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    private func lineNumberTextKit1(at point: CGPoint, layoutManager: NSLayoutManager, textContainer: NSTextContainer, text: String) -> Int? {
-        // Find the glyph at this point
-        let glyphIndex = layoutManager.glyphIndex(for: point, in: textContainer)
-        let characterIndex = layoutManager.characterIndexForGlyph(at: glyphIndex)
-
-        // Use the line index cache if available through the text view
-        if let textView {
-            return textView.lineIndexCache.lineNumber(at: characterIndex, in: text)
-        }
-
-        // Fallback: Count lines up to this character
-        let textUpToPoint = String(text.prefix(characterIndex))
-        return textUpToPoint.components(separatedBy: .newlines).count
-    }
-    #endif
 
     /// Estimate line number based on approximate line height
     private func estimateLineNumber(at point: CGPoint, text: String) -> Int? {

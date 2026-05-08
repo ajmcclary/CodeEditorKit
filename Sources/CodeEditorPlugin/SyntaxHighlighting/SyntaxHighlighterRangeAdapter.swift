@@ -19,7 +19,7 @@ internal final class SyntaxHighlighterRangeAdapter: RangeHighlightProviding {
         guard highlighter.supportsIncrementalHighlighting else {
             let visibleRange: NSRange = textView.visibleRange()
             let invalidStart = max(0, range.location - visibleRange.length / 2)
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             let storageLength = textView.textStorage?.length ?? 0
             #else
             let storageLength = textView.textStorage.length
@@ -29,7 +29,7 @@ internal final class SyntaxHighlighterRangeAdapter: RangeHighlightProviding {
         }
 
         // Incremental highlighters return precise invalidation
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let source = textView.textStorage?.string ?? ""
         #else
         let source = textView.textStorage.string
@@ -39,7 +39,7 @@ internal final class SyntaxHighlighterRangeAdapter: RangeHighlightProviding {
     }
 
     func queryHighlights(textView: CodeEditorView, range: NSRange) async throws -> [HighlightedToken] {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let source = textView.textStorage?.string ?? ""
         #else
         let source = textView.textStorage.string

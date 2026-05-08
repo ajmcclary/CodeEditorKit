@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -90,7 +90,7 @@ enum ContainerViewInitializer {
         for container: CodeEditorContainerView,
         with components: ViewComponents
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         setupAppKitViews(for: container, with: components)
         #else
         setupUIKitViews(for: container, with: components)
@@ -100,7 +100,7 @@ enum ContainerViewInitializer {
     // MARK: - Private Helpers
 
     private static func setupContainerBackground(for container: CodeEditorContainerView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS uses layer background
         container.wantsLayer = true
         container.layer?.backgroundColor = PlatformColors.systemBackground.cgColor
@@ -115,7 +115,7 @@ enum ContainerViewInitializer {
         with components: ViewComponents
     ) {
         // Text change observers
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NotificationCenter.default.addObserver(
             container,
             selector: #selector(container.textDidChange(_:)),
@@ -132,7 +132,7 @@ enum ContainerViewInitializer {
         #endif
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private static func setupAppKitViews(
         for container: CodeEditorContainerView,
         with components: ViewComponents
@@ -229,9 +229,7 @@ struct ViewComponents {
     #if canImport(UIKit)
     let contentView: EditorContentView?
 
-    #if !targetEnvironment(macCatalyst)
     let scrollView: UIScrollView? = nil
-    #endif
 
     init(textView: CodeEditorView, gutterView: GutterView, minimapView: MinimapView, contentView: EditorContentView) {
         self.textView = textView
@@ -257,7 +255,7 @@ extension CodeEditorContainerView {
     @objc func textDidChange(_: Notification) {
         // Handle text changes for both platforms
         Task { @MainActor [weak self] in
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             // On macOS, don't update gutterView - line numbers are handled by NSRulerView
             self?.minimapView.setNeedsDisplay(self?.minimapView.bounds ?? .zero)
             #else

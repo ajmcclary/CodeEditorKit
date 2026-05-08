@@ -3,7 +3,7 @@ import Foundation
 import Combine
 #endif
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -70,7 +70,7 @@ public final class ViewportManager: ObservableObject {
 
     private func setupObservers() {
         // Observe scroll changes
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NotificationCenter.default.publisher(for: NSView.boundsDidChangeNotification)
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
@@ -110,7 +110,7 @@ public final class ViewportManager: ObservableObject {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         // Get visible bounds
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let visibleBounds = textView.visibleRect
         #elseif canImport(UIKit)
         let visibleBounds = textView.bounds
@@ -138,7 +138,7 @@ public final class ViewportManager: ObservableObject {
         // Get visible range from TextKitBridge
         if let visibleRange = textKitBridge.visibleRange {
             // Check cache first
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             let textLength = textView.string.count
             #else
             let textLength = textView.text?.count ?? 0
@@ -238,7 +238,7 @@ public final class ViewportManager: ObservableObject {
     private func performPredictivePrefetching() {
         guard let textView else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textView.string.count
         #else
         let textLength = textView.text?.count ?? 0
@@ -303,7 +303,7 @@ public final class ViewportManager: ObservableObject {
 
     /// Calculate prefetch range based on visible range
     private func calculatePrefetchRange(from visibleRange: NSRange) -> NSRange {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textLength = textView?.string.count else { return visibleRange }
         #else
         guard let textLength = textView?.text?.count else { return visibleRange }

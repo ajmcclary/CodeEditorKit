@@ -4,7 +4,7 @@ import Foundation
 import UIKit
 #endif
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #endif
 
@@ -32,7 +32,7 @@ public final class PlatformServiceLayer {
     public var menuService: PlatformMenuService {
         #if canImport(UIKit)
         return UIKitMenuService()
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return AppKitMenuService()
         #else
         return MockMenuService()
@@ -43,7 +43,7 @@ public final class PlatformServiceLayer {
     public var inputService: PlatformInputService {
         #if canImport(UIKit)
         return UIKitInputService()
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return AppKitInputService()
         #else
         return MockInputService()
@@ -54,7 +54,7 @@ public final class PlatformServiceLayer {
     public var layoutService: PlatformLayoutService {
         #if canImport(UIKit)
         return UIKitLayoutService()
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return AppKitLayoutService()
         #else
         return MockLayoutService()
@@ -90,18 +90,9 @@ public final class PlatformDeviceService {
         #endif
     }
 
-    /// Whether the app is running on Mac Catalyst
-    public var isMacCatalyst: Bool {
-        #if targetEnvironment(macCatalyst)
-        return true
-        #else
-        return false
-        #endif
-    }
-
     /// Whether the current platform is macOS (native)
     public var isMacOS: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return true
         #else
         return false
@@ -110,7 +101,7 @@ public final class PlatformDeviceService {
 
     /// Whether the current platform is iOS (including iPhone and iPad)
     public var isIOS: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return true
         #else
         return false
@@ -123,7 +114,7 @@ public final class PlatformDeviceService {
     public var supportsHover: Bool {
         #if canImport(UIKit)
         if #available(iOS 13.4, *) {
-            return UIDevice.current.userInterfaceIdiom == .pad || isMacCatalyst
+            return UIDevice.current.userInterfaceIdiom == .pad
         }
         return false
         #elseif canImport(AppKit)
@@ -136,7 +127,7 @@ public final class PlatformDeviceService {
     /// Whether the device supports keyboard shortcuts
     public var supportsPlatformKeyboardShortcuts: Bool {
         #if canImport(UIKit)
-        return isIPad || isMacCatalyst
+        return isIPad
         #elseif canImport(AppKit)
         return true
         #else
@@ -148,7 +139,7 @@ public final class PlatformDeviceService {
     public var supportsMultipleWindows: Bool {
         #if canImport(UIKit)
         if #available(iOS 13.0, *) {
-            return isIPad || isMacCatalyst
+            return isIPad
         }
         return false
         #elseif canImport(AppKit)
@@ -161,7 +152,7 @@ public final class PlatformDeviceService {
     /// Whether the device supports external displays
     public var supportsExternalDisplay: Bool {
         #if canImport(UIKit)
-        return isIPad || isMacCatalyst
+        return isIPad
         #elseif canImport(AppKit)
         return true
         #else
@@ -346,7 +337,7 @@ public struct ModifierFlags: OptionSet, Sendable {
 public typealias PlatformServiceView = UIView
 /// Platform-specific menu type (UIMenu on iOS)
 public typealias PlatformServiceMenu = UIMenu
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 /// Platform-specific view type (NSView on macOS)
 public typealias PlatformServiceView = NSView
 /// Platform-specific menu type (NSMenu on macOS)

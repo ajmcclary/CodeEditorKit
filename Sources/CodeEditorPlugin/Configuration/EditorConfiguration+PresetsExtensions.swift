@@ -69,18 +69,6 @@ extension EditorConfiguration {
         return config
     }()
 
-    /// Configuration optimized for Mac Catalyst
-    public static let catalyst: EditorConfiguration = {
-        var config = EditorConfiguration()
-        config.display.fontSize = 14.0
-        config.layout.gutterWidth = 45.0
-        config.behavior.isAutomaticQuoteSubstitutionEnabled = false
-        config.behavior.isAutomaticDashSubstitutionEnabled = false
-        config.performance.maxSyntaxHighlightingLength = 250_000
-        config.performance.useHardwareAcceleration = true
-        return config
-    }()
-
     /// Configuration optimized for macOS
     public static let macOS: EditorConfiguration = {
         var config = EditorConfiguration()
@@ -97,10 +85,8 @@ extension EditorConfiguration {
     /// Compile-time preset based on the build target. For runtime device-aware
     /// selection use `PlatformCapabilities().recommendedConfiguration()` instead.
     public static var platformOptimized: EditorConfiguration {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return iOS
-        #elseif targetEnvironment(macCatalyst)
-        return catalyst
         #elseif canImport(AppKit)
         return macOS
         #else

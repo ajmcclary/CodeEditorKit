@@ -517,7 +517,7 @@ sequenceDiagram
 
 ### 2. Cross-Platform Architecture
 - **macOS Full Support**: Both local and remote LSP servers with process spawning
-- **iOS/Mac Catalyst Support**: Remote LSP servers only via WebSocket transport
+- **iOS Support**: Remote LSP servers only via WebSocket transport (no `Process` API on iOS)
 - **Platform-Aware Configuration**: Automatic detection and configuration based on platform constraints
 - **Unified API**: Same interface across all platforms with platform-specific optimizations
 
@@ -568,7 +568,7 @@ sequenceDiagram
 
 ## Benefits
 
-1. **Cross-Platform Support**: Native support for macOS (full), iOS/Mac Catalyst (remote only)
+1. **Cross-Platform Support**: Native support for macOS (full), iOS (remote only)
 2. **Performance Monitoring**: Integrated performance tracking with detailed metrics and reports
 3. **Memory Efficient**: Automatic cleanup and memory management with configurable retention
 4. **Enterprise Ready**: Comprehensive security with certificate pinning and authentication

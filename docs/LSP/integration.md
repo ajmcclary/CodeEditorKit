@@ -4,7 +4,7 @@ Enable IDE-level intelligence with Language Server Protocol support.
 
 ## Overview
 
-> Important: LSP functionality is only available on macOS. On iOS and Mac Catalyst, LSP features are not available due to platform limitations.
+> Important: LSP functionality is only available on macOS. On iOS, LSP features are not available due to platform limitations.
 
 CodeEditorPlugin provides comprehensive Language Server Protocol (LSP) support, bringing advanced IDE features like intelligent code completion, real-time diagnostics, and refactoring capabilities to your editor. The framework supports two modes of operation to ensure cross-platform compatibility.
 
@@ -90,7 +90,7 @@ func findWorkspaceRoot(for fileURL: URL) -> URL? {
 
 ## Platform Support Matrix
 
-| Feature | macOS | iOS | Mac Catalyst |
+| Feature | macOS | iOS |
 |---------|-------|-----|--------------|
 | **Local LSP Servers** | ✅ Full support | ❌ Not available | ❌ Not available |
 | **Remote LSP Servers** | ✅ Full support | ✅ Full support | ✅ Full support |
@@ -100,7 +100,7 @@ func findWorkspaceRoot(for fileURL: URL) -> URL? {
 Local language servers run as child processes and provide the best performance and integration:
 
 - **macOS 12.0+**: Full support using ProcessTransport
-- **iOS/Catalyst**: Not supported due to platform restrictions (no Process API)
+- **iOS**: Not supported due to platform restrictions (no Process API)
 
 ### Remote LSP Servers (All Platforms)
 
@@ -110,7 +110,7 @@ Connect to language servers over WebSocket for cross-platform support:
 - **Use cases**: iOS apps, cloud-based development, shared language servers
 - **Security**: TLS/SSL support with certificate validation
 
-> Important: When developing for iOS or Mac Catalyst, you must use remote LSP servers. Plan your architecture accordingly.
+> Important: When developing for iOS, you must use remote LSP servers. Plan your architecture accordingly.
 
 > Note: LSP integration is currently in preview with support for Swift, TypeScript, and Python. Full LSP 3.17 compliance is targeted for v2.0.
 
@@ -242,7 +242,7 @@ struct LSPEditor: View {
 Configure specific language servers:
 
 ```swift
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 let manager = LSPManager(memoryMonitor: MemoryMonitor(), workspaceRoot: projectPath)
 
 // Swift local server
@@ -263,12 +263,12 @@ manager.registerLanguageServer(LanguageServerConfig(
 #endif
 ```
 
-### Remote LSP Configuration (iOS/Catalyst Compatible)
+### Remote LSP Configuration (iOS Compatible)
 
 For platforms without local process support, use remote LSP servers:
 
 ```swift
-// Remote LSP for iOS/Catalyst
+// Remote LSP for iOS
 let client = await LSPClient.createAndSetup()
 let server = LSPServerConfiguration.remote(
     RemoteLSPConfiguration(
@@ -625,14 +625,14 @@ The LSP implementation relies on platform-specific capabilities:
 #### Process Management
 ```swift
 // macOS-only code in LSPClient.swift
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 private var serverProcess: Process?
 private var stdinPipe: Pipe?
 private var stdoutPipe: Pipe?
 #endif
 ```
 
-**iOS/Catalyst Limitations:**
+**iOS Limitations:**
 - iOS sandboxing prevents spawning external processes
 - `Process` class is not available for security reasons
 - Direct pipe communication requires system-level access
@@ -640,7 +640,7 @@ private var stdoutPipe: Pipe?
 #### Inter-Process Communication
 ```swift
 private func startServerProcess() async throws {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     let process = Process()
     process.executableURL = URL(fileURLWithPath: serverPath)
     // Configure stdin/stdout pipes for LSP communication
@@ -650,7 +650,7 @@ private func startServerProcess() async throws {
 }
 ```
 
-## Alternative Solutions for iOS/Catalyst
+## Alternative Solutions for iOS
 
 ### 1. Network-Based LSP (Recommended)
 
@@ -676,7 +676,7 @@ class WebSocketLSPTransport: LSPTransport {
 **Architecture:**
 ```
 ┌─────────────────┐    WebSocket/HTTP    ┌──────────────────┐
-│   iOS/Catalyst  │ ◄─────────────────► │   Cloud LSP      │
+│   iOS  │ ◄─────────────────► │   Cloud LSP      │
 │   CodeEditor    │                     │   Service        │
 └─────────────────┘                     └──────────────────┘
                                                │
@@ -726,7 +726,7 @@ class WASMLSPProvider {
 
 ## Platform Feature Matrix
 
-| Feature | macOS | iOS | Mac Catalyst | Implementation |
+| Feature | macOS | iOS | Implementation |
 |---------|-------|-----|--------------|----------------|
 | **Basic Completions** | ✅ | ✅ | ✅ | Local providers |
 | **Syntax Highlighting** | ✅ | ✅ | ✅ | Local regex/AST |
@@ -742,10 +742,10 @@ class WASMLSPProvider {
 
 ## Current Workarounds
 
-### For iOS/Catalyst Development
+### For iOS Development
 
 ```swift
-// Configuration for iOS/Catalyst without LSP
+// Configuration for iOS without LSP
 let config = EditorConfiguration()
 config.behavior.isCodeCompletionEnabled = true  // Uses local providers
 config.behavior.enableLSP = false            // Disable LSP features
@@ -801,7 +801,7 @@ LSPLogger.logFile = URL(fileURLWithPath: "~/lsp.log")
    - Ensure file is saved (some servers require it)
    - Check server capabilities
    - Verify document synchronization
-   - Use local providers on iOS/Catalyst
+   - Use local providers on iOS
 
 3. **Performance Issues**
    - Enable request debouncing
@@ -879,5 +879,4 @@ struct ProjectEditorView: View {
 - [Performance-Monitoring](../Performance/monitoring.md)
 - [Advanced-Patterns](../Internals/advanced-patterns.md)
 - [Platform-Abstraction](../Platform/platform-abstraction.md)
-- [Catalyst-Best-Practices](../Platform/catalyst.md)
 - [LSP-Retry-Configuration](retry-configuration.md)

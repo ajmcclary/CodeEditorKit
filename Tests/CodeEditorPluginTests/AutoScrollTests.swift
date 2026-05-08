@@ -1,7 +1,7 @@
 @testable import CodeEditorPlugin
 import XCTest
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -65,7 +65,7 @@ final class AutoScrollTests: XCTestCase {
         let editorView = CodeEditorView()
 
         // Set up the view with proper bounds on macOS to avoid geometry warnings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
         editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
         if let scrollView = editorView.enclosingScrollView {
@@ -77,7 +77,7 @@ final class AutoScrollTests: XCTestCase {
         #endif
 
         // Set some text
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
         #else
         editorView.text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
@@ -97,7 +97,7 @@ final class AutoScrollTests: XCTestCase {
         var config = EditorConfiguration()
 
         // Set up the view with proper bounds on macOS to avoid geometry warnings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
         editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
         if let scrollView = editorView.enclosingScrollView {
@@ -112,7 +112,7 @@ final class AutoScrollTests: XCTestCase {
         config.behavior.autoScrollToCursor = false
         editorView.configuration = config
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.string = "Test text for selection"
         #else
         editorView.text = "Test text for selection"
@@ -152,7 +152,7 @@ final class AutoScrollTests: XCTestCase {
         var config = EditorConfiguration()
 
         // Set up the view with proper bounds on macOS to avoid geometry warnings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         editorView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
         editorView.bounds = NSRect(x: 0, y: 0, width: 400, height: 300)
         if let scrollView = editorView.enclosingScrollView {

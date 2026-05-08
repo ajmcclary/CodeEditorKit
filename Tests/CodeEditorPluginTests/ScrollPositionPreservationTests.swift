@@ -1,7 +1,7 @@
 @testable import CodeEditorPlugin
 import XCTest
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -9,7 +9,7 @@ import UIKit
 
 @MainActor
 final class ScrollPositionPreservationTests: XCTestCase {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     func testScrollPositionPreservedWhenTogglingWordWrap() async {
         // Create a container view which provides the scroll view
         let containerView = CodeEditorContainerView()

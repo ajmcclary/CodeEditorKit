@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @preconcurrency import AppKit
 #elseif canImport(UIKit)
 @preconcurrency import UIKit
@@ -32,11 +32,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Optional interaction-state binding for cursor persistence/restoration.
     var interactionStateBinding: Binding<EditorInteractionState>?
 
-    #if targetEnvironment(macCatalyst)
-    /// Task manager for structured color application on Catalyst
-    private let catalystColorTaskManager = CatalystColorTaskManager()
-    #endif
-
     /// Additional callbacks for extended functionality
     var onTextChangeCallback: ((String) -> Void)?
     var onSelectionChangeCallback: ((NSRange) -> Void)?
@@ -60,7 +55,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         hasFocusBeenRequested = true
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let containerView = view as? CodeEditorContainerView {
             Task { @MainActor in
                 containerView.window?.makeFirstResponder(containerView.textView)
@@ -162,18 +157,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
                     // Call the debounced callback
                     self.onTextChangeCallback?(newText)
                 }
-
-                #if targetEnvironment(macCatalyst)
-                // Mac Catalyst sometimes needs additional dispatch to ensure binding updates work
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-
-                    // Force another binding update for Mac Catalyst
-                    if let textBinding = self.textBinding, textBinding.wrappedValue != newText {
-                        textBinding.wrappedValue = newText
-                    }
-                }
-                #endif
             } catch is CancellationError {
                 // Task was cancelled, which is expected behavior
             } catch {
@@ -215,7 +198,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     }
 
     private func text(from textView: CodeEditorView) -> String {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string
         #else
         textView.text ?? ""
@@ -258,7 +241,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     func setupTextChangeObservers(for textView: CodeEditorView) {
         removeNotificationObservers()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textChangeObserver = NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
@@ -318,11 +301,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Cleanup method to be called when the coordinator is no longer needed
     /// This should be called before the coordinator is deallocated
     func cleanup() {
-        #if targetEnvironment(macCatalyst)
-        Task {
-            await catalystColorTaskManager.cancelActiveTask()
-        }
-        #endif
         // Notification observers are removed automatically in deinit
     }
 
@@ -342,7 +320,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration: EditorConfiguration
     ) {
         // Update text if changed
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if textView.string != text {
             textView.string = text
         }
@@ -361,16 +339,6 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         configuration.apply(to: textView)
     }
 
-    /// Apply theme colors for Mac Catalyst
-    #if targetEnvironment(macCatalyst)
-    func applyCatalystThemeColors(theme: Theme, to textView: CodeEditorView) {
-        let effectiveTextColor = CatalystColorHelper.effectiveTextColor(from: Color(tokens: theme.style.editor.foreground))
-        Task { @MainActor in
-            CatalystColorHelper.applyTextColor(effectiveTextColor, to: textView, taskManager: catalystColorTaskManager)
-        }
-    }
-    #endif
-
     // MARK: - Container Setup and Update
 
     /// Set up a container view with initial values
@@ -378,7 +346,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme: Theme,
+        theme _: Theme,
         configuration: EditorConfiguration,
         memoryMonitor: MemoryMonitor,
         onTextChange: ((String) -> Void)? = nil,
@@ -395,7 +363,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         textView.memoryMonitor = memoryMonitor
 
         // Set initial text
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = text
         #else
         textView.text = text
@@ -410,11 +378,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         // when switching between dark and light theme variants without
         // baking specific theme tokens (some are near-black even for
         // "light" theme families).
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.backgroundColor = .textBackgroundColor
         textView.textColor = .textColor
-        #elseif targetEnvironment(macCatalyst)
-        applyCatalystThemeColors(theme: theme, to: textView)
         #else
         textView.backgroundColor = .systemBackground
         textView.textColor = .label
@@ -430,7 +396,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         updateState(text: text, language: language, configuration: configuration)
 
         // Force initial layout
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.needsLayout = true
         textView.needsDisplay = true
         #else
@@ -444,7 +410,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         _ container: CodeEditorContainerView,
         text: String,
         language: Language,
-        theme: Theme,
+        theme _: Theme,
         configuration: EditorConfiguration
     ) {
         // Check if we need to update
@@ -455,7 +421,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
         let textView = container.textView
 
         // Update text if changed
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if textView.string != text {
             textView.string = text
         }
@@ -479,11 +445,9 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
         // Re-assert system-adaptive editor colors so the canvas tracks
         // the theme appearance via .preferredColorScheme on every update.
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.backgroundColor = .textBackgroundColor
         textView.textColor = .textColor
-        #elseif targetEnvironment(macCatalyst)
-        applyCatalystThemeColors(theme: theme, to: textView)
         #else
         textView.backgroundColor = .systemBackground
         textView.textColor = .label
@@ -501,7 +465,7 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
 
 // MARK: - Platform-Specific Extensions
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 
 extension CodeEditorBaseCoordinator {
     /// Handle minimap setup for macOS
@@ -533,7 +497,7 @@ extension CodeEditorBaseCoordinator {
 
 // MARK: - Platform-Specific Coordinators
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 
 /// macOS-specific coordinator for CodeEditor
 @MainActor

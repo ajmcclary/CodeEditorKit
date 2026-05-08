@@ -75,40 +75,6 @@ public enum PlatformConfigurations {
         return config
     }
 
-    /// Base configuration for Mac Catalyst platform
-    public static var catalyst: EditorConfiguration {
-        var config = EditorConfiguration.default
-
-        // Display optimizations for Catalyst (hybrid approach)
-        config.display.fontSize = 14.0  // Between macOS and iOS
-        config.display.isLineNumbersEnabled = true
-        config.display.isSelectedLineHighlighted = true
-        config.display.isSyntaxHighlightingEnabled = true
-        config.display.isCodeFoldingEnabled = true
-        config.display.isMinimapVisible = false  // Catalyst apps often run on smaller screens
-        // Note: areInvisibleCharactersVisible not supported on Catalyst (TextKit limitation)
-        // Note: showIndentGuides not yet implemented on any platform
-
-        // Layout optimizations for Catalyst
-        config.layout.gutterWidth = 45.0  // Slightly wider for potential touch
-        config.layout.minimapWidth = 0.0
-        config.layout.lineHeightMultiple = 1.25  // Balanced spacing
-        config.layout.wrapLines = false
-        config.layout.insertSpacesForTabs = true
-
-        // Behavior settings for Catalyst
-        config.behavior.isCodeCompletionEnabled = true
-        config.behavior.isAutoIndentEnabled = true
-        config.behavior.isContinuousSpellCheckingEnabled = false
-
-        // Performance settings for Catalyst
-        config.performance.useHardwareAcceleration = true
-        config.performance.maxSyntaxHighlightingLength = 250_000  // Middle ground
-        config.performance.smoothScrolling = true
-
-        return config
-    }
-
     // MARK: - Device-Specific Configurations
 
     /// Configuration optimized for iPhone
@@ -202,31 +168,19 @@ public enum PlatformConfigurations {
 
         case .iOS:
             config = iOS
-
-        case .catalyst:
-            config = catalyst
         }
 
         // Apply device-specific adjustments
         let deviceType = capabilities.deviceType
 
-        // Apply device-specific adjustments for iOS and Catalyst
-        if capabilities.currentPlatform == .iOS || capabilities.currentPlatform == .catalyst {
+        // Apply device-specific adjustments for iOS / iPadOS
+        if capabilities.currentPlatform == .iOS {
             switch deviceType {
             case .iPhone:
                 config = iPhone
 
             case .iPad:
-                // For Catalyst on iPad, use iPad config but keep Catalyst-specific overrides
-                if capabilities.currentPlatform == .catalyst {
-                    config = iPad
-                    // Keep some Catalyst-specific settings
-                    config.layout.gutterWidth = 45.0  // Catalyst prefers this
-                    config.display.fontSize = 15.0     // Use iPad font size
-                    config.display.isMinimapVisible = false // Don't show minimap on Catalyst
-                } else {
-                    config = iPad
-                }
+                config = iPad
 
             case .appleTV, .appleWatch, .visionPro, .carPlay:
                 // Use minimal config for unsupported devices
@@ -257,14 +211,11 @@ public enum PlatformConfigurations {
         #endif
 
         // Apply display-specific adjustments
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         // Enable smooth scrolling for ProMotion displays
         if UIKitScreenMetrics.maximumFramesPerSecond > 60 {
             config.performance.smoothScrolling = true
         }
-        #elseif targetEnvironment(macCatalyst)
-        // Catalyst always supports smooth scrolling
-        config.performance.smoothScrolling = true
         #endif
 
         return config

@@ -1,43 +1,44 @@
 # Feature Matrix
 
-What works on which Apple platform. Reflects the package as of `0.1.0` (platform floor: macOS / iOS / Mac Catalyst 26.3+, Swift 6.3, strict concurrency).
+What works on which Apple platform. Reflects the package as of `0.2.0` (platform floor: macOS / iOS 26.3+, Swift 6.3, strict concurrency, TextKit2-only). Mac Catalyst was retired in 0.2.0 — see CHANGELOG.
 
 ## Library products
 
-| Product | macOS | iOS / iPadOS | Mac Catalyst | visionOS | Notes |
-|---|:---:|:---:|:---:|:---:|---|
-| `CodeEditorPlugin` | ✅ | ✅ | ✅ | ✅¹ | Core editor framework. The `EdgeInsets` value type is exported as `FrameworkEdgeInsets` to avoid clashing with `SwiftUI.EdgeInsets` on iOS. |
-| `CodeEditorUI` | ✅ | ⚠️ | ✅ | ⚠️ | `EditorSidebarShell` is `#if canImport(AppKit)` — macOS / Catalyst only by design. `EditorTabStrip`, `EditorStatusBar`, `EditorCommandPalette` are pure SwiftUI and work cross-platform. |
-| `CodeEditorDesignTokens` | ✅ | ✅ | ✅ | ✅ | Standalone tokens — depend on this directly if you only need design tokens without the editor. |
-| `CodeEditorSample` | ✅ | ✅ | ✅ | ⚠️ | Multi-platform sample. macOS shell uses 3-pane `RootWindow`; iOS uses `IOSRootView` (`NavigationSplitView`). `Settings` scene and command palette are macOS-only. |
+| Product | macOS | iOS / iPadOS | visionOS | Notes |
+|---|:---:|:---:|:---:|---|
+| `CodeEditorPlugin` | ✅ | ✅ | ✅¹ | Core editor framework. The `EdgeInsets` value type is exported as `FrameworkEdgeInsets` to avoid clashing with `SwiftUI.EdgeInsets` on iOS. |
+| `CodeEditorUI` | ✅ | ⚠️ | ⚠️ | `EditorSidebarShell` is macOS-only by design. `EditorTabStrip`, `EditorStatusBar`, `EditorCommandPalette` are pure SwiftUI and work cross-platform. |
+| `CodeEditorDesignTokens` | ✅ | ✅ | ✅ | Standalone tokens — depend on this directly if you only need design tokens without the editor. |
+| `CodeEditorSample` | ✅ | ✅ | ⚠️ | macOS shell uses 3-pane `RootWindow`; iOS uses `IOSRootView` (`NavigationSplitView`). `Settings` scene and command palette are macOS-only. |
 
 ¹ Inherits from iOS conditional compilation; not actively exercised in the sample.
 
+**Mac Catalyst:** not supported. Removed in 0.2.0 — see CHANGELOG. Use the native macOS path (AppKit-backed SwiftUI) for Mac, and the iOS path for iPad. Apple Silicon Macs can also run the iOS build directly without Catalyst.
+
 ## Editor capabilities
 
-| Capability | macOS | iOS | Catalyst | Where |
-|---|:---:|:---:|:---:|---|
-| TextKit2 layout | ✅ | ✅ | ✅ | `Sources/CodeEditorPlugin/Text/TextLayoutManager.swift` |
-| TextKit1 fallback (Catalyst) | — | — | ✅ | Activated automatically when `isUsingTextKit1` |
-| Syntax highlighting (18 languages) | ✅ | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
-| SwiftSyntax-backed Swift highlighter | ✅ | ✅ | ✅ | unconditional dependency on `swift-syntax` |
-| Range-based highlighting (experimental) | ✅ | ✅ | ✅ | `Performance.usesRangeBasedHighlighting` toggle |
-| Streaming highlighter for large files | ✅ | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |
-| Async / debounced highlighter | ✅ | ✅ | ✅ | 300 ms debounce by default |
-| Code folding | ✅ | ✅ | ✅ | 250 ms detection debounce; cache evicted on memory pressure |
-| Annotations (TODO / FIXME / MARK) | ✅ | ✅ | ✅ | `Sources/CodeEditorPlugin/Annotations/` |
-| Code completion | ✅ | ✅ | ✅ | single-character trigger guard prevents paste storms |
-| LSP integration | ✅ | ✅ | ✅ | `Sources/CodeEditorPlugin/LSP/` |
-| Minimap | ✅ | ✅ | ✅ | `Layout.isMinimapVisible`, `Layout.minimapWidth` |
-| Smart editing (auto-bracket, multi-cursor) | ✅ | ✅ | ✅ | `Features/SmartEditing*` |
-| Search / replace engine | ✅ | ✅ | ✅ | `Features/SearchReplaceEngine.swift` (UI not provided) |
-| Performance HUD components | ✅ | ✅ | ✅ | `Performance/PerformanceViews.swift` |
+| Capability | macOS | iOS | Where |
+|---|:---:|:---:|---|
+| TextKit2 layout | ✅ | ✅ | `Sources/CodeEditorPlugin/Text/TextLayoutManager.swift` |
+| Syntax highlighting (18 languages) | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
+| SwiftSyntax-backed Swift highlighter | ✅ | ✅ | unconditional dependency on `swift-syntax` |
+| Range-based highlighting (experimental) | ✅ | ✅ | `Performance.usesRangeBasedHighlighting` toggle |
+| Streaming highlighter for large files | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |
+| Async / debounced highlighter | ✅ | ✅ | 300 ms debounce by default |
+| Code folding | ✅ | ✅ | 250 ms detection debounce; cache evicted on memory pressure |
+| Annotations (TODO / FIXME / MARK) | ✅ | ✅ | `Sources/CodeEditorPlugin/Annotations/` |
+| Code completion | ✅ | ✅ | single-character trigger guard prevents paste storms |
+| LSP integration | ✅ | ✅ | `Sources/CodeEditorPlugin/LSP/` |
+| Minimap | ✅ | ✅ | `Layout.isMinimapVisible`, `Layout.minimapWidth` |
+| Smart editing (auto-bracket, multi-cursor) | ✅ | ✅ | `Features/SmartEditing*` |
+| Search / replace engine | ✅ | ✅ | `Features/SearchReplaceEngine.swift` (UI not provided) |
+| Performance HUD components | ✅ | ✅ | `Performance/PerformanceViews.swift` |
 
 ## Sample app capabilities
 
 | Demo | macOS shell | iOS shell | Notes |
 |---|:---:|:---:|---|
-| 8 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS / Catalyst) | ✅ | ✅ | exposed via `PresetCatalog` |
+| 7 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS) | ✅ | ✅ | exposed via `PresetCatalog` |
 | Theme picker (zed-trek family, 20 variants) | ✅ | ✅ | `ThemeCatalog.bundled("zed-trek")` |
 | Language picker (all 18) | ✅ | ✅ | `LanguageCatalog` |
 | Per-section knob panels (Display / Layout / Behavior / Performance) | ✅ | ⚠️ | iOS shows the same controls but in a NavigationSplitView sidebar |

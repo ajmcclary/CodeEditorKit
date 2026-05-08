@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -75,7 +75,7 @@ final class ConfigurationBasicTests: XCTestCase {
         let textView = CodeEditorView(frame: .zero)
 
         // Test width tracking
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.textContainer?.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         #else
@@ -84,7 +84,7 @@ final class ConfigurationBasicTests: XCTestCase {
         #endif
 
         // Test resizability
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.isHorizontallyResizable = false
         XCTAssertFalse(textView.isHorizontallyResizable)
 

@@ -502,7 +502,7 @@ sequenceDiagram
 - Efficient TextKit2 integration for 60fps rendering
 
 ### 3. **Cross-Platform Excellence**
-- Unified codebase for macOS, iOS, and Mac Catalyst
+- Unified codebase for macOS, iOS
 - Platform-specific optimizations while maintaining API consistency  
 - Native accessibility support on all platforms
 - Responsive design adapts to different screen sizes
@@ -520,7 +520,7 @@ sequenceDiagram
 - Battle-tested in real applications
 
 ### 6. **Future-Proof Architecture**
-- Designed for TextKit2 with fallbacks for TextKit1
+- Designed for TextKit2 (the only supported layout system since 0.2.0)
 - Modular design allows easy feature additions
 - Configuration-driven behavior for customization
 - Event-driven architecture enables rich integrations

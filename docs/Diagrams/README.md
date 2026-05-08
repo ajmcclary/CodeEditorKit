@@ -2,6 +2,8 @@
 
 This directory contains architectural diagrams for the CodeEditorPlugin framework, illustrating major components, systems, integrations, and their data flows.
 
+> **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and TextKit1 was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. The platform-abstraction diagram (#8) carries an explicit historical-snapshot banner. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md).
+
 ## Index of Diagrams
 
 ### 1. [High-Level Architecture](01-high-level-architecture.md)
@@ -26,7 +28,7 @@ Complete pipeline for language detection and syntax highlighting, including both
 Code completion system including CompletionManager, provider registry, session management, caching, and UI components. Includes sequence diagram of completion flow.
 
 ### 8. [Platform Abstraction Layer](08-platform-abstraction-layer.md)
-Cross-platform compatibility layer showing abstractions for macOS, iOS, and Mac Catalyst. Includes platform detection, type aliases, event/input adapters, and platform-specific implementations.
+Cross-platform compatibility layer showing abstractions for macOS, iOS. Includes platform detection, type aliases, event/input adapters, and platform-specific implementations.
 
 ### 9. [Text Processing Pipeline](09-text-processing-pipeline.md)
 Text processing flow from input to rendering, including TextKit2 integration, line index management, batch processing, and performance optimizations. Shows incremental updates and viewport rendering.

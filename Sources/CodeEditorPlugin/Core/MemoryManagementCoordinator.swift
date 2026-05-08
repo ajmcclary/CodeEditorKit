@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -28,7 +28,7 @@ public final class MemoryManagementCoordinator {
         var renderingOptimizer: TextKit2RenderingOptimizer?
         var completionManager: CompletionManager?
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         var lspManager: LSPManager?
         #endif
     }
@@ -79,7 +79,7 @@ public final class MemoryManagementCoordinator {
         return manager
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Creates and returns an LSPManager with proper memory monitoring
     /// - Parameter workspaceRoot: Optional workspace root URL for the LSP manager
     public func createLSPManager(workspaceRoot: URL? = nil) -> LSPManager {
@@ -163,7 +163,7 @@ public final class MemoryManagementCoordinator {
             }
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // LSPManager
         if components.lspManager != nil {
             if let editorView {
@@ -191,17 +191,9 @@ public final class MemoryManagementCoordinator {
         }
 
         // Clear large text storage if read-only
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let textStorage = editorView.textStorage,
            textStorage.length > 100_000,
-           !editorView.isEditable {
-            let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1
-            memoryFreed += sizeReduction
-            operations.append("large text storage")
-        }
-        #elseif targetEnvironment(macCatalyst)
-        let textStorage = editorView.textStorage
-        if textStorage.length > 100_000,
            !editorView.isEditable {
             let sizeReduction = Double(textStorage.length) / (1_024 * 1_024) * 0.1
             memoryFreed += sizeReduction
@@ -223,7 +215,7 @@ public final class MemoryManagementCoordinator {
         operations.append("syntax highlighting cache")
 
         // Clear text processing cache
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Force layout manager to clear cached layout information
         if let layoutManager = editorView.layoutManager,
            let textContainer = editorView.textContainer {
@@ -267,7 +259,7 @@ extension CodeEditorView {
         self.renderingOptimizer = coordinator.createRenderingOptimizer()
         self.completionManager = coordinator.createCompletionManager()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         self.lspManager = coordinator.createLSPManager()
         #endif
 

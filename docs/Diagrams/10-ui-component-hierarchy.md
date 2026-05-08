@@ -479,7 +479,7 @@ graph TB
 ### 2. Cross-Platform UI Component Abstractions
 
 **Unified Platform Layer**
-- **PlatformCapabilities**: Runtime feature detection across macOS, iOS, and Catalyst
+- **PlatformCapabilities**: Runtime feature detection across macOS and iOS
 - **CrossPlatformCoordinator**: Centralized platform-specific behavior coordination
 - **UnifiedDrawingCoordinator**: Consistent drawing APIs across platforms
 - **AdaptiveLayoutProvider**: Dynamic Type and device-adaptive layouts
@@ -526,7 +526,7 @@ graph TB
 - **Background Processing**: Async text processing with cancellation support
 
 **Rendering Optimizations**:
-- TextKit2 integration with fallback to TextKit1
+- TextKit2 integration (TextKit1 fallback retired in 0.2.0)
 - Hardware acceleration detection and utilization
 - Efficient line number rendering with minimal redraws
 - Smart invalidation for syntax highlighting and layout

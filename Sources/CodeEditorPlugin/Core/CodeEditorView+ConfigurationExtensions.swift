@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -18,14 +18,14 @@ extension CodeEditorView {
         }
 
         // Apply workspace root for LSP
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if lspManager.workspaceRoot != configuration.workspaceRoot {
             lspManager.workspaceRoot = configuration.workspaceRoot
         }
         #endif
 
         // Apply display settings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, line numbers are handled by NSRulerView in the container
         // Always ensure no GutterView exists on the text view itself
         updateGutterVisibility()
@@ -54,7 +54,7 @@ extension CodeEditorView {
         textColor = PlatformColors.label
 
         // Apply layout settings
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         updateTextContainerSize()
         #endif
 
@@ -70,16 +70,13 @@ extension CodeEditorView {
         #endif
 
         // Ensure text colors are visible on Mac Catalyst
-        #if targetEnvironment(macCatalyst)
-        applyTextColorForMacCatalyst()
-        #endif
 
         // Apply behavior settings
         isEditable = configuration.behavior.isEditable
         isSelectable = configuration.behavior.isSelectable
 
         // Apply text input behavior settings on macOS
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         isAutomaticTextCompletionEnabled = configuration.behavior.isAutomaticTextCompletionEnabled
         isAutomaticQuoteSubstitutionEnabled = configuration.behavior.isAutomaticQuoteSubstitutionEnabled
         isAutomaticDashSubstitutionEnabled = configuration.behavior.isAutomaticDashSubstitutionEnabled
@@ -94,7 +91,7 @@ extension CodeEditorView {
         updateRangeBasedHighlightingConfiguration()
 
         // Force layout update
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         needsLayout = true
         #else
         setNeedsLayout()
@@ -140,7 +137,7 @@ extension CodeEditorView {
         highlight.highlightColor = configuration.display.selectedLineHighlightColor
 
         // Add as background overlay
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         addSubview(highlight, positioned: .below, relativeTo: nil)
         #else
         addSubview(highlight)
@@ -165,7 +162,7 @@ extension CodeEditorView {
         }
 
         // Get the line range for the selection
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let range = Range(selectedRange, in: string) else { return }
         let stringLineRange = string.lineRange(for: range)
         let lineRange = NSRange(stringLineRange, in: string)
@@ -196,7 +193,7 @@ extension CodeEditorView {
     // MARK: - Layout Manager Settings
 
     private func updateLayoutManagerSettings() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         layoutManager?.showsInvisibleCharacters = isInvisibleCharactersEnabled
         #else
         // UITextView's layout manager doesn't support showsInvisibleCharacters directly
@@ -208,7 +205,7 @@ extension CodeEditorView {
     // MARK: - Syntax Highlighting Toggle
 
     internal func removeSyntaxHighlighting() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = self.textStorage else { return }
         #else
         let textStorage = self.textStorage

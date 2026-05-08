@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 #if canImport(Combine)
@@ -116,7 +116,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
 
     /// Apply platform-specific optimizations to a text view
     public func optimizeTextView(_ textView: CodeEditorView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         optimizeForMacOS(textView)
         #else
         optimizeForIOS(textView)
@@ -162,7 +162,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         // Platform-specific adjustments are now handled by PlatformCapabilities
         // This method maintains runtime adjustments only
 
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         // Update platform adjustments based on runtime checks
         // Skip this for Mac Catalyst to keep default values
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -176,7 +176,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         // Remove any existing observers first
         removeObservers()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         setupMacOSNotifications()
         #elseif canImport(UIKit)
         setupIOSNotifications()
@@ -251,7 +251,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
 
     // MARK: - Shared Context Menu Actions
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @objc func handleSharedMenuAction(_ menuItem: NSMenuItem) {
         if let action = menuItem.representedObject as? () -> Void {
             action()

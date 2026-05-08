@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -11,7 +11,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Cleanup
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Helper function to compare NSColors that may have different color space representations
     private func colorsAreEqual(_ color1: NSColor?, _ color2: NSColor?) -> Bool {
         guard let color1, let color2 else {
@@ -49,7 +49,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         _ = textView.textContainerInset
         // Just verify we can get and set the inset
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let customInset = CGSize(width: 10, height: 15)
         textView.textContainerInset = customInset
         XCTAssertEqual(textView.textContainerInset, customInset)
@@ -63,7 +63,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
     @MainActor
     func testLineFragmentPadding() {
         let textView = CodeEditorView(frame: .zero)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         _ = textView.textContainer?.lineFragmentPadding
         // Just verify we can get and set the padding
 
@@ -100,7 +100,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertTrue(textView.isSelectedLineHighlightEnabled)
         XCTAssertTrue(textView.isSyntaxHighlightingEnabled)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(textView.font?.pointSize, 16.0)
         // Note: defaultParagraphStyle is not configurable through EditorConfiguration
         #else
@@ -119,7 +119,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         config.behavior.isAutoIndentEnabled = true
         config.behavior.autoCloseBrackets = true
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         config.behavior.isContinuousSpellCheckingEnabled = true
         config.behavior.isGrammarCheckingEnabled = true
         config.behavior.isAutomaticQuoteSubstitutionEnabled = false
@@ -135,7 +135,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertTrue(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Note: Some text system properties may not be immediately updated by configuration
         // The configuration sets these values but NSTextView may have its own defaults
         if textView.isContinuousSpellCheckingEnabled != config.behavior.isContinuousSpellCheckingEnabled {
@@ -165,7 +165,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         updatedConfig.display.selectedLineHighlightColor = PlatformColors.systemGray
         textView.configuration = updatedConfig
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.insertionPointColor = PlatformColors.systemBlue
         textView.selectedTextAttributes[.backgroundColor] = PlatformColor.selectedTextBackgroundColor
         textView.selectedTextAttributes[.foregroundColor] = PlatformColor.selectedTextColor
@@ -173,7 +173,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
 
         // Verify settings were applied
         // Compare colors using a custom comparison to handle different color space representations
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(colorsAreEqual(textView.backgroundColor, PlatformColors.systemBackground),
                       "Background color mismatch")
         #else
@@ -182,7 +182,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertEqual(textView.textColor, PlatformColors.label)
         XCTAssertEqual(textView.configuration.display.selectedLineHighlightColor, PlatformColors.systemGray)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(textView.insertionPointColor, PlatformColors.systemBlue)
         XCTAssertNotNil(textView.selectedTextAttributes[.backgroundColor])
         XCTAssertNotNil(textView.selectedTextAttributes[.foregroundColor])
@@ -206,13 +206,13 @@ final class ConfigurationIntegrationTests: XCTestCase {
 
         // Verify settings were applied
         // Note: lineFragmentPadding is not directly set by lineNumberPadding
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
         #else
         XCTAssertTrue(textView.textContainer.widthTracksTextView)
         #endif
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertFalse(textView.isHorizontallyResizable)
         // Note: defaultParagraphStyle is not directly configurable
         #endif
@@ -238,7 +238,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // The configuration sets the limit but doesn't automatically disable highlighting
 
         // Hardware acceleration is configured but may not always result in wantsLayer = true
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Configuration suggests hardware acceleration but actual layer creation depends on system
         #endif
     }
@@ -250,14 +250,14 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Test minimal configuration then switch to full
         textView.configuration = .minimal
         XCTAssertFalse(textView.isLineNumbersEnabled)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         #else
         // On iOS/Mac Catalyst, minimal configuration doesn't change widthTracksTextView
         // since wrapLines is controlled differently
         #endif
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(textView.isHorizontallyResizable)
         #endif
 
@@ -266,7 +266,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         XCTAssertFalse(textView.isEditable)
         // Note: readOnly configuration doesn't change isSelectable - text remains selectable for copying
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertFalse(textView.isGrammarCheckingEnabled)
         XCTAssertFalse(textView.isAutomaticQuoteSubstitutionEnabled)
         XCTAssertFalse(textView.isAutomaticTextReplacementEnabled)
@@ -312,7 +312,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         var config = EditorConfiguration()
         config.display.isLineNumbersEnabled = true
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Configure behavior with actual properties
         config.behavior.isAutomaticDashSubstitutionEnabled = true
         config.behavior.isAutomaticTextReplacementEnabled = true
@@ -334,7 +334,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         // Verify new configuration is applied
         XCTAssertTrue(textView.isLineNumbersEnabled)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Verify behavior properties from the default configuration
         XCTAssertFalse(textView.isAutomaticDashSubstitutionEnabled)
         XCTAssertFalse(textView.isAutomaticTextReplacementEnabled)

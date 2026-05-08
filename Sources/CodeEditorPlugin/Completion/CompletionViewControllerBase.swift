@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -47,11 +47,11 @@ open class CompletionViewControllerBase: PlatformViewController {
     /// Configure the appearance of the view
     open func configureAppearance() {
         // Base appearance configuration
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.wantsLayer = true
         #endif
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.layer?.backgroundColor = PlatformColors.controlBackground.cgColor
         view.layer?.cornerRadius = 6
         view.layer?.borderWidth = 1
@@ -132,7 +132,7 @@ open class CompletionViewControllerBase: PlatformViewController {
 
     /// Get platform-specific row height
     internal func platformRowHeight() -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return 24
         #else
         return 44

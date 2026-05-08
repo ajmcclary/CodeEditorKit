@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -23,13 +23,13 @@ final class AnnotationTests: XCTestCase {
         await MainActor.run {
             _textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 800, height: 600))
             // Ensure text storage is properly initialized
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             _textView?.string = ""
             #else
             _textView?.text = ""
             #endif
             // Force layout to ensure TextKit is initialized
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             _textView?.layoutSubtreeIfNeeded()
             _textView?.needsLayout = true
             _textView?.layout()
@@ -66,7 +66,7 @@ final class AnnotationTests: XCTestCase {
 
         // Fallback: create a mock range for testing
         let mockLocation = MockTextLocation(offset: 0)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let mockEndLocation = MockTextLocation(offset: textView.string.count)
         #else
         let mockEndLocation = MockTextLocation(offset: textView.text?.count ?? 0)
@@ -77,7 +77,7 @@ final class AnnotationTests: XCTestCase {
     // MARK: - Annotation Model Tests
 
     func testAnnotationCreation() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "Test content"
         #else
         textView.text = "Test content"
@@ -96,7 +96,7 @@ final class AnnotationTests: XCTestCase {
     }
 
     func testAnnotationEquality() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "Test content"
         #else
         textView.text = "Test content"
@@ -122,7 +122,7 @@ final class AnnotationTests: XCTestCase {
     // MARK: - CodeEditorViewAnnotation Tests
 
     func testCodeEditorViewAnnotationCreation() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "Test content"
         #else
         textView.text = "Test content"
@@ -281,7 +281,7 @@ final class AnnotationTests: XCTestCase {
         textView.addAnnotation(annotation)
 
         // Force layout to trigger annotation view creation
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.layoutSubtreeIfNeeded()
         #else
         textView.layoutIfNeeded()
@@ -316,7 +316,7 @@ final class AnnotationTests: XCTestCase {
         XCTAssertEqual(textView.allAnnotations.count, 0)
 
         // Layout should not crash
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.layoutSubtreeIfNeeded()
         #else
         textView.layoutIfNeeded()
@@ -329,7 +329,7 @@ final class AnnotationTests: XCTestCase {
         textView.text = "Test text for layout"
 
         // Force initial layout
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.layoutSubtreeIfNeeded()
         #else
         textView.layoutIfNeeded()
@@ -344,7 +344,7 @@ final class AnnotationTests: XCTestCase {
         textView.addAnnotation(annotation)
 
         // Layout again with annotation
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.layoutSubtreeIfNeeded()
         #else
         textView.layoutIfNeeded()
@@ -506,7 +506,7 @@ class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         viewCreationCount += 1
 
         let view = PlatformView(frame: proposedViewFrame)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.systemBlue.cgColor
         view.layer?.cornerRadius = proposedViewFrame.width / 2

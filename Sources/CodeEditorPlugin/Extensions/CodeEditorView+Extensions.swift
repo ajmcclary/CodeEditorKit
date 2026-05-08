@@ -1,7 +1,7 @@
 // Sources/CodeEditorPlugin/Extensions/CodeEditorView+Extensions.swift
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -14,7 +14,7 @@ import UIKit
 extension CodeEditorView {
     /// Perform a cut operation (copy selection and delete it)
     func performCut() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         cut(nil)
         #else
         // Use the built-in cut method which handles pasteboard securely
@@ -24,7 +24,7 @@ extension CodeEditorView {
 
     /// Perform a copy operation (copy selection to pasteboard)
     func performCopy() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         copy(nil)
         #else
         // Use the built-in copy method which handles pasteboard securely
@@ -34,7 +34,7 @@ extension CodeEditorView {
 
     /// Perform a paste operation (insert pasteboard content at cursor)
     func performPaste() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         paste(nil)
         #else
         // Use the built-in paste method which handles pasteboard securely
@@ -44,7 +44,7 @@ extension CodeEditorView {
 
     /// Select all text in the editor
     func performSelectAll() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         selectAll(nil)
         #else
         selectAll(nil)
@@ -53,7 +53,7 @@ extension CodeEditorView {
 
     /// Delete the current selection or character before cursor
     func performDelete() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         deleteBackward(nil)
         #else
         deleteBackward()
@@ -62,7 +62,7 @@ extension CodeEditorView {
 
     /// Check if cut operation is available (has selection and is editable)
     var canCut: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return isEditable && selectedRange().length > 0
         #else
         return isEditable && selectedRange.length > 0
@@ -71,7 +71,7 @@ extension CodeEditorView {
 
     /// Check if copy operation is available (has selection)
     var canCopy: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return selectedRange().length > 0
         #else
         return selectedRange.length > 0
@@ -82,7 +82,7 @@ extension CodeEditorView {
     var canPaste: Bool {
         guard isEditable else { return false }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSPasteboard.general.string(forType: .string) != nil
         #else
         // On iOS 16+, checking pasteboard content triggers authorization prompts
@@ -97,7 +97,7 @@ extension CodeEditorView {
 
 @MainActor
 extension CodeEditorView {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
 
     // MARK: - NSTextView Method for macOS
 

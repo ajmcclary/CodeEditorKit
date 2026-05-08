@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -15,7 +15,7 @@ public final class AsyncSyntaxHighlighter {
     /// at draw time, so theme/appearance flips repaint without needing a
     /// fresh highlight pass.
     static let editorAdaptiveTextColor: PlatformColor = {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor(name: nil) { appearance in
             let isDark = appearance.bestMatch(from: [.darkAqua, .vibrantDark]) != nil
             return isDark
@@ -124,7 +124,7 @@ public final class AsyncSyntaxHighlighter {
         debounceTask = nil
 
         // Check if streaming should be used
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = textView.string
         #else
         let text = textView.text ?? ""
@@ -200,7 +200,7 @@ public final class AsyncSyntaxHighlighter {
         highlightingTask?.cancel()
 
         // Get the text content
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
             let text = textView.string
         #else
             let text = textView.text ?? ""
@@ -398,7 +398,7 @@ public final class AsyncSyntaxHighlighter {
         visibleRange: NSRange? = nil
     ) {
         // Get text storage - works for both TextKit1 and TextKit2
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         #else
         let textStorage = textView.textStorage
@@ -426,17 +426,7 @@ public final class AsyncSyntaxHighlighter {
         // (rendered as a baked, mis-tinted value in practice).
         let baseTextColor: PlatformColor = Self.editorAdaptiveTextColor
 
-        #if targetEnvironment(macCatalyst)
-        // On Mac Catalyst with TextKit1, we need to ensure the base color is visible
-        // Use a more explicit color that's guaranteed to render
-        let catalystBaseColor = baseTextColor.resolvedColor(with: textView.traitCollection)
-        textStorage.addAttribute(.foregroundColor, value: catalystBaseColor, range: rangeToHighlight)
-
-        // Also set the font to ensure proper rendering
-        if let font = textView.font {
-            textStorage.addAttribute(.font, value: font, range: rangeToHighlight)
-        }
-        #else
+        #if true
         textStorage.addAttribute(.foregroundColor, value: baseTextColor, range: rangeToHighlight)
         #endif
 
@@ -480,20 +470,7 @@ public final class AsyncSyntaxHighlighter {
         // colour resolution and font lookup are O(palette) instead of
         // O(tokens). On non-Catalyst, build a single attribute dictionary so
         // the inner call is `addAttributes(_:range:)` not per-attribute.
-        #if targetEnvironment(macCatalyst)
-        let catalystFont = textView.font
-        for (color, ranges) in tokensByColor {
-            let mergedRanges = mergeAdjacentRanges(ranges)
-            let resolvedColor = color.resolvedColor(with: textView.traitCollection)
-            var attributes: [NSAttributedString.Key: Any] = [.foregroundColor: resolvedColor]
-            if let font = catalystFont {
-                attributes[.font] = font
-            }
-            for range in mergedRanges {
-                textStorage.addAttributes(attributes, range: range)
-            }
-        }
-        #else
+        #if true
         for (color, ranges) in tokensByColor {
             let mergedRanges = mergeAdjacentRanges(ranges)
             for range in mergedRanges {
@@ -503,23 +480,16 @@ public final class AsyncSyntaxHighlighter {
         #endif
 
         textStorage.endEditing()
-
-        #if targetEnvironment(macCatalyst)
-        // Force text view to refresh its display on Mac Catalyst
-        textView.setNeedsDisplay()
-        // On Mac Catalyst, layoutManager is not optional
-        textView.layoutManager.invalidateDisplay(forCharacterRange: rangeToHighlight)
-        #endif
     }
 
     private func clearHighlighting(for textView: CodeEditorView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         #else
         let textStorage = textView.textStorage
         #endif
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
             let range = NSRange(location: 0, length: textView.string.count)
         #else
             let range = NSRange(location: 0, length: textView.text?.count ?? 0)

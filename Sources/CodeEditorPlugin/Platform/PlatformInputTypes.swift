@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -30,7 +30,7 @@ public struct PlatformModifierFlags: OptionSet, Sendable {
     public static let control = Self(rawValue: 1 << 2)
     public static let shift = Self(rawValue: 1 << 3)
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Create from NSEvent modifier flags
     public init(from flags: NSEvent.ModifierFlags) {
         var result = Self()
@@ -129,7 +129,7 @@ public enum PlatformMouseEventType: Sendable {
     case rightClick
     case hover
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Create from NSEvent type
     public init?(from eventType: NSEvent.EventType) {
         switch eventType {

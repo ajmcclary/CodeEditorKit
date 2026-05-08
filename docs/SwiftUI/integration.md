@@ -324,7 +324,7 @@ CodeEditor(text: $code)
 Take advantage of macOS features:
 
 ```swift
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 CodeEditor(text: $code)
     .codeLanguage(.swift)
     .focusable()  // Enable keyboard focus

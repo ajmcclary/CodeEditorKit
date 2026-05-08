@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 /// Modern completion view controller with table view interface for macOS
@@ -454,7 +454,7 @@ internal struct CompletionViewControllerAdapter: CompletionItemView {
     }
 
     var view: PlatformView {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let view = NSView()
         view.wantsLayer = true
         return view

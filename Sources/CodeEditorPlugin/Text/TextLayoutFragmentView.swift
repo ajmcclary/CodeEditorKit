@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 // MARK: - TextLayoutFragmentView
@@ -29,19 +29,19 @@ public class TextLayoutFragmentView: NSView {
     }
 
     private func setup() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         wantsLayer = true
         #endif
         #if canImport(UIKit)
         backgroundColor = .clear
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         // backgroundColor not available on NSView
         #endif
     }
 
     #if canImport(UIKit)
 
-    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #elseif canImport(AppKit)
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 

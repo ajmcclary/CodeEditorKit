@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -211,64 +211,3 @@ public enum HighlightingMode {
 }
 
 // MARK: - Platform-Specific Extensions
-
-#if targetEnvironment(macCatalyst)
-extension SyntaxHighlightingService {
-    /// Creates text attributes for Mac Catalyst
-    public func createCatalystTextAttributes(
-        textColor: PlatformColor?,
-        font: PlatformFont?,
-        configuration: EditorConfiguration
-    ) -> [NSAttributedString.Key: Any] {
-        // Ensure we have a visible color for Mac Catalyst
-        let effectiveTextColor: PlatformColor
-        if let currentColor = textColor {
-            // Verify the color is actually visible
-            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-            if currentColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
-               alpha > 0.1, (red + green + blue) > 0.1 {
-                // Ensure full opacity for Mac Catalyst
-                if alpha < 0.95 {
-                    effectiveTextColor = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
-                } else {
-                    effectiveTextColor = currentColor
-                }
-            } else {
-                // Current color is invisible, use fallback
-                effectiveTextColor = PlatformColors.label
-            }
-        } else {
-            // No color set, use guaranteed visible fallback
-            effectiveTextColor = PlatformColors.label
-        }
-
-        let effectiveFont = font ?? PlatformFonts.monospacedSystemFont(
-            ofSize: configuration.display.fontSize,
-            weight: .regular
-        )
-
-        return [
-            .foregroundColor: effectiveTextColor,
-            .font: effectiveFont,
-            .backgroundColor: UIColor.clear
-        ]
-    }
-
-    /// Validates Mac Catalyst text visibility
-    public func validateCatalystTextVisibility(
-        textStorage: NSTextStorage,
-        attributes: [NSAttributedString.Key: Any]
-    ) -> Bool {
-        guard textStorage.length > 0 else { return true }
-
-        // Check if the foreground color is visible
-        if let color = attributes[.foregroundColor] as? UIColor {
-            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-            color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-            return alpha > 0.1 && (red + green + blue) > 0.1
-        }
-
-        return false
-    }
-}
-#endif

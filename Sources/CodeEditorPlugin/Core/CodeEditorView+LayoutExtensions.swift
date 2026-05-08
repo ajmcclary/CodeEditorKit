@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -24,7 +24,7 @@ extension CodeEditorView {
         )
 
         // Apply the paragraph style to all text
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let textStorage = self.textStorage {
             let range = NSRange(location: 0, length: textStorage.length)
             textStorage.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
@@ -44,7 +44,7 @@ extension CodeEditorView {
         #endif
 
         // Force text view to relayout and redraw
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         needsDisplay = true
         needsLayout = true
         #else
@@ -55,7 +55,7 @@ extension CodeEditorView {
 
     // MARK: - Layout Overrides
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {
@@ -85,14 +85,6 @@ extension CodeEditorView {
     }
     #else
     override public func layoutSubviews() {
-        #if targetEnvironment(macCatalyst)
-        // Preserve word wrap state before layout
-        if !hasPreservedWordWrapState {
-            preservedWordWrapState = configuration.layout.wrapLines
-            hasPreservedWordWrapState = true
-        }
-        #endif
-
         super.layoutSubviews()
         updateGutterFrame()
         updateLineHighlightFrame()
@@ -101,36 +93,17 @@ extension CodeEditorView {
         // Don't update text container size here to prevent configuration loops
         // Text container size is managed by configuration updates
 
-        #if targetEnvironment(macCatalyst)
-        // Check if word wrap state was incorrectly changed
-        if hasPreservedWordWrapState && preservedWordWrapState != configuration.layout.wrapLines {
-            Self.logger.debug("Mac Catalyst: Word wrap state changed during layout, restoring to \(preservedWordWrapState)")
-
-            // Restore without triggering loops
-            var updatedConfig = configuration
-            updatedConfig.layout.wrapLines = preservedWordWrapState
-
-            isApplyingConfiguration = true
-            defer { isApplyingConfiguration = false }
-
-            configuration = updatedConfig
-            updateTextContainerSize()
-        }
-
-        // Monitor for text container changes
-        monitorTextContainerChanges()
-        #endif
     }
     #endif
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func viewDidEndLiveResize() {
         super.viewDidEndLiveResize()
         updateGutterFrame()
     }
     #endif
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func setFrameSize(_ newSize: NSSize) {
         // Save scroll position before frame change
         let savedScrollPosition = enclosingScrollView?.contentView.bounds.origin
@@ -152,7 +125,7 @@ extension CodeEditorView {
 
     // MARK: - Text Container Origin
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Override textContainerOrigin to account for ruler view when using NSScrollView
     override public var textContainerOrigin: NSPoint {
         let origin = super.textContainerOrigin
@@ -174,7 +147,7 @@ extension CodeEditorView {
 
     /// Updates the text container size based on current configuration and bounds
     internal func updateTextContainerSize() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textContainer = self.textContainer else { return }
 
         // If we're in a container view with minimap visible, let the container handle the sizing

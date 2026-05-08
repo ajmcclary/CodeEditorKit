@@ -8,7 +8,7 @@
 // `SyntaxColorScheme.color(forToken:in:)`).
 
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -42,7 +42,7 @@ extension CodeEditorView {
         appliedTheme = theme
         let cursorColor = PlatformColor(tokens: theme.style.players[0].cursor)
         let selectionColor = PlatformColor(tokens: theme.style.players[0].selection)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         var attrs = selectedTextAttributes
         attrs[.backgroundColor] = selectionColor
         selectedTextAttributes = attrs

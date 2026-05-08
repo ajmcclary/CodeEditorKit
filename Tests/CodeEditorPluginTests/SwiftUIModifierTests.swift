@@ -253,7 +253,7 @@ final class SwiftUIModifierTests: XCTestCase {
 
     // MARK: - Platform-Specific Modifier Tests
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @MainActor
     func testMacOSSpecificModifiers() {
         let binding = Binding<String>(

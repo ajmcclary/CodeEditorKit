@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -20,7 +20,7 @@ extension CodeEditorView {
         }
 
         // Get current cursor position
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let cursorPosition = selectedRange.location
         let text = string
         #else
@@ -74,7 +74,7 @@ extension CodeEditorView {
     public func requestCompletion(triggerKind: CompletionTriggerKind = .manual, triggerCharacter: String? = nil) {
         guard isCodeCompletionEnabled else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let cursorPosition = selectedRange.location
         let text = string
         #else
@@ -145,7 +145,7 @@ extension CodeEditorView {
 
     /// Show completion window/popover at the specified rectangle
     private func showCompletionWindow(with viewController: any CompletionViewControllerRepresentable, at rect: CGRect) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Create completion window
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
@@ -225,7 +225,7 @@ extension CodeEditorView {
     public func hideCompletionPopup() {
         guard isCompletionActive else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         completionWindow?.close()
         completionWindow = nil
         #else
@@ -243,7 +243,7 @@ extension CodeEditorView {
     // MARK: - Keyboard Handling
 
     /// Handle keyboard input for completion navigation
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func keyDown(with event: NSEvent) {
         // Handle completion navigation
         if isCompletionActive, let completionVC = completionViewController {
@@ -283,7 +283,7 @@ extension CodeEditorView {
 
     /// Get current line range at position
     private func currentLineRange(at position: Int) -> Range<String.Index> {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = string
         #else
         let text = self.text ?? ""
@@ -296,7 +296,7 @@ extension CodeEditorView {
 
     /// Get current word range at position
     private func currentWordRange(at position: Int) -> NSRange? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = string
         #else
         let text = self.text ?? ""

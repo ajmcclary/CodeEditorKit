@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -19,14 +19,14 @@ extension CodeEditorView {
     /// The attributed text content (if supported)
     public var attributedContent: NSAttributedString? {
         get {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return textStorage
             #else
             return attributedText
             #endif
         }
         set {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             textStorage?.setAttributedString(newValue ?? NSAttributedString())
             #else
             attributedText = newValue
@@ -88,7 +88,7 @@ extension CodeEditorView {
     /// Replace text in range
     public func replaceText(in range: Range<String.Index>, with text: String) {
         let nsRange = NSRange(range, in: content)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         insertText(text, replacementRange: nsRange)
         #else
         // For UIKit, we need to replace the text differently
@@ -205,7 +205,7 @@ extension CodeEditorView {
 
     /// Get currently visible range
     public func visibleRange() -> Range<String.Index>? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let visibleRect = visibleRect
         guard let textContainer,
               let layoutManager else { return nil }
@@ -214,28 +214,6 @@ extension CodeEditorView {
         let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
 
         return Range(characterRange, in: content)
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use TextKit2-compatible approach to avoid triggering TextKit1 mode
-        // Calculate visible range based on bounds without accessing layoutManager
-        let visibleRect = bounds
-
-        // Use text position APIs instead of layout manager
-        guard let startPosition = closestPosition(to: CGPoint(x: 0, y: visibleRect.minY)),
-              let endPosition = closestPosition(to: CGPoint(x: visibleRect.width, y: visibleRect.maxY)) else {
-            return nil
-        }
-
-        let startOffset = offset(from: beginningOfDocument, to: startPosition)
-        let endOffset = offset(from: beginningOfDocument, to: endPosition)
-
-        guard startOffset >= 0 && endOffset >= startOffset && endOffset <= content.count else {
-            return nil
-        }
-
-        let startIndex = content.index(content.startIndex, offsetBy: startOffset)
-        let endIndex = content.index(content.startIndex, offsetBy: endOffset)
-
-        return startIndex..<endIndex
         #else
         // iOS: Access layoutManager directly
         let visibleRect = bounds

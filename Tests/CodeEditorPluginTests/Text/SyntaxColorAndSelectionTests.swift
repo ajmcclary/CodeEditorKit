@@ -3,7 +3,7 @@ import CodeEditorDesignTokens
 import Foundation
 import Testing
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -28,7 +28,7 @@ struct SyntaxColorAndSelectionTests {
         #expect(child == parent)
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @Test("CodeEditorView selectedTextAttributes background = players[0].selection on macOS")
     @MainActor
     func selectionBackgroundFromTheme() {

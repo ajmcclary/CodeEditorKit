@@ -38,7 +38,7 @@ Code folding must visually hide folded content without destroying document text 
 - Modifies document text — must virtualize carefully to avoid corrupting the underlying NSTextStorage.
 - CodeEditorPlugin does not have CodeEditSourceEditor's `TextAttachment` base class or `layoutManager.attachments.add/remove` APIs.
 - High risk of document corruption if attachment management has bugs.
-- TextKit2 attachment behavior differs from TextKit1.
+- TextKit2 attachment behavior differs from the older TextKit1 attachment APIs many sample implementations were written against.
 
 **Risk:** VERY HIGH for first implementation. Not rejecting, but not for initial delivery.
 
@@ -60,18 +60,20 @@ Code folding must visually hide folded content without destroying document text 
 
 ### Strategy 4: `TextKit2RenderingAttributes`
 
-**Implementation:** Use TextKit2 rendering attributes if available to hide folded content.
+**Implementation:** Use TextKit2 rendering attributes to hide folded content.
 
 **Pros:**
 - TextKit2 rendering attributes don't conflict with storage attributes.
 - Potentially simpler than overlay drawing.
+- Since 0.2.0 the framework is TextKit2-only on every supported platform, so
+  the platform-fragmentation concern that motivated avoiding this strategy
+  no longer applies.
 
 **Cons:**
-- Only available on TextKit2 paths (not all platforms).
 - TextKit2 rendering attributes API is limited and not designed for content hiding.
-- Would require separate TextKit1 fallback anyway.
 
-**Risk:** Medium-high. Platform fragmentation.
+**Risk:** Medium. The dual-stack hazard is gone, but the API ergonomics may
+not match what content-hiding really needs.
 
 ## Decision
 

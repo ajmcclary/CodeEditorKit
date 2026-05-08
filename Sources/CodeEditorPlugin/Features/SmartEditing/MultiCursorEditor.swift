@@ -41,7 +41,7 @@ public final class MultiCursorEditor {
     public func addCursorsAtOccurrences(in textView: CodeEditorView) {
         guard textView.selectedRange.length > 0 else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
         #else
         let textStorage = textView.textStorage
@@ -52,7 +52,7 @@ public final class MultiCursorEditor {
         ).string
 
         // Find all occurrences
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = textView.string
         #else
         let text = textView.text ?? ""
@@ -94,7 +94,7 @@ public final class MultiCursorEditor {
     public func handleInput(_ text: String, in textView: CodeEditorView) -> Bool {
         guard !cursors.isEmpty else { return false }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return false }
         #else
         let textStorage = textView.textStorage

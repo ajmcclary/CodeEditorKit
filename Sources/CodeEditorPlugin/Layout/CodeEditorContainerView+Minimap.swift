@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -29,7 +29,7 @@ extension CodeEditorContainerView {
         }
 
         // Set up text change observer to update minimap
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
@@ -52,7 +52,7 @@ extension CodeEditorContainerView {
         #endif
 
         // Set up scroll observer to update minimap and handle cursor tracking
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView,
@@ -87,7 +87,7 @@ extension CodeEditorContainerView {
         }
 
         // Force redraw
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         minimapView.needsDisplay = true
         #else
         minimapView.setNeedsDisplay()
@@ -97,7 +97,7 @@ extension CodeEditorContainerView {
     // MARK: - Navigation
 
     private func navigateToLine(_ lineNumber: Int) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS navigation
         let text = textView.string
         let lines = text.components(separatedBy: .newlines)
@@ -171,7 +171,7 @@ extension CodeEditorContainerView {
 
     // MARK: - Cursor Tracking During Scroll
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     internal func handleScrollCursorTracking() {
         // Only auto-scroll to cursor if autoScrollToCursor is enabled
         guard configuration.behavior.autoScrollToCursor else { return }

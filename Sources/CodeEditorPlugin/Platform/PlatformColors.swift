@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -44,7 +44,7 @@ public enum PlatformColors {
 
     /// Primary label color (adapts to light/dark mode)
     public static var label: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.labelColor
         #else
         return UIColor.label
@@ -53,7 +53,7 @@ public enum PlatformColors {
 
     /// Secondary label color (dimmed)
     public static var secondaryLabel: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.secondaryLabelColor
         #else
         return UIColor.secondaryLabel
@@ -62,7 +62,7 @@ public enum PlatformColors {
 
     /// Tertiary label color (further dimmed)
     public static var tertiaryLabel: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.tertiaryLabelColor
         #else
         return UIColor.tertiaryLabel
@@ -71,7 +71,7 @@ public enum PlatformColors {
 
     /// Primary system background color
     public static var systemBackground: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.windowBackgroundColor
         #else
         return UIColor.systemBackground
@@ -80,7 +80,7 @@ public enum PlatformColors {
 
     /// Secondary system background color
     public static var secondarySystemBackground: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.controlBackgroundColor
         #else
         return UIColor.secondarySystemBackground
@@ -89,7 +89,7 @@ public enum PlatformColors {
 
     /// Control background color
     public static var controlBackground: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.controlBackgroundColor
         #else
         return UIColor.systemGray6
@@ -98,7 +98,7 @@ public enum PlatformColors {
 
     /// Separator line color
     public static var separator: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.separatorColor
         #else
         return UIColor.separator
@@ -107,7 +107,7 @@ public enum PlatformColors {
 
     /// Disabled control text color
     public static var disabledControlText: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.disabledControlTextColor
         #else
         return UIColor.tertiaryLabel
@@ -116,7 +116,7 @@ public enum PlatformColors {
 
     /// System accent/tint color
     public static var tintColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.controlAccentColor
         #else
         return UIColor.tintColor
@@ -125,7 +125,7 @@ public enum PlatformColors {
 
     /// Control accent color (same as tint on iOS, dedicated property on macOS)
     public static var controlAccentColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.controlAccentColor
         #else
         return UIColor.systemBlue
@@ -134,7 +134,7 @@ public enum PlatformColors {
 
     /// Text background color (for text fields, editors)
     public static var textBackgroundColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.textBackgroundColor
         #else
         return UIColor.systemBackground
@@ -143,7 +143,7 @@ public enum PlatformColors {
 
     /// Placeholder text color
     public static var placeholderTextColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.placeholderTextColor
         #else
         return UIColor.placeholderText
@@ -152,7 +152,7 @@ public enum PlatformColors {
 
     /// Selected text color
     public static var selectedTextColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.selectedTextColor
         #else
         return UIColor { traitCollection in
@@ -163,7 +163,7 @@ public enum PlatformColors {
 
     /// Selected text background color
     public static var selectedTextBackgroundColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.selectedTextBackgroundColor
         #else
         return UIColor.tintColor.withAlphaComponent(0.3)
@@ -174,7 +174,7 @@ public enum PlatformColors {
 
     /// Pure black color
     public static var black: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.black
         #else
         return UIColor.black
@@ -183,7 +183,7 @@ public enum PlatformColors {
 
     /// Pure white color
     public static var white: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.white
         #else
         return UIColor.white
@@ -192,7 +192,7 @@ public enum PlatformColors {
 
     /// Fully transparent color
     public static var clear: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.clear
         #else
         return UIColor.clear
@@ -203,7 +203,7 @@ public enum PlatformColors {
 
     /// System red color that adapts to appearance changes
     public static var systemRed: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemRed
         #else
         return UIColor.systemRed
@@ -212,7 +212,7 @@ public enum PlatformColors {
 
     /// System blue color that adapts to appearance changes
     public static var systemBlue: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemBlue
         #else
         return UIColor.systemBlue
@@ -221,7 +221,7 @@ public enum PlatformColors {
 
     /// System green color that adapts to appearance changes
     public static var systemGreen: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemGreen
         #else
         return UIColor.systemGreen
@@ -230,7 +230,7 @@ public enum PlatformColors {
 
     /// System purple color that adapts to appearance changes
     public static var systemPurple: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemPurple
         #else
         return UIColor.systemPurple
@@ -239,7 +239,7 @@ public enum PlatformColors {
 
     /// System orange color that adapts to appearance changes
     public static var systemOrange: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemOrange
         #else
         return UIColor.systemOrange
@@ -248,7 +248,7 @@ public enum PlatformColors {
 
     /// System teal color that adapts to appearance changes
     public static var systemTeal: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemTeal
         #else
         return UIColor.systemTeal
@@ -257,7 +257,7 @@ public enum PlatformColors {
 
     /// System indigo color that adapts to appearance changes
     public static var systemIndigo: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemIndigo
         #else
         return UIColor.systemIndigo
@@ -266,7 +266,7 @@ public enum PlatformColors {
 
     /// System pink color that adapts to appearance changes
     public static var systemPink: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemPink
         #else
         return UIColor.systemPink
@@ -275,7 +275,7 @@ public enum PlatformColors {
 
     /// System brown color that adapts to appearance changes
     public static var systemBrown: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemBrown
         #else
         return UIColor.systemBrown
@@ -284,7 +284,7 @@ public enum PlatformColors {
 
     /// System yellow color that adapts to appearance changes
     public static var systemYellow: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemYellow
         #else
         return UIColor.systemYellow
@@ -293,7 +293,7 @@ public enum PlatformColors {
 
     /// System gray color that adapts to appearance changes
     public static var systemGray: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor.systemGray
         #else
         return UIColor.systemGray

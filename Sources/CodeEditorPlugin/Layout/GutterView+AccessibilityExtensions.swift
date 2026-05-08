@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -12,7 +12,7 @@ extension GutterView {
     internal func setupAccessibility() {
         #if canImport(UIKit)
         setupAccessibilityUIKit()
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         setupAccessibilityAppKit()
         #endif
     }
@@ -71,7 +71,7 @@ extension GutterView {
         return firstVisibleLine..<(lastVisibleLine + 1)
     }
 
-    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #elseif canImport(AppKit)
     private func setupAccessibilityAppKit() {
         // macOS accessibility configuration
         setAccessibilityRole(.list)
@@ -247,7 +247,7 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
     }
 }
 
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 /// Custom accessibility element for individual line numbers.
 ///
 /// `@unchecked Sendable` rationale: `lineNumber` is the only stored property

@@ -435,7 +435,7 @@ classDiagram
 - **Range Processing**: Optimized `RangeMutation` with efficient transformation algorithms
 
 ### 4. Cross-Platform Data Abstractions
-- **Platform-Agnostic Models**: All core models work across macOS, iOS, and Catalyst
+- **Platform-Agnostic Models**: All core models work across macOS and iOS
 - **Sendable Wrappers**: Specialized sendable types for cross-platform event handling
 - **Configuration System**: Comprehensive `EditorConfiguration` with validation and presets
 - **LSP Integration**: Full Language Server Protocol support with type-safe message handling

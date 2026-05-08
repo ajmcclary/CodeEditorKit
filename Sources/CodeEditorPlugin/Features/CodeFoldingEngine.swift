@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -303,7 +303,7 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
             return
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let text = textView.textStorage?.string else {
             foldableRegions = []
             return

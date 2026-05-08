@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 // LSP functionality is only available on macOS
 
 import Foundation
@@ -416,4 +416,4 @@ public final class LSPManager: ObservableObject {
     }
 }
 
-#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
+#endif // canImport(AppKit)

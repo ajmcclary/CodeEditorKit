@@ -10,7 +10,7 @@ import Foundation
 final class LSPProcessManager {
     // MARK: - Properties
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// The running server process
     private var serverProcess: Process?
 
@@ -37,7 +37,7 @@ final class LSPProcessManager {
 
     // MARK: - Process Management
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Indicates whether a server process is currently running
     var isRunning: Bool {
         serverProcess?.isRunning ?? false

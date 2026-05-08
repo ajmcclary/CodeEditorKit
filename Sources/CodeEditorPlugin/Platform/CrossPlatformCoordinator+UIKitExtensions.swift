@@ -161,9 +161,7 @@ extension CrossPlatformCoordinator {
     // MARK: - IOS Specific Helpers
 
     func isExternalKeyboardConnected() -> Bool {
-        #if targetEnvironment(macCatalyst)
-        return true
-        #else
+        #if true
         // Check for external keyboard by examining the input view controller
         // When an external keyboard is connected, the software keyboard is typically hidden
         // Note: firstResponder is not available on UIWindow in newer iOS versions

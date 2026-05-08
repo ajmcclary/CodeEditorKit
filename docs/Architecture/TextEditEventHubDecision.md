@@ -19,13 +19,15 @@ NSTextStorage.didProcessEditingNotification
   → CodeEditorView.handleTextStorageDidProcessEditing(_:)
     → lineIndexCache.invalidate()
     → cache pre-warming (deferred Task)
-    → gutterView.needsDisplay = true
+    → gutterView.needsDisplay (gated on line-count change in 0.2.0+)
     → applySyntaxHighlighting(in: editedRange)
-    → Mac Catalyst text color fixup
     → eventPublisher.publishSync(.textDidChange)
     → notifyAccessibilityTextDidChange()
     → checkForCompletionTrigger(at: editedRange)
 ```
+
+> Historical note (pre-0.2.0): the flow also included a Mac Catalyst text-color
+> fixup step. That branch was removed when Catalyst support was retired.
 
 **Problems:**
 1. All concerns are in one method — adding a new consumer requires editing this method.

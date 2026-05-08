@@ -15,7 +15,7 @@ extension AnnotationsContentView: ThemeableUIComponent {}
 
 extension AnnotationView: ThemeableUIComponent {}
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension AppKitMinimapView: ThemeableUIComponent {}
 #elseif canImport(UIKit)
 extension UIKitMinimapView: ThemeableUIComponent {}

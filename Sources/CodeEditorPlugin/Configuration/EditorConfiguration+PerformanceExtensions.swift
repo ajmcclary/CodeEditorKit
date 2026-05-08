@@ -78,7 +78,7 @@ extension EditorConfiguration {
         /// strategies for files exceeding the threshold, including viewport-based
         /// rendering and chunked syntax highlighting.
         public var enableIOSOptimizations: Bool = {
-            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            #if canImport(UIKit)
             return true
             #else
             return false
@@ -188,7 +188,7 @@ extension EditorConfiguration.Performance: Codable {
         animateCodeFolding = try container.decodeIfPresent(Bool.self, forKey: .animateCodeFolding) ?? true
         maxEventsPerSecond = try container.decodeIfPresent(Int.self, forKey: .maxEventsPerSecond) ?? 60
         enableIOSOptimizations = try container.decodeIfPresent(Bool.self, forKey: .enableIOSOptimizations) ?? {
-            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            #if canImport(UIKit)
             return true
             #else
             return false

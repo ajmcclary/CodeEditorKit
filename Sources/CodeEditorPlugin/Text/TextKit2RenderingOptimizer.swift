@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -303,7 +303,7 @@ public final class TextKit2RenderingOptimizer: ObservableObject {
         // Optimize text container settings for large files
         guard let textContainer = layoutManager.textContainer else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Optimize for macOS
         textContainer.heightTracksTextView = false
         textContainer.widthTracksTextView = true

@@ -231,7 +231,7 @@ if appState.importConfiguration(from: jsonString) {
 }
 
 // Copy to clipboard (cross-platform)
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 NSPasteboard.general.setString(jsonString, forType: .string)
 #else
 UIPasteboard.general.string = jsonString

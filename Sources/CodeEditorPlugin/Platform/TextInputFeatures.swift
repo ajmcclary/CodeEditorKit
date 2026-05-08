@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -37,7 +37,7 @@ public protocol TextInputFeatures: Sendable {
 
 /// Protocol that text views must implement to support cross-platform text input features
 @MainActor public protocol TextInputFeatureTarget: AnyObject {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     var nsTextView: NSTextView? { get }
     #endif
     #if canImport(UIKit)
@@ -47,7 +47,7 @@ public protocol TextInputFeatures: Sendable {
 
 // MARK: - Platform-Specific Implementations
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 /// AppKit implementation of text input features
 public struct AppKitTextInputFeatures: TextInputFeatures {
     public let supportsSpellChecking = true
@@ -147,7 +147,7 @@ public enum TextInputFeaturesFactory {
 
 // MARK: - CodeEditorView Extensions
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @MainActor extension CodeEditorView: TextInputFeatureTarget {
     public var nsTextView: NSTextView? { self }
 
@@ -157,7 +157,7 @@ public enum TextInputFeaturesFactory {
 }
 #elseif canImport(UIKit)
 @MainActor extension CodeEditorView: TextInputFeatureTarget {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     public var nsTextView: NSTextView? { nil }
     #endif
 

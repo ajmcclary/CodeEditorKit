@@ -256,13 +256,6 @@ extension CodeEditorContainerView: UITextViewDelegate {
         gutterView.setNeedsDisplay()
 
         // On Mac Catalyst, we need to force the display update more aggressively
-        #if targetEnvironment(macCatalyst)
-        gutterView.layer.setNeedsDisplay()
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        gutterView.layer.displayIfNeeded()
-        CATransaction.commit()
-        #endif
     }
 
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -38,7 +38,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             autoreleasepool {
                 textView.text = largeText
                 textView.isLineNumbersEnabled = true
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.needsDisplay = true
                 #elseif canImport(UIKit)
                 textView.setNeedsDisplay()
@@ -57,7 +57,7 @@ final class PerformanceConfigurationTests: XCTestCase {
             autoreleasepool {
                 textView.text = largeText
                 textView.isLineNumbersEnabled = false
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.needsDisplay = true
                 #elseif canImport(UIKit)
                 textView.setNeedsDisplay()
@@ -98,7 +98,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         // Reduced from 1,000 to 200 repetitions
         let largeText = String(repeating: "This is a long line of text that should wrap around. ", count: 200)
         textView.text = largeText
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.textContainer?.widthTracksTextView = true
         #else
         textView.textContainer.widthTracksTextView = true
@@ -108,14 +108,14 @@ final class PerformanceConfigurationTests: XCTestCase {
             autoreleasepool {
                 // Simulate scrolling by changing the visible rect
                 let visibleRect = CGRect(x: 0, y: 0, width: 400, height: 600)
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.scrollToVisible(visibleRect)
                 #else
                 textView.scrollRectToVisible(visibleRect, animated: false)
                 #endif
 
                 // Force layout to ensure scrolling performance is measured
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.needsDisplay = true
                 #elseif canImport(UIKit)
                 textView.setNeedsDisplay()
@@ -153,7 +153,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.language = .swift
         textView.isSyntaxHighlightingEnabled = true
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let colorSchemes: [(bg: PlatformColor, text: PlatformColor, selectedLine: PlatformColor)] = [
             (.white, .black, NSColor.selectedTextBackgroundColor),
             (.black, .white, NSColor.selectedTextBackgroundColor.withAlphaComponent(0.3))
@@ -198,7 +198,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 textView.text = largeText
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.isAutomaticQuoteSubstitutionEnabled = true
                 textView.isAutomaticDashSubstitutionEnabled = true
                 textView.isAutomaticTextReplacementEnabled = true
@@ -219,7 +219,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = largeText
 
         // Test that hardware acceleration features can be configured
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.wantsLayer = true
         XCTAssertTrue(textView.wantsLayer, "Hardware acceleration should be enabled")
         XCTAssertNotNil(textView.layer, "Layer should be created for hardware acceleration")
@@ -300,12 +300,12 @@ final class PerformanceConfigurationTests: XCTestCase {
         textView.text = String(repeating: complexText + "\n", count: 10)
         textView.isLineNumbersEnabled = true
         textView.isSelectedLineHighlightEnabled = true
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.textContainer?.widthTracksTextView = true
         #else
         textView.textContainer.widthTracksTextView = true
         #endif
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         #elseif canImport(UIKit)
         textView.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
@@ -314,7 +314,7 @@ final class PerformanceConfigurationTests: XCTestCase {
         measure(options: Self.ultraFastMeasureOptions) {
             autoreleasepool {
                 // Force layout using TextKit2-compatible method
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+                #if canImport(AppKit)
                 textView.layout()
                 #elseif canImport(UIKit)
                 textView.layoutIfNeeded()

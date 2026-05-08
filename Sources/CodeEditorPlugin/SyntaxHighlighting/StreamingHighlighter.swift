@@ -237,7 +237,7 @@ extension AsyncSyntaxHighlighter {
         // Cancel any existing highlighting
         cancelAllHighlighting()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let text = textView.string
         #else
         let text = textView.text ?? ""

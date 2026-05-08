@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 /// Cross-platform color type (NSColor on macOS)
 public typealias PlatformColor = NSColor
@@ -66,7 +66,7 @@ public typealias PlatformAutoresizingMask = UIView.AutoresizingMask
 /// Provides consistent autoresizing behavior across macOS and iOS
 /// by abstracting platform-specific autoresizing mask differences.
 public enum PlatformAutoresizing {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Flexible width resizing (NSView.AutoresizingMask.width on macOS)
     public static let flexibleWidth = NSView.AutoresizingMask.width
     /// Flexible height resizing (NSView.AutoresizingMask.height on macOS)

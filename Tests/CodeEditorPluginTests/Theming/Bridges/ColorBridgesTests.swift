@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #endif
 #if canImport(UIKit)
@@ -27,7 +27,7 @@ struct ColorBridgesTests {
         #expect(color == expected)
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @Test("NSColor(tokens:) preserves sRGB components")
     func nsColorPreservesSRGB() {
         let token = Tokens.Color(hex: 0x0A84FF)

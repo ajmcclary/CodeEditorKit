@@ -3,7 +3,7 @@ import ObjectiveC
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -159,7 +159,7 @@ extension CodeEditorView {
 
     // MARK: - Coordinate System
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// NSTextView requires flipped coordinates for proper text rendering
     override nonisolated public var isFlipped: Bool {
         true

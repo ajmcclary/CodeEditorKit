@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @preconcurrency import AppKit
 #endif
 #if canImport(UIKit)

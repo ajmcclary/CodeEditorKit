@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -22,7 +22,7 @@ public enum PlatformAnimation {
         animations: @escaping @Sendable () -> Void,
         completion: (@Sendable (Bool) -> Void)? = nil
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if delay > 0 {
             // Use Task.sleep for delay with modern concurrency
             Task { @MainActor in
@@ -79,7 +79,7 @@ public enum PlatformAnimation {
         animations: @escaping @Sendable () -> Void,
         completion: (@Sendable (Bool) -> Void)? = nil
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS doesn't have built-in spring animations, use standard animation
         animate(
             withDuration: duration,
@@ -104,7 +104,7 @@ public enum PlatformAnimation {
     /// - Parameter changes: The changes to perform
     @MainActor
     public static func performWithoutAnimation(_ changes: @Sendable () -> Void) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NSAnimationContext.beginGrouping()
         NSAnimationContext.current.duration = 0
         changes()
@@ -134,7 +134,7 @@ public enum PlatformAnimation {
         public static let repeatAnimation = Self(rawValue: 1 << 6)
         public static let autoreverse = Self(rawValue: 1 << 7)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         func toCAMediaTimingFunction() -> CAMediaTimingFunction {
             if self.contains(.curveEaseIn) {
                 return CAMediaTimingFunction(name: .easeIn)
@@ -188,7 +188,7 @@ public enum PlatformAnimationTransaction {
     /// Disables animations for the duration of the closure
     /// - Parameter actions: The actions to perform without animation
     public static func disableAnimations<T>(_ actions: () throws -> T) rethrows -> T {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let result: T
         NSAnimationContext.beginGrouping()
         NSAnimationContext.current.duration = 0
@@ -208,7 +208,7 @@ public enum PlatformAnimationTransaction {
     ///   - duration: The animation duration
     ///   - actions: The actions to perform with the specified duration
     public static func setAnimationDuration<T>(_ duration: TimeInterval, _ actions: () throws -> T) rethrows -> T {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let result: T
         NSAnimationContext.beginGrouping()
         NSAnimationContext.current.duration = duration

@@ -184,18 +184,18 @@ func configurePlatformSpecificMemory() -> MemoryMonitor {
     let monitor = MemoryMonitor()
 
     #if canImport(UIKit)
-    // iOS and Catalyst: More aggressive memory management
+    // iOS: more aggressive memory management on the mobile heap
     monitor.memoryThresholdMB = 100.0
     monitor.monitoringInterval = 10.0
     monitor.enableAutomaticCleanup = true
 
-    // Register iOS/Catalyst-specific handlers
+    // Register iOS-specific handlers
     monitor.registerCleanupHandler(identifier: "image-thumbnails", priority: .high) { @MainActor in
-        // Clear thumbnail cache on iOS/Catalyst
+        // Clear thumbnail cache on iOS
         CleanupResult(memoryFreedMB: 15.0, description: "Cleared thumbnails")
     }
 
-    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #elseif canImport(AppKit)
     // macOS: More relaxed thresholds
     monitor.memoryThresholdMB = 500.0
     monitor.monitoringInterval = 60.0
@@ -290,7 +290,7 @@ struct StatRow: View {
 
 // MARK: - Example 7: Multi-Window Memory Management
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 class WindowManager: ObservableObject {
     static let shared = WindowManager()
 

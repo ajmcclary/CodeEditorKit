@@ -11,7 +11,7 @@ import SwiftUI
 import UIKit
 #endif
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #endif
 
@@ -114,7 +114,7 @@ enum CodeEditorRepresentableHelper {
         coordinator.setupTextViewDelegate(container.textView)
         #endif
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS-specific setup can be added here if needed
         #endif
     }
@@ -131,7 +131,7 @@ enum CodeEditorRepresentableHelper {
 
         #if canImport(UIKit)
         return calculateUIKitSize(textView: textView, proposal: proposal, configuration: configuration)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return calculateAppKitSize(textView: textView, proposal: proposal, configuration: configuration)
         #else
         return proposal.replacingUnspecifiedDimensions()
@@ -192,7 +192,7 @@ enum CodeEditorRepresentableHelper {
     }
     #endif
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     private static func calculateAppKitSize(
         textView: CodeEditorView,
         proposal: ProposedViewSize,

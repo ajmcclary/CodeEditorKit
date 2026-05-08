@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import Foundation
 
 /// Transport implementation using Process for local LSP servers (macOS only)

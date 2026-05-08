@@ -484,7 +484,7 @@ sequenceDiagram
 - **Configurable Display**: Adjustable maximum breadcrumb items and display options
 
 ### 7. Cross-platform Symbol Support
-- **Platform Abstraction**: Unified symbol detection across macOS, iOS, and Catalyst
+- **Platform Abstraction**: Unified symbol detection across macOS and iOS
 - **TextKit2 Integration**: Native integration with modern TextKit2 text processing
 - **Range Utilities**: Cross-platform NSRange operations and containment checking
 - **Memory-efficient Storage**: Optimized symbol storage with minimal memory footprint
@@ -508,7 +508,7 @@ sequenceDiagram
 ### Architecture & Reliability
 11. **Swift 6 Concurrency**: Actor-based design ensures thread safety and memory safety
 12. **Dependency Injection**: MemoryMonitor and AsyncOperationManager injection via EditorConfiguration
-13. **Cross-platform**: Unified codebase supporting macOS, iOS, and Mac Catalyst
+13. **Cross-platform**: Unified codebase supporting macOS, iOS
 14. **Extensible Design**: Simple `DocumentSymbolProvider` protocol for adding new languages
 15. **Production Ready**: Comprehensive error handling, memory management, and performance monitoring
 

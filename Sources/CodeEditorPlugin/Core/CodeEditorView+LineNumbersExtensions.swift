@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -60,7 +60,7 @@ extension CodeEditorView {
 
         // Reset text container inset when gutter is removed
         let padding = configuration.layout.lineNumberPadding
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textContainerInset = NSSize(width: padding, height: textContainerInset.height)
         #else
         textContainerInset = UIEdgeInsets(top: textContainerInset.top, left: padding, bottom: textContainerInset.bottom, right: textContainerInset.right)

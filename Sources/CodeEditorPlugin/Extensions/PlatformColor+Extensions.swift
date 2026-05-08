@@ -3,7 +3,7 @@ import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -17,7 +17,7 @@ extension PlatformColor {
     public static func from(_ swiftUIColor: Color) -> PlatformColor {
         #if canImport(UIKit)
         return UIColor(swiftUIColor)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return NSColor(swiftUIColor)
         #endif
     }
@@ -26,7 +26,7 @@ extension PlatformColor {
     public func withAlpha(_ alpha: CGFloat) -> PlatformColor {
         #if canImport(UIKit)
         return withAlphaComponent(alpha)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return withAlphaComponent(alpha)
         #endif
     }
@@ -35,7 +35,7 @@ extension PlatformColor {
     public static func rgba(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat = 1.0) -> PlatformColor {
         #if canImport(UIKit)
         return UIColor(red: red, green: green, blue: blue, alpha: alpha)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return NSColor(red: red, green: green, blue: blue, alpha: alpha)
         #endif
     }
@@ -44,7 +44,7 @@ extension PlatformColor {
     public static func hsb(hue: CGFloat, saturation: CGFloat, brightness: CGFloat, alpha: CGFloat = 1.0) -> PlatformColor {
         #if canImport(UIKit)
         return UIColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
         #endif
     }
@@ -92,7 +92,7 @@ extension PlatformColor {
 
         #if canImport(UIKit)
         self.init(red: red, green: green, blue: blue, alpha: alpha)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         self.init(red: red, green: green, blue: blue, alpha: alpha)
         #endif
     }
@@ -110,7 +110,7 @@ extension PlatformColor {
         }
 
         return (red, green, blue, alpha)
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         guard let color = usingColorSpace(.deviceRGB) else { return nil }
 
         var red: CGFloat = 0
@@ -168,7 +168,7 @@ extension PlatformColor {
 
 // MARK: - Platform-Specific Helpers
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension NSColor {
     /// Convenience property to match UIColor API
     public static var label: NSColor {

@@ -2,7 +2,7 @@ import CodeEditorDesignTokens
 import CoreGraphics
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 /// Internal frosted-glass wrapper. Composes an `NSVisualEffectView` with

@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -20,7 +20,7 @@ extension CodeEditorView {
         textLayoutManager.textViewportLayoutController.delegate = nil // Use default viewport behavior
 
         // Configure text container for optimal performance
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let textContainer = self.textContainer {
             // Allow non-contiguous layout for better scrolling performance
             textContainer.widthTracksTextView = true
@@ -29,18 +29,10 @@ extension CodeEditorView {
             // Set reasonable line fragment padding
             textContainer.lineFragmentPadding = 4.0
         }
-        #elseif targetEnvironment(macCatalyst)
-        let textContainer = self.textContainer
-        // Allow non-contiguous layout for better scrolling performance
-        textContainer.widthTracksTextView = true
-        textContainer.heightTracksTextView = false
-
-        // Set reasonable line fragment padding
-        textContainer.lineFragmentPadding = 4.0
         #endif
 
         // Configure for hardware acceleration if available
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let scrollView = enclosingScrollView {
             scrollView.wantsLayer = true
             scrollView.canDrawSubviewsIntoLayer = true

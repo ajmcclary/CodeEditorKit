@@ -106,7 +106,7 @@ public class SymbolNavigator: ObservableObject {
             symbols = []
             return
         }
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let text = textView.textStorage?.string else {
             symbols = []
             return

@@ -1,6 +1,6 @@
 import CodeEditorDesignTokens
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -84,7 +84,7 @@ public struct CompletionCellTheme: @unchecked Sendable {
 /// Protocol for creating platform-specific completion cell components
 @MainActor
 public protocol CompletionCellComponentProvider {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Platform-specific label type for NSTextField on AppKit
     associatedtype LabelType = NSTextField
     #elseif canImport(UIKit)
@@ -156,7 +156,7 @@ public enum CompletionCellLayout {
         ])
 
         // Set compression resistance priorities
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         detailLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         #elseif canImport(UIKit)
@@ -165,7 +165,7 @@ public enum CompletionCellLayout {
         #endif
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Updates the appearance of a label for deprecated items on AppKit
     /// 
     /// This method applies visual styling to indicate deprecated completion items,
@@ -216,7 +216,7 @@ public enum CompletionCellLayout {
 
 // MARK: - Platform-Specific Implementations
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 
 /// AppKit completion cell component provider
 @MainActor
@@ -482,7 +482,7 @@ public final class UnifiedCompletionTableViewCell: UITableViewCell {
 
 /// Factory for creating completion cells across platforms
 public enum CompletionCellFactory {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Creates a completion cell view for AppKit
     /// - Parameter theme: Theme configuration for the cell
     /// - Returns: Configured completion cell view

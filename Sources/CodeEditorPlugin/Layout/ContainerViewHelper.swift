@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -27,7 +27,7 @@ enum ContainerViewHelper {
     // MARK: - Platform-Specific Navigation
 
     private static func getText(from textView: CodeEditorView) -> String {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return textView.string
         #else
         return textView.text ?? ""
@@ -35,7 +35,7 @@ enum ContainerViewHelper {
     }
 
     private static func performNavigation(to position: Int, in textView: CodeEditorView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS navigation
         textView.setSelectedRange(NSRange(location: position, length: 0))
 
@@ -68,7 +68,7 @@ enum ContainerViewHelper {
     }
 
     private static func configurePlatformScrolling(_ textView: CodeEditorView, wrapLines: Bool) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = !wrapLines
         textView.textContainer?.widthTracksTextView = wrapLines
@@ -127,7 +127,7 @@ enum ContainerViewHelper {
 
     /// Set the background color for the container view
     static func setContainerBackground(_ view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS uses layer background
         view.wantsLayer = true
         view.layer?.backgroundColor = PlatformColors.systemBackground.cgColor
@@ -140,7 +140,7 @@ enum ContainerViewHelper {
 
     /// Get the appropriate text change notification name for the platform
     static var textDidChangeNotificationName: Notification.Name {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSText.didChangeNotification
         #else
         return UITextView.textDidChangeNotification
@@ -151,7 +151,7 @@ enum ContainerViewHelper {
 
     /// Calculate the visible text rect for the text view
     static func calculateVisibleTextRect(for textView: CodeEditorView, in containerBounds: CGRect) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let scrollView = textView.enclosingScrollView {
             return scrollView.contentView.visibleRect
         }
@@ -169,7 +169,7 @@ enum ContainerViewHelper {
 
     /// Mark a view as needing layout update
     static func setNeedsLayout(_ view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.needsLayout = true
         #else
         view.setNeedsLayout()
@@ -192,7 +192,7 @@ enum ContainerViewHelper {
     }
 
     private static func updatePlatformInsets(_ textView: CodeEditorView, leftInset: CGFloat) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let currentInsets = textView.textContainerInset
         textView.textContainerInset = NSSize(
             width: leftInset,
@@ -213,7 +213,7 @@ enum ContainerViewHelper {
 
 // MARK: - Platform-Specific Extensions
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension ContainerViewHelper {
     static func platformCalculateSideViewHeight(bounds: CGRect, textView _: CodeEditorView) -> CGFloat {
         bounds.height

@@ -18,7 +18,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
     /// Initialize DeviceType from the current device
     @MainActor
     public static var current: Self {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return .mac
         #elseif canImport(UIKit)
         return Self(from: UIDevice.current.userInterfaceIdiom)
@@ -71,7 +71,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
     public var hasNotch: Bool {
         switch self {
         case .iPhone:
-            #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+            #if canImport(UIKit)
             if #available(iOS 15.0, *) {
                 // Use the new window scene API
                 guard let windowScene = UIApplication.shared.connectedScenes
@@ -121,9 +121,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
 
         case .mac:
             // Mac might have touch bar or be using Mac Catalyst
-            #if targetEnvironment(macCatalyst)
-            return true
-            #else
+            #if true
             return false
             #endif
 

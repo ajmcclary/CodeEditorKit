@@ -7,7 +7,7 @@
 
 @testable import CodeEditorPlugin
 import XCTest
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -106,7 +106,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
             throw XCTSkip("UI tests not supported in this environment")
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, line numbers are handled by NSRulerView
         // Initially show line numbers
         containerView.showsLineNumbers = true

@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -45,7 +45,7 @@ public final class GutterInteractionHandler {
 
     /// Sets up platform-specific interaction handling
     private func setupInteractionHandling() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS: Mouse events are handled by overriding mouseDown in GutterView
         // No additional setup needed here
         #else
@@ -60,7 +60,7 @@ public final class GutterInteractionHandler {
 
     // MARK: - Mouse/Touch Handling
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Handles mouse down events on macOS
     /// - Parameter event: The mouse event
     /// - Returns: Whether the event was handled
@@ -151,34 +151,12 @@ public final class GutterInteractionHandler {
               let gutterView else { return nil }
 
         // Get the rectangle from the text view
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else { return nil }
 
         let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         var lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
-
-        // Convert to gutter coordinates
-        lineRect = textView.convert(lineRect, to: gutterView)
-        return lineRect
-
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        guard let text = textView.text,
-              let stringRange = Range(range, in: text) else { return nil }
-
-        // Get the start position of the line
-        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
-        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
-
-        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
-              let textRange = textView.textRange(from: position, to: position) else { return nil }
-
-        // Get the rect for this position
-        var lineRect = textView.firstRect(for: textRange)
-
-        // Expand to full line height
-        lineRect.size.height = textView.font?.lineHeight ?? 20
 
         // Convert to gutter coordinates
         lineRect = textView.convert(lineRect, to: gutterView)
@@ -247,7 +225,7 @@ public final class GutterInteractionHandler {
         gutterView?.setNeedsDisplayLineNumbers()
 
         // Notify text view of folding change
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.needsDisplay = true
         #else
         textView.setNeedsDisplay()

@@ -122,7 +122,7 @@ internal class BaseDebugAdapter: DebugAdapter {
     }
 
     // Process management
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     internal var process: Process?
     internal var stdin: Pipe?
     internal var stdout: Pipe?
@@ -312,7 +312,7 @@ internal class BaseDebugAdapter: DebugAdapter {
         _ = try await sendRequest("disconnect", arguments: ["restart": false])
 
         // Clean up process
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         process?.terminate()
         process = nil
         stdin = nil

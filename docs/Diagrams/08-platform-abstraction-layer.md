@@ -1,6 +1,8 @@
 # Platform Abstraction Layer
 
-This diagram shows how the CodeEditorPlugin achieves cross-platform compatibility across macOS, iOS, and Mac Catalyst with comprehensive coordinator system and capability detection.
+> **Historical snapshot — pre-0.2.0.** This diagram captures the abstraction layer as it existed when Mac Catalyst was a first-class platform. As of 0.2.0 the framework targets macOS and iOS only — `isMacCatalyst`, `catalystHybridMode`, `adaptForCatalyst()`, the `macCatalyst` capability case, and every other Catalyst-only branch in the diagram below have been retired from source. The two-platform abstraction surface is documented in [docs/Platform/platform-abstraction.md](../Platform/platform-abstraction.md). The diagram below is preserved for historical context and is not regenerated against current source.
+
+This diagram shows how the CodeEditorPlugin achieved cross-platform compatibility across macOS, iOS, and Mac Catalyst (the latter retired in 0.2.0) with a coordinator system and capability detection.
 
 ```mermaid
 classDiagram

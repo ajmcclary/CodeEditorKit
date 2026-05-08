@@ -1,14 +1,12 @@
 import Foundation
 
 // SwiftSyntax is not compatible with Mac Catalyst
-#if !targetEnvironment(macCatalyst)
 import SwiftParser
 import SwiftSyntax
-#endif
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -73,7 +71,6 @@ public enum SwiftTokenType: String, CaseIterable {
 
 // MARK: - SwiftSyntaxHighlighter
 
-#if !targetEnvironment(macCatalyst)
 /// A pure Swift syntax highlighter for Swift code using Apple's SwiftSyntax
 public final class SwiftSyntaxHighlighter: Sendable {
     // MARK: - Performance Constants
@@ -349,19 +346,3 @@ extension NSRange {
 }
 
 // Note: SyntaxHighlighter conformance is declared in LanguageRegistry.swift
-
-#else
-// Mac Catalyst fallback - provide compatible interface
-public final class SwiftSyntaxHighlighter: Sendable {
-    public init() {}
-
-    // Use shared SwiftTokenType instead of duplicating
-    public typealias TokenType = SwiftTokenType
-
-    public func highlight(source: String) -> [HighlightedToken] {
-        // Fallback to basic keyword-based highlighting on Mac Catalyst
-        // Use shared utilities for consistent behavior
-        SwiftHighlightingUtilities.performBasicSwiftHighlighting(source: source)
-    }
-}
-#endif

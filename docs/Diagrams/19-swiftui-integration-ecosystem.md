@@ -661,7 +661,7 @@ struct FactoryExampleView: View {
 1. **Modern Swift 6**: Full concurrency safety with @MainActor isolation and Sendable compliance
 2. **@Observable Integration**: Latest SwiftUI state management patterns with @Observable ViewModels
 3. **Performance Excellence**: Real-time monitoring, adaptive behavior, and 60fps rendering targets
-4. **Cross-Platform**: Unified API across macOS, iOS, iPadOS, and Mac Catalyst
+4. **Cross-Platform**: Unified API across macOS, iOS, iPadOS
 5. **Developer Experience**: Rich modifier ecosystem, factory methods, and comprehensive completion support
 6. **Accessibility First**: Dynamic Type, VoiceOver, and accessibility preference awareness
 7. **Business Logic Separation**: Clean architecture with dependency injection and service registry

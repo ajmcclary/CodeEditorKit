@@ -113,6 +113,6 @@ The sample app (and all library targets) target three Apple platforms:
 |----------|----------------|
 | macOS | 26.3+ |
 | iOS | 26.3+ |
-| Mac Catalyst | 26.3+ |
+| 26.3+ |
 
 Platform-specific code uses `#if canImport(AppKit)` / `#if canImport(UIKit)` rather than `#if os()`, following the repo's conventions. The sample app is a single codebase that adapts at compile time — there are no separate platform directories.

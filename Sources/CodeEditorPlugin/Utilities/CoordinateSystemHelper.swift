@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -15,7 +15,7 @@ class CoordinateSystemHelper {
 
     /// Current coordinate system type
     var coordinateSystem: CoordinateSystemType {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return .macOS
         #else
         return .iOS
@@ -144,7 +144,7 @@ class CoordinateSystemHelper {
         range: NSRange,
         in textView: CodeEditorView
     ) -> UnifiedRect? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
             return nil
@@ -155,36 +155,6 @@ class CoordinateSystemHelper {
         // Add container origin offset
         let textOrigin = textView.textContainerInset
         let adjustedRect = boundingRect.offsetBy(dx: textOrigin.width, dy: textOrigin.height)
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        guard let text = textView.text,
-              let stringRange = Range(range, in: text) else {
-            return nil
-        }
-
-        // Get start and end positions
-        let startOffset = text.distance(from: text.startIndex, to: stringRange.lowerBound)
-        let endOffset = text.distance(from: text.startIndex, to: stringRange.upperBound)
-
-        guard let startPosition = textView.position(from: textView.beginningOfDocument, offset: startOffset),
-              let endPosition = textView.position(from: textView.beginningOfDocument, offset: endOffset),
-              let textRange = textView.textRange(from: startPosition, to: endPosition) else {
-            return nil
-        }
-
-        // Get the bounding rect
-        let rects = textView.selectionRects(for: textRange)
-        guard !rects.isEmpty else { return nil }
-
-        // Combine all rects
-        var boundingRect = rects[0].rect
-        for rect in rects.dropFirst() {
-            boundingRect = boundingRect.union(rect.rect)
-        }
-
-        // Already includes container inset
-        let adjustedRect = boundingRect
-
         #else
         // iOS: Access layoutManager directly
         let layoutManager = textView.layoutManager
@@ -211,7 +181,7 @@ class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         in textView: CodeEditorView
     ) -> Int? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
             return nil
@@ -232,17 +202,6 @@ class CoordinateSystemHelper {
             in: textContainer,
             fractionOfDistanceBetweenInsertionPoints: nil
         )
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        let viewPoint = point.cgPoint(in: coordinateSystem, containerHeight: textView.bounds.height)
-
-        // Use closestPosition to find character index
-        guard let position = textView.closestPosition(to: viewPoint) else {
-            return nil
-        }
-
-        return textView.offset(from: textView.beginningOfDocument, to: position)
-
         #else
         // iOS: Access layoutManager directly
         let layoutManager = textView.layoutManager
@@ -268,7 +227,7 @@ class CoordinateSystemHelper {
 
     /// Calculate visible rect in text coordinates
     func visibleTextRect(for scrollView: PlatformScrollView) -> UnifiedRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let visibleRect = scrollView.visibleRect
         #else
         let visibleRect = CGRect(
@@ -291,7 +250,7 @@ class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         from view: PlatformView
     ) -> UnifiedPoint? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let windowPoint = view.convert(point.platformPoint, to: nil)
         return UnifiedPoint(x: windowPoint.x, y: windowPoint.y, in: .macOS)
         #else
@@ -306,7 +265,7 @@ class CoordinateSystemHelper {
         _ point: UnifiedPoint,
         from window: PlatformWindow
     ) -> UnifiedPoint? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let screenPoint = window.convertPoint(toScreen: point.platformPoint)
         return UnifiedPoint(x: screenPoint.x, y: screenPoint.y, in: .macOS)
         #else
@@ -328,7 +287,7 @@ class CoordinateSystemHelper {
         let targetRect = rect.cgRect(in: coordinateSystem, containerHeight: containerHeight)
         let currentVisible = visibleRect.cgRect(in: coordinateSystem, containerHeight: containerHeight)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         var newOffset = scrollView.contentView.bounds.origin
         #else
         var newOffset = scrollView.contentOffset
@@ -349,7 +308,7 @@ class CoordinateSystemHelper {
         }
 
         // Clamp to valid range
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let contentSize = scrollView.documentView?.bounds.size ?? CGSize.zero
         #else
         let contentSize = scrollView.contentSize
@@ -365,7 +324,7 @@ class CoordinateSystemHelper {
         _ event: PlatformEvent,
         view: PlatformView
     ) -> UnifiedPoint {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let locationInWindow = event.locationInWindow
         let locationInView = view.convert(locationInWindow, from: nil)
         return UnifiedPoint(x: locationInView.x, y: locationInView.y, in: .macOS)
@@ -408,7 +367,7 @@ class CoordinateSystemHelper {
         let bounds = textView.bounds
         let textInset = textView.textContainerInset
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textAreaRect = UnifiedRect(
             x: textInset.width,
             y: textInset.height,
@@ -450,7 +409,7 @@ class CoordinateSystemHelper {
         for view: PlatformView,
         in context: CGContext
     ) -> DrawingContext {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS contexts may need flipping
         if view.isFlipped {
             context.scaleBy(x: 1, y: -1)
@@ -543,7 +502,7 @@ struct DrawingContext {
     ) {
         let drawPoint = point.cgPoint(in: coordinateSystem, containerHeight: bounds.height)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // swiftlint:disable:next legacy_objc_type
         let nsText = NSString(string: text)
         nsText.draw(at: drawPoint, withAttributes: attributes)
@@ -558,7 +517,7 @@ struct DrawingContext {
 // MARK: - Platform Type Aliases
 
 // Note: Platform type aliases are defined in PlatformImports.swift
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 /// Platform-specific window type for macOS
 public typealias PlatformWindow = NSWindow
 #else
@@ -578,7 +537,7 @@ extension CGRect {
 extension CodeEditorView {
     /// Get enclosing scroll view
     var crossPlatformEnclosingScrollView: PlatformScrollView? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return super.enclosingScrollView
         #else
         // On iOS, UITextView is itself a UIScrollView
@@ -588,7 +547,7 @@ extension CodeEditorView {
 
     /// Platform-specific content offset
     var crossPlatformContentOffset: CGPoint {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return crossPlatformEnclosingScrollView?.contentView.bounds.origin ?? .zero
         #else
         return super.contentOffset

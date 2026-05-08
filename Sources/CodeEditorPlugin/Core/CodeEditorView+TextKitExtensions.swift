@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -11,7 +11,7 @@ import AppKit
 extension CodeEditorView {
     // MARK: - Text Changes
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func insertText(_ string: Any, replacementRange: NSRange) {
         super.insertText(string, replacementRange: replacementRange)
 
@@ -27,7 +27,7 @@ extension CodeEditorView {
 
     // MARK: - Text Properties
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// The plain text content of the editor.
     ///
     /// This property provides access to the text content as a plain string, without any formatting
@@ -75,7 +75,7 @@ extension CodeEditorView {
     }
     #endif
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// The attributed text content of the editor.
     ///
     /// This property provides access to the text content with all formatting attributes,
@@ -134,14 +134,14 @@ extension CodeEditorView {
     /// ```
     public var textSelection: NSRange {
         get {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             selectedRange
             #else
             selectedRange
             #endif
         }
         set {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             // Use the method that respects autoScrollToCursor configuration
             setSelectedRangeWithoutScrolling(newValue)
             #else
@@ -155,7 +155,7 @@ extension CodeEditorView {
     // MARK: - TextKit Properties
 
     /// Get the text content storage for TextKit2 operations
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public var textContentStorage: NSTextContentStorage? {
         textLayoutManager?.textContentManager as? NSTextContentStorage
     }
@@ -212,7 +212,7 @@ extension CodeEditorView {
         }
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public var isHorizontallyResizable: Bool {
         get {
             super.isHorizontallyResizable
@@ -245,32 +245,26 @@ extension CodeEditorView {
     /// ```
     public var heightTracksTextView: Bool {
         get {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             if let textContainer = super.textContainer {
                 return textContainer.heightTracksTextView
             } else {
                 return true
             }
-            #elseif targetEnvironment(macCatalyst)
-            let textContainer = super.textContainer
-            return textContainer.heightTracksTextView
             #else
             return true // UITextView doesn't have this property
             #endif
         }
         set {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             if let textContainer = super.textContainer {
                 textContainer.heightTracksTextView = newValue
             }
-            #elseif targetEnvironment(macCatalyst)
-            let textContainer = super.textContainer
-            textContainer.heightTracksTextView = newValue
             #endif
         }
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public var isVerticallyResizable: Bool {
         get {
             super.isVerticallyResizable
@@ -314,90 +308,34 @@ extension CodeEditorView {
         // Check if editing is allowed
         guard configuration.behavior.isEditable else { return false }
 
-        // Convert NSTextRange to NSRange for compatibility
         let textKitBridge = TextKitBridge(textView: self)
-        if textKitBridge.version == .textKit2 {
-            // Use TextKit2 conversion
-            if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
-                // Call delegate method with proper range
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
-                #else
-                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
-                #endif
-            }
-        } else {
-            // Use fallback conversion for TextKit1
-            if let textContentManager = textLayoutManager?.textContentManager {
-                let nsRange = NSRange(textRange, in: textContentManager)
-                // Delegate is called with NSRange
-                #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
-                #else
-                return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
-                #endif
-            }
+        if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
+            #if canImport(AppKit)
+            return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
+            #else
+            return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementText: replacementString ?? "") ?? true
+            #endif
         }
-
         return true
     }
 
     /// Replaces characters in the specified TextKit2 range with new text.
     ///
-    /// This method provides a TextKit2-compatible interface for text replacement,
-    /// handling the conversion between `NSTextRange` and `NSRange` formats and
-    /// updating syntax highlighting for the affected area.
+    /// Converts the supplied `NSTextRange` to an `NSRange` via `TextKitBridge`
+    /// and applies the replacement to the text storage, then triggers
+    /// syntax-highlighting + delegate notifications for the affected area.
     ///
-    /// ## Features
-    ///
-    /// - Automatic TextKit2 to TextKit1 range conversion
-    /// - Syntax highlighting updates for changed text
-    /// - Delegate notifications for text changes
-    /// - Fallback handling for range conversion failures
-    ///
-    /// ## Parameters
-    ///
-    /// - Parameter textRange: The range of text to replace (TextKit2 format) 
-    /// - Parameter string: The replacement text
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// // Replace text in a specific range
-    /// if let textRange = editor.textRange(for: nsRange) {
-    ///     editor.replaceCharacters(in: textRange, with: "replacement text")
-    /// }
-    /// ```
-    ///
-    /// - Note: This method automatically triggers syntax highlighting updates if enabled
+    /// - Parameter textRange: The range of text to replace.
+    /// - Parameter string: The replacement text.
     public func replaceCharacters(in textRange: NSTextRange, with string: String) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage else { return }
         #else
         let textStorage = self.textStorage
         #endif
 
-        // Convert NSTextRange to NSRange
         let textKitBridge = TextKitBridge(textView: self)
-        let nsRange: NSRange
-
-        if textKitBridge.version == .textKit2 {
-            // Use TextKit2 conversion
-            if let convertedRange = textKitBridge.nsRangeFromTextRange(textRange) {
-                nsRange = convertedRange
-            } else {
-                // Fallback to current selection if conversion fails
-                nsRange = selectedRange
-            }
-        } else {
-            // Use fallback conversion for TextKit1
-            if let textContentManager = textLayoutManager?.textContentManager {
-                nsRange = NSRange(textRange, in: textContentManager)
-            } else {
-                // Last resort: try direct conversion with UTF16TextLocation
-                nsRange = NSRange(textRange) ?? selectedRange
-            }
-        }
+        let nsRange = textKitBridge.nsRangeFromTextRange(textRange) ?? selectedRange
 
         // Perform the replacement
         textStorage.beginEditing()
@@ -411,7 +349,7 @@ extension CodeEditorView {
         }
 
         // Notify delegate
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         delegate?.textDidChange?(Notification(name: NSText.didChangeNotification, object: self))
         #else
         // UITextView will send its own notification
@@ -420,56 +358,29 @@ extension CodeEditorView {
 
     // MARK: - TextKit Helper Methods
 
-    /// Calculate line rect using TextKit2-compatible approach that doesn't force TextKit1
+    /// Calculate line rect using TextKit2.
     internal func calculateLineRect(for range: NSRange) -> CGRect? {
         let textKitBridge = TextKitBridge(textView: self)
         return textKitBridge.boundingRect(for: range)
     }
 
-    // MARK: - TextKit Version Detection
+    // MARK: - TextKit Version Detection (compat shims)
 
-    /// Detects which TextKit version is currently being used and logs warnings for compatibility mode
+    /// Always returns `"TextKit 2"`. Retained for API compatibility — consumers
+    /// previously called this to log/inspect the TextKit version. As of 0.2.0
+    /// the framework is TextKit2-only on every supported platform.
     public func detectTextKitVersion() -> String {
-        let textKitBridge = TextKitBridge(textView: self)
-        let version = textKitBridge.version
-
-        #if canImport(UIKit)
-        if version == .textKit2 {
-            Self.logger.info("✅ Using TextKit 2 with textLayoutManager")
-            return "TextKit 2"
-        } else {
-            Self.logger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
-            return "TextKit 1 (fallback)"
-        }
-        #else
-        if version == .textKit2 {
-            Self.logger.info("✅ Using TextKit 2 with textLayoutManager")
-            return "TextKit 2"
-        } else if responds(to: #selector(getter: NSTextView.layoutManager)) {
-            Self.logger.warning("❌ TextKit 1 compatibility mode active - this may cause performance issues")
-            return "TextKit 1 (compatibility mode)"
-        } else {
-            Self.logger.warning("⚠️ TextKit 2 not available - using TextKit 1 fallback")
-            return "TextKit 1 (fallback)"
-        }
-        #endif
+        "TextKit 2"
     }
 
-    /// Validates that TextKit 2 is being used properly
+    /// Always returns `true`. Retained for API compatibility.
     public func validateTextKit2Usage() -> Bool {
-        let textKitBridge = TextKitBridge(textView: self)
-        let isUsingTextKit2 = textKitBridge.version == .textKit2
-
-        if !isUsingTextKit2 {
-            Self.logger.warning("TextKit 2 validation failed: \(textKitBridge.version.description)")
-        }
-
-        return isUsingTextKit2
+        true
     }
 
     // MARK: - NSTextLayoutOrientationProvider
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override nonisolated public var layoutOrientation: NSLayoutManager.TextLayoutOrientation {
         // For NSTextView, we'll default to horizontal layout
         .horizontal
@@ -478,7 +389,7 @@ extension CodeEditorView {
 
     // MARK: - NSTextLayoutManagerDelegate
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Creates a text layout fragment for the specified text element.
     ///
     /// This method is part of the `NSTextLayoutManagerDelegate` protocol and is called

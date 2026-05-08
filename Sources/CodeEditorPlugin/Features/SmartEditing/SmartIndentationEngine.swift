@@ -22,7 +22,7 @@ public enum SmartIndentationEngine {
     ) -> String {
         guard configuration.isAutoIndentEnabled else { return "" }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return "" }
         #else
         let textStorage = textView.textStorage

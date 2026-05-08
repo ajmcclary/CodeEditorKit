@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -339,7 +339,7 @@ public final class GutterViewModel {
             logger.debug("Breakpoint toggle requested for line \(lineNumber)")
 
         case "Copy Line Number":
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(String(lineNumber), forType: .string)
             #elseif canImport(UIKit)

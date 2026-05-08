@@ -74,7 +74,7 @@ final class MinimapIntegrationTests: XCTestCase {
         XCTAssertEqual(viewportRect.width, minimapWidth, "Viewport width should match minimap width")
         XCTAssertEqual(viewportRect.height, CGFloat(visibleRange.count) * lineHeight, "Viewport height should match visible lines")
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, coordinates are flipped
         let expectedY = minimapHeight - CGFloat(visibleRange.lowerBound) * lineHeight - viewportRect.height
         XCTAssertEqual(viewportRect.origin.y, expectedY, accuracy: 0.01, "Viewport Y should be flipped on macOS")
@@ -90,7 +90,7 @@ final class MinimapIntegrationTests: XCTestCase {
         let minimapHeight: CGFloat = 400.0
 
         // Test line number at different points
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS has flipped coordinates
         let topLine = MinimapRenderer.lineNumber(at: NSPoint(x: 30, y: 396), lineHeight: lineHeight, totalLines: totalLines, minimapHeight: minimapHeight)
         let middleLine = MinimapRenderer.lineNumber(at: NSPoint(x: 30, y: 200), lineHeight: lineHeight, totalLines: totalLines, minimapHeight: minimapHeight)

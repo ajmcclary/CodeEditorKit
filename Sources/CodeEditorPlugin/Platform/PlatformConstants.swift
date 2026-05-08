@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -82,7 +82,7 @@ public enum PlatformConstants {
 
     // MARK: - Platform-Specific Values
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
 
     /// Default cursor blink period (macOS)
     public static let cursorBlinkPeriod: TimeInterval = 0.5

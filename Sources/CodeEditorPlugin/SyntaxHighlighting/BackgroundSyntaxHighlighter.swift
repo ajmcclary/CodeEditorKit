@@ -2,7 +2,7 @@ import Foundation
 #if canImport(Combine)
 import Combine
 #endif
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -85,7 +85,7 @@ public final class BackgroundSyntaxHighlighter: ObservableObject {
 
     /// Register for app termination notifications to ensure cleanup
     private func registerForTermination() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         terminationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil,

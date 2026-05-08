@@ -302,7 +302,7 @@ if metrics.eventsPerSecond > 50 {
 ### Cross-Platform Support
 13. **Platform Event Filtering**: `PlatformEventFilter` for platform-specific event handling
 14. **Coordinator Integration**: Events from `InputCoordinator`, `ToolbarCoordinator`, `ContextMenuCoordinator`
-15. **Platform Abstraction**: Unified event handling across macOS, iOS, and Catalyst
+15. **Platform Abstraction**: Unified event handling across macOS and iOS
 
 ### Developer Experience
 16. **Token-Based Unregistration**: Safe handler cleanup with `EventHandlerToken`

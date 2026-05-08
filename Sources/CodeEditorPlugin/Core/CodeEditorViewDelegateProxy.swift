@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @preconcurrency import AppKit
 #endif
 #if canImport(UIKit)
@@ -122,7 +122,7 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
 
     // MARK: - Platform-specific delegate forwarding
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     func textDidChange(_ notification: Notification) {
         // Forward NSTextView's textDidChange to our custom notification
         if let textView = notification.object as? CodeEditorView {
@@ -176,7 +176,7 @@ class CodeEditorViewDelegateProxy: NSObject, CodeEditorViewDelegate {
 
 // MARK: - Platform-specific Protocol Conformance
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension CodeEditorViewDelegateProxy: NSTextViewDelegate {}
 #elseif canImport(UIKit)
 extension CodeEditorViewDelegateProxy: UITextViewDelegate {}

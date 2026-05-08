@@ -405,7 +405,7 @@ sequenceDiagram
 - **Dynamic Mode Selection**: Automatically switches between High Quality, Balanced, and Performance modes
 - **File Size Awareness**: Adjusts settings based on document size and language complexity
 - **Memory Pressure Response**: Automatically reduces features when memory is constrained
-- **Cross-Platform Optimization**: Platform-specific performance tuning for macOS, iOS, and Catalyst
+- **Cross-Platform Optimization**: Platform-specific performance tuning for macOS and iOS
 
 ### 3. Comprehensive Performance Monitoring
 - **Real-Time Metrics**: Continuous collection of CPU, memory, rendering, and I/O metrics
@@ -480,7 +480,7 @@ await textProcessor.process(text: content, with: .syntaxHighlighting, priority: 
 
 1. **Proactive Optimization**: Performance issues prevented before impacting users
 2. **Adaptive Behavior**: System automatically adjusts to device capabilities and usage patterns
-3. **Cross-Platform Consistency**: Unified performance experience across macOS, iOS, and Catalyst
+3. **Cross-Platform Consistency**: Unified performance experience across macOS and iOS
 4. **Actor Safety**: Thread-safe performance monitoring with no data races
 5. **Memory Intelligence**: Smart memory management prevents OOM crashes
 6. **Developer Insights**: Comprehensive performance analytics for optimization decisions

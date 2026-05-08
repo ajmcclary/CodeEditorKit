@@ -15,7 +15,7 @@ This diagram shows the package dependencies for the main CodeEditorPlugin framew
 - **swift-snapshot-testing** - Snapshot testing (Point-Free, ajmcclary fork for Swift 6.3 compat)
 
 **Security Status:** Low risk - All dependencies from Apple or Point-Free
-**Platform Support:** macOS 26.3+, iOS 26.3+, Mac Catalyst 26.3+
+**Platform Support:** macOS 26.3+, iOS 26.3+ (Mac Catalyst retired in 0.2.0)
 
 ## Default View (Products Only)
 
@@ -57,7 +57,7 @@ flowchart LR
 
 ## Platform Compatibility Matrix
 
-| Dependency | macOS | iOS | Mac Catalyst | Notes |
+| Dependency | macOS | iOS | Notes |
 |------------|-------|-----|--------------|-------|
 | SwiftSyntax | ✅ | ✅ | ✅ | 602.0.0+ |
 | SwiftParser | ✅ | ✅ | ✅ | Included with SwiftSyntax |

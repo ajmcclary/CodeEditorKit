@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -278,7 +278,7 @@ extension CodeEditorViewDelegate {
     }
 
     func textViewCompletionViewController(_: CodeEditorView) -> any CompletionViewControllerRepresentable {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         CompletionViewController()
         #elseif canImport(UIKit)
         NoOpCompletionViewController()

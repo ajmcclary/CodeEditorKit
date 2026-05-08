@@ -173,7 +173,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
             return
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let text = textView.textStorage?.string else {
             symbols = []
             invalidateCache()

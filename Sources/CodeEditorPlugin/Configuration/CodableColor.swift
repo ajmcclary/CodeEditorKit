@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -13,7 +13,7 @@ struct CodableColor: Codable, Equatable {
     let alpha: CGFloat
 
     init(color: PlatformColor) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Convert to RGB color space if needed
         if let rgbColor = color.usingColorSpace(.deviceRGB) {
             var red: CGFloat = 0
@@ -53,7 +53,7 @@ struct CodableColor: Codable, Equatable {
     }
 
     var platformColor: PlatformColor {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSColor(red: red, green: green, blue: blue, alpha: alpha)
         #elseif canImport(UIKit)
         return UIColor(red: red, green: green, blue: blue, alpha: alpha)

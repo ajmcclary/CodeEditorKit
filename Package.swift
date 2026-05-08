@@ -12,7 +12,9 @@
 /// - **Platforms** (intentional — targets the current Apple OS family):
 ///   - macOS 26.3+
 ///   - iOS 26.3+
-///   - Mac Catalyst 26.3+
+///
+/// Mac Catalyst is **not supported.** The framework went pure SwiftUI +
+/// native AppKit/UIKit in 0.2.0 — see `CHANGELOG.md` for the rationale.
 ///
 /// Consumers on older OS releases should pin a future LTS tag rather than expect
 /// the floor to be lowered. See `docs/README.md` § Platform Requirements.
@@ -49,7 +51,7 @@ let swiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "CodeEditorPlugin",
-    platforms: [.macOS("26.3"), .iOS("26.3"), .macCatalyst("26.3")],
+    platforms: [.macOS("26.3"), .iOS("26.3")],
     products: [
         .library(
             name: "CodeEditorDesignTokens",

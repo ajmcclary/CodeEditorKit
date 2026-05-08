@@ -1,6 +1,6 @@
 import CoreGraphics
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -62,7 +62,7 @@ public enum UnifiedDrawingCoordinator {
         at point: CGPoint,
         withAttributes attributes: [NSAttributedString.Key: Any] = [:]
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         string.draw(at: point, withAttributes: attributes)
         #else
         string.draw(at: point, withAttributes: attributes)
@@ -114,7 +114,7 @@ public enum UnifiedDrawingCoordinator {
 
     /// Draw a focus ring around a rectangle (no-op on iOS)
     public static func drawFocusRing(around rect: CGRect) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NSFocusRingPlacement.only.set()
         let path = NSBezierPath(rect: rect)
         path.fill()
@@ -126,7 +126,7 @@ public enum UnifiedDrawingCoordinator {
 
     /// Ensure a view is layer-backed for better performance
     public static func ensureLayerBacked(_ view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.wantsLayer = true
         #endif
         // UIView is always layer-backed on iOS
@@ -134,7 +134,7 @@ public enum UnifiedDrawingCoordinator {
 
     /// Set the background color of a view's layer
     public static func setLayerBackgroundColor(_ color: PlatformColor?, for view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if view.wantsLayer {
             view.layer?.backgroundColor = color?.cgColor
         }
@@ -215,7 +215,7 @@ public enum UnifiedDrawingCoordinator {
 
     /// Calculate visible text area for a text view
     public static func calculateVisibleTextRect(for textView: CodeEditorView) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // For macOS, simply return the visible rect
         // The conversion was causing issues in some cases
         return textView.visibleRect
@@ -233,7 +233,7 @@ public enum UnifiedDrawingCoordinator {
 extension UnifiedDrawingCoordinator {
     /// Platform-specific implementation for getting current graphics context
     private static func getCurrentContextPlatformSpecific() -> CGContext? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return NSGraphicsContext.current?.cgContext
         #else
         return UIGraphicsGetCurrentContext()
@@ -242,7 +242,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for saving graphics state
     private static func saveGraphicsStatePlatformSpecific() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NSGraphicsContext.current?.saveGraphicsState()
         #else
         if let context = UIGraphicsGetCurrentContext() {
@@ -253,7 +253,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for restoring graphics state
     private static func restoreGraphicsStatePlatformSpecific() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NSGraphicsContext.current?.restoreGraphicsState()
         #else
         if let context = UIGraphicsGetCurrentContext() {
@@ -264,7 +264,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for setting needs display
     private static func setNeedsDisplayPlatformSpecific(for view: PlatformView) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.needsDisplay = true
         #else
         view.setNeedsDisplay()
@@ -273,7 +273,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for setting needs display in rect
     private static func setNeedsDisplayPlatformSpecific(for view: PlatformView, in rect: CGRect) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.setNeedsDisplay(rect)
         #else
         view.setNeedsDisplay(rect)
@@ -282,7 +282,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for converting point to drawing coordinates
     private static func convertPointToDrawingCoordinates(_ point: CGPoint, in view: PlatformView, bounds: CGRect) -> CGPoint {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // AppKit views may have flipped coordinate systems
         if view.isFlipped {
             return point
@@ -297,7 +297,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for converting rect to drawing coordinates
     private static func convertRectToDrawingCoordinates(_ rect: CGRect, in view: PlatformView, bounds: CGRect) -> CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if view.isFlipped {
             return rect
         } else {
@@ -315,7 +315,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for filling rectangle
     private static func fillRectPlatformSpecific(_ rect: CGRect, with color: PlatformColor) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         color.setFill()
         NSBezierPath.fill(rect)
         #else
@@ -326,7 +326,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for stroking rectangle
     private static func strokeRectPlatformSpecific(_ rect: CGRect, with color: PlatformColor, lineWidth: CGFloat) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         color.setStroke()
         let path = NSBezierPath(rect: rect)
         path.lineWidth = lineWidth
@@ -341,7 +341,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for drawing line
     private static func drawLinePlatformSpecific(from start: CGPoint, to end: CGPoint, color: PlatformColor, lineWidth: CGFloat) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         color.setStroke()
         let path = NSBezierPath()
         path.move(to: start)
@@ -360,7 +360,7 @@ extension UnifiedDrawingCoordinator {
 
     /// Platform-specific implementation for clipping to rectangle
     private static func clipToRectPlatformSpecific(_ rect: CGRect) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         NSBezierPath(rect: rect).addClip()
         #else
         UIBezierPath(rect: rect).addClip()
@@ -387,7 +387,7 @@ public struct UnifiedDrawingContext {
         self.cgContext = context
         self.bounds = view.bounds
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         self.isFlipped = view.isFlipped
         #else
         self.isFlipped = true // UIKit is always flipped

@@ -77,7 +77,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         // Verify setup
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(container.textView.string, "initial text")
         #else
         XCTAssertEqual(container.textView.text, "initial text")
@@ -127,7 +127,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         )
 
         // Verify updates
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(container.textView.string, "updated")
         #else
         XCTAssertEqual(container.textView.text, "updated")
@@ -237,10 +237,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         #if targetEnvironment(simulator)
         // Simulator needs more time, especially on iPhone
         try await Task.sleep(for: .milliseconds(2_000))
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst needs even more time for debouncing
-        try await Task.sleep(for: .milliseconds(3_000))
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #elseif canImport(AppKit)
         // Native macOS needs more time for debouncing
         try await Task.sleep(for: .milliseconds(2_000))
         #else

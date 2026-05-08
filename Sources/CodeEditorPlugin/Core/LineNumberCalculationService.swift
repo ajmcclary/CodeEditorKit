@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -125,7 +125,7 @@ public final class LineNumberCalculationService {
     ) -> CGFloat? {
         guard lineNumber > 0 else { return nil }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return calculateMacOSLinePosition(lineNumber: lineNumber, textView: textView, configuration: configuration)
         #elseif canImport(UIKit)
         return calculateiOSLinePosition(lineNumber: lineNumber, textView: textView, configuration: configuration)
@@ -192,7 +192,7 @@ public final class LineNumberCalculationService {
 
     /// Finds the line number at a specific point in the text view
     public func lineNumber(at point: CGPoint, in textView: CodeEditorView) -> Int? {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return findLineNumberMacOS(at: point, textView: textView)
         #elseif canImport(UIKit)
         return findLineNumberiOS(at: point, textView: textView)
@@ -253,7 +253,7 @@ public final class LineNumberCalculationService {
 extension LineNumberCalculationService {
     // MARK: - Platform-Specific Line Position Calculations
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     func calculateMacOSLinePosition(
         lineNumber: Int,
         textView: CodeEditorView,
@@ -305,27 +305,7 @@ extension LineNumberCalculationService {
         textView: CodeEditorView,
         configuration _: EditorConfiguration
     ) -> CGFloat? {
-        #if targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        guard let text = textView.text,
-              let range = characterRange(for: lineNumber, in: textView),
-              let stringRange = Range(range, in: text) else { return nil }
-
-        // Get the start position of the line
-        let lineStartIndex = text.lineRange(for: stringRange).lowerBound
-        let offset = text.distance(from: text.startIndex, to: lineStartIndex)
-
-        guard let position = textView.position(from: textView.beginningOfDocument, offset: offset),
-              let textRange = textView.textRange(from: position, to: position) else { return nil }
-
-        // Get the rect for this position
-        let lineRect = textView.firstRect(for: textRange)
-
-        // Apply text container insets and adjustments
-        let textContainerInset = textView.textContainerInset
-        return lineRect.minY + (textContainerInset.top + textContainerInset.bottom) / 2
-
-        #else
+        #if true
         // iOS: Access layoutManager directly
         let textContainer = textView.textContainer
         let layoutManager = textView.layoutManager
@@ -347,15 +327,7 @@ extension LineNumberCalculationService {
     }
 
     func findLineNumberiOS(at point: CGPoint, textView: CodeEditorView) -> Int? {
-        #if targetEnvironment(macCatalyst)
-        // Mac Catalyst: Use text position APIs to avoid triggering TextKit1 mode
-        guard let position = textView.closestPosition(to: point) else { return nil }
-
-        let characterIndex = textView.offset(from: textView.beginningOfDocument, to: position)
-
-        return lineNumber(for: characterIndex, in: textView)
-
-        #else
+        #if true
         // iOS: Access layoutManager directly
         let textContainer = textView.textContainer
         let layoutManager = textView.layoutManager
@@ -410,7 +382,7 @@ extension LineNumberCalculationService {
     }
 
     func filterVisiblePositions(_ positions: [LinePosition], in textView: CodeEditorView) -> [LinePosition] {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let visibleRect = textView.visibleRect
         #elseif canImport(UIKit)
         // On iOS, use bounds as the visible area or calculate based on scroll view if available

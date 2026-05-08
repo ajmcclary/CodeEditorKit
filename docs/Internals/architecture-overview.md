@@ -119,7 +119,7 @@ Benefits:
 The enhanced platform abstraction layer enables true cross-platform support:
 
 - **Unified Types**: `PlatformColor`, `PlatformFont`, `PlatformView`
-- **Enhanced Patterns**: All `#if os()` replaced with `#if canImport()` for better Catalyst support
+- **Enhanced Patterns**: All `#if os()` replaced with `#if canImport()` for cleaner two-platform conditionals (macOS / iOS)
 - **Capability Detection**: Runtime feature availability checking via `PlatformCapabilities`
 - **CrossPlatformCoordinator**: Unified input handling across all platforms
 - **Native Performance**: No abstraction penalties

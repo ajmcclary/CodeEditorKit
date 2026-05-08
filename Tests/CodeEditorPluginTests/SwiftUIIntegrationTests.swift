@@ -218,7 +218,7 @@ final class SwiftUIIntegrationTests: XCTestCase {
         XCTAssertNotNil(editor)
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     @MainActor
     func testMacOSSpecificFeatures() throws {
         let binding = Binding<String>(

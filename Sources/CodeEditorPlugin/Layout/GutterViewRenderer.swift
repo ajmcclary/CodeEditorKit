@@ -5,7 +5,7 @@
 
 import CoreGraphics
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -171,7 +171,7 @@ public class GutterViewRenderer {
 
     /// Calculate the Y position for a line number using simplified AppKit-style approach
     private func calculateLineNumberYPosition(lineNumber: Int, lineRange: NSRange, font: PlatformFont, textView: CodeEditorView) -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS implementation - unchanged
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
@@ -228,7 +228,7 @@ public class GutterViewRenderer {
         let controlSize = textView.configuration.layout.foldingControlSize
         let controlPadding = textView.configuration.layout.foldingControlPadding
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS: Position control to the left of line numbers
         let xPosition = controlPadding
         let yPosition = lineRect.minY + (lineRect.height - controlSize) / 2

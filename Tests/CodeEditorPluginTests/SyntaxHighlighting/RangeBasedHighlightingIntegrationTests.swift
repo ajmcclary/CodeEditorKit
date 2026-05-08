@@ -336,7 +336,7 @@ struct SyntaxHighlighterRangeAdapterTests {
     @MainActor
     func queryHighlightsShiftsUTF16Ranges() async throws {
         let textView = CodeEditorView()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "🙂\nlet value = 1"
         #else
         textView.text = "🙂\nlet value = 1"

@@ -235,7 +235,7 @@ public enum LSPServerConfiguration: Sendable {
     public func createTransport() async throws -> LSPTransport {
         switch self {
         case .local(let config):
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return ProcessTransport(
                 executablePath: config.executablePath,
                 arguments: config.arguments,

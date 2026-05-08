@@ -10,7 +10,7 @@ CodeEditorPlugin provides deep integration with macOS, supporting native feature
 
 ### Using Platform Types
 
-Always use the platform abstraction types for consistency. As of the 2025 refactoring, all platform detection uses `#if canImport()` patterns for better Catalyst compatibility:
+Always use the platform abstraction types for consistency. Platform detection uses `#if canImport()` patterns throughout the codebase, which keeps the macOS / iOS conditional path clean and free of `#if os()` ambiguity. (Mac Catalyst support was retired in 0.2.0 — see CHANGELOG.)
 
 ```swift
 import CodeEditorPlugin
@@ -216,4 +216,3 @@ extension EditorViewController: NSToolbarDelegate {
 - [UIKit-AppKit-Integration](uikit-appkit.md)
 - [Advanced-Patterns](../Internals/advanced-patterns.md)
 - [iOS-Integration](ios.md)
-- [Catalyst-Best-Practices](catalyst.md)

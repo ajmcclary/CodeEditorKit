@@ -49,7 +49,7 @@ final class DeviceTypeTests: XCTestCase {
     func testCurrentDevice() {
         let current = DeviceType.current
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(current, .mac, "On macOS, current device should be Mac")
         #elseif canImport(UIKit)
         // Can't test specific device type in unit tests, but ensure it's valid
@@ -94,9 +94,7 @@ final class DeviceTypeTests: XCTestCase {
         XCTAssertTrue(DeviceType.carPlay.isTouchPrimary)
         XCTAssertTrue(DeviceType.visionPro.isTouchPrimary)
 
-        #if targetEnvironment(macCatalyst)
-        XCTAssertTrue(DeviceType.mac.isTouchPrimary)
-        #else
+        #if true
         XCTAssertFalse(DeviceType.mac.isTouchPrimary)
         #endif
 

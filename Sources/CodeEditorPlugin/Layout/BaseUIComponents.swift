@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 /// Platform-specific accessibility traits type for AppKit
 public typealias PlatformAccessibilityTraits = NSAccessibility.Role
@@ -63,7 +63,7 @@ public enum UISpacing {
 
     /// Returns spacing appropriate for the current platform
     public static func platformDefault() -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return medium
         #else
         return large
@@ -86,7 +86,7 @@ public enum UIMargins {
 
     /// Returns margins appropriate for the current platform
     public static func platformDefault() -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return medium
         #else
         return large
@@ -106,7 +106,7 @@ public enum AccessibilityHelper {
         hint: String? = nil,
         traits: PlatformAccessibilityTraits? = nil
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.setAccessibilityLabel(label)
         if let hint {
             view.setAccessibilityHelp(hint)
@@ -129,7 +129,7 @@ public enum AccessibilityHelper {
         label: String,
         hint: String? = nil
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         configureControl(view, label: label, hint: hint)
         view.setAccessibilityRole(.button)
         #elseif canImport(UIKit)
@@ -145,7 +145,7 @@ public enum AccessibilityHelper {
         hint: String? = nil,
         value: String? = nil
     ) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         configureControl(view, label: label, hint: hint)
         view.setAccessibilityRole(.textField)
         if let value {

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -15,7 +15,7 @@ import UIKit
 // MARK: - EdgeInsets Platform Conversions
 
 extension EdgeInsets {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Create EdgeInsets from NSSize (used for text container insets on macOS)
     public init(size: NSSize) {
         self.init(top: size.height, left: size.width, bottom: size.height, right: size.width)
@@ -98,7 +98,7 @@ extension EdgeInsets {
 
 // MARK: - Platform-Specific Extensions
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension NSTextView {
     /// Get text container inset as EdgeInsets
     public var textContainerEdgeInsets: EdgeInsets {
@@ -131,7 +131,7 @@ extension UITextView {
 extension CodeEditorView {
     /// Get unified text container insets
     public var unifiedTextContainerInsets: EdgeInsets {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return EdgeInsets(size: textContainerInset)
         #else
         return EdgeInsets(uiEdgeInsets: textContainerInset)
@@ -140,7 +140,7 @@ extension CodeEditorView {
 
     /// Set unified text container insets
     public func setUnifiedTextContainerInsets(_ insets: EdgeInsets) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textContainerInset = insets.nsSize
         #else
         textContainerInset = insets.uiEdgeInsets

@@ -94,7 +94,7 @@ final class MemoryLeakTests: CleanupTestCase {
             // Since we can't test annotations, let's test that the editor itself can be deallocated
 
             // Force layout update
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             editor.needsLayout = true
             #else
             editor.setNeedsLayout()
@@ -184,7 +184,7 @@ final class MemoryLeakTests: CleanupTestCase {
             editor.text = "func hello() { print(\"world\") }"
 
             // Force layout update
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             editor.needsLayout = true
             #else
             editor.setNeedsLayout()

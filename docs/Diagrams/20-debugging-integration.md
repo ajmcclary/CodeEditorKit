@@ -555,7 +555,7 @@ sequenceDiagram
 - **Thread Safety**: MainActor isolation for UI operations
 - **Performance Coordination**: Integrated with PerformanceMonitor
 - **Memory Management**: Automatic cleanup via MemoryManagementCoordinator
-- **Cross-Platform**: Unified behavior across macOS, iOS, and Catalyst
+- **Cross-Platform**: Unified behavior across macOS and iOS
 
 ### 5. Advanced Execution Control
 - **Step Operations**: Step in, over, out with thread-specific control
@@ -566,7 +566,6 @@ sequenceDiagram
 ### 6. Platform-Specific Optimizations
 - **macOS**: Full local debugging with all adapters
 - **iOS**: Remote debugging capabilities
-- **Mac Catalyst**: Optimized debugging for Catalyst apps
 - **Performance Scaling**: Adapts to platform capabilities
 
 ### 7. LSP Integration

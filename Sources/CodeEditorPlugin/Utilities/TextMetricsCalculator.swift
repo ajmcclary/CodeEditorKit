@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #else
 import UIKit
@@ -12,7 +12,7 @@ public enum TextMetricsCalculator {
 
     /// Calculate the line height for a given font
     public static func calculateLineHeight(for font: PlatformFont) -> CGFloat {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let layoutManager = NSLayoutManager()
         let textContainer = NSTextContainer()
         let textStorage = NSTextStorage(string: "M")
@@ -47,7 +47,7 @@ public enum TextMetricsCalculator {
     ) -> CGSize {
         let attributedString = NSAttributedString(string: text, attributes: attributes)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let size = attributedString.boundingRect(
             with: constrainingSize,
             options: [.usesLineFragmentOrigin, .usesFontLeading]

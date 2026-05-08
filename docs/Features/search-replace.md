@@ -219,7 +219,7 @@ SearchReplaceEngine works across all platforms with proper abstractions:
 textView.replaceCharacters(in: range, with: replacement)
 ```
 
-### iOS/Catalyst
+### iOS
 ```swift
 // Uses UITextView's text storage
 textStorage.replaceCharacters(in: range, with: replacement)

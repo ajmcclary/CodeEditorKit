@@ -100,7 +100,7 @@ final class InputCoordinatorTests: XCTestCase {
 
         let rightClickEvent = PlatformInputEvent.mouse(location: CGPoint(x: 100, y: 100), type: .rightClick)
         let handled = coordinator.handleInput(rightClickEvent, in: mockView)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(handled, "Right click should be handled on macOS")
         #endif
     }

@@ -1,6 +1,6 @@
 import CoreGraphics
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -11,7 +11,7 @@ import UIKit
 /// Protocol that provides a unified interface for text view operations across platforms
 @MainActor
 public protocol UnifiedTextViewProtocol {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// The text storage associated with this text view
     var textStorage: NSTextStorage? { get }
     /// The layout manager responsible for text layout
@@ -39,7 +39,7 @@ public protocol UnifiedTextViewProtocol {
 
 // MARK: - Platform Conformance
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 @MainActor
 extension NSTextView: UnifiedTextViewProtocol {}
 #else
@@ -54,7 +54,7 @@ extension UITextView: UnifiedTextViewProtocol {
 extension UnifiedTextViewProtocol {
     /// Returns the visible container rectangle in a platform-agnostic way
     var unifiedVisibleContainerRect: CGRect {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let origin = textContainerOrigin
         return visibleRect.offsetBy(dx: -origin.x, dy: -origin.y)
         #else
@@ -124,7 +124,7 @@ extension TextView {
         }
 
         if !layoutAttributes.isEmpty {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             textStorage?.addAttributes(layoutAttributes, range: range)
             #else
             textStorage.addAttributes(layoutAttributes, range: range)
@@ -135,7 +135,7 @@ extension TextView {
     // MARK: - Private Helpers
 
     private func getCurrentSelection() -> Any {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return self.selectedRanges
         #else
         return self.selectedRange
@@ -143,7 +143,7 @@ extension TextView {
     }
 
     private func setTemporarySelection(_ range: NSRange) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         self.selectedRanges = [NSValue(range: range)]
         #else
         self.selectedRange = range
@@ -151,7 +151,7 @@ extension TextView {
     }
 
     private func restoreSelection(_ selection: Any) {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let ranges = selection as? [NSValue] {
             self.selectedRanges = ranges
         }

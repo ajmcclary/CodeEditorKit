@@ -4,7 +4,7 @@ import UIKit
 #if canImport(GameController)
 import GameController
 #endif
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -84,9 +84,6 @@ extension PlatformCapabilities {
             if supportsTrackpad {
                 preferred.insert(.trackpad)
             }
-
-        case .catalyst:
-            preferred = [.keyboard, .mouse, .touch]
         }
 
         return InputCapabilities(
@@ -111,7 +108,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if keyboard shortcuts are available
     public var supportsKeyboardShortcuts: Bool {
-        currentPlatform == .macOS || currentPlatform == .catalyst
+        currentPlatform == .macOS
     }
 
     /// Whether Apple Pencil input is supported
@@ -126,7 +123,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if Apple Pencil is supported
     public var supportsPencilInput: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return UIDevice.current.userInterfaceIdiom == .pad
         #else
         return false
@@ -145,7 +142,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if trackpad input is available
     public var supportsTrackpad: Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return true
         #elseif canImport(UIKit)
         // iPadOS 13.4+ supports trackpad
@@ -169,7 +166,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if haptic feedback is available
     public var supportsHapticFeedback: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return UIDevice.current.userInterfaceIdiom == .phone
         #else
         return false
@@ -188,7 +185,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if gesture recognizers are available
     public var supportsGestureRecognizers: Bool {
-        currentPlatform == .iOS || currentPlatform == .catalyst
+        currentPlatform == .iOS
     }
 
     /// Check for external keyboard connectivity
@@ -203,7 +200,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if external keyboard is connected
     public var hasExternalKeyboard: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         // Check for external keyboard on iOS
         return UIDevice.current.userInterfaceIdiom == .pad &&
                isExternalKeyboardConnected()
@@ -225,7 +222,7 @@ extension PlatformCapabilities {
     ///
     /// - Returns: True if pointing device is connected
     public var hasPointingDevice: Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         return supportsTrackpad && isPointingDeviceConnected()
         #else
         return true
@@ -265,12 +262,6 @@ extension PlatformCapabilities {
                 config.enablePencilGestures = true
                 config.pencilSensitivity = 0.8
             }
-
-        case .catalyst:
-            config.enableKeyboardShortcuts = true
-            config.enableHoverEffects = true
-            config.minimumTouchTargetSize = 32.0
-            config.gestureThreshold = 12.0
         }
 
         // Adjust for device capabilities
@@ -316,7 +307,7 @@ extension PlatformCapabilities {
 
     /// Check if external keyboard is connected (iOS only)
     private func isExternalKeyboardConnected() -> Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         // Use GCKeyboard to detect hardware keyboards (iOS 14+)
         #if canImport(GameController)
         if #available(iOS 14.0, *) {
@@ -340,7 +331,7 @@ extension PlatformCapabilities {
 
     /// Check if pointing device is connected (iOS only)
     private func isPointingDeviceConnected() -> Bool {
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         // Check for trackpad/mouse support on iPadOS 13.4+
         if #available(iOS 13.4, *) {
             // Check if any scene supports indirect input (trackpad/mouse)

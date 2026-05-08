@@ -5,7 +5,7 @@
 
 import CoreGraphics
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -137,7 +137,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Setup
 
     private func setup() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         wantsLayer = true
         // Make gutter transparent so it doesn't block text
         layer?.backgroundColor = PlatformColors.clear.cgColor
@@ -160,7 +160,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     // MARK: - Display Updates
 
     public func setNeedsDisplayLineNumbers() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Force a complete redraw on macOS to ensure line numbers are visible
         self.needsDisplay = true
         #else
@@ -170,7 +170,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
 
     // MARK: - Drawing
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func draw(_ dirtyRect: NSRect) {
         // On macOS, GutterView should not be used - line numbers are handled by NSRulerView
         // Only draw if we're actually in the view hierarchy (which shouldn't happen on macOS)
@@ -188,16 +188,6 @@ public class GutterView: PlatformView, GutterViewProtocol {
         super.draw(rect)
 
         // On Mac Catalyst, force clearing the entire bounds before drawing
-        #if targetEnvironment(macCatalyst)
-        if let context = UIGraphicsGetCurrentContext() {
-            // Clear the entire bounds, not just the dirty rect
-            context.clear(bounds)
-
-            // Set the fill color to clear/transparent
-            context.setFillColor(UIColor.clear.cgColor)
-            context.fill(bounds)
-        }
-        #endif
 
         // Always redraw the full bounds to ensure line numbers are visible
         // Use bounds instead of rect to force full redraw
@@ -265,7 +255,7 @@ extension GutterView {
         // Get the graphics context
         guard let context = UnifiedDrawingCoordinator.currentContext() else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let fillBackground = false // AppKit doesn't need background fill
         #else
         let fillBackground = true // UIKit needs background fill
@@ -290,7 +280,7 @@ extension GutterView {
 // MARK: - Click/Tap Handling
 
 extension GutterView {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Handle mouse clicks on macOS
     override public func mouseDown(with event: NSEvent) {
         // Delegate to interaction handler
@@ -338,7 +328,7 @@ extension GutterView {
     func observeTextView() {
         guard let textView else { return }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, GutterView is not used - line numbers are handled by NSRulerView
         // So we don't need to observe anything
         return
@@ -367,7 +357,7 @@ extension GutterView {
         #endif
     }
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Observe scroll view changes (macOS only)
     func observeScrollView(_ scrollView: NSScrollView) {
         // Guard against early calls
@@ -429,16 +419,6 @@ extension GutterView: UITextViewDelegate {
         layer.setNeedsDisplay()
 
         // On Catalyst, we need to force the display update more aggressively
-        #if targetEnvironment(macCatalyst)
-        // Mark the entire bounds as needing display
-        setNeedsDisplay(bounds)
-
-        // Force Core Animation to update immediately
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        layer.displayIfNeeded()
-        CATransaction.commit()
-        #endif
     }
 
     @objc public func scrollViewWillBeginDragging(_: UIScrollView) {

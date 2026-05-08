@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -49,7 +49,7 @@ public struct PlatformAdjustments: Sendable {
 
     /// Create default platform adjustments
     public init() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS adjustments
         self.defaultFontSize = 12.0
         self.lineSpacing = 1.2

@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -102,7 +102,7 @@ enum SharedContextMenuBuilder {
 // MARK: - Platform-specific builders
 
 extension SharedContextMenuBuilder {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// Convert shared menu descriptor to macOS NSMenu
     static func buildNSMenu(from descriptor: ContextMenuDescriptor, target: CrossPlatformCoordinator) -> NSMenu {
         let menu = NSMenu()

@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -51,7 +51,7 @@ public final class LayoutCoordinator {
         completion: (@Sendable (Bool) -> Void)? = nil
     ) {
         performLayout {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             NSAnimationContext.runAnimationGroup({ context in
                 context.duration = duration
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -76,7 +76,7 @@ public final class LayoutCoordinator {
         guard let view else { return }
 
         performLayout {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             view.needsLayout = true
             view.needsDisplay = true
             #else

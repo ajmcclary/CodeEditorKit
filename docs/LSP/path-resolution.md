@@ -1,6 +1,6 @@
 # LSP Path Resolution
 
-> Important: LSP functionality is only available on macOS. This type is not available on iOS or Mac Catalyst.
+> Important: LSP functionality is only available on macOS. This type is not available on iOS.
 
 Resolves Language Server Protocol (LSP) server executable paths with flexible path resolution strategies.
 
@@ -109,7 +109,7 @@ if let tsPath = resolver.resolvePath("typescript-language-server") {
 LSPPathResolver is only available on macOS, as LSP functionality requires desktop features not available on iOS:
 
 ```swift
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 // LSP functionality is available
 let resolver = LSPPathResolver()
 #endif

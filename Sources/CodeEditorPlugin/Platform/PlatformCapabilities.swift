@@ -1,7 +1,7 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -69,9 +69,7 @@ public final class PlatformCapabilities {
     /// Public initializer for dependency injection
     public init() {
         // Cache the platform since it's compile-time determined
-        #if targetEnvironment(macCatalyst)
-        self._currentPlatform = .catalyst
-        #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         self._currentPlatform = .macOS
         #else
         self._currentPlatform = .iOS
@@ -91,20 +89,14 @@ public final class PlatformCapabilities {
         /// Native macOS application
         case macOS
 
-        /// iOS application (iPhone or iPad)
+        /// iOS / iPadOS application
         case iOS
 
-        /// Mac Catalyst (iOS app running on Mac)
-        case catalyst
-
-        /// Human-readable platform name.
-        ///
-        /// Returns "macOS", "iOS", or "Mac Catalyst".
+        /// Human-readable platform name. Returns "macOS" or "iOS".
         public var name: String {
             switch self {
             case .macOS: return "macOS"
             case .iOS: return "iOS"
-            case .catalyst: return "Mac Catalyst"
             }
         }
     }
@@ -116,7 +108,7 @@ public final class PlatformCapabilities {
 
     /// The current operating system version as a string
     public var systemVersion: String {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         return ProcessInfo.processInfo.operatingSystemVersionString
         #elseif canImport(UIKit)
         return UIDevice.current.systemVersion
@@ -259,14 +251,14 @@ extension PlatformCapabilities {
             // Check platform-specific availability
             if currentPlatform == .macOS {
                 return true
-            } else if currentPlatform == .catalyst || isIPad {
+            } else if isIPad {
                 return true // Partial support
             } else {
                 return false // Unavailable on iPhone
             }
 
         case .quickOpen:
-            return currentPlatform == .macOS || currentPlatform == .catalyst
+            return currentPlatform == .macOS
 
         // Performance features
         case .hardwareAcceleration:
@@ -301,7 +293,7 @@ extension PlatformCapabilities {
             return currentPlatform == .macOS || (currentPlatform == .iOS && isIPad)
 
         case .tabs:
-            return currentPlatform == .macOS || currentPlatform == .catalyst
+            return currentPlatform == .macOS
 
         case .sidebars:
             return currentPlatform == .macOS || (currentPlatform == .iOS && isIPad)
@@ -330,7 +322,7 @@ extension PlatformCapabilities {
             return currentPlatform == .macOS || supportsTrackpad
 
         case .touchSupport:
-            return currentPlatform == .iOS || currentPlatform == .catalyst
+            return currentPlatform == .iOS
 
         case .gestureNavigation:
             return supportsGestureRecognizers
@@ -360,7 +352,7 @@ extension PlatformCapabilities {
     private func getInputFeatureAvailability(_ feature: EditorFeature) -> FeatureAvailability? {
         switch feature {
         case .keyboardShortcuts:
-            if currentPlatform == .macOS || currentPlatform == .catalyst {
+            if currentPlatform == .macOS {
                 return .full
             } else if currentPlatform == .iOS && isIPad {
                 return .partial
@@ -380,7 +372,7 @@ extension PlatformCapabilities {
         case .touchSupport:
             if currentPlatform == .iOS {
                 return .full
-            } else if currentPlatform == .catalyst {
+            } else if false {
                 return .partial
             } else {
                 return .unavailable
@@ -400,7 +392,7 @@ extension PlatformCapabilities {
         case .goToDefinition:
             if currentPlatform == .macOS {
                 return .full
-            } else if currentPlatform == .catalyst || isIPad {
+            } else if isIPad {
                 return .partial
             } else {
                 return .unavailable // iPhone doesn't support go to definition

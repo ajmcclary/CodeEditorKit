@@ -19,7 +19,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.textView = textView
         self.language = language
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let documentLength = textView.textStorage?.length ?? 0
         #else
         let documentLength = textView.textStorage.length

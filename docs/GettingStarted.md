@@ -1,12 +1,12 @@
 # Getting Started
 
-A modern, cross-platform code editor for macOS, iOS, and Mac Catalyst. Built on TextKit2 with Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree designed for extension.
+A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKit2 with Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree designed for extension. (Mac Catalyst was retired in 0.2.0 — see [CHANGELOG](../CHANGELOG.md).)
 
 ## Platform Requirements
 
 - **Swift**: 6.3 or later
 - **Xcode**: 26.3 or later
-- **Deployment targets**: macOS 26.3+, iOS 26.3+, Mac Catalyst 26.3+
+- **Deployment targets**: macOS 26.3+, iOS 26.3+
 
 ## Installation
 
@@ -24,9 +24,9 @@ import PackageDescription
 
 let package = Package(
     name: "MyApp",
-    platforms: [.macOS("26.3"), .iOS("26.3"), .macCatalyst("26.3")],
+    platforms: [.macOS("26.3"), .iOS("26.3")],
     dependencies: [
-        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "1.0.0")
+        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "0.2.0")
     ],
     targets: [
         .target(name: "MyApp", dependencies: ["CodeEditorPlugin"])
@@ -170,7 +170,6 @@ Or start from a built-in preset:
 .environment(\.codeEditorConfiguration, .presentation)    // big fonts, no chrome
 .environment(\.codeEditorConfiguration, .markdown)        // markdown-tuned
 .environment(\.codeEditorConfiguration, .iOS)             // iOS defaults
-.environment(\.codeEditorConfiguration, .catalyst)        // Mac Catalyst defaults
 .environment(\.codeEditorConfiguration, .platformOptimized)
 ```
 
@@ -185,7 +184,7 @@ Details: [Syntax highlighting](Features/syntax-highlighting.md).
 ## Where to Go Next
 
 - **Customize the look**: [Theme system](Features/theme-system.md)
-- **Platform-specific guidance**: [iOS](Platform/ios.md), [macOS](Platform/macos.md), [Mac Catalyst](Platform/catalyst.md), [UIKit ↔ AppKit](Platform/uikit-appkit.md)
+- **Platform-specific guidance**: [iOS](Platform/ios.md), [macOS](Platform/macos.md), [UIKit ↔ AppKit](Platform/uikit-appkit.md)
 - **SwiftUI integration**: [SwiftUI integration](SwiftUI/integration.md), [environment keys](SwiftUI/environment-keys.md)
 - **Performance**: [Monitoring](Performance/monitoring.md), [Optimizations](Performance/optimizations.md), [Production reliability](Performance/reliability.md)
 - **Concurrency model**: [Swift 6 concurrency](Concurrency/swift6.md), [Sendable callbacks](Concurrency/sendable-callbacks.md)

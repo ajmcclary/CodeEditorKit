@@ -161,7 +161,6 @@ classDiagram
         +markdown EditorConfiguration
         +presentation EditorConfiguration
         +iOS EditorConfiguration
-        +catalyst EditorConfiguration
         +macOS EditorConfiguration
         +platformOptimized EditorConfiguration
     }
@@ -231,7 +230,6 @@ let platformConfig = EditorConfiguration.platformOptimized
 
 // Platform-specific presets
 let iOSConfig = EditorConfiguration.iOS
-let catalystConfig = EditorConfiguration.catalyst
 let macOSConfig = EditorConfiguration.macOS
 ```
 

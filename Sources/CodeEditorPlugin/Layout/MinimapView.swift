@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -158,7 +158,7 @@ public enum MinimapRenderer {
         let startY = CGFloat(visibleRange.lowerBound) * lineHeight
         let height = CGFloat(visibleRange.count) * lineHeight
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, coordinate system is flipped
         let adjustedY = minimapHeight - startY - height
         return NSRect(x: 0, y: adjustedY, width: minimapWidth, height: height)
@@ -180,7 +180,7 @@ public enum MinimapRenderer {
         totalLines: Int,
         minimapHeight: CGFloat
     ) -> Int {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, coordinate system is flipped
         let adjustedY = minimapHeight - point.y
         let line = Int(adjustedY / lineHeight)
@@ -194,7 +194,7 @@ public enum MinimapRenderer {
 
 // MARK: - Platform-Specific Implementations
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 /// AppKit implementation of minimap view
 @MainActor
 public final class AppKitMinimapView: NSView, MinimapViewProtocol {

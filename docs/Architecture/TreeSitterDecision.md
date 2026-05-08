@@ -21,8 +21,8 @@ CodeEditSourceEditor uses ChimeHQ/SwiftTreeSitter (tag 0.4.x in their fork) as t
 ### Platform Concerns
 
 - **macOS:** Tree-sitter works reliably.
-- **iOS/Catalyst:** Requires the C library to be compiled for ARM64. Possible but adds build complexity.
-- **Cross-platform parity:** CodeEditorPlugin targets macOS, iOS, and Catalyst. Tree-sitter would require per-platform build configuration.
+- **iOS:** Requires the C library to be compiled for ARM64. Possible but adds build complexity.
+- **Cross-platform parity:** CodeEditorPlugin targets macOS and iOS. Tree-sitter would require per-platform build configuration.
 
 ### Parser Coverage
 
@@ -52,7 +52,7 @@ Rationale:
 ## Required Actions (when Gate B re-evaluated)
 
 1. Verify SwiftTreeSitter 0.25.x compiles under Swift 6.3 with `StrictConcurrency`.
-2. Test parser loading for JavaScript, Python, and JSON on macOS, iOS, and Catalyst.
+2. Test parser loading for JavaScript, Python, and JSON on macOS and iOS.
 3. Measure parse time and memory for 10K-line and 100K-line files.
 4. Confirm `ts_parser_reset()` is available as a public API (or the reflection workaround is still viable).
 5. Verify highlight and injection queries exist for the 20 supported languages.

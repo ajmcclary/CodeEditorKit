@@ -44,7 +44,7 @@ public enum AutoBracketingEngine {
         at range: NSRange,
         in textView: CodeEditorView
     ) -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return false }
         #else
         let textStorage = textView.textStorage
@@ -92,7 +92,7 @@ public enum AutoBracketingEngine {
         at range: NSRange,
         in textView: CodeEditorView
     ) -> Bool {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return false }
         #else
         let textStorage = textView.textStorage

@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -541,7 +541,7 @@ extension MinimapViewModel {
             return
         }
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let visibleRect = textView.visibleRect
         #elseif canImport(UIKit)
         let visibleRect = textView.bounds

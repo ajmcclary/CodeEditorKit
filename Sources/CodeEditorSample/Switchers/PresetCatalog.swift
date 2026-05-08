@@ -1,11 +1,10 @@
 import CodeEditorPlugin
 import Foundation
 
-/// Demo presets exposed by the sample's preset picker. All eight built-in
-/// presets are surfaced so the iOS / Catalyst variants are reachable from the
-/// demo even when running on macOS — picking them lets you preview their
-/// configuration via the inspector even if some platform-specific behaviors
-/// only fully manifest on the matching platform.
+/// Demo presets exposed by the sample's preset picker. The iOS preset is
+/// reachable from the macOS demo so its effects can be previewed via the
+/// inspector even though some behaviors only fully manifest on the matching
+/// platform. Catalyst was retired in 0.2.0.
 struct ConfigurationPreset: Identifiable, Hashable {
     let id: String
     let name: String
@@ -23,8 +22,7 @@ enum PresetCatalog {
         ConfigurationPreset(id: "markdown", name: "Markdown", configuration: .markdown),
         ConfigurationPreset(id: "presentation", name: "Presentation", configuration: .presentation),
         ConfigurationPreset(id: "macOS", name: "macOS", configuration: .macOS),
-        ConfigurationPreset(id: "iOS", name: "iOS", configuration: .iOS),
-        ConfigurationPreset(id: "catalyst", name: "Catalyst", configuration: .catalyst)
+        ConfigurationPreset(id: "iOS", name: "iOS", configuration: .iOS)
     ]
 
     /// Default on launch.

@@ -296,7 +296,6 @@ classDiagram
         +textKit2Bridge ModernTextKit2Bridge
         +lineNumberHelper TextKitLineNumberHelper
         +ensureTextKit2()
-        +bridgeToTextKit1()
         +optimizeTextContainer()
         +handleCrossPlatform()
     }
@@ -637,7 +636,7 @@ flowchart TB
 ### 6. Cross-Platform Text Processing
 - **Platform Abstraction**: Unified API across macOS/iOS
 - **Capability Detection**: Runtime feature detection
-- **TextKit Bridge**: Seamless TextKit1/TextKit2 integration
+- **TextKit Bridge**: TextKit2-only convenience wrapper for `NSRange ↔ NSTextRange` conversion (TextKit1 fallback retired in 0.2.0)
 - **Memory Providers**: Platform-specific memory management
 - **Performance Optimization**: Device-specific optimizations
 

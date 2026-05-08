@@ -64,7 +64,7 @@ class UIKitLayoutService: PlatformLayoutService {
 
 #endif
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 // MARK: - AppKit Service Implementations

@@ -75,7 +75,7 @@ struct EditorInteractionStateBindingTests {
         )
         coordinator.updateInteractionStateBinding(binding)
         let textView = CodeEditorView()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "a\nbc"
         #else
         textView.text = "a\nbc"

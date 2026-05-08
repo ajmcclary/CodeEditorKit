@@ -107,32 +107,14 @@ editor.layoutManager?.ensureLayout(for: editor.textContainer!)
 
 ## Platform-Specific Issues
 
-### Mac Catalyst Warnings
-
-**Issue**: Metal toolchain warnings on Mac Catalyst with Xcode beta.
-
-**Solution**: These are cosmetic warnings in beta. Prefer building the package target directly:
-```bash
-swift build
-```
-
 ### LSP Not Working on iOS
 
 **Issue**: Language Server Protocol features unavailable on iOS.
 
-**Solution**: LSP is macOS-only due to sandboxing. Use enhanced local completion:
+**Solution**: LSP is macOS-only due to sandboxing (`Process` is unavailable on iOS). Use enhanced local completion or a remote LSP transport:
 ```swift
 config.behavior.enableLSP = false  // Disable on iOS
 config.behavior.isCodeCompletionEnabled = true  // Use local providers
-```
-
-### Context Menu Not Appearing
-
-**Issue**: Right-click menu doesn't show on Mac Catalyst.
-
-**Solution**: Ensure proper coordinator setup:
-```swift
-CrossPlatformCoordinator.shared.configureInputHandling(for: editorView)
 ```
 
 ## Configuration Issues
@@ -178,18 +160,9 @@ do {
 }
 ```
 
-### TextKit2 Compatibility
+### TextKit2 (always on)
 
-**Issue**: TextKit2 features not working on older systems.
-
-**Solution**: Check capabilities:
-```swift
-if PlatformCapabilities.shared.supportsTextKit2 {
-    // Use TextKit2 features
-} else {
-    // Fallback to TextKit1
-}
-```
+As of 0.2.0 the framework is TextKit2-only on every supported platform — the TextKit1 fallback was retired along with Catalyst. `PlatformCapabilities.supportsTextKit2` always returns `true` on macOS / iOS 26.3+. If you have older code that branches on it, you can simplify the call site.
 
 ## Debugging Tips
 

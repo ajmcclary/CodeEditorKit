@@ -17,9 +17,7 @@ final class PlatformAbstractionTests: XCTestCase {
     func testPlatformDetection() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
-        #if targetEnvironment(macCatalyst)
-        XCTAssertEqual(capabilities.currentPlatform, .catalyst)
-        #elseif canImport(AppKit)
+        #if canImport(AppKit)
         XCTAssertEqual(capabilities.currentPlatform, .macOS)
         #else
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
@@ -40,7 +38,7 @@ final class PlatformAbstractionTests: XCTestCase {
     // MARK: - Type Alias Tests
 
     func testPlatformTypeAliases() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(PlatformColor.self == NSColor.self)
         XCTAssertTrue(PlatformFont.self == NSFont.self)
         XCTAssertTrue(PlatformView.self == NSView.self)
@@ -113,7 +111,7 @@ final class PlatformAbstractionTests: XCTestCase {
     func testTextKitCapabilities() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS 13+ should support TextKit2
         if capabilities.systemVersionComponents.major >= 13 {
             XCTAssertTrue(capabilities.supportsTextKit2)
@@ -149,11 +147,6 @@ final class PlatformAbstractionTests: XCTestCase {
                 XCTAssertTrue(capabilities.supportsPencilInput)
             }
             #endif
-
-        case .catalyst:
-            XCTAssertFalse(capabilities.supportsTouchBar)
-            XCTAssertTrue(capabilities.supportsMultipleWindows)
-            XCTAssertTrue(capabilities.supportsKeyboardShortcuts)
         }
     }
 
@@ -183,11 +176,6 @@ final class PlatformAbstractionTests: XCTestCase {
             XCTAssertEqual(config.layout.gutterWidth, 50.0)
             #endif
 
-        case .catalyst:
-            // Catalyst fontSize varies by device type (14.0 for base, 15.0 for iPad)
-            XCTAssertTrue(config.display.fontSize == 14.0 || config.display.fontSize == 15.0)
-            XCTAssertEqual(config.layout.gutterWidth, 45.0)
-
         case .macOS:
             // Default config should be unchanged
             XCTAssertEqual(config.display.fontSize, EditorConfiguration.default.display.fontSize)
@@ -206,7 +194,7 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertTrue(coordinator.isFeatureAvailable(.codeCompletion))
 
         // Test platform adjustments
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(coordinator.platformAdjustments.defaultFontSize, 12.0)
         #else
         XCTAssertEqual(coordinator.platformAdjustments.defaultFontSize, 14.0)
@@ -219,11 +207,8 @@ final class PlatformAbstractionTests: XCTestCase {
 
         XCTAssertFalse(toolbarItems.isEmpty)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS should have more toolbar items
-        XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst has more toolbar items
         XCTAssertGreaterThanOrEqual(toolbarItems.count, 4)
         #elseif canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -244,7 +229,7 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertNotNil(features)
         XCTAssertTrue(features.supportsSpellChecking)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(features.supportsGrammarChecking)
         XCTAssertTrue(features.supportsAutomaticTextCompletion)
         #else
@@ -262,14 +247,12 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertGreaterThan(version.major, 0)
 
         // Test platform detection
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(capabilities.currentPlatform, .macOS)
         // Test version-based capabilities
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 14, version.major >= 14)
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 13, version.major >= 13)
         XCTAssertEqual(capabilities.systemVersionComponents.major >= 12, version.major >= 12)
-        #elseif targetEnvironment(macCatalyst)
-        XCTAssertEqual(capabilities.currentPlatform, .catalyst)
         #else
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
         #endif

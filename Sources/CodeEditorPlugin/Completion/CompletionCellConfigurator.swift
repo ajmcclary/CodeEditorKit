@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -71,7 +71,7 @@ public enum CompletionCellConfigurator {
 
         /// Returns the current platform based on available frameworks
         public static var current: Self {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return .macOS
             #else
             return .iOS
@@ -120,7 +120,7 @@ public enum CompletionCellConfigurator {
     /// - Returns: Platform-appropriate color (dimmed if deprecated)
     public static func titleColor(for config: CellConfiguration) -> PlatformColor {
         if config.isDeprecated {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return PlatformColors.disabledControlText
             #else
             return PlatformColors.tertiaryLabel
@@ -156,7 +156,7 @@ open class CompletionCellBaseView: PlatformView {
 
     func commonSetup() {
         // Ensure the view is properly configured for its platform
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS specific setup
         wantsLayer = true
         #else
@@ -219,7 +219,7 @@ public enum CompletionCellConstraints {
         case iOS
 
         static var current: Self {
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             return .macOS
             #else
             return .iOS

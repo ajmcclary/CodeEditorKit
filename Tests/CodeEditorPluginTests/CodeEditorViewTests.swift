@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -27,7 +27,7 @@ final class CodeEditorViewTests: XCTestCase {
         // Test that it can be standalone or in hierarchy
         XCTAssertTrue(textView.superview == nil || textView.superview != nil)
         // Test that it's a proper text view
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(textView.isKind(of: NSTextView.self))
         #else
         XCTAssertTrue(textView.isKind(of: UITextView.self))
@@ -43,7 +43,7 @@ final class CodeEditorViewTests: XCTestCase {
         textView.text = testText
 
         XCTAssertEqual(textView.text, testText)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertGreaterThan(textView.textStorage?.length ?? 0, 0)
         #else
         XCTAssertGreaterThan(textView.textStorage.length, 0)
@@ -79,7 +79,7 @@ final class CodeEditorViewTests: XCTestCase {
     func testLineNumbers() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, line numbers are handled by NSRulerView in the container view
         // When using CodeEditorView standalone, the configuration property stores the preference
         // but the text view itself never creates a GutterView
@@ -155,7 +155,7 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLineHighlightColor() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let highlightColor = NSColor.yellow.withAlphaComponent(0.3)
         #else
         let highlightColor = UIColor.yellow.withAlphaComponent(0.3)
@@ -172,7 +172,7 @@ final class CodeEditorViewTests: XCTestCase {
     func testWidthTracking() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Test through the text container since CodeEditorView doesn't expose widthTracksTextView directly
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.textContainer?.widthTracksTextView = true
         XCTAssertTrue(textView.textContainer?.widthTracksTextView ?? false)
 
@@ -189,7 +189,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testHorizontalResizability() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has wrapLines = false, so horizontally resizable = true
         XCTAssertTrue(textView.isHorizontallyResizable)
@@ -210,7 +210,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testVerticalResizability() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isVerticallyResizable)
         textView.isVerticallyResizable = false
@@ -362,7 +362,7 @@ final class CodeEditorViewTests: XCTestCase {
         XCTAssertEqual(todoRange.length, 4)
 
         // Verify range is within text bounds
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textView.textStorage?.length ?? 0
         #else
         let textLength = textView.textStorage.length
@@ -379,7 +379,7 @@ final class CodeEditorViewTests: XCTestCase {
         // Just verify basic text setup
 
         // Verify that text was set
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textView.textStorage?.length ?? 0
         #else
         let textLength = textView.textStorage.length
@@ -408,7 +408,7 @@ final class CodeEditorViewTests: XCTestCase {
         textView.text = "Test content"
 
         // Force layout
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.layoutManager?.ensureLayout(forCharacterRange: NSRange(
             location: 0,
             length: textView.textStorage?.length ?? 0
@@ -421,7 +421,7 @@ final class CodeEditorViewTests: XCTestCase {
         #endif
 
         // Check that text storage has content
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textLength = textView.textStorage?.length ?? 0
         #else
         let textLength = textView.textStorage.length
@@ -432,7 +432,7 @@ final class CodeEditorViewTests: XCTestCase {
     @MainActor
     func testLayoutManager() {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertNotNil(textView.layoutManager)
         // The layout manager should be connected to the text view
         XCTAssertEqual(textView.layoutManager?.textContainers.first, textView.textContainer)
@@ -472,7 +472,7 @@ final class CodeEditorViewTests: XCTestCase {
 
     @MainActor
     func testIsFlipped() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isFlipped)
         #else
@@ -589,7 +589,7 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
 
         // Create a simple test view
         let view = PlatformView(frame: proposedViewFrame)
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.blue.cgColor
         view.layer?.cornerRadius = proposedViewFrame.width / 2

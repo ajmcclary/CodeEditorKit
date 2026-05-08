@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 #elseif canImport(UIKit)
@@ -159,7 +159,7 @@ public final class CodeEditorContainerView: PlatformView {
         ContainerViewInitializer.setupPlatformViews(for: self, with: components)
 
         // Platform-specific additional setup
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Ensure we don't clip subviews on macOS - minimap might extend beyond bounds
         clipsToBounds = false
         #endif
@@ -177,7 +177,7 @@ public final class CodeEditorContainerView: PlatformView {
 
     // MARK: - Layout
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     override public func layout() {
         // Ensure we're on the main thread for layout operations
         if Thread.isMainThread {
@@ -199,7 +199,7 @@ public final class CodeEditorContainerView: PlatformView {
 
     func layoutViews() {
         // Delegate to platform-specific implementations
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         layoutViewsAppKit()
         #else
         layoutViewsUIKit()
@@ -227,7 +227,7 @@ public final class CodeEditorContainerView: PlatformView {
             display.isLineNumbersEnabled = newValue
             configuration = configuration.with(display: display)
 
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             // On macOS, line numbers are handled by NSRulerView, not GutterView
             // Update the ruler view instead
             updateMacOSRuler()
@@ -238,7 +238,7 @@ public final class CodeEditorContainerView: PlatformView {
 
             updateTextContainerInsets()
 
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             needsLayout = true
             #else
             setNeedsLayout()

@@ -16,20 +16,17 @@ extension PlatformServiceLayer {
     /// Returns `true` if the current platform is macOS
     public var isMacOS: Bool { deviceService.isMacOS }
 
-    /// Returns `true` if the current platform is Mac Catalyst
-    public var isMacCatalyst: Bool { deviceService.isMacCatalyst }
-
-    /// Combined mobile check (iPhone or iPad, but not Mac Catalyst)
+    /// Combined mobile check (iPhone or iPad)
     public var isMobile: Bool { deviceService.isIOS }
 
-    /// Desktop check (macOS or Mac Catalyst)
-    public var isDesktop: Bool { deviceService.isMacOS || deviceService.isMacCatalyst }
+    /// Desktop check (macOS)
+    public var isDesktop: Bool { deviceService.isMacOS }
 
     // MARK: - UI Configuration Helpers
 
     /// Determines if touch-optimized UI should be used
     public var shouldUseTouchOptimizedUI: Bool {
-        deviceService.isIOS && !deviceService.isMacCatalyst
+        deviceService.isIOS
     }
 
     /// Determines if compact layout should be used
@@ -159,7 +156,7 @@ extension PlatformDeviceService {
     public var preferredEditorConfiguration: EditorConfigurationHints {
         EditorConfigurationHints(
             showLineNumbers: !isIPhone, // Hide on iPhone for space
-            isMinimapVisible: isMacOS || (isIPad && !isMacCatalyst), // Desktop and large screens
+            isMinimapVisible: isMacOS || isIPad, // Desktop and large screens
             enableWordWrap: isIPhone || prefersCompactUI, // Mobile-friendly
             fontSize: preferredTextSize,
             tabWidth: isIOS ? 2 : 4, // Smaller tabs on mobile

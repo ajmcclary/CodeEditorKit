@@ -129,9 +129,7 @@ final class LargeFilePerformanceTests: XCTestCase {
             }
 
             // Platform-specific timeouts for large file highlighting
-            #if targetEnvironment(macCatalyst)
-            wait(for: [expectation], timeout: 2.0)
-            #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             // Native macOS needs more time for syntax highlighting
             wait(for: [expectation], timeout: 2.0)
             #else

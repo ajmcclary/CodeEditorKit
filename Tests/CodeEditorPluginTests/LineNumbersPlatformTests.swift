@@ -8,7 +8,7 @@
 
 @testable import CodeEditorPlugin
 import XCTest
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -24,7 +24,7 @@ final class LineNumbersPlatformTests: XCTestCase {
 
     // MARK: - Platform-Specific Line Number Tests
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     func testMacOSUsesNSRulerViewNotGutterView() throws {
         // Given: A container view on macOS with line numbers enabled
         let containerView = createContainerView()
@@ -172,7 +172,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         containerView.showsLineNumbers = true
 
         // Then: Configuration should be updated
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // On macOS, this should trigger updateMacOSRuler()
         // We can't directly test if the method was called, but we can verify the property is set
         XCTAssertTrue(containerView.showsLineNumbers)
@@ -185,7 +185,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         containerView.showsLineNumbers = false
 
         // Then: Configuration should be updated
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertFalse(containerView.showsLineNumbers)
         #else
         // On iOS/Catalyst, gutterView should be hidden
@@ -202,7 +202,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         containerView.updateTextContainerInsets()
 
         // Then: Text container should have appropriate insets
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         let insets = containerView.textView.textContainerInset
         XCTAssertGreaterThan(insets.width, 0, "Text container should have horizontal inset")
         #else
@@ -221,7 +221,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         containerView.configuration = config
 
         // Then: The appropriate platform-specific changes should occur
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS should have ruler view
         XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
         XCTAssertTrue(containerView.scrollView.rulersVisible)
@@ -247,7 +247,7 @@ final class LineNumbersPlatformTests: XCTestCase {
             containerView.configuration = config
 
             // Then: The state should match the configuration
-            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            #if canImport(AppKit)
             XCTAssertEqual(containerView.scrollView.hasVerticalRuler, enabled)
             XCTAssertEqual(containerView.scrollView.rulersVisible, enabled)
             #else
@@ -265,7 +265,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         containerView.configuration = config
 
         // Then: Both features should work independently
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS: Ruler view for line numbers, minimap as separate view
         XCTAssertTrue(containerView.scrollView.hasVerticalRuler)
         XCTAssertTrue(containerView.subviews.contains(containerView.minimapView))

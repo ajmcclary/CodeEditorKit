@@ -38,7 +38,7 @@ final class IntegrationTests: CleanupTestCase {
 
         // Verify highlighting was applied
         var hasHighlighting = false
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let textStorage = editor.textStorage {
             textStorage.enumerateAttributes(
                 in: NSRange(location: 0, length: textStorage.length),
@@ -82,7 +82,7 @@ final class IntegrationTests: CleanupTestCase {
 
         // Verify final text is highlighted
         var hasHighlighting = false
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         if let textStorage = editor.textStorage {
             textStorage.enumerateAttributes(
                 in: NSRange(location: 0, length: textStorage.length),
@@ -136,7 +136,7 @@ final class IntegrationTests: CleanupTestCase {
         let editor = createCodeEditorView()
 
         // Verify platform-specific features work correctly
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(capabilities.currentPlatform, .macOS)
         XCTAssertTrue(capabilities.performanceCapabilities.supportsHardwareAcceleration)
         XCTAssertTrue(capabilities.textKitCapabilities.supportsTextKit2)
@@ -145,11 +145,7 @@ final class IntegrationTests: CleanupTestCase {
         editor.isAutomaticQuoteSubstitutionEnabled = false
         XCTAssertFalse(editor.isAutomaticQuoteSubstitutionEnabled)
         #elseif canImport(UIKit)
-        if ProcessInfo.processInfo.isMacCatalystApp {
-            XCTAssertEqual(capabilities.currentPlatform, .catalyst)
-        } else {
-            XCTAssertEqual(capabilities.currentPlatform, .iOS)
-        }
+        XCTAssertEqual(capabilities.currentPlatform, .iOS)
 
         // Test iOS/Catalyst-specific features
         editor.autocapitalizationType = .none
@@ -173,7 +169,7 @@ final class IntegrationTests: CleanupTestCase {
 
         // Test platform-specific configuration
         var config = EditorConfiguration()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         config = PlatformConfigurations.macOS
         #else
         config = PlatformConfigurations.iOS
@@ -204,7 +200,7 @@ final class IntegrationTests: CleanupTestCase {
 
         // Test platform-specific adjustments
         let adjustments = coordinator.platformAdjustments
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(adjustments.defaultFontSize, 12)
         #else
         XCTAssertEqual(adjustments.defaultFontSize, 14)

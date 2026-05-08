@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 // LSP test helpers are only available on macOS
 
 @testable import CodeEditorPlugin
@@ -193,4 +193,4 @@ extension LSPCompletionProvider {
     }
 }
 
-#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
+#endif // canImport(AppKit)

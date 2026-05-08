@@ -1,7 +1,7 @@
 import CodeEditorDesignTokens
 import CoreGraphics
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 
 extension NSColor {

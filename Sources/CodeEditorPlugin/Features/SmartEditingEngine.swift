@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -14,7 +14,7 @@ import UIKit
 /// - `SmartSelectionExpander`: Expands selections to logical boundaries
 @MainActor
 public class SmartEditingEngine: NSObject, ObservableObject {
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     public typealias PlatformTextViewDelegate = NSTextViewDelegate
     #else
     public typealias PlatformTextViewDelegate = UITextViewDelegate
@@ -146,7 +146,7 @@ public class SmartEditingEngine: NSObject, ObservableObject {
 
 // MARK: - Text View Delegate
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 extension SmartEditingEngine: NSTextViewDelegate {
     public func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString text: String?) -> Bool {
         guard let codeEditorView = textView as? CodeEditorView else { return true }
@@ -319,7 +319,7 @@ public struct SmartEditingConfiguration {
     /// Whether multi-cursor editing is enabled
     public var enableMultiCursor = true
 
-    #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+    #if canImport(AppKit)
     /// The modifier key used for multi-cursor operations on macOS
     public var multiCursorModifierKey: NSEvent.ModifierFlags = .option
     #else

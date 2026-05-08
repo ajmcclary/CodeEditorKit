@@ -2,7 +2,7 @@ import Foundation
 
 #if canImport(UIKit)
 import UIKit
-#elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
+#elseif canImport(AppKit)
 import AppKit
 #endif
 
@@ -16,7 +16,7 @@ extension CodeEditorView {
         let setupResult = TextKitSetupHelper.setupTextKit(for: self)
 
         #if DEBUG
-        Self.logger.debug("Setting up CodeEditorView with TextKit\(setupResult.isUsingTextKit2 ? "2" : "1")")
+        Self.logger.debug("Setting up CodeEditorView with TextKit2")
         setupResult.notes.forEach { note in
             Self.logger.debug("TextKit Setup: \(note)")
         }
@@ -52,7 +52,7 @@ extension CodeEditorView {
 
     internal func setupDefaultTheme() {
         // Set default theme colors
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         backgroundColor = PlatformColors.textBackgroundColor
         textColor = PlatformColors.label
         insertionPointColor = PlatformColors.controlAccentColor

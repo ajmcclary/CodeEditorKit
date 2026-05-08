@@ -67,7 +67,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let coordinator = CrossPlatformCoordinator()
         let adjustments = coordinator.platformAdjustments
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(adjustments.defaultFontSize, 12.0)
         XCTAssertEqual(adjustments.lineSpacing, 1.2)
         XCTAssertEqual(adjustments.gutterWidth, 40.0)
@@ -78,7 +78,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(adjustments.enableMultiCursor)
         #else
         // iOS/Catalyst - values may be adjusted for iPad
-        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        #if canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
             // iPad gets optimized adjustments
             XCTAssertEqual(adjustments.defaultFontSize, 14.0)
@@ -131,7 +131,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.isFeatureAvailable(.lineNumbers))
 
         // Test platform-specific features
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertTrue(coordinator.isFeatureAvailable(.multipleCursors))
         XCTAssertFalse(coordinator.isFeatureAvailable(.minimap))
         #else
@@ -147,12 +147,9 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         let goToDefAvailability = coordinator.getFeatureAvailability(.goToDefinition)
         let symbolNavAvailability = coordinator.getFeatureAvailability(.symbolNavigation)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         XCTAssertEqual(goToDefAvailability, .full)
         XCTAssertEqual(symbolNavAvailability, .full)
-        #elseif targetEnvironment(macCatalyst)
-        XCTAssertEqual(goToDefAvailability, .partial)
-        XCTAssertEqual(symbolNavAvailability, .partial)
         #elseif canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCTAssertEqual(goToDefAvailability, .partial)
@@ -176,7 +173,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(config.display.isLineNumbersEnabled)
         XCTAssertTrue(config.performance.useHardwareAcceleration)
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // Platform-specific values are set by PlatformCapabilities
         #else
         // Platform-specific values are set by PlatformCapabilities
@@ -196,7 +193,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         // All platforms should have find
         XCTAssertTrue(items.contains { $0.id == "find" })
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS should have full toolbar
         XCTAssertTrue(items.contains { $0.id == "replace" })
         XCTAssertTrue(items.contains { $0.id == "symbol" })
@@ -247,10 +244,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             in: textView
         )
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        XCTAssertTrue(handled)
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst always handles keyboard input
+        #if canImport(AppKit)
         XCTAssertTrue(handled)
         #else
         // iOS only handles keyboard input with external keyboard
@@ -269,10 +263,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             in: textView
         )
 
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        XCTAssertTrue(handled)
-        #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst always handles mouse input
+        #if canImport(AppKit)
         XCTAssertTrue(handled)
         #else
         // iOS handles mouse input differently for right click
@@ -302,7 +293,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertNotNil(menu)
 
         // All platforms should have basic editing actions
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // macOS returns NSMenu
         let nsMenu = menu
         XCTAssertGreaterThan(nsMenu.items.count, 3)

@@ -5,7 +5,7 @@ import SwiftUI
 #endif
 import Testing
 
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -88,7 +88,7 @@ struct MinimapStyleDataSourceTests {
     @MainActor
     func dataProviderEmitsStyleRuns() {
         let textView = CodeEditorView()
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         textView.string = "let value = 1"
         #else
         textView.text = "let value = 1"

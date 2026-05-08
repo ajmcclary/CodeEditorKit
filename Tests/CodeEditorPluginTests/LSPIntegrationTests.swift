@@ -1,4 +1,4 @@
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
+#if canImport(AppKit)
 // LSP tests are only available on macOS
 
 import XCTest
@@ -300,7 +300,7 @@ final class LSPIntegrationTests: XCTestCase {
 
     @MainActor
     func testPlatformAvailability() {
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        #if canImport(AppKit)
         // LSP should be available on native macOS
         let lspAvailability = CodeEditorDependencies.makePlatformCapabilities().isFeatureAvailable(.languageServerProtocol)
         XCTAssertTrue(lspAvailability, "LSP should be supported on native macOS")
@@ -477,4 +477,4 @@ final class LSPIntegrationTests: XCTestCase {
     }
 }
 
-#endif // canImport(AppKit) && !targetEnvironment(macCatalyst)
+#endif // canImport(AppKit)
