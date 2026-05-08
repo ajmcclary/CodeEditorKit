@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LCARS · WORKSPACE 0214 / NAVIGATION REFACTOR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* LCARS Dark tokens — sourced from CodeEditorPlugin/Resources/Themes/zed-trek.json */
+      --bg:            #05060A;
+      --bg-tab:        #05060A;
+      --bg-editor:     #080A0F;
+      --bg-panel:      #0D1018;
+      --bg-status:     #10141D;
+      --bg-surface:    #111827;
+      --bg-element:    #151A24;
+      --bg-hover:      #1E2636;
+      --bg-active:     #2A1E14;
+      --bg-active-2:   #372216;
+      --bg-blue-tint:  #0F2530;
+      --bg-lilac-tint: #211A38;
+
+      --border:        #2A2030;
+      --border-var:    #252B36;
+      --border-soft:   #1B2230;
+      --border-hidden: #1B1F2A;
+
+      --orange:        #FF9933;
+      --orange-bg:     #FF993329;
+      --orange-bg-2:   #FF993314;
+      --peach:         #FFD8B0;
+      --peach-bg:      #FFD8B01A;
+      --gold:          #FFCC66;
+      --gold-bg:       #FFCC6624;
+      --gold-search:   #FFCC6688;
+      --tomato:        #FFB66B;
+      --cyan:          #7EC8DE;
+      --cyan-bg:       #7EC8DE1A;
+      --cyan-bright:   #9CEAF7;
+      --blue:          #257EA7;
+      --blue-deep:     #1E3A5F;
+      --lilac:         #CC99FF;
+      --lilac-bg:      #CC99FF1F;
+      --lilac-deep:    #8A63E6;
+      --red:           #EF5A5A;
+      --red-bg:        #EF5A5A24;
+      --red-bright:    #FF7A7A;
+      --green:         #A7F3D0;
+      --green-mid:     #4CB591;
+
+      --text:          #F2E7D8;
+      --text-bright:   #FFF7ED;
+      --text-muted:    #AEB6C2;
+      --text-dim:      #8B93A1;
+      --text-fade:     #687282;
+      --text-disabled: #566070;
+      --line-num:      #6F7888;
+
+      --r-mega:        72px;
+      --r-large:       44px;
+      --r-mid:         24px;
+      --r-small:       14px;
+      --r-pill:        9999px;
+      --gap:           6px;
+
+      --serif: 'Antonio', 'Helvetica Neue', system-ui, sans-serif;
+      --sans:  'Antonio', 'Helvetica Neue', system-ui, sans-serif;
+      --mono:  'JetBrains Mono', ui-monospace, monospace;
+
+      --tracking-1: 0.02em;
+      --tracking-2: 0.06em;
+      --tracking-3: 0.18em;
+      --tracking-4: 0.32em;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.4;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* faint scanline overlay — period CRT cue, kept very subtle */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 2px,
+        rgba(0, 0, 0, 0.18) 2px,
+        rgba(0, 0, 0, 0.18) 3px
+      );
+      mix-blend-mode: multiply;
+      opacity: 0.5;
+    }
+
+    /* CRT vignette */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%);
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* LAYOUT                                                     */
+    /* ────────────────────────────────────────────────────────── */
+
+    .lcars {
+      display: grid;
+      grid-template-columns: 232px 1fr;
+      grid-template-rows: 96px 1fr 168px 24px;
+      gap: var(--gap);
+      padding: var(--gap);
+      height: 100vh;
+      background: var(--bg);
+      position: relative;
+    }
+
+    /* ╔══ TOP-LEFT ELBOW ═══════════════════════════════════════ */
+    .elbow-top {
+      grid-column: 1;
+      grid-row: 1;
+      background: var(--orange);
+      border-top-left-radius: var(--r-mega);
+      border-bottom-right-radius: var(--r-mid);
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 0 16px 12px;
+      color: var(--bg);
+    }
+
+    .elbow-top::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -6px;
+      width: 6px;
+      height: 30%;
+      background: var(--bg);
+    }
+
+    .elbow-top__num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-2);
+      color: var(--bg);
+      opacity: 0.78;
+    }
+
+    /* ╔══ TOP BAR ═══════════════════════════════════════════════ */
+    .topbar {
+      grid-column: 2;
+      grid-row: 1;
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto auto auto auto;
+      gap: var(--gap);
+      align-items: stretch;
+      min-width: 0;
+    }
+
+    .topbar__plate {
+      background: var(--orange);
+      color: var(--bg);
+      border-top-right-radius: var(--r-mega);
+      padding: 14px 32px 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      min-width: 0;
+      position: relative;
+    }
+
+    .topbar__plate::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 50%;
+      width: 6px;
+      height: 30%;
+      background: var(--bg);
+    }
+
+    .topbar__id {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .topbar__title {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar__title b {
+      font-weight: 700;
+    }
+
+    .topbar__sep {
+      width: 8px;
+      height: 8px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: inline-block;
+      transform: translateY(-3px);
+      flex-shrink: 0;
+    }
+
+    .topbar__stardate {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-2);
+      color: var(--bg);
+      opacity: 0.85;
+      white-space: nowrap;
+    }
+    .topbar__stardate b { font-weight: 700; }
+
+    .topbar__lineage {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .lineage-pip {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      color: var(--bg);
+      opacity: 0.55;
+      padding: 4px 8px;
+      background: rgba(5, 6, 10, 0.18);
+      border-radius: var(--r-pill);
+      white-space: nowrap;
+    }
+    .lineage-pip[data-active="true"] {
+      background: var(--bg);
+      color: var(--orange);
+      opacity: 1;
+    }
+    .lineage-pip[data-state="stale"]    { box-shadow: inset 0 -2px 0 var(--gold); }
+    .lineage-pip[data-state="modified"] { box-shadow: inset 0 -2px 0 var(--lilac); }
+    .lineage-pip[data-state="waiting"]  { box-shadow: inset 0 -2px 0 var(--red); }
+
+    /* notch cells next to top plate — those tiny LCARS cells */
+    .topbar__notch {
+      background: var(--peach);
+      color: var(--bg);
+      border-radius: 0;
+      padding: 0 18px;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      min-width: 96px;
+    }
+    .topbar__notch--cyan  { background: var(--cyan); }
+    .topbar__notch--gold  { background: var(--gold); }
+    .topbar__notch--lilac { background: var(--lilac); }
+
+    .topbar__notch:last-child {
+      border-top-right-radius: var(--r-mid);
+      border-bottom-right-radius: var(--r-mid);
+    }
+    .topbar__notch small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      opacity: 0.7;
+      margin-top: 1px;
+      text-transform: none;
+    }
+
+    /* ╔══ SIDEBAR ═══════════════════════════════════════════════ */
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2 / 3;
+      display: grid;
+      grid-template-rows: auto auto auto auto auto auto auto auto auto auto auto auto 1fr;
+      gap: var(--gap);
+      align-content: start;
+    }
+
+    .cell {
+      background: var(--peach);
+      color: var(--bg);
+      padding: 8px 14px 6px;
+      font-family: var(--serif);
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: filter 140ms ease;
+      border-radius: 0;
+      position: relative;
+      min-height: 32px;
+    }
+
+    .cell:hover { filter: brightness(1.12); }
+
+    .cell__id {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      opacity: 0.66;
+      letter-spacing: var(--tracking-2);
+    }
+
+    .cell__label {
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      line-height: 1;
+    }
+
+    .cell__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--bg);
+      opacity: 0.5;
+    }
+
+    .cell--orange { background: var(--orange); }
+    .cell--peach  { background: var(--peach); }
+    .cell--gold   { background: var(--gold); }
+    .cell--cyan   { background: var(--cyan); }
+    .cell--lilac  { background: var(--lilac); }
+    .cell--red    { background: var(--red); }
+    .cell--tomato { background: var(--tomato); }
+    .cell--blue   { background: var(--blue); color: var(--text); }
+    .cell--bluedeep { background: var(--blue-deep); color: var(--text); }
+
+    .cell--active {
+      animation: lcars-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes lcars-pulse {
+      0%, 100% { filter: brightness(1); }
+      50%      { filter: brightness(1.3); box-shadow: 0 0 24px rgba(255, 153, 51, 0.4); }
+    }
+
+    .cell--tall  { min-height: 64px; align-items: flex-end; }
+    .cell--xtall { min-height: 96px; align-items: flex-end; }
+
+    .cell--readout {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding: 8px 14px;
+    }
+    .cell--readout .cell__id {
+      align-self: flex-end;
+      margin-top: 2px;
+    }
+    .cell--readout .cell__big {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .cell--readout .cell__small {
+      font-family: var(--serif);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      opacity: 0.74;
+      margin-top: 2px;
+    }
+
+    /* the divider rows in the sidebar — thin black gaps with a dotted band */
+    .sidebar__divider {
+      height: 4px;
+      background: transparent;
+      position: relative;
+      margin: 4px 0;
+    }
+    .sidebar__divider::before {
+      content: '';
+      position: absolute;
+      top: 1px; left: 14px; right: 14px;
+      height: 2px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--orange) 0 6px,
+        transparent 6px 10px
+      );
+      opacity: 0.5;
+    }
+
+    /* ╔══ BOTTOM-LEFT ELBOW ════════════════════════════════════ */
+    .elbow-bottom {
+      grid-column: 1;
+      grid-row: 3;
+      background: var(--orange);
+      border-bottom-left-radius: var(--r-mega);
+      border-top-right-radius: var(--r-mid);
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 12px 16px 0;
+      color: var(--bg);
+    }
+    .elbow-bottom::before {
+      content: '';
+      position: absolute;
+      top: 35%;
+      right: -6px;
+      width: 6px;
+      height: 30%;
+      background: var(--bg);
+    }
+    .elbow-bottom__num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-2);
+      opacity: 0.8;
+    }
+
+    /* sidebar nameplate — vertical text element */
+    .sidebar__plate {
+      grid-column: 1;
+      grid-row: 4;
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      padding: 0 0 0 24px;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-3);
+      color: var(--text-dim);
+    }
+
+    /* ╔══ STAGE (panel stack) ══════════════════════════════════ */
+    .stage {
+      grid-column: 2;
+      grid-row: 2;
+      background: var(--bg);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stage__rail {
+      position: absolute;
+      top: 0; bottom: 0;
+      right: 0;
+      width: 56px;
+      z-index: 5;
+      background: var(--bg-status);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 6px;
+      border-radius: var(--r-small) 0 0 var(--r-small);
+    }
+
+    .stage__rail-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-3);
+      color: var(--text-fade);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      align-self: center;
+      margin: 8px 0;
+    }
+
+    .rail-chip {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-small);
+      background: var(--bg-element);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      position: relative;
+      transition: all 140ms ease;
+    }
+    .rail-chip:hover { background: var(--bg-hover); }
+    .rail-chip[data-active="true"] {
+      background: var(--orange);
+    }
+    .rail-chip[data-active="true"] .rail-chip__num { color: var(--bg); }
+    .rail-chip[data-active="true"] .rail-chip__icon { stroke: var(--bg); }
+
+    .rail-chip__num {
+      position: absolute;
+      top: 4px; left: 6px;
+      font-family: var(--mono);
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .rail-chip__icon {
+      width: 18px; height: 18px;
+      stroke: var(--text);
+      fill: none;
+      stroke-width: 1.6;
+    }
+    .rail-chip__dot {
+      position: absolute;
+      bottom: 4px; right: 6px;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .rail-chip__dot--orange { background: var(--orange); }
+    .rail-chip__dot--cyan   { background: var(--cyan); }
+    .rail-chip__dot--gold   { background: var(--gold); }
+    .rail-chip__dot--lilac  { background: var(--lilac); }
+    .rail-chip__dot--red    { background: var(--red); animation: blink 1.4s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: 0.3; } }
+
+    .stage__scroll {
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-right: 64px;
+      position: relative;
+    }
+    .stage__scroll::-webkit-scrollbar { height: 6px; }
+    .stage__scroll::-webkit-scrollbar-track { background: var(--bg-element); }
+    .stage__scroll::-webkit-scrollbar-thumb { background: var(--orange); border-radius: var(--r-pill); }
+
+    .stack {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(440px, auto);
+      gap: var(--gap);
+      height: 100%;
+      padding: 0 var(--gap) 0 0;
+    }
+
+    /* ╔══ PANEL ═════════════════════════════════════════════════ */
+    .panel {
+      display: grid;
+      grid-template-rows: 56px auto 1fr auto;
+      background: var(--bg-panel);
+      border-radius: var(--r-small);
+      overflow: hidden;
+      position: relative;
+      transition: all 220ms ease;
+    }
+
+    .panel--chat   { width: 460px; }
+    .panel--plan   { width: 480px; }
+    .panel--file   { width: 600px; }
+    .panel--diff   { width: 640px; }
+    .panel--approve { width: 460px; }
+
+    .panel[data-active="true"] {
+      background: var(--bg-editor);
+      box-shadow:
+        0 0 0 2px var(--orange),
+        0 0 32px rgba(255, 153, 51, 0.18);
+    }
+
+    /* the LCARS panel header bar — solid color, dark text, rounded ends */
+    .panel__head {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+      background: var(--bg);
+    }
+
+    .panel__head-id {
+      background: var(--peach);
+      color: var(--bg);
+      padding: 0 18px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-2);
+      border-top-left-radius: var(--r-small);
+      border-bottom-left-radius: var(--r-small);
+      min-width: 96px;
+    }
+
+    .panel__head-title {
+      background: var(--peach);
+      color: var(--bg);
+      padding: 0 18px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: var(--tracking-2);
+      text-transform: uppercase;
+      line-height: 1;
+      gap: 14px;
+      min-width: 0;
+      position: relative;
+    }
+    .panel__head-title::before {
+      content: '';
+      position: absolute;
+      left: -1px; top: 50%;
+      width: 6px; height: 60%;
+      background: var(--bg);
+      transform: translateY(-50%);
+    }
+    .panel__head-title small {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-3);
+      opacity: 0.66;
+      margin-left: auto;
+    }
+
+    .panel__head-title code {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0;
+      color: var(--bg);
+      background: rgba(5, 6, 10, 0.14);
+      padding: 2px 8px 0;
+      border-radius: 3px;
+    }
+
+    .panel__head-status {
+      background: var(--bg);
+      padding: 0;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 4px;
+    }
+
+    .panel__head-actions {
+      background: var(--bg);
+      padding: 0;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .head-stamp {
+      height: 56px;
+      display: grid;
+      place-items: center;
+      padding: 0 16px;
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--bg);
+      min-width: 92px;
+    }
+    .head-stamp small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      opacity: 0.7;
+      margin-top: 1px;
+      text-align: center;
+      text-transform: none;
+    }
+    .head-stamp--orange { background: var(--orange); }
+    .head-stamp--gold   { background: var(--gold); }
+    .head-stamp--cyan   { background: var(--cyan); }
+    .head-stamp--lilac  { background: var(--lilac); }
+    .head-stamp--red    { background: var(--red); animation: blink 1.6s steps(2) infinite; }
+
+    .head-stamp:last-child {
+      border-top-right-radius: var(--r-small);
+      border-bottom-right-radius: var(--r-small);
+    }
+
+    .head-action {
+      width: 36px;
+      height: 56px;
+      background: var(--bg-element);
+      border: 0;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      transition: all 120ms ease;
+    }
+    .head-action:hover {
+      background: var(--orange);
+      color: var(--bg);
+    }
+    .head-action svg { width: 14px; height: 14px; }
+    .head-action:last-child { border-top-right-radius: var(--r-small); border-bottom-right-radius: var(--r-small); }
+
+    /* panel color variants — recolor head plate by panel role */
+    .panel--chat .panel__head-id, .panel--chat .panel__head-title    { background: var(--peach); }
+    .panel--plan .panel__head-id, .panel--plan .panel__head-title    { background: var(--cyan); }
+    .panel--file .panel__head-id, .panel--file .panel__head-title    { background: var(--orange); }
+    .panel--diff .panel__head-id, .panel--diff .panel__head-title    { background: var(--gold); }
+    .panel--approve .panel__head-id, .panel--approve .panel__head-title { background: var(--red); color: var(--text-bright); }
+    .panel--approve .panel__head-title::before { background: var(--bg); }
+    .panel--approve .panel__head-title code { color: var(--text-bright); background: rgba(0,0,0,0.3); }
+
+    /* ╔══ PANEL META BAR ═══════════════════════════════════════ */
+    .panel__meta {
+      padding: 10px 16px;
+      background: var(--bg-status);
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+
+    .panel__meta-key {
+      color: var(--orange);
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+    }
+
+    .panel__meta-val {
+      color: var(--text);
+    }
+    .panel__meta-val a {
+      color: var(--cyan);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--cyan);
+    }
+
+    .panel__meta-bar {
+      width: 1px;
+      height: 14px;
+      background: var(--border-var);
+    }
+
+    /* ╔══ PANEL BODY ═══════════════════════════════════════════ */
+    .panel__body {
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      background: var(--bg-panel);
+    }
+    .panel__body::-webkit-scrollbar { width: 8px; }
+    .panel__body::-webkit-scrollbar-track { background: var(--bg-status); }
+    .panel__body::-webkit-scrollbar-thumb { background: var(--orange); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* CHAT                                                       */
+    /* ────────────────────────────────────────────────────────── */
+    .chat {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .msg {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 14px;
+      position: relative;
+    }
+
+    .msg__rail {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
+    }
+    .msg__role-pill {
+      padding: 4px 10px 3px;
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--bg);
+      border-radius: var(--r-pill);
+      align-self: flex-end;
+    }
+    .msg__role-pill--user  { background: var(--peach); }
+    .msg__role-pill--agent { background: var(--orange); }
+    .msg__time {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-fade);
+      text-align: right;
+      line-height: 1.35;
+    }
+    .msg__time b {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: block;
+    }
+
+    .msg__body {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.45;
+      letter-spacing: var(--tracking-1);
+      color: var(--text);
+    }
+    .msg__body p + p { margin-top: 8px; }
+    .msg--user .msg__body {
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--text-bright);
+    }
+    .msg__body code {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--blue-deep);
+    }
+
+    .stream-caret {
+      display: inline-block;
+      width: 8px; height: 16px;
+      background: var(--orange);
+      vertical-align: -3px;
+      animation: blink 1s steps(2) infinite;
+    }
+
+    /* artifact cards */
+    .artifact-row {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+    }
+    .artifact {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-element);
+      border-left: 4px solid var(--text-fade);
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+    .artifact:hover { background: var(--bg-hover); }
+    .artifact[data-state="open"] { background: var(--bg-active); border-left-color: var(--orange); }
+    .artifact[data-state="open"][data-color="cyan"] { border-left-color: var(--cyan); background: var(--bg-blue-tint); }
+    .artifact[data-state="open"][data-color="gold"] { border-left-color: var(--gold); }
+    .artifact[data-state="open"][data-color="lilac"] { border-left-color: var(--lilac); background: var(--bg-lilac-tint); }
+
+    .artifact__icon {
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      background: var(--bg-status);
+      border-radius: 4px;
+    }
+    .artifact__icon svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 1.6; }
+
+    .artifact__title {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0;
+      color: var(--text-bright);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .artifact__sub {
+      font-family: var(--serif);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--text-fade);
+      margin-top: 2px;
+    }
+    .artifact__sub b { color: var(--orange); font-weight: 700; }
+    .artifact__sub .b-cyan { color: var(--cyan); }
+    .artifact__sub .b-gold { color: var(--gold); }
+    .artifact__sub .b-red  { color: var(--red); }
+
+    .artifact__id {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-fade);
+    }
+
+    /* footnote callout */
+    .callout {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--cyan-bg);
+      border-left: 3px solid var(--cyan);
+      font-family: var(--serif);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-1);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .callout b {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 2px;
+    }
+    .callout--warn { background: var(--gold-bg); border-left-color: var(--gold); }
+    .callout--warn b { color: var(--gold); }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* PLAN                                                       */
+    /* ────────────────────────────────────────────────────────── */
+    .plan-readout {
+      margin: 14px 16px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--gap);
+    }
+    .plan-readout__cell {
+      padding: 12px 14px 10px;
+      background: var(--bg-element);
+      border-top: 4px solid var(--cyan);
+    }
+    .plan-readout__cell:nth-child(2) { border-top-color: var(--gold); }
+    .plan-readout__cell:nth-child(3) { border-top-color: var(--lilac); }
+    .plan-readout__num {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text-bright);
+    }
+    .plan-readout__num small {
+      font-family: var(--serif);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      margin-left: 6px;
+    }
+    .plan-readout__lbl {
+      font-family: var(--serif);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .plan-list {
+      padding: 16px 16px 24px;
+      counter-reset: step;
+    }
+    .plan-step {
+      display: grid;
+      grid-template-columns: 64px 28px 1fr;
+      gap: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-soft);
+      counter-increment: step;
+    }
+    .plan-step:last-child { border-bottom: 0; }
+    .plan-step__id {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-fade);
+    }
+    .plan-step__id::before {
+      content: 'STEP-';
+    }
+    .plan-step__id::after {
+      content: counter(step, decimal-leading-zero);
+    }
+    .plan-step__check {
+      width: 24px; height: 24px;
+      border: 2px solid var(--text-fade);
+      display: grid; place-items: center;
+      margin-top: 1px;
+    }
+    .plan-step__check svg { width: 14px; height: 14px; opacity: 0; }
+    .plan-step[data-state="done"] .plan-step__check {
+      border-color: var(--cyan);
+      background: var(--cyan-bg);
+    }
+    .plan-step[data-state="done"] .plan-step__check svg { opacity: 1; stroke: var(--cyan); }
+    .plan-step[data-state="active"] .plan-step__check {
+      border-color: var(--orange);
+      background: var(--orange-bg);
+      animation: lcars-pulse 1.6s ease-in-out infinite;
+    }
+    .plan-step[data-state="active"] .plan-step__check::after {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--orange);
+    }
+    .plan-step[data-state="done"] .plan-step__title {
+      color: var(--text-dim);
+      text-decoration: line-through;
+      text-decoration-color: var(--text-fade);
+    }
+
+    .plan-step__title {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 1.3;
+      color: var(--text-bright);
+      letter-spacing: var(--tracking-1);
+    }
+    .plan-step__title code {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      padding: 0 5px;
+      border-radius: 2px;
+    }
+    .plan-step__sub {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+    .plan-step__sub a {
+      color: var(--orange);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--orange);
+    }
+    .plan-step__sub b.run {
+      color: var(--orange);
+      font-family: var(--serif);
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      font-size: 10px;
+      margin-left: 6px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* FILE PANEL                                                 */
+    /* ────────────────────────────────────────────────────────── */
+    .stale-banner {
+      margin: 12px 16px 0;
+      padding: 10px 14px;
+      background: var(--gold-bg);
+      border-left: 3px solid var(--gold);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .stale-banner__msg {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: var(--tracking-1);
+      line-height: 1.4;
+    }
+    .stale-banner__msg b {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2px;
+    }
+    .stale-banner__actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pill-btn {
+      padding: 7px 12px 6px;
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      background: var(--bg-element);
+      color: var(--text);
+      border: 0;
+      cursor: pointer;
+      border-radius: var(--r-pill);
+      transition: all 120ms ease;
+    }
+    .pill-btn:hover { background: var(--bg-hover); }
+    .pill-btn--orange { background: var(--orange); color: var(--bg); }
+    .pill-btn--orange:hover { background: var(--peach); }
+    .pill-btn--cyan { background: var(--cyan); color: var(--bg); }
+    .pill-btn--gold { background: var(--gold); color: var(--bg); }
+    .pill-btn--gold:hover { background: var(--peach); }
+    .pill-btn--ghost { background: transparent; border: 1px solid var(--border-var); }
+    .pill-btn--ghost:hover { border-color: var(--orange); color: var(--orange); }
+
+    .code {
+      padding: 14px 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+      counter-reset: line;
+    }
+    .code__line {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: start;
+      counter-increment: line;
+      position: relative;
+    }
+    .code__line::before {
+      content: counter(line, decimal-leading-zero);
+      grid-column: 1;
+      padding: 0 12px 0 18px;
+      color: var(--line-num);
+      font-size: 10.5px;
+      letter-spacing: var(--tracking-2);
+      text-align: right;
+    }
+    .code__line[data-modified="true"] { background: var(--orange-bg-2); }
+    .code__line[data-modified="true"]::before { color: var(--orange); }
+    .code__line[data-modified="true"]::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--orange);
+    }
+    .code__line[data-selected="true"] { background: rgba(126, 200, 222, 0.10); }
+    .code__line[data-selected="true"]::after {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cyan);
+    }
+
+    .code__text {
+      padding-right: 18px;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    /* syntax tokens — derived from LCARS Dark theme syntax */
+    .tk-key   { color: var(--orange); font-weight: 700; }
+    .tk-fn    { color: var(--peach); font-weight: 700; }
+    .tk-str   { color: var(--cyan-bright); }
+    .tk-cmt   { color: var(--text-dim); font-style: italic; }
+    .tk-num   { color: var(--tomato); font-weight: 600; }
+    .tk-tag   { color: var(--orange); font-weight: 700; }
+    .tk-attr  { color: var(--cyan); font-weight: 600; }
+    .tk-prop  { color: var(--cyan); font-weight: 600; }
+    .tk-punct { color: var(--text-muted); }
+    .tk-bracket { color: var(--gold); font-weight: 700; }
+    .tk-type  { color: var(--lilac); font-weight: 700; }
+    .tk-bool  { color: var(--gold); font-weight: 700; }
+
+    .code__diagnostic {
+      grid-column: 2;
+      margin: 4px 16px 4px 0;
+      padding: 8px 12px;
+      background: var(--gold-bg);
+      border-left: 3px solid var(--gold);
+      font-family: var(--serif);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.4;
+      letter-spacing: var(--tracking-1);
+    }
+    .code__diagnostic b {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2px;
+    }
+
+    .code__sel-tag {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      color: var(--bg);
+      background: var(--cyan);
+      padding: 2px 8px 1px;
+      pointer-events: none;
+      border-radius: var(--r-pill);
+      text-transform: uppercase;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* DIFF                                                       */
+    /* ────────────────────────────────────────────────────────── */
+    .diff-readout {
+      padding: 14px 16px;
+      background: var(--bg-status);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: var(--gap);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .diff-readout__cell {
+      padding: 8px 12px;
+      background: var(--bg-element);
+      border-left: 3px solid var(--orange);
+    }
+    .diff-readout__cell:nth-child(2) { border-left-color: var(--green-mid); }
+    .diff-readout__cell:nth-child(3) { border-left-color: var(--red); }
+    .diff-readout__cell:nth-child(4) { border-left-color: var(--gold); }
+    .diff-readout__num {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text-bright);
+    }
+    .diff-readout__num--add { color: var(--green); }
+    .diff-readout__num--del { color: var(--red); }
+    .diff-readout__num--med { color: var(--gold); }
+    .diff-readout__lbl {
+      font-family: var(--serif);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .hunk { border-bottom: 1px solid var(--border-soft); }
+    .hunk:last-child { border-bottom: 0; }
+    .hunk__head {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--bg-status);
+    }
+    .hunk__locator { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .hunk__file {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+    .hunk__range {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: var(--tracking-2);
+      color: var(--gold);
+    }
+
+    .hunk__actions { display: flex; gap: 4px; }
+
+    .hunk__body {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .diff-line {
+      display: grid;
+      grid-template-columns: 36px 36px 18px 1fr;
+      padding-right: 18px;
+    }
+    .diff-line__a, .diff-line__b {
+      text-align: right;
+      padding: 0 8px;
+      color: var(--line-num);
+      font-size: 10px;
+      border-right: 1px solid var(--border-soft);
+    }
+    .diff-line__sign {
+      text-align: center;
+      padding: 0 4px;
+      color: var(--text-muted);
+    }
+    .diff-line__text {
+      padding-left: 6px;
+      color: var(--text);
+      white-space: pre;
+      overflow: hidden;
+    }
+    .diff-line[data-kind="add"] {
+      background: rgba(76, 181, 145, 0.10);
+    }
+    .diff-line[data-kind="add"] .diff-line__sign { color: var(--green); }
+    .diff-line[data-kind="add"] .diff-line__text { color: var(--green); }
+    .diff-line[data-kind="del"] {
+      background: var(--red-bg);
+    }
+    .diff-line[data-kind="del"] .diff-line__sign { color: var(--red); }
+    .diff-line[data-kind="del"] .diff-line__text {
+      color: var(--red-bright);
+      text-decoration: line-through;
+      text-decoration-color: var(--red);
+    }
+
+    .hunk__comment {
+      margin: 6px 16px 12px 84px;
+      padding: 10px 14px;
+      background: var(--bg-element);
+      border-left: 3px solid var(--orange);
+      font-family: var(--serif);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.45;
+      letter-spacing: var(--tracking-1);
+    }
+    .hunk__comment b {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-right: 8px;
+    }
+
+    /* ────────────────────────────────────────────────────────── */
+    /* APPROVAL PANEL                                             */
+    /* ────────────────────────────────────────────────────────── */
+    .approval {
+      padding: 18px 18px 16px;
+      position: relative;
+    }
+    .approval__alert {
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: var(--red-bg);
+      border-left: 4px solid var(--red);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .approval__alert-icon {
+      width: 44px; height: 44px;
+      display: grid; place-items: center;
+      background: var(--red);
+      color: var(--bg);
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 22px;
+      animation: blink 1.6s steps(2) infinite;
+    }
+    .approval__alert-text {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--red);
+    }
+    .approval__alert-text b {
+      display: block;
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-bright);
+      margin-bottom: 3px;
+    }
+
+    .approval__lead {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--text);
+      letter-spacing: var(--tracking-1);
+      margin-bottom: 16px;
+    }
+    .approval__lead em {
+      font-style: normal;
+      font-weight: 700;
+      color: var(--orange);
+    }
+
+    .approval__section { margin-top: 18px; }
+    .approval__lbl {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .approval__lbl::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: var(--orange);
+      opacity: 0.4;
+    }
+
+    .approval__files {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .approval__file {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--bg-element);
+      align-items: center;
+    }
+    .approval__file-flag {
+      width: 22px; height: 22px;
+      display: grid; place-items: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--orange);
+      border-radius: 3px;
+    }
+    .approval__file-flag--add { background: var(--green); }
+    .approval__file-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-bright);
+    }
+    .approval__file-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: var(--tracking-2);
+    }
+
+    .risk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .risk-item {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--bg-element);
+      align-items: start;
+    }
+    .risk-lvl {
+      padding: 2px 0;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      text-align: center;
+      color: var(--bg);
+      background: var(--text-fade);
+    }
+    .risk-lvl--high { background: var(--red); }
+    .risk-lvl--med  { background: var(--gold); }
+    .risk-lvl--low  { background: var(--text-fade); }
+    .risk-text {
+      font-family: var(--serif);
+      font-size: 12.5px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.4;
+      letter-spacing: var(--tracking-1);
+    }
+    .risk-text code {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      padding: 0 4px;
+    }
+
+    .approval__cta {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cta-btn {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--orange);
+      color: var(--bg);
+      border: 0;
+      cursor: pointer;
+      transition: all 140ms ease;
+      text-align: left;
+    }
+    .cta-btn:hover { background: var(--peach); }
+    .cta-btn:first-child { border-top-left-radius: var(--r-mid); border-top-right-radius: var(--r-mid); }
+    .cta-btn:last-child  { border-bottom-left-radius: var(--r-mid); border-bottom-right-radius: var(--r-mid); }
+    .cta-btn--ghost {
+      background: var(--bg-element);
+      color: var(--text);
+    }
+    .cta-btn--ghost:hover { background: var(--bg-hover); }
+
+    .cta-btn__lead {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: var(--tracking-2);
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .cta-btn__sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    .cta-btn__kbd {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0;
+      padding: 6px 10px 5px;
+      background: rgba(5, 6, 10, 0.18);
+      color: var(--bg);
+      border-radius: 3px;
+    }
+    .cta-btn--ghost .cta-btn__kbd { background: var(--bg); color: var(--text-muted); }
+
+    /* ╔══ COMPOSER (BOTTOM BAR) ════════════════════════════════ */
+    .composer-row {
+      grid-column: 2;
+      grid-row: 3;
+      display: grid;
+      grid-template-columns: 1fr;
+      background: var(--bg);
+      gap: var(--gap);
+    }
+
+    .composer {
+      background: var(--bg-panel);
+      border-radius: 0 var(--r-mid) var(--r-mid) 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .composer__strip {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: stretch;
+      gap: 2px;
+      background: var(--bg);
+      padding: 0;
+      height: 36px;
+    }
+    .composer__strip-label {
+      background: var(--orange);
+      color: var(--bg);
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      padding: 0 18px;
+      display: grid;
+      place-items: center;
+    }
+    .composer__strip-target {
+      background: var(--bg-status);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-muted);
+    }
+    .composer__strip-target b { color: var(--orange); font-weight: 700; }
+    .composer__strip-target .b-cyan { color: var(--cyan); }
+    .composer__strip-keys {
+      background: var(--bg-status);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-fade);
+      text-transform: uppercase;
+    }
+    .composer__strip-keys kbd {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      padding: 2px 5px 1px;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border-var);
+      margin: 0 2px;
+    }
+
+    .composer__main {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      align-items: stretch;
+      gap: var(--gap);
+      padding: 0;
+      background: var(--bg);
+    }
+
+    .composer__field {
+      background: var(--bg-element);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .composer__chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 3px 8px;
+      background: var(--bg-status);
+      border: 1px solid var(--border-var);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: var(--tracking-1);
+      color: var(--text);
+      border-radius: var(--r-pill);
+    }
+    .chip__pin {
+      width: 8px; height: 8px;
+      background: var(--orange);
+      border-radius: 50%;
+    }
+    .chip--cyan .chip__pin { background: var(--cyan); }
+    .chip__close {
+      cursor: pointer;
+      color: var(--text-fade);
+      font-size: 12px;
+      line-height: 0.7;
+    }
+    .chip__close:hover { color: var(--orange); }
+    .chip--add {
+      background: transparent;
+      border-style: dashed;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .chip--add:hover { border-color: var(--orange); color: var(--orange); }
+
+    .composer__textarea {
+      width: 100%;
+      background: var(--bg-editor);
+      border: 1px solid var(--border-var);
+      padding: 10px 14px;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 15px;
+      letter-spacing: var(--tracking-1);
+      color: var(--text);
+      resize: none;
+      outline: none;
+      min-height: 60px;
+      max-height: 90px;
+    }
+    .composer__textarea:focus { border-color: var(--orange); }
+    .composer__textarea::placeholder { color: var(--text-fade); font-style: italic; }
+
+    .composer__send {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      padding: 0;
+    }
+
+    .composer__send .send-btn {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 0 16px;
+      background: var(--orange);
+      color: var(--bg);
+      border: 0;
+      cursor: pointer;
+      flex: 1;
+      text-align: left;
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      transition: all 140ms ease;
+      position: relative;
+    }
+    .composer__send .send-btn:hover { background: var(--peach); }
+    .composer__send .send-btn:first-child { border-top-right-radius: var(--r-mid); }
+    .composer__send .send-btn:last-child  { border-bottom-right-radius: var(--r-mid); }
+    .composer__send .send-btn small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      opacity: 0.7;
+      margin-top: 3px;
+      text-transform: none;
+    }
+    .composer__send .send-btn kbd {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px 4px;
+      background: rgba(5, 6, 10, 0.18);
+      color: var(--bg);
+      border-radius: 3px;
+    }
+    .composer__send .send-btn--secondary {
+      background: var(--cyan);
+    }
+    .composer__send .send-btn--secondary:hover { background: var(--peach); }
+
+    /* ╔══ STATUS RIBBON ═════════════════════════════════════════ */
+    .status-ribbon {
+      grid-column: 1 / 3;
+      grid-row: 4;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto auto auto;
+      align-items: stretch;
+      gap: var(--gap);
+      background: var(--bg);
+      height: 24px;
+    }
+    .ribbon-cell {
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-status);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-2);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .ribbon-cell:first-child {
+      background: var(--orange);
+      color: var(--bg);
+      font-weight: 700;
+      letter-spacing: var(--tracking-3);
+    }
+    .ribbon-cell:last-child {
+      background: var(--cyan);
+      color: var(--bg);
+      font-weight: 700;
+      border-bottom-right-radius: var(--r-mid);
+    }
+    .ribbon-cell b { color: var(--text-bright); font-weight: 700; }
+    .ribbon-cell:first-child b { color: var(--bg); }
+    .ribbon-cell:last-child b { color: var(--bg); }
+
+    .ribbon-pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--bg);
+      animation: blink 1.2s steps(2) infinite;
+    }
+
+    /* ╔══ MISC ══════════════════════════════════════════════════ */
+    .scroll-hint {
+      position: fixed;
+      bottom: 196px;
+      right: 80px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--bg-element);
+      border: 1px solid var(--orange);
+      border-radius: var(--r-pill);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: var(--tracking-3);
+      text-transform: uppercase;
+      color: var(--orange);
+      z-index: 100;
+    }
+    .scroll-hint kbd {
+      background: var(--bg);
+      padding: 2px 5px;
+      border-radius: 2px;
+      color: var(--text);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="lcars">
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ TOP-LEFT ELBOW                                       ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <div class="elbow-top">
+    <span class="elbow-top__num">000-1701</span>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ TOP BAR                                              ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <header class="topbar">
+    <div class="topbar__plate">
+      <div class="topbar__id">
+        <h1 class="topbar__title">LCARS &middot; <b>Workspace 0214</b></h1>
+        <span class="topbar__sep"></span>
+        <span class="topbar__stardate">STARDATE <b>78214.7</b> &middot; ACCESS 7-7-9-1</span>
+      </div>
+      <nav class="topbar__lineage" aria-label="Panel lineage">
+        <span class="lineage-pip">01·CHAT</span>
+        <span class="lineage-pip" data-state="modified">02·PLAN</span>
+        <span class="lineage-pip" data-active="true" data-state="stale">03·NAV</span>
+        <span class="lineage-pip" data-state="modified">04·DIFF</span>
+        <span class="lineage-pip" data-state="waiting">05·APR</span>
+      </nav>
+    </div>
+    <div class="topbar__notch topbar__notch--cyan">14:09<small>session</small></div>
+    <div class="topbar__notch topbar__notch--gold">5/12<small>panels</small></div>
+    <div class="topbar__notch topbar__notch--lilac">α<small>branch</small></div>
+    <div class="topbar__notch">A·M<small>operator</small></div>
+  </header>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ SIDEBAR                                              ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <aside class="sidebar">
+    <button class="cell cell--peach" data-target="chat">
+      <span><span class="cell__id">01-A</span><br><span class="cell__label">Chat</span></span>
+      <span class="cell__dot"></span>
+    </button>
+    <button class="cell cell--cyan" data-target="plan">
+      <span><span class="cell__id">02-D</span><br><span class="cell__label">Plan</span></span>
+      <span class="cell__dot"></span>
+    </button>
+    <button class="cell cell--orange cell--active cell--tall" data-target="file">
+      <span><span class="cell__id">03-X · ACTIVE</span><br><span class="cell__label">Navigation.tsx</span></span>
+    </button>
+    <button class="cell cell--gold" data-target="diff">
+      <span><span class="cell__id">04-G</span><br><span class="cell__label">Diff · 3</span></span>
+    </button>
+    <button class="cell cell--red" data-target="approve">
+      <span><span class="cell__id">05-R</span><br><span class="cell__label">Approval</span></span>
+      <span class="cell__dot" style="opacity:1; animation: blink 1.4s steps(2) infinite;"></span>
+    </button>
+
+    <div class="sidebar__divider"></div>
+
+    <div class="cell cell--readout cell--bluedeep">
+      <span class="cell__big">14<small>%</small></span>
+      <span class="cell__small">Memory</span>
+      <span class="cell__id">M-3·1MB</span>
+    </div>
+    <div class="cell cell--readout cell--bluedeep">
+      <span class="cell__big">7+1</span>
+      <span class="cell__small">Tests · 1 fail</span>
+      <span class="cell__id">T-NAV</span>
+    </div>
+    <div class="cell cell--readout cell--bluedeep">
+      <span class="cell__big">+12<small>−6</small></span>
+      <span class="cell__small">Pending diff</span>
+      <span class="cell__id">D-3F</span>
+    </div>
+
+    <div class="sidebar__divider"></div>
+
+    <div class="cell cell--lilac">
+      <span><span class="cell__id">BR</span><br><span class="cell__label">feature/nav-v2</span></span>
+    </div>
+    <div class="cell cell--peach">
+      <span><span class="cell__id">RUN</span><br><span class="cell__label">#14 · Streaming</span></span>
+      <span class="cell__dot" style="animation: blink 1s steps(2) infinite;"></span>
+    </div>
+  </aside>
+
+  <!-- placeholder for vertical sidebar info -->
+  <div class="sidebar__plate">L1·P5</div>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ STAGE                                                ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <main class="stage">
+    <div class="stage__scroll" id="stageScroll">
+      <div class="stack">
+
+        <!-- ─────── PANEL 01 — CHAT ─────── -->
+        <section class="panel panel--chat" data-active="false" data-panel-id="chat">
+          <header class="panel__head">
+            <div class="panel__head-id">P·01</div>
+            <div class="panel__head-title">
+              Chat &middot; 0214
+              <small>session</small>
+            </div>
+            <div class="panel__head-status">
+              <div class="head-stamp head-stamp--cyan">Active<small>session</small></div>
+            </div>
+            <div class="panel__head-actions">
+              <button class="head-action" title="Pin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1l2 4 5 1-3.5 3.5 1 5L8 12l-4.5 2.5 1-5L1 6l5-1z"/></svg></button>
+              <button class="head-action" title="Collapse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M3 8h10M3 12h10"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-key">Origin</span>
+            <span class="panel__meta-val">User-initiated</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Scope</span>
+            <span class="panel__meta-val"><a href="#">project / dashboard / nav</a></span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Prompts</span>
+            <span class="panel__meta-val">3</span>
+          </div>
+
+          <div class="panel__body">
+            <div class="chat">
+
+              <!-- USER MSG 1 -->
+              <article class="msg">
+                <div class="msg__rail">
+                  <span class="msg__role-pill msg__role-pill--user">Operator</span>
+                  <span class="msg__time"><b>14:02</b>U·01</span>
+                </div>
+                <div class="msg__body">
+                  Refactor the dashboard navigation to use the new routing primitives. Keep the mobile breakpoint untouched, and surface a diff before applying anything.
+                </div>
+              </article>
+
+              <!-- AGENT MSG 1 -->
+              <article class="msg">
+                <div class="msg__rail">
+                  <span class="msg__role-pill msg__role-pill--agent">LCARS</span>
+                  <span class="msg__time"><b>14:02</b>A·01</span>
+                </div>
+                <div class="msg__body">
+                  <p>Plan acknowledged. Drafted a three-step plan, opened it as a panel, and prepared a proposed diff across three files. Mobile breakpoint logic in <code>useResponsive.ts</code> remains untouched.</p>
+
+                  <div class="artifact-row">
+                    <div class="artifact" data-state="open" data-color="cyan">
+                      <div class="artifact__icon"><svg viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/></svg></div>
+                      <div>
+                        <div class="artifact__title">Plan.md</div>
+                        <div class="artifact__sub">Plan · 3 steps · <b>modified</b></div>
+                      </div>
+                      <div class="artifact__id">P·02</div>
+                    </div>
+                    <div class="artifact" data-state="open">
+                      <div class="artifact__icon"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12"/><path d="M5 6h6M5 9h4"/></svg></div>
+                      <div>
+                        <div class="artifact__title">navigation.tsx</div>
+                        <div class="artifact__sub">File · <span class="b-gold">stale</span></div>
+                      </div>
+                      <div class="artifact__id">P·03</div>
+                    </div>
+                    <div class="artifact" data-state="open" data-color="gold">
+                      <div class="artifact__icon"><svg viewBox="0 0 16 16"><path d="M3 8l4-4M3 8l4 4M13 8l-4-4M13 8l-4 4"/></svg></div>
+                      <div>
+                        <div class="artifact__title">Diff · 3 files</div>
+                        <div class="artifact__sub">+12 −6 · <b>unapplied</b></div>
+                      </div>
+                      <div class="artifact__id">P·04</div>
+                    </div>
+                    <div class="artifact" data-color="lilac">
+                      <div class="artifact__icon"><svg viewBox="0 0 16 16"><path d="M2 13h12M4 11l3-6 3 4 2-2"/></svg></div>
+                      <div>
+                        <div class="artifact__title">Test output</div>
+                        <div class="artifact__sub">7 passed · <span class="b-red">1 failed</span></div>
+                      </div>
+                      <div class="artifact__id">→ open</div>
+                    </div>
+                  </div>
+
+                  <div class="callout">
+                    <b>Computer · advisory</b>
+                    The route-matching change in <code>routes.ts:67</code> may shift the order in which sibling routes resolve. Recommended: review before approving.
+                  </div>
+                </div>
+              </article>
+
+              <!-- USER MSG 2 -->
+              <article class="msg">
+                <div class="msg__rail">
+                  <span class="msg__role-pill msg__role-pill--user">Operator</span>
+                  <span class="msg__time"><b>14:09</b>U·02</span>
+                </div>
+                <div class="msg__body">
+                  Why did you change line 67 in <code>routes.ts</code>? The old order looked correct to me.
+                </div>
+              </article>
+
+              <!-- AGENT MSG 2 — STREAMING -->
+              <article class="msg">
+                <div class="msg__rail">
+                  <span class="msg__role-pill msg__role-pill--agent">LCARS</span>
+                  <span class="msg__time"><b>14:09</b>A·02</span>
+                </div>
+                <div class="msg__body">
+                  <p>The previous order placed the catch-all <code>/dashboard/*</code> before the specific <code>/dashboard/settings</code>, so the new router would shadow the settings route. I lifted settings above the wildcard and left the rest of the file alone<span class="stream-caret"></span></p>
+                </div>
+              </article>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 02 — PLAN ─────── -->
+        <section class="panel panel--plan" data-active="false" data-panel-id="plan">
+          <header class="panel__head">
+            <div class="panel__head-id">P·02</div>
+            <div class="panel__head-title">
+              Plan.md
+              <small>v3 · plan</small>
+            </div>
+            <div class="panel__head-status">
+              <div class="head-stamp head-stamp--lilac">Modified<small>since 14:08</small></div>
+            </div>
+            <div class="panel__head-actions">
+              <button class="head-action" title="Regenerate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8a6 6 0 1 0 1.7-4.2L2 5"/><path d="M2 2v3h3"/></svg></button>
+              <button class="head-action" title="Versions"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg></button>
+              <button class="head-action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-key">From</span>
+            <span class="panel__meta-val"><a href="#">"Refactor the dashboard nav…"</a></span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Edits</span>
+            <span class="panel__meta-val">2 user · 1 agent</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Updated</span>
+            <span class="panel__meta-val">14:08 (1m ago)</span>
+          </div>
+
+          <div class="panel__body">
+            <div class="plan-readout">
+              <div class="plan-readout__cell">
+                <div class="plan-readout__num">03<small>total</small></div>
+                <div class="plan-readout__lbl">Steps</div>
+              </div>
+              <div class="plan-readout__cell">
+                <div class="plan-readout__num">03<small>changed</small></div>
+                <div class="plan-readout__lbl">Files</div>
+              </div>
+              <div class="plan-readout__cell">
+                <div class="plan-readout__num">07<small>+ 1 fail</small></div>
+                <div class="plan-readout__lbl">Tests</div>
+              </div>
+            </div>
+
+            <div class="plan-list">
+              <div class="plan-step" data-state="done">
+                <div class="plan-step__id"></div>
+                <div class="plan-step__check"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7l3 3 6-7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div>
+                  <div class="plan-step__title">Lift <code>/dashboard/settings</code> above the wildcard route in <code>routes.ts</code>.</div>
+                  <div class="plan-step__sub">Touches <a href="#">routes.ts:64–71</a> · order change only.</div>
+                </div>
+              </div>
+              <div class="plan-step" data-state="active">
+                <div class="plan-step__id"></div>
+                <div class="plan-step__check"></div>
+                <div>
+                  <div class="plan-step__title">Replace <code>useNavigate()</code> with the new <code>useRouterPrimitive()</code> across <code>navigation.tsx</code>.</div>
+                  <div class="plan-step__sub">Touches <a href="#">navigation.tsx:42–88</a> · keeps mobile breakpoint via <code>useResponsive</code>.<b class="run">▶ in progress</b></div>
+                </div>
+              </div>
+              <div class="plan-step">
+                <div class="plan-step__id"></div>
+                <div class="plan-step__check"></div>
+                <div>
+                  <div class="plan-step__title">Add a regression test for sibling-route ordering in <code>navigation.test.ts</code>.</div>
+                  <div class="plan-step__sub">New file section · ~40 lines.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 03 — FILE (ACTIVE) ─────── -->
+        <section class="panel panel--file" data-active="true" data-panel-id="file">
+          <header class="panel__head">
+            <div class="panel__head-id">P·03</div>
+            <div class="panel__head-title">
+              <code>navigation.tsx</code>
+              <small>112 ln · TS / React</small>
+            </div>
+            <div class="panel__head-status">
+              <div class="head-stamp head-stamp--gold">Stale<small>14:08</small></div>
+              <div class="head-stamp head-stamp--orange">Active<small>cursor here</small></div>
+            </div>
+            <div class="panel__head-actions">
+              <button class="head-action" title="Refresh"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8a6 6 0 1 0 1.7-4.2L2 5"/><path d="M2 2v3h3"/></svg></button>
+              <button class="head-action" title="Compare"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8l3-3M3 8l3 3M13 8l-3-3M13 8l-3 3"/></svg></button>
+              <button class="head-action" title="Reveal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l3-2 3 2h6v8H2z"/></svg></button>
+              <button class="head-action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-key">Origin</span>
+            <span class="panel__meta-val">opened from <a href="#">navigation.tsx ref</a></span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Last edit</span>
+            <span class="panel__meta-val">Agent · run #14 · 14:08</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Diagnostic</span>
+            <span class="panel__meta-val" style="color:var(--gold)">1 warning</span>
+          </div>
+
+          <div class="panel__body">
+
+            <div class="stale-banner">
+              <div class="stale-banner__msg">
+                <b>Stale source · disk changed 14:08</b>
+                The agent regenerated this file 18 seconds ago. Your viewing copy is from 14:07.
+              </div>
+              <div class="stale-banner__actions">
+                <button class="pill-btn pill-btn--gold">Refresh</button>
+                <button class="pill-btn pill-btn--ghost">Compare</button>
+                <button class="pill-btn pill-btn--ghost">Keep mine</button>
+              </div>
+            </div>
+
+            <div class="code">
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> <span class="tk-bracket">{</span> useRouterPrimitive <span class="tk-bracket">}</span> <span class="tk-key">from</span> <span class="tk-str">'@/router'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> <span class="tk-bracket">{</span> useResponsive <span class="tk-bracket">}</span> <span class="tk-key">from</span> <span class="tk-str">'@/hooks/useResponsive'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">import</span> SidebarItem <span class="tk-key">from</span> <span class="tk-str">'./SidebarItem'</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-cmt">// Mobile breakpoint preserved — see useResponsive.ts</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">export const</span> <span class="tk-fn">Navigation</span> <span class="tk-punct">= (</span><span class="tk-punct">) =&gt; {</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-key">const</span> <span class="tk-bracket">{</span> isMobile <span class="tk-bracket">} =</span> <span class="tk-fn">useResponsive</span><span class="tk-punct">();</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-key">const</span> <span class="tk-bracket">{</span> matchRoute, navigate <span class="tk-bracket">} =</span> <span class="tk-fn">useRouterPrimitive</span><span class="tk-punct">();</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">  <span class="tk-key">const</span> sections <span class="tk-punct">= </span><span class="tk-bracket">[</span></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">    <span class="tk-bracket">{</span> <span class="tk-prop">id</span><span class="tk-punct">:</span> <span class="tk-str">'overview'</span>, <span class="tk-prop">label</span><span class="tk-punct">:</span> <span class="tk-str">'Overview'</span>, <span class="tk-prop">route</span><span class="tk-punct">:</span> <span class="tk-str">'/dashboard'</span> <span class="tk-bracket">}</span><span class="tk-punct">,</span></span></div>
+              <div class="code__line" data-modified="true"><span class="code__text">    <span class="tk-bracket">{</span> <span class="tk-prop">id</span><span class="tk-punct">:</span> <span class="tk-str">'settings'</span>, <span class="tk-prop">label</span><span class="tk-punct">:</span> <span class="tk-str">'Settings'</span>, <span class="tk-prop">route</span><span class="tk-punct">:</span> <span class="tk-str">'/dashboard/settings'</span> <span class="tk-bracket">}</span><span class="tk-punct">,</span></span></div>
+              <div class="code__line"><span class="code__text">    <span class="tk-bracket">{</span> <span class="tk-prop">id</span><span class="tk-punct">:</span> <span class="tk-str">'team'</span>, <span class="tk-prop">label</span><span class="tk-punct">:</span> <span class="tk-str">'Team'</span>, <span class="tk-prop">route</span><span class="tk-punct">:</span> <span class="tk-str">'/dashboard/team'</span> <span class="tk-bracket">}</span><span class="tk-punct">,</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-bracket">]</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">  <span class="tk-key">return</span> <span class="tk-bracket">(</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">    <span class="tk-punct">&lt;</span><span class="tk-tag">nav</span> <span class="tk-attr">className</span><span class="tk-punct">=</span><span class="tk-bracket">{</span>isMobile <span class="tk-punct">?</span> <span class="tk-str">'nav-stack'</span> <span class="tk-punct">:</span> <span class="tk-str">'nav-row'</span><span class="tk-bracket">}</span><span class="tk-punct">&gt;</span></span>
+                <span class="code__sel-tag">L42–88 sel</span>
+              </div>
+              <div class="code__line" data-selected="true"><span class="code__text">      <span class="tk-bracket">{</span>sections<span class="tk-punct">.</span><span class="tk-fn">map</span><span class="tk-bracket">((</span>s<span class="tk-bracket">) =&gt; (</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">        <span class="tk-punct">&lt;</span><span class="tk-type">SidebarItem</span></span></div>
+              <div class="code__line" data-selected="true" data-modified="true"><span class="code__text">          <span class="tk-attr">key</span><span class="tk-punct">=</span><span class="tk-bracket">{</span>s<span class="tk-punct">.</span>id<span class="tk-bracket">}</span></span></div>
+              <div class="code__line" data-selected="true" data-modified="true"><span class="code__text">          <span class="tk-attr">active</span><span class="tk-punct">=</span><span class="tk-bracket">{</span><span class="tk-fn">matchRoute</span><span class="tk-bracket">(</span>s<span class="tk-punct">.</span>route<span class="tk-bracket">)}</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">          <span class="tk-attr">onSelect</span><span class="tk-punct">=</span><span class="tk-bracket">{() =&gt;</span> <span class="tk-fn">navigate</span><span class="tk-bracket">(</span>s<span class="tk-punct">.</span>route<span class="tk-bracket">)}</span></span></div>
+              <div class="code__line"><span class="code__diagnostic"><b>warning · ts(2304)</b><code style="font-family:var(--mono);font-size:11px;color:var(--cyan);background:var(--cyan-bg);padding:0 4px">matchRoute</code> returns <code style="font-family:var(--mono);font-size:11px;color:var(--lilac);background:var(--lilac-bg);padding:0 4px">RouteMatch | null</code> — coerce to boolean before passing to <code style="font-family:var(--mono);font-size:11px;color:var(--cyan);background:var(--cyan-bg);padding:0 4px">active</code>.</span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">        <span class="tk-punct">/&gt;</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">      <span class="tk-bracket">))}</span></span></div>
+              <div class="code__line" data-selected="true"><span class="code__text">    <span class="tk-punct">&lt;/</span><span class="tk-tag">nav</span><span class="tk-punct">&gt;</span></span></div>
+              <div class="code__line"><span class="code__text">  <span class="tk-bracket">)</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-bracket">}</span><span class="tk-punct">;</span></span></div>
+              <div class="code__line"><span class="code__text"></span></div>
+              <div class="code__line"><span class="code__text"><span class="tk-key">export default</span> Navigation<span class="tk-punct">;</span></span></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 04 — DIFF ─────── -->
+        <section class="panel panel--diff" data-active="false" data-panel-id="diff">
+          <header class="panel__head">
+            <div class="panel__head-id">P·04</div>
+            <div class="panel__head-title">
+              Diff &middot; nav refactor
+              <small>3 hunks · 3 files</small>
+            </div>
+            <div class="panel__head-status">
+              <div class="head-stamp head-stamp--lilac">Unapplied<small>+12 −6</small></div>
+            </div>
+            <div class="panel__head-actions">
+              <button class="head-action" title="Apply all"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8l3 3 7-7"/></svg></button>
+              <button class="head-action" title="Reject all"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+              <button class="head-action" title="Comment"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3h12v9H7l-3 3v-3H2z"/></svg></button>
+              <button class="head-action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-key">From</span>
+            <span class="panel__meta-val"><a href="#">Plan step 02</a></span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Risk</span>
+            <span class="panel__meta-val" style="color:var(--gold)">Medium</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Generated</span>
+            <span class="panel__meta-val">Run #14 · 14:08</span>
+          </div>
+
+          <div class="panel__body">
+            <div class="diff-readout">
+              <div class="diff-readout__cell">
+                <div class="diff-readout__num">03</div>
+                <div class="diff-readout__lbl">Files</div>
+              </div>
+              <div class="diff-readout__cell">
+                <div class="diff-readout__num diff-readout__num--add">+12</div>
+                <div class="diff-readout__lbl">Additions</div>
+              </div>
+              <div class="diff-readout__cell">
+                <div class="diff-readout__num diff-readout__num--del">−06</div>
+                <div class="diff-readout__lbl">Deletions</div>
+              </div>
+              <div class="diff-readout__cell">
+                <div class="diff-readout__num diff-readout__num--med">M</div>
+                <div class="diff-readout__lbl">Risk · medium</div>
+              </div>
+            </div>
+
+            <!-- HUNK 1 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">src/router/routes.ts</span>
+                  <span class="hunk__range">@@ −63,5 +64,7 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="pill-btn pill-btn--orange">Accept</button>
+                  <button class="pill-btn pill-btn--ghost">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">63</span><span class="diff-line__b">63</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text">  { path: '/dashboard', element: &lt;Overview /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">64</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  { path: '/dashboard/*', element: &lt;CatchAll /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">65</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  { path: '/dashboard/settings', element: &lt;Settings /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">64</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/settings', element: &lt;Settings /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">65</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/team',     element: &lt;Team /&gt; },</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">66</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  { path: '/dashboard/*',        element: &lt;CatchAll /&gt; },</span>
+                </div>
+                <div class="hunk__comment">
+                  <b>Agent · rationale</b>Specific routes lifted above the wildcard so the new router resolves them first. No behaviour change for the catch-all itself.
+                </div>
+              </div>
+            </div>
+
+            <!-- HUNK 2 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">src/components/Navigation.tsx</span>
+                  <span class="hunk__range">@@ −51,8 +51,10 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="pill-btn pill-btn--orange">Accept</button>
+                  <button class="pill-btn pill-btn--ghost">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">51</span><span class="diff-line__b">51</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text">  const { isMobile } = useResponsive();</span>
+                </div>
+                <div class="diff-line" data-kind="del">
+                  <span class="diff-line__a">52</span><span class="diff-line__b"></span><span class="diff-line__sign">−</span>
+                  <span class="diff-line__text">  const navigate = useNavigate();</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">52</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const { matchRoute, navigate } = useRouterPrimitive();</span>
+                </div>
+                <div class="diff-line" data-kind="ctx">
+                  <span class="diff-line__a">53</span><span class="diff-line__b">53</span><span class="diff-line__sign"> </span>
+                  <span class="diff-line__text"></span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">54</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const sections = [/* see file panel */];</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- HUNK 3 -->
+            <div class="hunk">
+              <div class="hunk__head">
+                <div class="hunk__locator">
+                  <span class="hunk__file">tests/navigation.test.ts</span>
+                  <span class="hunk__range">@@ −0,0 +12,8 @@</span>
+                </div>
+                <div class="hunk__actions">
+                  <button class="pill-btn pill-btn--ghost">Accept</button>
+                  <button class="pill-btn pill-btn--ghost">Reject</button>
+                </div>
+              </div>
+              <div class="hunk__body">
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">12</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">test('settings resolves above wildcard', () =&gt; {</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">13</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  const m = matchRoute('/dashboard/settings');</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">14</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">  expect(m?.element.type).toBe(Settings);</span>
+                </div>
+                <div class="diff-line" data-kind="add">
+                  <span class="diff-line__a"></span><span class="diff-line__b">15</span><span class="diff-line__sign">+</span>
+                  <span class="diff-line__text">});</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────── PANEL 05 — APPROVAL ─────── -->
+        <section class="panel panel--approve" data-active="false" data-panel-id="approve">
+          <header class="panel__head">
+            <div class="panel__head-id">P·05</div>
+            <div class="panel__head-title">
+              Approval gate
+              <small>awaiting</small>
+            </div>
+            <div class="panel__head-status">
+              <div class="head-stamp head-stamp--red">Alert<small>decision req</small></div>
+            </div>
+            <div class="panel__head-actions">
+              <button class="head-action" title="Defer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg></button>
+              <button class="head-action" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+            </div>
+          </header>
+
+          <div class="panel__meta">
+            <span class="panel__meta-key">From</span>
+            <span class="panel__meta-val">P·04 / Diff</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Risk</span>
+            <span class="panel__meta-val" style="color:var(--gold)">Medium</span>
+            <span class="panel__meta-bar"></span>
+            <span class="panel__meta-key">Reversible</span>
+            <span class="panel__meta-val" style="color:var(--cyan)">Yes · 1-click</span>
+          </div>
+
+          <div class="panel__body">
+            <div class="approval">
+
+              <div class="approval__alert">
+                <div class="approval__alert-icon">!</div>
+                <div class="approval__alert-text">
+                  <b>Authorization required</b>
+                  Operator confirmation needed before any file is modified
+                </div>
+              </div>
+
+              <p class="approval__lead">
+                The agent will modify <em>three</em> source files in your working tree. Nothing is committed; nothing leaves this machine.
+              </p>
+
+              <div class="approval__section">
+                <div class="approval__lbl">Files affected</div>
+                <div class="approval__files">
+                  <div class="approval__file">
+                    <span class="approval__file-flag">M</span>
+                    <span class="approval__file-name">src/router/routes.ts</span>
+                    <span class="approval__file-meta">+3 −2</span>
+                  </div>
+                  <div class="approval__file">
+                    <span class="approval__file-flag">M</span>
+                    <span class="approval__file-name">src/components/Navigation.tsx</span>
+                    <span class="approval__file-meta">+5 −4</span>
+                  </div>
+                  <div class="approval__file">
+                    <span class="approval__file-flag approval__file-flag--add">A</span>
+                    <span class="approval__file-name">tests/navigation.test.ts</span>
+                    <span class="approval__file-meta">+4 −0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="approval__section">
+                <div class="approval__lbl">Risk areas</div>
+                <div class="risk-list">
+                  <div class="risk-item">
+                    <span class="risk-lvl risk-lvl--med">Med</span>
+                    <span class="risk-text">Route resolution order changes — sibling specificity now matters.</span>
+                  </div>
+                  <div class="risk-item">
+                    <span class="risk-lvl risk-lvl--low">Low</span>
+                    <span class="risk-text">Sidebar layout: 1 unrelated test currently failing on snapshot. Unrelated to this change.</span>
+                  </div>
+                  <div class="risk-item">
+                    <span class="risk-lvl risk-lvl--low">Low</span>
+                    <span class="risk-text">Mobile breakpoint untouched. Verified by inspection of <code>useResponsive.ts</code>.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="approval__cta">
+                <button class="cta-btn">
+                  <span>
+                    <span class="cta-btn__lead">Apply changes</span>
+                    <span class="cta-btn__sub">3 files · revert with ⌘Z</span>
+                  </span>
+                  <span class="cta-btn__kbd">⌘↵</span>
+                </button>
+                <button class="cta-btn cta-btn--ghost">
+                  <span>
+                    <span class="cta-btn__lead">Review diff first</span>
+                    <span class="cta-btn__sub">Focus P·04 / Diff</span>
+                  </span>
+                  <span class="cta-btn__kbd">D</span>
+                </button>
+                <button class="cta-btn cta-btn--ghost">
+                  <span>
+                    <span class="cta-btn__lead">Cancel</span>
+                    <span class="cta-btn__sub">Keep diff, do not apply</span>
+                  </span>
+                  <span class="cta-btn__kbd">Esc</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- panel rail (overlaid on stage right edge) -->
+    <aside class="stage__rail" aria-label="Panel rail">
+      <span class="stage__rail-label">Stack</span>
+      <button class="rail-chip" data-target="chat">
+        <span class="rail-chip__num">01</span>
+        <svg class="rail-chip__icon" viewBox="0 0 16 16"><path d="M2 4h12v8H4l-2 2V4z"/></svg>
+        <span class="rail-chip__dot rail-chip__dot--cyan"></span>
+      </button>
+      <button class="rail-chip" data-target="plan">
+        <span class="rail-chip__num">02</span>
+        <svg class="rail-chip__icon" viewBox="0 0 16 16"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+        <span class="rail-chip__dot rail-chip__dot--lilac"></span>
+      </button>
+      <button class="rail-chip" data-active="true" data-target="file">
+        <span class="rail-chip__num">03</span>
+        <svg class="rail-chip__icon" viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/></svg>
+        <span class="rail-chip__dot rail-chip__dot--gold"></span>
+      </button>
+      <button class="rail-chip" data-target="diff">
+        <span class="rail-chip__num">04</span>
+        <svg class="rail-chip__icon" viewBox="0 0 16 16"><path d="M3 2v12M13 2v12M3 6h10M3 10h10"/></svg>
+        <span class="rail-chip__dot rail-chip__dot--lilac"></span>
+      </button>
+      <button class="rail-chip" data-target="approve">
+        <span class="rail-chip__num">05</span>
+        <svg class="rail-chip__icon" viewBox="0 0 16 16"><path d="M8 1l1.8 4.2L14 6l-3.4 2.8L11.6 13 8 10.6 4.4 13l1-4.2L2 6l4.2-.8L8 1z"/></svg>
+        <span class="rail-chip__dot rail-chip__dot--red"></span>
+      </button>
+    </aside>
+  </main>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ BOTTOM-LEFT ELBOW                                    ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <div class="elbow-bottom">
+    <span class="elbow-bottom__num">000-1701</span>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ COMPOSER ROW                                         ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <div class="composer-row">
+    <div class="composer">
+      <div class="composer__strip">
+        <div class="composer__strip-label">Input</div>
+        <div class="composer__strip-target">
+          <span>Targeting <b>P·03 navigation.tsx</b> · <span class="b-cyan">L42–88</span></span>
+        </div>
+        <div class="composer__strip-keys">
+          <span><kbd>⌘↵</kbd> submit</span>
+          <span><kbd>⌘⇧↵</kbd> workspace</span>
+          <span><kbd>⌘K</kbd> switcher</span>
+        </div>
+      </div>
+
+      <div class="composer__main">
+        <div class="composer__field">
+          <div class="composer__chips">
+            <span class="chip"><span class="chip__pin"></span>Active &middot; navigation.tsx<span class="chip__close">×</span></span>
+            <span class="chip chip--cyan"><span class="chip__pin"></span>Selection &middot; L42–88<span class="chip__close">×</span></span>
+            <span class="chip"><span class="chip__pin"></span>Plan.md<span class="chip__close">×</span></span>
+            <span class="chip chip--add">+ add context</span>
+          </div>
+          <textarea class="composer__textarea" placeholder="Address the active panel, a selection, or the workspace…">Why did you change line 67 in routes.ts? The old order looked correct to me.</textarea>
+        </div>
+
+        <div class="composer__send">
+          <button class="send-btn">
+            <span><span style="display:block">Submit</span><small>active panel</small></span>
+            <kbd>⌘↵</kbd>
+          </button>
+          <button class="send-btn send-btn--secondary">
+            <span><span style="display:block">Workspace</span><small>full context</small></span>
+            <kbd>⌘⇧↵</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════════╗ -->
+  <!-- ║ STATUS RIBBON                                        ║ -->
+  <!-- ╚══════════════════════════════════════════════════════╝ -->
+  <footer class="status-ribbon">
+    <div class="ribbon-cell"><span class="ribbon-pulse"></span>Run #14 streaming</div>
+    <div class="ribbon-cell">Active <b>P·03 / file</b> · sel <b>L42–88</b> · ctx <b>3 chips</b></div>
+    <div class="ribbon-cell">Mem <b>14% · 3.1MB</b></div>
+    <div class="ribbon-cell">Tests <b>7 / 1✗</b></div>
+    <div class="ribbon-cell">Branch <b>feature/nav-v2</b></div>
+    <div class="ribbon-cell">v0.41.2</div>
+    <div class="ribbon-cell">LCARS &middot; Dark</div>
+  </footer>
+
+</div>
+
+<div class="scroll-hint">
+  <span>drag · scroll · or</span>
+  <kbd>⌘⌥→</kbd>
+</div>
+
+<script>
+  const panels      = document.querySelectorAll('.panel');
+  const railChips   = document.querySelectorAll('.rail-chip');
+  const sideCells   = document.querySelectorAll('.cell[data-target]');
+  const lineagePips = document.querySelectorAll('.lineage-pip');
+  const stageScroll = document.getElementById('stageScroll');
+  const order = ['chat','plan','file','diff','approve'];
+
+  const setActive = (panelId) => {
+    panels.forEach(p => p.dataset.active = (p.dataset.panelId === panelId).toString());
+    railChips.forEach(r => r.dataset.active = (r.dataset.target === panelId).toString());
+    const idx = order.indexOf(panelId);
+    lineagePips.forEach((n, i) => n.dataset.active = (i === idx).toString());
+    sideCells.forEach(c => {
+      const isMatch = c.dataset.target === panelId;
+      c.classList.toggle('cell--active', isMatch);
+      c.classList.toggle('cell--tall',   isMatch);
+    });
+    const target = document.querySelector(`.panel[data-panel-id="${panelId}"]`);
+    if (target) {
+      const left = target.offsetLeft - 12;
+      stageScroll.scrollTo({ left, behavior: 'smooth' });
+    }
+  };
+
+  railChips.forEach(r => r.addEventListener('click', () => setActive(r.dataset.target)));
+  sideCells.forEach(c => c.addEventListener('click', () => setActive(c.dataset.target)));
+  lineagePips.forEach((n, i) => n.addEventListener('click', () => setActive(order[i])));
+  panels.forEach(p => p.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button, textarea, input, a')) return;
+    setActive(p.dataset.panelId);
+  }));
+
+  document.addEventListener('keydown', (e) => {
+    if (!(e.metaKey && e.altKey)) return;
+    const current = Array.from(panels).findIndex(p => p.dataset.active === 'true');
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setActive(order[Math.min(current + 1, order.length - 1)]);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setActive(order[Math.max(current - 1, 0)]);
+    }
+  });
+
+  // live stardate ticker (visual flair only)
+  const stardateEl = document.querySelector('.topbar__stardate b');
+  if (stardateEl) {
+    let base = 78214.7;
+    setInterval(() => {
+      base += 0.1;
+      stardateEl.textContent = base.toFixed(1);
+    }, 4000);
+  }
+</script>
+
+</body>
+</html>
