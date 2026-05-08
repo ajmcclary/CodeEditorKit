@@ -1,16 +1,12 @@
 # Performance Monitoring
 
-@Metadata {
-    @PageColor(purple)
-}
-
 Monitor and optimize your editor's performance with built-in tools.
 
 ## Overview
 
 CodeEditorPlugin includes comprehensive performance monitoring tools that provide real-time insights into rendering performance, memory usage, and syntax highlighting efficiency.
 
-> Tip: For detailed optimization techniques, see <doc:Performance-Optimizations>. For test-specific performance configuration, see <doc:Test-Performance-Configuration>.
+> Tip: For detailed optimization techniques, see [Performance-Optimizations](optimizations.md). For test-specific performance configuration, see [Test-Performance-Configuration](test-config.md).
 
 ## Enabling Performance Monitoring
 
@@ -151,7 +147,6 @@ config.performance.backgroundProcessingDelay = 100 // ms
 config.performance.useHardwareAcceleration = true
 ```
 
-
 ## Performance Best Practices
 
 ### 1. Monitor Key Metrics
@@ -234,9 +229,9 @@ try csv.write(to: csvURL)
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:Swift6-Concurrency>
-- <doc:Architecture-Overview>
-- <doc:Performance-Optimization-Integration>
-- <doc:Performance-Optimizations>
-- <doc:Test-Performance-Configuration>
+- [Configuration-System](../Configuration/system.md)
+- [Swift6-Concurrency](../Concurrency/swift6.md)
+- [Architecture-Overview](../Internals/architecture-overview.md)
+- [Performance-Optimization-Integration](optimizations.md)
+- [Performance-Optimizations](optimizations.md)
+- [Test-Performance-Configuration](test-config.md)

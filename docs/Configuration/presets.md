@@ -1,10 +1,5 @@
 # Configuration Presets
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(blue)
-}
-
 Use built-in configuration presets for common editing scenarios.
 
 ## Overview
@@ -291,6 +286,6 @@ class EditorViewModel: ObservableObject {
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:Theme-System>
-- <doc:SwiftUI-Integration>
+- [Configuration-System](system.md)
+- [Theme-System](../Features/theme-system.md)
+- [SwiftUI-Integration](../SwiftUI/integration.md)

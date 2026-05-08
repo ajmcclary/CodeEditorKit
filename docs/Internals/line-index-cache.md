@@ -1,8 +1,4 @@
-# ``CodeEditorPlugin/OptimizedLineIndexCache``
-
-@Metadata {
-    @PageColor(green)
-}
+# `CodeEditorPlugin/OptimizedLineIndexCache`
 
 High-performance line index cache using a balanced red-black tree for O(log n) line lookups and updates in large documents.
 
@@ -274,6 +270,6 @@ func updateStatusBar() async {
 
 ## See Also
 
-- ``TextMetricsCalculator``
-- ``TextKitLineNumberHelper``
-- ``CodeEditorView``
+- `TextMetricsCalculator`
+- `TextKitLineNumberHelper`
+- `CodeEditorView`

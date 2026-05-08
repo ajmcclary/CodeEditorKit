@@ -1,10 +1,5 @@
 # Configuration System
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(blue)
-}
-
 Master CodeEditorPlugin's powerful and flexible configuration system.
 
 ## Overview
@@ -333,6 +328,6 @@ struct SettingsView: View {
 
 ## See Also
 
-- <doc:Configuration-Presets>
-- <doc:Theme-System>
-- <doc:SwiftUI-Integration>
+- [Configuration-Presets](presets.md)
+- [Theme-System](../Features/theme-system.md)
+- [SwiftUI-Integration](../SwiftUI/integration.md)

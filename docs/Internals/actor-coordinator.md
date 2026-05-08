@@ -1,8 +1,4 @@
-# ``CodeEditorPlugin/ActorCoordinator``
-
-@Metadata {
-    @PageColor(red)
-}
+# `CodeEditorPlugin/ActorCoordinator`
 
 Central coordinator for managing specialized actors across the editor, providing unified access to concurrent services with proper lifecycle management.
 
@@ -279,7 +275,6 @@ do {
 ### SwiftUI Integration
 
 ```swift
-@MainActor
 class EditorViewModel: ObservableObject {
     let coordinator: ActorCoordinator
     @Published var processedText = ""
@@ -323,10 +318,10 @@ func performOperation() async {
 
 ## See Also
 
-- ``TextProcessingActor``
-- ``CacheCoordinatorActor``
-- ``FileSystemActor``
-- ``PerformanceMetricsActor``
-- ``DocumentStateActor``
-- ``ErrorRecoveryCoordinator``
-- ``EditorConfiguration``
+- `TextProcessingActor`
+- `CacheCoordinatorActor`
+- `FileSystemActor`
+- `PerformanceMetricsActor`
+- `DocumentStateActor`
+- `ErrorRecoveryCoordinator`
+- `EditorConfiguration`

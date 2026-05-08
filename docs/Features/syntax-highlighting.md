@@ -1,9 +1,5 @@
 # Syntax Highlighting
 
-@Metadata {
-    @PageColor(green)
-}
-
 Learn about CodeEditorPlugin's sophisticated syntax highlighting system supporting 20 programming languages.
 
 ## Overview
@@ -227,6 +223,6 @@ LanguageRegistry.register(customLanguage)
 
 ## See Also
 
-- <doc:Theme-System>
-- <doc:Performance-Monitoring>
-- <doc:Configuration-System>
+- [Theme-System](theme-system.md)
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Configuration-System](../Configuration/system.md)

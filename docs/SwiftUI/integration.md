@@ -1,9 +1,5 @@
 # SwiftUI Integration
 
-@Metadata {
-    @PageColor(blue)
-}
-
 Integrate CodeEditorPlugin seamlessly into your SwiftUI applications.
 
 ## Overview
@@ -475,6 +471,6 @@ extension EnvironmentValues {
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:Theme-System>
-- <doc:UIKit-AppKit-Integration>
+- [Configuration-System](../Configuration/system.md)
+- [Theme-System](../Features/theme-system.md)
+- [UIKit-AppKit-Integration](../Platform/uikit-appkit.md)

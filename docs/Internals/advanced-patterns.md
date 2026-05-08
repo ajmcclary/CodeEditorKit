@@ -1,10 +1,5 @@
 # Advanced Patterns
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(purple)
-}
-
 Learn advanced integration patterns and best practices for CodeEditorPlugin.
 
 ## Overview
@@ -157,7 +152,6 @@ class EditorStore: ObservableObject {
 ```
 
 ## Collaborative Editing (Preparation)
-
 
 ## Performance Patterns
 
@@ -482,8 +476,8 @@ memoryOptimizedConfig.performance.animateCodeFolding = false
 
 ## See Also
 
-- <doc:Architecture-Overview>
-- <doc:Performance-Monitoring>
-- <doc:Performance-Optimization-Integration>
-- <doc:Troubleshooting>
-- <doc:Configuration-System>
+- [Architecture-Overview](architecture-overview.md)
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Performance-Optimization-Integration](../Performance/optimizations.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Configuration-System](../Configuration/system.md)

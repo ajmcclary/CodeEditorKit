@@ -1,9 +1,5 @@
 # iOS Integration
 
-@Metadata {
-    @PageColor(blue)
-}
-
 Create touch-optimized code editing experiences for iPhone and iPad.
 
 ## Overview
@@ -301,20 +297,87 @@ class EditorViewController: UIViewController {
 }
 ```
 
+## Large File Handling
+
+iOS devices are memory-constrained relative to the desktop. For multi-megabyte files, use `IOSLargeFileOptimizer` to scale rendering and highlighting down adaptively.
+
+### Optimization modes
+
+| Mode | File size | Behavior |
+|---|---|---|
+| Normal | < 1 MB | No optimization |
+| Large file | 1–10 MB | Disables full-document highlighting; viewport-based only. Reduces undo to 10 levels. Disables spell-checking. |
+| Extreme | ≥ 10 MB | All large-file behaviors plus: undo limited to 3 levels, simplified rendering, no text attachments, non-contiguous layout. |
+
+### Setup
+
+```swift
+let optimizer = IOSLargeFileOptimizer(
+    textView: codeEditorView,
+    memoryMonitor: memoryMonitor,
+    performanceMonitor: performanceSystem
+)
+
+optimizer.optimizationThreshold = 500_000   // bytes — when to kick in
+optimizer.maxHighlightingRange = 50_000     // chunk size for viewport highlighting
+optimizer.viewportExpansion = 0.3           // expand viewport by 30% for prefetch
+optimizer.memoryPressureMode = .aggressive  // .ignore | .adaptive | .aggressive
+
+optimizer.enableOptimizations()
+```
+
+The optimizer captures the editor's pre-optimization settings (`maxSyntaxHighlightingLength`, `isSyntaxHighlightingEnabled`, `adaptivePerformanceMode`) and restores them when you call `disableOptimizations()`.
+
+### SwiftUI
+
+```swift
+struct EditorView: View {
+    @StateObject private var optimizer: IOSLargeFileOptimizer
+    @State private var content = ""
+
+    var body: some View {
+        VStack {
+            CodeEditor(text: $content)
+                .iOSLargeFileOptimization(content.count > 500_000)
+
+            if optimizer.isOptimizing {
+                Label("Optimized — \(optimizer.currentMode.rawValue)", systemImage: "speedometer")
+                    .foregroundStyle(.orange)
+            }
+        }
+    }
+}
+```
+
+### Memory pressure response
+
+Under memory pressure the optimizer registers a critical-priority cleanup handler with `MemoryMonitor` that clears the syntax-highlighting cache, drops the undo stack, and asks TextKit to release layout caches. Pair it with [Memory monitor](../Performance/memory-monitor.md) to wire that up.
+
+### iOS vs. macOS thresholds
+
+| Setting | iOS | macOS |
+|---|---|---|
+| Optimization threshold | 1 MB | 10 MB |
+| Viewport expansion | 50% | 150% |
+| Max highlighting range | 100 KB | 1 MB |
+| Memory threshold | 100 MB | 1 GB |
+
+Tune for your target device class — older iPhones benefit from lower thresholds and aggressive mode; iPad Pro can use values closer to macOS.
+
 ## Best Practices
 
-1. **Touch Targets**: Ensure touch targets are at least 44x44 points
-2. **Keyboard Handling**: Always handle keyboard appearance properly
-3. **Memory Management**: Be mindful of memory on older devices
-4. **State Restoration**: Save and restore scroll position and selection
-5. **Accessibility**: Support VoiceOver and other accessibility features
-6. **Platform Types**: Always use `PlatformColor`, `PlatformFont`, etc.
-7. **Container View**: Use `CodeEditorContainerView` for proper layout
+1. **Touch targets**: at least 44×44 pt.
+2. **Keyboard handling**: always observe `keyboardWillShow`/`keyboardWillHide` and adjust insets.
+3. **Memory**: use `IOSLargeFileOptimizer` for files > 500 KB; watch `memoryMonitor.memoryStats`.
+4. **State restoration**: persist scroll position and selection.
+5. **Accessibility**: support VoiceOver.
+6. **Platform types**: use `PlatformColor`, `PlatformFont`, `PlatformColors.label`, etc. — never `UIColor`/`NSColor` directly.
+7. **Container view**: use `CodeEditorContainerView` for gutter and minimap support.
 
 ## See Also
 
-- <doc:Platform-Abstraction>
-- <doc:SwiftUI-Integration>
-- <doc:UIKit-AppKit-Integration>
-- <doc:macOS-Integration>
-- <doc:Catalyst-Best-Practices>
+- [Platform-Abstraction](platform-abstraction.md)
+- [SwiftUI-Integration](../SwiftUI/integration.md)
+- [UIKit-AppKit-Integration](uikit-appkit.md)
+- [macOS-Integration](macos.md)
+- [Catalyst-Best-Practices](catalyst.md)

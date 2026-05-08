@@ -1,9 +1,5 @@
 # Architecture Overview
 
-@Metadata {
-    @PageColor(orange)
-}
-
 Understand the modern, feature-based architecture that powers CodeEditorPlugin.
 
 ## Overview
@@ -38,9 +34,10 @@ Sources/CodeEditorPlugin/
 ├── LSP/                     # Language Server Protocol
 ├── Annotations/             # Code annotation system
 ├── Models/                  # Data models
-├── Utilities/               # Shared utilities
-└── Documentation.docc/      # DocC documentation
+└── Utilities/               # Shared utilities
 ```
+
+(Long-form prose docs live in the top-level [`docs/`](../README.md) folder, not inside `Sources/`.)
 
 **Key Changes (January 2025)**:
 - **Consolidated Text Handling**: TextKit, TextLayout, and TextProcessing merged into unified `Text/` directory (34 files)
@@ -187,6 +184,6 @@ config.layout.tabWidth = 4
 
 ## See Also
 
-- <doc:Platform-Abstraction>
-- <doc:Swift6-Concurrency>
-- <doc:Configuration-System>
+- [Platform-Abstraction](../Platform/platform-abstraction.md)
+- [Swift6-Concurrency](../Concurrency/swift6.md)
+- [Configuration-System](../Configuration/system.md)

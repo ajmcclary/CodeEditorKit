@@ -6,15 +6,6 @@ Configure and optimize test execution with parallel testing, timeouts, and perfo
 
 This article describes the comprehensive test performance optimizations implemented for CodeEditorPlugin, including parallel test execution strategies, timeout configuration, and performance budget enforcement to ensure reliable and fast test execution.
 
-## Topics
-
-### Test Plans
-
-
-### Test Utilities
-
-The test utilities are internal testing helpers not exposed as part of the public API.
-
 ## Test Parallelization
 
 ### Configuration Overview
@@ -435,6 +426,6 @@ extension XCTestCase {
 
 ## See Also
 
-- <doc:Performance-Optimizations>
-- <doc:Performance-Monitoring>
-- ``PerformanceBudget``
+- [Performance-Optimizations](optimizations.md)
+- [Performance-Monitoring](monitoring.md)
+- `PerformanceBudget`

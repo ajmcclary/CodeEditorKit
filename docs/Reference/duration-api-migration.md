@@ -413,7 +413,7 @@ extension ModernScheduler {
 
 ## See Also
 
-- <doc:Performance-Monitoring>
-- <doc:Swift6-Concurrency>
-- ``AsyncSyntaxHighlighter``
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Swift6-Concurrency](../Concurrency/swift6.md)
+- `AsyncSyntaxHighlighter`
 - [Swift Evolution: Duration](https://github.com/apple/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md)

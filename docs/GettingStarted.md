@@ -1,65 +1,108 @@
 # Getting Started
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(blue)
-}
+A modern, cross-platform code editor for macOS, iOS, and Mac Catalyst. Built on TextKit2 with Swift 6 strict concurrency, SwiftSyntax for Swift highlighting, and a feature-based source tree designed for extension.
 
-Learn how to quickly integrate CodeEditorPlugin into your application.
+## Platform Requirements
 
-## Overview
-
-CodeEditorPlugin is a modern, cross-platform code editor component for macOS, iOS, and Mac Catalyst applications. Built with Swift 6 concurrency and production-grade reliability, it features syntax highlighting for 20 programming languages, code completion, annotations, and comprehensive SwiftUI integration. With 66 comprehensive test files and zero linting violations, this guide will help you get up and running in minutes.
+- **Swift**: 6.3 or later
+- **Xcode**: 26.3 or later
+- **Deployment targets**: macOS 26.3+, iOS 26.3+, Mac Catalyst 26.3+
 
 ## Installation
 
-### Swift Package Manager
+### Xcode
 
-Add CodeEditorPlugin to your project using Xcode's package manager:
-
-1. In Xcode, select **File → Add Package Dependencies**
+1. **File → Add Package Dependencies**
 2. Enter the repository URL: `https://github.com/ajmcclary/CodeEditorPlugin.git`
-3. Select your version requirements
-4. Click **Add Package**
+3. Pick a version rule (Up to Next Major is recommended) and click **Add Package**
 
-Alternatively, add it to your `Package.swift`:
+### Package.swift
 
 ```swift
-dependencies: [
-    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "1.0.0")
-]
+// swift-tools-version: 6.3
+import PackageDescription
+
+let package = Package(
+    name: "MyApp",
+    platforms: [.macOS("26.3"), .iOS("26.3"), .macCatalyst("26.3")],
+    dependencies: [
+        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "1.0.0")
+    ],
+    targets: [
+        .target(name: "MyApp", dependencies: ["CodeEditorPlugin"])
+    ]
+)
 ```
 
-## Basic Usage
+CodeEditorPlugin pulls in `swift-syntax`, `swift-dependencies`, and `xctest-dynamic-overlay` (for `IssueReporting`). These are managed automatically by SwiftPM.
 
-### SwiftUI Integration (Recommended)
-
-The simplest way to add a code editor to your SwiftUI app:
+## A Minimal Editor
 
 ```swift
 import SwiftUI
 import CodeEditorPlugin
 
 struct ContentView: View {
-    @State private var code = """
-        import Foundation
-        
-        func greetWorld() {
-            print("Hello, World!")
-        }
-        """
-    
+    @State private var code = "// Type your code here"
+
     var body: some View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
-            .lineNumbers(true)
-            .isSyntaxHighlightingEnabled(true)
-            .frame(minHeight: 400)
+            .frame(minHeight: 300)
     }
 }
 ```
 
-### AppKit Integration (macOS)
+That's it — syntax highlighting, line numbers, and theming are on by sensible defaults.
+
+## Common Snippets
+
+### SwiftUI with language + theme
+
+```swift
+CodeEditor(text: $code, language: .python, theme: .dark)
+    .lineNumbers(true)
+    .isSelectedLineHighlighted(true)
+    .frame(minHeight: 300)
+```
+
+### Read-only code viewer
+
+```swift
+struct CodeViewer: View {
+    let source: String
+
+    var body: some View {
+        CodeEditor(text: .constant(source))
+            .editable(false)
+            .lineNumbers(true)
+            .environment(\.codeEditorConfiguration, .readOnly)
+    }
+}
+```
+
+### Code completion
+
+```swift
+CodeEditor(text: $code)
+    .codeLanguage(.swift)
+    .codeCompletion { context in
+        guard context.text.hasSuffix(".") else { return [] }
+        return [
+            SwiftUICompletionItem(label: "append", kind: .method, insertText: "append(<#value#>)")
+        ]
+    }
+```
+
+### Reacting to text + selection changes (debounced)
+
+```swift
+CodeEditor(text: $code, debounceInterval: .milliseconds(500))
+    .onTextChange { newText in validateSyntax(newText) }
+    .onSelectionChange { range in updateCursorInfo(range) }
+```
+
+### AppKit (`NSViewController`)
 
 ```swift
 import AppKit
@@ -68,19 +111,17 @@ import CodeEditorPlugin
 class ViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         let editor = CodeEditorView()
         editor.language = .swift
         editor.isLineNumbersEnabled = true
         editor.text = "print(\"Hello, World!\")"
-        
         view.addSubview(editor)
-        // Add Auto Layout constraints...
+        // Add Auto Layout constraints…
     }
 }
 ```
 
-### UIKit Integration (iOS)
+### UIKit (`UIViewController`)
 
 ```swift
 import UIKit
@@ -89,87 +130,74 @@ import CodeEditorPlugin
 class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         let editor = CodeEditorView()
+        editor.text = "// Your code here"
         editor.language = .swift
-        editor.isLineNumbersEnabled = true
-        editor.text = "print(\"Hello, iOS!\")"
-        
         view.addSubview(editor)
-        // Add Auto Layout constraints...
+        editor.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            editor.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            editor.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            editor.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            editor.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
     }
 }
 ```
 
-## Quick Configuration
+## Configuration
 
-Use configuration presets for common scenarios:
+Configuration is plain-old-Swift values: build one up, mutate it, apply it.
 
 ```swift
-// Start with built-in presets
-var config = EditorConfiguration.default
-config.display.isLineNumbersEnabled = true
-
-// Or use specialized presets
-let readOnlyConfig = EditorConfiguration.readOnly
-let minimalConfig = EditorConfiguration.minimal
-let presentationConfig = EditorConfiguration.presentation
-
-// Apply configuration changes
+var config = EditorConfiguration()
 config.display.fontSize = 16
-config.layout.tabWidth = 4
+config.display.isLineNumbersEnabled = true
+config.display.isCodeFoldingEnabled = true
+config.layout.tabWidth = 2
 config.behavior.isCodeCompletionEnabled = true
-config.layout.wrapLines = false
 
-// Apply to editor
-config.apply(to: editor)
+CodeEditor(text: $code)
+    .codeLanguage(.javascript)
+    .environment(\.codeEditorConfiguration, config)
 ```
 
-## Key Features
+Or start from a built-in preset:
 
-### Syntax Highlighting
 ```swift
-editor.language = .swift
-editor.isSyntaxHighlightingEnabled = true
+.environment(\.codeEditorConfiguration, .readOnly)        // viewer-style
+.environment(\.codeEditorConfiguration, .minimal)         // chrome-free
+.environment(\.codeEditorConfiguration, .presentation)    // big fonts, no chrome
+.environment(\.codeEditorConfiguration, .markdown)        // markdown-tuned
+.environment(\.codeEditorConfiguration, .iOS)             // iOS defaults
+.environment(\.codeEditorConfiguration, .catalyst)        // Mac Catalyst defaults
+.environment(\.codeEditorConfiguration, .platformOptimized)
 ```
 
-### Code Completion
-```swift
-editor.isCodeCompletionEnabled = true
-```
-
-### Annotations (TODO, FIXME, etc.)
-```swift
-editor.enablesAnnotations = true
-// Automatically detects TODO, FIXME, NOTE, WARNING, ERROR comments
-```
-
-### Line Numbers
-```swift
-editor.isLineNumbersEnabled = true
-```
+See [Configuration system](Configuration/system.md) for the full schema and [Presets](Configuration/presets.md) for what each preset turns on.
 
 ## Supported Languages
 
-- **Swift** (Full AST-based highlighting with SwiftSyntax)
-- **Python**, **JavaScript/TypeScript**, **Rust**, **Go** 
-- **HTML/CSS**, **JSON/YAML**, **Markdown**
-- **Java**, **C/C++**, **Ruby**, **PHP**
-- **SQL**, **XML**, **Shell scripts**
-- **Plain text**
+Full AST-based highlighting via SwiftSyntax for **Swift**. Optimized regex highlighters for: **Python**, **JavaScript / TypeScript**, **Rust**, **Go**, **Java**, **C / C++**, **Ruby**, **PHP**, **HTML / CSS**, **JSON / YAML**, **Markdown**, **SQL**, **XML**, **Shell scripts**, plus **plain text**.
 
-## Next Steps
+Details: [Syntax highlighting](Features/syntax-highlighting.md).
 
-- Explore <doc:Configuration-System> for detailed customization
-- Learn about <doc:Syntax-Highlighting> for language support
-- Review <doc:Production-Reliability> for robust error handling and concurrency safety
-- See <doc:Advanced-Patterns> for sophisticated use cases
-- Check out <doc:Performance-Monitoring> for optimization insights
-- Review <doc:Troubleshooting> for common issues
+## Where to Go Next
 
-## Platform Requirements
+- **Customize the look**: [Theme system](Features/theme-system.md)
+- **Platform-specific guidance**: [iOS](Platform/ios.md), [macOS](Platform/macos.md), [Mac Catalyst](Platform/catalyst.md), [UIKit ↔ AppKit](Platform/uikit-appkit.md)
+- **SwiftUI integration**: [SwiftUI integration](SwiftUI/integration.md), [environment keys](SwiftUI/environment-keys.md)
+- **Performance**: [Monitoring](Performance/monitoring.md), [Optimizations](Performance/optimizations.md), [Production reliability](Performance/reliability.md)
+- **Concurrency model**: [Swift 6 concurrency](Concurrency/swift6.md), [Sendable callbacks](Concurrency/sendable-callbacks.md)
+- **Architecture deep-dives**: [Architecture overview](Internals/architecture-overview.md), [Advanced patterns](Internals/advanced-patterns.md)
+- **Stuck?** [Troubleshooting](Reference/troubleshooting.md)
 
-- **Swift**: 6.0+
-- **macOS**: 12.0+ (optimized for macOS 14+)
-- **iOS**: 16.0+
-- **Mac Catalyst**: 16.0+
+## Installation Troubleshooting
+
+If package resolution fails:
+
+1. **Product → Clean Build Folder** (⇧⌘K)
+2. **File → Packages → Reset Package Caches**
+3. Confirm Xcode 26.3+ is installed
+
+If `swift-syntax` fails to resolve, pin its version explicitly in your `Package.swift`. Other recurring issues are documented in [Troubleshooting](Reference/troubleshooting.md).

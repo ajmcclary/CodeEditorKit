@@ -1,10 +1,5 @@
 # Troubleshooting
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(red)
-}
-
 Common issues and their solutions when using CodeEditorPlugin.
 
 ## Overview
@@ -240,6 +235,6 @@ If you encounter issues not covered here:
 
 ## See Also
 
-- <doc:Platform-Abstraction>
-- <doc:Performance-Monitoring>
-- <doc:Configuration-System>
+- [Platform-Abstraction](../Platform/platform-abstraction.md)
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Configuration-System](../Configuration/system.md)

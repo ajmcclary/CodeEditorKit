@@ -1,10 +1,5 @@
 # Catalyst Best Practices
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(orange)
-}
-
 Build excellent Mac apps with Mac Catalyst using CodeEditorPlugin.
 
 ## Overview
@@ -711,7 +706,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 ## See Also
 
-- <doc:macOS-Integration>
-- <doc:iOS-Integration>
-- <doc:Platform-Abstraction>
-- <doc:Troubleshooting>
+- [macOS-Integration](macos.md)
+- [iOS-Integration](ios.md)
+- [Platform-Abstraction](platform-abstraction.md)
+- [Troubleshooting](../Reference/troubleshooting.md)

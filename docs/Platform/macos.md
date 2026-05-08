@@ -1,9 +1,5 @@
 # macOS Integration
 
-@Metadata {
-    @PageColor(blue)
-}
-
 Leverage macOS-specific features to create a native editing experience.
 
 ## Overview
@@ -216,8 +212,8 @@ extension EditorViewController: NSToolbarDelegate {
 
 ## See Also
 
-- <doc:Platform-Abstraction>
-- <doc:UIKit-AppKit-Integration>
-- <doc:Advanced-Patterns>
-- <doc:iOS-Integration>
-- <doc:Catalyst-Best-Practices>
+- [Platform-Abstraction](platform-abstraction.md)
+- [UIKit-AppKit-Integration](uikit-appkit.md)
+- [Advanced-Patterns](../Internals/advanced-patterns.md)
+- [iOS-Integration](ios.md)
+- [Catalyst-Best-Practices](catalyst.md)

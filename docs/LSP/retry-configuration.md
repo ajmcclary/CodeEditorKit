@@ -8,28 +8,6 @@ Configure robust retry behavior for Language Server Protocol connections to ensu
 
 The CodeEditorPlugin includes sophisticated retry logic for LSP connections, ensuring better reliability when starting language servers. This is particularly useful in environments where servers may take time to start or experience intermittent failures.
 
-## Topics
-
-### Configuration Types
-
-- ``LSPRetryConfiguration``
-- ``LSPRetryConfiguration/default``
-- ``LSPRetryConfiguration/aggressive``
-- ``LSPRetryConfiguration/conservative``
-- ``LSPRetryConfiguration/noRetry``
-
-### Configuration Properties
-
-The retry behavior is controlled by the following properties:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `maxRetries` | `Int` | Maximum number of retry attempts |
-| `initialDelay` | `TimeInterval` | Initial delay between retries (seconds) |
-| `maxDelay` | `TimeInterval` | Maximum delay between retries (seconds) |
-| `backoffFactor` | `Double` | Exponential backoff multiplier |
-| `jitterEnabled` | `Bool` | Add randomness to avoid thundering herd |
-
 ## Predefined Configurations
 
 ### Default Configuration
@@ -116,7 +94,6 @@ When enabled, adds ±20% random variation to delays to prevent synchronized retr
 
 Retry attempts are logged with appropriate severity:
 
-
 Example log output:
 ```
 [WARNING] Failed to start LSP server for swift on attempt 1/4. Retrying in 1.0s. Error: Connection refused
@@ -149,7 +126,6 @@ do {
 
 The retry logic is implemented at the `LSPClientRegistry` level and automatically applies to:
 
-
 The retry mechanism:
 1. Attempts connection with the language server
 2. On failure, logs the error and calculates retry delay
@@ -159,4 +135,4 @@ The retry mechanism:
 
 ## See Also
 
-- <doc:LSP-Integration>
+- [LSP-Integration](integration.md)

@@ -13,8 +13,6 @@ excluded:
   - .build
   - Sources/**/*.generated.swift
   - Tests/**/*.generated.swift
-  # DocC tutorial code snippets — illustrative, not part of the framework.
-  - Sources/CodeEditorPlugin/Documentation.docc/Resources/Code
 
 # ===========================
 # MARK: - Analyzer Rules

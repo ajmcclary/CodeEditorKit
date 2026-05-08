@@ -421,7 +421,6 @@ let editor = CodeEditorView(frame: .zero, memoryMonitor: MemoryMonitorFactory.cr
 Use a dependency container for complex applications:
 
 ```swift
-@MainActor
 class DependencyContainer {
     private(set) lazy var memoryMonitor: MemoryMonitor = {
         let monitor = MemoryMonitor()
@@ -705,10 +704,10 @@ class MultiTabEditorController {
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:Performance-Monitoring>
-- <doc:Unified-Event-System>
-- ``MemoryMonitor``
-- ``EditorConfiguration/Performance``
-- ``CleanupResult``
-- ``CleanupPriority``
+- [Configuration-System](../Configuration/system.md)
+- [Performance-Monitoring](monitoring.md)
+- [Unified-Event-System](../Concurrency/unified-events.md)
+- `MemoryMonitor`
+- `EditorConfiguration/Performance`
+- `CleanupResult`
+- `CleanupPriority`

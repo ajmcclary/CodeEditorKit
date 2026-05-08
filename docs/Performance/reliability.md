@@ -1,10 +1,5 @@
 # Production Reliability
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(blue)
-}
-
 Comprehensive error handling, concurrency safety, and production-grade reliability features.
 
 ## Overview
@@ -194,6 +189,6 @@ memoryMonitor.registerCleanupHandler(
 
 ## See Also
 
-- <doc:Swift6-Concurrency>
-- <doc:Performance-Monitoring>
-- <doc:Troubleshooting>
+- [Swift6-Concurrency](../Concurrency/swift6.md)
+- [Performance-Monitoring](monitoring.md)
+- [Troubleshooting](../Reference/troubleshooting.md)

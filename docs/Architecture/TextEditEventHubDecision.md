@@ -49,14 +49,11 @@ internal struct TextEditEvent: Sendable, Equatable {
 ### Hub
 
 ```swift
-@MainActor
 internal final class TextEditEventHub {
     internal func addObserver(_ observer: any TextEditEventObserving)
     internal func removeObserver(_ observer: any TextEditEventObserving)
     internal func publish(_ event: TextEditEvent)
 }
-
-@MainActor
 internal protocol TextEditEventObserving: AnyObject {
     func textStorageDidApplyEdit(_ event: TextEditEvent)
 }

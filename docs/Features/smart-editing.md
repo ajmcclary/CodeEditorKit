@@ -1,8 +1,4 @@
-# ``CodeEditorPlugin/SmartEditingEngine``
-
-@Metadata {
-    @PageColor(blue)
-}
+# `CodeEditorPlugin/SmartEditingEngine`
 
 Provides intelligent editing features including auto-brackets, multi-cursor support, smart indentation, and selection expansion.
 
@@ -314,8 +310,8 @@ assert(smartEngine.configuration.isAutoIndentEnabled)
 
 ## See Also
 
-- ``SmartEditingConfiguration``
-- ``TextCursor``
-- ``AutoIndentRule``
-- ``SmartEditingBracketPair``
-- ``CodeEditorView``
+- `SmartEditingConfiguration`
+- `TextCursor`
+- `AutoIndentRule`
+- `SmartEditingBracketPair`
+- `CodeEditorView`

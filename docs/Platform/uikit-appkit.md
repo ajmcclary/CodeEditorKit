@@ -1,9 +1,5 @@
 # UIKit & AppKit Integration
 
-@Metadata {
-    @PageColor(blue)
-}
-
 Integrate CodeEditorPlugin with traditional UIKit and AppKit applications.
 
 ## Overview
@@ -396,6 +392,6 @@ class SplitEditorViewController: NSSplitViewController {
 
 ## See Also
 
-- <doc:SwiftUI-Integration>
-- <doc:Configuration-System>
-- <doc:Platform-Abstraction>
+- [SwiftUI-Integration](../SwiftUI/integration.md)
+- [Configuration-System](../Configuration/system.md)
+- [Platform-Abstraction](platform-abstraction.md)

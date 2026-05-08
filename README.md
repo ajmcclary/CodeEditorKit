@@ -105,9 +105,10 @@ Sources/CodeEditorPlugin/
 ├── LSP/              # Language Server Protocol (7 files)
 ├── Annotations/       # Code annotations (8 files)
 ├── Models/           # Data models (7 files)
-├── Utilities/        # Shared utilities (12 files)
-└── Documentation.docc/# DocC documentation
+└── Utilities/        # Shared utilities (12 files)
 ```
+
+Long-form prose docs live in [`docs/`](docs/README.md), organized by topic.
 
 18 top-level source directories, 437 Swift source files.
 
@@ -239,15 +240,14 @@ swift test --filter TestName
 
 ## 📚 Documentation
 
-DocC documentation lives in `Sources/CodeEditorPlugin/Documentation.docc`.
-Build it from Xcode's documentation workflow, or add the Swift-DocC plugin locally
-if you need CLI archive generation.
+Documentation lives in [`docs/`](docs/README.md) as plain Markdown — no
+DocC toolchain needed. Start with:
 
-Key documentation files:
-- `GettingStarted.md` - Quick setup guide
-- `Configuration-System.md` - Configuration details
-- `SwiftUI-Integration.md` - SwiftUI best practices
-- `Platform-Abstraction.md` - Cross-platform development
+- [Getting Started](docs/GettingStarted.md) — install + first editor
+- [Configuration system](docs/Configuration/system.md)
+- [SwiftUI integration](docs/SwiftUI/integration.md)
+- [Platform abstraction](docs/Platform/platform-abstraction.md)
+- [Architecture decisions](docs/Architecture/README.md) and [diagrams](docs/Diagrams/README.md)
 
 ## 🎯 Recent Improvements (2025)
 

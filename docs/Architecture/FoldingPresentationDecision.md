@@ -87,7 +87,6 @@ Rationale:
 ## Required Implementation (Phase 5.3)
 
 ```swift
-@MainActor
 internal protocol FoldPresentationStrategy: AnyObject {
     func collapse(_ fold: FoldableRegion, in textView: CodeEditorView)
     func expand(_ fold: FoldableRegion, in textView: CodeEditorView)

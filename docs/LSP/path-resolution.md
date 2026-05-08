@@ -1,9 +1,5 @@
 # LSP Path Resolution
 
-@Metadata {
-    @PageColor(purple)
-}
-
 > Important: LSP functionality is only available on macOS. This type is not available on iOS or Mac Catalyst.
 
 Resolves Language Server Protocol (LSP) server executable paths with flexible path resolution strategies.
@@ -145,4 +141,4 @@ guard let serverPath = resolver.resolvePath("my-language-server") else {
 
 ## See Also
 
-- <doc:LSP-Integration>
+- [LSP-Integration](integration.md)

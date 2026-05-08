@@ -1,9 +1,5 @@
 # Annotation System
 
-@Metadata {
-    @PageColor(green)
-}
-
 Add interactive inline annotations to highlight important comments in your code.
 
 ## Overview
@@ -187,7 +183,6 @@ annotation.addAction("Create Issue") { annotation in
 }
 ```
 
-
 ### CI Integration
 
 Fail builds with too many annotations:
@@ -202,6 +197,6 @@ if annotationCount > 0 {
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:Syntax-Highlighting>
-- <doc:Performance-Monitoring>
+- [Configuration-System](../Configuration/system.md)
+- [Syntax-Highlighting](syntax-highlighting.md)
+- [Performance-Monitoring](../Performance/monitoring.md)

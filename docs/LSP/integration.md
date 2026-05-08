@@ -1,10 +1,5 @@
 # LSP Integration
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(purple)
-}
-
 Enable IDE-level intelligence with Language Server Protocol support.
 
 ## Overview
@@ -881,8 +876,8 @@ struct ProjectEditorView: View {
 
 ## See Also
 
-- <doc:Performance-Monitoring>
-- <doc:Advanced-Patterns>
-- <doc:Platform-Abstraction>
-- <doc:Catalyst-Best-Practices>
-- <doc:LSP-Retry-Configuration>
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Advanced-Patterns](../Internals/advanced-patterns.md)
+- [Platform-Abstraction](../Platform/platform-abstraction.md)
+- [Catalyst-Best-Practices](../Platform/catalyst.md)
+- [LSP-Retry-Configuration](retry-configuration.md)

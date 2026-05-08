@@ -26,7 +26,7 @@ struct MyApp: App {
 **Type**: `EditorConfiguration`  
 **Default**: `EditorConfiguration.default`
 
-> **Related Modifier**: Use the ``CodeEditor/environment(_:_:)`` method directly on the view for convenience.
+> **Related Modifier**: Use the `CodeEditor/environment(_:_:)` method directly on the view for convenience.
 
 ### `codeEditorLanguage`
 
@@ -47,7 +47,7 @@ struct CodeView: View {
 **Type**: `Language`  
 **Default**: `.plainText`
 
-> **Related Modifier**: Use ``CodeEditor/codeLanguage(_:)`` for setting the language on individual editors.
+> **Related Modifier**: Use `CodeEditor/codeLanguage(_:)` for setting the language on individual editors.
 
 ### `codeEditorTheme`
 
@@ -67,7 +67,7 @@ struct ThemedEditor: View {
 **Type**: `Theme`  
 **Default**: `.default`
 
-> **Related Modifier**: Use ``CodeEditor/codeTheme(_:)`` for setting the theme on individual editors.
+> **Related Modifier**: Use `CodeEditor/codeTheme(_:)` for setting the theme on individual editors.
 
 ### `codeEditorMemoryMonitor`
 
@@ -90,7 +90,7 @@ struct MultiEditorView: View {
 **Type**: `MemoryMonitor?`  
 **Default**: `nil` (each editor creates its own monitor)
 
-> **Related Modifier**: Use ``CodeEditor/memoryMonitor(_:)`` for setting a custom memory monitor.
+> **Related Modifier**: Use `CodeEditor/memoryMonitor(_:)` for setting a custom memory monitor.
 
 ### `codeEditorBecomeFirstResponder`
 
@@ -108,7 +108,7 @@ struct FocusedEditor: View {
 **Type**: `Bool`  
 **Default**: `false`
 
-> **Related Modifier**: Use ``CodeEditor/focused(_:)`` for more advanced focus management with FocusState.
+> **Related Modifier**: Use `CodeEditor/focused(_:)` for more advanced focus management with FocusState.
 
 ### `codeEditorEventSystem`
 
@@ -137,7 +137,7 @@ struct MultiEditorView: View {
 **Type**: `UnifiedEventSystem?`  
 **Default**: `nil` (creates a new instance)
 
-> **Related Modifier**: Use ``CodeEditor/eventSystem(_:)`` for setting a custom event system on individual editors.
+> **Related Modifier**: Use `CodeEditor/eventSystem(_:)` for setting a custom event system on individual editors.
 
 ## Usage Patterns
 
@@ -209,5 +209,5 @@ CodeEditor(text: $code)
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:SwiftUI-Integration>
+- [Configuration-System](../Configuration/system.md)
+- [SwiftUI-Integration](integration.md)

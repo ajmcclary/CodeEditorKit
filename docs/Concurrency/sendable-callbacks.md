@@ -49,8 +49,6 @@ struct EditorView: View {
                 }
             }
     }
-    
-    @MainActor
     func autoSave(_ text: String) async {
         // Save logic here
         lastSaved = Date()
@@ -70,8 +68,6 @@ CodeEditor(text: $code)
             updateStatusBar(with: range)
         }
     }
-    
-@MainActor
 func updateStatusBar(with range: NSRange) {
     // Update UI with selection info
     statusText = "Line: \(getLineNumber(for: range.location))"
@@ -114,7 +110,6 @@ struct ConfigurableEditor: View {
 Integrate callbacks with custom actors:
 
 ```swift
-@MainActor
 final class EditorViewModel: ObservableObject {
     @Published var text = ""
     @Published var wordCount = 0
@@ -210,8 +205,6 @@ final class DebouncedEditor: View {
                 }
             }
     }
-    
-    @MainActor
     func performSearch(_ query: String) async {
         // Search implementation
     }
@@ -258,7 +251,6 @@ struct AdvancedEditor: View {
 Write tests for callbacks with proper async handling:
 
 ```swift
-@MainActor
 final class CallbackTests: XCTestCase {
     func testTextChangeCallback() async {
         let expectation = XCTestExpectation(description: "Text change callback")
@@ -343,7 +335,6 @@ CodeEditor(text: $text)
     }
 
 // Option 2: Use @MainActor for UI state
-@MainActor
 final class ViewModel: ObservableObject {
     @Published var changeCount = 0
     
@@ -406,8 +397,8 @@ CodeEditor(text: $text)
 
 ## See Also
 
-- <doc:Swift6-Concurrency>
-- <doc:SwiftUI-Integration>
+- [Swift6-Concurrency](swift6.md)
+- [SwiftUI-Integration](../SwiftUI/integration.md)
 - [Swift Concurrency Documentation](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/)
-- ``CodeEditor/onTextChange(perform:)``
-- ``CodeEditor/onSelectionChange(perform:)``
+- `CodeEditor/onTextChange(perform:)`
+- `CodeEditor/onSelectionChange(perform:)`

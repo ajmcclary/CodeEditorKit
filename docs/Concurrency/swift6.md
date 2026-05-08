@@ -1,10 +1,5 @@
 # Swift 6 Concurrency
 
-@Metadata {
-    @PageKind(article)
-    @PageColor(orange)
-}
-
 Understand how CodeEditorPlugin leverages Swift 6's actor system for thread-safe, performant operations.
 
 ## Overview
@@ -40,7 +35,6 @@ actor BackgroundProcessor {
 UI updates happen on the main actor:
 
 ```swift
-@MainActor
 class CodeEditorViewModel: ObservableObject {
     @Published var highlightedText: AttributedString = ""
     
@@ -262,6 +256,6 @@ actor NewHighlighter {
 
 ## See Also
 
-- <doc:Architecture-Overview>
-- <doc:Performance-Monitoring>
-- <doc:Platform-Abstraction>
+- [Architecture-Overview](../Internals/architecture-overview.md)
+- [Performance-Monitoring](../Performance/monitoring.md)
+- [Platform-Abstraction](../Platform/platform-abstraction.md)

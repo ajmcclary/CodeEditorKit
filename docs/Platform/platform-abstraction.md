@@ -1,9 +1,5 @@
 # Platform Abstraction
 
-@Metadata {
-    @PageColor(orange)
-}
-
 Learn how CodeEditorPlugin's sophisticated abstraction layer enables true cross-platform development.
 
 ## Overview
@@ -362,7 +358,7 @@ enum MyFeatureFactory {
 
 ## See Also
 
-- <doc:Architecture-Overview>
-- <doc:macOS-Integration>
-- <doc:iOS-Integration>
-- <doc:Catalyst-Best-Practices>
+- [Architecture-Overview](../Internals/architecture-overview.md)
+- [macOS-Integration](macos.md)
+- [iOS-Integration](ios.md)
+- [Catalyst-Best-Practices](catalyst.md)

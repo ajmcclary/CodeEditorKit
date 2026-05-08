@@ -1,10 +1,5 @@
 # Unified Event System
 
-@Metadata {
-    @PageKind(article)
-    @PageImage(purpose: card, source: "advanced-features-hero")
-}
-
 Learn how to use the UnifiedEventSystem for decoupled event handling and advanced editor customization.
 
 ## Overview
@@ -70,7 +65,6 @@ struct AutocompleteEvent: EditorEvent {
 
 ```swift
 // Publish events from your components
-@MainActor
 func textDidChange(in editor: CodeEditorView) {
     guard let eventSystem = editor.configuration.eventSystem else { return }
     
@@ -453,8 +447,8 @@ class EditorEventTests: XCTestCase {
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:MemoryMonitor-Injection>
-- <doc:Swift6-Concurrency>
-- ``UnifiedEventSystem``
-- ``EditorEvent``
+- [Configuration-System](../Configuration/system.md)
+- [MemoryMonitor-Injection](../Performance/memory-monitor.md)
+- [Swift6-Concurrency](swift6.md)
+- `UnifiedEventSystem`
+- `EditorEvent`

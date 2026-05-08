@@ -1,9 +1,5 @@
 # Theme System
 
-@Metadata {
-    @PageColor(purple)
-}
-
 Use CodeEditorPlugin's `Theme` value type to style editor text, syntax colors, chrome, gutter, minimap, completion rows, annotations, and selection behavior.
 
 ## Overview
@@ -208,6 +204,6 @@ Verify custom themes on macOS, iOS, and Mac Catalyst because selection rendering
 
 ## See Also
 
-- <doc:Configuration-System>
-- <doc:SwiftUI-Integration>
-- <doc:Platform-Abstraction>
+- [Configuration-System](../Configuration/system.md)
+- [SwiftUI-Integration](../SwiftUI/integration.md)
+- [Platform-Abstraction](../Platform/platform-abstraction.md)

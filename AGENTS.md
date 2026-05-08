@@ -59,9 +59,10 @@ Sources/CodeEditorPlugin/
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Code annotation detection (TODO, FIXME, etc.)
 ├── Models/                  # Shared data models
-├── Utilities/               # Shared helpers
-└── Documentation.docc/      # DocC catalog
+└── Utilities/               # Shared helpers
 ```
+
+Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
 ~19 functional directories, ~445 Swift source files in the main target.
 
@@ -128,7 +129,7 @@ Architecture diagrams live in `Diagrams/`. They use Mermaid syntax and should be
 
 - **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.
 
-- **Custom lint rule `no_print_statements`** matches the doc comment lines in Documentation.docc but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
+- **Custom lint rule `no_print_statements`** matches `///` doc comment lines in source, but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
 
 - **`canImport` conventions are enforced across ~275 files**. Adding a new `#if os()` is a regression.
 

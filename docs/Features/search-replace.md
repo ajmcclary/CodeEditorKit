@@ -1,8 +1,4 @@
-# ``CodeEditorPlugin/SearchReplaceEngine``
-
-@Metadata {
-    @PageColor(green)
-}
+# `CodeEditorPlugin/SearchReplaceEngine`
 
 Provides comprehensive search and replace functionality with support for regular expressions, highlighting, and batch operations.
 
@@ -299,7 +295,7 @@ struct SearchBar: View {
 
 ## See Also
 
-- ``SearchOptions``
-- ``SearchResult``
-- ``SearchStatistics``
-- ``CodeEditorView``
+- `SearchOptions`
+- `SearchResult`
+- `SearchStatistics`
+- `CodeEditorView`

@@ -1,8 +1,4 @@
-# ``CodeEditorPlugin/UnifiedDrawingCoordinator``
-
-@Metadata {
-    @PageColor(blue)
-}
+# `CodeEditorPlugin/UnifiedDrawingCoordinator`
 
 Abstracts platform-specific drawing operations, providing a unified interface for cross-platform rendering in code editor components.
 
@@ -355,8 +351,8 @@ override func draw(_ rect: CGRect) {
 
 ## See Also
 
-- ``GutterView``
-- ``MinimapView``
-- ``PlatformColor``
-- ``PlatformFont``
-- ``CodeEditorView``
+- `GutterView`
+- `MinimapView`
+- `PlatformColor`
+- `PlatformFont`
+- `CodeEditorView`
