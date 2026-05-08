@@ -279,6 +279,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Gutter view for line numbers
     internal var gutterViewStorage: GutterView?
 
+    /// Tracks the line count last shown in the gutter so we can skip
+    /// invalidating it on intra-line edits. Updated from
+    /// `handleTextStorageDidProcessEditing` (see C1 perf fix).
+    internal var lastGutterLineCount: Int = -1
+
     /// Line highlight view
     internal var lineHighlightView: PlatformView?
 

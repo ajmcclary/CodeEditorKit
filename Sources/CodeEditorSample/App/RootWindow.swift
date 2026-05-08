@@ -1,3 +1,4 @@
+#if canImport(AppKit)
 import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
@@ -5,7 +6,8 @@ import SwiftUI
 /// Vertical stack: tab strip + body + status bar. Reads theme,
 /// configuration, and the document store from the shared `AppState`
 /// (also consumed by the Settings window) so changes made in either
-/// window propagate to the other.
+/// window propagate to the other. macOS / Catalyst only — see
+/// `IOSRootView` for the iOS variant.
 struct RootWindow: View {
     @Bindable var appState: AppState
 
@@ -62,3 +64,4 @@ struct RootWindow: View {
             .frame(width: 0, height: 0)
     }
 }
+#endif

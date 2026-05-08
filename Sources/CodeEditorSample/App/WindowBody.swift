@@ -1,9 +1,11 @@
+#if canImport(AppKit)
 import CodeEditorDesignTokens
 import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
-/// Horizontal split: settings | editor | inspector.
+/// Horizontal split: settings | editor | inspector. macOS / Catalyst only —
+/// `IOSRootView` provides the iOS layout via `NavigationSplitView`.
 struct WindowBody: View {
     @Environment(\.codeEditorTheme) private var editorTheme
     @Binding var theme: Theme
@@ -63,3 +65,4 @@ struct WindowBody: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+#endif

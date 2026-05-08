@@ -47,7 +47,11 @@ internal final class VisibleRangeProvider {
     func updateVisibleSet() {
         guard let textView else { return }
         let range: NSRange = textView.visibleRange()
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let storageLength = textView.textStorage?.length ?? 0
+        #else
+        let storageLength = textView.textStorage.length
+        #endif
         let end = min(storageLength, range.location + range.length)
         guard range.location >= 0, end > range.location else { return }
         let updated = IndexSet(integersIn: range.location..<end)

@@ -119,25 +119,58 @@ public struct EditorConfiguration: Codable, Sendable {
     public var workspaceRoot: URL?
 
     // MARK: - Injectable Dependencies
-    // These properties support dependency injection instead of singleton access
+    //
+    // These properties support dependency injection instead of singleton access.
+    //
+    // ## Isolation contract (Swift 6 strict concurrency)
+    //
+    // `EditorConfiguration` is a `Sendable` value type, but four of these
+    // injection slots are `@MainActor`-isolated because the underlying
+    // services touch UIKit / AppKit state (`PlatformCapabilities`,
+    // `UnifiedPerformanceSystem`, `LanguageMetadataRegistry`,
+    // `PlatformServiceLayer`). Reading or writing those properties from a
+    // background actor will fail to compile under strict concurrency — that
+    // is intentional. The expected usage pattern is:
+    //
+    //   1. Build a configuration from any actor context using
+    //      `EditorConfiguration(layout:display:behavior:performance:)`
+    //      (the non-`@MainActor` initializer).
+    //   2. If you need to inject MainActor-bound services, switch to the
+    //      `@MainActor public init(...)` overload (declared below) or
+    //      assign the properties from a `@MainActor`-isolated context.
+    //   3. `Codable` round-trips drop the four `@MainActor` slots and the
+    //      `eventSystem` slot — they are treated as runtime-only injection
+    //      points. See `init(from:)` and `encode(to:)` at the bottom of this
+    //      file. Consumers persisting configuration to disk get the value
+    //      types (`layout`, `display`, `behavior`, `performance`); they
+    //      re-inject the live services after decoding.
+    //
+    // `paragraphStyleCache` is an actor-agnostic cache (its own internal
+    // `DispatchQueue` provides thread-safety — see ParagraphStyleCache.swift)
+    // so it does not require `@MainActor` isolation here.
 
-    /// Platform capabilities provider
+    /// Platform capabilities provider.
+    /// `@MainActor` because the underlying detection touches UIKit/AppKit.
     /// If nil, the configured dependency factory will be used.
     @MainActor public var platformCapabilities: PlatformCapabilities?
 
-    /// Unified performance monitoring system
+    /// Unified performance monitoring system.
+    /// `@MainActor` because the system observes view-hierarchy events.
     /// If nil, the configured dependency factory will be used.
     @MainActor public var unifiedPerformanceSystem: UnifiedPerformanceSystem?
 
-    /// Paragraph style cache for text rendering
+    /// Paragraph style cache for text rendering.
+    /// Internally synchronized — safe to use from any actor.
     /// If nil, the configured dependency factory will be used.
     public var paragraphStyleCache: ParagraphStyleCache?
 
-    /// Language metadata registry for completion and highlighting
+    /// Language metadata registry for completion and highlighting.
+    /// `@MainActor` because the registry caches view-derived metrics.
     /// If nil, the configured dependency factory will be used.
     @MainActor public var languageMetadataRegistry: LanguageMetadataRegistry?
 
-    /// Platform service layer for cross-platform operations
+    /// Platform service layer for cross-platform operations.
+    /// `@MainActor` because the layer dispatches to AppKit/UIKit services.
     /// If nil, the configured dependency factory will be used.
     @MainActor public var platformServiceLayer: PlatformServiceLayer?
 

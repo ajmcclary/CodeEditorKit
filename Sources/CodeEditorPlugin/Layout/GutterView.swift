@@ -25,6 +25,14 @@ private final class GutterDisplayLinkTarget: NSObject {
     }
 }
 
+// Display-link handle for the iOS gutter.
+//
+// `@unchecked Sendable` rationale: `target` is a constant after init.
+// `displayLink` is mutated only via `@MainActor` methods (`init`, `setPaused`)
+// and read only inside a `deinit` whose lifetime is bounded by main-actor
+// release. The whole type is effectively main-actor-isolated; the unchecked
+// stamp exists because Swift can't synthesize Sendable for a class that holds
+// a `CADisplayLink` (UIKit reference type).
 private final class GutterDisplayLinkHandle: @unchecked Sendable {
     private let target: GutterDisplayLinkTarget
     private var displayLink: CADisplayLink?

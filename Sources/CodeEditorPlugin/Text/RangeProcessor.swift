@@ -18,6 +18,14 @@ public enum RangeFillMode: Sendable, Hashable {
 // MARK: - RangeProcessor
 
 /// A type that can perform on-demand processing of range-based data.
+///
+/// `@unchecked Sendable` rationale: mutable state (`pendingEventQueue`,
+/// `processedUpperBound`, `targetProcessingLocation`, `version`,
+/// `processedVersion`) is accessed from suspension points inside the
+/// `RangeProcessor`'s async methods that take an `isolated any Actor`
+/// parameter (see `AwaitableQueue.processingCompleted(isolation:)`). The
+/// caller's actor isolation is the synchronization mechanism. Direct
+/// concurrent access from non-isolated contexts is not part of the contract.
 public final class RangeProcessor: @unchecked Sendable {
     private typealias VersionedMutation = Versioned<Int, RangeMutation>
 

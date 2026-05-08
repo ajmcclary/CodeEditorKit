@@ -1,0 +1,42 @@
+name: iOS build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-build:
+    name: xcodebuild generic/platform=iOS
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun -sdk iphoneos --show-sdk-version
+
+      - name: xcodebuild CodeEditorSample (iOS)
+        run: |
+          xcodebuild \
+            -scheme CodeEditorSample \
+            -destination "generic/platform=iOS" \
+            -configuration Debug \
+            build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: xcodebuild CodeEditorPlugin (iOS Simulator)
+        run: |
+          xcodebuild \
+            -scheme CodeEditorPlugin \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Debug \
+            build \
+            CODE_SIGNING_ALLOWED=NO

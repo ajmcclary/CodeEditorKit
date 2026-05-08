@@ -45,6 +45,12 @@ struct SyntaxColorCacheKey: Hashable, Sendable {
 
 /// Process-wide syntax-color cache. Single shared instance; keys scope each
 /// theme's hits separately.
+///
+/// `@unchecked Sendable` rationale: `entries` is the only mutable property
+/// and every read/write below is bracketed by `lock.lock()`/`unlock()`. The
+/// stored `Tokens.Color` values are value types (`Sendable`-conforming).
+/// Combine-style synthesis isn't available because the dictionary is mutated
+/// in place by `store(themeID:token:value:)`.
 final class SyntaxColorCache: @unchecked Sendable {
     static let shared = SyntaxColorCache()
 

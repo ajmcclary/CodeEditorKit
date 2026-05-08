@@ -31,8 +31,20 @@ private actor HighlightingTaskManager {
 
 // MARK: - SyntaxHighlightingCoordinator
 
-/// Coordinates between SwiftSyntax and regex-based highlighting for different languages
-/// Thread-safe implementation with proper cancellation support
+/// Coordinates between SwiftSyntax and regex-based highlighting for different languages.
+///
+/// `@unchecked Sendable` rationale (Swift 6 strict concurrency):
+/// - All stored properties beyond `taskManager` are immutable references to
+///   value-semantic helpers (`SwiftSyntaxHighlighter`, `RegexSyntaxHighlighter`,
+///   `FastJSONTokenizer`, `PerformanceMonitor`, `HighlightingStrategyExecutor`).
+/// - Cancellation/active-task state lives inside the private
+///   `HighlightingTaskManager` actor (declared above) — every mutation crosses
+///   that actor boundary via `await taskManager.cancelCurrent()` /
+///   `setCurrentTask(_:)`. The actor is the synchronization mechanism.
+/// - Why not synthesized: the type is publicly subclassable in spirit (final
+///   class with reference semantics) and Swift cannot prove the actor-only
+///   discipline statically. The convention is enforced by the API: callers
+///   never reach into mutable state directly.
 public final class SyntaxHighlightingCoordinator: @unchecked Sendable {
     // MARK: - Properties
 

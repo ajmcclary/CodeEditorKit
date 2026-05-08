@@ -1,6 +1,10 @@
 import CodeEditorPlugin
 import SwiftUI
 
+// `FrameworkEdgeInsets` is exported by `CodeEditorPlugin` to disambiguate
+// from `SwiftUI.EdgeInsets`. Same value type as the framework's internal
+// `EdgeInsets`, just under a non-conflicting name.
+
 struct LayoutKnobsSection: View {
     @Binding var configuration: EditorConfiguration
     @State private var expanded: Bool = false
@@ -17,11 +21,61 @@ struct LayoutKnobsSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 tabsSection
                 spacingSection
+                textContainerInsetSection
                 widthAndBadgeSection
                 minimapAndFoldingSection
             }
         }
         .padding(.horizontal, 12)
+    }
+
+    @ViewBuilder
+    private var textContainerInsetSection: some View {
+        KnobSubsection(title: "Text Container Inset")
+        CGFloatSliderRow(
+            label: "top",
+            value: insetBinding(\FrameworkEdgeInsets.top),
+            range: 0...64,
+            step: 0.5
+        )
+        CGFloatSliderRow(
+            label: "left",
+            value: insetBinding(\FrameworkEdgeInsets.left),
+            range: 0...64,
+            step: 0.5
+        )
+        CGFloatSliderRow(
+            label: "bottom",
+            value: insetBinding(\FrameworkEdgeInsets.bottom),
+            range: 0...64,
+            step: 0.5
+        )
+        CGFloatSliderRow(
+            label: "right",
+            value: insetBinding(\FrameworkEdgeInsets.right),
+            range: 0...64,
+            step: 0.5
+        )
+    }
+
+    /// Build a `Binding<CGFloat>` against one edge of the immutable framework
+    /// `EdgeInsets` — every set rebuilds the whole struct so the configuration
+    /// mutation is value-typed.
+    private func insetBinding(
+        _ keyPath: KeyPath<FrameworkEdgeInsets, CGFloat>
+    ) -> Binding<CGFloat> {
+        Binding(
+            get: { configuration.layout.textContainerInset[keyPath: keyPath] },
+            set: { newValue in
+                let inset = configuration.layout.textContainerInset
+                configuration.layout.textContainerInset = FrameworkEdgeInsets(
+                    top: keyPath == \FrameworkEdgeInsets.top ? newValue : inset.top,
+                    left: keyPath == \FrameworkEdgeInsets.left ? newValue : inset.left,
+                    bottom: keyPath == \FrameworkEdgeInsets.bottom ? newValue : inset.bottom,
+                    right: keyPath == \FrameworkEdgeInsets.right ? newValue : inset.right
+                )
+            }
+        )
     }
 
     @ViewBuilder

@@ -1,10 +1,12 @@
+#if canImport(AppKit)
 import AppKit
 import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
 /// Right sidebar: live `EditorConfiguration` rendered as Swift source,
-/// with a Copy button.
+/// with a Copy button. macOS / Catalyst only — see `IOSRootView` for the
+/// iOS variant.
 struct InspectorSidebar: View {
     @Environment(\.codeEditorTheme) private var theme
     let configuration: EditorConfiguration
@@ -26,9 +28,7 @@ struct InspectorSidebar: View {
                 HStack {
                     Spacer()
                     Button("Copy") {
-                        let pasteboard = NSPasteboard.general
-                        pasteboard.clearContents()
-                        pasteboard.setString(rendered, forType: .string)
+                        copyToPasteboard(rendered)
                     }
                     .controlSize(.small)
                 }
@@ -42,4 +42,11 @@ struct InspectorSidebar: View {
     private var rendered: String {
         ConfigurationCodeFormatter.render(configuration)
     }
+
+    private func copyToPasteboard(_ string: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(string, forType: .string)
+    }
 }
+#endif

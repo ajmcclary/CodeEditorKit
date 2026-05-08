@@ -1,9 +1,14 @@
+#if canImport(AppKit)
 import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
 /// Left sidebar shell: prominent header with active preset subtitle,
 /// switcher card, then the four knob sections.
+///
+/// Uses `EditorSidebarShell` from `CodeEditorUI`, which is macOS / Catalyst
+/// only. The iOS variant (`IOSRootView`) presents the same controls in a
+/// `NavigationSplitView`.
 struct SettingsSidebar: View {
     @Binding var theme: Theme
     @Binding var configuration: EditorConfiguration
@@ -46,3 +51,4 @@ struct SettingsSidebar: View {
         }
     }
 }
+#endif

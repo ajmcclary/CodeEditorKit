@@ -58,12 +58,43 @@ extension CodeEditorView {
             }
         }
 
-        // Update gutter when text changes
-        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        gutterViewStorage?.needsDisplay = true
-        #else
-        gutterViewStorage?.setNeedsDisplay()
-        #endif
+        // Gutter invalidation (perf C1).
+        //
+        // The gutter only renders line numbers, so its content only changes
+        // when line *count* changes. Intra-line edits (typing on one line) do
+        // not affect any line number and don't need a redraw.
+        //
+        // Heuristic for "line count changed":
+        //   - Insertions: cheap — substring of `editedRange` contains "\n".
+        //   - Deletions: we cannot read deleted content from `textStorage`,
+        //     so any deletion conservatively invalidates. This is fine in
+        //     practice — keystroke deletes are far rarer than inserts.
+        //   - Replacements (`changeInLength == 0` with edited characters): also
+        //     conservative — invalidate.
+        let mightChangeLineCount: Bool = {
+            guard editedMask.contains(.editedCharacters), editedRange.location != NSNotFound else {
+                return false
+            }
+            let changeInLength = textStorage.changeInLength
+            if changeInLength <= 0 {
+                return true
+            }
+            let fullString = textStorage.string
+            let totalLength = fullString.utf16.count
+            let safeStart = max(0, editedRange.location)
+            let safeLength = min(editedRange.length, max(0, totalLength - safeStart))
+            guard safeLength > 0 else { return false }
+            let safeRange = NSRange(location: safeStart, length: safeLength)
+            guard let editedSubstring = Range(safeRange, in: fullString) else { return false }
+            return fullString[editedSubstring].contains("\n")
+        }()
+        if mightChangeLineCount {
+            #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+            gutterViewStorage?.needsDisplay = true
+            #else
+            gutterViewStorage?.setNeedsDisplay()
+            #endif
+        }
 
         // Apply syntax highlighting to the edited range if enabled
         if configuration.display.isSyntaxHighlightingEnabled {

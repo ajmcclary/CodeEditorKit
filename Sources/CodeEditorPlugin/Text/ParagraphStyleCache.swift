@@ -5,8 +5,18 @@ import UIKit
 import AppKit
 #endif
 
-/// Cache for paragraph styles to avoid recomputation
-/// Thread-safety note: This cache should be accessed from a consistent context (typically MainActor)
+/// Cache for paragraph styles to avoid recomputation.
+///
+/// `@unchecked Sendable` rationale (Swift 6 strict concurrency):
+/// - Mutable state: `cache: [CacheKey: NSParagraphStyle]` (line ~37) — capped at `capacity`.
+/// - Synchronization: every read/write goes through `cacheQueue`, a serial
+///   `DispatchQueue` (line ~38). Public accessors `paragraphStyle(...)` and
+///   `clear()` use `sync` to preserve the synchronous API drawing code expects.
+/// - Why not synthesized: the type is a reference type owning a mutable
+///   dictionary; Swift cannot prove safety automatically. The serial-queue
+///   discipline below is what makes the cross-actor crossings safe.
+/// - `NSParagraphStyle` values stored in the dictionary are themselves
+///   immutable copies (see `createParagraphStyle` returning `paragraphStyle.copy()`).
 public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Types
 
@@ -29,6 +39,7 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Properties
 
     private var cache: [CacheKey: NSParagraphStyle] = [:]
+    private let cacheQueue = DispatchQueue(label: "com.codeeditor.paragraphstyle-cache")
     private let capacity: Int
 
     // MARK: - Initialization
@@ -47,10 +58,8 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         lineHeightMultiple: CGFloat,
         font: PlatformFont
     ) -> NSParagraphStyle {
-        // Calculate space width for this font
         let spaceWidth = calculateSpaceWidth(for: font)
 
-        // Create cache key
         let key = CacheKey(
             tabWidth: tabWidth,
             lineHeightMultiple: lineHeightMultiple,
@@ -58,33 +67,31 @@ public final class ParagraphStyleCache: @unchecked Sendable {
             spaceWidth: spaceWidth
         )
 
-        // Check cache
-        if let cached = cache[key] {
-            return cached
-        }
+        return cacheQueue.sync {
+            if let cached = cache[key] {
+                return cached
+            }
 
-        // Create new paragraph style
-        let paragraphStyle = createParagraphStyle(
-            tabWidth: tabWidth,
-            lineHeightMultiple: lineHeightMultiple,
-            spaceWidth: spaceWidth
-        )
+            let paragraphStyle = createParagraphStyle(
+                tabWidth: tabWidth,
+                lineHeightMultiple: lineHeightMultiple,
+                spaceWidth: spaceWidth
+            )
 
-        // Cache it
-        cache[key] = paragraphStyle
-        // Remove oldest if over capacity
-        if cache.count > capacity {
-            if let oldestKey = cache.keys.first {
+            cache[key] = paragraphStyle
+            if cache.count > capacity, let oldestKey = cache.keys.first {
                 cache.removeValue(forKey: oldestKey)
             }
-        }
 
-        return paragraphStyle
+            return paragraphStyle
+        }
     }
 
     /// Clear the cache
     public func clear() {
-        cache.removeAll()
+        cacheQueue.sync {
+            cache.removeAll()
+        }
     }
 
     // MARK: - Private Methods

@@ -37,7 +37,13 @@ public struct CompletionCellConfiguration {
     }
 }
 
-/// Theming configuration for completion cells
+/// Theming configuration for completion cells.
+///
+/// `@unchecked Sendable` rationale: every stored property is `let` and the
+/// struct is value-typed. The `PlatformFont` / `PlatformColor` references are
+/// NS/UI reference types that aren't formally `Sendable`, but in practice are
+/// treated as immutable value-likes throughout the codebase. The wrapper here
+/// makes that contract explicit.
 public struct CompletionCellTheme: @unchecked Sendable {
     public let iconFont: PlatformFont
     public let titleFont: PlatformFont

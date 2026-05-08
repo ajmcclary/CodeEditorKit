@@ -19,7 +19,11 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.textView = textView
         self.language = language
 
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         let documentLength = textView.textStorage?.length ?? 0
+        #else
+        let documentLength = textView.textStorage.length
+        #endif
         let highlighter = Self.makeHighlighter(for: language)
         let container = StyledRangeContainer(documentLength: documentLength)
         let providerID = container.registerProvider(priority: 0)

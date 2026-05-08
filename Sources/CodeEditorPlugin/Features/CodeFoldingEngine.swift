@@ -58,11 +58,39 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     // Performance metrics for production monitoring
     private let performanceMetrics: ProductionPerformanceMetrics
 
+    /// Debounce window for fold-region detection. Re-runs are coalesced so
+    /// rapid keystrokes don't trigger N detection passes. Mirrors the
+    /// `AsyncSyntaxHighlighter` 300 ms cadence — fold detection is cheaper
+    /// than highlighting but still wasteful on every keystroke.
+    private static let detectionDebounceNanoseconds: UInt64 = 250_000_000
+
+    /// Optional memory monitor for cache-pressure cleanup (perf C6).
+    private let memoryMonitor: MemoryMonitor?
+    private static let memoryCleanupIdentifier = "CodeFoldingEngine.foldRegionCache"
+
     // MARK: - Initialization
 
-    internal init(performanceMetrics: ProductionPerformanceMetrics? = nil) {
+    internal init(
+        performanceMetrics: ProductionPerformanceMetrics? = nil,
+        memoryMonitor: MemoryMonitor? = nil
+    ) {
         self.performanceMetrics = performanceMetrics ?? CodeEditorDependencies.makeProductionPerformanceMetrics()
+        self.memoryMonitor = memoryMonitor
+        registerMemoryCleanup()
         // Providers are now initialized in FoldingProviderRegistry
+    }
+
+    private func registerMemoryCleanup() {
+        guard let memoryMonitor else { return }
+        memoryMonitor.registerCleanupHandler(
+            identifier: Self.memoryCleanupIdentifier,
+            priority: .normal
+        ) { [weak self] in
+            guard let self else { return CleanupResult(memoryFreedMB: 0.0) }
+            let approxFreedMB = Double(self.foldRegionCache.count) * 0.001
+            self.clearCache()
+            return CleanupResult(memoryFreedMB: approxFreedMB)
+        }
     }
 
     /// Attach to a text view
@@ -191,13 +219,23 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
 
     // MARK: - Region Detection
 
-    /// Update foldable regions based on current text
+    /// Update foldable regions based on current text.
+    ///
+    /// Perf C5: detection is debounced — rapid keystrokes coalesce into a
+    /// single detection pass after `detectionDebounceNanoseconds`. Explicit
+    /// folding actions (toggleFold, foldAll, etc.) don't go through this
+    /// path so user interactions stay snappy.
     internal func updateFoldableRegions() {
         updateTask?.cancel()
 
         updateTask = Task { [weak self] in
             guard let self else { return }
-
+            do {
+                try await Task.sleep(nanoseconds: Self.detectionDebounceNanoseconds)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
             await self.detectFoldableRegions()
         }
     }

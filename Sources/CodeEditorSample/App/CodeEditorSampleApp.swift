@@ -10,6 +10,7 @@ struct CodeEditorSampleApp: App {
     /// Settings (cmd-,) window read and mutate the same instance.
     @State private var appState = AppState()
 
+    #if canImport(AppKit)
     var body: some Scene {
         WindowGroup("CodeEditorSample") {
             RootWindow(appState: appState)
@@ -18,10 +19,15 @@ struct CodeEditorSampleApp: App {
         }
         .windowResizability(.contentSize)
 
-        #if canImport(AppKit)
         Settings {
             SettingsScene(appState: appState)
         }
-        #endif
     }
+    #else
+    var body: some Scene {
+        WindowGroup("CodeEditorSample") {
+            IOSRootView(appState: appState)
+        }
+    }
+    #endif
 }

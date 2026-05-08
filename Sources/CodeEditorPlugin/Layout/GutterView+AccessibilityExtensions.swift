@@ -248,7 +248,14 @@ class LineNumberAccessibilityElement: UIAccessibilityElement {
 }
 
 #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-/// Custom accessibility element for individual line numbers
+/// Custom accessibility element for individual line numbers.
+///
+/// `@unchecked Sendable` rationale: `lineNumber` is the only stored property
+/// and is `let`. `NSAccessibilityElement` itself is an AppKit reference type
+/// and not formally `Sendable`; instances are created and accessed only on the
+/// main thread by AppKit's accessibility machinery. The unchecked stamp is
+/// required so the type can satisfy `Sendable` requirements that flow in from
+/// `GutterView`'s main-actor-isolated context.
 final class LineNumberAccessibilityElement: NSAccessibilityElement, @unchecked Sendable {
     private let lineNumber: Int
 

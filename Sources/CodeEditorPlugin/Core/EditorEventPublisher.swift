@@ -214,7 +214,12 @@ private struct EditorEventCombinePublisher: Publisher, Sendable {
 
 // MARK: - Helper Types for EditorEventSubscription
 
-// Thread-safe handler reference
+// Thread-safe handler reference.
+//
+// `@unchecked Sendable` rationale: the only mutable property is `handler`,
+// guarded by `NSLock` on every read and write below. Combine's `Subscriber`
+// protocol predates Swift concurrency, so synthesized `Sendable` is unavailable
+// for this lock-protected reference pattern.
 @available(macOS 10.15, iOS 13.0, *)
 private final class HandlerReference: @unchecked Sendable {
     private let lock = NSLock()
@@ -240,7 +245,11 @@ private final class HandlerReference: @unchecked Sendable {
     }
 }
 
-// Thread-safe wrapper storage
+// Thread-safe wrapper storage.
+//
+// `@unchecked Sendable` rationale: `wrapper` is the only mutable state and
+// every set/get/clear takes `lock` first. Same Combine-interop reason as
+// `HandlerReference` for the unchecked variant.
 @available(macOS 10.15, iOS 13.0, *)
 private final class WrapperStorage: @unchecked Sendable {
     private let lock = NSLock()
@@ -268,7 +277,13 @@ private final class WrapperStorage: @unchecked Sendable {
     }
 }
 
-// Type-erased handler box to avoid capturing generic types
+// Type-erased handler box to avoid capturing generic types.
+//
+// `@unchecked Sendable` rationale: `handler` is captured immutably at
+// initialization and never mutated. The closure itself is provided by callers
+// and contractually expected to be safe to invoke from any actor. We can't
+// synthesize `Sendable` because the function-typed property isn't `@Sendable`
+// — but its immutability after init is what makes the box safe to share.
 @available(macOS 10.15, iOS 13.0, *)
 private final class HandlerBox: @unchecked Sendable {
     private let handler: (EditorEvent) -> Void

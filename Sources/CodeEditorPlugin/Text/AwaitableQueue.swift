@@ -1,3 +1,11 @@
+/// FIFO queue with continuation-based wait semantics.
+///
+/// `@unchecked Sendable` rationale: `pendingEvents` is mutated freely, but the
+/// queue's contract is that all access happens from a caller-supplied actor
+/// context (see `processingCompleted(isolation:)`). The actor parameter is the
+/// synchronization mechanism — direct cross-actor access without that
+/// parameter is unsupported. `Element: Sendable` is enforced so values
+/// trapped in the queue can safely cross actor boundaries when delivered.
 final class AwaitableQueue<Element>: @unchecked Sendable where Element: Sendable {
     private typealias Continuation = CheckedContinuation<Void, Never>
 

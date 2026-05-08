@@ -2,6 +2,100 @@
 
 ## Unreleased
 
+## [0.1.0] — 2026-05-08
+
+### Added — Distribution & Consumability
+
+- `LICENSE` at repo root (MIT, ajmcclary, 2026). Distribution-blocking gap closed.
+- Real GitHub URL `https://github.com/ajmcclary/CodeEditorPlugin.git` replaces the
+  `yourusername` placeholder in `Package.swift`.
+- `docs/README.md` documents the platform floor (macOS / iOS / Catalyst 26.3+) as
+  intentional rather than aspirational.
+- `docs/FeatureMatrix.md` enumerates platform-by-platform capability coverage
+  for every product, sample demo, and editor capability.
+- GitHub Actions workflows: `swift-build-test.yml`, `ios-build.yml`, `lint.yml`.
+- Public `FrameworkEdgeInsets` typealias on `CodeEditorPlugin.EdgeInsets` so
+  external consumers can disambiguate from `SwiftUI.EdgeInsets` (the obvious
+  qualification fails because the module name shadows a public struct).
+
+### Fixed — Performance
+
+- **Gutter invalidation gating** ([CodeEditorView+SyntaxHighlightingExtensions.swift:62](Sources/CodeEditorPlugin/Core/CodeEditorView+SyntaxHighlightingExtensions.swift)):
+  intra-line edits no longer trigger a full gutter redraw. Only edits that
+  could change line count (newlines added, deletions, replacements) invalidate.
+- **AsyncSyntaxHighlighter Mac Catalyst attribute hoisting**
+  ([AsyncSyntaxHighlighter.swift:478](Sources/CodeEditorPlugin/SyntaxHighlighting/AsyncSyntaxHighlighter.swift)):
+  per-color colour resolution and font lookup hoisted out of the per-token
+  inner loop. Token application now uses `addAttributes(_:range:)` once per
+  range instead of two `addAttribute` calls.
+- **Code-folding detection debounce**
+  ([CodeFoldingEngine.swift:195](Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift)):
+  rapid keystrokes now coalesce into a single 250 ms-delayed detection pass,
+  matching the `AsyncSyntaxHighlighter` cadence.
+- **Code-folding cache memory-pressure cleanup**
+  ([CodeFoldingEngine.swift:60](Sources/CodeEditorPlugin/Features/CodeFoldingEngine.swift)):
+  `CodeFoldingEngine.init` accepts an optional `MemoryMonitor`; when supplied,
+  the fold cache is dropped on memory-pressure callbacks via
+  `MemoryMonitor.registerCleanupHandler`.
+
+### Fixed — Concurrency Hygiene (Swift 6 strict)
+
+- **`ParagraphStyleCache` race resolved** ([ParagraphStyleCache.swift:10](Sources/CodeEditorPlugin/Text/ParagraphStyleCache.swift)):
+  the cache dictionary is now guarded by a serial `DispatchQueue` instead of
+  documented-but-unenforced "consistent context." Public API stays synchronous
+  to match call-site expectations from drawing code.
+- **`@unchecked Sendable` declarations carry safety justifications**: every
+  one of the 16 in-tree sites now has a comment block documenting (a) what
+  is mutable, (b) the synchronization mechanism, (c) why synthesized
+  `Sendable` cannot apply. Files touched: `SyntaxHighlightingCoordinator`,
+  `EditorEventPublisher` (HandlerReference, WrapperStorage, HandlerBox),
+  `GutterView` (DisplayLinkHandle), `CompletionCellComponents` (CellTheme),
+  `GutterView+AccessibilityExtensions` (LineNumberAccessibilityElement),
+  `RangeProcessor`, `SyntaxColorLookup` (SyntaxColorCache),
+  `AwaitableQueue`, `ParagraphStyleCache`.
+- **`EditorConfiguration` actor-isolation contract documented**
+  ([EditorConfiguration.swift:121](Sources/CodeEditorPlugin/Configuration/EditorConfiguration.swift)):
+  the four `@MainActor` injection slots
+  (`platformCapabilities`, `unifiedPerformanceSystem`,
+  `languageMetadataRegistry`, `platformServiceLayer`) now have a clear contract
+  block explaining why they require `@MainActor` to access and how the existing
+  `Codable` conformance handles them (round-trips drop them; consumers re-inject
+  live services after decoding).
+
+### Fixed — iOS Compatibility
+
+- Four `textView.textStorage?.length` and `.string` sites that worked under
+  AppKit's optional `textStorage` but failed under UIKit's non-optional
+  `textStorage`. Fixed via platform-conditional unwrapping in
+  `VisibleRangeProvider`, `RangeBasedHighlightingController`, and
+  `SyntaxHighlighterRangeAdapter`. iOS sample (and any iOS consumer) now
+  builds clean.
+
+### Added — Sample App
+
+- **iOS shell** (`Sources/CodeEditorSample/iOS/IOSRootView.swift`): a
+  `NavigationSplitView`-based root for iOS / iPadOS that reuses the same
+  `DocumentStore`, `AppState`, and `EditorConfiguration` as the macOS shell.
+  The macOS-only sample views (`RootWindow`, `WindowBody`, `SettingsSidebar`,
+  `InspectorSidebar`) are now gated behind `#if canImport(AppKit)`, with the
+  `IOSRootView` taking over on platforms without AppKit.
+- **iOS / Catalyst presets** restored to `PresetCatalog` (previously
+  intentionally omitted with a comment).
+- **`Performance.usesRangeBasedHighlighting`** toggle exposed in the
+  `PerformanceKnobsSection`.
+- **`Layout.textContainerInset`** edge sliders (top / left / bottom / right)
+  added to `LayoutKnobsSection`.
+
+### Deferred — Sample-app demo screens
+
+The original review flagged ~14 demo screens; this release lands the iOS shell,
+preset coverage, and the two missing knob panels. The richer demo surfaces
+(LSP server connection, custom completion provider showcase, large-file stress
+test, performance HUD overlay, folding visualization, annotations demo, file
+open/save, recent files, search-and-replace UI, theme builder, font picker,
+demo navigation infrastructure) are deferred. The framework backing types
+exist; the sample wiring did not fit the scope of this release.
+
 ### Comprehensive code-review remediation (in progress on `remediation/full-review-followup`)
 
 A multi-tier sweep prompted by an audit that surfaced 20 distinct

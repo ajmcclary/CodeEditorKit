@@ -9,19 +9,26 @@
 /// ## Requirements
 ///
 /// - **Swift**: 6.3 or later
-/// - **Platforms**:
+/// - **Platforms** (intentional — targets the current Apple OS family):
 ///   - macOS 26.3+
 ///   - iOS 26.3+
 ///   - Mac Catalyst 26.3+
+///
+/// Consumers on older OS releases should pin a future LTS tag rather than expect
+/// the floor to be lowered. See `docs/README.md` § Platform Requirements.
 ///
 /// ## Installation
 ///
 /// Add to your `Package.swift`:
 /// ```swift
 /// dependencies: [
-///     .package(url: "https://github.com/yourusername/CodeEditorPlugin.git", from: "1.0.0")
+///     .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "0.1.0")
 /// ]
 /// ```
+///
+/// ## License
+///
+/// MIT — see `LICENSE` at the repo root.
 ///
 /// ## Dependencies
 ///

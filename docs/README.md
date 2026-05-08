@@ -5,6 +5,24 @@ A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict 
 ## Start here
 
 → **[Getting Started](GettingStarted.md)** — install, integrate, and configure in five minutes.
+→ **[Feature Matrix](FeatureMatrix.md)** — what works on macOS / iOS / Catalyst.
+
+## Platform Requirements
+
+This package targets the current Apple OS family deliberately:
+
+| Platform | Minimum |
+|---|---|
+| macOS | 26.3 |
+| iOS | 26.3 |
+| Mac Catalyst | 26.3 |
+| Swift toolchain | 6.3 |
+
+The floor is intentional, not aspirational — the editor uses APIs introduced in this release window and exercising them on older OSes would require deprecation paths the project explicitly rejected during the most recent remediation pass. If you need broader OS coverage, pin a future LTS tag rather than building from `main`.
+
+## Distribution
+
+The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. `CodeEditorDesignTokens` is a standalone library — depend on it directly if you only need the design-token surface without the editor.
 
 ## By topic
 

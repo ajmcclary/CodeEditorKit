@@ -63,6 +63,10 @@ struct PerformanceKnobsSection: View {
             label: "animateCodeFolding (perf)",
             value: $configuration.performance.animateCodeFolding
         )
+        ToggleRow(
+            label: "usesRangeBasedHighlighting",
+            value: $configuration.performance.usesRangeBasedHighlighting
+        )
         PickerRow(
             label: "renderingUpdateStrategy",
             value: $configuration.performance.renderingUpdateStrategy,
