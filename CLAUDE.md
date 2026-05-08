@@ -37,7 +37,7 @@ Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay`
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 4 test targets.
+Tests mix both XCTest and Swift Testing frameworks across 3 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`).
 
 ## Source Tree
 
@@ -48,7 +48,7 @@ Sources/CodeEditorPlugin/
 ├── Layout/                  # UI components + co-located ViewModels
 ├── Configuration/           # Settings, presets, validation
 ├── SyntaxHighlighting/      # Language highlighting engine
-├── Languages/               # Language-specific providers (20 languages)
+├── Languages/               # Language-specific providers (18 languages)
 ├── Theming/                 # Theme system, color tokens, appearance
 ├── Completion/              # Code completion providers
 ├── Features/                # Optional features (folding, annotations, etc.)
@@ -59,12 +59,13 @@ Sources/CodeEditorPlugin/
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Code annotation detection (TODO, FIXME, etc.)
 ├── Models/                  # Shared data models
-└── Utilities/               # Shared helpers
+├── Utilities/               # Shared helpers
+└── Resources/               # Bundled theme JSON (processed via `resources:`)
 ```
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-~19 functional directories, ~445 Swift source files in the main target.
+18 directories, ~438 Swift source files in the main target.
 
 ## Conventions
 
@@ -101,10 +102,10 @@ config.display.isLineNumbersEnabled = true
 // Presets
 let config = EditorConfiguration.minimal
 
-// Batch mutation
-appState.updateConfiguration { config in
-    config.display.isLineNumbersEnabled = true
-}
+// Batch mutation (immutable chaining)
+let updated = config
+    .with(display: modifiedDisplay)
+    .with(behavior: modifiedBehavior)
 ```
 
 ### Testing
@@ -114,7 +115,7 @@ Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Pack
 
 - **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
 
-- **`swift package generate-documentation`** requires the Swift-DocC plugin installed separately — this is not a standard Swift CLI command.
+- **No DocC catalog**: this project ships plain Markdown in `docs/`, not a DocC bundle. Don't add `@Metadata`, `<doc:>`, `## Topics`, or `.tutorial` directives to files in `docs/` — they won't render and they re-introduce a toolchain dependency that was deliberately removed.
 
 - **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.
 

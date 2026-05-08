@@ -59,12 +59,13 @@ Sources/CodeEditorPlugin/
 ├── LSP/                     # Language Server Protocol support
 ├── Annotations/             # Code annotation detection (TODO, FIXME, etc.)
 ├── Models/                  # Shared data models
-└── Utilities/               # Shared helpers
+├── Utilities/               # Shared helpers
+└── Resources/               # Bundled theme JSON (processed via `resources:`)
 ```
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-~19 functional directories, ~445 Swift source files in the main target.
+18 directories, ~438 Swift source files in the main target.
 
 ## Conventions
 
@@ -112,20 +113,20 @@ Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Pack
 
 ## Diagrams
 
-Architecture diagrams live in `Diagrams/`. They use Mermaid syntax and should be kept in sync with the actual codebase. When adding new features or renaming classes, update the relevant diagrams.
+Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with the codebase — when adding features or renaming classes, update the relevant diagram. The folder has its own [`README.md`](docs/Diagrams/README.md) indexing every diagram.
 
-**Key things to watch:**
-- Language count is 18 (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell), not 20
-- The plugin system (`Diagram 27`) is a design document — not yet implemented
-- `20-debugging-integration-architecture.md` is the extended design document; `20-debugging-integration.md` reflects current implementation
-- `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code
-- No `depermaid`, `ConfigurationBatchUpdater`, `AppState`, `PluginManager`, or `ServiceLifecycle` classes exist
+**Watch for stale claims in diagrams:**
+- Language count is 18 (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell), not 20.
+- The plugin system (`Diagram 27`) is a design document — not yet implemented.
+- `20-debugging-integration-architecture.md` is the extended design; `20-debugging-integration.md` reflects current implementation.
+- `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code.
+- These symbols are referenced in older diagrams but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
 
 ## What Will Go Wrong
 
 - **Sample app is a target, not a directory**: `cd CodeEditorSample && swift build` will fail. Use `swift run CodeEditorSample` or `swift build --target CodeEditorSample`.
 
-- **`swift package generate-documentation`** requires the Swift-DocC plugin installed separately — this is not a standard Swift CLI command.
+- **No DocC catalog**: this project ships plain Markdown in `docs/`, not a DocC bundle. Don't add `@Metadata`, `<doc:>`, `## Topics`, or `.tutorial` directives to files in `docs/` — they won't render and they re-introduce a toolchain dependency that was deliberately removed.
 
 - **SwiftLint strict mode** is on (`strict: true` in `.swiftlint.yml`). Warnings are treated as errors. Always run `swiftlint --fix` before `swiftlint`.
 
