@@ -34,6 +34,9 @@ extension CodeEditorView {
         // Set up code folding engine
         setupCodeFoldingEngine()
 
+        // Set up line geometry store edit handler
+        setupLineGeometryStore()
+
         // LSP integration can be set up here when needed
         // setupLSPIntegration()
 
@@ -80,6 +83,15 @@ extension CodeEditorView {
     internal func setupCodeFoldingEngine() {
         // Connect the code folding engine
         codeFoldingEngine.attach(to: self)
+    }
+
+    internal func setupLineGeometryStore() {
+        // Create and register the edit handler that keeps the geometry
+        // store in sync with text storage changes.
+        lineGeometryEditHandler = LineGeometryEditHandler(
+            geometryStore: lineGeometryStore,
+            textView: self
+        )
     }
 
     internal func updateCompletionTriggerCharacters() {

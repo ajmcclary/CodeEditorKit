@@ -858,4 +858,169 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         XCTAssertEqual(store.utf16Offset(forLineIndex: 0), 0)
         XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 7)
     }
+
+    // MARK: - 9. Edit Handler Tests
+
+    /// Simulate a text edit by directly calling `textStorageDidApplyEdit`
+    /// on the handler. Verifies the store is rebuilt correctly.
+    func testEditHandlerRebuildsAfterCharacterEdit() {
+        let textView = CodeEditorView(frame: .zero)
+        textView.text = "line1\nline2\nline3"
+
+        // Remove the handler created during setupTextView to test in isolation
+        textView.lineGeometryEditHandler?.detach()
+        textView.lineGeometryEditHandler = nil
+
+        // Build the store initially
+        textView.lineGeometryStore.build(from: textView.textStorage!)
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 3)
+
+        // Create the handler (normally done in setupTextView)
+        let handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
+
+        // Simulate a text edit: insert "extra\n" at the beginning
+        let storage = textView.textStorage!
+        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "extra\n")
+
+        // Fire the edit event
+        let event = TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 6,
+            documentLength: storage.length,
+            editedCharacters: true
+        )
+        handler.textStorageDidApplyEdit(event)
+
+        // Store should now reflect the new text
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 4)
+        assertStoreMatchesReference(for: storage.string)
+
+        handler.detach()
+    }
+
+    func testEditHandlerNoOpOnAttributeOnlyEdit() {
+        let textView = CodeEditorView(frame: .zero)
+        textView.text = "line1\nline2"
+
+        textView.lineGeometryEditHandler?.detach()
+        textView.lineGeometryEditHandler = nil
+
+        textView.lineGeometryStore.build(from: textView.textStorage!)
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
+
+        let handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
+
+        // Fire an attribute-only edit event
+        let event = TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 0,
+            documentLength: textView.textStorage!.length,
+            editedCharacters: false
+        )
+        handler.textStorageDidApplyEdit(event)
+
+        // Store should be unchanged
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
+
+        handler.detach()
+    }
+
+    func testEditHandlerMultipleSequentialEdits() {
+        let textView = CodeEditorView(frame: .zero)
+        textView.text = "a\nb\nc"
+
+        textView.lineGeometryEditHandler?.detach()
+        textView.lineGeometryEditHandler = nil
+
+        textView.lineGeometryStore.build(from: textView.textStorage!)
+        let handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
+
+        // Edit 1: insert "X" at position 0
+        let storage = textView.textStorage!
+        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: "X")
+        handler.textStorageDidApplyEdit(TextEditEvent(
+            editedRange: NSRange(location: 0, length: 0),
+            changeInLength: 1,
+            documentLength: storage.length,
+            editedCharacters: true
+        ))
+        assertStoreMatchesReference(for: storage.string)
+
+        // Edit 2: delete the newline after "b"
+        // "Xa\nb\nc" → find the \n after "b"
+        let nsString = storage.string as NSString
+        let bLineRange = nsString.lineRange(for: NSRange(location: 4, length: 0))
+        let newlineLoc = NSMaxRange(bLineRange) - 1
+        storage.replaceCharacters(in: NSRange(location: newlineLoc, length: 1), with: "")
+        handler.textStorageDidApplyEdit(TextEditEvent(
+            editedRange: NSRange(location: newlineLoc, length: 1),
+            changeInLength: -1,
+            documentLength: storage.length,
+            editedCharacters: true
+        ))
+        assertStoreMatchesReference(for: storage.string)
+
+        // Edit 3: replace all content
+        storage.replaceCharacters(
+            in: NSRange(location: 0, length: storage.length),
+            with: "new\ncontent\nhere"
+        )
+        handler.textStorageDidApplyEdit(TextEditEvent(
+            editedRange: NSRange(location: 0, length: storage.length - 14),
+            changeInLength: 14 - (storage.length - 14),
+            documentLength: storage.length,
+            editedCharacters: true
+        ))
+        assertStoreMatchesReference(for: storage.string)
+
+        handler.detach()
+    }
+
+    func testEditHandlerDetachStopsObserving() {
+        let textView = CodeEditorView(frame: .zero)
+        textView.text = "test"
+
+        // Detach the handler created during setupTextView() so we can
+        // test detach behavior in isolation.
+        textView.lineGeometryEditHandler?.detach()
+        textView.lineGeometryEditHandler = nil
+
+        textView.lineGeometryStore.build(from: textView.textStorage!)
+        let handler = LineGeometryEditHandler(
+            geometryStore: textView.lineGeometryStore,
+            textView: textView
+        )
+
+        // Detach the handler
+        handler.detach()
+
+        // Modify text — handler should NOT rebuild
+        textView.textStorage?.replaceCharacters(in: NSRange(location: 0, length: 4), with: "changed")
+        // The store should still reflect the old text (length 4 = "test")
+        XCTAssertEqual(textView.lineGeometryStore.totalUtf16Length, 4)
+    }
+
+    func testEditHandlerRegisteredViaSetup() {
+        // Verify that a properly set up CodeEditorView has the handler
+        let textView = CodeEditorView(frame: .zero)
+        textView.text = "line1\nline2"
+
+        // setupTextView is called during init
+        XCTAssertNotNil(textView.lineGeometryEditHandler,
+                        "Handler should be created during setupTextView()")
+
+        // After setting text, the store should reflect it (handler rebuilds on edit)
+        // The initial text set doesn't go through TextEditEventHub, so we build manually
+        textView.lineGeometryStore.build(from: textView.textStorage!)
+        XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
+    }
 }

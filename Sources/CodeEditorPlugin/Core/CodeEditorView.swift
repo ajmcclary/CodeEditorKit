@@ -211,6 +211,10 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// correctness. Runs alongside `lineIndexCache` during the migration.
     internal let lineGeometryStore = LineGeometryStore()
 
+    /// Handler that keeps `lineGeometryStore` in sync with `NSTextStorage`
+    /// after text edits. Registered with `textEditEventHub` during setup.
+    internal var lineGeometryEditHandler: LineGeometryEditHandler?
+
     /// Text edit event hub for broadcasting edit notifications to observers.
     /// Consumers (RangeStore sync, highlighting, folding, gutter) subscribe
     /// to receive canonical edit events instead of watching `NSTextStorage`
