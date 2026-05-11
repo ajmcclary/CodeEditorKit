@@ -111,6 +111,7 @@ enum KnobIcon {
         "isCodeCompletionEnabled": "sparkles",
         "isAutomaticTextCompletionEnabled": "text.append",
         "showInlineCompletionSuggestions": "lightbulb",
+        "useTreeSitterHighlighting": "tree",
         "completionTriggerCharacters": "keyboard",
 
         "maxSyntaxHighlightingLength": "ruler.fill",
@@ -120,6 +121,7 @@ enum KnobIcon {
         "useHardwareAcceleration": "cpu",
         "smoothScrolling": "scroll",
         "animateCodeFolding": "wand.and.stars.inverse",
+        "usesRangeBasedHighlighting": "ruler",
         "renderingUpdateStrategy": "rectangle.stack",
         "highlightingDebounceInterval": "timer",
         "textChangeDebounceInterval": "hourglass",

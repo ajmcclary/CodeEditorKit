@@ -6,8 +6,8 @@ import SwiftUI
 /// Left sidebar shell: prominent header with active preset subtitle,
 /// switcher card, then the knob sections.
 ///
-/// Uses `EditorSidebarShell` from `CodeEditorUI`, which is macOS / Catalyst
-/// only. The iOS variant (`IOSRootView`) presents the same controls in a
+/// Uses `EditorSidebarShell` from `CodeEditorUI`, which is macOS-only.
+/// The iOS variant (`IOSRootView`) presents controls in a
 /// `NavigationSplitView`.
 struct SettingsSidebar: View {
     @Bindable var appState: AppState

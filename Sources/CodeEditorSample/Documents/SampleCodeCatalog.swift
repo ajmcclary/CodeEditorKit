@@ -574,7 +574,7 @@ enum SampleCodeCatalog {
     free-form text. Line wrapping, selection, and find-replace all
     work the same as in any other language.
 
-      • Editor renders 20+ languages with theme-aware highlighting.
+      • Editor renders \(Language.allCases.count) languages with theme-aware highlighting.
       • Switch languages via the Language picker on the left.
       • Customize the theme via the Theme picker.
       • Tweak knobs in the Display / Layout / Behavior sections.

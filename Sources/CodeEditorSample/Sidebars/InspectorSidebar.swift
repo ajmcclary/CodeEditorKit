@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Right sidebar: LSP probe, annotation/symbol panel, live
 /// `EditorConfiguration` rendered as Swift source, with a Copy button.
-/// macOS / Catalyst only — see `IOSRootView` for the iOS variant.
+/// macOS only — see `IOSRootView` for the iOS variant.
 struct InspectorSidebar: View {
     @Environment(\.codeEditorTheme) private var theme
     @Bindable var appState: AppState

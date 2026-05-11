@@ -129,7 +129,6 @@ let package = Package(
             dependencies: [
                 "CodeEditorPlugin",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
-                .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
             ],
             exclude: [
@@ -159,6 +158,13 @@ let package = Package(
             ],
             exclude: [
                 "Snapshots"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
+            name: "CodeEditorSampleTests",
+            dependencies: [
+                "CodeEditorSample"
             ],
             swiftSettings: swiftSettings
         )

@@ -197,6 +197,9 @@ enum ConfigurationCodeFormatter {
         if live.autoScrollToCursor != base.autoScrollToCursor {
             lines.append("\(prefix).autoScrollToCursor = \(live.autoScrollToCursor)")
         }
+        if live.useTreeSitterHighlighting != base.useTreeSitterHighlighting {
+            lines.append("\(prefix).useTreeSitterHighlighting = \(live.useTreeSitterHighlighting)")
+        }
         return lines
     }
 
@@ -236,6 +239,9 @@ enum ConfigurationCodeFormatter {
         }
         if live.animateCodeFolding != base.animateCodeFolding {
             lines.append("\(prefix).animateCodeFolding = \(live.animateCodeFolding)")
+        }
+        if live.usesRangeBasedHighlighting != base.usesRangeBasedHighlighting {
+            lines.append("\(prefix).usesRangeBasedHighlighting = \(live.usesRangeBasedHighlighting)")
         }
         if live.maxEventsPerSecond != base.maxEventsPerSecond {
             lines.append("\(prefix).maxEventsPerSecond = \(live.maxEventsPerSecond)")

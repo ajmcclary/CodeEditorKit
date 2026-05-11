@@ -4,7 +4,7 @@ import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
-/// Horizontal split: settings | editor | inspector. macOS / Catalyst only —
+/// Horizontal split: settings | editor | inspector. macOS only —
 /// `IOSRootView` provides the iOS layout via `NavigationSplitView`.
 struct WindowBody: View {
     @Environment(\.codeEditorTheme) private var editorTheme
