@@ -235,6 +235,11 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     case php
     case shell
     case dockerfile
+    case toml
+    case lua
+    case csharp
+    case kotlin
+    case dart
     case plainText = "plaintext"
 
     /// The human-readable display name for the language.

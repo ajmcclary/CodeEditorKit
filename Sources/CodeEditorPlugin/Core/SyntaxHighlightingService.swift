@@ -151,6 +151,21 @@ public final class SyntaxHighlightingService {
         case .dockerfile:
             return [" ", "$"]
 
+        case .toml:
+            return ["=", " ", "[", "\"", "'"]
+
+        case .lua:
+            return [".", ":", "(", " "]
+
+        case .csharp:
+            return [".", "(", "[", "<", " "]
+
+        case .kotlin:
+            return [".", "(", "[", "<", " ", ":"]
+
+        case .dart:
+            return [".", "(", "[", "<", " ", ":"]
+
         case .plainText:
             return []
         }

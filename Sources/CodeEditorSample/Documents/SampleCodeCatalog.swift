@@ -35,6 +35,11 @@ enum SampleCodeCatalog {
         case .php:        return phpSample
         case .shell:      return shellSample
         case .dockerfile: return dockerfileSample
+        case .toml:      return tomlSample
+        case .lua:       return luaSample
+        case .csharp:    return csharpSample
+        case .kotlin:    return kotlinSample
+        case .dart:      return dartSample
         case .plainText:  return plainTextSample
         }
     }
@@ -453,6 +458,113 @@ enum SampleCodeCatalog {
         CMD curl -f http://localhost:8080/health || exit 1
 
     CMD ["node", "/app/server.js"]
+    """
+
+    private static let tomlSample = """
+    # Sample TOML configuration for syntax highlighting.
+    title = "TOML Example"
+
+    [owner]
+    name = "Ada Lovelace"
+    active = true
+
+    [database]
+    server = "192.168.1.1"
+    ports = [8001, 8002, 8003]
+    connection_max = 5000
+    enabled = true
+
+    [[servers]]
+    ip = "10.0.0.1"
+    role = "frontend"
+
+    [[servers]]
+    ip = "10.0.0.2"
+    role = "backend"
+    """
+
+    private static let luaSample = """
+    -- Sample Lua script for syntax highlighting.
+    local function greet(name, times)
+        times = times or 1
+        local lines = {}
+        for i = 1, times do
+            lines[i] = "Hello, " .. name .. "! (" .. i .. ")"
+        end
+        return table.concat(lines, "\\n")
+    end
+
+    local names = {"Ada", "Grace", "Linus"}
+    for _, name in ipairs(names) do
+        print(greet(name, 2))
+    end
+    """
+
+    private static let csharpSample = """
+    using System;
+    using System.Collections.Generic;
+
+    namespace Greeting
+    {
+        public static class Program
+        {
+            /// <summary>Greets the named person and returns the rendered string.</summary>
+            public static string Greet(string name, int times = 1)
+            {
+                var lines = new List<string>();
+                for (int i = 0; i < times; i++)
+                {
+                    lines.Add($\"Hello, {name}! ({i + 1})\");
+                }
+                return string.Join("\\n", lines);
+            }
+
+            public static void Main()
+            {
+                var names = new[] { "Ada", "Grace", "Linus" };
+                foreach (var name in names)
+                {
+                    Console.WriteLine(Greet(name, 2));
+                }
+            }
+        }
+    }
+    """
+
+    private static let kotlinSample = """
+    // Sample Kotlin script for syntax highlighting.
+    fun greet(name: String, times: Int = 1): String {
+        val lines = mutableListOf<String>()
+        for (i in 0 until times) {
+            lines.add("Hello, $name! (${i + 1})")
+        }
+        return lines.joinToString("\\n")
+    }
+
+    fun main() {
+        val names = listOf("Ada", "Grace", "Linus")
+        for (name in names) {
+            println(greet(name, 2))
+        }
+    }
+    """
+
+    private static let dartSample = """
+    // Sample Dart program for syntax highlighting.
+    String greet(String name, {int times = 1}) {
+        final lines = <String>[];
+        for (var i = 0; i < times; i++) {
+            lines.add("Hello, $name! (${i + 1})");
+        }
+        return lines.join("\\n");
+    }
+
+    void main() {
+        final names = ["Ada", "Grace", "Linus"];
+        for (final name in names) {
+            print(greet(name, times: 2));
+        }
+    }
     """
 
     private static let plainTextSample = """

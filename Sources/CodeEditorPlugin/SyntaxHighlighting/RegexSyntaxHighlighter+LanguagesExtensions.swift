@@ -85,6 +85,21 @@ extension RegexSyntaxHighlighter {
         // Dockerfile
         languages["dockerfile"] = createDockerfileDefinition()
 
+        // TOML
+        languages["toml"] = createTOMLDefinition()
+
+        // Lua
+        languages["lua"] = createLuaDefinition()
+
+        // C#
+        languages["csharp"] = createCSharpDefinition()
+
+        // Kotlin
+        languages["kotlin"] = createKotlinDefinition()
+
+        // Dart
+        languages["dart"] = createDartDefinition()
+
         return languages
     }
 
@@ -155,6 +170,21 @@ extension RegexSyntaxHighlighter {
 
             case .dockerfile:
                 languageMap[language] = definitions["dockerfile"]
+
+            case .toml:
+                languageMap[language] = definitions["toml"]
+
+            case .lua:
+                languageMap[language] = definitions["lua"]
+
+            case .csharp:
+                languageMap[language] = definitions["csharp"]
+
+            case .kotlin:
+                languageMap[language] = definitions["kotlin"]
+
+            case .dart:
+                languageMap[language] = definitions["dart"]
 
             case .plainText:
                 // Plain text doesn't need highlighting
@@ -534,5 +564,113 @@ extension RegexSyntaxHighlighter {
             // Options like --from=, --chown=
             .addCustomRule(pattern: #"--[a-zA-Z][a-zA-Z-]*(?==)"#, type: .property, priority: 7)
             .build(name: "Dockerfile", fileExtensions: ["dockerfile"])
+    }
+
+    private static func createTOMLDefinition() -> LanguageDefinition {
+        LanguageDefinitionBuilder()
+            .addComments(singleLine: "#")
+            .addStrings(single: true, double: true)
+            .addNumbers()
+            // Section headers: [section] or [[array]]
+            .addCustomRule(pattern: #"^\[{1,2}[^\]]+\]{1,2}"#, type: .keyword, priority: 10)
+            // Key-value pairs
+            .addCustomRule(pattern: #"^[a-zA-Z_][a-zA-Z0-9_-]*(?=\s*=)"#, type: .property, priority: 8)
+            .addCustomRule(pattern: #"\b(true|false)\b"#, type: .keyword, priority: 7)
+            .build(name: "TOML", fileExtensions: ["toml"])
+    }
+
+    private static func createLuaDefinition() -> LanguageDefinition {
+        let luaKeywords = [
+            "and", "break", "do", "else", "elseif", "end", "false", "for",
+            "function", "goto", "if", "in", "local", "nil", "not", "or",
+            "repeat", "return", "then", "true", "until", "while"
+        ]
+
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "--")
+            .addCustomRule(pattern: #"--\[\[[\s\S]*?]]"#, type: .comment, priority: 10)
+            .addStrings(single: true, double: true)
+            .addCustomRule(pattern: #"\[\[[\s\S]*?]]"#, type: .string, priority: 9) // Long strings
+            .addNumbers()
+            .addKeywords(luaKeywords)
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!&|^~#]+"#)
+            .build(name: "Lua", fileExtensions: ["lua"])
+    }
+
+    private static func createCSharpDefinition() -> LanguageDefinition {
+        let csKeywords = [
+            "abstract", "as", "base", "bool", "break", "byte", "case", "catch",
+            "char", "checked", "class", "const", "continue", "decimal", "default",
+            "delegate", "do", "double", "else", "enum", "event", "explicit", "extern",
+            "false", "finally", "fixed", "float", "for", "foreach", "goto", "if",
+            "implicit", "in", "int", "interface", "internal", "is", "lock", "long",
+            "namespace", "new", "null", "object", "operator", "out", "override",
+            "params", "private", "protected", "public", "readonly", "ref", "return",
+            "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string",
+            "struct", "switch", "this", "throw", "true", "try", "typeof", "uint",
+            "ulong", "unchecked", "unsafe", "ushort", "using", "var", "virtual",
+            "void", "volatile", "while"
+        ]
+
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true)
+            .addCustomRule(pattern: #"\$\"[^\"]*\""#, type: .string, priority: 9) // Interpolated strings
+            .addNumbers()
+            .addKeywords(csKeywords)
+            .addCustomRule(pattern: #"\b[A-Z][a-zA-Z0-9]*\b"#, type: .type, priority: 7) // PascalCase types
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!&|^~?:]+"#)
+            .build(name: "C#", fileExtensions: ["cs"])
+    }
+
+    private static func createKotlinDefinition() -> LanguageDefinition {
+        let ktKeywords = [
+            "abstract", "annotation", "as", "break", "by", "catch", "class",
+            "companion", "const", "constructor", "continue", "data", "do", "else",
+            "enum", "false", "final", "finally", "for", "fun", "if", "import",
+            "in", "init", "inner", "interface", "internal", "is", "lateinit",
+            "null", "object", "open", "operator", "out", "override", "package",
+            "private", "protected", "public", "return", "sealed", "super", "suspend",
+            "this", "throw", "true", "try", "typealias", "val", "var", "vararg",
+            "when", "while"
+        ]
+
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true)
+            .addCustomRule(pattern: #"\$\{[^}]+\}"#, type: .identifier, priority: 9) // String templates
+            .addCustomRule(pattern: #"\$\w+"#, type: .identifier, priority: 8) // $variable
+            .addNumbers()
+            .addKeywords(ktKeywords)
+            .addCustomRule(pattern: #"\b[A-Z][a-zA-Z0-9]*\b"#, type: .type, priority: 7) // PascalCase types
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!&|^~?:]+"#)
+            .build(name: "Kotlin", fileExtensions: ["kt", "kts"])
+    }
+
+    private static func createDartDefinition() -> LanguageDefinition {
+        let dartKeywords = [
+            "abstract", "as", "assert", "async", "await", "break", "case", "catch",
+            "class", "const", "continue", "default", "deferred", "do", "dynamic",
+            "else", "enum", "export", "extends", "extension", "external", "factory",
+            "false", "final", "finally", "for", "Function", "get", "hide", "if",
+            "implements", "import", "in", "interface", "is", "late", "library",
+            "mixin", "new", "null", "on", "operator", "part", "required", "rethrow",
+            "return", "set", "show", "static", "super", "switch", "sync", "this",
+            "throw", "true", "try", "typedef", "var", "void", "while", "with", "yield"
+        ]
+
+        return LanguageDefinitionBuilder()
+            .addComments(singleLine: "//", multiLineStart: "/*", multiLineEnd: "*/")
+            .addStrings(single: true, double: true)
+            .addCustomRule(pattern: #"\$\{[^}]+\}"#, type: .identifier, priority: 9) // String interpolation
+            .addNumbers()
+            .addKeywords(dartKeywords)
+            .addCustomRule(pattern: #"\b[A-Z][a-zA-Z0-9]*\b"#, type: .type, priority: 7) // PascalCase types
+            .addFunctionCalls()
+            .addOperators(pattern: #"[+\-*/%=<>!&|^~?:]+"#)
+            .build(name: "Dart", fileExtensions: ["dart"])
     }
 }

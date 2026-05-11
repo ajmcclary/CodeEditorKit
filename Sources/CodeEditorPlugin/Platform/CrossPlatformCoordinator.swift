@@ -318,10 +318,10 @@ public final class CrossPlatformCoordinator: ObservableObject {
     /// - Returns: The comment prefix string
     internal func getCommentPrefix(for language: Language) -> String {
         switch language {
-        case .swift, .javascript, .typescript, .c, .cpp, .go, .rust, .java:
+        case .swift, .javascript, .typescript, .c, .cpp, .go, .rust, .java, .csharp, .kotlin, .dart:
             return "//"
 
-        case .python, .ruby, .shell, .dockerfile:
+        case .python, .ruby, .shell, .dockerfile, .toml:
             return "#"
 
         case .html, .xml:
@@ -335,6 +335,9 @@ public final class CrossPlatformCoordinator: ObservableObject {
 
         case .php:
             return "//"
+
+        case .lua:
+            return "--"
 
         case .yaml:
             return "#"

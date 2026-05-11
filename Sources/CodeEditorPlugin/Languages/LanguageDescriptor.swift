@@ -797,6 +797,190 @@ internal struct LanguageDescriptor: Sendable {
             scriptAliases: []
         ),
 
+        // ── TOML ───────────────────────────────────────────────────────
+        .toml: Self(
+            language: .toml,
+            displayName: "TOML",
+            fileExtensions: ["toml"],
+            lspIdentifier: "toml",
+            highlightingStrategy: .regex,
+            lineComment: "#",
+            blockCommentStart: nil,
+            blockCommentEnd: nil,
+            identifierPattern: "[a-zA-Z_][a-zA-Z0-9_-]*",
+            stringDelimiters: ["\"", "'"],
+            keywords: [],
+            types: [],
+            functions: [],
+            literals: ["true", "false"],
+            triggerCharacters: ["=", " ", "[", "\"", "'"],
+            snippets: [],
+            memberCompletions: nil,
+            commonModules: [],
+            treeSitterName: "toml",
+            shebangIdentifiers: [],
+            scriptAliases: []
+        ),
+
+        // ── Lua ────────────────────────────────────────────────────────
+        .lua: Self(
+            language: .lua,
+            displayName: "Lua",
+            fileExtensions: ["lua"],
+            lspIdentifier: "lua",
+            highlightingStrategy: .regex,
+            lineComment: "--",
+            blockCommentStart: "--[[",
+            blockCommentEnd: "]]",
+            identifierPattern: "[a-zA-Z_][a-zA-Z0-9_]*",
+            stringDelimiters: ["\"", "'"],
+            keywords: [
+                "and", "break", "do", "else", "elseif", "end", "false", "for",
+                "function", "goto", "if", "in", "local", "nil", "not", "or",
+                "repeat", "return", "then", "true", "until", "while"
+            ],
+            types: [],
+            functions: [
+                "print", "assert", "error", "ipairs", "pairs", "next", "select",
+                "tonumber", "tostring", "type", "rawget", "rawset", "rawequal",
+                "setmetatable", "getmetatable", "require", "pcall", "xpcall"
+            ],
+            literals: ["true", "false", "nil"],
+            triggerCharacters: [".", ":", "(", " "],
+            snippets: [],
+            memberCompletions: nil,
+            commonModules: [],
+            treeSitterName: "lua",
+            shebangIdentifiers: ["lua"],
+            scriptAliases: ["lua"]
+        ),
+
+        // ── C# ─────────────────────────────────────────────────────────
+        .csharp: Self(
+            language: .csharp,
+            displayName: "C#",
+            fileExtensions: ["cs"],
+            lspIdentifier: "csharp",
+            highlightingStrategy: .regex,
+            lineComment: "//",
+            blockCommentStart: "/*",
+            blockCommentEnd: "*/",
+            identifierPattern: "[a-zA-Z_][a-zA-Z0-9_]*",
+            stringDelimiters: ["\"", "'"],
+            keywords: [
+                "abstract", "as", "base", "bool", "break", "byte", "case", "catch",
+                "char", "checked", "class", "const", "continue", "decimal", "default",
+                "delegate", "do", "double", "else", "enum", "event", "explicit", "extern",
+                "false", "finally", "fixed", "float", "for", "foreach", "goto", "if",
+                "implicit", "in", "int", "interface", "internal", "is", "lock", "long",
+                "namespace", "new", "null", "object", "operator", "out", "override",
+                "params", "private", "protected", "public", "readonly", "ref", "return",
+                "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string",
+                "struct", "switch", "this", "throw", "true", "try", "typeof", "uint",
+                "ulong", "unchecked", "unsafe", "ushort", "using", "var", "virtual",
+                "void", "volatile", "while"
+            ],
+            types: [
+                "string", "int", "long", "float", "double", "decimal", "bool", "char",
+                "byte", "object", "dynamic", "List", "Dictionary", "IEnumerable",
+                "Task", "Stream", "HttpClient"
+            ],
+            functions: [
+                "Console.WriteLine", "Console.ReadLine", "string.Format",
+                "Convert.ToInt32", "Enumerable.Select", "Enumerable.Where",
+                "Task.Run", "async", "await"
+            ],
+            literals: ["true", "false", "null", "this", "base"],
+            triggerCharacters: [".", "(", "[", "<", " "],
+            snippets: [],
+            memberCompletions: nil,
+            commonModules: [],
+            treeSitterName: "c_sharp",
+            shebangIdentifiers: [],
+            scriptAliases: []
+        ),
+
+        // ── Kotlin ─────────────────────────────────────────────────────
+        .kotlin: Self(
+            language: .kotlin,
+            displayName: "Kotlin",
+            fileExtensions: ["kt", "kts"],
+            lspIdentifier: "kotlin",
+            highlightingStrategy: .regex,
+            lineComment: "//",
+            blockCommentStart: "/*",
+            blockCommentEnd: "*/",
+            identifierPattern: "[a-zA-Z_][a-zA-Z0-9_]*",
+            stringDelimiters: ["\"", "'"],
+            keywords: [
+                "abstract", "annotation", "as", "break", "by", "catch", "class",
+                "companion", "const", "constructor", "continue", "data", "do", "else",
+                "enum", "false", "final", "finally", "for", "fun", "if", "import",
+                "in", "init", "inner", "interface", "internal", "is", "lateinit",
+                "null", "object", "open", "operator", "out", "override", "package",
+                "private", "protected", "public", "return", "sealed", "super", "suspend",
+                "this", "throw", "true", "try", "typealias", "val", "var", "vararg",
+                "when", "while"
+            ],
+            types: [
+                "String", "Int", "Long", "Float", "Double", "Boolean", "Char", "Byte",
+                "Short", "Any", "Unit", "Nothing", "List", "MutableList", "Set",
+                "MutableSet", "Map", "MutableMap", "Array", "Sequence"
+            ],
+            functions: [
+                "println", "print", "readLine", "require", "check", "assert",
+                "run", "let", "apply", "also", "with", "lazy", "use"
+            ],
+            literals: ["true", "false", "null", "this", "super"],
+            triggerCharacters: [".", "(", "[", "<", " ", ":"],
+            snippets: [],
+            memberCompletions: nil,
+            commonModules: [],
+            treeSitterName: "kotlin",
+            shebangIdentifiers: [],
+            scriptAliases: []
+        ),
+
+        // ── Dart ───────────────────────────────────────────────────────
+        .dart: Self(
+            language: .dart,
+            displayName: "Dart",
+            fileExtensions: ["dart"],
+            lspIdentifier: "dart",
+            highlightingStrategy: .regex,
+            lineComment: "//",
+            blockCommentStart: "/*",
+            blockCommentEnd: "*/",
+            identifierPattern: "[a-zA-Z_$][a-zA-Z0-9_$]*",
+            stringDelimiters: ["\"", "'"],
+            keywords: [
+                "abstract", "as", "assert", "async", "await", "break", "case", "catch",
+                "class", "const", "continue", "default", "deferred", "do", "dynamic",
+                "else", "enum", "export", "extends", "extension", "external", "factory",
+                "false", "final", "finally", "for", "Function", "get", "hide", "if",
+                "implements", "import", "in", "interface", "is", "late", "library",
+                "mixin", "new", "null", "on", "operator", "part", "required", "rethrow",
+                "return", "set", "show", "static", "super", "switch", "sync", "this",
+                "throw", "true", "try", "typedef", "var", "void", "while", "with", "yield"
+            ],
+            types: [
+                "String", "int", "double", "bool", "List", "Map", "Set", "Future",
+                "Stream", "void", "dynamic", "Object", "Never", "Iterable", "num"
+            ],
+            functions: [
+                "print", "toString", "main", "runApp", "setState", "build",
+                "dispose", "initState", "then", "catchError", "whenComplete"
+            ],
+            literals: ["true", "false", "null", "this", "super"],
+            triggerCharacters: [".", "(", "[", "<", " ", ":"],
+            snippets: [],
+            memberCompletions: nil,
+            commonModules: [],
+            treeSitterName: "dart",
+            shebangIdentifiers: [],
+            scriptAliases: []
+        ),
+
         // ── Plain Text ─────────────────────────────────────────────────
         .plainText: Self(
             language: .plainText,

@@ -197,6 +197,21 @@ public final class LSPCompletionProvider: CompletionProvider {
         case .dockerfile:
             return "dockerfile"
 
+        case .toml:
+            return "toml"
+
+        case .lua:
+            return "lua"
+
+        case .csharp:
+            return "csharp"
+
+        case .kotlin:
+            return "kotlin"
+
+        case .dart:
+            return "dart"
+
         case .plainText:
             return "plaintext"
         }
