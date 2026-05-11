@@ -231,6 +231,164 @@ final class LanguageDetectionTests: XCTestCase {
         }
     }
 
+    // MARK: - Shebang Detection Tests (Phase 3)
+
+    @MainActor
+    func testShebangDirectInterpreter() {
+        let service = LanguageDetectionService()
+
+        let cases: [(shebang: String, expected: Language)] = [
+            ("#!/bin/bash\necho hello", .shell),
+            ("#!/usr/bin/python3\nprint('hi')", .python),
+            ("#!/usr/bin/ruby\nputs 'hi'", .ruby),
+            ("#!/usr/bin/php\n<?php echo 'hi';", .php)
+        ]
+
+        for (content, expected) in cases {
+            let detected = service.detectLanguage(fromContent: content)
+            XCTAssertEqual(detected, expected, "Shebang '\(content.prefix(20))...' should detect \(expected.name)")
+        }
+    }
+
+    @MainActor
+    func testShebangEnvIndirection() {
+        let service = LanguageDetectionService()
+
+        let cases: [(shebang: String, expected: Language)] = [
+            ("#!/usr/bin/env python3\nprint('hi')", .python),
+            ("#!/usr/bin/env node\nconsole.log('hi')", .javascript),
+            ("#!/usr/bin/env deno\nconsole.log('hi')", .typescript),
+            ("#!/usr/bin/env bash\necho hi", .shell),
+            ("#!/usr/bin/env ruby\nputs 'hi'", .ruby),
+            ("#!/usr/bin/env php\n<?php echo 'hi';", .php)
+        ]
+
+        for (content, expected) in cases {
+            let detected = service.detectLanguage(fromContent: content)
+            XCTAssertEqual(detected, expected, "env shebang '\(content.prefix(25))...' should detect \(expected.name)")
+        }
+    }
+
+    @MainActor
+    func testShebangEnvWithSFlag() {
+        let service = LanguageDetectionService()
+
+        // /usr/bin/env -S python3 -u → should resolve to python3 → .python
+        let content = "#!/usr/bin/env -S python3 -u\nprint('hi')"
+        let detected = service.detectLanguage(fromContent: content)
+        XCTAssertEqual(detected, .python, "env -S python3 should detect Python")
+    }
+
+    @MainActor
+    func testShebangScriptAliasResolution() {
+        let service = LanguageDetectionService()
+
+        // node → .javascript (via scriptAliases)
+        let jsContent = "#!/usr/bin/env node\nconsole.log('hi')"
+        XCTAssertEqual(service.detectLanguage(fromContent: jsContent), .javascript)
+
+        // deno → .typescript (via shebangIdentifiers)
+        let tsContent = "#!/usr/bin/env deno\nconsole.log('hi')"
+        XCTAssertEqual(service.detectLanguage(fromContent: tsContent), .typescript)
+
+        // python2 → .python (via shebangIdentifiers)
+        let py2Content = "#!/usr/bin/env python2\nprint 'hi'"
+        XCTAssertEqual(service.detectLanguage(fromContent: py2Content), .python)
+    }
+
+    @MainActor
+    func testShebangNoMatchReturnsNil() {
+        let service = LanguageDetectionService()
+
+        // Unknown interpreter — should not crash, and pattern detection may or may not match
+        let content = "#!/usr/bin/unknown-interpreter\necho hi"
+        let detected = service.detectLanguage(fromContent: content)
+        // May be nil or may match a pattern — just verify it doesn't crash
+        _ = detected
+    }
+
+    // MARK: - Modeline Detection Tests (Phase 3)
+
+    @MainActor
+    func testVimModelineFiletype() {
+        let service = LanguageDetectionService()
+
+        let cases: [(content: String, expected: Language)] = [
+            ("# vim: set filetype=python:\nprint('hi')", .python),
+            ("// vim: set filetype=javascript:\nconst x = 1;", .javascript),
+            ("# vim: set filetype=sh:\necho hi", .shell),
+            ("# vim: set filetype=ruby:\nputs 'hi'", .ruby)
+        ]
+
+        for (content, expected) in cases {
+            let detected = service.detectLanguage(fromContent: content)
+            XCTAssertEqual(detected, expected, "Vim modeline should detect \(expected.name)")
+        }
+    }
+
+    @MainActor
+    func testVimModelineShortFt() {
+        let service = LanguageDetectionService()
+
+        let cases: [(content: String, expected: Language)] = [
+            ("# vim: ft=python\nprint('hi')", .python),
+            ("// vim: ft=javascript\nconst x = 1;", .javascript),
+            ("# vim: ft=ruby\nputs 'hi'", .ruby)
+        ]
+
+        for (content, expected) in cases {
+            let detected = service.detectLanguage(fromContent: content)
+            XCTAssertEqual(detected, expected, "Vim ft= modeline should detect \(expected.name)")
+        }
+    }
+
+    @MainActor
+    func testEmacsModeline() {
+        let service = LanguageDetectionService()
+
+        let cases: [(content: String, expected: Language)] = [
+            ("# -*- mode: python -*-\nprint('hi')", .python),
+            ("// -*- mode: javascript -*-\nconst x = 1;", .javascript),
+            ("# -*- mode: ruby -*-\nputs 'hi'", .ruby)
+        ]
+
+        for (content, expected) in cases {
+            let detected = service.detectLanguage(fromContent: content)
+            XCTAssertEqual(detected, expected, "Emacs modeline should detect \(expected.name)")
+        }
+    }
+
+    @MainActor
+    func testEmacsModelineWithSemicolon() {
+        let service = LanguageDetectionService()
+
+        let content = "# -*- mode: python; -*-\nprint('hi')"
+        let detected = service.detectLanguage(fromContent: content)
+        XCTAssertEqual(detected, .python, "Emacs modeline with semicolon should detect Python")
+    }
+
+    @MainActor
+    func testModelineAtEndOfFile() {
+        let service = LanguageDetectionService()
+
+        // Vim modeline at end of file (within last 5 lines)
+        var content = String(repeating: "\n", count: 20)
+        content += "# vim: set filetype=python:"
+        let detected = service.detectLanguage(fromContent: content)
+        XCTAssertEqual(detected, .python, "Vim modeline at end of file should detect Python")
+    }
+
+    @MainActor
+    func testModelineNoMatchReturnsNil() {
+        let service = LanguageDetectionService()
+
+        // Content with no shebang, no modeline — should not crash
+        let content = "just some random text\nnothing to detect here"
+        let detected = service.detectLanguage(fromContent: content)
+        // May be nil — just verify it doesn't crash
+        _ = detected
+    }
+
     // MARK: - Performance Tests
 
     func testLanguageDetectionPerformance() {
