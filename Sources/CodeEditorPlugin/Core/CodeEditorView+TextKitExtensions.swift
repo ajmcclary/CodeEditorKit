@@ -280,15 +280,16 @@ extension CodeEditorView {
 
     /// Determines whether text should be changed in the specified range.
     ///
-    /// This method is called before text changes are applied to determine if the change
-    /// should be allowed. It checks editor configuration and delegates to the text view's
-    /// delegate for validation.
+    /// This method is the pre-mutation hook for TextKit2 edits. It publishes a
+    /// `WillEditEvent` so downstream consumers (LSP coordinator, tree-sitter
+    /// provider) can capture state before `NSTextStorage` mutates.
     ///
     /// ## Validation Process
     ///
     /// 1. Checks if editing is enabled in configuration
     /// 2. Converts TextKit2 `NSTextRange` to `NSRange` for compatibility
-    /// 3. Calls the delegate's `shouldChangeText` method
+    /// 3. Publishes `WillEditEvent` to `textEditEventHub` will-edit observers
+    /// 4. Calls the delegate's `shouldChangeText` method
     ///
     /// ## Parameters
     ///
@@ -298,19 +299,15 @@ extension CodeEditorView {
     /// ## Returns
     ///
     /// `true` if the text change should be allowed, `false` otherwise
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// // This method is typically called internally by the text system
-    /// let shouldChange = editor.shouldChangeText(in: textRange, replacementString: "new text")
-    /// ```
     public func shouldChangeText(in textRange: NSTextRange, replacementString: String?) -> Bool {
         // Check if editing is allowed
         guard configuration.behavior.isEditable else { return false }
 
         let textKitBridge = TextKitBridge(textView: self)
         if let nsRange = textKitBridge.nsRangeFromTextRange(textRange) {
+            // Publish pre-edit event for will-edit observers.
+            publishWillEditEvent(range: nsRange, replacementText: replacementString ?? "")
+
             #if canImport(AppKit)
             return delegate?.textView?(self, shouldChangeTextIn: nsRange, replacementString: replacementString) ?? true
             #else
@@ -318,6 +315,79 @@ extension CodeEditorView {
             #endif
         }
         return true
+    }
+
+    /// Constructs and publishes a `WillEditEvent` to the event hub's
+    /// will-edit observer set.
+    private func publishWillEditEvent(range: NSRange, replacementText: String) {
+        #if canImport(AppKit)
+        let source = textStorage?.string ?? ""
+        #else
+        let source = textStorage.string
+        #endif
+
+        // Compute the affected line range before the edit.
+        // Counts newlines up to the edit boundaries. O(offset) — acceptable
+        // because the edit point is where the user is typing (near-constant
+        // cost in practice for interactive edits).
+        let preEditLineRange = computePreEditLineRange(
+            in: source,
+            location: range.location,
+            length: range.length
+        )
+
+        // Capture the old source text in the affected region using
+        // native Swift indexing (avoids NSString bridging lint).
+        let preEditSource: String?
+        let safeLower = max(0, range.location)
+        let safeUpper = min(range.location + range.length, source.utf16.count)
+        if safeLower < safeUpper {
+            let startIdx = source.utf16.index(source.utf16.startIndex, offsetBy: safeLower)
+            let endIdx = source.utf16.index(source.utf16.startIndex, offsetBy: safeUpper)
+            preEditSource = String(source.utf16[startIdx..<endIdx])
+        } else {
+            preEditSource = nil
+        }
+
+        let event = WillEditEvent(
+            preEditRange: range,
+            replacementText: replacementText,
+            preEditLineRange: preEditLineRange,
+            preEditSource: preEditSource
+        )
+        textEditEventHub.willPublish(event)
+    }
+
+    /// Returns the 1-based line range affected by an edit at `location`
+    /// spanning `length` UTF-16 code units.
+    private func computePreEditLineRange(
+        in source: String,
+        location: Int,
+        length: Int
+    ) -> ClosedRange<Int> {
+        let utf16 = source.utf16
+        var lineNumber = 1
+        var cursor = utf16.startIndex
+        var pos = 0
+
+        // Advance to the start position.
+        while pos < location, cursor < utf16.endIndex {
+            if utf16[cursor] == 0x0A { lineNumber &+= 1 } // U+000A LINE FEED
+            utf16.formIndex(after: &cursor)
+            pos &+= 1
+        }
+        let startLine = lineNumber
+
+        // Advance through the affected length.
+        let endPos = min(location + length, source.utf16.count)
+        while pos < endPos, cursor < utf16.endIndex {
+            if utf16[cursor] == 0x0A { lineNumber &+= 1 }
+            utf16.formIndex(after: &cursor)
+            pos &+= 1
+        }
+        let endLine = endPos > location ? lineNumber : startLine
+
+        return startLine...endLine
     }
 
     /// Replaces characters in the specified TextKit2 range with new text.

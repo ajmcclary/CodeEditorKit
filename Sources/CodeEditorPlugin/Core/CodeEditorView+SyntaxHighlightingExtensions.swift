@@ -75,8 +75,12 @@ extension CodeEditorView {
             #endif
         }
 
-        // Apply syntax highlighting to the edited range if enabled
-        if configuration.display.isSyntaxHighlightingEnabled {
+        // Apply syntax highlighting to the edited range if enabled.
+        // Only trigger for character edits — attribute-only edits are
+        // produced by the range attribute applier and must not re-enter
+        // the highlighting pipeline (prevents loops and double-apply).
+        if editedMask.contains(.editedCharacters),
+           configuration.display.isSyntaxHighlightingEnabled {
             let editedRange = textStorage.editedRange
             if editedRange.location != NSNotFound {
                 applySyntaxHighlighting(in: editedRange)
