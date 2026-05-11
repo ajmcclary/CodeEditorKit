@@ -1,17 +1,17 @@
 # Feature Matrix
 
-What works on which Apple platform. Reflects the package as of `0.2.0` (platform floor: macOS / iOS 26.3+, Swift 6.3, strict concurrency, TextKit2-only). Mac Catalyst was retired in 0.2.0 — see CHANGELOG.
+What works on the package's declared Apple platforms. Reflects the package as of `0.2.0` (platform floor: macOS / iOS 26.3+, Swift 6.3, strict concurrency, TextKit2-only). Mac Catalyst was retired in 0.2.0 — see CHANGELOG.
 
 ## Library products
 
-| Product | macOS | iOS / iPadOS | visionOS | Notes |
-|---|:---:|:---:|:---:|---|
-| `CodeEditorPlugin` | ✅ | ✅ | ✅¹ | Core editor framework. The `EdgeInsets` value type is exported as `FrameworkEdgeInsets` to avoid clashing with `SwiftUI.EdgeInsets` on iOS. |
-| `CodeEditorUI` | ✅ | ⚠️ | ⚠️ | `EditorSidebarShell` is macOS-only by design. `EditorTabStrip`, `EditorStatusBar`, `EditorCommandPalette` are pure SwiftUI and work cross-platform. |
-| `CodeEditorDesignTokens` | ✅ | ✅ | ✅ | Standalone tokens — depend on this directly if you only need design tokens without the editor. |
-| `CodeEditorSample` | ✅ | ✅ | ⚠️ | macOS shell uses 3-pane `RootWindow`; iOS uses `IOSRootView` (`NavigationSplitView`). `Settings` scene and command palette are macOS-only. |
+| Product | macOS | iOS / iPadOS | Notes |
+|---|:---:|:---:|---|
+| `CodeEditorPlugin` | ✅ | ✅ | Core editor framework. The `EdgeInsets` value type is exported as `FrameworkEdgeInsets` to avoid clashing with `SwiftUI.EdgeInsets` on iOS. |
+| `CodeEditorUI` | ✅ | ⚠️ | `EditorSidebarShell` is macOS-only by design. `EditorTabStrip`, `EditorStatusBar`, `EditorCommandPalette` are SwiftUI components, but the sample uses the chrome shell only on macOS. |
+| `CodeEditorDesignTokens` | ✅ | ✅ | Standalone tokens — depend on this directly if you only need design tokens without the editor. |
+| `CodeEditorSample` | ✅ | ✅ | macOS shell uses 3-pane `RootWindow`; iOS uses `IOSRootView` (`NavigationSplitView`). `Settings` scene and command palette are macOS-only. |
 
-¹ Inherits from iOS conditional compilation; not actively exercised in the sample.
+`Package.swift` declares macOS and iOS only. visionOS is not a package platform and is not exercised by the sample or CI.
 
 **Mac Catalyst:** not supported. Removed in 0.2.0 — see CHANGELOG. Use the native macOS path (AppKit-backed SwiftUI) for Mac, and the iOS path for iPad. Apple Silicon Macs can also run the iOS build directly without Catalyst.
 
@@ -28,7 +28,7 @@ What works on which Apple platform. Reflects the package as of `0.2.0` (platform
 | Code folding | ✅ | ✅ | 250 ms detection debounce; cache evicted on memory pressure |
 | Annotations (TODO / FIXME / MARK) | ✅ | ✅ | `Sources/CodeEditorPlugin/Annotations/` |
 | Code completion | ✅ | ✅ | single-character trigger guard prevents paste storms |
-| LSP integration | ✅ | ✅ | `Sources/CodeEditorPlugin/LSP/` |
+| LSP integration | ✅ | ⚠️ | macOS has `LSPManager` for local process-backed servers. iOS has the all-platform `LSPClient` / `WebSocketTransport` primitives for remote servers, but no local process manager. |
 | Minimap | ✅ | ✅ | `Layout.isMinimapVisible`, `Layout.minimapWidth` |
 | Smart editing (auto-bracket, multi-cursor) | ✅ | ✅ | `Features/SmartEditing*` |
 | Search / replace engine | ✅ | ✅ | `Features/SearchReplaceEngine.swift` (UI not provided) |
@@ -38,23 +38,23 @@ What works on which Apple platform. Reflects the package as of `0.2.0` (platform
 
 | Demo | macOS shell | iOS shell | Notes |
 |---|:---:|:---:|---|
-| 7 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS) | ✅ | ✅ | exposed via `PresetCatalog` |
+| 8 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS / Platform-Optimized) | ✅ | ✅ | exposed via `PresetCatalog` |
 | Theme picker (zed-trek family, 20 variants) | ✅ | ✅ | `ThemeCatalog.bundled("zed-trek")` |
 | Language picker (all 25 concrete languages + plain text) | ✅ | ✅ | `LanguageCatalog` |
-| Per-section knob panels (Display / Layout / Behavior / Performance) | ✅ | ⚠️ | iOS shows the same controls but in a NavigationSplitView sidebar |
+| Per-section knob panels (Display / Layout / Behavior / Performance / Workspace / Annotations) | ✅ | ✅ | iOS shows the same controls in a NavigationSplitView sidebar |
 | `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls |
 | `Performance.usesRangeBasedHighlighting` toggle | ✅ | ✅ | new in 0.1.0 |
 | Multi-tab in-memory document store | ✅ | ✅ | `DocumentStore` |
 | Command palette (⌘⇧P) | ✅ | — | macOS-only `EditorCommandPalette` |
 | Live configuration inspector (right sidebar) | ✅ | — | uses `EditorSidebarShell` (macOS only) |
 | File open / save | — | — | **deferred** — see CHANGELOG |
-| LSP demo screen | — | — | **deferred** — `LSPManager` is wired in the framework but the sample doesn't connect to a server |
+| LSP status probe | ✅ | — | macOS inspector checks common local language-server executables for the configured workspace root |
 | Custom completion provider demo | — | — | **deferred** |
 | Large-file stress test | — | — | **deferred** |
 | Performance HUD overlay | — | — | **deferred** — backing types ship in `Performance/PerformanceViews.swift` |
-| Folding visualization | — | — | **deferred** |
-| Annotations demo | — | — | **deferred** |
-| Search / replace UI | — | — | **deferred** — `SearchReplaceEngine` exists; no UI shipped |
+| Folding controls and commands | ✅ | ✅ | gutter controls are framework-level; macOS also exposes fold commands through the command palette |
+| Annotations demo | ✅ | ✅ | TODO / FIXME / WARNING / ERROR knobs and breakpoint toggles feed `AnnotationsHub` |
+| Search / replace UI | ✅ | — | macOS sample ships `FindReplaceOverlay`; iOS keeps the engine available without sample UI |
 | Theme builder | — | — | **deferred** |
 | Font-family picker | — | — | **deferred** |
 
@@ -64,7 +64,7 @@ What works on which Apple platform. Reflects the package as of `0.2.0` (platform
 |---|---|
 | MIT license | ✅ `LICENSE` at repo root |
 | Canonical repo URL | ✅ `https://github.com/ajmcclary/CodeEditorPlugin.git` |
-| Tagged release | ⚠️ `v0.1.0` planned post-merge (see CHANGELOG) |
+| Tagged release | ⚠️ No git tags are present on `origin`; CHANGELOG has `0.1.0` / `0.2.0` entries but they are not published as tags |
 | GitHub Actions CI | ✅ `swift-build-test`, `ios-build`, `lint` workflows |
 | Strict-concurrency clean build | ✅ `swift build` produces no warnings under `StrictConcurrency` |
 | Public `@unchecked Sendable` documented | ✅ all 16 sites carry safety comments |

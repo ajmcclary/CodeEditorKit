@@ -37,7 +37,7 @@ Key dependencies: `swift-syntax`, `swift-dependencies`, `xctest-dynamic-overlay`
 
 The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attachable`) exists because upstream 1.19.x doesn't build under Swift 6.3. Do not revert to upstream until a tagged release fixes that.
 
-Tests mix both XCTest and Swift Testing frameworks across 3 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`).
+Tests mix both XCTest and Swift Testing frameworks across 4 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`, `CodeEditorSampleTests`).
 
 ## Source Tree
 
@@ -48,7 +48,7 @@ Sources/CodeEditorPlugin/
 ├── Layout/                  # UI components + co-located ViewModels
 ├── Configuration/           # Settings, presets, validation
 ├── SyntaxHighlighting/      # Language highlighting engine
-├── Languages/               # Language-specific providers (18 languages)
+├── Languages/               # Language-specific providers (25 concrete languages + plain text)
 ├── Theming/                 # Theme system, color tokens, appearance
 ├── Completion/              # Code completion providers
 ├── Features/                # Optional features (folding, annotations, etc.)
@@ -65,7 +65,7 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-18 directories, ~438 Swift source files in the main target.
+18 directories, ~445 Swift source files in the main target.
 
 ## Conventions
 
@@ -110,6 +110,17 @@ let updated = config
 
 ### Testing
 Snapshot tests write to `__Snapshots__/` directories (excluded from git in `Package.swift` excludes). When adding snapshot tests, record with `isRecording: true`, then commit the generated images. Tests use a mix of `import XCTest` and `import Testing`.
+
+## Diagrams
+
+Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with the codebase — when adding features or renaming classes, update the relevant diagram. The folder has its own [`README.md`](docs/Diagrams/README.md) indexing every diagram.
+
+**Watch for stale claims in diagrams:**
+- Language count is 25 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, plus plain text).
+- The plugin system (`Diagram 27`) is a design document — not yet implemented.
+- `20-debugging-integration-architecture.md` is the extended design; `20-debugging-integration.md` reflects current implementation.
+- `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code.
+- These symbols are referenced in older diagrams but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
 
 ## What Will Go Wrong
 

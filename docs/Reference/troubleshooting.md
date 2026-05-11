@@ -111,10 +111,9 @@ editor.layoutManager?.ensureLayout(for: editor.textContainer!)
 
 **Issue**: Language Server Protocol features unavailable on iOS.
 
-**Solution**: LSP is macOS-only due to sandboxing (`Process` is unavailable on iOS). Use enhanced local completion or a remote LSP transport:
+**Solution**: Local process-backed LSP is macOS-only because `Process` is unavailable on iOS. Keep local completion enabled, or connect to a remote language server with `LSPClient` and `WebSocketTransport`:
 ```swift
-config.behavior.enableLSP = false  // Disable on iOS
-config.behavior.isCodeCompletionEnabled = true  // Use local providers
+config.behavior.isCodeCompletionEnabled = true
 ```
 
 ## Configuration Issues

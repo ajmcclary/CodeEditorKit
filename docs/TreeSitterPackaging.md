@@ -10,7 +10,7 @@
 ```
 ┌─────────────────────────────────────────┐
 │ CodeEditorPlugin (core, ~2 MB)          │
-│  ├── RegexSyntaxHighlighter (26 langs)  │
+│  ├── Language catalog (25 + plain text) │
 │  ├── RangeHighlightProviding protocol   │
 │  ├── RangeBasedHighlightingController   │
 │  ├── EditorConfiguration.Behavior       │
@@ -46,13 +46,13 @@ The spike uses `RegexBackedTreeSitterParser` — a regex-backed implementation t
 
 ## Compile-Time Gate
 
-`Package.swift` defines `CAN_IMPORT_TREE_SITTER` (default: `true`):
+`Package.swift` defines `CAN_IMPORT_TREE_SITTER` by default:
 
 ```swift
 let swiftSettings: [SwiftSetting] = [
     .swiftLanguageMode(.v6),
     .enableExperimentalFeature("StrictConcurrency"),
-    .define("CAN_IMPORT_TREE_SITTER", to: "true")
+    .define("CAN_IMPORT_TREE_SITTER")
 ]
 ```
 
@@ -84,8 +84,8 @@ When excluded, `useTreeSitterHighlighting` has no effect — regex is always use
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "0.2.0"),
-    .package(url: "https://github.com/ajmcclary/CodeEditorTreeSitterLanguages.git", from: "0.1.0")
+    .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", branch: "main"),
+    .package(url: "https://github.com/ajmcclary/CodeEditorTreeSitterLanguages.git", branch: "main")
 ]
 ```
 
@@ -94,10 +94,8 @@ dependencies: [
 import CodeEditorPlugin
 import CodeEditorTreeSitterLanguages
 
-let config = EditorConfiguration()
-    .with(behavior: EditorConfiguration.Behavior(
-        useTreeSitterHighlighting: true
-    ))
+var config = EditorConfiguration()
+config.behavior.useTreeSitterHighlighting = true
 ```
 
 ## Binary Size Comparison
@@ -105,7 +103,7 @@ let config = EditorConfiguration()
 | Component | Size | Notes |
 |-----------|------|-------|
 | CodeEditorPlugin (regex only) | ~2 MB | Swift + SwiftSyntax + regex engine |
-| CodeEditorTreeSitterLanguages | ~35 MB | 20+ grammar binaries as XCFramework |
+| CodeEditorTreeSitterLanguages | ~35 MB | Grammar binaries for the 25 concrete language catalog as XCFramework resources |
 | Combined | ~37 MB | Full editor with Tree-sitter |
 
 For comparison, CodeEditLanguages ships a 33 MB XCFramework for 41 language entries. Our core editor is significantly leaner because we keep the regex path as the default.

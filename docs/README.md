@@ -5,7 +5,7 @@ A modern code editor framework for Apple platforms — TextKit2, Swift 6 strict 
 ## Start here
 
 → **[Getting Started](GettingStarted.md)** — install, integrate, and configure in five minutes.
-→ **[Feature Matrix](FeatureMatrix.md)** — what works on macOS / iOS.
+→ **[Feature Matrix](FeatureMatrix.md)** — what works on the declared macOS / iOS package platforms.
 
 ## Platform Requirements
 
@@ -23,7 +23,7 @@ The floor is intentional, not aspirational — the editor uses APIs introduced i
 
 ## Distribution
 
-The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. `CodeEditorDesignTokens` is a standalone library — depend on it directly if you only need the design-token surface without the editor.
+The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https://github.com/ajmcclary/CodeEditorPlugin.git`. Release tags are not published yet, so SwiftPM consumers should use the `main` branch until tags exist. `CodeEditorDesignTokens` is a standalone library — depend on it directly if you only need the design-token surface without the editor.
 
 ## By topic
 
@@ -93,7 +93,7 @@ The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https
 
 ## Working notes
 
-- `superpowers/` holds in-progress design plans and specs (currently active WIP). Treated as a working folder — content there is not part of the public documentation surface.
+- `superpowers/` holds historical implementation plans and specs. Treat it as working-note archive, not as the public documentation surface or a source of current package truth.
 
 ## Contributing to these docs
 

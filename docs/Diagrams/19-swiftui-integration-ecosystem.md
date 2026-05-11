@@ -173,18 +173,18 @@ classDiagram
 
     class CodeEditorModifiers {
         <<CodeEditor extensions>>
-        +highlightSelectedLine() some View
+        +isSelectedLineHighlighted() some View
         +editable() some View
         +onTextChange() CodeEditor
         +onSelectionChange() CodeEditor
         +codeCompletion() CodeEditor
         +codeFontSize() some View
         +tabWidth() some View
-        +showInvisibleCharacters() some View
-        +showMinimap() some View
+        +areInvisibleCharactersVisible() some View
+        +isMinimapVisible() some View
         +autoScrollToCursor() some View
-        +enableCodeFolding() some View
-        +showFoldingControls() some View
+        +isCodeFoldingEnabled() some View
+        +areFoldingControlsVisible() some View
         +minimumFoldableLines() some View
         +animateCodeFolding() some View
         +memoryMonitor() some View
@@ -247,7 +247,7 @@ classDiagram
     class ComponentVisibility {
         <<visibility state struct>>
         +showGutter Bool
-        +showMinimap Bool
+        +isMinimapVisible Bool
         +showScrollbar Bool
         +showStatusBar Bool
         +showCompletionPopup Bool
@@ -539,7 +539,7 @@ struct ContentView: View {
         CodeEditor(text: $code)
             .codeLanguage(.swift)
             .lineNumbers(true)
-            .highlightSelectedLine(true)
+            .isSelectedLineHighlighted(true)
             .frame(height: 400)
     }
 }
@@ -577,8 +577,8 @@ struct PerformanceAwareEditor: View {
             CodeEditor(text: $code, debounceInterval: .milliseconds(300))
                 .codeLanguage(.swift)
                 .lineNumbers(true)
-                .enableCodeFolding(true)
-                .showMinimap(true)
+                .isCodeFoldingEnabled(true)
+                .isMinimapVisible(true)
                 .memoryMonitor(memoryMonitor)
                 .eventSystem(eventSystem)
                 .onTextChange { newText in

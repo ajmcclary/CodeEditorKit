@@ -32,17 +32,20 @@ flowchart LR
         PluginTests[CodeEditorPluginTests]
         TokensTests[CodeEditorDesignTokensTests]
         UITests[CodeEditorUITests]
+        SampleTests[CodeEditorSampleTests]
     end
 
     subgraph "Source Targets"
         Plugin[CodeEditorPlugin]
         UI[CodeEditorUI]
         Tokens[CodeEditorDesignTokens]
+        Sample[CodeEditorSample]
     end
 
     PluginTests --> Plugin
     TokensTests --> Tokens
     UITests --> UI
+    SampleTests --> Sample
 ```
 
 ## Sample App Internal Structure
@@ -71,11 +74,22 @@ flowchart TB
         Layout[LayoutKnobsSection]
         Behavior[BehaviorKnobsSection]
         Perf[PerformanceKnobsSection]
+        Workspace[WorkspaceKnobsSection]
+        AnnotationsKnobs[AnnotationsKnobsSection]
+    end
+
+    subgraph "EditorActions"
+        FindReplace[FindReplaceOverlay]
+        GotoLine[GotoLineSheet]
+        GotoSymbol[GotoSymbolSheet]
+        AnnotationsHub[AnnotationsHub]
     end
 
     subgraph "Sidebars"
         Settings[SettingsSidebar]
         Inspector[InspectorSidebar]
+        LSPStatus[LSPStatusPanel]
+        AnnotationInspector[AnnotationsInspectorPanel]
     end
 
     subgraph "Switchers"
@@ -97,22 +111,29 @@ flowchart TB
     Settings --> Layout
     Settings --> Behavior
     Settings --> Perf
+    Settings --> Workspace
+    Settings --> AnnotationsKnobs
     Settings --> Presets
     Settings --> Languages
     Settings --> Themes
+    WindowBody --> FindReplace
+    WindowBody --> GotoLine
+    WindowBody --> GotoSymbol
+    Inspector --> LSPStatus
+    Inspector --> AnnotationInspector
     AppState --> DocStore
     AppState --> Catalog
     AppState --> CmdPalette
+    AppState --> AnnotationsHub
 ```
 
 ## Cross-Platform Support
 
-The sample app (and all library targets) target three Apple platforms:
+The sample app and all library targets use the two package platforms declared in `Package.swift`:
 
 | Platform | Minimum Version |
 |----------|----------------|
 | macOS | 26.3+ |
-| iOS | 26.3+ |
-| 26.3+ |
+| iOS / iPadOS | 26.3+ |
 
-Platform-specific code uses `#if canImport(AppKit)` / `#if canImport(UIKit)` rather than `#if os()`, following the repo's conventions. The sample app is a single codebase that adapts at compile time — there are no separate platform directories.
+Platform-specific code uses `#if canImport(AppKit)` / `#if canImport(UIKit)` rather than `#if os()`, following the repo's conventions. The sample app has a macOS shell (`RootWindow`, `WindowBody`, `SettingsScene`) and an iOS shell (`IOSRootView`) over shared state and catalog types.

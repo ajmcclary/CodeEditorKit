@@ -43,7 +43,7 @@ Comprehensive architecture for advanced features including debugging integration
 Complete Language Server Protocol implementation with transport layers, protocol integration, and multi-language support. Includes message routing, capability negotiation, error handling, and retry configuration with exponential backoff and jitter support.
 
 ### 13. [Performance Monitoring & Optimization System](13-performance-monitoring-system.md)
-Advanced performance monitoring with adaptive optimization, memory management, and real-time metrics. Includes profiling, bottleneck detection, automatic performance tuning, and integration with the performance budget system for enforcement and reporting.
+Current performance monitoring implementation, including `PerformanceMonitor`, `UnifiedPerformanceSystem`, `PerformanceInsights`, memory monitoring, production metrics, adaptive performance mode, viewport tracking, iOS large-file optimization, and performance budget reporting.
 
 ### 14. [Symbol Navigation & Code Intelligence](14-symbol-navigation-intelligence.md)
 Symbol navigation and code intelligence system with multi-language support, cross-reference tracking, and intelligent navigation. Includes definition lookup, reference finding, and workspace symbol search.
@@ -103,7 +103,7 @@ All diagrams are written in Mermaid syntax and can be viewed:
 
 ## Regenerating Dependency Diagrams
 
-Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. These diagrams reflect the actual dependencies declared in the package manifest — direct runtime dependencies (SwiftSyntax, SwiftParser, swift-dependencies, xctest-dynamic-overlay), internal product dependencies (CodeEditorDesignTokens, CodeEditorUI), and test target dependencies (swift-custom-dump, swift-snapshot-testing).
+Dependency diagrams (25, 26) should be manually updated when `Package.swift` changes. These diagrams reflect the actual dependencies declared in the package manifest — direct runtime dependencies (SwiftSyntax, SwiftParser, swift-dependencies, xctest-dynamic-overlay), internal product dependencies (CodeEditorDesignTokens, CodeEditorUI, CodeEditorSample), and test target dependencies (CodeEditorPluginTests, CodeEditorDesignTokensTests, CodeEditorUITests, CodeEditorSampleTests, swift-custom-dump, swift-snapshot-testing).
 
 ## Diagram Conventions
 

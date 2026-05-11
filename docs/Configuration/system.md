@@ -74,9 +74,9 @@ Controls optimization features:
 ```swift
 config.performance.useHardwareAcceleration = true
 config.performance.maxSyntaxHighlightingLength = 500_000
-config.performance.enableViewportRendering = true
+config.performance.usesRangeBasedHighlighting = true
 config.performance.smoothScrolling = true
-config.performance.debounceDelay = 100 // milliseconds
+config.performance.textChangeDebounceInterval = .milliseconds(100)
 ```
 
 ## Using Configuration

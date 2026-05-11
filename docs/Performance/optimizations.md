@@ -1,92 +1,134 @@
 # Performance Optimizations
 
-Comprehensive performance enhancements implemented across syntax highlighting, test execution, and memory management.
+This page summarizes the optimization paths that exist in the current package: syntax-highlighting coordination, range-based invalidation, memory-aware caches, iOS large-file handling, and performance regression tests.
 
-## Overview
+## Syntax Highlighting
 
-This article describes the extensive performance optimizations implemented in CodeEditorPlugin, including advanced syntax highlighting algorithms, parallel test execution strategies, and intelligent memory management improvements that ensure smooth 60fps performance even with large files.
+### Optimized Coordinator
 
-## Syntax Highlighting Optimizations
-
-### Incremental Highlighting
-
-The `IncrementalSyntaxHighlighter` provides efficient partial updates for text changes:
-
-**Key Features:**
+`OptimizedSyntaxHighlightingCoordinator` wraps the base `SyntaxHighlightingCoordinator` with cache lookup, viewport slicing, chunking, cache warming, and circuit-breaker behavior:
 
 ```swift
-// The system automatically uses incremental highlighting
-editorView.highlightingMode = .incremental
+let memoryMonitor = MemoryMonitor()
 
-// Performance metrics are tracked automatically
-let metrics = await highlighter.getPerformanceMetrics()
-print("Incremental highlights: \(metrics.incrementalHighlights)")
-print("Full highlights: \(metrics.fullHighlights)")
-```
+let coordinator = OptimizedSyntaxHighlightingCoordinator(
+    memoryMonitor: memoryMonitor,
+    configuration: .performance
+)
 
-### Background Queue Optimizations
-
-The `BackgroundSyntaxHighlighter` implements a sophisticated priority system:
-
-#### Priority Levels
-
-| Priority | Value | Use Case |
-|----------|-------|----------|
-| Critical | 3 | Immediate viewport updates |
-| High | 2 | Near viewport or important updates |
-| Normal | 1 | Standard highlighting |
-| Low | 0 | Background pre-highlighting |
-
-#### Features
-
-```swift
-// Submit highlighting request with priority
-let request = HighlightingRequest(
-    text: documentText,
+let tokens = await coordinator.highlight(
+    text: source,
     language: .swift,
-    priority: .critical // For viewport content
+    visibleRange: NSRange(location: 0, length: min(source.utf16.count, 5_000))
 )
-
-let result = await backgroundHighlighter.highlight(request)
 ```
 
-### Optimized Syntax Highlighting Coordinator
-
-The `OptimizedSyntaxHighlightingCoordinator` provides advanced performance features:
+Tune it directly when you own the coordinator:
 
 ```swift
-let config = HighlightingConfiguration(
-    enableViewportOptimization: true,
-    viewportPadding: 500,           // Characters around viewport
-    maxChunkSize: 5000,             // Chunk size for large files
-    enableIncrementalHighlighting: true,
-    cacheWarmingEnabled: true,
-    circuitBreakerThreshold: 0.1    // 100ms threshold
-)
+var configuration = OptimizedSyntaxHighlightingCoordinator.HighlightingConfiguration.performance
+configuration.viewportPadding = 200
+configuration.maxChunkSize = 2_000
+configuration.circuitBreakerThreshold = 0.05
 
-coordinator.configuration = config
+coordinator.updateConfiguration(configuration)
 ```
 
-**Features:**
+### Background and Streaming Paths
 
-## Test Performance Optimizations
+`AsyncSyntaxHighlighter` owns debouncing and cancellation for editor updates. It delegates background work to `BackgroundSyntaxHighlighter`, while `StreamingHighlighter` supports chunked highlighting for large inputs. App code usually configures these through `EditorConfiguration.Performance` rather than constructing requests manually.
 
-### Parallel Test Execution
+```swift
+var config = EditorConfiguration()
+config.performance.highlightingDebounceInterval = .milliseconds(150)
+config.performance.textChangeDebounceInterval = .milliseconds(150)
+config.performance.maxSyntaxHighlightingLength = 1_000_000
+```
 
-Three test execution plans optimize test running:
+### Range-Based Highlighting
 
-1. **CodeEditorPlugin-Parallel.xctestplan**: Basic parallel execution
-2. **CodeEditorPlugin-SmartParallel.xctestplan**: Groups tests by shared resources
-3. **run-parallel-tests.sh**: Script for running tests in parallel
+The range-based pipeline is opt-in and experimental:
+
+```swift
+var config = EditorConfiguration()
+config.performance.usesRangeBasedHighlighting = true
+```
+
+Internally this uses `RangeBasedHighlightingController`, `RangeHighlightProviding`, and `RangeStore` to invalidate and query visible ranges without forcing every consumer through attributed-text mutation.
+
+### Tree-sitter Spike
+
+`EditorConfiguration.Behavior.useTreeSitterHighlighting` enables the Tree-sitter-shaped range provider when the package is built with `CAN_IMPORT_TREE_SITTER`:
+
+```swift
+var config = EditorConfiguration()
+config.behavior.useTreeSitterHighlighting = true
+```
+
+The current provider is regex-backed and exists to validate the architecture. Real C grammar packaging is tracked in [Tree-sitter packaging](../TreeSitterPackaging.md).
+
+## Memory and Cache Behavior
+
+Use injected `MemoryMonitor` instances to coordinate cleanup across editors, caches, and LSP managers:
+
+```swift
+let memoryMonitor = MemoryMonitor()
+
+var config = EditorConfiguration()
+config.performance.memoryMonitor = memoryMonitor
+```
+
+Memory-aware components register cleanup handlers and report freed memory estimates. Avoid global monitors; inject one through configuration or initializers.
+
+## iOS Large-File Handling
+
+iOS-specific large-file settings live in `EditorConfiguration.Performance`:
+
+```swift
+var config = EditorConfiguration.iOS
+config.performance.enableIOSOptimizations = true
+config.performance.iOSLargeFileThreshold = 1_048_576
+config.performance.iOSMaxHighlightingChunk = 100_000
+```
+
+`IOSLargeFileOptimizer` applies chunk sizing and feature reduction appropriate for memory-constrained devices.
+
+## Performance Budgets
+
+Runtime and test code share the `PerformanceBudget` definitions:
+
+```swift
+let reporter = PerformanceBudgetReporter()
+await reporter.record(operation: "completion_request", duration: 0.043)
+
+let report = await reporter.generateReport()
+CrossPlatformLogger.logger().debug(report.summary)
+```
+
+Predefined operation keys include:
+
+| Key | Target |
+|---|---:|
+| `syntax_highlighting` | 16 ms |
+| `text_layout` | 16 ms |
+| `scrolling` | 8 ms |
+| `completion_request` | 50 ms |
+| `find_in_file` | 50 ms |
+| `fuzzy_search` | 100 ms |
+| `memory_pressure_recovery` | 500 ms |
+
+## Test Execution
+
+The repository ships parallel test plans and a helper script:
 
 ```bash
-# Run tests in parallel
+swift test --parallel
 ./Scripts/run-parallel-tests.sh
+```
 
-# Using swift test directly
-swift test --parallel --num-workers auto
+For Xcode-driven test plans:
 
-# Using xcodebuild with test plan
+```bash
 xcodebuild test \
   -scheme CodeEditorPlugin \
   -testPlan CodeEditorPlugin-SmartParallel \
@@ -94,376 +136,25 @@ xcodebuild test \
   -maximum-concurrent-test-device-destinations 4
 ```
 
-### Test Timeouts
-
-Prevent runaway tests with configurable timeouts:
+`Tests/CodeEditorPluginTests/TestMemoryOptimizer.swift` provides bounded data generation for memory-sensitive tests:
 
 ```swift
-func testWithTimeout() async throws {
-    try await withTimeout(seconds: 10) {
-        // Test code that must complete within 10 seconds
-    }
-}
-
-// Run async test with timeout
-try await runAsyncTest(timeout: 10.0) {
-    // Test code here
-}
-
-// Assert operation completes within timeout
-await assertCompletesWithin(5.0) {
-    try await someAsyncOperation()
-}
+let source = MemoryBoundedTestData.swiftCode(lines: 1_000)
 ```
 
-**Timeout Categories:**
-
-### Performance Budgets
-
-Enforce performance targets across operations:
-
-```swift
-// Define performance budget
-let budget = Budget(
-    operation: "syntax_highlighting",
-    targetTime: 0.016,  // 60fps
-    warningTime: 0.033, // 30fps
-    criticalTime: 0.1   // 100ms
-)
-
-// Measure against budget
-measureAgainstBudget("syntax_highlighting") {
-    // Code to measure
-}
-```
-
-**Predefined Budgets:**
-
-| Operation | Target | Warning | Critical |
-|-----------|--------|---------|----------|
-| Syntax highlighting | 16ms | 33ms | 100ms |
-| File open (small) | 100ms | 200ms | 500ms |
-| File open (large) | 2s | 5s | 10s |
-| Completion request | 50ms | 100ms | 200ms |
-| Search | 100ms | 200ms | 500ms |
-
-### Memory Optimizations
-
-#### TestMemoryOptimizer
-
-Efficient test data generation and management:
-
-```swift
-// Generate memory-efficient test data
-let testData = TestMemoryOptimizer.generateTestData(
-    size: .large,
-    pattern: .realistic
-)
-
-// Shared test data caching
-let cachedData = TestMemoryOptimizer.shared.getCachedData(key: "largeFile")
-```
-
-#### Memory Leak Detection
-
-```swift
-func testMemoryLeak() {
-    let object = MyClass()
-    trackForMemoryLeaks(object)
-    // Object should be deallocated after test
-}
-```
-
-## Configuration Performance
-
-### ConfigurationBatchUpdater
-
-Batch configuration updates to minimize change notifications:
-
-```swift
-let batcher = ConfigurationBatchUpdater(updateDelay: 0.1) { config in
-    // Apply batched updates
-    self.applyConfiguration(config)
-}
-
-// Queue multiple updates
-batcher.queueUpdate { config in
-    config.display.fontSize = 16
-    return config
-}
-
-batcher.queueUpdate { config in
-    config.display.isLineNumbersEnabled = true
-    return config
-}
-
-// Updates are automatically batched and applied after delay
-```
-
-### Lazy Evaluation
-
-The `@LazyComputed` property wrapper defers expensive computations:
-
-```swift
-class ExpensiveComponent {
-    @LazyComputed
-    var expensiveValue = computeExpensiveValue()
-    
-    func computeExpensiveValue() -> ComplexResult {
-        // This is only called when first accessed
-        return performComplexCalculation()
-    }
-}
-```
-
-### Configuration Validation Caching
-
-```swift
-// Validation results are cached
-let isValid = config.validateWithCache() // First call validates
-let isStillValid = config.validateWithCache() // Uses cache
-```
-
-## Performance Monitoring
-
-### SyntaxHighlightingPerformanceTracker
-
-Track highlighting performance with detailed metrics:
-
-```swift
-let tracker = SyntaxHighlightingPerformanceTracker()
-
-// Automatic tracking
-await tracker.trackHighlighting(
-    operation: "swift_file",
-    duration: 0.05,
-    tokenCount: 1500,
-    cacheHit: false
-)
-
-// Generate performance report
-let report = await tracker.generateReport()
-print(report.summary)
-// Output:
-// Average highlighting time: 45ms
-// Cache hit rate: 85%
-// Tokens per second: 30,000
-```
-
-### PerformanceBudgetReporter
-
-Generate comprehensive performance reports:
-
-```swift
-let reporter = PerformanceBudgetReporter()
-
-// Record operations
-await reporter.record(operation: "file_open", duration: 0.15)
-await reporter.record(operation: "syntax_highlighting", duration: 0.018)
-
-// Generate report
-let report = await reporter.generateReport()
-print(report.summary)
-// Output:
-// Performance Budget Report
-// Total Operations: 2
-// Violations: 1
-// ⚠️ Warning file_open: 0.15s (50% over budget)
-// ✅ Within Budget syntax_highlighting: 0.018s
-```
-
-## Best Practices
-
-### For Syntax Highlighting
-
-1. **Use incremental highlighting** for text changes
-2. **Submit background requests** with appropriate priorities
-3. **Cancel unnecessary requests** when viewport changes
-4. **Monitor highlighting performance** with budgets
-
-### For Tests
-
-1. **Use parallel execution plans** for faster CI/CD
-2. **Set appropriate timeouts** to catch hanging tests
-3. **Track memory usage** in performance-critical tests
-4. **Use TestMemoryOptimizer** for large test data
-
-### For Configuration
-
-1. **Batch multiple configuration changes**
-2. **Use lazy evaluation** for expensive properties
-3. **Cache validation results**
-4. **Monitor configuration change frequency**
-
-## Performance Targets
-
-The optimized helpers below have been measured against the pre-optimization baselines:
-
-| Operation | Before | After | Speedup |
-|---|---|---|---|
-| Debouncing (500 ops) | 1.17 s | ~0.05 s | 23× |
-| Fuzzy matching (10k items) | 0.20 s | ~0.02 s | 10× |
-| Symbol navigation | 0.52 s | ~0.05 s | 10× |
-| Memory benchmark | 11 s | < 1 s | 11× |
-
-## Optimized Components
-
-Three drop-in helpers ship for the hottest paths. All preserve the original APIs and are safe to enable behind a feature flag.
-
-### `AsyncOperationManager` — debouncing & throttling
-
-`Sources/CodeEditorPlugin/Utilities/AsyncOperationManager+OptimizedDebouncing.swift`
-
-Three new entry points:
-
-- `debounceOptimized(key:delay:_:)` — same shape as `debounce`, but lower overhead when you actually need the result.
-- `debounceFireAndForget(key:delay:_:)` — much faster when you don't need to await the result.
-- `batchDebounce(operations:delay:)` — coalesce multiple keys into a single coalesced flush.
-
-```swift
-// Before
-try await manager.debounce(key: "search", delay: 0.3) { await performSearch() }
-
-// After (need result)
-try await manager.debounceOptimized(key: "search", delay: 0.3) { await performSearch() }
-
-// After (don't need result — much faster)
-await manager.debounceFireAndForget(key: "search", delay: 0.3) { await performSearch() }
-
-// Batch
-let operations = ["op1": { await op1() }, "op2": { await op2() }]
-let results = try await manager.batchDebounce(operations: operations, delay: 0.1)
-```
-
-### `OptimizedFuzzyMatcher` — completion ranking
-
-`Sources/CodeEditorPlugin/Completion/OptimizedFuzzyMatcher.swift`
-
-Parallel processing for large candidate sets, pre-computed word boundaries, character-frequency rejection, and two-phase scoring (cheap then detailed).
-
-```swift
-let matcher = OptimizedFuzzyMatcher(
-    configuration: .init(
-        enableParallelProcessing: true,
-        parallelThreshold: 50,   // candidates needed before going parallel
-        maxResults: 100
-    )
-)
-let results = matcher.match(pattern: query, candidates: completionItems)
-```
-
-### `OptimizedSymbolNavigator` — symbol navigation
-
-`Sources/CodeEditorPlugin/Features/OptimizedSymbolNavigator.swift`
-
-Interval-tree backed symbol lookup with aggressive caching of flattened symbols. Drop-in replacement for `SymbolNavigator`.
-
-```swift
-let navigator = OptimizedSymbolNavigator()
-navigator.attach(to: textView)
-navigator.updateSymbols()
-navigator.navigate(to: symbol)
-```
-
-Lookups go from O(n) to O(log n). Breadcrumb updates ~10× faster for large files.
-
-### Rollout
-
-Gate each helper behind a flag during migration:
-
-```swift
-enum FeatureFlags {
-    static let useOptimizedDebouncing = true
-    static let useOptimizedFuzzyMatcher = true
-    static let useOptimizedSymbolNavigator = true
-}
-```
-
-Toggle off and revert if regressions appear. All three preserve API shape and Sendable/thread-safety guarantees.
-
-## Advanced Optimization Techniques
-
-### Smart Prefetching
-
-```swift
-// Prefetch highlighting for predicted scroll
-let prefetcher = HighlightingPrefetcher()
-prefetcher.predictedDirection = .down
-prefetcher.prefetchDistance = 1000 // characters
-
-await prefetcher.prefetchHighlighting(
-    around: currentViewport,
-    in: document
-)
-```
-
-### Adaptive Performance Mode
-
-```swift
-// Automatically adjust performance based on device
-let adaptiveMode = AdaptivePerformanceMode()
-adaptiveMode.currentDevice = .lowEnd
-
-// Automatically reduces:
-// - Chunk sizes
-// - Cache sizes
-// - Concurrent operations
-// - Prefetch distance
-```
-
-### Memory Pressure Handling
-
-```swift
-// Automatic cleanup on memory pressure
-memoryMonitor.onMemoryPressure = { level in
-    switch level {
-    case .low:
-        // Reduce cache sizes
-        tokenCache.reduceCacheSize(by: 0.2)
-    case .medium:
-        // Clear non-essential caches
-        tokenCache.clearNonEssential()
-    case .high:
-        // Emergency cleanup
-        tokenCache.clearAll()
-        cancelBackgroundOperations()
-    }
-}
-```
-
-## Debugging Performance Issues
-
-### Enable Performance Logging
-
-```swift
-// Enable detailed performance logging
-PerformanceLogger.shared.level = .verbose
-PerformanceLogger.shared.categories = [.highlighting, .rendering]
-```
-
-### Profile with Instruments
-
-```swift
-// Add signposts for profiling
-let signpost = OSSignposter()
-let state = signpost.beginInterval("highlighting")
-// ... perform highlighting ...
-signpost.endInterval("highlighting", state)
-```
-
-### Performance Diagnostics
-
-```swift
-// Generate performance diagnostic report
-let diagnostics = await PerformanceDiagnostics.generate()
-print(diagnostics.bottlenecks)
-print(diagnostics.recommendations)
-```
+`Tests/CodeEditorPluginTests/XCTestCase+PerformanceBudget.swift` adds `measureAgainstBudget` and `measureAsyncAgainstBudget` helpers for regression coverage.
+
+## Debugging Slow Paths
+
+- Use `PerformanceMonitor` for precise operation timing.
+- Use `PerformanceBudgetReporter` when a named budget exists.
+- Use Instruments for UI frame pacing, allocation spikes, and TextKit2 layout behavior.
+- Check `SyntaxHighlightingPerformanceTracker.generateReport()` when investigating tokenization or cache-hit behavior.
+- Prefer `CrossPlatformLogger.logger()` for diagnostic output.
 
 ## See Also
 
-- [Performance-Monitoring](monitoring.md)
-- [Test-Performance-Configuration](test-config.md)
-- `PerformanceBudget`
-- `SyntaxHighlightingPerformanceTracker`
-- `ConfigurationBatchUpdater`
+- [Performance monitoring](monitoring.md)
+- [Memory monitor](memory-monitor.md)
+- [Test performance configuration](test-config.md)
+- [Syntax highlighting](../Features/syntax-highlighting.md)

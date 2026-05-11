@@ -4,7 +4,7 @@ Use built-in configuration presets for common editing scenarios.
 
 ## Overview
 
-CodeEditorPlugin includes nine carefully crafted configuration presets that cover most common use cases. Five main presets are designed for specific editing scenarios, while four platform-specific presets optimize for different Apple platforms. Each preset is optimized for its specific purpose and can be further customized.
+CodeEditorPlugin includes eight configuration presets. Five are scenario presets (`default`, `minimal`, `readOnly`, `markdown`, `presentation`) and three are platform-oriented (`iOS`, `macOS`, `platformOptimized`). Each preset is a plain `EditorConfiguration` value and can be further customized.
 
 ## Available Presets
 
@@ -36,11 +36,11 @@ let config = EditorConfiguration.minimal
 
 Features:
 - No line numbers
-- No gutter
-- Minimal UI chrome
+- Syntax highlighting disabled
+- Annotations disabled
+- Code folding disabled
+- Code completion disabled
 - Focus on content
-- Larger line spacing
-- Simple theme
 
 Best for: Writing, note-taking, or focused coding sessions
 
@@ -71,12 +71,10 @@ let config = EditorConfiguration.markdown
 ```
 
 Features:
-- Wider line spacing
 - Word wrapping enabled
-- Larger font size
-- Tab width: 2 spaces
-- Spell checking enabled
-- Markdown-optimized theme
+- Automatic link detection enabled
+- Quote and dash substitution enabled
+- Code folding disabled
 
 Best for: Writing documentation, blog posts, or README files
 
@@ -89,11 +87,12 @@ let config = EditorConfiguration.presentation
 ```
 
 Features:
-- Extra large font (20pt)
-- High contrast theme
-- Increased line spacing
-- Bold keywords
-- Simplified UI
+- Read-only behavior inherited from `.readOnly`
+- Larger font (18pt)
+- Line numbers hidden
+- Annotations hidden
+- Selected-line highlight disabled
+- Word wrapping enabled
 - Maximum readability
 
 Best for: Live coding, screencasts, or conference presentations
@@ -109,12 +108,12 @@ let config = EditorConfiguration.iOS
 ```
 
 Features:
-- Touch-optimized UI
-- Larger tap targets
-- Appropriate font sizes
-- Memory-conscious settings
-- Viewport rendering enabled
-- Adapted for smaller screens
+- Font size 16 pt
+- Wider gutter
+- Smooth scrolling enabled
+- Lower syntax-highlighting length limit
+- Hardware acceleration enabled
+- Automatic text replacement disabled
 
 Best for: iOS applications
 
@@ -127,12 +126,11 @@ let config = EditorConfiguration.macOS
 ```
 
 Features:
-- Full desktop features
-- Hardware acceleration
-- Rich UI elements
-- Professional tooling
-- Maximum performance
-- Desktop-oriented layout
+- Desktop gutter width
+- Hardware acceleration enabled
+- Higher syntax-highlighting length limit
+- Automatic text replacement enabled
+- Automatic quote substitution enabled
 
 Best for: Native macOS applications
 
@@ -224,15 +222,16 @@ extension EditorConfiguration {
 ## Preset Comparison
 
 | Feature | Default | Minimal | Read Only | Markdown | Presentation |
-|---------|---------|---------|-----------|----------|--------------|
-| Line Numbers | ✓ | ✗ | ✓ | ✗ | ✓ |
-| Editable | ✓ | ✓ | ✗ | ✓ | ✓ |
-| Font Size | 14pt | 14pt | 13pt | 16pt | 20pt |
-| Tab Width | 4 | 4 | 4 | 2 | 4 |
-| Line Spacing | 1.2 | 1.5 | 1.2 | 1.6 | 1.4 |
-| Word Wrap | ✗ | ✓ | ✗ | ✓ | ✗ |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Line numbers | ✓ | ✗ | ✓ | ✓ | ✗ |
+| Editable | ✓ | ✓ | ✗ | ✓ | ✗ |
+| Syntax highlighting | ✓ | ✗ | ✓ | ✓ | ✓ |
+| Code completion | ✓ | ✗ | ✗ | ✓ | ✗ |
+| Font size | 14 pt | 14 pt | 14 pt | 14 pt | 18 pt |
+| Tab width | 4 | 4 | 4 | 4 | 4 |
+| Word wrap | ✗ | ✗ | ✗ | ✓ | ✓ |
 | Minimap | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Annotations | ✓ | ✗ | ✓ | ✗ | ✓ |
+| Annotations | ✓ | ✗ | ✓ | ✓ | ✗ |
 
 ## Dynamic Preset Selection
 

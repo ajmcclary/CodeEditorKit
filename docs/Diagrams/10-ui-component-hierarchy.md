@@ -262,7 +262,7 @@ classDiagram
     class ComponentVisibility {
         &lt;&lt;Visibility State&gt;&gt;
         +showGutter Bool
-        +showMinimap Bool
+        +isMinimapVisible Bool
         +showScrollbar Bool
         +showStatusBar Bool
         +showCompletionPopup Bool

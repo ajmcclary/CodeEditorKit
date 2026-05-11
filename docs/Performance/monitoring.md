@@ -1,237 +1,123 @@
 # Performance Monitoring
 
-Monitor and optimize your editor's performance with built-in tools.
+CodeEditorPlugin exposes performance instrumentation through actor-based monitors, memory cleanup hooks, budget checks, and optional SwiftUI insight views.
 
-## Overview
+## Runtime Monitoring
 
-CodeEditorPlugin includes comprehensive performance monitoring tools that provide real-time insights into rendering performance, memory usage, and syntax highlighting efficiency.
-
-> Tip: For detailed optimization techniques, see [Performance-Optimizations](optimizations.md). For test-specific performance configuration, see [Test-Performance-Configuration](test-config.md).
-
-## Enabling Performance Monitoring
-
-### SwiftUI
+Use `PerformanceMonitor` to measure named operations:
 
 ```swift
-struct MonitoredEditor: View {
-    @State private var config = EditorConfiguration()
-    @State private var showMetrics = false
-    
-    var body: some View {
-        VStack {
-            CodeEditor(text: $code)
-                .environment(\.codeEditorConfiguration, config)
-                .onAppear {
-                    config.performance.enableMetrics = true
-                }
-            
-            if showMetrics {
-                PerformanceMetricsView()
-            }
+let monitor = PerformanceMonitor()
+let token = await monitor.startMeasuring("syntax-highlighting")
+
+// Perform the operation.
+
+await monitor.endMeasuring(token)
+let report = await monitor.generateReport()
+
+CrossPlatformLogger.logger().debug(report.summary)
+```
+
+For scoped measurement:
+
+```swift
+let tokens = try await monitor.measure("highlight-visible-range") {
+    try await highlighter.highlightVisibleRange()
+}
+```
+
+`PerformanceMonitor` retains the most recent 1,000 metrics or one hour of data, whichever limit is reached first. Operations over 100 ms are logged as warnings.
+
+## Performance Insights UI
+
+`PerformanceInsights` aggregates a `PerformanceMonitor`, `MemoryMonitor`, and TextKit2 summary data into a SwiftUI-readable model:
+
+```swift
+@StateObject private var memoryMonitor = MemoryMonitor()
+@State private var insights: PerformanceInsights?
+
+var body: some View {
+    VStack {
+        CodeEditor(text: $code)
+
+        if let insights {
+            PerformanceInsightsPanel(insights: insights)
         }
     }
-}
-```
-
-### Programmatic Access
-
-```swift
-let monitor = editor.performanceMonitor
-monitor.startMonitoring()
-
-// Get current metrics
-let fps = monitor.currentFrameRate
-let memory = monitor.memoryUsage
-let highlightTime = monitor.lastHighlightDuration
-```
-
-## Available Metrics
-
-### Frame Rate Analysis
-
-Monitor rendering performance:
-
-```swift
-monitor.frameRateHandler = { fps in
-    if fps < 30 {
-        print("Performance warning: \(fps) FPS")
+    .task { @MainActor in
+        insights = PerformanceInsights(memoryMonitor: memoryMonitor)
     }
 }
 ```
 
-Metrics:
-- Current FPS
-- Average FPS
-- Minimum FPS
-- Frame drops
+The insight panel surfaces status, active issues, recommendations, and a detailed report. Some real-time fields are intentionally coarse; use `PerformanceMonitor` and `PerformanceBudgetReporter` for precise operation timing.
 
-### Memory Profiling
+## Memory Monitoring
 
-Track memory usage:
+Inject a shared `MemoryMonitor` through configuration when multiple editor instances should share cleanup pressure:
 
 ```swift
-monitor.memoryHandler = { usage in
-    print("Memory: \(usage.used / 1024 / 1024) MB")
-    if usage.percentage > 80 {
-        print("High memory usage warning")
-    }
-}
+let memoryMonitor = MemoryMonitor()
+
+var configuration = EditorConfiguration()
+configuration.performance.memoryMonitor = memoryMonitor
+
+CodeEditor(text: $code)
+    .environment(\.codeEditorConfiguration, configuration)
 ```
 
-Metrics:
-- Current usage
-- Peak usage
-- Available memory
-- Leak detection
+Components such as caches and LSP managers can register cleanup handlers with the same monitor. See [memory monitor](memory-monitor.md) for pressure handling examples.
 
-### Syntax Highlighting Performance
+## Performance Budgets
 
-Measure highlighting efficiency:
+`PerformanceBudget` defines operation budgets and `PerformanceBudgetReporter` records measurements:
 
 ```swift
-monitor.highlightingHandler = { metrics in
-    print("Highlighted \(metrics.lineCount) lines in \(metrics.duration)ms")
-    print("Average: \(metrics.averagePerLine)ms per line")
-}
+let reporter = PerformanceBudgetReporter()
+await reporter.record(operation: "syntax_highlighting", duration: 0.018)
+
+let report = await reporter.generateReport()
+CrossPlatformLogger.logger().debug(report.summary)
 ```
 
-Metrics:
-- Total duration
-- Lines processed
-- Cache hit rate
-- Tokens generated
+The package also provides XCTest helpers in `Tests/CodeEditorPluginTests/XCTestCase+PerformanceBudget.swift` for enforcing budgets in performance regression tests.
 
-### Large File Handling
+## Production Metrics
 
-Special metrics for large files:
+`ProductionPerformanceMetrics` records high-level runtime events such as syntax highlighting, text layout, memory cleanup, and code folding. `AdaptivePerformanceMode` can then derive a lower-cost configuration when the active document or device characteristics demand it.
+
+## Practical Tuning
+
+Prefer the public `EditorConfiguration.Performance` properties for app-level tuning:
 
 ```swift
-if file.size > 500_000 {
-    monitor.enableLargeFileMetrics()
-    // Additional metrics:
-    // - Viewport rendering time
-    // - Progressive loading progress
-    // - Memory mapping efficiency
-}
+var configuration = EditorConfiguration()
+configuration.performance.maxSyntaxHighlightingLength = 1_000_000
+configuration.performance.textChangeDebounceInterval = .milliseconds(150)
+configuration.performance.highlightingDebounceInterval = .milliseconds(150)
+configuration.performance.renderingUpdateStrategy = .adaptive
+configuration.performance.usesRangeBasedHighlighting = true
 ```
 
-## Performance Optimization
-
-### Automatic Optimizations
-
-The editor automatically optimizes based on metrics:
+On iOS, large-file behavior is controlled by:
 
 ```swift
-config.performance.autoOptimize = true
-// Automatically enables:
-// - Viewport rendering for large files
-// - Reduced animation complexity under load
-// - Aggressive caching when memory allows
+configuration.performance.enableIOSOptimizations = true
+configuration.performance.iOSLargeFileThreshold = 1_048_576
+configuration.performance.iOSMaxHighlightingChunk = 100_000
 ```
 
-### Manual Optimization
+## Debugging Slow Paths
 
-Fine-tune performance settings:
-
-```swift
-// For large files
-config.performance.maxSyntaxHighlightingLength = 1_000_000
-config.performance.viewportExpansion = 50 // lines
-
-// For smooth scrolling
-config.performance.smoothScrolling = true
-config.performance.scrollingDebounce = 16 // ms
-
-// For responsiveness
-config.performance.backgroundProcessingDelay = 100 // ms
-config.performance.useHardwareAcceleration = true
-```
-
-## Performance Best Practices
-
-### 1. Monitor Key Metrics
-
-```swift
-// Set up alerts for critical metrics
-monitor.setThreshold(.frameRate, value: 30) { metric in
-    print("FPS dropped below 30: \(metric.value)")
-}
-```
-
-### 2. Use Viewport Rendering
-
-```swift
-// Enable for files over 100KB
-if file.size > 100_000 {
-    config.performance.enableViewportRendering = true
-}
-```
-
-### 3. Optimize Highlighting
-
-```swift
-// Cache commonly used patterns
-config.performance.enablePatternCache = true
-config.performance.patternCacheSize = 1000
-```
-
-### 4. Manage Memory
-
-```swift
-// Set memory limits
-config.performance.maxMemoryUsage = 100 // MB
-config.performance.enableMemoryWarnings = true
-```
-
-## Debugging Performance Issues
-
-### Performance Logs
-
-Enable detailed logging:
-
-```swift
-PerformanceLogger.level = .verbose
-PerformanceLogger.categories = [
-    .rendering,
-    .highlighting,
-    .memory,
-    .io
-]
-```
-
-### Bottleneck Detection
-
-Identify performance bottlenecks:
-
-```swift
-let analyzer = PerformanceAnalyzer()
-analyzer.analyze(editor) { report in
-    print("Bottlenecks found:")
-    for issue in report.bottlenecks {
-        print("- \(issue.description): \(issue.impact)")
-    }
-}
-```
-
-## Export Performance Data
-
-Save metrics for analysis:
-
-```swift
-// Export as JSON
-let data = monitor.exportMetrics(format: .json)
-try data.write(to: metricsURL)
-
-// Export as CSV for spreadsheet analysis
-let csv = monitor.exportMetrics(format: .csv)
-try csv.write(to: csvURL)
-```
+- Measure the exact operation with `PerformanceMonitor`.
+- Check budget status with `PerformanceBudgetReporter`.
+- Inspect memory pressure and cleanup counts with `MemoryMonitor`.
+- Use Instruments for UI frame pacing, allocations, and TextKit2 layout details.
+- Avoid adding new global monitors; inject monitors through configuration or initializers.
 
 ## See Also
 
-- [Configuration-System](../Configuration/system.md)
-- [Swift6-Concurrency](../Concurrency/swift6.md)
-- [Architecture-Overview](../Internals/architecture-overview.md)
-- [Performance-Optimization-Integration](optimizations.md)
-- [Performance-Optimizations](optimizations.md)
-- [Test-Performance-Configuration](test-config.md)
+- [Performance optimizations](optimizations.md)
+- [Memory monitor](memory-monitor.md)
+- [Test performance configuration](test-config.md)
+- [Swift 6 concurrency](../Concurrency/swift6.md)

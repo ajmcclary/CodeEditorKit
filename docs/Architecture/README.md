@@ -5,7 +5,7 @@ Short ADRs capturing structural decisions made for CodeEditorPlugin. Each one re
 | Gate | Decision | Status | Date |
 |---|---|---|---|
 | A | [RangeStore backend](RangeStoreDecision.md) — use `ArrayRunStore` with a backend-abstraction layer instead of `_RopeModule` | go | 2026-05-07 |
-| B | [Tree-sitter viability](TreeSitterDecision.md) — defer adoption until after the Phase 3 highlighting overlay is complete | defer | 2026-05-07 |
+| B | [Tree-sitter viability](TreeSitterDecision.md) — keep the internal range-provider spike; defer real C grammar adoption and package extraction | partial go | 2026-05-07 |
 | C | [Folding presentation strategy](FoldingPresentationDecision.md) — keep `attributeHidden` for now; overlay placeholders as the preferred future direction | go | 2026-05-07 |
 | D | [Text edit event hub](TextEditEventHubDecision.md) — `CodeEditorView` owns a single `TextEditEventHub`; one canonical `TextEditEvent` struct for all consumers | go | 2026-05-07 |
 | — | [Performance scaffolding audit](PerformanceScaffoldingAudit.md) — phase-1.2 audit of performance-critical methods | reference | 2026-05-07 |

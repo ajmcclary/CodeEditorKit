@@ -263,61 +263,33 @@ struct PerformanceProfile {
 ## OptimizedSyntaxHighlightingCoordinator Configuration
 
 ```swift
-let config = OptimizedSyntaxHighlightingCoordinator.Configuration(
-    // Performance Thresholds
-    circuitBreakerThreshold: 0.1,      // 100ms P95 threshold
-    performanceDegradationThreshold: 0.05, // 50ms warning threshold
-    
-    // Chunking Strategies
-    standardChunkSize: 5_000,           // Standard chunk size
-    largeFileChunkSize: 10_000,         // For 500KB+ files
-    streamingThreshold: 500_000,        // Switch to streaming mode
-    
-    // Viewport Optimization
-    enableViewportOptimization: true,
-    viewportPadding: 500,               // Characters before/after visible range
-    predictiveScrollDistance: 1000,     // Prefetch distance
-    
-    // Caching Configuration
-    cacheWarmingEnabled: true,
-    maxCacheSize: 50_000_000,          // 50MB cache limit
-    cacheHitRateTarget: 0.90,          // 90% target hit rate
-    
-    // Error Recovery
-    maxRetryAttempts: 3,
-    backoffMultiplier: 2.0,
-    enableProgressiveFallback: true,
-    
-    // Memory Management
-    memoryPressureThreshold: 0.8,      // 80% memory usage threshold
-    enableAdaptiveProcessing: true,
-    enableProgressiveRendering: true
+let memoryMonitor = MemoryMonitor()
+
+let coordinator = OptimizedSyntaxHighlightingCoordinator(
+    memoryMonitor: memoryMonitor,
+    configuration: .performance
 )
+
+var configuration = OptimizedSyntaxHighlightingCoordinator.HighlightingConfiguration.default
+configuration.enableViewportOptimization = true
+configuration.viewportPadding = 500
+configuration.maxChunkSize = 5_000
+configuration.enableIncrementalHighlighting = true
+configuration.cacheWarmingEnabled = true
+configuration.circuitBreakerThreshold = 0.1
+
+coordinator.updateConfiguration(configuration)
 ```
 
-## SmartTokenCache Configuration
+## AsyncSyntaxHighlighter Cache Settings
 
 ```swift
-let cacheConfig = SmartTokenCache.Configuration(
-    // Viewport Awareness
-    viewportAwareCaching: true,
-    predictivePrefetching: true,
-    scrollPatternLearning: true,
-    
-    // Memory Management
-    maxMemoryUsage: 25_000_000,        // 25MB cache limit
-    lruEvictionEnabled: true,
-    memoryPressureResponse: true,
-    
-    // Performance Monitoring
-    hitRateMonitoring: true,
-    statisticsCollection: true,
-    performanceTracking: true,
-    
-    // Cache Warming
-    intelligentCacheWarming: true,
-    warmingThreshold: 0.1,             // Warm cache at 10% scroll
-    warmingDistance: 2000              // Characters to warm ahead
+let highlighter = AsyncSyntaxHighlighter(memoryMonitor: memoryMonitor)
+
+await highlighter.configureCacheSettings(
+    maxCacheSize: 100,
+    maxMemoryUsageMB: 50.0,
+    staleThreshold: .hours(1)
 )
 ```
 

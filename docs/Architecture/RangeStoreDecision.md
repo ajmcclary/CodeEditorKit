@@ -42,7 +42,7 @@ Rationale:
 
 ## Required Implementation
 
-The `RangeStore` API (defined in Phase 2.1) will be backed by a simple sorted array of `[StoredRun<Element>]` where each run has an offset and value. Edits shift subsequent offsets. See `Documentation/Architecture/RangeStore.md` for the API specification.
+The implemented `RangeStore` API lives in `Sources/CodeEditorPlugin/Text/RangeStore/` and is backed by a simple sorted array of stored runs. Edits shift subsequent offsets, and adjacent compatible gap runs are coalesced after mutations.
 
 ## Rejected Alternatives
 
@@ -51,4 +51,4 @@ The `RangeStore` API (defined in Phase 2.1) will be backed by a simple sorted ar
 
 ## Follow-up
 
-When Phase 3 highlighting runs consume `RangeStore` with actual style data, benchmark with a 100K-line file to determine if ArrayRunStore needs replacement. The swap point is well-defined: if `runs(in:)` takes > 1ms with > 1000 stored runs, switch to interval-tree.
+`RangeStore` now backs range-based style and fold storage paths. Continue benchmarking with 100K-line fixtures; the swap point remains well-defined: if `runs(in:)` takes > 1 ms with > 1,000 stored runs, switch to an interval-tree backend behind the same API.

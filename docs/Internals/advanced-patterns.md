@@ -451,7 +451,7 @@ editor.optimizeForLargeFiles()
 var performance = config.performance
 performance.useHardwareAcceleration = true
 performance.maxSyntaxHighlightingLength = 100_000
-performance.enableViewportRendering = true
+performance.usesRangeBasedHighlighting = true
 ```
 
 ### Memory-Conscious Configuration

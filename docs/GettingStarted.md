@@ -14,7 +14,7 @@ A modern, cross-platform code editor for macOS and iOS / iPadOS. Built on TextKi
 
 1. **File → Add Package Dependencies**
 2. Enter the repository URL: `https://github.com/ajmcclary/CodeEditorPlugin.git`
-3. Pick a version rule (Up to Next Major is recommended) and click **Add Package**
+3. Until release tags are published, choose the `main` branch. After tags exist, switch to an up-to-next-major version rule.
 
 ### Package.swift
 
@@ -26,7 +26,7 @@ let package = Package(
     name: "MyApp",
     platforms: [.macOS("26.3"), .iOS("26.3")],
     dependencies: [
-        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", from: "0.2.0")
+        .package(url: "https://github.com/ajmcclary/CodeEditorPlugin.git", branch: "main")
     ],
     targets: [
         .target(name: "MyApp", dependencies: ["CodeEditorPlugin"])
@@ -177,7 +177,7 @@ See [Configuration system](Configuration/system.md) for the full schema and [Pre
 
 ## Supported Languages
 
-Full AST-based highlighting via SwiftSyntax for **Swift**. Optimized regex highlighters for: **Python**, **JavaScript / TypeScript**, **Rust**, **Go**, **Java**, **C / C++**, **Ruby**, **PHP**, **HTML / CSS**, **JSON / YAML**, **Markdown**, **SQL**, **XML**, **Shell scripts**, plus **plain text**.
+Full AST-based highlighting via SwiftSyntax for **Swift**. The full catalog is **25 concrete languages plus plain text**: Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, and Plain Text.
 
 Details: [Syntax highlighting](Features/syntax-highlighting.md).
 

@@ -499,7 +499,7 @@ sequenceDiagram
 5. **Parallel Processing**: TaskGroup-based concurrent operations for large symbol sets
 
 ### Developer Experience
-6. **20+ Language Support**: Swift, JavaScript, Python, C/C++, Java, Go, Rust, HTML, CSS, JSON, Markdown, and more
+6. **25 Concrete Languages + Plain Text**: Swift, JavaScript, TypeScript, Python, C/C++, C#, Kotlin, Dart, Java, Go, Rust, HTML, CSS, JSON, Markdown, and more
 7. **LSP Integration**: Full Language Server Protocol support for advanced language features
 8. **Real-time Updates**: 300ms debounced symbol detection with cursor-aware breadcrumbs
 9. **Intelligent Search**: Fuzzy matching with camelCase, separator, and consecutive character bonuses
