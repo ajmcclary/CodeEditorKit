@@ -15,9 +15,18 @@ extension CodeEditorView {
         }
 
         if rangeBasedHighlightingController == nil {
+            // Check if Tree-sitter highlighting is enabled for this language
+            let externalProvider: (any RangeHighlightProviding)?
+            if configuration.behavior.useTreeSitterHighlighting {
+                externalProvider = TreeSitterRangeHighlightProvider.makeSpikeProvider(for: language)
+            } else {
+                externalProvider = nil
+            }
+
             rangeBasedHighlightingController = RangeBasedHighlightingController(
                 textView: self,
-                language: language
+                language: language,
+                externalProvider: externalProvider
             )
         }
 

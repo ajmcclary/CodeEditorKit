@@ -68,6 +68,17 @@ extension EditorConfiguration {
         /// - Note: This does not affect manual scrolling or cursor movement.
         public var autoScrollToCursor: Bool = false
 
+        /// Whether to use Tree-sitter for syntax highlighting (experimental).
+        ///
+        /// When enabled and the language has a Tree-sitter grammar available,
+        /// the editor uses Tree-sitter's `highlights.scm` queries for token
+        /// production instead of the regex highlighter. Falls back to regex
+        /// for languages without Tree-sitter support.
+        ///
+        /// - Note: This is a Phase 5 spike feature. Currently only JavaScript,
+        ///   TypeScript, and Python have capture maps defined.
+        public var useTreeSitterHighlighting: Bool = false
+
         // MARK: - Initialization
 
         public init() {}
@@ -95,6 +106,7 @@ extension EditorConfiguration.Behavior: Codable {
         case showInlineCompletionSuggestions
         case completionTriggerCharacters
         case autoScrollToCursor
+        case useTreeSitterHighlighting
     }
 
     public init(from decoder: Decoder) throws {
@@ -123,6 +135,7 @@ extension EditorConfiguration.Behavior: Codable {
         isAutomaticSpellingCorrectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticSpellingCorrectionEnabled) ?? false
         isAutomaticTextCompletionEnabled = try container.decodeIfPresent(Bool.self, forKey: .isAutomaticTextCompletionEnabled) ?? false
         autoScrollToCursor = try container.decodeIfPresent(Bool.self, forKey: .autoScrollToCursor) ?? false
+        useTreeSitterHighlighting = try container.decodeIfPresent(Bool.self, forKey: .useTreeSitterHighlighting) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -144,5 +157,6 @@ extension EditorConfiguration.Behavior: Codable {
         try container.encode(isAutomaticSpellingCorrectionEnabled, forKey: .isAutomaticSpellingCorrectionEnabled)
         try container.encode(isAutomaticTextCompletionEnabled, forKey: .isAutomaticTextCompletionEnabled)
         try container.encode(autoScrollToCursor, forKey: .autoScrollToCursor)
+        try container.encode(useTreeSitterHighlighting, forKey: .useTreeSitterHighlighting)
     }
 }

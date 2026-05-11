@@ -9,13 +9,26 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     private weak var textView: CodeEditorView?
     private let language: Language
     private let container: StyledRangeContainer
-    private let provider: SyntaxHighlighterRangeAdapter
+    private let provider: any RangeHighlightProviding
     private let providerState: HighlightProviderState
     private let visibleRangeProvider: VisibleRangeProvider
 
     internal let styleDataSource: StyledMinimapStyleDataSource
 
-    internal init(textView: CodeEditorView, language: Language) {
+    /// Primary initializer.
+    ///
+    /// - Parameters:
+    ///   - textView: The editor view to observe.
+    ///   - language: The language to highlight.
+    ///   - externalProvider: An optional `RangeHighlightProviding` to use
+    ///     instead of the default regex-backed adapter. When non-nil (e.g.
+    ///     a `TreeSitterRangeHighlightProvider`), it is used directly.
+    ///     When nil, the standard `SyntaxHighlighterRangeAdapter` is used.
+    internal init(
+        textView: CodeEditorView,
+        language: Language,
+        externalProvider: (any RangeHighlightProviding)? = nil
+    ) {
         self.textView = textView
         self.language = language
 
@@ -24,10 +37,19 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         #else
         let documentLength = textView.textStorage.length
         #endif
-        let highlighter = Self.makeHighlighter(for: language)
+
         let container = StyledRangeContainer(documentLength: documentLength)
         let providerID = container.registerProvider(priority: 0)
-        let provider = SyntaxHighlighterRangeAdapter(highlighter: highlighter)
+
+        // Use external provider (Tree-sitter) if supplied, otherwise fall back
+        // to the regex-backed SyntaxHighlighter adapter.
+        let provider: any RangeHighlightProviding
+        if let externalProvider {
+            provider = externalProvider
+        } else {
+            let highlighter = Self.makeHighlighter(for: language)
+            provider = SyntaxHighlighterRangeAdapter(highlighter: highlighter)
+        }
 
         self.container = container
         self.provider = provider
