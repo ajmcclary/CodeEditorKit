@@ -153,7 +153,7 @@ final class PerformanceBenchmarkTests: XCTestCase {
             autoreleasepool {
                 editor.text = content
                 // Force line number calculation
-                _ = editor.lineIndexCache.lineCount
+                _ = editor.lineGeometryStore.lineCount
             }
         }
     }

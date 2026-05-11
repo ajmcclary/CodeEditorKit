@@ -434,6 +434,7 @@ public actor OptimizedLineIndexCache {
 
 // MARK: - Performance Test Helper
 
+@available(*, deprecated, message: "Use LineGeometryStore instead")
 extension OptimizedLineIndexCache {
     /// Validates the tree structure (for testing)
     func validateTree() -> Bool {

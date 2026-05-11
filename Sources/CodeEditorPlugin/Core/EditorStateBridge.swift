@@ -31,17 +31,6 @@ enum EditorStateBridge {
         return SelectionState(line: lineIdx + 1, column: column, selectionLength: range.length)
     }
 
-    /// Cache-aware overload that uses a `LineIndexCache` for O(log n)
-    /// line lookups. Deprecated in favor of `deriveSelection(from:in:lineGeometryStore:)`
-    /// which uses the UTF-16-correct `LineGeometryStore`.
-    @available(*, deprecated, message: "Use deriveSelection(from:in:lineGeometryStore:) for UTF-16 correctness")
-    static func deriveSelection(from range: NSRange, in text: String, lineIndexCache: LineIndexCache) -> SelectionState {
-        let utf16Length = text.utf16.count
-        let safeLocation = max(0, min(range.location, utf16Length))
-        let (line, column) = lineIndexCache.lineAndColumn(at: safeLocation, in: text)
-        return SelectionState(line: line, column: column, selectionLength: range.length)
-    }
-
     /// Counts lines in `text` (number of `\n` + 1, or 0 for empty).
     static func lineCount(of text: String) -> Int {
         if text.isEmpty { return 0 }

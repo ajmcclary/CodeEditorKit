@@ -201,14 +201,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Adaptive performance mode manager
     internal lazy var adaptivePerformanceMode = AdaptivePerformanceMode(memoryMonitor: memoryMonitor)
 
-    /// Line index cache for optimized line number calculations
-    internal let lineIndexCache = LineIndexCache()
-
     /// Incremental line geometry store — red-black tree of per-line UTF-16
     /// lengths, heights, and cumulative subtree metadata. Supports O(log n)
     /// lookup by offset, line index, and y-position. Built from
     /// `NSTextStorage` using `NSString` line enumeration for UTF-16
-    /// correctness. Runs alongside `lineIndexCache` during the migration.
+    /// correctness.
     internal let lineGeometryStore = LineGeometryStore()
 
     /// Handler that keeps `lineGeometryStore` in sync with `NSTextStorage`

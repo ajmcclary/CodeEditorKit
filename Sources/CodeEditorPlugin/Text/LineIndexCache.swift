@@ -171,6 +171,7 @@ final class LineIndexCache {
 }
 
 /// Optimized line calculations for visible ranges
+@available(*, deprecated, message: "Use LineGeometryStore for UTF-16-correct line geometry")
 extension LineIndexCache {
     /// Get line numbers and ranges for a visible character range
     func visibleLineInfo(
