@@ -419,17 +419,16 @@ struct PlainTextHighlighter: SyntaxHighlighter {
 // MARK: - RegexSyntaxHighlighter Extension
 
 extension RegexSyntaxHighlighter: SyntaxHighlighter {
-    public convenience init(customLanguage _: LanguageDefinition) {
-        self.init()
-        // The existing RegexSyntaxHighlighter will handle the language definition
+    public convenience init(customLanguage language: LanguageDefinition) {
+        self.init(defaultLanguage: language)
     }
 
     public func highlight(source: String) -> [HighlightedToken] {
-        // Use Swift language definition as default
-        // Create a basic language definition for plain text highlighting
-        let plainTextRules: [HighlightRule] = []
-        let plainTextDef = LanguageDefinition(name: "Plain", fileExtensions: [], rules: plainTextRules)
-        return highlight(source: source, language: plainTextDef)
+        guard let language = defaultLanguage else {
+            // No language defined — return empty (plain text, no tokens).
+            return []
+        }
+        return highlight(source: source, language: language)
     }
 }
 

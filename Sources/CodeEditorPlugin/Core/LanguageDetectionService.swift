@@ -66,7 +66,7 @@ public final class LanguageDetectionService {
 
         switch lowercasedFilename {
         case "dockerfile":
-            return .shell
+            return .dockerfile
 
         case "makefile", "gnumakefile":
             return .shell

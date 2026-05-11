@@ -614,6 +614,27 @@ internal struct LanguageStaticMetadata: Sendable {
             triggerCharacters: [" ", "$", "-"]
         ),
 
+        .dockerfile: Self(
+            name: "Dockerfile",
+            fileExtensions: ["dockerfile"],
+            lspIdentifier: "dockerfile",
+            highlightingStrategy: .regex,
+            commentPrefix: "#",
+            blockCommentStart: nil,
+            blockCommentEnd: nil,
+            identifierPattern: "[a-zA-Z_][a-zA-Z0-9_]*",
+            stringDelimiters: ["\""],
+            keywords: [
+                "FROM", "RUN", "CMD", "ENTRYPOINT", "COPY", "ADD", "WORKDIR", "ENV",
+                "ARG", "EXPOSE", "VOLUME", "USER", "LABEL", "MAINTAINER", "ONBUILD",
+                "STOPSIGNAL", "HEALTHCHECK", "SHELL", "AS"
+            ],
+            types: [],
+            functions: [],
+            literals: [],
+            triggerCharacters: [" ", "$"]
+        ),
+
         .plainText: Self(
             name: "Plain Text",
             fileExtensions: ["txt", "text", "log"],

@@ -36,11 +36,18 @@ public final class RegexSyntaxHighlighter: Sendable {
     // Direct language mapping for efficient lookup
     private let languageMap: [Language: RegexLanguageDefinition]
 
+    /// Optional default language definition, stored immutably at init for use
+    /// when `highlight(source:)` is called without an explicit definition.
+    /// This avoids the bug where the convenience init discarded its language
+    /// parameter and always produced zero tokens.
+    let defaultLanguage: RegexLanguageDefinition?
+
     // MARK: - Initialization
 
-    public init() {
+    public init(defaultLanguage: RegexLanguageDefinition? = nil) {
         supportedLanguages = Self.createLanguageDefinitions()
         languageMap = Self.createLanguageMap(from: supportedLanguages)
+        self.defaultLanguage = defaultLanguage
     }
 
     // MARK: - Public Methods

@@ -84,7 +84,18 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     }
 
     private static func makeHighlighter(for language: Language) -> any SyntaxHighlighter {
-        let registry = LanguageRegistry()
-        return registry.provider(for: language.rawValue)?.createHighlighter() ?? PlainTextHighlighter()
+        // Swift uses SwiftSyntax for AST-based highlighting
+        if language == .swift {
+            return SwiftSyntaxHighlighter()
+        }
+
+        // All other languages go through the canonical regex definitions
+        let regexHighlighter = RegexSyntaxHighlighter()
+        if let definition = regexHighlighter.languageDefinition(for: language) {
+            return RegexSyntaxHighlighter(customLanguage: definition)
+        }
+
+        // Fallback for plain text or unrecognized languages
+        return PlainTextHighlighter()
     }
 }

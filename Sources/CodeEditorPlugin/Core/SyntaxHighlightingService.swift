@@ -148,6 +148,9 @@ public final class SyntaxHighlightingService {
         case .shell:
             return ["$", "-", " ", "/"]
 
+        case .dockerfile:
+            return [" ", "$"]
+
         case .plainText:
             return []
         }

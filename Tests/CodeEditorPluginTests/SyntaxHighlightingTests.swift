@@ -396,6 +396,101 @@ final class SyntaxHighlightingTests: XCTestCase {
         XCTAssertTrue(hasHighlighting, "Should have applied highlighting")
     }
 
+    // MARK: - RegexSyntaxHighlighter Regression Tests (Phase 1)
+
+    /// Proves that RegexSyntaxHighlighter(customLanguage:) correctly stores the
+    /// language definition and highlight(source:) uses it — the fix for the bug
+    /// where the convenience init discarded its parameter and always produced
+    /// zero tokens.
+    @MainActor
+    func testRegexHighlighterCustomLanguageProducesTokens() {
+        let regexHighlighter = RegexSyntaxHighlighter()
+
+        let languages: [(Language, String)] = [
+            (.javascript, "const x = 42; let y = 'hello'; function foo() { return x + y; }"),
+            (.python, "def foo():\n    x = 42\n    return x * 2\n"),
+            (.go, "package main\n\nfunc main() {\n    x := 42\n    fmt.Println(x)\n}"),
+            (.rust, "fn main() {\n    let x = 42;\n    println!(\"{}\", x);\n}"),
+            (.sql, "SELECT * FROM users WHERE active = 1 ORDER BY name;"),
+            (.shell, "#!/bin/bash\n\necho \"Hello, World!\"\nif [ -f file.txt ]; then\n    cat file.txt\nfi"),
+            (.markdown, "# Hello\n\nThis is **bold** and *italic* text.\n\n```js\nconst x = 1;\n```"),
+            (.json, "{\n    \"name\": \"test\",\n    \"value\": 42,\n    \"active\": true\n}"),
+            (.css, ".container {\n    color: red;\n    font-size: 16px;\n}")
+        ]
+
+        for (language, source) in languages {
+            guard let definition = regexHighlighter.languageDefinition(for: language) else {
+                XCTFail("Should find regex definition for \(language.name)")
+                continue
+            }
+
+            let highlighter = RegexSyntaxHighlighter(customLanguage: definition)
+            let tokens = highlighter.highlight(source: source)
+
+            XCTAssertFalse(
+                tokens.isEmpty,
+                "RegexSyntaxHighlighter should produce tokens for \(language.name). Got 0 tokens for source: \(source.prefix(40))..."
+            )
+
+            // Verify at least one meaningful token type is present
+            // (not all languages use .keyword — e.g. CSS uses .property / .type)
+            let meaningfulTokens = tokens.filter {
+                $0.type == .keyword || $0.type == .type ||
+                $0.type == .property || $0.type == .function ||
+                $0.type == .string || $0.type == .number
+            }
+            XCTAssertFalse(
+                meaningfulTokens.isEmpty,
+                "Should detect at least one meaningful token in \(language.name)"
+            )
+        }
+    }
+
+    /// Proves that .dockerfile is recognized as its own language (not mapped to .shell).
+    @MainActor
+    func testDockerfileDetectedAsOwnLanguage() {
+        let detectionService = LanguageDetectionService()
+        let language = detectionService.detectLanguage(fromFilename: "Dockerfile")
+        XCTAssertEqual(language, .dockerfile, "Dockerfile should map to .dockerfile, not .shell")
+    }
+
+    /// Proves that Dockerfile regex definition produces tokens.
+    @MainActor
+    func testDockerfileHighlightingProducesTokens() {
+        let dockerfileSource = """
+        FROM ubuntu:22.04 AS builder
+        RUN apt-get update && apt-get install -y curl
+        WORKDIR /app
+        COPY . .
+        ENV NODE_ENV=production
+        EXPOSE 8080
+        CMD ["node", "server.js"]
+        """
+
+        let regexHighlighter = RegexSyntaxHighlighter()
+        guard let definition = regexHighlighter.languageDefinition(for: .dockerfile) else {
+            XCTFail("Should find regex definition for Dockerfile")
+            return
+        }
+
+        let highlighter = RegexSyntaxHighlighter(customLanguage: definition)
+        let tokens = highlighter.highlight(source: dockerfileSource)
+
+        XCTAssertFalse(tokens.isEmpty, "Dockerfile highlighting should produce tokens")
+
+        let keywordTokens = tokens.filter { $0.type == .keyword }
+        XCTAssertFalse(keywordTokens.isEmpty, "Should detect Dockerfile instruction keywords")
+
+        // Verify specific instructions are highlighted
+        let instructionTexts = keywordTokens.compactMap { token -> String? in
+            guard let range = Range(token.range, in: dockerfileSource) else { return nil }
+            return String(dockerfileSource[range])
+        }
+        XCTAssertTrue(instructionTexts.contains("FROM"), "Should highlight FROM")
+        XCTAssertTrue(instructionTexts.contains("RUN"), "Should highlight RUN")
+        XCTAssertTrue(instructionTexts.contains("ENV"), "Should highlight ENV")
+    }
+
     deinit {
         // Cleanup if needed
     }

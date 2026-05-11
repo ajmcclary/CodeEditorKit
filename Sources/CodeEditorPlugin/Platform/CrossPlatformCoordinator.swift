@@ -321,7 +321,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
         case .swift, .javascript, .typescript, .c, .cpp, .go, .rust, .java:
             return "//"
 
-        case .python, .ruby, .shell:
+        case .python, .ruby, .shell, .dockerfile:
             return "#"
 
         case .html, .xml:

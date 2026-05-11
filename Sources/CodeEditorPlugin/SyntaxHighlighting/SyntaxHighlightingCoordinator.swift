@@ -234,6 +234,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     case ruby
     case php
     case shell
+    case dockerfile
     case plainText = "plaintext"
 
     /// The human-readable display name for the language.
@@ -268,6 +269,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .ruby: "Ruby"
         case .php: "PHP"
         case .shell: "Shell"
+        case .dockerfile: "Dockerfile"
         case .plainText: "Plain Text"
         }
     }
@@ -304,6 +306,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .ruby: ["rb", "rbw"]
         case .php: ["php", "phtml", "php3", "php4", "php5"]
         case .shell: ["sh", "bash", "zsh", "fish"]
+        case .dockerfile: ["dockerfile"]
         case .plainText: ["txt", "text", "log"]
         }
     }
@@ -345,6 +348,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
         case .ruby: "ruby"
         case .php: "php"
         case .shell: "shellscript"
+        case .dockerfile: "dockerfile"
         case .plainText: "plaintext"
         }
     }

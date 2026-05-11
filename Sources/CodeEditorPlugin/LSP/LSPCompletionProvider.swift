@@ -194,6 +194,9 @@ public final class LSPCompletionProvider: CompletionProvider {
         case .shell:
             return "shell"
 
+        case .dockerfile:
+            return "dockerfile"
+
         case .plainText:
             return "plaintext"
         }

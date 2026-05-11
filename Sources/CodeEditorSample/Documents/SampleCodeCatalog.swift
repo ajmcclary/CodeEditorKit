@@ -34,6 +34,7 @@ enum SampleCodeCatalog {
         case .ruby:       return rubySample
         case .php:        return phpSample
         case .shell:      return shellSample
+        case .dockerfile: return dockerfileSample
         case .plainText:  return plainTextSample
         }
     }
@@ -424,6 +425,34 @@ enum SampleCodeCatalog {
     for name in "${names[@]}"; do
         greet "$name" 2
     done
+    """
+
+    private static let dockerfileSample = """
+    # syntax=docker/dockerfile:1
+    FROM ubuntu:22.04 AS builder
+
+    # Install build dependencies
+    RUN apt-get update && \\
+        apt-get install -y --no-install-recommends \\
+            curl \\
+            ca-certificates \\
+        && rm -rf /var/lib/apt/lists/*
+
+    WORKDIR /app
+    COPY package.json package-lock.json ./
+    RUN npm ci --production
+
+    FROM ubuntu:22.04
+    COPY --from=builder /app/node_modules /app/node_modules
+    COPY . /app
+
+    ENV NODE_ENV=production
+    EXPOSE 8080
+    USER nobody
+    HEALTHCHECK --interval=30s --timeout=3s \\
+        CMD curl -f http://localhost:8080/health || exit 1
+
+    CMD ["node", "/app/server.js"]
     """
 
     private static let plainTextSample = """

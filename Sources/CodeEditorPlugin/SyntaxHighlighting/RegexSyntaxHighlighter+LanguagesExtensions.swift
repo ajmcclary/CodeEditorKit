@@ -82,6 +82,9 @@ extension RegexSyntaxHighlighter {
         // Shell
         languages["shell"] = createShellDefinition()
 
+        // Dockerfile
+        languages["dockerfile"] = createDockerfileDefinition()
+
         return languages
     }
 
@@ -149,6 +152,9 @@ extension RegexSyntaxHighlighter {
 
             case .shell:
                 languageMap[language] = definitions["shell"]
+
+            case .dockerfile:
+                languageMap[language] = definitions["dockerfile"]
 
             case .plainText:
                 // Plain text doesn't need highlighting
@@ -507,5 +513,26 @@ extension RegexSyntaxHighlighter {
             .addCustomRule(pattern: #"\b\w+(?=\s*\()"#, type: .function, priority: 6) // Function calls
             .addOperators(pattern: #"[|&;<>()]+"#)
             .build(name: "Shell", fileExtensions: ["sh", "bash", "zsh", "fish"])
+    }
+
+    private static func createDockerfileDefinition() -> LanguageDefinition {
+        LanguageDefinitionBuilder()
+            .addComments(singleLine: "#")
+            .addStrings(single: false, double: true)
+            .addNumbers()
+            // Dockerfile instructions as keywords (typically at line start)
+            .addCustomRule(
+                pattern: #"^\s*(FROM|RUN|CMD|ENTRYPOINT|COPY|ADD|WORKDIR|ENV|ARG|EXPOSE|VOLUME|USER|LABEL|MAINTAINER|ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL)\b"#,
+                type: .keyword,
+                priority: 10
+            )
+            // Multi-line continuation
+            .addCustomRule(pattern: #"\\\s*$"#, type: .operator, priority: 6)
+            // Variable substitution: ${VAR} and $VAR
+            .addCustomRule(pattern: #"\$\{[^}]+\}"#, type: .identifier, priority: 8)
+            .addCustomRule(pattern: #"\$[a-zA-Z_][a-zA-Z0-9_]*"#, type: .identifier, priority: 7)
+            // Options like --from=, --chown=
+            .addCustomRule(pattern: #"--[a-zA-Z][a-zA-Z-]*(?==)"#, type: .property, priority: 7)
+            .build(name: "Dockerfile", fileExtensions: ["dockerfile"])
     }
 }

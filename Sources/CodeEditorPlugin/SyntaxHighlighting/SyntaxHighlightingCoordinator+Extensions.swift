@@ -8,7 +8,7 @@ extension SyntaxHighlightingCoordinator {
         switch language {
         case .swift, .python, .javascript, .typescript, .rust, .go, .java, .c, .cpp,
              .ruby, .php, .html, .css, .json, .yaml, .markdown, .xml, .sql, .shell,
-             .plainText:
+             .dockerfile, .plainText:
             return true
         }
     }
