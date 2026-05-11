@@ -30,6 +30,11 @@ internal final class HighlightProviderState {
 
     private var chunkTask: Task<Void, Never>?
 
+    /// Called on the main actor after a range of highlights has been
+    /// written to the container. The range is the full query range
+    /// (not individual token ranges). Set by the attribute applier.
+    var onRangeHighlighted: (@MainActor (NSRange) -> Void)?
+
     init(
         provider: any RangeHighlightProviding,
         providerID: Int,
@@ -131,6 +136,7 @@ internal final class HighlightProviderState {
             pendingSet.subtract(indices)
             validSet.formUnion(indices)
             failedSet.subtract(indices)
+            onRangeHighlighted?(range)
         } catch {
             let indices = IndexSet(integersIn: range.location..<(range.location + range.length))
             pendingSet.subtract(indices)

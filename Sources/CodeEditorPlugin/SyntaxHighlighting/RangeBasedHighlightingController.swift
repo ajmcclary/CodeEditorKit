@@ -16,6 +16,10 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
 
     internal let styleDataSource: StyledMinimapStyleDataSource
 
+    /// Applies merged `StyledRangeContainer` runs to `NSTextStorage`
+    /// attributes. Created alongside this controller and detached together.
+    internal let applier: RangeAttributeApplier
+
     /// Primary initializer.
     ///
     /// - Parameters:
@@ -65,12 +69,16 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.styleDataSource = StyledMinimapStyleDataSource(container: container) { capture in
             TokenType(rawValue: capture)?.adaptiveColor ?? PlatformColors.label
         }
+        self.applier = RangeAttributeApplier(textView: textView, container: container)
         self.previousSourceSnapshot = Self.sourceString(from: textView)
 
         provider.setUp(textView: textView, language: language)
         let state = providerState
         visibleRangeProvider.onVisibleSetChange = { [weak state] visible in
             state?.updateVisibleSet(visible)
+        }
+        providerState.onRangeHighlighted = { [weak self] range in
+            self?.applier.applyAttributes(for: range)
         }
         textView.textEditEventHub.addObserver(self)
         providerState.updateVisibleSet(visibleRangeProvider.visibleIndices)
@@ -87,6 +95,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     internal func detach() {
         providerState.cancel()
         visibleRangeProvider.stopObserving()
+        applier.detach()
         textView?.textEditEventHub.removeObserver(self)
         textView = nil
     }
