@@ -43,6 +43,14 @@ struct DisplayKnobsSection: View {
 
                 KnobSubsection(title: "Minimap")
                 ToggleRow(label: "isMinimapVisible", value: $configuration.display.isMinimapVisible)
+
+                KnobSubsection(title: "Viewport")
+                StepperRow(
+                    label: "visibleLines",
+                    value: $configuration.display.visibleLines,
+                    range: 1...500,
+                    step: 1
+                )
             }
         }
         .padding(.horizontal, 12)

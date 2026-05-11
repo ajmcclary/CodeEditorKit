@@ -79,6 +79,7 @@ enum KnobIcon {
         "areFoldingControlsVisible": "chevron.compact.down",
         "minimumFoldableLines": "arrow.up.and.down.text.horizontal",
         "isMinimapVisible": "map",
+        "visibleLines": "list.dash",
 
         "tabWidth": "arrow.right.to.line",
         "insertSpacesForTabs": "space",
@@ -121,6 +122,12 @@ enum KnobIcon {
         "animateCodeFolding": "wand.and.stars.inverse",
         "renderingUpdateStrategy": "rectangle.stack",
         "highlightingDebounceInterval": "timer",
-        "textChangeDebounceInterval": "hourglass"
+        "textChangeDebounceInterval": "hourglass",
+
+        "enableIOSOptimizations": "iphone.gen3",
+        "iOSLargeFileThreshold": "doc.badge.gearshape",
+        "iOSMaxHighlightingChunk": "square.split.bottomrightquarter",
+
+        "workspaceRoot": "folder"
     ]
 }

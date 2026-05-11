@@ -44,6 +44,7 @@ struct WindowBody: View {
         if let activeID = documents.activeTabID {
             CodeEditor(text: documents.textBinding(for: activeID))
                 .codeLanguage(documents.activeLanguage ?? .plainText)
+                .codeWorkspaceRoot(configuration.workspaceRoot)
                 .environment(\.codeEditorConfiguration, configuration)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {

@@ -22,7 +22,12 @@ enum PresetCatalog {
         ConfigurationPreset(id: "markdown", name: "Markdown", configuration: .markdown),
         ConfigurationPreset(id: "presentation", name: "Presentation", configuration: .presentation),
         ConfigurationPreset(id: "macOS", name: "macOS", configuration: .macOS),
-        ConfigurationPreset(id: "iOS", name: "iOS", configuration: .iOS)
+        ConfigurationPreset(id: "iOS", name: "iOS", configuration: .iOS),
+        ConfigurationPreset(
+            id: "platformOptimized",
+            name: "Platform-Optimized",
+            configuration: .platformOptimized
+        )
     ]
 
     /// Default on launch.

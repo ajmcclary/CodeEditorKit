@@ -15,7 +15,8 @@ enum ConfigurationCodeFormatter {
             ("Display", displayLines(configuration, baseline: baseline)),
             ("Layout", layoutLines(configuration, baseline: baseline)),
             ("Behavior", behaviorLines(configuration, baseline: baseline)),
-            ("Performance", performanceLines(configuration, baseline: baseline))
+            ("Performance", performanceLines(configuration, baseline: baseline)),
+            ("Workspace", workspaceLines(configuration, baseline: baseline))
         ]
 
         var out = "var config = EditorConfiguration()\n"
@@ -71,6 +72,9 @@ enum ConfigurationCodeFormatter {
         }
         if live.isMinimapVisible != base.isMinimapVisible {
             lines.append("\(prefix).isMinimapVisible = \(live.isMinimapVisible)")
+        }
+        if live.visibleLines != base.visibleLines {
+            lines.append("\(prefix).visibleLines = \(live.visibleLines)")
         }
         if live.selectedLineHighlightColor != base.selectedLineHighlightColor {
             lines.append("\(prefix).selectedLineHighlightColor = /* custom */")
@@ -235,6 +239,32 @@ enum ConfigurationCodeFormatter {
         }
         if live.maxEventsPerSecond != base.maxEventsPerSecond {
             lines.append("\(prefix).maxEventsPerSecond = \(live.maxEventsPerSecond)")
+        }
+        if live.enableIOSOptimizations != base.enableIOSOptimizations {
+            lines.append("\(prefix).enableIOSOptimizations = \(live.enableIOSOptimizations)")
+        }
+        if live.iOSLargeFileThreshold != base.iOSLargeFileThreshold {
+            lines.append("\(prefix).iOSLargeFileThreshold = \(live.iOSLargeFileThreshold)")
+        }
+        if live.iOSMaxHighlightingChunk != base.iOSMaxHighlightingChunk {
+            lines.append("\(prefix).iOSMaxHighlightingChunk = \(live.iOSMaxHighlightingChunk)")
+        }
+        return lines
+    }
+
+    // MARK: - Workspace
+
+    private static func workspaceLines(
+        _ live: EditorConfiguration,
+        baseline: EditorConfiguration
+    ) -> [String] {
+        var lines: [String] = []
+        if live.workspaceRoot != baseline.workspaceRoot {
+            if let root = live.workspaceRoot {
+                lines.append("config.workspaceRoot = URL(fileURLWithPath: \"\(root.path)\")")
+            } else {
+                lines.append("config.workspaceRoot = nil")
+            }
         }
         return lines
     }

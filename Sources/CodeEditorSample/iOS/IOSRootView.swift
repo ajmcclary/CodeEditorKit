@@ -48,6 +48,7 @@ struct IOSRootView: View {
         if let activeID = appState.documents.activeTabID {
             CodeEditor(text: appState.documents.textBinding(for: activeID))
                 .codeLanguage(appState.documents.activeLanguage ?? .plainText)
+                .codeWorkspaceRoot(appState.configuration.workspaceRoot)
                 .environment(\.codeEditorConfiguration, appState.configuration)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {

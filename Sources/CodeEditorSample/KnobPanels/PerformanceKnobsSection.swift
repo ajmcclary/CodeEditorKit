@@ -18,6 +18,7 @@ struct PerformanceKnobsSection: View {
                 limitsSection
                 strategySection
                 debounceSection
+                iOSSection
             }
         }
         .padding(.horizontal, 12)
@@ -89,5 +90,30 @@ struct PerformanceKnobsSection: View {
             value: $configuration.performance.textChangeDebounceInterval,
             rangeMS: 0...1_000
         )
+    }
+
+    @ViewBuilder
+    private var iOSSection: some View {
+        #if canImport(UIKit)
+        KnobSubsection(title: "iOS Large Files")
+        ToggleRow(
+            label: "enableIOSOptimizations",
+            value: $configuration.performance.enableIOSOptimizations
+        )
+        StepperRow(
+            label: "iOSLargeFileThreshold",
+            value: $configuration.performance.iOSLargeFileThreshold,
+            range: 65_536...10_485_760,
+            step: 65_536
+        )
+        StepperRow(
+            label: "iOSMaxHighlightingChunk",
+            value: $configuration.performance.iOSMaxHighlightingChunk,
+            range: 4_096...1_048_576,
+            step: 4_096
+        )
+        #else
+        EmptyView()
+        #endif
     }
 }

@@ -48,6 +48,7 @@ struct SettingsSidebar: View {
             LayoutKnobsSection(configuration: $configuration)
             BehaviorKnobsSection(configuration: $configuration)
             PerformanceKnobsSection(configuration: $configuration)
+            WorkspaceKnobsSection(configuration: $configuration)
         }
     }
 }

@@ -16,12 +16,15 @@ struct InspectorSidebar: View {
             sectionTitle: "Configuration",
             content: {
                 ScrollView {
-                    Text(rendered)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(Color(tokens: theme.style.text.base))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                        .padding(12)
+                    VStack(alignment: .leading, spacing: 0) {
+                        LSPStatusPanel(workspaceRoot: configuration.workspaceRoot)
+                        Text(rendered)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(Color(tokens: theme.style.text.base))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                            .padding(12)
+                    }
                 }
             },
             footer: {
