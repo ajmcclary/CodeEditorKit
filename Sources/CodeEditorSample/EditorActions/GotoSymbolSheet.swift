@@ -77,7 +77,7 @@ struct GotoSymbolSheet: View {
                 .foregroundStyle(Color(tokens: theme.style.text.base))
                 .lineLimit(1)
             Spacer()
-            Text("\(symbol.kind)")
+            Text(symbol.kind.rawValue)
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(Color(tokens: theme.style.text.muted))
         }
