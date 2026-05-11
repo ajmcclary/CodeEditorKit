@@ -134,9 +134,30 @@ This is the single most important architectural difference.
 - No height-aware iteration
 - Intended for simple line number → character offset mapping
 
-**CodeEditorPlugin — `OptimizedLineIndexCache`**: Referenced in NOTES.md but **does not exist on disk**.
-The file path `Sources/CodeEditorPlugin/Text/OptimizedLineIndexCache.swift` is absent — it may have been planned
-but never created, or was removed.
+**CodeEditorPlugin — `OptimizedLineIndexCache`**: Exists at
+`Sources/CodeEditorPlugin/Performance/OptimizedLineIndexCache.swift` (not under `Text/` as NOTES.md and the
+initial analysis assumed). It implements an `actor` with a red-black tree, supporting O(log n) lookup by
+character offset and line index. However:
+- It is **not wired into `CodeEditorView`** — no production code path references it.
+- `handleMultiLineChange` at line ~290 is a stub that just clears the lookup cache rather than
+  performing incremental split/merge operations.
+- It tracks `subtreeCharCount` (Swift `Character` counts), not UTF-16 lengths or pixel heights.
+- It has no y-position → line lookup and no height tracking.
+- It uses character offsets derived from `for char in text` iteration, which increments by 1
+  per Swift `Character` — this does **not** match TextKit's UTF-16 `NSRange` offsets for documents
+  containing emoji, composed characters, or surrogate pairs.
+
+See [§5.1.1](#511-character-vs-utf-16-offset-mismatch) for the detailed correctness analysis of this offset mismatch.
+
+### 3.2.1 Character vs UTF-16 Offset Mismatch (Correctness Issue)
+
+`LineIndexCache.buildCache(for:)` at line 139 iterates Swift `Character`s via `for char in text`,
+incrementing `currentOffset` by 1 per character. TextKit consumers (e.g.,
+`TextKitLineNumberHelper.swift:195`) pass `NSRange.location` values that are UTF-16 code unit
+offsets. For ASCII text these coincide — but for documents containing multi-scalar emoji
+(e.g., 👨‍👩‍👧‍👦 = one Swift `Character`, 11 UTF-16 code units), composed characters, or
+surrogate pairs, the offsets diverge silently. Any new geometry store must be UTF-16–based
+from day one.
 
 ### 3.3 Edit Handling
 
@@ -254,6 +275,18 @@ prediction) either uses TextKit2 traversal (slow for large files) or walks the s
 
 **Contrast**: CodeEditTextView's `TextLineStorage` handles all of these in O(log n) with incremental updates.
 
+### 5.1.1 Character vs UTF-16 Offset Mismatch (Correctness Bug)
+
+The current line caches mix Swift `String` character offsets with TextKit/`NSRange` UTF-16 offsets.
+`LineIndexCache.buildCache(for:)` at line 139 builds offsets by iterating Swift `Character`s
+and incrementing by 1 per character, while TextKit consumers (e.g., `TextKitLineNumberHelper.swift:195`)
+pass `NSRange.location` which is UTF-16 based. For ASCII text these coincide, but for documents
+containing emoji, composed characters, or surrogate pairs, the offsets diverge. The
+`OptimizedLineIndexCache` in `Performance/` has the same issue — it tracks `subtreeCharCount`
+as a character count, not a UTF-16 length.
+
+**Any new geometry store must be UTF-16–based from day one.**
+
 ### 5.2 Missing: Incremental Edit Path for Line Data
 
 **Current state**: `TextEditEventHub` broadcasts edits, but `LineIndexCache` just invalidates and rebuilds.
@@ -297,15 +330,18 @@ customization, and layout invalidation for composition ranges.
 
 ### 5.7 Stale Documentation
 
-- `CodeEditorView.swift:20`: Doc comment says "TextKit2 integration with fallback to TextKit1"
+- `CodeEditorView.swift:20`: Doc comment said "TextKit2 integration with fallback to TextKit1" — **fixed**
+  in this analysis cycle. Now reads "TextKit2-only since 0.2.0".
 - `TextKitSetupHelper.swift:8`: Reality says "TextKit2-only since 0.2.0"
 - `NOTES.md` references `OptimizedLineIndexCache.swift` which does not exist on disk
 
 ### 5.8 `TextKit2RenderingOptimizer` — Intent vs Reality
 
-The file is ~530 lines of instrumentation (statistics, performance reports, budget tracking) but only
-~150 lines of actual rendering optimization logic. The fragment cache uses `NSTextParagraph` stubs rather
-than real layout fragments. This is monitoring infrastructure waiting for an optimization strategy.
+The file is ~530 lines of instrumentation (statistics, performance reports, budget tracking) but the
+actual optimization logic is skeletal. `createOrRecycleFragment()` at line ~264 creates empty
+`NSTextParagraph` placeholders. `prefetchLayoutAsync` at line ~264 simulates prefetch with `Task.yield()`
+rather than performing real layout. Either wire this to real geometry/layout behavior or rename it to
+reflect its current role as metrics scaffolding.
 
 ---
 
@@ -327,12 +363,31 @@ subtree metadata for fast lookup by offset, line index, and y-position.
 - Scroll preservation after edits becomes deterministic (delta height propagation)
 - Viewport prediction can pre-compute visible ranges without TextKit2 queries
 
+**Do not just move or rename `OptimizedLineIndexCache`.** The current optimized cache in
+`Performance/` is useful prior art, but it lacks height tracking, y-position lookup, real
+split/merge insert-delete behavior, and UTF-16 rigor. Build a new store.
+
+**The store should track:**
+- UTF-16 line length and line ending length
+- Cumulative UTF-16 length (subtree)
+- Line count (subtree)
+- Estimated line height (from font metrics) and measured line height (from layout)
+- Cumulative subtree height (for y-position lookup)
+- Folded/collapsed state per line
+- Lookup: by offset (UTF-16), by line index, by y-position (CGFloat)
+- Iteration: by text range (`NSRange`) and y-range (`CGFloat` range)
+
 **Implementation notes**:
 - Use Swift's native reference types (no `Unmanaged` needed initially — benchmark first)
 - Subscribe to `TextEditEventHub` for incremental updates
-- Track: UTF-16 length, height (or estimated height until laid out), fold state
-- Support: `getLine(atOffset:)`, `getLine(atIndex:)`, `getLine(atPosition:)`, `linesInRange(_:)`, `linesStartingAt(_:until:)`
 - Build from `NSTextStorage` on initial load using balanced construction
+- **Make the first version `@MainActor`, not an `actor`.** Text edit events, TextKit geometry,
+  gutter updates, and folding state are UI-adjacent. Async actor calls would spread through
+  hot synchronous rendering paths. If background consumers need access later, expose
+  immutable snapshots.
+- UTF-16 rigor: build from `(text as NSString).length` offsets and `NSString` line enumeration,
+  not `for char in text` iteration. Add tests for emoji, composed characters, CRLF,
+  trailing newline, and `NSRange` round-trips from day one.
 
 ### 6.2 Priority 2: Incremental Edit Handling
 
@@ -458,6 +513,14 @@ because it's not an `NSTextView`. We don't need a custom undo stack.
 own view). TextKit2's `NSTextLayoutFragment` + `NSTextViewportLayoutController` handles this more efficiently
 at the system level, including view recycling.
 
+### 7.6 Multi-Cursor and Column Selection (Lower Priority, Not "Do Not Borrow")
+
+Multi-cursor editing and column selection are worth studying from CodeEditTextView's
+`TextSelectionManager` and `TextView+ColumnSelection`, but they are a separate product
+feature, not a prerequisite for the line geometry work. The geometry store helps many
+current features (gutter, minimap, folding, scroll preservation); multi-cursor is
+independent. Keep it in the backlog but below the line geometry store on the priority stack.
+
 ---
 
 ## 8. Detailed File-by-File Analysis
@@ -469,7 +532,7 @@ at the system level, including view recycling.
 | `Core/CodeEditorView.swift` | ~310 | Central editor class; owns all subsystems | Dog comment says TextKit1 fallback; no `LineGeometryStore` property |
 | `Core/TextKitSetupHelper.swift` | ~195 | TextKit2-only setup; platform config | Solid; correctly documents TextKit2-only stance |
 | `Text/LineIndexCache.swift` | ~180 | Flat offset-array line cache | **Primary gap** — no heights, no incremental updates, no y-lookup |
-| `Text/TextKit2RenderingOptimizer.swift` | ~530 | Fragment cache + performance reporting | Heavy instrumentation, light optimization; fragment cache uses stubs |
+| `Text/TextKit2RenderingOptimizer.swift` | ~530 | Fragment cache + performance reporting | Heavy instrumentation, placeholder fragments; either wire to real layout or rename as metrics scaffolding |
 | `Text/TextEditEventHub.swift` | ~60 | Canonical edit event broadcast | Well-designed but no incremental line consumer |
 | `Text/TextKitLineNumberHelper.swift` | ~300 | Wraps TextKit2 for line number queries | Uses `lineIndexCache` as fallback; good abstraction |
 | `Text/ModernTextKitHelper.swift` | — | TextKit2 optimizations | Supplementary performance helpers |
@@ -480,6 +543,7 @@ at the system level, including view recycling.
 | `Features/LineFoldStorage.swift` | — | Fold state storage | Stores which lines are folded, but not height impact |
 | `Features/FoldRegionAdapter.swift` | — | Bridge between folding and rendering | Could directly consume geometry store |
 | `Core/CodeEditorView+SyntaxHighlightingExtensions.swift` | — | Syntax highlight application | Invalidates `lineIndexCache` per edit; rebuilds entire cache |
+| `Performance/OptimizedLineIndexCache.swift` | ~350 | Red-black tree actor cache (prior art) | Not wired to CodeEditorView; stub multi-line edit; Character offsets, not UTF-16; no height tracking |
 
 ### 8.2 CodeEditTextView Key Files
 
@@ -578,55 +642,72 @@ line geometry store.
 
 ## 11. Implementation Strategy
 
-The following is an outline for the *next phase* — creating a detailed implementation plan. This section identifies
-the work streams and their dependencies.
+This section reflects the refined implementation order after review of the initial analysis.
+The strategy is: benchmarks first, build behind existing cache, integrate via `TextEditEventHub`,
+migrate consumers gradually, then re-scope auxiliary code.
 
 ### 11.1 Phase 0: Benchmark Baseline
 
-- Add `measure` blocks to `LineIndexCacheTests` for insert, delete, offset-to-line, and visible-range operations
-- Profile gutter rendering at 1k / 10k / 100k / 1M lines
-- Profile minimap block calculation for large files
-- Document current performance numbers as baseline
+Add benchmark and correctness tests first. Cover:
+- ASCII, emoji (single-scalar and ZWJ sequences like 👨‍👩‍👧‍👦), composed characters (é, ǻ)
+- CRLF, LF, and mixed line endings
+- Trailing newline present vs absent
+- Huge files (100k / 500k / 1M lines)
+- Random edit sequences (fuzz testing for incremental update correctness)
+- `NSRange` round-trip tests: build from `NSString` offsets, verify every offset round-trips
 
-### 11.2 Phase 1: LineGeometryStore (Core Data Structure)
+### 11.2 Phase 1: LineGeometryStore (Implement Behind Existing Cache)
 
 - Create `Sources/CodeEditorPlugin/Text/LineGeometryStore.swift`
-- Implement a tree-based or gap-buffer-based store with:
-  - Per-line: UTF-16 length, height (estimated until laid out), fold state
-  - Cumulative subtree: total length, total height, line count
-  - Lookup: by offset, by line index, by y-position
-  - Iteration: by range, by y-range
-  - Build from `NSTextStorage` (balanced construction)
-  - Incremental mutations: insert, update, delete
-- Write exhaustive unit tests with metadata correctness assertions
-- Benchmark against baseline
+- Implement as `@MainActor` class (not `actor`) — UI-adjacent data, no async overhead
+- Build from `NSTextStorage` using `NSString` line enumeration for UTF-16 correctness
+- Store per-line: UTF-16 length, line ending length, estimated height, measured height,
+  cumulative subtree offset/height, fold state
+- Support lookup by offset (UTF-16), line index, and y-position
+- Support iteration by text range and y-range
+- Run behind current `LineIndexCache`: wire into `CodeEditorView` but have both stores
+  operate. In debug builds, assert that offset-to-line results match for known-safe
+  ASCII cases and log mismatches for non-ASCII cases.
+- Write exhaustive unit tests with metadata correctness assertions modeled after
+  CodeEditTextView's `TextLayoutLineStorageTests`
 
-### 11.3 Phase 2: Incremental Edit Integration
+### 11.3 Phase 2: Integrate with `TextEditEventHub`
 
 - Create `LineGeometryEditHandler` as a `TextEditEventObserving` consumer
-- Implement split/merge/insert/delete logic for newline edits
-- Wire into `CodeEditorView` setup (alongside existing `lineIndexCache`)
-- Run side-by-side with `LineIndexCache` during transition period
+- Implement proper incremental edit handling:
+  - Split: newline inserted within a line → split into two line records
+  - Merge: newline deleted → merge adjacent line records
+  - Insert: new line record inserted (e.g., paste of multi-line text)
+  - Delete: line record removed (entire line deleted)
+  - Attribute-only: no-op (pass through)
+- This is the right existing seam — `TextEditEventHub` already broadcasts canonical
+  edits; the missing piece is an incremental consumer.
 
-### 11.4 Phase 3: Consumer Migration
+### 11.4 Phase 3: Migrate Consumers Gradually
 
-- **Gutter**: Replace `lineIndexCache.lineNumber(at:)` calls with `lineGeometryStore.getLine(atOffset:)`
-- **Gutter**: Use `linesStartingAt(_:until:)` for visible line iteration instead of TextKit2 traversal
-- **Minimap**: Use `lineGeometryStore` for block positions instead of TextKit2 queries
-- **Folding**: Store fold state directly in `LineGeometryStore` nodes; adjust heights on fold/unfold
-- **Scroll preservation**: Use height deltas from store instead of heuristic calculations
-- **Viewport prediction**: Pre-compute visible range from store geometry
+- **TextKitLineNumberHelper**: First consumer. Replace `lineIndexCache` calls with
+  `lineGeometryStore` queries. This is the lowest-risk entry point.
+- **Gutter visible-line calculation**: Use `linesStartingAt(_:until:)` for
+  visible-line iteration instead of TextKit2 fragment enumeration.
+- **Minimap**: Use geometry store for block positions instead of TextKit2 queries.
+- **Scroll preservation**: Use height deltas from store instead of heuristic calculations.
+- **Folding geometry**: Store fold state in `LineGeometryStore` nodes; adjust heights
+  on fold/unfold for accurate content height shifts.
+- **Viewport prediction**: Pre-compute visible range from store geometry.
 
-### 11.5 Phase 4: Deprecation and Cleanup
+### 11.5 Phase 4: Re-scope or Rename Auxiliary Code
 
-- Remove `LineIndexCache` once all consumers migrated
-- Remove reference to nonexistent `OptimizedLineIndexCache` from documentation
-- Fix stale doc comment in `CodeEditorView.swift` (TextKit1 fallback mention)
-- Update `TextKit2RenderingOptimizer` to use geometry store for viewport calculations
+- **`TextKit2RenderingOptimizer`**: Currently creates placeholder fragments and simulated
+  prefetch work (`createOrRecycleFragment` at ~line 264, `prefetchLayoutAsync` at ~line 264).
+  Either wire it to real geometry/layout behavior from `LineGeometryStore` or rename it to
+  reflect its current role as metrics/monitoring scaffolding.
+- **`OptimizedLineIndexCache`** in `Performance/`: Archive as prior art. Do not wire in.
+- **`LineIndexCache`**: Deprecate once all consumers migrated to `LineGeometryStore`.
 
-### 11.6 Phase 5: Optional Enhancements
+### 11.6 Phase 5: Lower-Priority Enhancements
 
-- Multi-cursor selection model (lower priority)
+- Multi-cursor selection model (study from CodeEditTextView's `TextSelectionManager`)
+- Column selection support
 - View reuse queue for gutter line number views
 - Layout invalidation pattern adoption for gutter/minimap
 - Cursor geometry helpers (`rectForOffset`, `roundedPathForRange`)
@@ -635,15 +716,18 @@ the work streams and their dependencies.
 
 ## Appendix A: File Existence Audit
 
-During this analysis, the following file referenced in NOTES.md was found to be **absent** from disk:
+During this analysis, the following file was found at a **different location** than expected:
 
-- `Sources/CodeEditorPlugin/Text/OptimizedLineIndexCache.swift` — Does not exist. The NOTES.md reference to "OptimizedLineIndexCache" reads like an unfinished prototype may have been planned but never created.
+- `Sources/CodeEditorPlugin/Performance/OptimizedLineIndexCache.swift` — Exists at this path, not under
+  `Text/` as NOTES.md and the initial analysis assumed. It is an `actor`-based red-black tree with
+  O(log n) lookup, but is not wired into `CodeEditorView`, has a stub `handleMultiLineChange`, and
+  uses character (not UTF-16) offsets.
 
 ## Appendix B: Stale Documentation
 
 | Location | Issue |
 |---|---|
-| `CodeEditorView.swift:20` | "TextKit2 integration with fallback to TextKit1" — should read "TextKit2-only" |
+| `CodeEditorView.swift:20` | ~~"TextKit2 integration with fallback to TextKit1"~~ **Fixed** — now reads "TextKit2-only since 0.2.0" |
 | `NOTES.md` line referencing `OptimizedLineIndexCache.swift:1` | File does not exist |
 
 ## Appendix C: CodeEditTextView Files With Highest Adoption Value
