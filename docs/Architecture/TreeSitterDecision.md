@@ -26,7 +26,7 @@ CodeEditSourceEditor uses ChimeHQ/SwiftTreeSitter (tag 0.4.x in their fork) as t
 
 ### Parser Coverage
 
-Tree-sitter has grammars for ~250 languages. CodeEditorPlugin currently supports 20 languages. Most have mature tree-sitter grammars (JavaScript, Python, JSON, HTML, CSS, etc.).
+Tree-sitter has grammars for ~250 languages. CodeEditorPlugin currently supports 25 concrete languages plus plain text. Most have mature tree-sitter grammars (JavaScript, Python, JSON, HTML, CSS, etc.).
 
 ### Architectural Integration
 
@@ -55,7 +55,7 @@ Rationale:
 2. Test parser loading for JavaScript, Python, and JSON on macOS and iOS.
 3. Measure parse time and memory for 10K-line and 100K-line files.
 4. Confirm `ts_parser_reset()` is available as a public API (or the reflection workaround is still viable).
-5. Verify highlight and injection queries exist for the 20 supported languages.
+5. Verify highlight and injection queries exist for the 25 concrete supported languages.
 
 ## Rejected Alternatives
 

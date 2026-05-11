@@ -34,7 +34,7 @@ Baseline: Swift 6.3, strict concurrency, macOS + iOS.
 
 `CodeEditLanguages` (the reference repo) is a narrow language-asset package: 5 Swift files, a prebuilt 33 MB XCFramework of Tree-sitter grammar binaries, and 178 `.scm` query files covering 41 language entries. Its architectural lesson is the **boundary**: keep grammar binaries, language metadata, and query assets separate from rendering and editor state.
 
-`CodeEditorPlugin` (our repo) is a full editor stack with SwiftSyntax-based highlighting for Swift, regex for 17 other languages, a fast JSON tokenizer, TextKit2 rendering, code folding, document symbols, completions, LSP scaffolding, and performance instrumentation. It already has the protocol (`RangeHighlightProviding`) and pipeline (`RangeBasedHighlightingController`) to receive a Tree-sitter provider behind a feature flag.
+`CodeEditorPlugin` (our repo) is a full editor stack with SwiftSyntax-based highlighting for Swift, strategy-backed highlighting for the other supported concrete languages, a fast JSON tokenizer, TextKit2 rendering, code folding, document symbols, completions, LSP scaffolding, and performance instrumentation. It already has the protocol (`RangeHighlightProviding`) and pipeline (`RangeBasedHighlightingController`) to receive a Tree-sitter provider behind a feature flag.
 
 The strongest recommendation from this analysis: **do not import CodeEditLanguages wholesale**. Instead, adopt its data-model patterns (centralized asset descriptors, typed query bundles, robust language detection) into our existing Swift 6.3 strict-concurrency architecture, then build a Tree-sitter provider behind our `RangeHighlightProviding` protocol.
 
@@ -50,9 +50,9 @@ The strongest recommendation from this analysis: **do not import CodeEditLanguag
 
 | Component | File | Role | Issue |
 |-----------|------|------|-------|
-| `Language` enum | `SyntaxHighlightingCoordinator.swift` (line ~510) | 20-case enum with `name`, `fileExtensions`, `lspIdentifier`, `init?(fileExtension:)` | Solid foundation. Missing many languages vs. CodeEdit's 41. |
-| `LanguageDetectionService` | `Core/LanguageDetectionService.swift` | Extension cache, filename table, shebang substring match, content heuristics | Shebang is simple `contains()` — misses `/usr/bin/env`, script aliases (`node`, `deno`). No modeline scanning. Dockerfile → `.shell` (wrong). |
-| `LanguageStaticMetadata` | `Languages/LanguageStaticMetadata.swift` | Centralized keywords, types, functions, literals, trigger characters, highlighting strategy per language | Good direction. Only covers the 20 `Language` cases. |
+| `Language` enum | `SyntaxHighlightingCoordinator.swift` (line ~220) | 25 concrete language cases plus `plainText`, with `name`, `fileExtensions`, `lspIdentifier`, `init?(fileExtension:)` delegated through descriptors | Solid foundation. Still intentionally smaller than CodeEdit's 41 language entries. |
+| `LanguageDetectionService` | `Core/LanguageDetectionService.swift` | Extension cache, filename table, shebang parsing, modeline scanning, content heuristics | Dockerfile now maps to `.dockerfile`; keep script alias coverage aligned with descriptors. |
+| `LanguageStaticMetadata` | `Languages/LanguageStaticMetadata.swift` | Centralized keywords, types, functions, literals, trigger characters, highlighting strategy per language | Covers the current 25 concrete language cases plus plain text. |
 | `LanguageMetadataRegistry` | `Languages/LanguageMetadataRegistry.swift` | Separate registry with `ExtendedLanguageMetadata` (snippets, modules, member completions) | Duplicates `LanguageStaticMetadata`. Only populated for Swift, TypeScript, Go. Redundant. |
 | `LanguageProviderFactory` | `Languages/LanguageProviderFactory.swift` | Creates `UniversalCompletionProvider` from static metadata | Uses `LanguageStaticMetadata` — correct data flow. |
 
@@ -65,7 +65,7 @@ The strongest recommendation from this analysis: **do not import CodeEditLanguag
 | `SwiftSyntaxHighlighter` | `Languages/SwiftSyntaxHighlighter.swift` | AST-based Swift highlighting | Correct choice for Swift. |
 | `FastJSONTokenizer` | (tokenizer path) | Specialized JSON tokenizer | Good tradeoff for JSON. |
 | `RegexSyntaxHighlighter` | `SyntaxHighlighting/RegexSyntaxHighlighter.swift` | Core regex engine with `LanguageDefinition` and `HighlightedToken` | Solid engine. |
-| `RegexSyntaxHighlighter+LanguagesExtensions` | `SyntaxHighlighting/RegexSyntaxHighlighter+LanguagesExtensions.swift` | Language definitions for all 18 non-plainText languages | Good coverage. Builder pattern is clean. |
+| `RegexSyntaxHighlighter+LanguagesExtensions` | `SyntaxHighlighting/RegexSyntaxHighlighter+LanguagesExtensions.swift` | Canonical regex definitions for the supported non-plainText languages | Good coverage. Builder pattern is clean. |
 | `LanguageRegistry` (highlighting) | `SyntaxHighlighting/LanguageRegistry.swift` | **Separate** registry with inline rule definitions for 10 languages | **Duplicates** the regex extension definitions. Only covers 10 languages. Used by `RangeBasedHighlightingController`. |
 
 ### Range-Based Highlighting Pipeline
@@ -107,30 +107,26 @@ The strongest recommendation from this analysis: **do not import CodeEditLanguag
 | `LanguageProviderFactory` | `Languages/LanguageProviderFactory.swift` | Creates `UniversalCompletionProvider` from `LanguageStaticMetadata` |
 | `UniversalCompletionProvider` | `Languages/LanguageProviderFactory.swift` | Context-analyzing completion for all languages |
 | `LSPLanguageFeatures` | `LSP/LSPLanguageFeatures.swift` | LSP request builders for completion, hover, definition, symbols |
-| Language LSP identifiers | `SyntaxHighlightingCoordinator.swift` (Language enum) | Maps 20 languages to LSP IDs |
+| Language LSP identifiers | `SyntaxHighlightingCoordinator.swift` (Language enum) | Maps 25 concrete languages plus plain text to LSP IDs |
 
 ---
 
 ## Language Coverage Comparison
 
-### Our 20 vs. CodeEdit's 41
+### Our 25 Concrete Languages vs. CodeEdit's 41
 
 Our current `Language` enum (`SyntaxHighlightingCoordinator.swift`):
 
 ```
 swift, javascript, typescript, python, go, rust, c, cpp, java,
-html, css, json, markdown, yaml, xml, sql, ruby, php, shell, plainText
+html, css, json, markdown, yaml, xml, sql, ruby, php, shell,
+dockerfile, toml, lua, csharp, kotlin, dart, plainText
 ```
 
-CodeEditLanguages has these **additional** entries (21 more, for 41 total):
+CodeEditLanguages still has these **additional** entries beyond CodeEditorPlugin's current set:
 
 | Language | Priority | Rationale |
 |----------|----------|-----------|
-| **Dockerfile** | High | Currently mapped to `.shell` — incorrect. Common in dev workflows. |
-| **TOML** | High | Rust ecosystem, config files. No representation today. |
-| **Lua** | High | Game dev, Neovim config, embedded scripting. |
-| **Kotlin** | Medium | Android ecosystem. |
-| **Dart** | Medium | Flutter ecosystem. |
 | **Haskell** | Medium | Functional programming. |
 | **Scala** | Medium | JVM language with unique syntax. |
 | **Objective-C** | Medium | Apple legacy, still in many codebases. |
@@ -150,7 +146,7 @@ CodeEditLanguages has these **additional** entries (21 more, for 41 total):
 | Bash (separate from shell) | Medium | Shell currently lumps bash/sh/zsh/fish together. |
 | Agda | Low | Academic. |
 
-**Immediate additions** (low effort, high impact): Dockerfile, TOML, Lua, Kotlin, Dart, C#.
+**Completed additions from the original audit**: Dockerfile, TOML, Lua, Kotlin, Dart, C#.
 **Parse mode differentiation** (medium effort): JSX from JS, TSX from TS.
 
 ---
@@ -161,7 +157,7 @@ CodeEditLanguages has these **additional** entries (21 more, for 41 total):
 
 **Current state**: `LanguageDetectionService` uses:
 - Extension cache → `Language(fileExtension:)` initializer.
-- Special filename table (Dockerfile→shell, Makefile→shell, etc.).
+- Special filename table (Dockerfile→dockerfile, Makefile→shell, etc.).
 - Shebang: simple `contains("python")`, `contains("bash")`, etc.
 - Content heuristics: first 1000 chars, keyword detection.
 
@@ -188,7 +184,7 @@ CodeEditLanguages has these **additional** entries (21 more, for 41 total):
    
    Our `LanguageDetectionService` has no equivalent. These are common in scripts and configuration files.
 
-3. **Dockerfile maps to shell.** Should be its own `Language` case (`.dockerfile`). Do not map to `.plainText` as a fallback — Dockerfile has real syntax that deserves highlighting. Add the case to the enum and provide a regex definition.
+3. **Dockerfile mapping has been fixed.** It is now its own `Language` case (`.dockerfile`) with dedicated highlighting instead of falling back to shell or plain text.
 
 4. **No script-embedding detection.** Shebangs with `node` should detect JavaScript, `deno` should detect TypeScript, `python2`/`python3` should detect Python. Our shebang logic only matches the substring "javascript" — `#!/usr/bin/env node` would not be detected.
 
@@ -214,7 +210,7 @@ LanguageDetectionService additions:
 
 1. `LanguageStaticMetadata` (in `Languages/LanguageStaticMetadata.swift`):
    - Dictionary `[Language: Self]` with name, extensions, LSP ID, strategy, comment syntax, identifier pattern, string delimiters, keywords, types, functions, literals, trigger characters.
-   - Covers all 20 languages.
+   - Covers all 25 concrete languages plus plain text.
    - Used by `LanguageProviderFactory` for completions.
 
 2. `LanguageMetadataRegistry` (in `Languages/LanguageMetadataRegistry.swift`):
@@ -254,7 +250,7 @@ struct LanguageDescriptor: Sendable {
 
 ### 4.3 Syntax Highlighting
 
-**Current state**: Three strategies (`SwiftSyntax`, `FastJSON`, `regex`) dispatched through `HighlightingStrategyExecutor`. Regex definitions live in `RegexSyntaxHighlighter+LanguagesExtensions.swift` using a builder pattern. All 18 non-plainText languages have regex definitions.
+**Current state**: Three strategies (`SwiftSyntax`, `FastJSON`, `regex`) dispatched through `HighlightingStrategyExecutor`. Regex definitions live in `RegexSyntaxHighlighter+LanguagesExtensions.swift` using a builder pattern. Supported non-plainText languages have canonical definitions or dedicated strategy entries.
 
 **Strengths**:
 - SwiftSyntax for Swift is correct and performant.
@@ -390,7 +386,7 @@ CodeEditLanguages ships `tags.scm` for several grammars. This would make the sym
 
 **Current state**: `LanguageProviderFactory` creates `UniversalCompletionProvider` from `LanguageStaticMetadata`. The provider uses `SharedContextAnalyzer` and `SharedCompletionBuilder` — well-factored, avoids per-language switch statements.
 
-Coverage: All 20 languages have keyword/type/function/literal completions via `LanguageStaticMetadata`. Member completions exist for Swift, JavaScript, TypeScript, Python, Rust, Go, Java, C, C++.
+Coverage: All 25 concrete languages plus plain text have keyword/type/function/literal completions via `LanguageStaticMetadata`. Member completions exist for Swift, JavaScript, TypeScript, Python, Rust, Go, Java, C, C++.
 
 **CodeEditLanguages contribution**: CodeEditLanguages has no completion system — it's purely a parse/query resource package. Our completion system is already more advanced.
 
@@ -400,7 +396,7 @@ Coverage: All 20 languages have keyword/type/function/literal completions via `L
 
 **Current state**: `LSPLanguageFeatures` provides request builders for completion, hover, definition, document symbols, references, rename, formatting, code action, code lens, signature help. Language LSP identifiers are in the `Language` enum.
 
-**Coverage**: All 20 languages have correct LSP identifiers. New languages added to the enum will need LSP identifiers.
+**Coverage**: All 25 concrete languages plus plain text have correct LSP identifiers. New languages added to the enum will need LSP identifiers.
 
 **CodeEditLanguages contribution**: CodeEdit's `CodeLanguage` doesn't have LSP identifiers — it's focused on parse/query resources. Our LSP scaffolding is independent.
 
@@ -435,14 +431,14 @@ Coverage: All 20 languages have keyword/type/function/literal completions via `L
    - Effect: `RangeBasedHighlightingController` has no highlighting for Go, Rust, C, C++, Java, Ruby, PHP, Shell, SQL.
    - Fix: Switch `RangeBasedHighlightingController` to use the canonical `RegexSyntaxHighlighter` definitions directly. Retain `LanguageRegistry` only for public/custom language providers.
 
-3. **Dockerfile maps to `.shell`** (HIGH)
+3. **Dockerfile previously mapped to `.shell`** (RESOLVED)
    - Files: `Core/LanguageDetectionService.swift` (line ~70), `Language` enum fileExtensions
-   - Effect: Dockerfile content gets shell highlighting, which is semantically wrong.
-   - Fix: Add `.dockerfile` as a real `Language` case with its own regex definition. Do not fall back to `.plainText`.
+   - Previous effect: Dockerfile content got shell highlighting, which was semantically wrong.
+   - Resolution: `.dockerfile` is a real `Language` case with its own regex definition.
 
 4. **`LanguageMetadataRegistry` duplicates `LanguageStaticMetadata`** (MEDIUM)
    - Files: `Languages/LanguageMetadataRegistry.swift`, `Languages/LanguageStaticMetadata.swift`
-   - Effect: Two sources of truth for language metadata. Only 3 of 20 languages in the registry.
+   - Effect: Two sources of truth for language metadata.
    - Fix: Merge into one or deprecate `LanguageMetadataRegistry`.
 
 ### Gaps (Non-Critical)
@@ -653,7 +649,7 @@ Before shipping Tree-sitter highlighting, measure against current regex path:
 | Memory after open | 10K-line JS | < 50 MB (parser + tree + queries) |
 | Memory after scroll | 100K-line JS | < 200 MB |
 | Memory after close | — | 0 MB (no leaks) |
-| Startup latency | Cold launch, 20 languages available | < 100 ms (lazy query loading) |
+| Startup latency | Cold launch, 25 concrete languages plus plain text available | < 100 ms (lazy query loading) |
 
 Compare each metric against current regex path. Tree-sitter will be slower for initial parse (it builds an actual AST) but should win on:
 - Incremental edits (tree edit vs. full re-regex).
@@ -679,7 +675,7 @@ Compare each metric against current regex path. Tree-sitter will be slower for i
 ## Verification Checklist
 
 - [ ] Phase 1: `RegexSyntaxHighlighter` stores default language as immutable `let` property.
-- [ ] Phase 1: `RangeBasedHighlightingController` uses canonical regex definitions (not `LanguageRegistry`) for all 18 non-plainText languages.
+- [ ] Phase 1: `RangeBasedHighlightingController` uses canonical regex definitions (not `LanguageRegistry`) for all supported non-plainText languages.
 - [ ] Phase 1: Regression tests prove range-backed minimap tokens for JS, Python, Go, Rust, SQL, Shell, Markdown, JSON, CSS.
 - [ ] Phase 1: `.dockerfile` added as real `Language` case, not mapped to `.shell`.
 - [ ] Phase 2: Single `LanguageDescriptor` replaces dual metadata systems.
@@ -689,7 +685,7 @@ Compare each metric against current regex path. Tree-sitter will be slower for i
 - [ ] Phase 4: Dockerfile, TOML, Lua, C#, Kotlin, Dart each added as one descriptor + one regex definition.
 - [ ] Phase 5: JavaScript Tree-sitter spike compiles under Swift 6.3.
 - [ ] Phase 5: 10K-line JS file parses in < 50 ms.
-- [ ] Phase 6a: All 18 non-Swift languages have Tree-sitter highlighting behind feature flag.
+- [ ] Phase 6a: All supported non-Swift languages have Tree-sitter highlighting behind feature flag.
 - [ ] Phase 6b: Markdown fenced code blocks get injected highlighting.
 - [ ] Phase 6c: Tree-sitter folding and symbols available alongside heuristic fallbacks.
 
@@ -701,13 +697,13 @@ Compare each metric against current regex path. Tree-sitter will be slower for i
 
 **Implementation date**: 2026-05-11
 **Verification**: 289 tests pass, 0 SwiftLint violations, `swift build` clean
-**Language count**: 20 → 26 (Dockerfile, TOML, Lua, C#, Kotlin, Dart added)
+**Language count**: 20 cases → 25 concrete languages plus plain text (Dockerfile, TOML, Lua, C#, Kotlin, Dart added)
 
 ### Phase 1: Baseline Correctness ✅
 
 **Bugs fixed**:
-- `RegexSyntaxHighlighter` convenience init now stores custom language via immutable `let defaultLanguage` property — range-backed path produces correct tokens for all 26 languages.
-- `RangeBasedHighlightingController` switched from `LanguageRegistry` (10 languages) to canonical `RegexSyntaxHighlighter` definitions (26 languages).
+- `RegexSyntaxHighlighter` convenience init now stores custom language via immutable `let defaultLanguage` property — range-backed path produces correct tokens for all 25 concrete languages plus plain text.
+- `RangeBasedHighlightingController` switched from `LanguageRegistry` (10 languages) to canonical `RegexSyntaxHighlighter` definitions for 25 concrete languages plus plain text.
 - `.dockerfile` added as real `Language` case with dedicated regex definition.
 - Dockerfile filename detection fixed — maps to `.dockerfile` instead of `.shell`.
 
@@ -765,7 +761,7 @@ Post-Phase-2 consolidation: no switch statements needed updating for `name`/`fil
 
 ### Phase 6: Tree-sitter Expansion ✅
 
-**6a — Capture maps**: Expanded to all 26 languages (7 presets: `default`, `cFamily`, `ruby`, `markup`, `css`, `json` + existing JS/TS/Python). `TreeSitterCaptureMap.forLanguage(_:)` dispatch.
+**6a — Capture maps**: Expanded to 25 concrete languages plus plain text (7 presets: `default`, `cFamily`, `ruby`, `markup`, `css`, `json` + existing JS/TS/Python). `TreeSitterCaptureMap.forLanguage(_:)` dispatch.
 
 **6b — Injections**: `TreeSitterInjectionLayer` with predefined rules for Markdown code blocks, HTML `<script>`/`<style>`, JS/TS template literals. Architecture ready for `injections.scm`.
 
@@ -786,7 +782,7 @@ Post-Phase-2 consolidation: no switch statements needed updating for `name`/`fil
 ## Verification Checklist
 
 - [x] Phase 1: `RegexSyntaxHighlighter` stores default language as immutable `let` property.
-- [x] Phase 1: `RangeBasedHighlightingController` uses canonical regex definitions (not `LanguageRegistry`) for all 26 languages.
+- [x] Phase 1: `RangeBasedHighlightingController` uses canonical regex definitions (not `LanguageRegistry`) for 25 concrete languages plus plain text.
 - [x] Phase 1: Regression tests prove range-backed minimap tokens for JS, Python, Go, Rust, SQL, Shell, Markdown, JSON, CSS.
 - [x] Phase 1: `.dockerfile` added as real `Language` case, not mapped to `.shell`.
 - [x] Phase 2: Single `LanguageDescriptor` replaces dual metadata systems.
@@ -796,7 +792,7 @@ Post-Phase-2 consolidation: no switch statements needed updating for `name`/`fil
 - [x] Phase 4: Dockerfile, TOML, Lua, C#, Kotlin, Dart each added as one descriptor + one regex definition.
 - [x] Phase 5: JavaScript Tree-sitter spike compiles under Swift 6.3.
 - [x] Phase 5: 10K-line JS file parses in < 500 ms.
-- [x] Phase 6a: All 26 languages have capture maps behind feature flag.
+- [x] Phase 6a: 25 concrete languages plus plain text have capture maps behind feature flag.
 - [x] Phase 6b: Injection layer architecture defined (Markdown code blocks, HTML script/style, JS template literals).
 - [x] Phase 6c: Tree-sitter folding and symbol providers available alongside heuristic fallbacks.
 - [x] Phase 7: `CAN_IMPORT_TREE_SITTER` compile-time gate; core editor compiles without Tree-sitter.

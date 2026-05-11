@@ -218,9 +218,10 @@ public final class LSPCompletionProvider: CompletionProvider {
     }
 
     private func convertPositionToLineCharacter(position: Int, in text: String) -> (line: Int, character: Int) {
-        let lines = text.prefix(position).components(separatedBy: .newlines)
+        let lines = TextRangeUtilities.substring(upToUTF16Offset: position, in: text)
+            .components(separatedBy: .newlines)
         let line = max(0, lines.count - 1)
-        let character = lines.last?.count ?? 0
+        let character = lines.last.map { TextRangeUtilities.utf16Length(of: $0) } ?? 0
 
         return (line: line, character: character)
     }

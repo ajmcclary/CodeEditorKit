@@ -234,7 +234,7 @@ final class CSSCompletionProvider: BaseCompletionProvider {
 
     override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)
@@ -282,7 +282,7 @@ final class CSSCompletionProvider: BaseCompletionProvider {
         var items: [CompletionItemModel] = []
 
         // Check for CSS-specific contexts
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Handle CSS-specific completions
         if let ruleContext = getCurrentRuleContext(from: beforeCursor) {

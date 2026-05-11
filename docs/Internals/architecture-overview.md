@@ -23,7 +23,7 @@ Sources/CodeEditorPlugin/
 ├── Text/                    # Unified text handling (TextKit, layout, processing)
 ├── Layout/                  # UI components, view models (GutterView, MinimapView)
 ├── Configuration/           # Settings and validation system
-├── SyntaxHighlighting/      # Language highlighting (20 languages)
+├── SyntaxHighlighting/      # Language highlighting (25 concrete languages + plain text)
 ├── Languages/               # Language-specific providers
 ├── Completion/              # Code completion with view model
 ├── Features/                # Optional features (flat structure)
@@ -92,7 +92,7 @@ A sophisticated configuration system with:
 Manages multi-language syntax highlighting:
 
 - SwiftSyntax integration for accurate Swift highlighting
-- Regex-based highlighting for 19 other languages
+- Strategy-based highlighting for the remaining supported languages
 - Viewport-based rendering for optimal performance
 - Background processing to maintain UI responsiveness
 

@@ -753,7 +753,7 @@ config.display.showCompletionPopup = true    // Local completions still work
 ```
 
 The existing completion system provides:
-- 20 language-specific completion providers
+- 25 concrete language-specific completion providers plus plain text fallback
 - Context-aware completions
 - Snippet support
 - Symbol detection within files

@@ -110,7 +110,7 @@ public final class CompletionRankingModel {
 
         case .keyword:
             // Keywords are generally relevant at the start of lines or after whitespace
-            let linePrefix = String(context.lineText.prefix(context.cursorPosition))
+            let linePrefix = context.lineTextBeforeCursor
             if linePrefix.trimmingCharacters(in: .whitespaces).isEmpty {
                 relevance += RankingWeights.contextRelevance
             }

@@ -75,6 +75,38 @@ final class CompletionSystemTests: XCTestCase {
         XCTAssertNotNil(context.timestamp)
     }
 
+    @MainActor
+    func testCompletionContextExtractorUsesUTF16CursorOffsets() throws {
+        let text = "😀 user.na"
+        let extractor = CompletionContextExtractor()
+        let context = extractor.extractContext(
+            at: TextRangeUtilities.utf16Length(of: text),
+            in: text,
+            language: .swift
+        )
+
+        XCTAssertEqual(context.prefix, "na")
+        XCTAssertEqual(context.triggerCharacter, "a")
+        XCTAssertEqual(context.currentLine, text)
+
+        let dotRange = NSRange(try XCTUnwrap(text.range(of: ".")), in: text)
+        let dotLocation = NSMaxRange(dotRange)
+        XCTAssertTrue(extractor.shouldTriggerCompletion(at: dotLocation, in: text))
+    }
+
+    func testCompletionContextModelCurrentWordUsesUTF16Range() throws {
+        let text = "😀 user.na"
+        let wordRange = NSRange(try XCTUnwrap(text.range(of: "na")), in: text)
+        let context = CompletionContextModel(
+            text: text,
+            cursorPosition: TextRangeUtilities.utf16Length(of: text),
+            language: .swift,
+            wordRange: wordRange
+        )
+
+        XCTAssertEqual(context.currentWord, "na")
+    }
+
     // MARK: - CompletionManager Tests
 
     @MainActor

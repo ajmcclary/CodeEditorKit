@@ -1831,7 +1831,7 @@ The spec records the rationale for each cut and the full design.
       sidebar, status bar.
 - [x] All 20 `zed-trek` themes are pickable from the settings sidebar
       and the command palette.
-- [x] All 20 `Language` cases are pickable.
+- [x] All 25 concrete `Language` cases plus plain text are pickable.
 - [x] All six demo presets snap-replace the live `EditorConfiguration`.
 - [x] All 52 `EditorConfiguration` knobs are interactively editable;
       inspector mirrors every change.

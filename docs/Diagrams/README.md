@@ -49,7 +49,7 @@ Advanced performance monitoring with adaptive optimization, memory management, a
 Symbol navigation and code intelligence system with multi-language support, cross-reference tracking, and intelligent navigation. Includes definition lookup, reference finding, and workspace symbol search.
 
 ### 15. [Language Provider Complete Ecosystem](15-language-provider-ecosystem.md)
-Language provider ecosystem supporting 18 languages with completion, symbols, folding, and data providers. Shows the matrix of supported languages and their capabilities.
+Language provider ecosystem supporting 25 concrete languages plus plain text with completion, symbols, folding, and data providers. Shows the matrix of supported languages and their capabilities.
 
 ### 16. [Annotation System Detailed Architecture](16-annotation-system-architecture.md)
 Comprehensive annotation system providing code annotations, diagnostics, and contextual information overlay capabilities. Includes multi-source annotation support, interactive features, and visual customization.
@@ -73,7 +73,7 @@ Utility systems and extensions network providing shared utilities, cross-platfor
 Advanced layout system and UI component architecture handling positioning, responsive design, and complex component interactions. Includes flexbox/grid layouts, constraint solving, animation coordination, and accessibility integration.
 
 ### 23. [Multi-Language Support Matrix](23-multi-language-support-matrix.md)
-Matrix view of language support capabilities across 18 supported languages. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
+Matrix view of language support capabilities across 25 concrete supported languages plus plain text. Shows feature comparison, performance characteristics, LSP integrations, and debugging support for each language.
 
 ### 24. [Performance Optimization Pipeline](24-performance-optimization-pipeline.md)
 Comprehensive performance optimization pipeline that monitors, analyzes, and continuously optimizes performance. Includes real-time monitoring, bottleneck detection, adaptive optimization strategies, and machine learning-based improvements.
@@ -119,4 +119,3 @@ All diagrams use a consistent light/dark mode compatible color palette:
 - **Subgraphs**: Logical groupings of related components  
 
 Colors automatically adapt to light/dark mode with semantic meaning maintained across all diagrams.
-

@@ -93,7 +93,7 @@ final class MarkdownCompletionProvider: BaseCompletionProvider {
 
     private func analyzeMarkdownContext(_ context: CompletionContextModel) -> MarkdownContextAnalysisResult {
         let lineText = context.lineText
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractMarkdownWord(from: beforeCursor)

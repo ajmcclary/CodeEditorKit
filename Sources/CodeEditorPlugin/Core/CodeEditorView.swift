@@ -12,7 +12,7 @@ import AppKit
 /// A powerful, cross-platform text view designed specifically for code editing.
 ///
 /// `CodeEditorView` provides advanced features for code editing including:
-/// - **Syntax highlighting** with support for 17+ programming languages
+/// - **Syntax highlighting** with support for 25 concrete programming languages plus plain text
 /// - **Code completion** with LSP integration and custom providers
 /// - **Line numbers** with customizable gutter display
 /// - **Annotations** for displaying TODOs, FIXMEs, and custom markers
@@ -194,6 +194,14 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Code folding engine for managing foldable regions and fold states
     internal let codeFoldingEngine = CodeFoldingEngine()
+
+    /// Search and replace engine. Stored on the view so find-next and find-previous
+    /// operate on the same result set created by the latest search.
+    public lazy var searchEngine: SearchReplaceEngine = {
+        let engine = SearchReplaceEngine()
+        engine.attach(to: self)
+        return engine
+    }()
 
     /// Business logic service registry for dependency injection
     internal lazy var businessLogicServices = BusinessLogicServiceRegistry()

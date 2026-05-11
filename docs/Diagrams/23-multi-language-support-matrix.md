@@ -1,6 +1,6 @@
 # Multi-Language Support Matrix
 
-This diagram provides a comprehensive matrix view of language support capabilities across all 18 supported languages in the CodeEditorPlugin framework.
+This diagram provides a comprehensive matrix view of language support capabilities across all 25 concrete supported languages plus plain text in the CodeEditorPlugin framework.
 
 ```mermaid
 flowchart LR
@@ -8,6 +8,10 @@ flowchart LR
         subgraph "Compiled Languages"
             SWIFT[Swift<br/>+ Native AST Parsing<br/>+ SwiftSyntax Integration<br/>+ Folding & Symbols<br/>+ Built-in LSP<br/>⚡ <50ms completion]
             C[C<br/>+ Enhanced Completion<br/>+ Folding & Symbols<br/>* LSP clangd<br/>⚡ <100ms completion]
+            CPP[C++<br/>+ Enhanced Completion<br/>+ Folding & Symbols<br/>* LSP clangd<br/>⚡ <100ms completion]
+            CSHARP[C#<br/>+ Descriptor Completion<br/>+ Folding & Symbols<br/>* LSP OmniSharp<br/>⚡ Enhanced LSP]
+            KOTLIN[Kotlin<br/>+ Descriptor Completion<br/>+ Folding & Symbols<br/>* LSP Kotlin<br/>⚡ Enhanced LSP]
+            DART[Dart<br/>+ Descriptor Completion<br/>+ Folding & Symbols<br/>* LSP Dart<br/>⚡ Enhanced LSP]
             RUST[Rust<br/>+ Universal Completion<br/>+ Enhanced Symbols<br/>+ Folding<br/>* LSP rust-analyzer<br/>⚡ 200-500ms response]
             GO[Go<br/>+ Universal Completion<br/>+ Enhanced Symbols<br/>+ Folding<br/>* LSP gopls<br/>⚡ Enhanced performance]
         end
@@ -19,6 +23,7 @@ flowchart LR
             RUBY[Ruby<br/>+ Enhanced Completion<br/>+ Enhanced Symbols<br/>+ Folding<br/>* LSP solargraph<br/>⚡ 50-150ms response]
             PHP[PHP<br/>+ Enhanced Completion<br/>+ Enhanced Symbols<br/>+ Folding<br/>* LSP intelephense<br/>⚡ 50-150ms response]
             JAVA[Java<br/>+ Universal Completion<br/>+ Enhanced Symbols<br/>+ Folding<br/>* LSP Eclipse JDT<br/>⚡ Enhanced LSP]
+            LUA[Lua<br/>+ Descriptor Completion<br/>+ Folding & Symbols<br/>* LSP LuaLS<br/>⚡ Enhanced LSP]
         end
 
         subgraph "Web & Markup Languages"
@@ -33,6 +38,8 @@ flowchart LR
             YAML[YAML<br/>+ Enhanced Completion<br/>+ Anchor Symbols<br/>+ Folding<br/>* LSP YAML LSP<br/>+ Formatting<br/>⚡ <50ms response]
             XML[XML<br/>+ Enhanced Completion<br/>+ Element Symbols<br/>+ Folding<br/>* LSP XML LSP<br/>+ Formatting<br/>⚡ <50ms response]
             MD[Markdown<br/>+ Enhanced Link Completion<br/>+ Header Symbols<br/>+ Folding<br/>* LSP Marksman<br/>+ Formatting<br/>⚡ <50ms response]
+            DOCKER[Dockerfile<br/>+ Instruction Highlighting<br/>+ Descriptor Completion<br/>+ Folding<br/>* LSP Dockerfile<br/>⚡ Enhanced LSP]
+            TOML[TOML<br/>+ Key/Value Highlighting<br/>+ Descriptor Completion<br/>+ Folding<br/>* LSP taplo<br/>⚡ Enhanced LSP]
         end
     end
 
@@ -63,6 +70,10 @@ flowchart LR
 
     class SWIFT compiled
     class C compiled
+    class CPP compiled
+    class CSHARP compiled
+    class KOTLIN compiled
+    class DART compiled
     class RUST compiled
     class GO compiled
     class PYTHON dynamic
@@ -71,6 +82,7 @@ flowchart LR
     class RUBY dynamic
     class PHP dynamic
     class JAVA dynamic
+    class LUA dynamic
     class HTML web
     class CSS web
     class SQL web
@@ -79,6 +91,8 @@ flowchart LR
     class YAML data
     class XML data
     class MD data
+    class DOCKER data
+    class TOML data
     class LSP_CLIENT infrastructure
     class LSP_REGISTRY infrastructure
     class UNIVERSAL_COMPLETION infrastructure
@@ -294,7 +308,7 @@ classDiagram
 
 ## Benefits
 
-1. **Comprehensive Coverage**: Support for 18 major programming languages with enhanced capabilities
+1. **Comprehensive Coverage**: Support for 25 concrete programming languages with enhanced capabilities
 2. **Performance Tiers**: Native integration for Swift/JSON, enhanced LSP for major languages, improved pattern-based for others
 3. **LSP Infrastructure**: Client registry with server registration and lookup
 4. **Universal Completion System**: Unified completion provider with language metadata

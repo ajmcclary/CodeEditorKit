@@ -132,7 +132,7 @@ open class BaseCompletionProvider: CompletionProvider {
 
     /// Analyze the context to determine what kind of completions to provide
     open func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)

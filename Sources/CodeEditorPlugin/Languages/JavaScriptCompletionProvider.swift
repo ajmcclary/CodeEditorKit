@@ -209,7 +209,7 @@ final class JavaScriptCompletionProvider: BaseCompletionProvider {
 
     private func analyzeJavaScriptContext(_ context: CompletionContextModel) -> JavaScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)

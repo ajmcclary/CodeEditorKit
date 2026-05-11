@@ -132,10 +132,102 @@ public enum TextRangeUtilities {
         text.utf16.count
     }
 
+    /// Returns the full UTF-16 `NSRange` of a Swift string.
+    public static func fullRange(in text: String) -> NSRange {
+        NSRange(location: 0, length: utf16Length(of: text))
+    }
+
     /// Converts a UTF-16 `NSRange` into a Swift substring.
     public static func substring(inUTF16Range range: NSRange, from text: String) -> String? {
         guard let swiftRange = Range(range, in: text) else { return nil }
         return String(text[swiftRange])
+    }
+
+    /// Returns text before a UTF-16 offset, clamped to the document bounds.
+    public static func substring(upToUTF16Offset offset: Int, in text: String) -> String {
+        let clampedOffset = max(0, min(offset, utf16Length(of: text)))
+        return substring(
+            inUTF16Range: NSRange(location: 0, length: clampedOffset),
+            from: text
+        ) ?? ""
+    }
+
+    /// Returns the character immediately before a UTF-16 offset.
+    public static func characterBeforeUTF16Offset(_ offset: Int, in text: String) -> Character? {
+        substring(upToUTF16Offset: offset, in: text).last
+    }
+
+    /// Returns the current identifier prefix ending at a UTF-16 offset.
+    public static func identifierPrefix(endingAtUTF16Offset offset: Int, in text: String) -> String {
+        let prefix = substring(upToUTF16Offset: offset, in: text)
+        var characters: [Character] = []
+
+        for character in prefix.reversed() {
+            guard isIdentifierCharacter(character) else { break }
+            characters.append(character)
+        }
+
+        return String(characters.reversed())
+    }
+
+    /// Returns the UTF-16 range for the current identifier ending at an offset.
+    public static func identifierRange(endingAtUTF16Offset offset: Int, in text: String) -> NSRange? {
+        let clampedOffset = max(0, min(offset, utf16Length(of: text)))
+        let prefix = identifierPrefix(endingAtUTF16Offset: clampedOffset, in: text)
+        guard !prefix.isEmpty else { return nil }
+
+        let length = utf16Length(of: prefix)
+        return NSRange(location: clampedOffset - length, length: length)
+    }
+
+    /// Returns whether a character is an identifier constituent for editor features.
+    public static func isIdentifierCharacter(_ character: Character) -> Bool {
+        let identifierCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        return character.unicodeScalars.allSatisfy { identifierCharacters.contains($0) }
+    }
+
+    /// Returns the line range containing a UTF-16 offset.
+    public static func lineRange(containingUTF16Offset offset: Int, in text: String) -> NSRange {
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = text as NSString
+        guard nsText.length > 0 else {
+            return NSRange(location: 0, length: 0)
+        }
+
+        let clampedLocation = max(0, min(offset, nsText.length))
+        return nsText.lineRange(for: NSRange(location: clampedLocation, length: 0))
+    }
+
+    /// Returns the line text containing a UTF-16 offset without trailing newline characters.
+    public static func lineText(containingUTF16Offset offset: Int, in text: String) -> String {
+        // swiftlint:disable:next legacy_objc_type
+        let nsText = text as NSString
+        let range = lineRange(containingUTF16Offset: offset, in: text)
+        guard NSMaxRange(range) <= nsText.length else { return "" }
+        return nsText.substring(with: range).trimmingCharacters(in: .newlines)
+    }
+
+    /// Expands a UTF-16 range to valid Swift `String` character boundaries.
+    public static func characterAlignedRange(_ range: NSRange, in text: String) -> NSRange? {
+        let textLength = utf16Length(of: text)
+        let clampedRange = clampRange(range, toTextLength: textLength)
+        var start = clampedRange.location
+
+        while start >= 0 {
+            var end = NSMaxRange(clampedRange)
+            while end <= textLength {
+                let candidate = NSRange(location: start, length: end - start)
+                if Range(candidate, in: text) != nil {
+                    return candidate
+                }
+                end += 1
+            }
+
+            if start == 0 { break }
+            start -= 1
+        }
+
+        return nil
     }
 
     /// Normalizes a range by ensuring valid bounds and handling edge cases
@@ -388,13 +480,15 @@ extension TextRangeUtilities {
     }
 
     static func adjustBatchLengthToLineBoundary(text: String, startLocation: Int, targetLength: Int) -> Int {
-        let endLocation = min(startLocation + targetLength, text.count)
-        let searchRange = text.index(text.startIndex, offsetBy: startLocation)..<text.index(text.startIndex, offsetBy: endLocation)
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        let endLocation = min(startLocation + targetLength, textLength)
+        let searchRange = NSRange(location: startLocation, length: endLocation - startLocation)
 
         // Look for the last newline within the target range
-        if let lastNewlineRange = text.range(of: "\n", options: .backwards, range: searchRange) {
-            let newlineLocation = text.distance(from: text.startIndex, to: lastNewlineRange.upperBound)
-            return newlineLocation - startLocation
+        if let searchText = TextRangeUtilities.substring(inUTF16Range: searchRange, from: text),
+           let lastNewlineRange = searchText.range(of: "\n", options: .backwards) {
+            let prefixThroughNewline = searchText[..<lastNewlineRange.upperBound]
+            return TextRangeUtilities.utf16Length(of: String(prefixThroughNewline))
         }
 
         return targetLength // No newline found, use original length

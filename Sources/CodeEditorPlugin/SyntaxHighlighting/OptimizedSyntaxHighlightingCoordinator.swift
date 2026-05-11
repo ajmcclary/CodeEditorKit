@@ -95,6 +95,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         visibleRange: NSRange? = nil
     ) async -> [HighlightedToken] {
         let startTime = CFAbsoluteTimeGetCurrent()
+        let textLength = TextRangeUtilities.utf16Length(of: text)
 
         // Check circuit breaker
         if shouldTripCircuitBreaker() {
@@ -111,7 +112,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 tokenCount: 0,
                 cacheHit: false,
                 language: language,
-                textLength: text.count,
+                textLength: textLength,
                 totalStartTime: startTime
             ))
             return []
@@ -133,7 +134,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 tokenCount: cachedTokens.count,
                 cacheHit: true,
                 language: language,
-                textLength: text.count,
+                textLength: textLength,
                 totalStartTime: startTime
             ))
 
@@ -147,7 +148,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
 
         if configuration.enableViewportOptimization,
            let visibleRange,
-           text.count > 10_000 {
+           textLength > 10_000 {
             tokens = await highlightViewport(
                 text: text,
                 language: language,
@@ -233,15 +234,21 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         totalStartTime: TimeInterval
     ) async -> [HighlightedToken] {
         // Expand visible range with padding
-        let expandedRange = NSRange(
-            location: max(0, visibleRange.location - configuration.viewportPadding),
-            length: min(text.count - visibleRange.location, visibleRange.length + 2 * configuration.viewportPadding)
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        let visibleRange = TextRangeUtilities.clampRange(visibleRange, toTextLength: textLength)
+        let expandedStart = max(0, visibleRange.location - configuration.viewportPadding)
+        let expandedEnd = min(
+            textLength,
+            NSMaxRange(visibleRange) + configuration.viewportPadding
         )
+        let expandedRange = NSRange(location: expandedStart, length: expandedEnd - expandedStart)
 
         // Extract viewport text
-        let start = text.index(text.startIndex, offsetBy: expandedRange.location)
-        let end = text.index(start, offsetBy: expandedRange.length)
-        let viewportText = String(text[start..<end])
+        guard let viewportSlice = textSlice(from: text, range: expandedRange) else {
+            return []
+        }
+
+        let viewportText = viewportSlice.text
         guard !viewportText.isEmpty else {
             return []
         }
@@ -254,7 +261,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         tokens = tokens.map { token in
             HighlightedToken(
                 range: NSRange(
-                    location: token.range.location + expandedRange.location,
+                    location: token.range.location + viewportSlice.range.location,
                     length: token.range.length
                 ),
                 type: token.type,
@@ -270,7 +277,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
             tokenCount: tokens.count,
             cacheHit: false,
             language: language,
-            textLength: viewportText.count,
+            textLength: TextRangeUtilities.utf16Length(of: viewportText),
             totalStartTime: totalStartTime
         ))
 
@@ -284,19 +291,20 @@ public final class OptimizedSyntaxHighlightingCoordinator {
         totalStartTime: TimeInterval
     ) async -> [HighlightedToken] {
         let highlightStart = CFAbsoluteTimeGetCurrent()
+        let textLength = TextRangeUtilities.utf16Length(of: text)
 
         // Use chunking for large texts
-        if text.count > configuration.maxChunkSize {
+        if textLength > configuration.maxChunkSize {
             var allTokens: [HighlightedToken] = []
             var offset = 0
 
-            while offset < text.count {
-                let chunkLength = min(configuration.maxChunkSize, text.count - offset)
-                _ = NSRange(location: offset, length: chunkLength)
+            while offset < textLength {
+                let chunkLength = min(max(configuration.maxChunkSize, 1), textLength - offset)
+                guard let chunkSlice = chunkSlice(from: text, startingAt: offset, preferredLength: chunkLength) else {
+                    break
+                }
 
-                let chunkStart = text.index(text.startIndex, offsetBy: offset)
-                let chunkEnd = text.index(chunkStart, offsetBy: chunkLength)
-                let chunk = String(text[chunkStart..<chunkEnd])
+                let chunk = chunkSlice.text
                 guard !chunk.isEmpty else {
                     break
                 }
@@ -307,7 +315,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 let adjustedTokens = chunkTokens.map { token in
                     HighlightedToken(
                         range: NSRange(
-                            location: token.range.location + offset,
+                            location: token.range.location + chunkSlice.range.location,
                             length: token.range.length
                         ),
                         type: token.type,
@@ -316,7 +324,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 }
 
                 allTokens.append(contentsOf: adjustedTokens)
-                offset += chunkLength
+                offset = NSMaxRange(chunkSlice.range)
 
                 // Yield to prevent blocking
                 await Task.yield()
@@ -332,7 +340,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 tokenCount: allTokens.count,
                 cacheHit: false,
                 language: language,
-                textLength: text.count,
+                textLength: textLength,
                 totalStartTime: totalStartTime
             ))
 
@@ -349,7 +357,7 @@ public final class OptimizedSyntaxHighlightingCoordinator {
                 tokenCount: tokens.count,
                 cacheHit: false,
                 language: language,
-                textLength: text.count,
+                textLength: textLength,
                 totalStartTime: totalStartTime
             ))
 
@@ -370,6 +378,39 @@ public final class OptimizedSyntaxHighlightingCoordinator {
     private func tripCircuitBreaker() {
         circuitBreakerTrips += 1
         CrossPlatformLogger.logger().warning("Syntax highlighting circuit breaker tripped (\(circuitBreakerTrips) trips)")
+    }
+
+    private func textSlice(from text: String, range: NSRange) -> (text: String, range: NSRange)? {
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        let clampedRange = TextRangeUtilities.clampRange(range, toTextLength: textLength)
+
+        if let substring = TextRangeUtilities.substring(inUTF16Range: clampedRange, from: text) {
+            return (substring, clampedRange)
+        }
+
+        guard let alignedRange = TextRangeUtilities.characterAlignedRange(clampedRange, in: text),
+              let substring = TextRangeUtilities.substring(inUTF16Range: alignedRange, from: text)
+        else {
+            return nil
+        }
+
+        return (substring, alignedRange)
+    }
+
+    private func chunkSlice(from text: String, startingAt offset: Int, preferredLength: Int) -> (text: String, range: NSRange)? {
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        guard offset < textLength else { return nil }
+
+        var length = min(preferredLength, textLength - offset)
+        while offset + length <= textLength {
+            let range = NSRange(location: offset, length: length)
+            if let substring = TextRangeUtilities.substring(inUTF16Range: range, from: text) {
+                return (substring, range)
+            }
+            length += 1
+        }
+
+        return nil
     }
 
     private func trackPerformance(_ data: PerformanceData) {

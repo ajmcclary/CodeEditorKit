@@ -38,7 +38,7 @@ project, captured in [open question 5 of the umbrella](2026-05-05-design-system-
 - **Theme picker** — all 20 zed-trek variants, presented as a flat
   scrolling list grouped by family color (Black Alert → Yellow Alert)
   with Dark / Light pills inline. Default on launch: `Theme.lcarsDark`.
-- **Language picker** — all 20 `Language` cases, alphabetical, with
+- **Language picker** — all 25 concrete `Language` cases plus plain text, alphabetical, with
   display names. Default for new tabs: `.swift`.
 - **Preset picker** — six `EditorConfiguration` presets:
   `.default`, `.minimal`, `.readOnly`, `.markdown`, `.presentation`,

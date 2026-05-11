@@ -102,7 +102,7 @@ public enum CompletionProviderUtilities {
     /// Extract function call context
     public static func extractFunctionCallContext(from text: String, at position: Int) -> (function: String?, parameterIndex: Int) {
         // Look backwards for opening parenthesis
-        let beforeCursor = String(text.prefix(position))
+        let beforeCursor = TextRangeUtilities.substring(upToUTF16Offset: position, in: text)
 
         var parenDepth = 0
         var commaCount = 0

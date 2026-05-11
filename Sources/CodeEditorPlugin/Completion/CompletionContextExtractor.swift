@@ -15,7 +15,7 @@ internal final class CompletionContextExtractor {
         in text: String,
         language: Language
     ) -> CompletionContext {
-        guard location <= text.count else {
+        guard location >= 0 && location <= TextRangeUtilities.utf16Length(of: text) else {
             return createEmptyContext(at: location, language: language)
         }
 
@@ -45,41 +45,18 @@ internal final class CompletionContextExtractor {
 
     /// Extracts the prefix (word being typed) at the given location
     internal func extractPrefix(at location: Int, in text: String) -> String {
-        guard location > 0 else { return "" }
-
-        var prefixStart = location
-        let characterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
-
-        for charIndex in stride(from: location - 1, through: 0, by: -1) {
-            let index = text.index(text.startIndex, offsetBy: charIndex)
-            let character = text[index]
-
-            if character.unicodeScalars.allSatisfy({ characterSet.contains($0) }) {
-                prefixStart = charIndex
-            } else {
-                break
-            }
-        }
-
-        if prefixStart < location {
-            let startIndex = text.index(text.startIndex, offsetBy: prefixStart)
-            let endIndex = text.index(text.startIndex, offsetBy: location)
-            return String(text[startIndex..<endIndex])
-        }
-
-        return ""
+        TextRangeUtilities.identifierPrefix(endingAtUTF16Offset: location, in: text)
     }
 
     /// Checks if completion should be triggered at the given location
     internal func shouldTriggerCompletion(at location: Int, in text: String) -> Bool {
-        guard location > 0 && location <= text.count else { return false }
-
-        let index = text.index(text.startIndex, offsetBy: location - 1)
-        let character = String(text[index])
+        guard location > 0 && location <= TextRangeUtilities.utf16Length(of: text),
+              let character = TextRangeUtilities.characterBeforeUTF16Offset(location, in: text)
+        else { return false }
 
         // Check trigger characters
         let triggerCharacters = [".", " ", "(", "[", "{", ":", ",", "<", "=", ">"]
-        return triggerCharacters.contains(character)
+        return triggerCharacters.contains(String(character))
     }
 
     // MARK: - Private Methods
@@ -96,36 +73,28 @@ internal final class CompletionContextExtractor {
     }
 
     private func extractCurrentLine(at location: Int, in text: String) -> (line: String, index: Int, start: Int) {
-        let lines = text.components(separatedBy: .newlines)
-        var currentLineIndex = 0
-        var currentLineStart = 0
-
-        for (index, line) in lines.enumerated() {
-            let lineEnd = currentLineStart + line.count
-            if location <= lineEnd {
-                currentLineIndex = index
-                break
-            }
-            currentLineStart = lineEnd + 1 // +1 for newline
-        }
-
-        let currentLine = currentLineIndex < lines.count ? lines[currentLineIndex] : ""
-        return (currentLine, currentLineIndex, currentLineStart)
+        let prefix = TextRangeUtilities.substring(upToUTF16Offset: location, in: text)
+        let currentLineIndex = max(0, prefix.components(separatedBy: .newlines).count - 1)
+        let lineRange = TextRangeUtilities.lineRange(containingUTF16Offset: location, in: text)
+        let currentLine = TextRangeUtilities.lineText(containingUTF16Offset: location, in: text)
+        return (currentLine, currentLineIndex, lineRange.location)
     }
 
     private func extractTriggerCharacter(at location: Int, in text: String) -> String? {
-        guard location > 0 else { return nil }
+        guard location > 0,
+              let character = TextRangeUtilities.characterBeforeUTF16Offset(location, in: text)
+        else { return nil }
 
-        let index = text.index(text.startIndex, offsetBy: location - 1)
-        return String(text[index])
+        return String(character)
     }
 
     private func calculateContextRange(at location: Int, in text: String) -> NSRange {
         let contextBefore = 100
         let contextAfter = 100
+        let textLength = TextRangeUtilities.utf16Length(of: text)
 
         let start = max(0, location - contextBefore)
-        let length = min(contextBefore + contextAfter, text.count - start)
+        let length = min(contextBefore + contextAfter, textLength - start)
 
         return NSRange(location: start, length: length)
     }

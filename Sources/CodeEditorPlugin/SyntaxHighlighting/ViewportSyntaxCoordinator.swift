@@ -25,6 +25,11 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
 
     private let memoryMonitor: MemoryMonitor
 
+    private struct ViewportExtraction {
+        let text: String
+        let range: NSRange
+    }
+
     public init(
         memoryMonitor: MemoryMonitor,
         baseCoordinator: SyntaxHighlightingCoordinator = SyntaxHighlightingCoordinator(),
@@ -61,7 +66,10 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         visibleRange = range
 
         // Calculate expanded range for better user experience
-        let expandedRange = calculateExpandedRange(visibleRange: range, sourceLength: source.count)
+        let expandedRange = calculateExpandedRange(
+            visibleRange: range,
+            sourceLength: TextRangeUtilities.utf16Length(of: source)
+        )
 
         // Check cache first
         var hasher = Hasher()
@@ -78,25 +86,25 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         }
 
         // Extract substring for the expanded range
-        let substring = extractSubstring(from: source, range: expandedRange)
+        let extraction = extractSubstring(from: source, range: expandedRange)
 
         // Highlight the substring
-        let tokens = baseCoordinator.highlight(source: substring, language: language)
+        let tokens = baseCoordinator.highlight(source: extraction.text, language: language)
 
         // Adjust token ranges to match original text positions
-        let adjustedTokens = adjustTokenRanges(tokens, offset: expandedRange.location)
+        let adjustedTokens = adjustTokenRanges(tokens, offset: extraction.range.location)
 
         // Cache the result
         let result = ViewportHighlightResult(
             tokens: adjustedTokens,
-            range: expandedRange,
+            range: extraction.range,
             timestamp: Date()
         )
         cache.set(result, forKey: cacheKey)
 
         let processingTime = Date().timeIntervalSince(startTime)
         statistics.recordHighlighting(
-            range: expandedRange,
+            range: extraction.range,
             tokenCount: adjustedTokens.count,
             processingTime: processingTime
         )
@@ -140,8 +148,8 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
             preloadRange = NSRange(location: location, length: length)
 
         case .down:
-            let maxLocation = source.count
-            let location = min(maxLocation, currentRange.upperBound)
+            let maxLocation = TextRangeUtilities.utf16Length(of: source)
+            let location = min(maxLocation, NSMaxRange(currentRange))
             let length = min(preloadSize, maxLocation - location)
             preloadRange = NSRange(location: location, length: length)
         }
@@ -173,19 +181,25 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         let expansionSize = Int(Double(visibleRange.length) * (viewportExpansionRatio - 1.0) / 2.0)
 
         let startLocation = max(0, visibleRange.location - expansionSize)
-        let endLocation = min(sourceLength, visibleRange.upperBound + expansionSize)
+        let endLocation = min(sourceLength, NSMaxRange(visibleRange) + expansionSize)
 
         return NSRange(location: startLocation, length: endLocation - startLocation)
     }
 
-    nonisolated private func extractSubstring(from source: String, range: NSRange) -> String {
-        guard range.location >= 0 && range.upperBound <= source.count else {
-            return source // Fallback to full source if range is invalid
+    nonisolated private func extractSubstring(from source: String, range: NSRange) -> ViewportExtraction {
+        let sourceLength = TextRangeUtilities.utf16Length(of: source)
+        let clampedRange = TextRangeUtilities.clampRange(range, toTextLength: sourceLength)
+
+        if let substring = TextRangeUtilities.substring(inUTF16Range: clampedRange, from: source) {
+            return ViewportExtraction(text: substring, range: clampedRange)
         }
 
-        let startIndex = source.index(source.startIndex, offsetBy: range.location)
-        let endIndex = source.index(startIndex, offsetBy: range.length)
-        return String(source[startIndex..<endIndex])
+        if let alignedRange = TextRangeUtilities.characterAlignedRange(clampedRange, in: source),
+           let substring = TextRangeUtilities.substring(inUTF16Range: alignedRange, from: source) {
+            return ViewportExtraction(text: substring, range: alignedRange)
+        }
+
+        return ViewportExtraction(text: source, range: TextRangeUtilities.fullRange(in: source))
     }
 
     nonisolated private func adjustTokenRanges(_ tokens: [HighlightedToken], offset: Int) -> [HighlightedToken] {
@@ -206,12 +220,12 @@ public final class ViewportSyntaxCoordinator: ObservableObject {
         range: NSRange,
         language: Language
     ) async -> [HighlightedToken] {
-        let substring = extractSubstring(from: source, range: range)
+        let extraction = extractSubstring(from: source, range: range)
 
         // Perform highlighting on main actor since baseCoordinator requires it
-        let tokens = baseCoordinator.highlight(source: substring, language: language)
+        let tokens = baseCoordinator.highlight(source: extraction.text, language: language)
 
-        return adjustTokenRanges(tokens, offset: range.location)
+        return adjustTokenRanges(tokens, offset: extraction.range.location)
     }
 
     /// Register with memory monitor for cleanup
@@ -343,13 +357,5 @@ public final class ViewportStatistics: ObservableObject {
         lastHighlightTime = nil
         tokenCounts.removeAll()
         processingTimes.removeAll()
-    }
-}
-
-// MARK: - NSRange Extension
-
-extension NSRange {
-    var upperBound: Int {
-        location + length
     }
 }

@@ -1,6 +1,6 @@
 # Language Provider Complete Ecosystem
 
-This comprehensive diagram shows the complete language provider ecosystem supporting 18 languages (plus LSP) with completion, symbols, folding, and data providers.
+This comprehensive diagram shows the complete language provider ecosystem supporting 25 concrete languages plus plain text (and LSP) with completion, symbols, folding, and data providers.
 
 ```mermaid
 classDiagram
@@ -360,7 +360,7 @@ flowchart TB
 - **Custom Provider Support**: Plugin architecture for additional languages
 
 ### 2. Comprehensive Language Support
-- **18 Languages**: Full support for major programming languages (plus LSP integration)
+- **25 Concrete Languages**: Full support for major programming languages (plus plain text and LSP integration)
 - **Complete Web Stack**: HTML, CSS, JavaScript, TypeScript support
 - **Data Format Support**: JSON, YAML, XML, Markdown completion
 - **System Languages**: Shell/Bash, SQL completion
@@ -389,7 +389,7 @@ flowchart TB
 
 ## Benefits
 
-1. **Complete Language Ecosystem**: Support for 18 major programming languages plus LSP
+1. **Complete Language Ecosystem**: Support for 25 concrete programming languages plus plain text and LSP
 2. **Full-Stack Development**: Complete web development support (HTML, CSS, JS, TS)
 3. **System Administration**: Shell scripting and SQL database support
 4. **Consistent Experience**: Uniform completion behavior across all languages

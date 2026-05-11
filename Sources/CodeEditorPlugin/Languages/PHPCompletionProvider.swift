@@ -348,7 +348,7 @@ public function set${1:Property}(${2:?string} $${3:property}): void
 
     private func analyzePHPContext(_ context: CompletionContextModel) -> PHPContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)

@@ -29,10 +29,9 @@ extension CodeEditorView {
         #endif
 
         // Check if we just typed a trigger character
-        if cursorPosition > 0 && cursorPosition <= text.count {
-            let index = text.index(text.startIndex, offsetBy: cursorPosition - 1)
-            let typedChar = text[index]
-
+        if cursorPosition > 0,
+           cursorPosition <= TextRangeUtilities.utf16Length(of: text),
+           let typedChar = TextRangeUtilities.characterBeforeUTF16Offset(cursorPosition, in: text) {
             if completionTriggerCharacters.contains(typedChar) {
                 // Trigger completion with character trigger
                 requestCompletion(triggerKind: .character, triggerCharacter: String(typedChar))
@@ -289,9 +288,8 @@ extension CodeEditorView {
         let text = self.text ?? ""
         #endif
 
-        let pos = min(position, text.count)
-        let textIndex = text.index(text.startIndex, offsetBy: pos)
-        return text.lineRange(for: textIndex..<textIndex)
+        let lineRange = TextRangeUtilities.lineRange(containingUTF16Offset: position, in: text)
+        return Range(lineRange, in: text) ?? text.startIndex..<text.startIndex
     }
 
     /// Get current word range at position
@@ -302,18 +300,8 @@ extension CodeEditorView {
         let text = self.text ?? ""
         #endif
 
-        guard position <= text.count else { return nil }
-
-        let textIndex = text.index(text.startIndex, offsetBy: position)
-        let wordRange = text.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted, options: .backwards, range: text.startIndex..<textIndex)
-
-        if let range = wordRange {
-            let start = text.distance(from: text.startIndex, to: range.upperBound)
-            let end = position
-            return NSRange(location: start, length: end - start)
-        }
-
-        return nil
+        guard position <= TextRangeUtilities.utf16Length(of: text) else { return nil }
+        return TextRangeUtilities.identifierRange(endingAtUTF16Offset: position, in: text)
     }
 
     #if canImport(UIKit)

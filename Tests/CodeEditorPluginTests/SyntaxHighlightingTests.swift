@@ -514,6 +514,84 @@ final class SyntaxHighlightingTests: XCTestCase {
         XCTAssertTrue(instructionTexts.contains("ENV"), "Should highlight ENV")
     }
 
+    @MainActor
+    func testViewportSyntaxCoordinatorUsesUTF16VisibleRanges() {
+        let source = "😀\nlet marker = 1"
+        let visibleRange = NSRange(
+            location: TextRangeUtilities.utf16Length(of: "😀\n"),
+            length: TextRangeUtilities.utf16Length(of: "let marker = 1")
+        )
+        let coordinator = ViewportSyntaxCoordinator(
+            memoryMonitor: MemoryMonitor(),
+            viewportExpansionRatio: 1.0
+        )
+
+        let tokens = coordinator.highlightViewport(
+            source: source,
+            visibleRange: visibleRange,
+            language: .swift
+        )
+
+        XCTAssertTrue(
+            tokens.contains { token in
+                token.type == .keyword &&
+                    token.range.location == visibleRange.location &&
+                    tokenText(token, in: source)?.trimmingCharacters(in: .whitespacesAndNewlines) == "let"
+            },
+            "Viewport highlighting should preserve UTF-16 token offsets after emoji. Tokens: \(debugTokenSummary(tokens, in: source))"
+        )
+    }
+
+    @MainActor
+    func testOptimizedSyntaxCoordinatorUsesUTF16ViewportRanges() async {
+        let prefix = "😀\n"
+        let targetLine = "let marker = 1"
+        let source = prefix + targetLine + "\n" + String(repeating: "let filler = 0\n", count: 800)
+        let visibleRange = NSRange(
+            location: TextRangeUtilities.utf16Length(of: prefix),
+            length: TextRangeUtilities.utf16Length(of: targetLine)
+        )
+        let coordinator = OptimizedSyntaxHighlightingCoordinator(
+            memoryMonitor: MemoryMonitor(),
+            configuration: .init(
+                enableViewportOptimization: true,
+                viewportPadding: 0,
+                maxChunkSize: 5_000,
+                enableIncrementalHighlighting: true,
+                cacheWarmingEnabled: false,
+                circuitBreakerThreshold: 1
+            )
+        )
+
+        let tokens = await coordinator.highlight(
+            text: source,
+            language: .swift,
+            visibleRange: visibleRange
+        )
+
+        XCTAssertTrue(
+            tokens.contains { token in
+                token.type == .keyword &&
+                    token.range.location == visibleRange.location &&
+                    tokenText(token, in: source)?.trimmingCharacters(in: .whitespacesAndNewlines) == "let"
+            },
+            "Optimized viewport highlighting should preserve UTF-16 token offsets after emoji. Tokens: \(debugTokenSummary(tokens, in: source))"
+        )
+    }
+
+    private func tokenText(_ token: HighlightedToken, in source: String) -> String? {
+        TextRangeUtilities.substring(inUTF16Range: token.range, from: source)
+    }
+
+    private func debugTokenSummary(_ tokens: [HighlightedToken], in source: String) -> String {
+        tokens
+            .prefix(8)
+            .map { token in
+                "\(token.type)@\(token.range.location):\(token.range.length)=\(tokenText(token, in: source) ?? "nil")"
+            }
+            .joined(separator: ", ")
+    }
+
     deinit {
         // Cleanup if needed
     }

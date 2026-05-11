@@ -242,7 +242,7 @@ final class XMLCompletionProvider: BaseCompletionProvider {
     // MARK: - Context Analysis
 
     private func analyzeXMLContext(_ context: CompletionContextModel) -> XMLContextAnalysisResult {
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
         let fileType = detectFileType(from: context.text)
 
         // Extract current word being typed

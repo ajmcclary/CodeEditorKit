@@ -120,7 +120,7 @@ final class JSONCompletionProvider: BaseCompletionProvider {
     // MARK: - Context Analysis
 
     private func analyzeJSONContext(_ context: CompletionContextModel) -> JSONContextAnalysisResult {
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
         let fileType = detectFileType(from: context.text)
 
         // Extract current word being typed

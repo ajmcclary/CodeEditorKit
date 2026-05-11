@@ -39,6 +39,14 @@ public class SearchReplaceEngine: ObservableObject {
         pattern: String,
         options: SearchOptions? = nil
     ) async -> [SearchResult] {
+        await findAll(pattern: pattern, options: options, selectFirstResult: true)
+    }
+
+    private func findAll(
+        pattern: String,
+        options: SearchOptions?,
+        selectFirstResult: Bool
+    ) async -> [SearchResult] {
         guard let textView else { return [] }
 
         // Cancel any existing search
@@ -46,9 +54,17 @@ public class SearchReplaceEngine: ObservableObject {
 
         // Use provided options or default
         let searchOptions = options ?? self.searchOptions
+        self.searchOptions = searchOptions
 
         isSearching = true
         defer { isSearching = false }
+
+        guard !pattern.isEmpty else {
+            currentSearchResults = []
+            currentSearchIndex = -1
+            updateStatistics(for: [])
+            return []
+        }
 
         #if canImport(AppKit)
         let text = textView.string
@@ -69,6 +85,10 @@ public class SearchReplaceEngine: ObservableObject {
         // Highlight results if enabled
         if searchOptions.highlightResults {
             highlightSearchResults(results)
+        }
+
+        if selectFirstResult, let firstResult = results.first {
+            scrollToResult(firstResult)
         }
 
         return results
@@ -144,7 +164,7 @@ public class SearchReplaceEngine: ObservableObject {
         #endif
 
         // Update search results
-        let lengthDiff = replacement.count - result.range.length
+        let lengthDiff = TextRangeUtilities.utf16Length(of: replacement) - result.range.length
         updateResultsAfterReplacement(at: index, lengthDifference: lengthDiff)
 
         return true
@@ -161,7 +181,7 @@ public class SearchReplaceEngine: ObservableObject {
         let searchOptions = options ?? self.searchOptions
 
         // Find all occurrences first
-        let results = await findAll(pattern: pattern, options: searchOptions)
+        let results = await findAll(pattern: pattern, options: searchOptions, selectFirstResult: false)
         guard !results.isEmpty else { return 0 }
 
         // Sort results in reverse order to maintain correct ranges
@@ -211,6 +231,7 @@ public class SearchReplaceEngine: ObservableObject {
         options: SearchOptions
     ) async -> [SearchResult] {
         var results: [SearchResult] = []
+        guard !pattern.isEmpty else { return results }
 
         do {
             if options.useRegularExpression {
@@ -223,51 +244,56 @@ public class SearchReplaceEngine: ObservableObject {
                 let matches = regex.matches(
                     in: text,
                     options: [],
-                    range: NSRange(location: 0, length: text.count)
+                    range: TextRangeUtilities.fullRange(in: text)
                 )
 
-                results = matches.enumerated().map { index, match in
-                    let matchedText = String(text[text.index(text.startIndex, offsetBy: match.range.location)..<text.index(text.startIndex, offsetBy: NSMaxRange(match.range))])
-                    return SearchResult(
-                        index: index,
-                        range: match.range,
-                        matchedText: matchedText,
-                        lineNumber: lineNumber(for: match.range.location, in: text),
-                        context: getContext(for: match.range, in: text)
-                    )
+                for match in matches {
+                    guard !options.wholeWord || isWholeWordMatch(match.range, in: text),
+                          let result = makeSearchResult(index: results.count, range: match.range, in: text)
+                    else {
+                        continue
+                    }
+                    results.append(result)
                 }
             } else {
                 // Plain text search
-                var searchRange = NSRange(location: 0, length: text.count)
-                var index = 0
+                var compareOptions: String.CompareOptions = []
+                if !options.caseSensitive {
+                    compareOptions.insert(.caseInsensitive)
+                }
 
-                while searchRange.location < text.count {
-                    guard let swiftSearchRange = Range(searchRange, in: text) else { break }
+                var searchStart = text.startIndex
 
+                while searchStart < text.endIndex {
                     let foundSwiftRange = text.range(
                         of: pattern,
-                        options: options.searchOptions,
-                        range: swiftSearchRange
+                        options: compareOptions,
+                        range: searchStart..<text.endIndex
                     )
 
-                    let foundRange = foundSwiftRange.map { NSRange($0, in: text) } ?? NSRange(location: NSNotFound, length: 0)
-
-                    if foundRange.location == NSNotFound {
+                    guard let foundSwiftRange else {
                         break
                     }
 
-                    let matchedText = String(text[text.index(text.startIndex, offsetBy: foundRange.location)..<text.index(text.startIndex, offsetBy: NSMaxRange(foundRange))])
-                    results.append(SearchResult(
-                        index: index,
-                        range: foundRange,
-                        matchedText: matchedText,
-                        lineNumber: lineNumber(for: foundRange.location, in: text),
-                        context: getContext(for: foundRange, in: text)
-                    ))
+                    let foundRange = NSRange(foundSwiftRange, in: text)
+                    if !options.wholeWord || isWholeWordMatch(foundRange, in: text),
+                       let result = makeSearchResult(index: results.count, range: foundRange, in: text) {
+                        results.append(result)
+                    }
 
-                    searchRange.location = NSMaxRange(foundRange)
-                    searchRange.length = text.count - searchRange.location
-                    index += 1
+                    searchStart = foundSwiftRange.upperBound
+                }
+
+                if options.searchBackward {
+                    results = results.reversed().enumerated().map { index, result in
+                        SearchResult(
+                            index: index,
+                            range: result.range,
+                            matchedText: result.matchedText,
+                            lineNumber: result.lineNumber,
+                            context: result.context
+                        )
+                    }
                 }
             }
         } catch {
@@ -277,25 +303,60 @@ public class SearchReplaceEngine: ObservableObject {
         return results
     }
 
+    private func makeSearchResult(index: Int, range: NSRange, in text: String) -> SearchResult? {
+        guard let matchedText = TextRangeUtilities.substring(inUTF16Range: range, from: text) else {
+            return nil
+        }
+
+        return SearchResult(
+            index: index,
+            range: range,
+            matchedText: matchedText,
+            lineNumber: lineNumber(for: range.location, in: text),
+            context: getContext(for: range, in: text)
+        )
+    }
+
+    private func isWholeWordMatch(_ range: NSRange, in text: String) -> Bool {
+        guard let swiftRange = Range(range, in: text) else { return false }
+
+        if swiftRange.lowerBound > text.startIndex {
+            let before = text[text.index(before: swiftRange.lowerBound)]
+            if TextRangeUtilities.isIdentifierCharacter(before) {
+                return false
+            }
+        }
+
+        if swiftRange.upperBound < text.endIndex {
+            let after = text[swiftRange.upperBound]
+            if TextRangeUtilities.isIdentifierCharacter(after) {
+                return false
+            }
+        }
+
+        return true
+    }
+
     private func lineNumber(for location: Int, in text: String) -> Int {
-        let substring = String(text.prefix(location))
+        let substring = TextRangeUtilities.substring(upToUTF16Offset: location, in: text)
         return substring.components(separatedBy: .newlines).count
     }
 
     private func getContext(for range: NSRange, in text: String) -> String {
         let contextRadius = 40
+        let textLength = TextRangeUtilities.utf16Length(of: text)
 
         let contextStart = max(0, range.location - contextRadius)
-        let contextEnd = min(text.count, NSMaxRange(range) + contextRadius)
+        let contextEnd = min(textLength, NSMaxRange(range) + contextRadius)
         let contextRange = NSRange(location: contextStart, length: contextEnd - contextStart)
 
-        var context = String(text[text.index(text.startIndex, offsetBy: contextRange.location)..<text.index(text.startIndex, offsetBy: NSMaxRange(contextRange))])
+        var context = TextRangeUtilities.substring(inUTF16Range: contextRange, from: text) ?? ""
 
         // Add ellipsis if truncated
         if contextStart > 0 {
             context = "..." + context
         }
-        if contextEnd < text.count {
+        if contextEnd < textLength {
             context += "..."
         }
 
@@ -307,10 +368,10 @@ public class SearchReplaceEngine: ObservableObject {
 
         #if canImport(AppKit)
         guard let textStorage = textView.textStorage else { return }
-        let fullRange = NSRange(location: 0, length: textView.string.count)
+        let fullRange = TextRangeUtilities.fullRange(in: textView.string)
         #else
         let textStorage = textView.textStorage
-        let fullRange = NSRange(location: 0, length: textView.text?.count ?? 0)
+        let fullRange = TextRangeUtilities.fullRange(in: textView.text ?? "")
         #endif
 
         // Clear existing highlights
@@ -460,10 +521,6 @@ public struct SearchOptions {
             options.insert(.caseInsensitive)
         }
 
-        if wholeWord {
-            options.insert(.anchored)
-        }
-
         if searchBackward {
             options.insert(.backwards)
         }
@@ -484,19 +541,4 @@ public struct SearchStatistics {
     public var lastMatchLine = 0
     /// The timestamp when the search was performed
     public var searchTime = Date()
-}
-
-// MARK: - Extensions
-
-// Extension removed - no longer needed since we use String.CompareOptions directly
-
-extension CodeEditorView {
-    /// Get or create search engine
-    public var searchEngine: SearchReplaceEngine {
-        // This would be stored as an associated object or property
-        // For now, creating a new instance
-        let engine = SearchReplaceEngine()
-        engine.attach(to: self)
-        return engine
-    }
 }

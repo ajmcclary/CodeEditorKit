@@ -259,10 +259,10 @@ SELECT * FROM ${1:cte_name};
 
     override func analyzeContext(_ context: CompletionContextModel) -> ContextAnalysisResult {
         let lineText = context.lineText.uppercased().trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition)).uppercased()
+        let beforeCursor = context.textBeforeCursor.uppercased()
 
         // Extract current word being typed
-        let filter = extractCurrentWord(from: String(context.text.prefix(context.cursorPosition)))
+        let filter = extractCurrentWord(from: context.textBeforeCursor)
 
         // Check for function context
         if beforeCursor.hasSuffix("(") || isInFunctionContext(beforeCursor) {

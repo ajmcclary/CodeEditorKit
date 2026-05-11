@@ -83,7 +83,7 @@ final class YAMLCompletionProvider: BaseCompletionProvider {
 
     private func analyzeYAMLContext(_ context: CompletionContextModel) -> YAMLContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
         let fileType = detectFileType(from: context.text)
 
         // Extract current word being typed

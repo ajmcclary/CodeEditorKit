@@ -200,7 +200,7 @@ final class TypeScriptCompletionProvider: BaseCompletionProvider {
 
     private func analyzeTypeScriptContext(_ context: CompletionContextModel) -> TypeScriptContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)

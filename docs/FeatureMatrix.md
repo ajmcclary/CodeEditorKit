@@ -20,7 +20,7 @@ What works on which Apple platform. Reflects the package as of `0.2.0` (platform
 | Capability | macOS | iOS | Where |
 |---|:---:|:---:|---|
 | TextKit2 layout | ✅ | ✅ | `Sources/CodeEditorPlugin/Text/TextLayoutManager.swift` |
-| Syntax highlighting (18 languages) | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
+| Syntax highlighting (25 concrete languages + plain text) | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
 | SwiftSyntax-backed Swift highlighter | ✅ | ✅ | unconditional dependency on `swift-syntax` |
 | Range-based highlighting (experimental) | ✅ | ✅ | `Performance.usesRangeBasedHighlighting` toggle |
 | Streaming highlighter for large files | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |
@@ -40,7 +40,7 @@ What works on which Apple platform. Reflects the package as of `0.2.0` (platform
 |---|:---:|:---:|---|
 | 7 built-in presets (Default / Minimal / Read-only / Markdown / Presentation / macOS / iOS) | ✅ | ✅ | exposed via `PresetCatalog` |
 | Theme picker (zed-trek family, 20 variants) | ✅ | ✅ | `ThemeCatalog.bundled("zed-trek")` |
-| Language picker (all 18) | ✅ | ✅ | `LanguageCatalog` |
+| Language picker (all 25 concrete languages + plain text) | ✅ | ✅ | `LanguageCatalog` |
 | Per-section knob panels (Display / Layout / Behavior / Performance) | ✅ | ⚠️ | iOS shows the same controls but in a NavigationSplitView sidebar |
 | `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls |
 | `Performance.usesRangeBasedHighlighting` toggle | ✅ | ✅ | new in 0.1.0 |

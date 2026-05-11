@@ -231,7 +231,7 @@ final class CCompletionProvider: BaseCompletionProvider {
 
     private func analyzeCContext(_ context: CompletionContextModel) -> CContextAnalysisResult {
         let lineText = context.lineText.trimmingCharacters(in: .whitespaces)
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
 
         // Extract current word being typed
         let filter = extractCurrentWord(from: beforeCursor)

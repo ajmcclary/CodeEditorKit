@@ -6,11 +6,11 @@
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20iOS%20%7C%20Mac%20Catalyst-lightgrey)](#requirements)
 [![Files](https://img.shields.io/badge/source%20files-481-blue)](#architecture)
 
-A powerful, production-ready code editor component for macOS, iOS, and Mac Catalyst. Built with Swift 6.3 and featuring syntax highlighting for 20 languages, comprehensive theming, and a modern architecture designed for performance and extensibility.
+A powerful, production-ready code editor component for macOS, iOS, and Mac Catalyst. Built with Swift 6.3 and featuring syntax highlighting for 25 concrete languages plus plain text, comprehensive theming, and a modern architecture designed for performance and extensibility.
 
 ## ✨ Key Features
 
-- **20 Languages**: Syntax highlighting with SwiftSyntax for Swift, optimized regex for others
+- **25 Languages**: Syntax highlighting with SwiftSyntax for Swift and optimized highlighters for other supported languages
 - **Cross-Platform**: Native performance on macOS, iOS, and Mac Catalyst 
 - **Swift 6 Concurrency**: Actor-based architecture for thread safety and performance
 - **Rich Editing**: Line numbers, code folding, annotations, smart indentation

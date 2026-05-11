@@ -250,7 +250,7 @@ final class HTMLCompletionProvider: BaseCompletionProvider {
     // MARK: - Context Analysis
 
     private func analyzeHTMLContext(_ context: CompletionContextModel) -> HTMLContextAnalysisResult {
-        let beforeCursor = String(context.text.prefix(context.cursorPosition))
+        let beforeCursor = context.textBeforeCursor
         // let afterCursor = String(context.text.suffix(from: context.text.index(context.text.startIndex, offsetBy: context.cursorPosition)))
 
         // Extract current word being typed

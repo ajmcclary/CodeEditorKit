@@ -258,13 +258,21 @@ public struct CompletionContextModel: Sendable {
     public var currentWord: String {
         guard let wordRange,
               wordRange.location != NSNotFound,
-              wordRange.location + wordRange.length <= text.count else {
+              NSMaxRange(wordRange) <= TextRangeUtilities.utf16Length(of: text) else {
             return ""
         }
 
-        let startIndex = text.index(text.startIndex, offsetBy: wordRange.location)
-        let endIndex = text.index(startIndex, offsetBy: wordRange.length)
-        return String(text[startIndex..<endIndex])
+        return TextRangeUtilities.substring(inUTF16Range: wordRange, from: text) ?? ""
+    }
+
+    /// Text before the cursor, treating `cursorPosition` as a UTF-16 offset.
+    public var textBeforeCursor: String {
+        TextRangeUtilities.substring(upToUTF16Offset: cursorPosition, in: text)
+    }
+
+    /// Current line content before the cursor, treating `cursorPosition` as a UTF-16 offset.
+    public var lineTextBeforeCursor: String {
+        textBeforeCursor.components(separatedBy: .newlines).last ?? ""
     }
 }
 

@@ -29,6 +29,73 @@ final class FeatureBehaviorTests: CleanupTestCase {
         XCTAssertTrue(editedText.contains("print(bar)"))
     }
 
+    func testSearchReplaceUsesPersistentEngineForControllerNavigation() async {
+        let editor = createCodeEditorView()
+        editor.text = """
+        alpha
+        beta
+        alpha
+        """
+
+        var options = SearchOptions()
+        options.highlightResults = false
+        options.flashResult = false
+
+        if #available(macOS 13.0, iOS 16.0, *) {
+            let controller = EditorController()
+            controller.attach(to: editor)
+
+            let results = await controller.find("alpha", options: options)
+            XCTAssertEqual(results.count, 2)
+            XCTAssertEqual(controller.matchCount, 2)
+            XCTAssertEqual(controller.currentMatchIndex, 0)
+
+            let nextResult = controller.findNext()
+            XCTAssertNotNil(nextResult)
+            XCTAssertEqual(nextResult?.index, 1)
+            XCTAssertEqual(controller.matchCount, 2)
+            XCTAssertEqual(controller.currentMatchIndex, 1)
+        }
+    }
+
+    func testSearchReplaceUsesUTF16RangesForMatches() async throws {
+        let editor = createCodeEditorView()
+        let text = "😀 target\nplain target"
+        editor.text = text
+
+        var options = SearchOptions()
+        options.highlightResults = false
+        options.flashResult = false
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+
+        let results = await engine.findAll(pattern: "target", options: options)
+        XCTAssertEqual(results.map(\.matchedText), ["target", "target"])
+
+        let expectedRanges = try [text.range(of: "target"), text.range(of: "target", options: .backwards)]
+            .map { NSRange(try XCTUnwrap($0), in: text) }
+            .sorted { $0.location < $1.location }
+        XCTAssertEqual(results.map(\.range), expectedRanges)
+    }
+
+    func testSearchReplaceWholeWordSkipsEmbeddedMatches() async {
+        let editor = createCodeEditorView()
+        editor.text = "foo foobar barfoo foo_bar foo"
+
+        var options = SearchOptions()
+        options.wholeWord = true
+        options.highlightResults = false
+        options.flashResult = false
+
+        let engine = SearchReplaceEngine()
+        engine.attach(to: editor)
+
+        let results = await engine.findAll(pattern: "foo", options: options)
+        XCTAssertEqual(results.map(\.matchedText), ["foo", "foo"])
+        XCTAssertEqual(results.map(\.range.location), [0, 26])
+    }
+
     func testCodeFoldingDetectsAndTogglesSwiftRegions() async throws {
         let editor = createCodeEditorView()
         editor.language = .swift
