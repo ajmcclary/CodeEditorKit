@@ -121,12 +121,7 @@ internal final class RegexBackedTreeSitterParser: TreeSitterParserProtocol, @unc
     }
 
     private func captureMapForLanguage(_ language: Language) -> TreeSitterCaptureMap {
-        switch language {
-        case .javascript: return .javascript
-        case .typescript: return .typescript
-        case .python: return .python
-        default: return .javascript
-        }
+        TreeSitterCaptureMap.forLanguage(language)
     }
 }
 
@@ -232,22 +227,16 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
 extension TreeSitterRangeHighlightProvider {
     /// Creates a provider for the given language using the spike regex-backed parser.
     ///
-    /// In Phase 6 this switches to a real C Tree-sitter parser.
+    /// In Phase 6 this switches to a real C Tree-sitter parser. Currently
+    /// supports all 26 languages via `RegexBackedTreeSitterParser`.
     static func makeSpikeProvider(for language: Language) -> TreeSitterRangeHighlightProvider? {
-        let captureMap: TreeSitterCaptureMap
-        switch language {
-        case .javascript: captureMap = .javascript
-        case .typescript: captureMap = .typescript
-        case .python: captureMap = .python
-
-        default:
-            // Tree-sitter not yet available for this language in the spike
-            guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
-                return nil
-            }
-            captureMap = .javascript
+        // Only create a provider for languages with a Tree-sitter grammar name
+        // (Swift uses SwiftSyntax; plainText has no highlighting)
+        guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
+            return nil
         }
 
+        let captureMap = TreeSitterCaptureMap.forLanguage(language)
         let parser = RegexBackedTreeSitterParser()
         return TreeSitterRangeHighlightProvider(parser: parser, captureMap: captureMap)
     }

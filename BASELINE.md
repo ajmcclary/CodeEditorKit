@@ -141,3 +141,67 @@ totalCreated, pooledCount, activeCount
 - Column selection support
 - Gutter view reuse integration (wiring `ViewReuseQueue` into `GutterView`)
 - Layout invalidation pattern adoption for gutter/minimap
+
+---
+
+# Tree-sitter Integration Baseline (Phases 1–5)
+
+**Date**: 2026-05-11  
+**Source**: `Tests/CodeEditorPluginTests/TreeSitterBenchmarkTests.swift`  
+**Tests**: 5 tests, 0 failures
+
+## Implementation Summary
+
+| Phase | Status | Key Deliverable |
+|---|---|---|
+| 1 — Baseline Correctness | Complete | Fixed `RegexSyntaxHighlighter` discarding custom language; `RangeBasedHighlightingController` now uses canonical 26-language definitions |
+| 2 — Descriptor Consolidation | Complete | `LanguageDescriptor` single source of truth; `Language` enum delegates; `LanguageMetadataRegistry` simplified |
+| 3 — Language Detection | Complete | Structural shebang parser (`/usr/bin/env -S` support); Vim/Emacs modeline scanning |
+| 4 — Add Small Languages | Complete | TOML, Lua, C#, Kotlin, Dart — 26 languages total |
+| 5 — Tree-sitter Spike | Complete | `TreeSitterRangeHighlightProvider` + `RegexBackedTreeSitterParser`; feature flag `useTreeSitterHighlighting`; capture maps for JS/TS/Python |
+
+## Phase 5 Benchmark Results (arm64 macOS, regex-backed spike)
+
+### JavaScript highlighting (regex-backed Tree-sitter pipeline)
+
+| Scale | Parse time | Query time | Captures | vs. Direct Regex |
+|---|---|---|---|---|
+| 5K lines | 7.2 ms | 2.1 ms | ~12,000 | 1.3× slower (capture conversion overhead) |
+| 10K lines | 14.5 ms | 4.3 ms | ~24,000 | < 500 ms ✓ |
+| 100K lines | 1.18 s | 0.04 s | ~240,000 | < 5 s ✓ |
+
+### Architecture
+
+```
+EditorConfiguration.behavior.useTreeSitterHighlighting (default: false)
+  └─ CodeEditorView.updateRangeBasedHighlightingConfiguration()
+       └─ TreeSitterRangeHighlightProvider.makeSpikeProvider(for:)
+            ├─ RegexBackedTreeSitterParser (Phase 5 spike)
+            │    └─ RegexSyntaxHighlighter → TreeSitterCapture[]
+            ├─ TreeSitterCaptureMap → TokenType
+            └─ RangeBasedHighlightingController
+                 └─ StyledRangeContainer → minimap
+```
+
+### New Files (Phase 5)
+
+| File | Role |
+|---|---|
+| `SyntaxHighlighting/TreeSitter/TreeSitterRangeHighlightProvider.swift` | `TreeSitterParserProtocol`, `RegexBackedTreeSitterParser`, `TreeSitterRangeHighlightProvider`, `makeSpikeProvider(for:)` |
+| `SyntaxHighlighting/TreeSitter/TreeSitterCaptureMap.swift` | Capture name → `TokenType` mapping; presets for JS, TS, Python |
+| `Tests/CodeEditorPluginTests/TreeSitterBenchmarkTests.swift` | 5 tests (correctness + 10K/100K parse + comparison) |
+
+### Language Growth
+
+| Phase | Count | Languages Added |
+|---|---|---|
+| Start | 20 | swift, javascript, typescript, python, go, rust, c, cpp, java, html, css, json, markdown, yaml, xml, sql, ruby, php, shell, plainText |
+| Phase 1 | 21 | + dockerfile |
+| Phase 4 | 26 | + toml, lua, csharp, kotlin, dart |
+
+### Remaining Work (Phase 6–7)
+
+- Phase 6a: Expand capture maps to all 26 languages
+- Phase 6b: Injection support (Markdown code blocks, HTML script/style, JS template literals)
+- Phase 6c: Tree-sitter folding + symbol providers
+- Phase 7: Extract into optional `CodeEditorTreeSitterLanguages` companion package
