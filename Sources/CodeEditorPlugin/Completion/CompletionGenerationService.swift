@@ -98,35 +98,11 @@ internal final class CompletionGenerationService {
     /// Generates basic completions for any language using centralized metadata
     /// This consolidates previous language-specific methods into a single data-driven approach
     private func generateBasicCompletions(for context: CompletionContext) -> [CompletionItemModel] {
-        // Try to get metadata from the centralized registry first
-        if let metadata = CodeEditorDependencies.makeLanguageMetadataRegistry().metadata(for: context.language) {
+        // Read from the single source of truth: LanguageDescriptor
+        if let descriptor = LanguageDescriptor.descriptor(for: context.language), !descriptor.keywords.isEmpty {
             return SharedCompletionBuilder.createKeywordCompletions(
-                from: metadata.keywords,
+                from: descriptor.keywords,
                 filter: context.prefix,
-                languageName: context.language.name
-            )
-        }
-
-        // Try LanguageProviderFactory as fallback (for languages like Python, JavaScript, Rust)
-        if LanguageProviderFactory.createProvider(for: context.language) != nil {
-            // Create a basic context model and attempt to get completions
-            let providerContext = CompletionContextModel(
-                text: "",
-                cursorPosition: 0,
-                language: context.language,
-                triggerKind: .manual,
-                triggerCharacter: nil,
-                lineText: context.currentLine
-            )
-
-            // Use shared context analysis for a quick prefix extraction
-            let analysisResult = SharedContextAnalyzer.analyzeContext(providerContext, for: context.language)
-            let filter = context.prefix.isEmpty ? analysisResult.filter : context.prefix
-
-            // Get keywords from factory metadata
-            return SharedCompletionBuilder.createKeywordCompletions(
-                from: fallbackKeywords(for: context.language),
-                filter: filter,
                 languageName: context.language.name
             )
         }

@@ -249,29 +249,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     /// // ["Swift", "JavaScript", "TypeScript", ...]
     /// ```
     public var name: String {
-        switch self {
-        case .swift: "Swift"
-        case .javascript: "JavaScript"
-        case .typescript: "TypeScript"
-        case .python: "Python"
-        case .go: "Go"
-        case .rust: "Rust"
-        case .c: "C"
-        case .cpp: "C++"
-        case .java: "Java"
-        case .html: "HTML"
-        case .css: "CSS"
-        case .json: "JSON"
-        case .markdown: "Markdown"
-        case .yaml: "YAML"
-        case .xml: "XML"
-        case .sql: "SQL"
-        case .ruby: "Ruby"
-        case .php: "PHP"
-        case .shell: "Shell"
-        case .dockerfile: "Dockerfile"
-        case .plainText: "Plain Text"
-        }
+        LanguageDescriptor.descriptor(for: self)?.displayName ?? rawValue.capitalized
     }
 
     /// The file extensions associated with this language.
@@ -286,29 +264,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     /// Language.cpp.fileExtensions       // ["cpp", "cc", "cxx", "hpp", "h", "hh"]
     /// ```
     public var fileExtensions: [String] {
-        switch self {
-        case .swift: ["swift"]
-        case .javascript: ["js", "jsx", "mjs"]
-        case .typescript: ["ts", "tsx"]
-        case .python: ["py", "pyw"]
-        case .go: ["go"]
-        case .rust: ["rs"]
-        case .c: ["c", "h"]
-        case .cpp: ["cpp", "cc", "cxx", "hpp", "hh", "hxx"]
-        case .java: ["java"]
-        case .html: ["html", "htm", "xhtml"]
-        case .css: ["css", "scss", "sass", "less"]
-        case .json: ["json", "jsonc"]
-        case .markdown: ["md", "markdown", "mdown", "mkd"]
-        case .yaml: ["yaml", "yml"]
-        case .xml: ["xml", "xsl", "xslt", "svg"]
-        case .sql: ["sql"]
-        case .ruby: ["rb", "rbw"]
-        case .php: ["php", "phtml", "php3", "php4", "php5"]
-        case .shell: ["sh", "bash", "zsh", "fish"]
-        case .dockerfile: ["dockerfile"]
-        case .plainText: ["txt", "text", "log"]
-        }
+        LanguageDescriptor.descriptor(for: self)?.fileExtensions ?? []
     }
 
     /// The Language Server Protocol identifier for the language.
@@ -328,29 +284,7 @@ public enum Language: String, CaseIterable, Equatable, Hashable, Sendable {
     ///
     /// - SeeAlso: [LSP Specification - Text Document Item](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocumentItem)
     public var lspIdentifier: String {
-        switch self {
-        case .swift: "swift"
-        case .javascript: "javascript"
-        case .typescript: "typescript"
-        case .python: "python"
-        case .go: "go"
-        case .rust: "rust"
-        case .c: "c"
-        case .cpp: "cpp"
-        case .java: "java"
-        case .html: "html"
-        case .css: "css"
-        case .json: "json"
-        case .markdown: "markdown"
-        case .yaml: "yaml"
-        case .xml: "xml"
-        case .sql: "sql"
-        case .ruby: "ruby"
-        case .php: "php"
-        case .shell: "shellscript"
-        case .dockerfile: "dockerfile"
-        case .plainText: "plaintext"
-        }
+        LanguageDescriptor.descriptor(for: self)?.lspIdentifier ?? rawValue
     }
 
     /// Initialize from file extension

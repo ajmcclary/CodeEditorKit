@@ -4,43 +4,29 @@ import Foundation
 
 /// Factory for creating language-specific completion providers with shared logic and reduced duplication
 ///
-/// This factory uses centralized metadata from `LanguageStaticMetadata` and provides
-/// a `UniversalCompletionProvider` for all 20 supported languages.
+/// This factory uses centralized metadata from `LanguageDescriptor` and provides
+/// a `UniversalCompletionProvider` for all supported languages.
 @MainActor
 public enum LanguageProviderFactory {
-    // MARK: - Member Completion Providers
-
-    private static let memberCompletionsMap: [Language: any LanguageMemberCompletions] = [
-        .swift: SwiftMemberCompletions(),
-        .javascript: JavaScriptMemberCompletions(),
-        .typescript: TypeScriptMemberCompletions(),
-        .python: PythonMemberCompletions(),
-        .rust: RustMemberCompletions(),
-        .go: GoMemberCompletions(),
-        .java: JavaMemberCompletions(),
-        .c: CMemberCompletions(),
-        .cpp: CMemberCompletions() // C++ uses same base as C
-    ]
-
     // MARK: - Factory Methods
 
     /// Creates a completion provider for the specified language
     ///
-    /// Uses centralized `LanguageStaticMetadata` for keyword/type/function data
+    /// Uses centralized `LanguageDescriptor` for keyword/type/function data
     /// and language-specific member completions where available.
     public static func createProvider(for language: Language) -> CompletionProvider? {
-        guard let staticMetadata = LanguageStaticMetadata.metadata(for: language) else {
+        guard let descriptor = LanguageDescriptor.descriptor(for: language) else {
             return nil
         }
 
-        let memberCompletions = memberCompletionsMap[language] ?? DefaultMemberCompletions()
+        let memberCompletions = descriptor.memberCompletions ?? DefaultMemberCompletions()
 
         let metadata = LanguageMetadata(
-            keywords: staticMetadata.keywords,
-            types: staticMetadata.types,
-            functions: staticMetadata.functions,
-            literals: staticMetadata.literals,
-            triggerCharacters: staticMetadata.triggerCharacters,
+            keywords: descriptor.keywords,
+            types: descriptor.types,
+            functions: descriptor.functions,
+            literals: descriptor.literals,
+            triggerCharacters: descriptor.triggerCharacters,
             memberCompletions: memberCompletions
         )
 
@@ -55,18 +41,18 @@ public enum LanguageProviderFactory {
     /// This is useful when you need direct access to the metadata
     /// without creating a full provider.
     public static func metadata(for language: Language) -> LanguageMetadata? {
-        guard let staticMetadata = LanguageStaticMetadata.metadata(for: language) else {
+        guard let descriptor = LanguageDescriptor.descriptor(for: language) else {
             return nil
         }
 
-        let memberCompletions = memberCompletionsMap[language] ?? DefaultMemberCompletions()
+        let memberCompletions = descriptor.memberCompletions ?? DefaultMemberCompletions()
 
         return LanguageMetadata(
-            keywords: staticMetadata.keywords,
-            types: staticMetadata.types,
-            functions: staticMetadata.functions,
-            literals: staticMetadata.literals,
-            triggerCharacters: staticMetadata.triggerCharacters,
+            keywords: descriptor.keywords,
+            types: descriptor.types,
+            functions: descriptor.functions,
+            literals: descriptor.literals,
+            triggerCharacters: descriptor.triggerCharacters,
             memberCompletions: memberCompletions
         )
     }
@@ -75,7 +61,7 @@ public enum LanguageProviderFactory {
     ///
     /// Returns all languages that have static metadata defined.
     public static var supportedLanguages: [Language] {
-        Array(LanguageStaticMetadata.all.keys)
+        Array(LanguageDescriptor.all.keys)
     }
 }
 
@@ -198,7 +184,7 @@ public struct LanguageMetadata {
 }
 
 /// Protocol for language-specific member completions
-public protocol LanguageMemberCompletions {
+public protocol LanguageMemberCompletions: Sendable {
     /// Creates member completion suggestions for a specific type
     /// - Parameters:
     ///   - targetType: The type to get completions for

@@ -2,161 +2,49 @@ import Foundation
 
 // MARK: - Language Metadata Registry
 
-/// Centralized registry for all language metadata, eliminating duplication across providers
+/// DI-friendly registry that wraps `LanguageDescriptor` for the completion system.
+///
+/// Previously duplicated keyword/type/function/literal data that now lives in
+/// `LanguageDescriptor`. This class exists to satisfy the dependency-injection
+/// contract (`EditorConfiguration`, `BusinessLogicServiceRegistry`,
+/// `CompletionProviderRegistry`) and provides a stable public API.
 @MainActor
 public final class LanguageMetadataRegistry {
     /// Public initializer for dependency injection
     public init() {}
 
-    // MARK: - Extended Language Metadata
-
-    /// Complete metadata for all supported languages
-    private lazy var completeLanguageMetadata: [Language: ExtendedLanguageMetadata] = {
-        createLanguageMetadata()
-    }()
-
-    /// Create language metadata dictionary
-    private func createLanguageMetadata() -> [Language: ExtendedLanguageMetadata] {
-        var metadata: [Language: ExtendedLanguageMetadata] = [:]
-
-        metadata[.swift] = createSwiftMetadata()
-        metadata[.typescript] = createTypeScriptMetadata()
-        metadata[.go] = createGoMetadata()
-
-        // Add other languages...
-
-        return metadata
-    }
-
-    /// Create Swift metadata
-    private func createSwiftMetadata() -> ExtendedLanguageMetadata {
-        ExtendedLanguageMetadata(
-            keywords: [
-                "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func",
-                "import", "init", "inout", "internal", "let", "operator", "private", "protocol",
-                "public", "static", "struct", "subscript", "typealias", "var", "break", "case",
-                "continue", "default", "defer", "do", "else", "fallthrough", "for", "guard",
-                "if", "in", "repeat", "return", "switch", "where", "while", "as", "any", "catch",
-                "false", "is", "nil", "rethrows", "super", "self", "Self", "throw", "throws", "true", "try"
-            ],
-            types: [
-                "Int", "UInt", "Int8", "Int16", "Int32", "Int64", "UInt8", "UInt16", "UInt32", "UInt64",
-                "Float", "Double", "Bool", "String", "Character", "Array", "Dictionary", "Set", "Optional",
-                "AnyObject", "AnyClass", "Any", "Void", "Never", "Result", "Published", "ObservableObject",
-                "StateObject", "ObservedObject", "Binding", "State", "EnvironmentObject"
-            ],
-            functions: [
-                "print", "debugPrint", "dump", "assert", "assertionFailure", "precondition", "preconditionFailure",
-                "fatalError", "abs", "min", "max", "swap", "stride", "zip", "enumerated", "reversed",
-                "sorted", "map", "filter", "reduce", "forEach", "compactMap", "flatMap", "first", "last"
-            ],
-            literals: [
-                "true", "false", "nil", "self", "Self", "super", "#file", "#line", "#column", "#function",
-                "#dsohandle", "#colorLiteral", "#imageLiteral", "#fileLiteral"
-            ],
-            triggerCharacters: [".", "(", "[", "<", " ", ":"],
-            snippets: SwiftSnippets.all,
-            memberCompletions: SwiftMemberCompletions(),
-            commonModules: [
-                "Foundation", "UIKit", "AppKit", "SwiftUI", "Combine", "CoreData", "CoreGraphics",
-                "QuartzCore", "AVFoundation", "NetworkExtension", "UserNotifications", "StoreKit"
-            ]
-        )
-    }
-
-    /// Create TypeScript metadata
-    private func createTypeScriptMetadata() -> ExtendedLanguageMetadata {
-        ExtendedLanguageMetadata(
-            keywords: [
-                "break", "case", "catch", "class", "const", "continue", "debugger", "default",
-                "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for",
-                "function", "if", "import", "in", "instanceof", "new", "null", "return", "super",
-                "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with",
-                "as", "implements", "interface", "let", "package", "private", "protected", "public",
-                "static", "yield", "any", "boolean", "constructor", "declare", "get", "module",
-                "require", "number", "set", "string", "symbol", "type", "from", "of", "namespace",
-                "abstract", "async", "await", "keyof", "readonly", "is", "never", "unknown"
-            ],
-            types: [
-                "boolean", "number", "string", "symbol", "object", "undefined", "null", "void", "never",
-                "unknown", "any", "Array", "Object", "Function", "Date", "RegExp", "Promise", "Map",
-                "Set", "WeakMap", "WeakSet", "Error", "Partial", "Required", "Record", "Pick", "Omit"
-            ],
-            functions: [
-                "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURI", "decodeURI", "setTimeout",
-                "clearTimeout", "setInterval", "clearInterval", "fetch", "console.log", "console.error",
-                "JSON.parse", "JSON.stringify", "Object.keys", "Object.values", "Object.entries"
-            ],
-            literals: [
-                "true", "false", "null", "undefined", "NaN", "Infinity", "this", "super", "globalThis"
-            ],
-            triggerCharacters: [".", "(", "[", "{", " ", ":", "<"],
-            snippets: TypeScriptSnippets.all,
-            memberCompletions: TypeScriptMemberCompletions(),
-            commonModules: [
-                "react", "vue", "angular", "express", "lodash", "axios", "typescript", "webpack",
-                "jest", "mocha", "eslint", "prettier", "nodemon", "dotenv", "cors", "bcrypt"
-            ]
-        )
-    }
-
-    /// Create Go metadata
-    private func createGoMetadata() -> ExtendedLanguageMetadata {
-        ExtendedLanguageMetadata(
-            keywords: [
-                "break", "case", "chan", "const", "continue", "default", "defer", "else", "fallthrough",
-                "for", "func", "go", "goto", "if", "import", "interface", "map", "package", "range",
-                "return", "select", "struct", "switch", "type", "var"
-            ],
-            types: [
-                "bool", "byte", "complex64", "complex128", "error", "float32", "float64", "int", "int8",
-                "int16", "int32", "int64", "rune", "string", "uint", "uint8", "uint16", "uint32",
-                "uint64", "uintptr", "interface{}", "struct{}", "chan", "map", "slice"
-            ],
-            functions: [
-                "make", "new", "append", "copy", "delete", "len", "cap", "close", "panic", "recover",
-                "print", "println", "complex", "real", "imag", "min", "max"
-            ],
-            literals: [
-                "true", "false", "iota", "nil"
-            ],
-            triggerCharacters: [".", "(", "[", " ", ":"],
-            snippets: GoSnippets.all,
-            memberCompletions: GoMemberCompletions(),
-            commonModules: [
-                "fmt", "os", "io", "net/http", "encoding/json", "time", "strings", "strconv",
-                "context", "sync", "log", "errors", "bufio", "path/filepath", "regexp"
-            ]
-        )
-    }
-
     // MARK: - Public API
 
-    /// Gets metadata for a specific language
+    /// Gets metadata for a specific language.
+    ///
+    /// All core data (keywords, types, functions, literals, triggers) comes from
+    /// `LanguageDescriptor`; snippets, member completions, and common modules are
+    /// also read from the descriptor so every language gets consistent treatment.
     public func metadata(for language: Language) -> ExtendedLanguageMetadata? {
-        completeLanguageMetadata[language]
+        guard let descriptor = LanguageDescriptor.descriptor(for: language) else { return nil }
+        return ExtendedLanguageMetadata(
+            keywords: descriptor.keywords,
+            types: descriptor.types,
+            functions: descriptor.functions,
+            literals: descriptor.literals,
+            triggerCharacters: descriptor.triggerCharacters,
+            snippets: descriptor.snippets,
+            memberCompletions: descriptor.memberCompletions ?? DefaultMemberCompletions(),
+            commonModules: descriptor.commonModules
+        )
     }
 
     /// Gets all supported languages
     public var supportedLanguages: [Language] {
-        Array(completeLanguageMetadata.keys)
+        Array(LanguageDescriptor.all.keys)
     }
 
-    /// Creates a completion provider for the specified language
+    /// Creates a completion provider for the specified language.
+    ///
+    /// Delegates to `LanguageProviderFactory` so there is a single code path
+    /// for provider creation.
     public func createProvider(for language: Language) -> CompletionProvider? {
-        guard let metadata = metadata(for: language) else { return nil }
-
-        return UniversalCompletionProvider(
-            language: language,
-            metadata: LanguageMetadata(
-                keywords: metadata.keywords,
-                types: metadata.types,
-                functions: metadata.functions,
-                literals: metadata.literals,
-                triggerCharacters: metadata.triggerCharacters,
-                memberCompletions: metadata.memberCompletions
-            )
-        )
+        LanguageProviderFactory.createProvider(for: language)
     }
 }
 
