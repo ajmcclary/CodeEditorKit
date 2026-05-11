@@ -17,6 +17,39 @@
 | 5 — View reuse + geometry helpers | Complete | `Utilities/ViewReuseQueue.swift`, `Text/LineGeometryStore+GeometryHelpers.swift` | 9 |
 | **Total** | | **8 files created/modified** | **64** |
 
+## Performance Comparison (arm64 macOS, single-run measure blocks)
+
+### Build (initial load from text)
+
+| Operation | Scale | NSString (flat array) | LineGeometryStore (red-black tree) | Ratio |
+|---|---|---|---|---|
+| Build offsets/tree | 10k lines (~300 KB) | 2.5 ms | 243 ms | 97× |
+| Build offsets/tree | 100k lines (~400 KB) | 16.7 ms | 3,198 ms | 192× |
+| Build + line count | 1M lines (~2 MB) | 140 ms | 40,220 ms | 287× |
+
+The store's build is O(n log n) because it uses sequential red-black insertion with fixup for each line, guaranteeing correct invariants for any tree shape. NSString's flat-array scan is O(n). A balanced-tree construction (Phase 1 original approach) would match NSString's O(n) but produced red-black violations for non-power-of-2 sizes. This is the primary target for follow-on optimization.
+
+### Lookup
+
+| Operation | Scale | NSString | LineGeometryStore | Notes |
+|---|---|---|---|---|
+| Offset→line index | 100 queries, 10k lines | 25 µs | 493 µs | Both sub-millisecond; store is ~20× slower |
+| Y-position→line index | 100 queries, 50k lines | N/A | 618 µs | **Unique capability** — NSString cannot perform y-position lookups |
+
+The store's O(log n) lookups are fast enough for interactive use (all sub-millisecond). The y-position→line lookup is a capability the flat-array `LineIndexCache` lacks entirely — it requires per-line height tracking and cumulative subtree heights, which only the tree provides.
+
+### Key tradeoff
+
+| Dimension | NSString / LineIndexCache | LineGeometryStore |
+|---|---|---|
+| Build speed | O(n), fast | O(n log n), slower |
+| Offset→line lookup | O(log n), 25 µs | O(log n), 493 µs |
+| Y-position→line lookup | ✗ Not supported | O(log n), 618 µs |
+| Height tracking | ✗ Not supported | ✓ Per-line estimated + measured |
+| Fold state | ✗ Not supported | ✓ Collapsed lines = height 0 |
+| Incremental edits | Rebuilds entire cache | Rebuilds via handler (future: true incremental) |
+| UTF-16 correctness | ✗ Character offsets (bug) | ✓ NSString-based |
+
 ## New Files
 
 | File | Role |

@@ -463,6 +463,72 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         }
     }
 
+    // MARK: - 5b. LineGeometryStore Performance Benchmarks
+
+    func testStoreBuildPerformance10kLines() {
+        let text = (1...10_000).map { "Line \($0) with some filler content to make lines longer\n" }.joined()
+
+        measure(options: Self.ultraFastMeasureOptions) {
+            autoreleasepool {
+                let store = LineGeometryStore()
+                store.build(from: NSTextStorage(string: text))
+            }
+        }
+    }
+
+    func testStoreBuildPerformance100kLines() {
+        let text = (1...100_000).map { "L\($0)\n" }.joined()
+
+        measure(options: Self.ultraFastMeasureOptions) {
+            autoreleasepool {
+                let store = LineGeometryStore()
+                store.build(from: NSTextStorage(string: text))
+            }
+        }
+    }
+
+    func testStoreOffsetToLineLookup10kQueries() {
+        let text = (1...10_000).map { "Line \($0) with some content\n" }.joined()
+        let store = makeStore(for: text)
+        let midPoint = (text as NSString).length / 2
+
+        measure(options: Self.ultraFastMeasureOptions) {
+            autoreleasepool {
+                for offset in stride(from: 0, to: (text as NSString).length, by: (text as NSString).length / 100) {
+                    _ = store.lineIndex(forUtf16Offset: offset)
+                }
+                _ = store.lineIndex(forUtf16Offset: midPoint)
+            }
+        }
+    }
+
+    func testStoreLineCountPerformance1MLines() throws {
+        throw XCTSkip("Skipped in CI — 1M-line red-black tree build takes ~40s. The baseline is recorded in BASELINE.md.")
+        /* let text = String(repeating: "x\n", count: 1_000_000)
+
+        measure(options: Self.ultraFastMeasureOptions) {
+            autoreleasepool {
+                let store = LineGeometryStore()
+                store.build(from: NSTextStorage(string: text))
+                _ = store.lineCount
+            }
+        }
+        */
+    }
+
+    func testStoreYPositionLookupPerformance() {
+        let text = String(repeating: "x\n", count: 50_000)
+        let store = makeStore(for: text)
+
+        measure(options: Self.ultraFastMeasureOptions) {
+            autoreleasepool {
+                for y in stride(from: 0, to: store.totalHeight, by: store.totalHeight / 100) {
+                    _ = store.lineIndex(forYPosition: y)
+                }
+            }
+        }
+    }
+
     // MARK: - 6. Fuzz Test Harness
 
     /// Generate a random edit: pick a random range in the document and
