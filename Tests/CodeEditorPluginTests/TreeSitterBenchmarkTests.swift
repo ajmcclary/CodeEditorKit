@@ -8,6 +8,34 @@ import XCTest
 /// and establishes baseline numbers before the real C Tree-sitter integration
 /// in Phase 6.
 final class TreeSitterBenchmarkTests: XCTestCase {
+    private final class RecordingTreeSitterParser: TreeSitterParserProtocol, @unchecked Sendable {
+        var setLanguageDelay: UInt64 = 0
+        var didSetLanguage = false
+        var parseCallsBeforeSetup = 0
+        var parseResult = TreeSitterParseResult(captures: [], parseDuration: 0, queryDuration: 0)
+        var editCalls: [(startByte: Int, oldEndByte: Int, newEndByte: Int)] = []
+
+        func setLanguage(_: Language) async throws {
+            if setLanguageDelay > 0 {
+                try await Task.sleep(nanoseconds: setLanguageDelay)
+            }
+            didSetLanguage = true
+        }
+
+        func parse(source _: String) async throws -> TreeSitterParseResult {
+            guard didSetLanguage else {
+                parseCallsBeforeSetup += 1
+                throw TreeSitterError.noLanguageSet
+            }
+            return parseResult
+        }
+
+        func applyEdit(startByte: Int, oldEndByte: Int, newEndByte: Int) async -> IndexSet {
+            editCalls.append((startByte, oldEndByte, newEndByte))
+            return IndexSet(integersIn: startByte..<newEndByte)
+        }
+    }
+
     // MARK: - Fixtures
 
     private func javascriptFixture(lineCount: Int) -> String {
@@ -70,7 +98,7 @@ final class TreeSitterBenchmarkTests: XCTestCase {
     func testSpikeProviderProducesTokens() async throws {
         let source = javascriptFixture(lineCount: 80)
 
-        guard let provider = TreeSitterRangeHighlightProvider.makeSpikeProvider(for: .javascript) else {
+        guard TreeSitterRangeHighlightProvider.makeSpikeProvider(for: .javascript) != nil else {
             XCTFail("Should create spike provider for JavaScript")
             return
         }
@@ -90,6 +118,99 @@ final class TreeSitterBenchmarkTests: XCTestCase {
     }
 
     @MainActor
+    func testProviderAwaitsLanguageSetupBeforeQuerying() async throws {
+        let source = "let value = 1"
+        let parser = RecordingTreeSitterParser()
+        parser.setLanguageDelay = 20_000_000
+        parser.parseResult = TreeSitterParseResult(
+            captures: [
+                TreeSitterCapture(byteRange: 0..<3, captureName: "keyword")
+            ],
+            parseDuration: 0,
+            queryDuration: 0
+        )
+        let provider = TreeSitterRangeHighlightProvider(parser: parser, captureMap: .javascript)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = source
+
+        provider.setUp(textView: textView, language: .javascript)
+        let tokens = try await provider.queryHighlights(
+            textView: textView,
+            range: NSRange(location: 0, length: source.utf16.count)
+        )
+
+        XCTAssertTrue(parser.didSetLanguage)
+        XCTAssertEqual(parser.parseCallsBeforeSetup, 0)
+        XCTAssertEqual(tokens.map(\.text), ["let"])
+    }
+
+    @MainActor
+    func testProviderConvertsUTF16EditRangeToUTF8Bytes() async {
+        let original = "π = 1\nlet café = 1"
+        let replacement = "ee"
+        guard let editedSwiftRange = original.range(of: "é") else {
+            XCTFail("Expected fixture to contain edited character")
+            return
+        }
+        let editedRange = NSRange(editedSwiftRange, in: original)
+        let updated = original.replacingCharacters(in: editedSwiftRange, with: replacement)
+        let expectedStartByte = original[..<editedSwiftRange.lowerBound].utf8.count
+        let expectedOldEndByte = original[..<editedSwiftRange.upperBound].utf8.count
+        let expectedNewEndByte = expectedStartByte + replacement.utf8.count
+
+        let parser = RecordingTreeSitterParser()
+        let provider = TreeSitterRangeHighlightProvider(parser: parser, captureMap: .javascript)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = original
+
+        provider.setUp(textView: textView, language: .javascript)
+        provider.willApplyEdit(textView: textView, range: editedRange)
+        textView.text = updated
+
+        _ = await provider.applyEdit(
+            textView: textView,
+            range: editedRange,
+            delta: replacement.utf16.count - editedRange.length
+        )
+
+        XCTAssertEqual(parser.editCalls.count, 1)
+        XCTAssertEqual(parser.editCalls.first?.startByte, expectedStartByte)
+        XCTAssertEqual(parser.editCalls.first?.oldEndByte, expectedOldEndByte)
+        XCTAssertEqual(parser.editCalls.first?.newEndByte, expectedNewEndByte)
+    }
+
+    @MainActor
+    func testProviderReturnsOnlyHighlightsInsideRequestedRange() async throws {
+        let source = "let first = 1\nlet second = 2"
+        guard let firstRange = source.range(of: "let"),
+              let newlineRange = source.range(of: "\n"),
+              let secondRange = source.range(of: "let", range: newlineRange.upperBound..<source.endIndex) else {
+            XCTFail("Expected fixture ranges")
+            return
+        }
+        let requestedRange = NSRange(secondRange, in: source)
+        let parser = RecordingTreeSitterParser()
+        parser.didSetLanguage = true
+        parser.parseResult = TreeSitterParseResult(
+            captures: [
+                TreeSitterCapture(byteRange: byteRange(for: firstRange, in: source), captureName: "keyword"),
+                TreeSitterCapture(byteRange: byteRange(for: secondRange, in: source), captureName: "keyword")
+            ],
+            parseDuration: 0,
+            queryDuration: 0
+        )
+        let provider = TreeSitterRangeHighlightProvider(parser: parser, captureMap: .javascript)
+        let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        textView.text = source
+
+        provider.setUp(textView: textView, language: .javascript)
+        let tokens = try await provider.queryHighlights(textView: textView, range: requestedRange)
+
+        XCTAssertEqual(tokens.map(\.range), [requestedRange])
+        XCTAssertEqual(tokens.map(\.text), ["let"])
+    }
+
+    @MainActor
     func testCaptureMapConversion() {
         let map = TreeSitterCaptureMap.javascript
 
@@ -104,6 +225,12 @@ final class TreeSitterBenchmarkTests: XCTestCase {
 
         // Unknown captures
         XCTAssertEqual(map.tokenType(for: "nonexistent"), .unknown)
+    }
+
+    private func byteRange(for range: Range<String.Index>, in source: String) -> Range<Int> {
+        let lowerBound = source[..<range.lowerBound].utf8.count
+        let upperBound = source[..<range.upperBound].utf8.count
+        return lowerBound..<upperBound
     }
 
     // MARK: - Benchmark Tests

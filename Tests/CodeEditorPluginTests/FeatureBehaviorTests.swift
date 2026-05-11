@@ -70,6 +70,22 @@ final class FeatureBehaviorTests: CleanupTestCase {
         XCTAssertEqual(shiftedFold?.range.location, region.range.location + 2)
     }
 
+    func testNewLanguagesHaveFoldingProviders() {
+        let registry = FoldingProviderRegistry()
+
+        for language in [Language.csharp, .kotlin, .dart, .dockerfile, .toml, .lua] {
+            XCTAssertTrue(registry.hasProvider(for: language), "\(language.name) should have a folding provider registration")
+        }
+    }
+
+    func testNewLanguagesHaveSymbolProviders() {
+        let navigator = SymbolNavigator()
+
+        for language in [Language.csharp, .kotlin, .dart, .dockerfile, .toml, .lua] {
+            XCTAssertTrue(navigator.hasProvider(for: language), "\(language.name) should have a symbol provider registration")
+        }
+    }
+
     private func waitForFoldableRegion(in engine: CodeFoldingEngine) async throws -> FoldableRegion {
         for _ in 0..<20 {
             if let region = engine.foldableRegions.first {

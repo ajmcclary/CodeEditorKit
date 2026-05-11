@@ -43,6 +43,10 @@ public class SymbolNavigator: ObservableObject {
         logger.info("Registered symbol provider for \(language.name)")
     }
 
+    internal func hasProvider(for language: Language) -> Bool {
+        providers[language] != nil
+    }
+
     private func setupDefaultProviders() {
         // Register default providers
         registerProvider(SwiftSymbolProvider(), for: .swift)
@@ -77,6 +81,15 @@ public class SymbolNavigator: ObservableObject {
         registerProvider(RubySymbolProvider(), for: .ruby)
         registerProvider(PHPSymbolProvider(), for: .php)
         registerProvider(ShellSymbolProvider(), for: .shell)
+
+        // Newly added languages enter through the Tree-sitter provider facade.
+        // The spike delegates to heuristics today and moves to tags.scm later.
+        registerProvider(TreeSitterSymbolProvider(language: .csharp), for: .csharp)
+        registerProvider(TreeSitterSymbolProvider(language: .kotlin), for: .kotlin)
+        registerProvider(TreeSitterSymbolProvider(language: .dart), for: .dart)
+        registerProvider(TreeSitterSymbolProvider(language: .dockerfile), for: .dockerfile)
+        registerProvider(TreeSitterSymbolProvider(language: .toml), for: .toml)
+        registerProvider(TreeSitterSymbolProvider(language: .lua), for: .lua)
     }
 
     // MARK: - Symbol Detection

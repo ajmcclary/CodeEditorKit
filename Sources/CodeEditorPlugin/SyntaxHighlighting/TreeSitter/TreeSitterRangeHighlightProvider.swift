@@ -77,7 +77,6 @@ internal final class RegexBackedTreeSitterParser: TreeSitterParserProtocol, @unc
         let captures = tokens.compactMap { token -> TreeSitterCapture? in
             // Convert NSRange to byte range
             guard let stringRange = Range(token.range, in: source) else { return nil }
-            let utf8View = source.utf8
             let byteStart = source[..<stringRange.lowerBound].utf8.count
             let byteEnd = byteStart + source[stringRange].utf8.count
             return TreeSitterCapture(
@@ -134,10 +133,17 @@ internal final class RegexBackedTreeSitterParser: TreeSitterParserProtocol, @unc
 /// in Phase 6 this is replaced with a real C Tree-sitter parser.
 @MainActor
 internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
+    private struct PreEditSnapshot {
+        let source: String
+        let range: NSRange
+    }
+
     private let parser: any TreeSitterParserProtocol
     private let captureMap: TreeSitterCaptureMap
     private var currentLanguage: Language = .plainText
     private var documentVersion = 0
+    private var setupTask: Task<Void, Error>?
+    private var preEditSnapshots: [PreEditSnapshot] = []
     private let logger = CrossPlatformLogger.logger(
         subsystem: "CodeEditorPlugin",
         category: "TreeSitterProvider"
@@ -153,48 +159,67 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
     func setUp(textView _: CodeEditorView, language: Language) {
         currentLanguage = language
         documentVersion = 0
-        Task {
-            do {
-                try await parser.setLanguage(language)
-                logger.debug("Tree-sitter language set to \(language.name)")
-            } catch {
-                logger.error("Tree-sitter failed to set language: \(error)")
-            }
+        preEditSnapshots.removeAll()
+        setupTask?.cancel()
+
+        let parser = self.parser
+        setupTask = Task {
+            try await parser.setLanguage(language)
         }
+    }
+
+    func willApplyEdit(textView: CodeEditorView, range: NSRange) {
+        recordPreEditSnapshot(source: Self.sourceString(from: textView), range: range)
+    }
+
+    func willApplyEdit(textView _: CodeEditorView, source: String, range: NSRange) {
+        recordPreEditSnapshot(source: source, range: range)
     }
 
     func applyEdit(textView: CodeEditorView, range: NSRange, delta: Int) async -> IndexSet {
         documentVersion &+= 1
 
-        #if canImport(AppKit)
-        guard let source = textView.textStorage?.string else { return IndexSet() }
-        #else
-        let source = textView.textStorage.string
-        #endif
+        do {
+            try await awaitSetup()
+        } catch {
+            logger.error("Tree-sitter setup failed before edit: \(error)")
+            return IndexSet()
+        }
 
-        // Convert NSRange (UTF-16) to byte offsets for Tree-sitter
-        let utf16View = source.utf16
-        let byteStart = source.utf8.distance(
-            from: source.utf8.startIndex,
-            to: source.utf8.index(source.utf8.startIndex, offsetBy: range.location)
-        )
-        let oldByteEnd = byteStart + range.length
-        let newByteEnd = byteStart + range.length + delta
+        let source = Self.sourceString(from: textView)
+        let sourceLength = TextRangeUtilities.utf16Length(of: source)
+        let fullInvalidation = IndexSet(integersIn: 0..<sourceLength)
+
+        guard let snapshotIndex = preEditSnapshots.firstIndex(where: { $0.range == range }) else {
+            logger.warning("Missing pre-edit source snapshot; invalidating full document")
+            return fullInvalidation
+        }
+        let snapshot = preEditSnapshots.remove(at: snapshotIndex)
+
+        let newLength = max(0, range.length + delta)
+        let newRange = NSRange(location: range.location, length: newLength)
+        guard let oldByteRange = Self.byteRange(forUTF16Range: range, in: snapshot.source),
+              let newByteRange = Self.byteRange(forUTF16Range: newRange, in: source) else {
+            logger.warning("Unable to translate UTF-16 edit range to UTF-8 bytes; invalidating full document")
+            return fullInvalidation
+        }
 
         return await parser.applyEdit(
-            startByte: byteStart,
-            oldEndByte: oldByteEnd,
-            newEndByte: newByteEnd
+            startByte: oldByteRange.lowerBound,
+            oldEndByte: oldByteRange.upperBound,
+            newEndByte: newByteRange.upperBound
         )
     }
 
-    func queryHighlights(textView: CodeEditorView, range _: NSRange) async throws -> [HighlightedToken] {
-        #if canImport(AppKit)
-        guard let source = textView.textStorage?.string, !source.isEmpty else { return [] }
-        #else
-        let source = textView.textStorage.string
+    func queryHighlights(textView: CodeEditorView, range: NSRange) async throws -> [HighlightedToken] {
+        try await awaitSetup()
+
+        let source = Self.sourceString(from: textView)
         guard !source.isEmpty else { return [] }
-        #endif
+
+        let sourceLength = TextRangeUtilities.utf16Length(of: source)
+        let clampedRange = TextRangeUtilities.clampRange(range, toTextLength: sourceLength)
+        guard clampedRange.length > 0 else { return [] }
 
         let result = try await parser.parse(source: source)
 
@@ -207,18 +232,76 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
             guard tokenType != .whitespace else { continue }
 
             // Convert byte range back to NSRange (UTF-16)
-            let utf8View = source.utf8
-            let byteStartIndex = utf8View.index(utf8View.startIndex, offsetBy: capture.byteRange.lowerBound)
-            let byteEndIndex = utf8View.index(utf8View.startIndex, offsetBy: capture.byteRange.upperBound)
-            let stringRange = byteStartIndex..<byteEndIndex
+            guard let stringRange = Self.stringRange(forByteRange: capture.byteRange, in: source) else {
+                continue
+            }
 
             let nsRange = NSRange(stringRange, in: source)
-            let text = String(source[stringRange])
+            let intersection = NSIntersectionRange(nsRange, clampedRange)
+            guard intersection.length > 0,
+                  let text = TextRangeUtilities.substring(inUTF16Range: intersection, from: source) else {
+                continue
+            }
 
-            tokens.append(HighlightedToken(range: nsRange, type: tokenType, text: text))
+            tokens.append(HighlightedToken(range: intersection, type: tokenType, text: text))
         }
 
         return tokens
+    }
+
+    private func awaitSetup() async throws {
+        if let setupTask {
+            try await setupTask.value
+        }
+    }
+
+    private func recordPreEditSnapshot(source: String, range: NSRange) {
+        preEditSnapshots.append(PreEditSnapshot(source: source, range: range))
+        let maximumRetainedSnapshots = 32
+        if preEditSnapshots.count > maximumRetainedSnapshots {
+            preEditSnapshots.removeFirst(preEditSnapshots.count - maximumRetainedSnapshots)
+        }
+    }
+
+    private static func sourceString(from textView: CodeEditorView) -> String {
+        #if canImport(AppKit)
+        textView.textStorage?.string ?? ""
+        #else
+        textView.textStorage.string
+        #endif
+    }
+
+    private static func byteRange(forUTF16Range range: NSRange, in source: String) -> Range<Int>? {
+        guard let stringRange = Range(range, in: source) else { return nil }
+        let lowerBound = source[..<stringRange.lowerBound].utf8.count
+        let upperBound = source[..<stringRange.upperBound].utf8.count
+        return lowerBound..<upperBound
+    }
+
+    private static func stringRange(forByteRange byteRange: Range<Int>, in source: String) -> Range<String.Index>? {
+        guard byteRange.lowerBound >= 0,
+              byteRange.upperBound >= byteRange.lowerBound,
+              byteRange.upperBound <= source.utf8.count else {
+            return nil
+        }
+
+        let utf8View = source.utf8
+        guard let lowerByteIndex = utf8View.index(
+            utf8View.startIndex,
+            offsetBy: byteRange.lowerBound,
+            limitedBy: utf8View.endIndex
+        ),
+            let upperByteIndex = utf8View.index(
+                utf8View.startIndex,
+                offsetBy: byteRange.upperBound,
+                limitedBy: utf8View.endIndex
+            ),
+            let lowerIndex = String.Index(lowerByteIndex, within: source),
+            let upperIndex = String.Index(upperByteIndex, within: source) else {
+            return nil
+        }
+
+        return lowerIndex..<upperIndex
     }
 }
 

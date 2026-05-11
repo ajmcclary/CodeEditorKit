@@ -379,6 +379,25 @@ final class LanguageDetectionTests: XCTestCase {
     }
 
     @MainActor
+    func testModelineAtEndOfLargeFileBeyondPrefixSample() {
+        let service = LanguageDetectionService()
+        let body = String(repeating: "plain text line with no language signal\n", count: 80)
+        let content = body + "# vim: set filetype=python:"
+
+        let detected = service.detectLanguage(fromContent: content)
+
+        XCTAssertEqual(detected, .python, "EOF modelines beyond the first 1,000 characters should be scanned")
+    }
+
+    @MainActor
+    func testDockerfileVariantPathDetection() {
+        let service = LanguageDetectionService()
+
+        XCTAssertEqual(service.detectLanguage(fromPath: "/tmp/Dockerfile.dev"), .dockerfile)
+        XCTAssertEqual(service.detectLanguage(fromPath: "/tmp/dockerfile.production"), .dockerfile)
+    }
+
+    @MainActor
     func testModelineNoMatchReturnsNil() {
         let service = LanguageDetectionService()
 

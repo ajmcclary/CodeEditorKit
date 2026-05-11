@@ -139,23 +139,53 @@ public final class LanguageRegistry {
     // MARK: - Built-in Languages
 
     private func registerBuiltInLanguages() {
-        // Register Swift
-        register(SwiftLanguageProvider())
-
-        // Register other built-in languages
-        register(PythonLanguageProvider())
-        register(JavaScriptLanguageProvider())
-        register(JSONLanguageProvider())
-        register(HTMLLanguageProvider())
-        register(CSSLanguageProvider())
-        register(MarkdownLanguageProvider())
-        register(XMLLanguageProvider())
-        register(YAMLLanguageProvider())
-        register(PlainTextLanguageProvider())
+        for language in Language.allCases {
+            guard let descriptor = LanguageDescriptor.descriptor(for: language) else { continue }
+            register(DescriptorLanguageProvider(descriptor: descriptor))
+        }
     }
 }
 
 // MARK: - Built-in Language Providers
+
+/// Descriptor-backed provider for the canonical built-in language catalog.
+struct DescriptorLanguageProvider: LanguageProvider {
+    let descriptor: LanguageDescriptor
+
+    var identifier: String {
+        descriptor.language.identifier
+    }
+
+    var displayName: String {
+        descriptor.displayName
+    }
+
+    var fileExtensions: [String] {
+        descriptor.fileExtensions
+    }
+
+    @MainActor
+    func createHighlighter() -> any SyntaxHighlighter {
+        switch descriptor.language {
+        case .swift:
+            return SwiftSyntaxHighlighter()
+
+        case .plainText:
+            return PlainTextHighlighter()
+
+        default:
+            let regexHighlighter = RegexSyntaxHighlighter()
+            if let definition = regexHighlighter.languageDefinition(for: descriptor.language) {
+                return RegexSyntaxHighlighter(customLanguage: definition)
+            }
+            return PlainTextHighlighter()
+        }
+    }
+
+    nonisolated func completionKeywords() -> [String] {
+        descriptor.keywords
+    }
+}
 
 /// Swift language provider
 struct SwiftLanguageProvider: LanguageProvider {

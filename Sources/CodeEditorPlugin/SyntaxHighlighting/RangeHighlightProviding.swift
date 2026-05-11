@@ -12,6 +12,12 @@ internal protocol RangeHighlightProviding: AnyObject {
     /// Called before text storage applies an edit. Default: no-op.
     func willApplyEdit(textView: CodeEditorView, range: NSRange)
 
+    /// Called before the provider processes an already-applied edit, with the
+    /// pre-edit source snapshot. Providers with byte-oriented incremental
+    /// parsers need this to translate UTF-16 edit ranges into old/new byte
+    /// ranges without guessing from the post-edit text.
+    func willApplyEdit(textView: CodeEditorView, source: String, range: NSRange)
+
     /// Called after an edit. Returns invalidated character indices.
     func applyEdit(textView: CodeEditorView, range: NSRange, delta: Int) async -> IndexSet
 
@@ -21,4 +27,8 @@ internal protocol RangeHighlightProviding: AnyObject {
 
 extension RangeHighlightProviding {
     func willApplyEdit(textView _: CodeEditorView, range _: NSRange) {}
+
+    func willApplyEdit(textView: CodeEditorView, source _: String, range: NSRange) {
+        willApplyEdit(textView: textView, range: range)
+    }
 }

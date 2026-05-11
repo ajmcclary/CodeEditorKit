@@ -454,6 +454,29 @@ final class SyntaxHighlightingTests: XCTestCase {
         XCTAssertEqual(language, .dockerfile, "Dockerfile should map to .dockerfile, not .shell")
     }
 
+    @MainActor
+    func testLanguageRegistryRegistersAllDescriptorLanguages() {
+        let registry = LanguageRegistry()
+
+        for language in Language.allCases {
+            XCTAssertNotNil(
+                registry.provider(for: language.identifier),
+                "LanguageRegistry should register \(language.name)"
+            )
+        }
+
+        XCTAssertEqual(registry.provider(forFileExtension: "cs")?.identifier, Language.csharp.identifier)
+        XCTAssertEqual(registry.provider(forFileExtension: "kt")?.identifier, Language.kotlin.identifier)
+        XCTAssertEqual(registry.provider(forFileExtension: "dart")?.identifier, Language.dart.identifier)
+        XCTAssertEqual(registry.provider(forFileExtension: "toml")?.identifier, Language.toml.identifier)
+        XCTAssertEqual(registry.provider(forFileExtension: "lua")?.identifier, Language.lua.identifier)
+
+        let csharpTokens = registry.provider(for: Language.csharp.identifier)?
+            .createHighlighter()
+            .highlight(source: "public class Program { static void Main() {} }")
+        XCTAssertFalse(csharpTokens?.isEmpty ?? true, "Descriptor-backed registry providers should create real highlighters")
+    }
+
     /// Proves that Dockerfile regex definition produces tokens.
     @MainActor
     func testDockerfileHighlightingProducesTokens() {

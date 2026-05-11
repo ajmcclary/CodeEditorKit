@@ -49,12 +49,16 @@ public final class LanguageDetectionService {
     /// Detects language from file path
     public func detectLanguage(fromPath path: String) -> Language {
         let url = URL(fileURLWithPath: path)
+        let filename = url.lastPathComponent
+        let filenameLanguage = detectLanguage(fromFilename: filename)
+        if filenameLanguage != .plainText {
+            return filenameLanguage
+        }
+
         let fileExtension = url.pathExtension
 
         guard !fileExtension.isEmpty else {
-            // Check for special filenames
-            let filename = url.lastPathComponent
-            return detectLanguage(fromFilename: filename)
+            return filenameLanguage
         }
 
         return detectLanguage(fromExtension: fileExtension)
@@ -65,7 +69,7 @@ public final class LanguageDetectionService {
         let lowercasedFilename = filename.lowercased()
 
         switch lowercasedFilename {
-        case "dockerfile":
+        case let name where name == "dockerfile" || name.hasPrefix("dockerfile."):
             return .dockerfile
 
         case "makefile", "gnumakefile":
@@ -108,23 +112,24 @@ public final class LanguageDetectionService {
             return cached
         }
 
-        // Limit content analysis to first 1000 characters for performance
-        let sampleContent = String(content.prefix(1_000))
+        // Keep content analysis bounded while still honoring EOF modelines.
+        let prefixSample = String(content.prefix(1_000))
+        let suffixSample = String(content.suffix(1_000))
 
         // Try to detect by shebang (strongest signal)
-        if let shebangLanguage = detectLanguageFromShebang(sampleContent) {
+        if let shebangLanguage = detectLanguageFromShebang(prefixSample) {
             contentCache[contentHash] = shebangLanguage
             return shebangLanguage
         }
 
         // Try to detect by modelines (editor directive)
-        if let modelineLanguage = detectLanguageFromModelines(sampleContent) {
+        if let modelineLanguage = detectLanguageFromModelines(prefix: prefixSample, suffix: suffixSample) {
             contentCache[contentHash] = modelineLanguage
             return modelineLanguage
         }
 
         // Try to detect by content patterns
-        if let patternLanguage = detectLanguageFromPatterns(sampleContent) {
+        if let patternLanguage = detectLanguageFromPatterns(prefixSample) {
             contentCache[contentHash] = patternLanguage
             return patternLanguage
         }
@@ -272,10 +277,9 @@ public final class LanguageDetectionService {
     /// Supported modeline formats:
     /// - Vim:  `vim: set filetype=python:`, `vim: ft=python`
     /// - Emacs: `-*- mode: python -*-`, `-*- mode: python; -*-`
-    private func detectLanguageFromModelines(_ content: String) -> Language? {
-        let lines = content.split(separator: "\n", omittingEmptySubsequences: false)
-        let prefixLines = lines.prefix(5)
-        let suffixLines = lines.suffix(5)
+    private func detectLanguageFromModelines(prefix: String, suffix: String) -> Language? {
+        let prefixLines = prefix.split(separator: "\n", omittingEmptySubsequences: false).prefix(5)
+        let suffixLines = suffix.split(separator: "\n", omittingEmptySubsequences: false).suffix(5)
 
         for line in prefixLines + suffixLines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)

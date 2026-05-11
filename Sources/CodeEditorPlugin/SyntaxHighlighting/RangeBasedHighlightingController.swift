@@ -12,6 +12,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     private let provider: any RangeHighlightProviding
     private let providerState: HighlightProviderState
     private let visibleRangeProvider: VisibleRangeProvider
+    private var previousSourceSnapshot: String?
 
     internal let styleDataSource: StyledMinimapStyleDataSource
 
@@ -64,6 +65,7 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
         self.styleDataSource = StyledMinimapStyleDataSource(container: container) { capture in
             TokenType(rawValue: capture)?.adaptiveColor ?? PlatformColors.label
         }
+        self.previousSourceSnapshot = Self.sourceString(from: textView)
 
         provider.setUp(textView: textView, language: language)
         let state = providerState
@@ -90,7 +92,20 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
     }
 
     internal func textStorageDidApplyEdit(_ event: TextEditEvent) {
+        guard let textView else { return }
+        defer {
+            previousSourceSnapshot = Self.sourceString(from: textView)
+        }
         guard event.editedCharacters else { return }
+        if let previousSourceSnapshot {
+            provider.willApplyEdit(
+                textView: textView,
+                source: previousSourceSnapshot,
+                range: event.editedRange
+            )
+        } else {
+            provider.willApplyEdit(textView: textView, range: event.editedRange)
+        }
         container.storageUpdated(
             editedRange: event.editedRange,
             changeInLength: event.changeInLength
@@ -103,6 +118,14 @@ internal final class RangeBasedHighlightingController: TextEditEventObserving {
             range: event.editedRange,
             delta: event.changeInLength
         )
+    }
+
+    private static func sourceString(from textView: CodeEditorView) -> String {
+        #if canImport(AppKit)
+        textView.textStorage?.string ?? ""
+        #else
+        textView.textStorage.string
+        #endif
     }
 
     private static func makeHighlighter(for language: Language) -> any SyntaxHighlighter {
