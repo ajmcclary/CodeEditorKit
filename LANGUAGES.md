@@ -37,6 +37,10 @@ Baseline: Swift 6.3, strict concurrency, macOS + iOS.
 
 The strongest recommendation from this analysis: **do not import CodeEditLanguages wholesale**. Instead, adopt its data-model patterns (centralized asset descriptors, typed query bundles, robust language detection) into our existing Swift 6.3 strict-concurrency architecture, then build a Tree-sitter provider behind our `RangeHighlightProviding` protocol.
 
+**Architecture decisions**:
+- **Swift stays on SwiftSyntax.** SwiftSyntax remains authoritative for Swift highlighting, document symbols, and parser-derived features. Tree-sitter is for non-Swift languages only.
+- **Tree-sitter is an optional companion package** (`CodeEditorTreeSitterLanguages`), not part of the core editor package. Core stays SwiftSyntax + regex + fast JSON. Consumers opt in.
+
 ---
 
 ## Current Architecture Map
@@ -167,20 +171,23 @@ CodeEditLanguages has these **additional** entries (21 more, for 41 total):
    - `/usr/bin/env -S python3 -u` → parses env flags.
    - Script aliases: `node`, `deno`, `python2`, `python3`.
    
-   Our implementation (`detectLanguageFromShebang`) does:
+   Our implementation (`detectLanguageFromShebang`) uses substring matching:
    ```swift
    if shebang.contains("python") { return .python }
    // ...
    ```
-   This matches `/usr/bin/python` but misses `/usr/bin/env python3` (the word "python" exists but the logic can't resolve the script name from env).
+   Because it uses `contains()`, it *does* match `/usr/bin/env python3` (the substring "python" appears). The real problems are:
+   - **Imprecision**: substring matching can produce accidental matches (e.g., a shebang containing "python" in a path like `/opt/nopython/bin/node`).
+   - **Incompleteness**: it cannot structurally parse `env -S` flags, cannot distinguish `python2` from `python3` for targeted handling, and cannot resolve script aliases like `deno` (which has no substring match to any current check).
+   - **Missing aliases**: `#!/usr/bin/env node` is not detected because "node" has no substring check — only "javascript" and "node" are not the same substring. Similarly, `deno` is not checked.
 
 2. **No modeline scanning.** CodeEdit scans prefix/suffix buffers for:
    - Vim modelines: `vim: set filetype=python:`
    - Emacs modelines: `-*- mode: python -*-`
    
-   We have no equivalent.
+   Our `LanguageDetectionService` has no equivalent. These are common in scripts and configuration files.
 
-3. **Dockerfile maps to shell.** Should be its own language. Until we add `Dockerfile` to the enum, the minimum fix is to stop claiming Dockerfile is shell.
+3. **Dockerfile maps to shell.** Should be its own `Language` case (`.dockerfile`). Do not map to `.plainText` as a fallback — Dockerfile has real syntax that deserves highlighting. Add the case to the enum and provide a regex definition.
 
 4. **No script-embedding detection.** Shebangs with `node` should detect JavaScript, `deno` should detect TypeScript, `python2`/`python3` should detect Python. Our shebang logic only matches the substring "javascript" — `#!/usr/bin/env node` would not be detected.
 
@@ -265,9 +272,13 @@ struct LanguageDescriptor: Sendable {
 
 This matters because `RangeBasedHighlightingController.makeHighlighter(for:)` uses `LanguageRegistry` — so the range-backed (minimap) path produces no tokens for Go, Rust, C, C++, Java, Ruby, PHP, Shell, or SQL.
 
+**Recommendation**: `RangeBasedHighlightingController` should use the canonical `RegexSyntaxHighlighter` definitions (from `RegexSyntaxHighlighter+LanguagesExtensions.swift`) directly, bypassing `LanguageRegistry` for built-in languages. `LanguageRegistry` should be retained only for public/custom language provider registration (its `LanguageProvider` protocol surface). Maintaining two internal registries that duplicate regex rules is unsustainable — every language addition or rule change must be made in both places.
+
 **Tree-sitter opportunity**: Tree-sitter `highlights.scm` files are the canonical, community-maintained source of truth for syntax coloring. For non-Swift languages, using them eliminates the hand-maintenance burden. The 178 `.scm` files in CodeEditLanguages cover all major languages.
 
 ### 4.4 Range-Based Highlighting Insertion Point
+
+**This is Phase 1 work — the only immediate code change.**
 
 **Current state**: `RangeHighlightProviding` protocol is already the right abstraction:
 
@@ -304,26 +315,29 @@ This means the range-backed path (`RangeBasedHighlightingController` → `Langua
 
 This must be fixed before any Tree-sitter work, otherwise the baseline is broken.
 
-**Fix**: `RegexSyntaxHighlighter` should store the custom language:
+**Fix**: Add an immutable stored property to `RegexSyntaxHighlighter` itself — do **not** use Objective-C associated objects. Under Swift 6.3 strict concurrency, an immutable `let` property initialized at construction time is safe, auditable, and free of runtime association hazards:
 
 ```swift
-extension RegexSyntaxHighlighter: SyntaxHighlighter {
-    private static var languageKey: UInt8 = 0
+public final class RegexSyntaxHighlighter: Sendable {
+    // Existing properties...
+    public let supportedLanguages: [String: RegexLanguageDefinition]
+    private let languageMap: [Language: RegexLanguageDefinition]
 
-    private var storedLanguage: LanguageDefinition? {
-        get { objc_getAssociatedObject(self, &Self.languageKey) as? LanguageDefinition }
-        set { objc_setAssociatedObject(self, &Self.languageKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
+    /// Optional default language — stored immutably at init for use when
+    /// `highlight(source:)` is called without an explicit definition.
+    private let defaultLanguage: RegexLanguageDefinition?
+
+    public init(defaultLanguage: RegexLanguageDefinition? = nil) {
+        self.supportedLanguages = Self.createLanguageDefinitions()
+        self.languageMap = Self.createLanguageMap(from: supportedLanguages)
+        self.defaultLanguage = defaultLanguage
     }
 
-    public convenience init(customLanguage language: LanguageDefinition) {
-        self.init()
-        self.storedLanguage = language
-    }
-
+    // Conforms to SyntaxHighlighter.highlight(source:)
     public func highlight(source: String) -> [HighlightedToken] {
-        guard let language = storedLanguage else {
-            let plainTextDef = LanguageDefinition(name: "Plain", fileExtensions: [], rules: [])
-            return highlight(source: source, language: plainTextDef)
+        guard let language = defaultLanguage else {
+            // No language defined — return empty (plain text, no tokens).
+            return []
         }
         return highlight(source: source, language: language)
     }
@@ -402,7 +416,7 @@ Coverage: All 20 languages have keyword/type/function/literal completions via `L
 
 **Tree-sitter opportunity**: `injections.scm` query files define language nesting rules. Tree-sitter can recursively parse injected languages, producing proper tokens for embedded code. This is a headline feature that regex cannot match.
 
-**Implementation note**: Injections require the Tree-sitter provider (or a compatible parser) and add complexity — recursive parsing, parse scheduling, range management for nested languages. This should be Phase 4+ after basic Tree-sitter highlighting is stable.
+**Implementation note**: Injections require the Tree-sitter provider (or a compatible parser) and add complexity — recursive parsing, parse scheduling, range management for nested languages. This should be Phase 6b after basic Tree-sitter highlighting (Phase 5/6a) is stable.
 
 ---
 
@@ -410,72 +424,90 @@ Coverage: All 20 languages have keyword/type/function/literal completions via `L
 
 ### Critical Bugs
 
-1. **`RegexSyntaxHighlighter` convenience init discards custom language**
+1. **`RegexSyntaxHighlighter` convenience init discards custom language** (BLOCKING)
    - File: `SyntaxHighlighting/LanguageRegistry.swift`, line ~360
    - Effect: Range-based highlighting path produces zero tokens for all regex-backed languages.
-   - Fix: Store the passed `LanguageDefinition` and use it in `highlight(source:)`.
+   - Fix: Add `private let defaultLanguage: RegexLanguageDefinition?` to `RegexSyntaxHighlighter` itself, initialize it in a new `init(defaultLanguage:)` and use it in `highlight(source:)`. No associated objects.
 
-2. **`LanguageRegistry.registerBuiltInLanguages()` only registers 10 languages**
+2. **`LanguageRegistry.registerBuiltInLanguages()` only registers 10 languages** (BLOCKING)
    - File: `SyntaxHighlighting/LanguageRegistry.swift`, line ~125
    - Effect: `RangeBasedHighlightingController` has no highlighting for Go, Rust, C, C++, Java, Ruby, PHP, Shell, SQL.
-   - Fix: Either expand to all 18 languages, or switch `RangeBasedHighlightingController` to use `RegexSyntaxHighlighter` directly instead of `LanguageRegistry`.
+   - Fix: Switch `RangeBasedHighlightingController` to use the canonical `RegexSyntaxHighlighter` definitions directly. Retain `LanguageRegistry` only for public/custom language providers.
 
-3. **Dockerfile maps to `.shell`**
+3. **Dockerfile maps to `.shell`** (HIGH)
    - Files: `Core/LanguageDetectionService.swift` (line ~70), `Language` enum fileExtensions
    - Effect: Dockerfile content gets shell highlighting, which is semantically wrong.
-   - Fix: Add `.dockerfile` to Language enum, or at minimum stop mapping Dockerfile to shell.
+   - Fix: Add `.dockerfile` as a real `Language` case with its own regex definition. Do not fall back to `.plainText`.
 
-4. **`LanguageMetadataRegistry` duplicates `LanguageStaticMetadata`**
+4. **`LanguageMetadataRegistry` duplicates `LanguageStaticMetadata`** (MEDIUM)
    - Files: `Languages/LanguageMetadataRegistry.swift`, `Languages/LanguageStaticMetadata.swift`
    - Effect: Two sources of truth for language metadata. Only 3 of 20 languages in the registry.
    - Fix: Merge into one or deprecate `LanguageMetadataRegistry`.
 
 ### Gaps (Non-Critical)
 
-5. **No modeline scanning** — Vim/Emacs modelines are common in scripts and config files.
-6. **Shebang doesn't resolve `/usr/bin/env`** — the most common shebang form on macOS/Linux.
-7. **No script alias resolution** — `#!/usr/bin/env node` should resolve to JavaScript.
-8. **No injection support** — embedded languages (Markdown code blocks, HTML script/style, JS template literals) get no highlighting.
-9. **Folding providers are heuristic** — brace-matching can't distinguish string braces from structural braces.
-10. **Symbol providers are heuristic** — line-based function detection has false positives.
+5. **Shebang parsing is substring-based, not structural.** It matches `/usr/bin/env python3` by coincidence (substring "python"), but cannot resolve `env -S` flags, misses `deno`/`node` aliases, and can produce accidental matches. Replace with structural parser.
+6. **No modeline scanning** — Vim/Emacs modelines are common in scripts and config files.
+7. **No injection support** — embedded languages (Markdown code blocks, HTML script/style, JS template literals) get no highlighting.
+8. **Folding providers are heuristic** — brace-matching can't distinguish string braces from structural braces.
+9. **Symbol providers are heuristic** — line-based function detection has false positives.
 
 ---
 
 ## Phased Migration Plan
 
-### Phase 1: Fix Baseline (immediate)
+### Phase 1: Baseline Correctness (immediate — only code work now)
 
-**Goal**: Make the existing range-based pipeline work correctly before adding Tree-sitter.
+**Goal**: Make the existing range-based pipeline work correctly. No new features, no Tree-sitter.
 
-1. Fix `RegexSyntaxHighlighter` custom language init → store and use the definition.
-2. Expand `LanguageRegistry` or switch `RangeBasedHighlightingController` to use `RegexSyntaxHighlighter` directly for all 18 non-plainText languages.
-3. Add tests: prove range-backed minimap has tokens for JavaScript, Python, JSON, Markdown, CSS, Go, Rust.
-4. Fix Dockerfile mapping (stop mapping to shell; either add as language or treat as plain text until added).
+1. Fix `RegexSyntaxHighlighter` custom language init → add `private let defaultLanguage: RegexLanguageDefinition?` and use it in `highlight(source:)`.
+2. Switch `RangeBasedHighlightingController` to use canonical `RegexSyntaxHighlighter` definitions directly instead of `LanguageRegistry` for built-in languages.
+3. Add regression tests proving `RangeBasedHighlightingController` produces tokens for JS, Python, Go, Rust, SQL, Shell, Markdown, JSON, and CSS.
+4. Add `.dockerfile` as a real `Language` case with its own regex definition.
 
-**Files touched**: `LanguageRegistry.swift`, `RegexSyntaxHighlighter.swift`, `RangeBasedHighlightingController.swift`, `LanguageDetectionService.swift`.
+**Files touched**: `RegexSyntaxHighlighter.swift`, `RangeBasedHighlightingController.swift`, `LanguageRegistry.swift`, `LanguageDetectionService.swift`, `Language` enum.
 
-### Phase 2: Improve Language Detection
+### Phase 2: Descriptor Consolidation
 
-1. Add proper shebang parser: resolve `/usr/bin/env`, handle `-S` flags, resolve script aliases.
-2. Add modeline scanner: Vim (`vim:.*filetype=`), Emacs (`-*- mode: ... -*-`).
-3. Add script alias table: `node`→JavaScript, `deno`→TypeScript, `python2`/`python3`→Python, `rb`→Ruby.
-4. Add coverage tests for shebang variants.
+**Goal**: Merge all language metadata into a single `LanguageDescriptor` source of truth **before** adding languages or new detection logic.
+
+1. Merge `LanguageMetadataRegistry` into `LanguageStaticMetadata` (or deprecate the former).
+2. Add `LanguageDescriptor` struct with all fields: identity (extensions, LSP ID, Tree-sitter name, shebang identifiers, script aliases), syntax (comments, strategy), completion data (keywords, types, functions, literals, triggers), and query purposes.
+3. Ensure `Language` enum properties (`name`, `fileExtensions`, `lspIdentifier`) delegate to `LanguageDescriptor.all[language]` rather than containing their own switch statements.
+4. Ensure `RegexSyntaxHighlighter.createLanguageMap(from:)`, `LanguageProviderFactory`, `SymbolNavigator`, `FoldingProviderRegistry`, and `LanguageDetectionService` all read from the descriptor.
+
+**Why before language additions**: Adding a new language today touches the `Language` enum switch (name, extensions, LSP ID), `LanguageStaticMetadata.all` dictionary, `RegexSyntaxHighlighter+LanguagesExtensions` definitions, `FoldingProviderRegistry` registrations, `SymbolNavigator` registrations, `LanguageDetectionService` filename table, and optionally `LanguageRegistry` inline rules. After consolidation, a new language is one descriptor entry plus a regex definition.
+
+**Files touched**: `LanguageStaticMetadata.swift`, `LanguageMetadataRegistry.swift`, `LanguageProviderFactory.swift`, `SyntaxHighlightingCoordinator.swift` (Language enum).
+
+### Phase 3: Language Detection
+
+**Goal**: Replace substring-based shebang matching with structural parsing. Add modeline scanning.
+
+1. Add `parseShebang(_:)` — resolves `/usr/bin/env` indirection, handles `-S` flags, extracts the script name, looks it up in the descriptor's `shebangIdentifiers` and `scriptAliases` sets.
+2. Add `scanModelines(prefix:suffix:)` — detects Vim (`vim:.*filetype=`) and Emacs (`-*- mode: ... -*-`) modelines, resolves filetype to `Language` via descriptor.
+3. Remove the old substring-based `detectLanguageFromShebang`. The new parser uses the descriptor alias table, so `deno` → TypeScript, `node` → JavaScript, `python2`/`python3` → Python, etc.
+4. Add coverage tests for shebang variants: `/usr/bin/env python3`, `/usr/bin/env -S python3 -u`, `/usr/bin/env node`, `/usr/bin/env deno`, `/bin/bash`, `/usr/bin/ruby`.
 
 **Files touched**: `LanguageDetectionService.swift`.
 
-### Phase 3: Unify Language Metadata
+### Phase 4: Add Small Languages
 
-1. Merge `LanguageMetadataRegistry` into `LanguageStaticMetadata` (or deprecate the former).
-2. Add `LanguageDescriptor` struct as the single source of truth per language.
-3. Add `treeSitterName` and `queryNames` fields in preparation for Tree-sitter integration.
+**Goal**: Add Dockerfile, TOML, Lua, C#, Kotlin, Dart. Do this after descriptor consolidation so each language is one descriptor entry + one regex definition.
 
-**Files touched**: `LanguageStaticMetadata.swift`, `LanguageMetadataRegistry.swift`, `LanguageProviderFactory.swift`.
+1. Add `.dockerfile`, `.toml`, `.lua`, `.csharp`, `.kotlin`, `.dart` to `Language` enum.
+2. Add `LanguageDescriptor` entries for each.
+3. Add regex definitions in `RegexSyntaxHighlighter+LanguagesExtensions`.
+4. Register folding / symbol providers (start with `BraceFoldingProvider` for brace-based languages, `IndentationFoldingProvider` for TOML/Lua/Dockerfile).
+5. Map file extensions, shebangs, and LSP identifiers.
 
-### Phase 4: Tree-sitter Spike (JavaScript only)
+**Files touched**: `Language` enum, `LanguageStaticMetadata.swift`, `RegexSyntaxHighlighter+LanguagesExtensions.swift`, `FoldingProviderRegistry.swift`, `SymbolNavigator.swift`.
 
-**Goal**: Prove Tree-sitter highlighting works behind a feature flag.
+### Phase 5: Tree-sitter Spike (JavaScript only, feature-flagged)
 
-1. Resolve SwiftTreeSitter Swift 6.3 compatibility (verify 0.25.x compiles with `StrictConcurrency`).
+**Goal**: Prove Tree-sitter highlighting works behind a feature flag. Swift stays on SwiftSyntax throughout.
+
+1. Resolve SwiftTreeSitter Swift 6.3 compatibility (verify 0.25.x compiles with `StrictConcurrency`). If it does not, fork or write a minimal wrapper.
 2. Build a `TreeSitterRangeHighlightProvider` conforming to `RangeHighlightProviding`.
 3. Load JavaScript grammar + `highlights.scm` queries.
 4. Implement parse → query → `[HighlightedToken]` pipeline.
@@ -485,28 +517,31 @@ Coverage: All 20 languages have keyword/type/function/literal completions via `L
 
 **Files touched**: New `TreeSitter/` directory or `SyntaxHighlighting/TreeSitter/`.
 
-### Phase 5: Expand Tree-sitter Coverage
+### Phase 6: Tree-sitter Expansion
 
+**Goal**: Expand Tree-sitter to all non-Swift languages with available grammars. Highlighting first, then injections, then folds/symbols.
+
+**Sub-phase 6a — Highlighting**:
 1. Add grammars for high-impact languages: TypeScript, Python, JSON, HTML, CSS, Markdown, Ruby, PHP, Shell, SQL, Go, Rust, C, C++, Java, YAML, XML.
 2. Map Tree-sitter capture names to our `TokenType` enum.
 3. Implement capture-to-token mapping table per language.
 4. Add feature flag: `EditorConfiguration.behavior.useTreeSitterHighlighting`.
 5. Benchmark all supported languages.
 
-### Phase 6: Injections
-
+**Sub-phase 6b — Injections**:
 1. Implement `injections.scm` support.
 2. Recursive parse scheduling for nested languages.
 3. Markdown fenced code blocks, HTML `<script>`/`<style>`, JS template literals first.
 4. PHP-in-HTML, JSX, TSX as injection modes.
 
-### Phase 7: Tree-sitter Folding & Symbols
-
+**Sub-phase 6c — Folding & Symbols**:
 1. Build `TreeSitterFoldProvider` using `folds.scm`.
 2. Build `TreeSitterSymbolProvider` using `tags.scm`.
 3. Register alongside existing heuristic providers with priority fallback.
 
-### Phase 8: Packaging (optional grammar package)
+### Phase 7: Packaging
+
+**Goal**: Extract Tree-sitter grammars and query assets into an optional companion package.
 
 1. Extract grammar binaries + query resources into `CodeEditorTreeSitterLanguages` package.
 2. Core editor stays lean (pure Swift + SwiftSyntax + regex fallback).
@@ -630,7 +665,7 @@ Compare each metric against current regex path. Tree-sitter will be slower for i
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| SwiftTreeSitter doesn't compile under Swift 6.3 | High | Verify before starting Phase 4. Fall back to fork or wrapper if needed. |
+| SwiftTreeSitter doesn't compile under Swift 6.3 | High | Verify before starting Phase 5. Fall back to fork or wrapper if needed. |
 | Tree-sitter binary size (grammars) | Medium | Keep in optional companion package. Core editor stays lean. |
 | iOS build complexity (C library) | Medium | Validate ARM64 slices early. Consider embedded grammar bundles. |
 | Query capture names don't match our `TokenType` | Low | Build explicit mapping table per language. Test with snapshot tests. |
@@ -642,17 +677,20 @@ Compare each metric against current regex path. Tree-sitter will be slower for i
 
 ## Verification Checklist
 
-- [ ] Phase 1: `RegexSyntaxHighlighter(customLanguage:)` stores and uses the definition.
-- [ ] Phase 1: Range-backed minimap has tokens for all 18 active languages.
-- [ ] Phase 2: Shebang parser resolves `/usr/bin/env node` → JavaScript.
-- [ ] Phase 2: Modeline scanner detects `vim: set filetype=python:`.
-- [ ] Phase 3: Single `LanguageDescriptor` replaces dual metadata systems.
-- [ ] Phase 4: JavaScript Tree-sitter spike compiles under Swift 6.3.
-- [ ] Phase 4: 10K-line JS file parses in < 50 ms.
-- [ ] Phase 5: All 18 non-Swift languages have Tree-sitter highlighting behind feature flag.
-- [ ] Phase 6: Markdown fenced code blocks get injected highlighting.
-- [ ] Phase 7: Tree-sitter folding matches `folds.scm` output.
-- [ ] Phase 7: Tree-sitter symbols match `tags.scm` output.
+- [ ] Phase 1: `RegexSyntaxHighlighter` stores default language as immutable `let` property.
+- [ ] Phase 1: `RangeBasedHighlightingController` uses canonical regex definitions (not `LanguageRegistry`) for all 18 non-plainText languages.
+- [ ] Phase 1: Regression tests prove range-backed minimap tokens for JS, Python, Go, Rust, SQL, Shell, Markdown, JSON, CSS.
+- [ ] Phase 1: `.dockerfile` added as real `Language` case, not mapped to `.shell`.
+- [ ] Phase 2: Single `LanguageDescriptor` replaces dual metadata systems.
+- [ ] Phase 2: `Language` enum properties delegate to `LanguageDescriptor` (no inline switch statements).
+- [ ] Phase 3: Shebang parser resolves `/usr/bin/env node` → JavaScript, `/usr/bin/env deno` → TypeScript.
+- [ ] Phase 3: Modeline scanner detects `vim: set filetype=python:`.
+- [ ] Phase 4: Dockerfile, TOML, Lua, C#, Kotlin, Dart each added as one descriptor + one regex definition.
+- [ ] Phase 5: JavaScript Tree-sitter spike compiles under Swift 6.3.
+- [ ] Phase 5: 10K-line JS file parses in < 50 ms.
+- [ ] Phase 6a: All 18 non-Swift languages have Tree-sitter highlighting behind feature flag.
+- [ ] Phase 6b: Markdown fenced code blocks get injected highlighting.
+- [ ] Phase 6c: Tree-sitter folding and symbols available alongside heuristic fallbacks.
 
 ---
 
