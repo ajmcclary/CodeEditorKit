@@ -214,6 +214,16 @@ public final class LSPManager: ObservableObject {
         clientRegistry.client(for: languageId)
     }
 
+    /// Returns the `TextDocumentSyncKind` advertised by the server for
+    /// the given language. Defaults to `.full` when no server is connected
+    /// or the capability is absent.
+    public func syncKind(for languageId: String) -> TextDocumentSyncKind {
+        clientRegistry.client(for: languageId)?
+            .serverCapabilities?
+            .textDocumentSync?
+            .change ?? .full
+    }
+
     // MARK: - Document Management
 
     /// Open a document in the appropriate LSP server

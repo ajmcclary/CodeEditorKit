@@ -190,6 +190,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// LSP manager for language server integration
     #if canImport(AppKit)
     internal lazy var lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
+
+    /// LSP content coordinator — batches edit events into `textDocument/didChange`
+    /// notifications with ~250 ms debounce. Created by `setupLSPIntegration()`
+    /// when a document path and language are available.
+    internal var lspContentCoordinator: LSPContentCoordinator?
     #endif
 
     /// Code folding engine for managing foldable regions and fold states
@@ -486,6 +491,11 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
         // Clean up code folding - no cleanup method available
         rangeBasedHighlightingController?.detach()
         rangeBasedHighlightingController = nil
+
+        #if canImport(AppKit)
+        lspContentCoordinator?.detach()
+        lspContentCoordinator = nil
+        #endif
 
         // Clean up syntax highlighting
         Task {

@@ -38,7 +38,7 @@ extension CodeEditorView {
         setupLineGeometryStore()
 
         // LSP integration can be set up here when needed
-        // setupLSPIntegration()
+        // setupLSPIntegration(filePath:languageId:)
 
         // Set up TextKit2 rendering optimization
         setupTextKit2Optimization()
@@ -112,4 +112,30 @@ extension CodeEditorView {
         let syntaxService = businessLogicServices.syntaxHighlightingService
         completionTriggerCharacters = syntaxService.getCompletionTriggerCharacters(for: language)
     }
+
+    // MARK: - LSP Integration
+
+    /// Creates an `LSPContentCoordinator` that bridges this editor's
+    /// edit-event stream to LSP `textDocument/didChange` notifications.
+    ///
+    /// Call this after opening a document in an LSP server (via
+    /// `lspManager.openDocument`). The coordinator begins batching edits
+    /// immediately. Call `lspContentCoordinator?.detach()` to stop.
+    ///
+    /// - Parameters:
+    ///   - filePath: Absolute path to the file being edited.
+    ///   - languageId: LSP language identifier (e.g. `"swift"`).
+    #if canImport(AppKit)
+    internal func setupLSPIntegration(filePath: String, languageId: String) {
+        // Detach any previous coordinator first.
+        lspContentCoordinator?.detach()
+
+        lspContentCoordinator = LSPContentCoordinator(
+            textView: self,
+            lspManager: lspManager,
+            filePath: filePath,
+            languageId: languageId
+        )
+    }
+    #endif
 }
