@@ -101,6 +101,7 @@ extension CodeEditorView {
         set {
             if let newValue {
                 textStorage?.setAttributedString(newValue)
+                rebuildLineGeometryStoreFromCurrentTextStorage()
             } else {
                 string = ""
             }

@@ -27,7 +27,13 @@ enum EditorStateBridge {
         let safeLocation = max(0, min(range.location, utf16Length))
         let lineIdx = lineGeometryStore.lineIndex(forUtf16Offset: safeLocation)
         let lineStart = lineGeometryStore.utf16Offset(forLineIndex: lineIdx)
-        let column = safeLocation - lineStart + 1
+        let columnRange = NSRange(location: lineStart, length: safeLocation - lineStart)
+        let column: Int
+        if let stringRange = Range(columnRange, in: text) {
+            column = text[stringRange].count + 1
+        } else {
+            column = safeLocation - lineStart + 1
+        }
         return SelectionState(line: lineIdx + 1, column: column, selectionLength: range.length)
     }
 

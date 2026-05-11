@@ -14,6 +14,7 @@ final class CodeEditorSnapshotTests: XCTestCase {
         var configuration = EditorConfiguration.minimal
         configuration.display.fontSize = 13
         configuration.display.isLineNumbersEnabled = true
+        configuration.display.isSelectedLineHighlighted = false
         configuration.layout.gutterWidth = 44
         configuration.layout.wrapLines = false
         configuration.performance.useHardwareAcceleration = false

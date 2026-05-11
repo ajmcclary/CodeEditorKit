@@ -63,6 +63,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
 
     // MARK: - Initialization
 
+    /// Creates an empty reuse queue.
     public init() {}
 
     // MARK: - Public API
@@ -78,9 +79,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     ///   - factory: Closure that creates a new view when the pool is empty.
     /// - Returns: A view ready for configuration and display.
     public func getOrCreateView(forKey key: Key, factory: () -> View) -> View {
-        if var views = available[key], !views.isEmpty {
-            let view = views.removeLast()
-            available[key] = views.isEmpty ? nil : views
+        if let view = dequeueAvailableView(preferredKey: key) {
             let id = ObjectIdentifier(view)
             checkedOut.insert(id)
             viewToKey[id] = key
@@ -120,9 +119,10 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     ///   - key: The key to associate with the view for future reuse.
     public func enqueueView(_ view: View, forKey key: Key) {
         let id = ObjectIdentifier(view)
+        let activeKey = viewToKey[id] ?? key
         checkedOut.remove(id)
         viewToKey.removeValue(forKey: id)
-        activeViews.removeValue(forKey: key)
+        activeViews.removeValue(forKey: activeKey)
         view.removeFromSuperview()
         prepareForReuse(view)
         available[key, default: []].append(view)
@@ -152,6 +152,24 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     }
 
     // MARK: - Private
+
+    private func dequeueAvailableView(preferredKey key: Key) -> View? {
+        if var views = available[key], !views.isEmpty {
+            let view = views.removeLast()
+            available[key] = views.isEmpty ? nil : views
+            return view
+        }
+
+        guard let fallbackKey = available.first(where: { !$0.value.isEmpty })?.key,
+              var fallbackViews = available[fallbackKey],
+              !fallbackViews.isEmpty else {
+            return nil
+        }
+
+        let view = fallbackViews.removeLast()
+        available[fallbackKey] = fallbackViews.isEmpty ? nil : fallbackViews
+        return view
+    }
 
     /// Prepare a view for reuse by resetting its transform and alpha.
     /// Subclasses can override this behavior by providing a custom

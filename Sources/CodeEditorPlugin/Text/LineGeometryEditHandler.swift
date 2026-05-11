@@ -43,13 +43,11 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
-        guard let textStorage = textView?.textStorage else { return }
-
         // Rebuild the geometry store from the current text storage state.
         // Future optimization: incremental update using red-black tree
         // split/merge/insert/delete operations (O(m log n) for m affected
         // lines). The observer pattern and store API are already in place.
-        geometryStore.build(from: textStorage)
+        textView?.rebuildLineGeometryStoreFromCurrentTextStorage()
     }
 
     // MARK: - Lifecycle

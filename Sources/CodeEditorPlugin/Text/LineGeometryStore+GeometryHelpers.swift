@@ -14,8 +14,10 @@ extension LineGeometryStore {
     /// - Returns: A rectangle spanning the full width at the line's
     ///   y-position with the line's effective height, or `.zero` if
     ///   the line index is out of bounds.
-    public func estimatedRect(forLineAt lineIndex: Int,
-                              containerWidth: CGFloat) -> CGRect {
+    public func estimatedRect(
+        forLineAt lineIndex: Int,
+        containerWidth: CGFloat
+    ) -> CGRect {
         guard lineIndex >= 0, lineIndex < lineCount,
               let geom = lineGeometry(at: lineIndex) else {
             return .zero
@@ -31,8 +33,10 @@ extension LineGeometryStore {
     ///   - yRange: The vertical range to query.
     ///   - containerWidth: Width of the text container.
     /// - Returns: Array of rectangles, one per line in the range.
-    public func estimatedRects(inYRange yRange: ClosedRange<CGFloat>,
-                               containerWidth: CGFloat) -> [CGRect] {
+    public func estimatedRects(
+        inYRange yRange: ClosedRange<CGFloat>,
+        containerWidth: CGFloat
+    ) -> [CGRect] {
         let geoms = lineGeometries(inYRange: yRange)
         return geoms.map { geom in
             let y = yPosition(forLineIndex: lineIndex(forUtf16Offset: geom.utf16Offset))
@@ -47,8 +51,10 @@ extension LineGeometryStore {
     ///   - utf16Range: The text range to query.
     ///   - containerWidth: Width of the text container.
     /// - Returns: Array of rectangles, one per line in the range.
-    public func estimatedRects(in utf16Range: NSRange,
-                               containerWidth: CGFloat) -> [CGRect] {
+    public func estimatedRects(
+        in utf16Range: NSRange,
+        containerWidth: CGFloat
+    ) -> [CGRect] {
         let geoms = lineGeometries(in: utf16Range)
         return geoms.map { geom in
             let y = yPosition(forLineIndex: lineIndex(forUtf16Offset: geom.utf16Offset))
@@ -73,8 +79,10 @@ extension LineGeometryStore {
     ///   - visibleRect: The currently visible rectangle.
     ///   - padding: Extra lines to include above and below (default: 1).
     /// - Returns: A closed range of 0-based line indices.
-    public func visibleLineRange(for visibleRect: CGRect,
-                                  padding: Int = 1) -> ClosedRange<Int> {
+    public func visibleLineRange(
+        for visibleRect: CGRect,
+        padding: Int = 1
+    ) -> ClosedRange<Int> {
         let top = visibleRect.minY
         let bottom = visibleRect.maxY
         let start = max(0, lineIndex(forYPosition: top) - padding)

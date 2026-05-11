@@ -2,6 +2,8 @@
 import Foundation
 import XCTest
 
+// swiftlint:disable force_unwrapping identifier_name legacy_objc_type mark_formatting multiline_arguments xct_specific_matcher
+
 // MARK: - LineGeometryStore Benchmark & Correctness Tests
 //
 // Phase 0 of the LineGeometryStore implementation strategy.
@@ -924,6 +926,17 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 7)
     }
 
+    func testSetEstimatedHeightRecomputesSubtreeHeights() {
+        let store = makeStore(for: "line1\nline2\nline3")
+
+        store.setEstimatedHeight(30.0)
+
+        XCTAssertEqual(store.totalHeight, 90.0)
+        XCTAssertEqual(store.yPosition(forLineIndex: 0), 0)
+        XCTAssertEqual(store.yPosition(forLineIndex: 1), 30.0)
+        XCTAssertEqual(store.yPosition(forLineIndex: 2), 60.0)
+    }
+
     // MARK: - 9. Edit Handler Tests
 
     /// Simulate a text edit by directly calling `textStorageDidApplyEdit`
@@ -1077,16 +1090,34 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
     func testEditHandlerRegisteredViaSetup() {
         // Verify that a properly set up CodeEditorView has the handler
         let textView = CodeEditorView(frame: .zero)
+        #if canImport(AppKit)
+        textView.string = "line1\nline2"
+        #else
         textView.text = "line1\nline2"
+        #endif
 
         // setupTextView is called during init
         XCTAssertNotNil(textView.lineGeometryEditHandler,
                         "Handler should be created during setupTextView()")
 
-        // After setting text, the store should reflect it (handler rebuilds on edit)
-        // The initial text set doesn't go through TextEditEventHub, so we build manually
-        textView.lineGeometryStore.build(from: textView.textStorage!)
         XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
+    }
+
+    func testCodeEditorViewInitializesAndRebuildsGeometryForProgrammaticText() {
+        let textView = CodeEditorView(frame: .zero)
+        XCTAssertEqual(textView.lineCount, 1)
+        XCTAssertEqual(textView.lineRange(for: 1), textView.content.startIndex..<textView.content.endIndex)
+
+        #if canImport(AppKit)
+        textView.string = "a😀b\nsecond\n"
+        #else
+        textView.text = "a😀b\nsecond\n"
+        #endif
+
+        XCTAssertEqual(textView.lineCount, 3)
+        XCTAssertEqual(textView.lineNumber(at: textView.content.startIndex), 1)
+        XCTAssertNotNil(textView.lineRange(for: 2))
+        XCTAssertNotNil(textView.lineRange(for: 3))
     }
 
     // MARK: - 10. ViewReuseQueue Tests
@@ -1137,6 +1168,24 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
         XCTAssertEqual(queue.activeCount, 1)
         XCTAssertEqual(queue.pooledCount, 2)
+    }
+
+    func testViewReuseQueueReusesPooledViewForDifferentKey() {
+        let queue = ViewReuseQueue<PlatformView, Int>()
+
+        let view1 = queue.getOrCreateView(forKey: 1) {
+            PlatformView(frame: .zero)
+        }
+        queue.enqueueView(view1, forKey: 1)
+
+        let view2 = queue.getOrCreateView(forKey: 2) {
+            PlatformView(frame: .zero)
+        }
+
+        XCTAssertTrue(view1 === view2)
+        XCTAssertEqual(queue.totalCreated, 1)
+        XCTAssertEqual(queue.activeCount, 1)
+        XCTAssertEqual(queue.pooledCount, 0)
     }
 
     func testViewReuseQueueReset() {
@@ -1219,3 +1268,5 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         XCTAssertEqual(store.lineIndex(at: CGPoint(x: 10, y: h * 2)), 2)
     }
 }
+
+// swiftlint:enable force_unwrapping identifier_name legacy_objc_type mark_formatting multiline_arguments xct_specific_matcher

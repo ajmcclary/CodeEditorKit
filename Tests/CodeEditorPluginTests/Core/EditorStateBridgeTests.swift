@@ -2,6 +2,12 @@
 import Foundation
 import Testing
 
+#if canImport(AppKit)
+import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
+
 @Suite("EditorStateBridge derivations")
 struct EditorStateBridgeTests {
     @Test("deriveSelection maps NSRange to 1-based Ln/Col on a multi-line string")
@@ -44,6 +50,7 @@ struct EditorStateBridgeTests {
 }
 
 @Suite("EditorStateBridge cache-aware selection derivation")
+@MainActor
 struct EditorStateBridgeCacheAwareTests {
     @Test("deriveSelection with LineGeometryStore matches simple path on small text")
     func cacheMatchesSimple() {
@@ -88,5 +95,19 @@ struct EditorStateBridgeCacheAwareTests {
         let result = EditorStateBridge.deriveSelection(from: range, in: text, lineGeometryStore: store)
         #expect(result.line == 2)
         #expect(result.column == 1)
+    }
+
+    @Test("deriveSelection with LineGeometryStore reports character columns for emoji")
+    func cacheColumnUsesCharactersNotUTF16CodeUnits() {
+        let text = "😀x\nnext"
+        let textStorage = NSTextStorage(string: text)
+        let store = LineGeometryStore()
+        store.build(from: textStorage)
+
+        let range = NSRange(location: 2, length: 0)
+        let result = EditorStateBridge.deriveSelection(from: range, in: text, lineGeometryStore: store)
+
+        #expect(result.line == 1)
+        #expect(result.column == 2)
     }
 }

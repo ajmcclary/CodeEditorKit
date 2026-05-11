@@ -341,6 +341,40 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Memory management coordinator
     internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
 
+    #if canImport(AppKit)
+    override public var string: String {
+        get {
+            super.string
+        }
+        set {
+            super.string = newValue
+            rebuildLineGeometryStoreFromCurrentTextStorage()
+        }
+    }
+    #else
+    // swiftlint:disable:next implicitly_unwrapped_optional
+    override public var text: String! {
+        get {
+            super.text
+        }
+        set {
+            super.text = newValue
+            rebuildLineGeometryStoreFromCurrentTextStorage()
+        }
+    }
+
+    // swiftlint:disable:next implicitly_unwrapped_optional
+    override public var attributedText: NSAttributedString! {
+        get {
+            super.attributedText
+        }
+        set {
+            super.attributedText = newValue
+            rebuildLineGeometryStoreFromCurrentTextStorage()
+        }
+    }
+    #endif
+
     // MARK: - Initialization
 
     #if canImport(AppKit)

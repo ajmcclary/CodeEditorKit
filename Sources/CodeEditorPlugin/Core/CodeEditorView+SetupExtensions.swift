@@ -86,12 +86,26 @@ extension CodeEditorView {
     }
 
     internal func setupLineGeometryStore() {
+        rebuildLineGeometryStoreFromCurrentTextStorage()
+
         // Create and register the edit handler that keeps the geometry
         // store in sync with text storage changes.
         lineGeometryEditHandler = LineGeometryEditHandler(
             geometryStore: lineGeometryStore,
             textView: self
         )
+    }
+
+    internal func rebuildLineGeometryStoreFromCurrentTextStorage() {
+        #if canImport(AppKit)
+        guard let textStorage else {
+            lineGeometryStore.reset()
+            return
+        }
+        lineGeometryStore.build(from: textStorage)
+        #else
+        lineGeometryStore.build(from: textStorage)
+        #endif
     }
 
     internal func updateCompletionTriggerCharacters() {

@@ -156,14 +156,16 @@ public final class LineGeometryStore {
     /// deeper child is recolored red (reducing its bh by 1).
     ///
     /// - Parameter textStorage: The text storage to build geometry from.
-    // swiftlint:disable:next legacy_objc_type
     public func build(from textStorage: NSTextStorage) {
         reset()
+        // swiftlint:disable:next legacy_objc_type
         let nsString = textStorage.string as NSString
         let length = nsString.length
         guard length > 0 else {
             let emptyGeometry = LineGeometry(
-                utf16Offset: 0, utf16Length: 0, lineEndingLength: 0,
+                utf16Offset: 0,
+                utf16Length: 0,
+                lineEndingLength: 0,
                 estimatedHeight: defaultEstimatedHeight
             )
             root = Node(geometry: emptyGeometry)
@@ -222,8 +224,11 @@ public final class LineGeometryStore {
 
     /// Recursively build a balanced BST from a sorted array slice.
     /// All nodes are initially black; the coloring pass fixes violations.
-    private func buildBalanced(from geometries: [LineGeometry],
-                                start: Int, end: Int) -> Node? {
+    private func buildBalanced(
+        from geometries: [LineGeometry],
+        start: Int,
+        end: Int
+    ) -> Node? {
         guard start <= end else { return nil }
         let mid = (start + end) / 2
         let node = Node(geometry: geometries[mid])
@@ -654,7 +659,7 @@ public final class LineGeometryStore {
             if let right = node.right { stack.append(right) }
             if let left = node.left { stack.append(left) }
         }
-        root.propagateMetadataUpward()
+        updateMetadataPostOrder(root)
     }
 
     // MARK: - Fold State
