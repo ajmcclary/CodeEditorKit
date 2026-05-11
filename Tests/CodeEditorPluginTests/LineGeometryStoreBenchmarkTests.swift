@@ -16,6 +16,7 @@ import XCTest
 //   5. Performance benchmarks (build, lookup, insert, delete at scale)
 //   6. Fuzz harness (random edit sequences vs known-correct rebuild)
 
+@MainActor
 final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
     // MARK: - Helpers
@@ -612,5 +613,249 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         XCTAssertEqual(offsets[2], 4)
         XCTAssertEqual(offsets[49_999], 99_998)
         XCTAssertEqual(offsets[50_000], 100_000)
+    }
+
+    // MARK: - 8. LineGeometryStore Integration Tests
+
+    /// Helper: build a `LineGeometryStore` from a plain String.
+    private func makeStore(for text: String) -> LineGeometryStore {
+        let storage = NSTextStorage(string: text)
+        let store = LineGeometryStore()
+        store.build(from: storage)
+        return store
+    }
+
+    /// Verify that the store's offsets match the reference implementation
+    /// for a given text. Returns the reference offsets for further assertions.
+    @discardableResult
+    private func assertStoreMatchesReference(
+        for text: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> [Int] {
+        let referenceOffsets = referenceLineOffsets(for: text)
+        let store = makeStore(for: text)
+
+        // Line count must match
+        XCTAssertEqual(store.lineCount, referenceOffsets.count,
+                       "Line count mismatch", file: file, line: line)
+
+        // Total UTF-16 length must match NSString length
+        let nsString = text as NSString
+        XCTAssertEqual(store.totalUtf16Length, nsString.length,
+                       "Total UTF-16 length mismatch", file: file, line: line)
+
+        // Every reference offset must map to the correct line index
+        for (lineIndex, expectedOffset) in referenceOffsets.enumerated() {
+            let actualOffset = store.utf16Offset(forLineIndex: lineIndex)
+            XCTAssertEqual(actualOffset, expectedOffset,
+                           "Line \(lineIndex): expected offset \(expectedOffset), got \(actualOffset)",
+                           file: file, line: line)
+        }
+
+        // Every offset in the document must round-trip through the store
+        for offset in 0..<nsString.length {
+            let lineIdx = store.lineIndex(forUtf16Offset: offset)
+            let lineStart = store.utf16Offset(forLineIndex: lineIdx)
+            let lineEnd = lineIdx + 1 < store.lineCount
+                ? store.utf16Offset(forLineIndex: lineIdx + 1)
+                : nsString.length
+            XCTAssertTrue(offset >= lineStart && offset < lineEnd,
+                          "Offset \(offset) not in line [\(lineStart), \(lineEnd))",
+                          file: file, line: line)
+        }
+
+        // Tree must be valid
+        XCTAssertTrue(store.validateTree(), "Red-black tree invariants violated",
+                      file: file, line: line)
+
+        return referenceOffsets
+    }
+
+    func testStoreMatchesReferenceASCIISingleLine() {
+        assertStoreMatchesReference(for: "Hello, World!")
+    }
+
+    func testStoreMatchesReferenceASCIIMultiLine() {
+        assertStoreMatchesReference(for: "Line 1\nLine 2\nLine 3")
+    }
+
+    func testStoreMatchesReferenceEmpty() {
+        assertStoreMatchesReference(for: "")
+    }
+
+    func testStoreMatchesReferenceEmoji() {
+        assertStoreMatchesReference(for: "a😀b\nc👨‍👩‍👧‍👦d\nef\u{00E9}")
+    }
+
+    func testStoreMatchesReferenceCRLF() {
+        assertStoreMatchesReference(for: "line1\r\nline2\r\nline3")
+    }
+
+    func testStoreMatchesReferenceCR() {
+        assertStoreMatchesReference(for: "line1\rline2\rline3")
+    }
+
+    func testStoreMatchesReferenceMixedEndings() {
+        assertStoreMatchesReference(for: "LF\nCRLF\r\nCR\rLF\n")
+    }
+
+    func testStoreMatchesReferenceTrailingNewline() {
+        assertStoreMatchesReference(for: "line1\nline2\n")
+    }
+
+    func testStoreMatchesReferenceNoTrailingNewline() {
+        assertStoreMatchesReference(for: "line1\nline2")
+    }
+
+    func testStoreMatchesReferenceMultipleBlankLines() {
+        assertStoreMatchesReference(for: "a\n\n\nb")
+    }
+
+    func testStoreMatchesReferenceSingleNewline() {
+        assertStoreMatchesReference(for: "\n")
+    }
+
+    func testStoreMatchesReferenceSwiftFile() {
+        let text = """
+        import Foundation
+
+        /// A sample file.
+        public struct Test {
+            var value: Int = 0
+        }
+        """
+        assertStoreMatchesReference(for: text)
+    }
+
+    func testStoreLineGeometryAccess() {
+        let text = "line1\nline2\nline3"
+        let store = makeStore(for: text)
+
+        // Access individual line geometries
+        let geom0 = store.lineGeometry(at: 0)
+        XCTAssertNotNil(geom0)
+        XCTAssertEqual(geom0?.utf16Offset, 0)
+        XCTAssertEqual(geom0?.utf16Length, 6) // "line1\n"
+        XCTAssertEqual(geom0?.lineEndingLength, 1)
+
+        let geom1 = store.lineGeometry(at: 1)
+        XCTAssertNotNil(geom1)
+        XCTAssertEqual(geom1?.utf16Offset, 6)
+        XCTAssertEqual(geom1?.utf16Length, 6)
+
+        let geom2 = store.lineGeometry(at: 2)
+        XCTAssertNotNil(geom2)
+        XCTAssertEqual(geom2?.utf16Offset, 12)
+        XCTAssertEqual(geom2?.utf16Length, 5) // "line3" — no newline
+        XCTAssertEqual(geom2?.lineEndingLength, 0)
+
+        // Out of bounds
+        XCTAssertNil(store.lineGeometry(at: -1))
+        XCTAssertNil(store.lineGeometry(at: 3))
+    }
+
+    func testStoreGeometryRangeIteration() {
+        let text = "a\nbb\nccc\ndddd\neeeee"
+        let store = makeStore(for: text)
+
+        // Get lines in a UTF-16 range
+        let range = NSRange(location: 2, length: 10) // covers "bb\nccc\ndd"
+        let geometries = store.lineGeometries(in: range)
+        XCTAssertEqual(geometries.count, 3) // lines 1, 2, 3
+        XCTAssertEqual(geometries[0].utf16Offset, 2) // "bb\n"
+        XCTAssertEqual(geometries[1].utf16Offset, 5) // "ccc\n"
+        XCTAssertEqual(geometries[2].utf16Offset, 9) // "dddd\n"
+    }
+
+    func testStoreHeightTracking() {
+        let text = "line1\nline2\nline3"
+        let store = makeStore(for: text)
+
+        // Default estimated height
+        let defaultHeight: CGFloat = 17.0
+
+        // Each unmeasured line should have effectiveHeight == estimatedHeight
+        for idx in 0..<store.lineCount {
+            let geom = store.lineGeometry(at: idx)
+            XCTAssertEqual(geom?.effectiveHeight, defaultHeight)
+            XCTAssertNil(geom?.measuredHeight)
+        }
+
+        // Total height should be lineCount * estimatedHeight
+        XCTAssertEqual(store.totalHeight, CGFloat(store.lineCount) * defaultHeight)
+
+        // Update a measured height
+        store.updateMeasuredHeight(24.0, forLineAt: 1)
+        let updatedGeom = store.lineGeometry(at: 1)
+        XCTAssertEqual(updatedGeom?.measuredHeight, 24.0)
+        XCTAssertEqual(updatedGeom?.effectiveHeight, 24.0)
+
+        // Total height should reflect the change
+        XCTAssertEqual(store.totalHeight, defaultHeight + 24.0 + defaultHeight)
+    }
+
+    func testStoreFoldState() {
+        let text = "line1\nline2\nline3\nline4"
+        let store = makeStore(for: text)
+        let defaultHeight: CGFloat = 17.0
+
+        // Initial total height
+        XCTAssertEqual(store.totalHeight, CGFloat(store.lineCount) * defaultHeight)
+
+        // Fold line 1
+        store.setFolded(true, forLineAt: 1)
+        XCTAssertTrue(store.lineGeometry(at: 1)?.isFolded ?? false)
+        XCTAssertEqual(store.lineGeometry(at: 1)?.effectiveHeight, 0)
+
+        // Total height should decrease by one line height
+        XCTAssertEqual(store.totalHeight, CGFloat(store.lineCount - 1) * defaultHeight)
+
+        // Unfold
+        store.setFolded(false, forLineAt: 1)
+        XCTAssertEqual(store.totalHeight, CGFloat(store.lineCount) * defaultHeight)
+    }
+
+    func testStoreYPositionLookup() {
+        let text = "line1\nline2\nline3"
+        let store = makeStore(for: text)
+        let h: CGFloat = 17.0
+
+        // Y-position of each line
+        XCTAssertEqual(store.yPosition(forLineIndex: 0), 0)
+        XCTAssertEqual(store.yPosition(forLineIndex: 1), h)
+        XCTAssertEqual(store.yPosition(forLineIndex: 2), h * 2)
+
+        // Line index from y-position
+        XCTAssertEqual(store.lineIndex(forYPosition: 0), 0)
+        XCTAssertEqual(store.lineIndex(forYPosition: h - 1), 0)
+        XCTAssertEqual(store.lineIndex(forYPosition: h), 1)
+        XCTAssertEqual(store.lineIndex(forYPosition: h * 2 - 1), 1)
+        XCTAssertEqual(store.lineIndex(forYPosition: h * 2), 2)
+    }
+
+    func testStoreAllLineGeometries() {
+        let text = "a\nb\nc"
+        let store = makeStore(for: text)
+
+        let all = store.allLineGeometries
+        XCTAssertEqual(all.count, 3)
+        XCTAssertEqual(all[0].utf16Offset, 0)
+        XCTAssertEqual(all[1].utf16Offset, 2)
+        XCTAssertEqual(all[2].utf16Offset, 4)
+    }
+
+    func testStoreRebuildAfterReset() {
+        let store = LineGeometryStore()
+        store.build(from: NSTextStorage(string: "first"))
+        XCTAssertEqual(store.lineCount, 1)
+
+        store.reset()
+        XCTAssertEqual(store.lineCount, 0)
+
+        store.build(from: NSTextStorage(string: "second\nthird"))
+        XCTAssertEqual(store.lineCount, 2)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 0), 0)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 7)
     }
 }

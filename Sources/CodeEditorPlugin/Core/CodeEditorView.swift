@@ -204,6 +204,13 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// Line index cache for optimized line number calculations
     internal let lineIndexCache = LineIndexCache()
 
+    /// Incremental line geometry store — red-black tree of per-line UTF-16
+    /// lengths, heights, and cumulative subtree metadata. Supports O(log n)
+    /// lookup by offset, line index, and y-position. Built from
+    /// `NSTextStorage` using `NSString` line enumeration for UTF-16
+    /// correctness. Runs alongside `lineIndexCache` during the migration.
+    internal let lineGeometryStore = LineGeometryStore()
+
     /// Text edit event hub for broadcasting edit notifications to observers.
     /// Consumers (RangeStore sync, highlighting, folding, gutter) subscribe
     /// to receive canonical edit events instead of watching `NSTextStorage`
