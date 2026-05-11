@@ -21,7 +21,7 @@ extension CodeEditorView {
             let externalProvider: (any RangeHighlightProviding)?
             #if CAN_IMPORT_TREE_SITTER
             if configuration.behavior.useTreeSitterHighlighting {
-                externalProvider = TreeSitterRangeHighlightProvider.makeSpikeProvider(for: language)
+                externalProvider = TreeSitterRangeHighlightProvider.makeProvider(for: language)
             } else {
                 externalProvider = nil
             }

@@ -308,13 +308,26 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
 // MARK: - Provider Factory
 
 extension TreeSitterRangeHighlightProvider {
-    /// Creates a provider for the given language using the spike regex-backed parser.
+    /// Creates a provider for the given language.
     ///
-    /// In Phase 6 this switches to a real C Tree-sitter parser. Currently
-    /// supports all 26 languages via `RegexBackedTreeSitterParser`.
+    /// Uses `TreeSitterParser` (with bounded incremental invalidation)
+    /// instead of the spike's `RegexBackedTreeSitterParser`. The parser
+    /// backend supports real C tree-sitter when the `CAN_IMPORT_TREE_SITTER`
+    /// flag is set and `SwiftTreeSitter` is linked.
+    static func makeProvider(for language: Language) -> TreeSitterRangeHighlightProvider? {
+        guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
+            return nil
+        }
+
+        let captureMap = TreeSitterCaptureMap.forLanguage(language)
+        let parser = TreeSitterParser()
+        return TreeSitterRangeHighlightProvider(parser: parser, captureMap: captureMap)
+    }
+
+    /// Legacy spike provider using regex-only backend. Kept for
+    /// testing and fallback scenarios.
+    @available(*, deprecated, message: "Use makeProvider(for:) instead")
     static func makeSpikeProvider(for language: Language) -> TreeSitterRangeHighlightProvider? {
-        // Only create a provider for languages with a Tree-sitter grammar name
-        // (Swift uses SwiftSyntax; plainText has no highlighting)
         guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
             return nil
         }
