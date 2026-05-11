@@ -2,7 +2,7 @@
 
 **Date**: 2026-05-10  
 **Source**: `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift`  
-**Tests**: 64 tests, 0 failures  
+**Tests**: 69 tests, 0 failures (1 skipped — 1M-line benchmark)  
 **Reference**: `NSString.getLineStart(_:end:contentsEnd:for:)` — UTF-16 correct ground truth
 
 ## Implementation Summary (Phases 0–5)
@@ -21,33 +21,32 @@
 
 ### Build (initial load from text)
 
-| Operation | Scale | NSString (flat array) | LineGeometryStore (red-black tree) | Ratio |
-|---|---|---|---|---|
-| Build offsets/tree | 10k lines (~300 KB) | 2.5 ms | 243 ms | 97× |
-| Build offsets/tree | 100k lines (~400 KB) | 16.7 ms | 3,198 ms | 192× |
-| Build + line count | 1M lines (~2 MB) | 140 ms | 40,220 ms | 287× |
+| Operation | Scale | NSString (flat array) | Sequential insert (before) | Balanced build (after) | Improvement |
+|---|---|---|---|---|---|
+| Build offsets/tree | 10k lines (~300 KB) | 2.5 ms | 243 ms | **9.0 ms** | 27× faster |
+| Build offsets/tree | 100k lines (~400 KB) | 16.7 ms | 3,198 ms | **83.7 ms** | 38× faster |
 
-The store's build is O(n log n) because it uses sequential red-black insertion with fixup for each line, guaranteeing correct invariants for any tree shape. NSString's flat-array scan is O(n). A balanced-tree construction (Phase 1 original approach) would match NSString's O(n) but produced red-black violations for non-power-of-2 sizes. This is the primary target for follow-on optimization.
+The original sequential insertion was O(n log n) with worst-case constants (each insert traversed from root; sorted input caused right-skew before fixup rebalanced). The balanced build constructs the tree directly from the sorted array in O(n) using median-as-root recursion, then applies a single post-order coloring pass. The coloring pass exploits the balanced BST property that any node's subtrees differ in height by at most 1 — when children have equal black-height the node stays black; when they differ by 1 the deeper child is recolored red (reducing its bh by exactly 1).
 
 ### Lookup
 
-| Operation | Scale | NSString | LineGeometryStore | Notes |
+| Operation | Scale | NSString | LineGeometryStore (before) | LineGeometryStore (after) |
 |---|---|---|---|---|
-| Offset→line index | 100 queries, 10k lines | 25 µs | 493 µs | Both sub-millisecond; store is ~20× slower |
-| Y-position→line index | 100 queries, 50k lines | N/A | 618 µs | **Unique capability** — NSString cannot perform y-position lookups |
+| Offset→line index | 100 queries, 10k lines | 25 µs | 493 µs | **443 µs** |
+| Y-position→line index | 100 queries, 50k lines | N/A | 618 µs | **530 µs** |
 
-The store's O(log n) lookups are fast enough for interactive use (all sub-millisecond). The y-position→line lookup is a capability the flat-array `LineIndexCache` lacks entirely — it requires per-line height tracking and cumulative subtree heights, which only the tree provides.
+Lookup improved modestly because the balanced tree has better cache locality and shorter average path lengths than the sequentially-built tree.
 
 ### Key tradeoff
 
 | Dimension | NSString / LineIndexCache | LineGeometryStore |
 |---|---|---|
-| Build speed | O(n), fast | O(n log n), slower |
-| Offset→line lookup | O(log n), 25 µs | O(log n), 493 µs |
-| Y-position→line lookup | ✗ Not supported | O(log n), 618 µs |
+| Build speed | O(n), 16.7 ms (100k) | O(n), **83.7 ms** (100k) — was 3,198 ms |
+| Offset→line lookup | O(log n), 25 µs | O(log n), **443 µs** |
+| Y-position→line lookup | ✗ Not supported | O(log n), **530 µs** |
 | Height tracking | ✗ Not supported | ✓ Per-line estimated + measured |
 | Fold state | ✗ Not supported | ✓ Collapsed lines = height 0 |
-| Incremental edits | Rebuilds entire cache | Rebuilds via handler (future: true incremental) |
+| Incremental edits | Rebuilds entire cache | Rebuilds via handler (O(n) balanced build) |
 | UTF-16 correctness | ✗ Character offsets (bug) | ✓ NSString-based |
 
 ## New Files

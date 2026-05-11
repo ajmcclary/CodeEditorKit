@@ -148,8 +148,12 @@ public final class LineGeometryStore {
     /// Build the store from an `NSTextStorage` using `NSString` line
     /// enumeration for UTF-16 correctness.
     ///
-    /// Uses standard red-black insertion with fixup for each line to
-    /// guarantee invariants regardless of tree shape.
+    /// Uses balanced tree construction from the sorted line array (O(n))
+    /// followed by a post-order coloring pass that guarantees red-black
+    /// invariants. For a balanced BST, subtrees of any node differ in
+    /// height by at most 1, so coloring reduces to: when children have
+    /// equal black-height the node is black; when they differ by 1 the
+    /// deeper child is recolored red (reducing its bh by 1).
     ///
     /// - Parameter textStorage: The text storage to build geometry from.
     // swiftlint:disable:next legacy_objc_type
@@ -158,7 +162,6 @@ public final class LineGeometryStore {
         let nsString = textStorage.string as NSString
         let length = nsString.length
         guard length > 0 else {
-            // Always have at least one (empty) line
             let emptyGeometry = LineGeometry(
                 utf16Offset: 0, utf16Length: 0, lineEndingLength: 0,
                 estimatedHeight: defaultEstimatedHeight
@@ -169,6 +172,8 @@ public final class LineGeometryStore {
             return
         }
 
+        // Collect all line geometries
+        var geometries: [LineGeometry] = []
         var index = 0
         var runningOffset = 0
         var anyLineTerminated = false
@@ -182,29 +187,105 @@ public final class LineGeometryStore {
             )
             let utf16Length = lineEnd - lineStart
             let lineEndingLength = lineEnd - contentsEnd
-            let geometry = LineGeometry(
+            geometries.append(LineGeometry(
                 utf16Offset: runningOffset,
                 utf16Length: utf16Length,
                 lineEndingLength: lineEndingLength,
                 estimatedHeight: defaultEstimatedHeight
-            )
-            insertNode(Node(geometry: geometry))
+            ))
             runningOffset += utf16Length
             anyLineTerminated = contentsEnd < lineEnd
             index = lineEnd
             if index >= length { break }
         }
-
-        // Trailing empty line after a terminating newline
         if anyLineTerminated && index == length {
-            let trailingGeometry = LineGeometry(
+            geometries.append(LineGeometry(
                 utf16Offset: runningOffset,
                 utf16Length: 0,
                 lineEndingLength: 0,
                 estimatedHeight: defaultEstimatedHeight
-            )
-            insertNode(Node(geometry: trailingGeometry))
+            ))
         }
+
+        // Build balanced BST from sorted array
+        root = buildBalanced(from: geometries, start: 0, end: geometries.count - 1)
+
+        // Color the tree to satisfy red-black invariants
+        _ = colorTree(root)
+
+        // Compute subtree metadata bottom-up
+        updateMetadataPostOrder(root)
+
+        lineCount = geometries.count
+        lastLookupNode = nil
+    }
+
+    /// Recursively build a balanced BST from a sorted array slice.
+    /// All nodes are initially black; the coloring pass fixes violations.
+    private func buildBalanced(from geometries: [LineGeometry],
+                                start: Int, end: Int) -> Node? {
+        guard start <= end else { return nil }
+        let mid = (start + end) / 2
+        let node = Node(geometry: geometries[mid])
+        node.isRed = false
+        node.left = buildBalanced(from: geometries, start: start, end: mid - 1)
+        node.left?.parent = node
+        node.right = buildBalanced(from: geometries, start: mid + 1, end: end)
+        node.right?.parent = node
+        return node
+    }
+
+    /// Post-order red-black coloring pass.
+    ///
+    /// For a balanced BST where any node's subtrees differ in height by
+    /// at most 1, the black heights (if all nodes were black) also differ
+    /// by at most 1.  The fix is:
+    /// - If children have equal bh: this node stays black, bh ← child_bh + 1.
+    /// - If one child is deeper: recolor the deeper child RED (reducing its
+    ///   bh by exactly 1), then this node stays black.
+    ///
+    /// Returns the black-height of the subtree.
+    @discardableResult
+    private func colorTree(_ node: Node?) -> Int {
+        guard let node else { return 0 }
+
+        let leftBH = colorTree(node.left)
+        let rightBH = colorTree(node.right)
+
+        if leftBH == rightBH {
+            node.isRed = false
+            return leftBH + 1
+        }
+
+        // One side is deeper by exactly 1 — recolor deeper child RED
+        if leftBH > rightBH {
+            node.left?.isRed = true
+            let newLeftBH = blackHeight(of: node.left)
+            node.isRed = false
+            return newLeftBH + 1
+        } else {
+            node.right?.isRed = true
+            let newRightBH = blackHeight(of: node.right)
+            node.isRed = false
+            return newRightBH + 1
+        }
+    }
+
+    /// Compute the black-height of a subtree (number of black nodes on
+    /// any path from this node to a leaf, not counting this node).
+    /// Assumes the tree satisfies red-black properties.
+    private func blackHeight(of node: Node?) -> Int {
+        guard let node else { return 0 }
+        let childBH = max(blackHeight(of: node.left), blackHeight(of: node.right))
+        return childBH + (node.isRed ? 0 : 1)
+    }
+
+    /// Post-order metadata computation. Must be called after coloring.
+    private func updateMetadataPostOrder(_ node: Node?) {
+        guard let node else { return }
+        updateMetadataPostOrder(node.left)
+        updateMetadataPostOrder(node.right)
+        node.updateSubtreeMetadata()
     }
 
     // MARK: - Red-Black Tree Insertion
