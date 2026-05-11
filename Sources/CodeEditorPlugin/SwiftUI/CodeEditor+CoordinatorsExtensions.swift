@@ -32,6 +32,12 @@ open class CodeEditorBaseCoordinator: NSObject, ObservableObject {
     /// Optional interaction-state binding for cursor persistence/restoration.
     var interactionStateBinding: Binding<EditorInteractionState>?
 
+    /// Optional host-supplied controller. Held weakly to avoid extending
+    /// the lifetime of an external object beyond what the host intends.
+    /// Set by the SwiftUI representable on `make…`/`update…` and cleared
+    /// on `dismantle…`.
+    weak var editorController: EditorController?
+
     /// Additional callbacks for extended functionality
     var onTextChangeCallback: ((String) -> Void)?
     var onSelectionChangeCallback: ((NSRange) -> Void)?

@@ -47,6 +47,7 @@ struct IOSRootView: View {
     private var editor: some View {
         if let activeID = appState.documents.activeTabID {
             CodeEditor(text: appState.documents.textBinding(for: activeID))
+                .editorController(appState.editorController)
                 .codeLanguage(appState.documents.activeLanguage ?? .plainText)
                 .codeWorkspaceRoot(appState.configuration.workspaceRoot)
                 .environment(\.codeEditorConfiguration, appState.configuration)

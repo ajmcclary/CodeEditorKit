@@ -4,28 +4,26 @@ import CodeEditorUI
 import SwiftUI
 
 /// Left sidebar shell: prominent header with active preset subtitle,
-/// switcher card, then the four knob sections.
+/// switcher card, then the knob sections.
 ///
 /// Uses `EditorSidebarShell` from `CodeEditorUI`, which is macOS / Catalyst
 /// only. The iOS variant (`IOSRootView`) presents the same controls in a
 /// `NavigationSplitView`.
 struct SettingsSidebar: View {
-    @Binding var theme: Theme
-    @Binding var configuration: EditorConfiguration
-    @Bindable var documents: DocumentStore
+    @Bindable var appState: AppState
 
     var body: some View {
         EditorSidebarShell(
             prominentTitle: "Editor",
             prominentSubtitle: subtitle,
-            onReset: { configuration = PresetCatalog.default.configuration }
+            onReset: { appState.configuration = PresetCatalog.default.configuration }
         ) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     SwitcherSection(
-                        theme: $theme,
-                        configuration: $configuration,
-                        documents: documents
+                        theme: $appState.theme,
+                        configuration: $appState.configuration,
+                        documents: appState.documents
                     )
                     knobSections
                     Spacer(minLength: 12)
@@ -37,18 +35,19 @@ struct SettingsSidebar: View {
     }
 
     private var subtitle: String {
-        let activePreset = PresetCatalog.all.first { $0.configuration == configuration }
+        let activePreset = PresetCatalog.all.first { $0.configuration == appState.configuration }
         return "\(activePreset?.name ?? "Custom") preset"
     }
 
     @ViewBuilder
     private var knobSections: some View {
         VStack(alignment: .leading, spacing: 4) {
-            DisplayKnobsSection(configuration: $configuration)
-            LayoutKnobsSection(configuration: $configuration)
-            BehaviorKnobsSection(configuration: $configuration)
-            PerformanceKnobsSection(configuration: $configuration)
-            WorkspaceKnobsSection(configuration: $configuration)
+            DisplayKnobsSection(configuration: $appState.configuration)
+            LayoutKnobsSection(configuration: $appState.configuration)
+            BehaviorKnobsSection(configuration: $appState.configuration)
+            PerformanceKnobsSection(configuration: $appState.configuration)
+            WorkspaceKnobsSection(configuration: $appState.configuration)
+            AnnotationsKnobsSection(appState: appState)
         }
     }
 }

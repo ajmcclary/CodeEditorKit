@@ -157,6 +157,11 @@ public struct CodeEditor: View {
     // Interaction state (opt-in, two-way binding)
     internal var interactionState: Binding<EditorInteractionState> = .constant(EditorInteractionState())
 
+    // Imperative command façade (opt-in). When set, the SwiftUI representable
+    // weakly assigns the underlying CodeEditorView into the controller so
+    // host code can call find/fold/goto/etc. through the controller's API.
+    internal var editorController: EditorController?
+
     // Debouncing
     private let textDebounceInterval: Duration?
 
@@ -242,6 +247,28 @@ public struct CodeEditor: View {
         return copy
     }
 
+    /// Attaches a host-owned `EditorController` so the host can drive
+    /// find/replace, folding, line/symbol navigation, and the annotations
+    /// data source through a single façade. The controller weakly
+    /// references the underlying `CodeEditorView` for its lifetime.
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @State private var controller = EditorController()
+    ///
+    /// var body: some View {
+    ///     CodeEditor(text: $code)
+    ///         .editorController(controller)
+    ///     Button("Fold All") { controller.foldAll() }
+    /// }
+    /// ```
+    public func editorController(_ controller: EditorController) -> Self {
+        var copy = self
+        copy.editorController = controller
+        return copy
+    }
+
     // MARK: - Body
 
     public var body: some View {
@@ -267,6 +294,7 @@ public struct CodeEditor: View {
             memoryMonitor: effectiveMemoryMonitor,
             textDebounceInterval: effectiveDebounceInterval,
             interactionState: interactionState,
+            editorController: editorController,
             onTextChange: handleTextChange,
             onSelectionChange: handleSelectionChange
         )

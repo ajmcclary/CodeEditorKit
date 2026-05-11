@@ -18,9 +18,7 @@ struct RootWindow: View {
     var body: some View {
         @Bindable var documents = appState.documents
         let (items, dispatch) = CommandPaletteCatalog.build(
-            theme: $appState.theme,
-            configuration: $appState.configuration,
-            documents: appState.documents,
+            appState: appState,
             settingsVisible: $settingsVisible,
             inspectorVisible: $inspectorVisible
         )
@@ -31,9 +29,7 @@ struct RootWindow: View {
                     activeTabID: $documents.activeTabID
                 )
                 WindowBody(
-                    theme: $appState.theme,
-                    configuration: $appState.configuration,
-                    documents: appState.documents,
+                    appState: appState,
                     settingsVisible: $settingsVisible,
                     inspectorVisible: $inspectorVisible
                 )

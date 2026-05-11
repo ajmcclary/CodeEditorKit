@@ -29,6 +29,7 @@ enum CodeEditorRepresentableHelper {
         let configuration: EditorConfiguration
         let memoryMonitor: MemoryMonitor
         let interactionState: Binding<EditorInteractionState>
+        let editorController: EditorController?
         let onTextChange: ((String) -> Void)?
         let onSelectionChange: ((NSRange) -> Void)?
     }
@@ -39,6 +40,7 @@ enum CodeEditorRepresentableHelper {
         let theme: Theme
         let configuration: EditorConfiguration
         let interactionState: Binding<EditorInteractionState>
+        let editorController: EditorController?
         let environment: EnvironmentValues
     }
 
@@ -67,6 +69,14 @@ enum CodeEditorRepresentableHelper {
         // Platform-specific setup
         setupPlatformSpecificFeatures(container: container, coordinator: coordinator)
 
+        // Attach the host's controller (if any) to the underlying view.
+        // The controller weakly references the view and is responsible for
+        // detaching on dismantle.
+        if let controller = parameters.editorController {
+            coordinator.editorController = controller
+            controller.attach(to: container.textView)
+        }
+
         return container
     }
 
@@ -90,6 +100,21 @@ enum CodeEditorRepresentableHelper {
             configuration: parameters.configuration
         )
         coordinator.applyInteractionState(to: container.textView)
+
+        // Re-attach controller on update so that SwiftUI re-creating the
+        // representable does not leave the controller pointing at a stale
+        // view. If the host swapped controllers (rare), update the
+        // coordinator's reference too.
+        if let controller = parameters.editorController {
+            if coordinator.editorController !== controller {
+                coordinator.editorController?.attach(to: nil)
+                coordinator.editorController = controller
+            }
+            controller.attach(to: container.textView)
+        } else if let existing = coordinator.editorController {
+            existing.attach(to: nil)
+            coordinator.editorController = nil
+        }
 
         // Handle focus request from environment using coordinator's tracking
         coordinator.requestFocusIfNeeded(
@@ -259,6 +284,10 @@ enum CodeEditorRepresentableHelper {
     static func dismantle(coordinator: CodeEditorCoordinator) {
         coordinator.removeNotificationObservers()
         coordinator.textUpdateTask?.cancel()
+        // Detach the host's controller so it stops vending operations
+        // against a view that's about to disappear.
+        coordinator.editorController?.attach(to: nil)
+        coordinator.editorController = nil
     }
 
     // MARK: - Common Utilities

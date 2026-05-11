@@ -4,12 +4,12 @@ import CodeEditorPlugin
 import CodeEditorUI
 import SwiftUI
 
-/// Right sidebar: live `EditorConfiguration` rendered as Swift source,
-/// with a Copy button. macOS / Catalyst only — see `IOSRootView` for the
-/// iOS variant.
+/// Right sidebar: LSP probe, annotation/symbol panel, live
+/// `EditorConfiguration` rendered as Swift source, with a Copy button.
+/// macOS / Catalyst only — see `IOSRootView` for the iOS variant.
 struct InspectorSidebar: View {
     @Environment(\.codeEditorTheme) private var theme
-    let configuration: EditorConfiguration
+    @Bindable var appState: AppState
 
     var body: some View {
         EditorSidebarShell(
@@ -17,7 +17,11 @@ struct InspectorSidebar: View {
             content: {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        LSPStatusPanel(workspaceRoot: configuration.workspaceRoot)
+                        LSPStatusPanel(workspaceRoot: appState.configuration.workspaceRoot)
+                        AnnotationsInspectorPanel(
+                            hub: appState.annotationsHub,
+                            controller: appState.editorController
+                        )
                         Text(rendered)
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(Color(tokens: theme.style.text.base))
@@ -43,7 +47,7 @@ struct InspectorSidebar: View {
     }
 
     private var rendered: String {
-        ConfigurationCodeFormatter.render(configuration)
+        ConfigurationCodeFormatter.render(appState.configuration)
     }
 
     private func copyToPasteboard(_ string: String) {

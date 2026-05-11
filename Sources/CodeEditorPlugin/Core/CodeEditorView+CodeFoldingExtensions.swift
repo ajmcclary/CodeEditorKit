@@ -130,10 +130,10 @@ extension CodeEditorView {
     /// ```swift
     /// // Fold all functions
     /// editor.foldAll(type: .function)
-    /// 
+    ///
     /// // Fold all classes
     /// editor.foldAll(type: .class)
-    /// 
+    ///
     /// // Fold all comments
     /// editor.foldAll(type: .comment)
     /// ```
@@ -142,6 +142,19 @@ extension CodeEditorView {
 
         let regionsToFold = codeFoldingEngine.foldableRegions.filter { $0.type == type }
         for region in regionsToFold {
+            codeFoldingEngine.fold(region)
+        }
+    }
+
+    /// Fold every foldable region in the document.
+    ///
+    /// Collapses all detected foldable code regions regardless of type
+    /// (functions, classes, blocks, comments). Inert when code folding is
+    /// disabled in `EditorConfiguration.display.isCodeFoldingEnabled`.
+    public func foldAll() {
+        guard configuration.display.isCodeFoldingEnabled else { return }
+
+        for region in codeFoldingEngine.foldableRegions {
             codeFoldingEngine.fold(region)
         }
     }
@@ -156,7 +169,7 @@ extension CodeEditorView {
     /// // Expand all folded code
     /// editor.unfoldAll()
     /// ```
-    internal func unfoldAll() {
+    public func unfoldAll() {
         guard configuration.display.isCodeFoldingEnabled else { return }
         codeFoldingEngine.unfoldAll()
     }

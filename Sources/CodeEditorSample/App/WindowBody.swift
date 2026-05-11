@@ -8,9 +8,7 @@ import SwiftUI
 /// `IOSRootView` provides the iOS layout via `NavigationSplitView`.
 struct WindowBody: View {
     @Environment(\.codeEditorTheme) private var editorTheme
-    @Binding var theme: Theme
-    @Binding var configuration: EditorConfiguration
-    @Bindable var documents: DocumentStore
+    @Bindable var appState: AppState
     @Binding var settingsVisible: Bool
     @Binding var inspectorVisible: Bool
 
@@ -18,17 +16,21 @@ struct WindowBody: View {
         HStack(spacing: 0) {
             if settingsVisible {
                 SettingsSidebar(
-                    theme: $theme,
-                    configuration: $configuration,
-                    documents: documents
+                    appState: appState
                 )
                 columnSeparator
             }
             editorPane
             if inspectorVisible {
                 columnSeparator
-                InspectorSidebar(configuration: configuration)
+                InspectorSidebar(appState: appState)
             }
+        }
+        .sheet(isPresented: $appState.gotoLineSheetVisible) {
+            GotoLineSheet(controller: appState.editorController)
+        }
+        .sheet(isPresented: $appState.gotoSymbolSheetVisible) {
+            GotoSymbolSheet(controller: appState.editorController)
         }
     }
 
@@ -41,12 +43,19 @@ struct WindowBody: View {
 
     @ViewBuilder
     private var editorPane: some View {
-        if let activeID = documents.activeTabID {
-            CodeEditor(text: documents.textBinding(for: activeID))
-                .codeLanguage(documents.activeLanguage ?? .plainText)
-                .codeWorkspaceRoot(configuration.workspaceRoot)
-                .environment(\.codeEditorConfiguration, configuration)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if let activeID = appState.documents.activeTabID {
+            ZStack(alignment: .top) {
+                CodeEditor(text: appState.documents.textBinding(for: activeID))
+                    .editorController(appState.editorController)
+                    .codeLanguage(appState.documents.activeLanguage ?? .plainText)
+                    .codeWorkspaceRoot(appState.configuration.workspaceRoot)
+                    .environment(\.codeEditorConfiguration, appState.configuration)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if appState.findOverlayVisible {
+                    FindReplaceOverlay(appState: appState)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
         } else {
             emptyState
         }

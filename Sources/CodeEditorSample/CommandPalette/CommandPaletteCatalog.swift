@@ -7,11 +7,10 @@ import SwiftUI
 /// dispatch closure so the host can run the action when the user
 /// confirms a row.
 enum CommandPaletteCatalog {
+    // swiftlint:disable:next function_body_length
     @MainActor
     static func build(
-        theme: Binding<Theme>,
-        configuration: Binding<EditorConfiguration>,
-        documents: DocumentStore,
+        appState: AppState,
         settingsVisible: Binding<Bool>,
         inspectorVisible: Binding<Bool>
     ) -> (items: [CommandPaletteItem], dispatch: (CommandPaletteItem) -> Void) {
@@ -20,39 +19,70 @@ enum CommandPaletteCatalog {
 
         for chosen in ThemeCatalog.all {
             let item = CommandPaletteItem(title: "Theme: \(chosen.name)", kind: .setting)
-            actions[item.id] = { theme.wrappedValue = chosen }
+            actions[item.id] = { appState.theme = chosen }
             items.append(item)
         }
 
         for language in LanguageCatalog.all {
             let item = CommandPaletteItem(title: "Language: \(language.name)", kind: .setting)
             actions[item.id] = {
-                guard let id = documents.activeTabID else { return }
-                documents.setLanguage(language, of: id)
+                guard let id = appState.documents.activeTabID else { return }
+                appState.documents.setLanguage(language, of: id)
             }
             items.append(item)
         }
 
         for preset in PresetCatalog.all {
             let item = CommandPaletteItem(title: "Preset: \(preset.name)", kind: .setting)
-            actions[item.id] = { configuration.wrappedValue = preset.configuration }
+            actions[item.id] = { appState.configuration = preset.configuration }
             items.append(item)
         }
 
+        appendDocumentActions(into: &items, actions: &actions, appState: appState)
+        appendSidebarActions(
+            into: &items,
+            actions: &actions,
+            settingsVisible: settingsVisible,
+            inspectorVisible: inspectorVisible
+        )
+        appendFindActions(into: &items, actions: &actions, appState: appState)
+        appendNavigationActions(into: &items, actions: &actions, appState: appState)
+        appendFoldingActions(into: &items, actions: &actions, appState: appState)
+        appendAnnotationActions(into: &items, actions: &actions, appState: appState)
+
+        return (items, { picked in actions[picked.id]?() })
+    }
+
+    // MARK: - Section helpers
+
+    @MainActor
+    private static func appendDocumentActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        appState: AppState
+    ) {
         let newTab = CommandPaletteItem(title: "New Tab", kind: .action, shortcut: "⌘T")
-        actions[newTab.id] = { documents.newTab() }
+        actions[newTab.id] = { appState.documents.newTab() }
         items.append(newTab)
 
         let closeTab = CommandPaletteItem(title: "Close Tab", kind: .action, shortcut: "⌘W")
         actions[closeTab.id] = {
-            if let id = documents.activeTabID { documents.close(id) }
+            if let id = appState.documents.activeTabID { appState.documents.close(id) }
         }
         items.append(closeTab)
 
         let closeAll = CommandPaletteItem(title: "Close All Tabs", kind: .action)
-        actions[closeAll.id] = { documents.closeAll() }
+        actions[closeAll.id] = { appState.documents.closeAll() }
         items.append(closeAll)
+    }
 
+    @MainActor
+    private static func appendSidebarActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        settingsVisible: Binding<Bool>,
+        inspectorVisible: Binding<Bool>
+    ) {
         let toggleSettings = CommandPaletteItem(title: "Toggle Settings Sidebar", kind: .action)
         actions[toggleSettings.id] = { settingsVisible.wrappedValue.toggle() }
         items.append(toggleSettings)
@@ -60,7 +90,106 @@ enum CommandPaletteCatalog {
         let toggleInspector = CommandPaletteItem(title: "Toggle Inspector", kind: .action)
         actions[toggleInspector.id] = { inspectorVisible.wrappedValue.toggle() }
         items.append(toggleInspector)
+    }
 
-        return (items, { picked in actions[picked.id]?() })
+    @MainActor
+    private static func appendFindActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        appState: AppState
+    ) {
+        let find = CommandPaletteItem(title: "Find…", kind: .action, shortcut: "⌘F")
+        actions[find.id] = { appState.findOverlayVisible = true }
+        items.append(find)
+
+        let findNext = CommandPaletteItem(title: "Find Next", kind: .action)
+        actions[findNext.id] = { _ = appState.editorController.findNext() }
+        items.append(findNext)
+
+        let findPrev = CommandPaletteItem(title: "Find Previous", kind: .action)
+        actions[findPrev.id] = { _ = appState.editorController.findPrevious() }
+        items.append(findPrev)
+
+        let replace = CommandPaletteItem(title: "Replace…", kind: .action, shortcut: "⌘⌥F")
+        actions[replace.id] = { appState.findOverlayVisible = true }
+        items.append(replace)
+    }
+
+    @MainActor
+    private static func appendNavigationActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        appState: AppState
+    ) {
+        let gotoLine = CommandPaletteItem(title: "Go to Line…", kind: .action, shortcut: "⌘L")
+        actions[gotoLine.id] = { appState.gotoLineSheetVisible = true }
+        items.append(gotoLine)
+
+        let gotoSymbol = CommandPaletteItem(title: "Go to Symbol…", kind: .action, shortcut: "⌘⇧O")
+        actions[gotoSymbol.id] = {
+            appState.editorController.refreshSymbols()
+            appState.gotoSymbolSheetVisible = true
+        }
+        items.append(gotoSymbol)
+    }
+
+    @MainActor
+    private static func appendFoldingActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        appState: AppState
+    ) {
+        let foldAll = CommandPaletteItem(title: "Fold All", kind: .action)
+        actions[foldAll.id] = { appState.editorController.foldAll() }
+        items.append(foldAll)
+
+        let unfoldAll = CommandPaletteItem(title: "Unfold All", kind: .action)
+        actions[unfoldAll.id] = { appState.editorController.unfoldAll() }
+        items.append(unfoldAll)
+
+        let toggleFold = CommandPaletteItem(title: "Toggle Fold at Cursor", kind: .action)
+        actions[toggleFold.id] = {
+            if let line = appState.editorController.currentLineNumber {
+                appState.editorController.toggleFold(atLine: line)
+            }
+        }
+        items.append(toggleFold)
+    }
+
+    @MainActor
+    private static func appendAnnotationActions(
+        into items: inout [CommandPaletteItem],
+        actions: inout [CommandPaletteItem.ID: () -> Void],
+        appState: AppState
+    ) {
+        let addTodo = CommandPaletteItem(title: "Add TODO at Cursor", kind: .action)
+        actions[addTodo.id] = { addAnnotation(.todo, appState: appState) }
+        items.append(addTodo)
+
+        let addFixme = CommandPaletteItem(title: "Add FIXME at Cursor", kind: .action)
+        actions[addFixme.id] = { addAnnotation(.fixme, appState: appState) }
+        items.append(addFixme)
+
+        let clearDemo = CommandPaletteItem(title: "Clear Demo Annotations", kind: .action)
+        actions[clearDemo.id] = { appState.annotationsHub.clearAllDemoAnnotations() }
+        items.append(clearDemo)
+
+        let toggleBp = CommandPaletteItem(title: "Toggle Breakpoint at Cursor", kind: .action)
+        actions[toggleBp.id] = {
+            if let line = appState.editorController.currentLineNumber {
+                appState.annotationsHub.toggleBreakpoint(at: line)
+            }
+        }
+        items.append(toggleBp)
+
+        let clearBp = CommandPaletteItem(title: "Clear All Breakpoints", kind: .action)
+        actions[clearBp.id] = { appState.annotationsHub.clearAllBreakpoints() }
+        items.append(clearBp)
+    }
+
+    @MainActor
+    private static func addAnnotation(_ kind: AnnotationKind, appState: AppState) {
+        guard let line = appState.editorController.currentLineNumber else { return }
+        appState.annotationsHub.addDemoAnnotation(kind: kind, at: line)
     }
 }
