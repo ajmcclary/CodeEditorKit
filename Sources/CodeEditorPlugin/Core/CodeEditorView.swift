@@ -17,7 +17,7 @@ import AppKit
 /// - **Line numbers** with customizable gutter display
 /// - **Annotations** for displaying TODOs, FIXMEs, and custom markers
 /// - **Cross-platform support** for iOS, macOS, and Mac Catalyst
-/// - **Modern TextKit2** integration with fallback to TextKit1
+/// - **Modern TextKit2** integration (TextKit2-only since 0.2.0)
 /// - **Configurable appearance** with themes and layout options
 /// - **Performance optimization** for large files and real-time editing
 ///
