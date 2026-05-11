@@ -1022,4 +1022,134 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         textView.lineGeometryStore.build(from: textView.textStorage!)
         XCTAssertEqual(textView.lineGeometryStore.lineCount, 2)
     }
+
+    // MARK: - 10. ViewReuseQueue Tests
+
+    func testViewReuseQueueGetOrCreate() {
+        let queue = ViewReuseQueue<PlatformView, Int>()
+
+        let view1 = queue.getOrCreateView(forKey: 1) {
+            PlatformView(frame: CGRect(x: 0, y: 0, width: 100, height: 20))
+        }
+        XCTAssertEqual(queue.totalCreated, 1)
+        XCTAssertEqual(queue.activeCount, 1)
+        XCTAssertEqual(queue.pooledCount, 0)
+
+        // Same key should reuse
+        queue.enqueueView(view1, forKey: 1)
+        XCTAssertEqual(queue.activeCount, 0)
+        XCTAssertEqual(queue.pooledCount, 1)
+
+        let view2 = queue.getOrCreateView(forKey: 1) {
+            PlatformView(frame: .zero)
+        }
+        XCTAssertEqual(queue.totalCreated, 1) // No new creation
+        XCTAssertTrue(view1 === view2) // Same instance
+    }
+
+    func testViewReuseQueueDifferentKeys() {
+        let queue = ViewReuseQueue<PlatformView, Int>()
+
+        let v1 = queue.getOrCreateView(forKey: 1) { PlatformView(frame: .zero) }
+        let v2 = queue.getOrCreateView(forKey: 2) { PlatformView(frame: .zero) }
+        XCTAssertEqual(queue.totalCreated, 2)
+        XCTAssertFalse(v1 === v2)
+    }
+
+    func testViewReuseQueueEnqueueNotInSet() {
+        let queue = ViewReuseQueue<PlatformView, Int>()
+
+        // Create views for keys 1, 2, 3
+        _ = queue.getOrCreateView(forKey: 1) { PlatformView(frame: .zero) }
+        _ = queue.getOrCreateView(forKey: 2) { PlatformView(frame: .zero) }
+        _ = queue.getOrCreateView(forKey: 3) { PlatformView(frame: .zero) }
+
+        XCTAssertEqual(queue.activeCount, 3)
+
+        // Keep only key 2 active
+        queue.enqueueViews(notInSet: Set([2]))
+
+        XCTAssertEqual(queue.activeCount, 1)
+        XCTAssertEqual(queue.pooledCount, 2)
+    }
+
+    func testViewReuseQueueReset() {
+        let queue = ViewReuseQueue<PlatformView, Int>()
+
+        let v1 = queue.getOrCreateView(forKey: 1) { PlatformView(frame: .zero) }
+        XCTAssertEqual(queue.totalCreated, 1)
+
+        // Enqueue the view we got (not a new one)
+        queue.enqueueView(v1, forKey: 1)
+        XCTAssertEqual(queue.totalCreated, 1) // enqueueView doesn't create
+        XCTAssertEqual(queue.activeCount, 0)
+        XCTAssertEqual(queue.pooledCount, 1)
+
+        queue.reset()
+        XCTAssertEqual(queue.totalCreated, 1)
+        XCTAssertEqual(queue.activeCount, 0)
+        XCTAssertEqual(queue.pooledCount, 0)
+    }
+
+    // MARK: - 11. Geometry Helpers Tests
+
+    func testEstimatedRectForLine() {
+        let store = makeStore(for: "line1\nline2\nline3")
+        let h: CGFloat = 17.0
+        let width: CGFloat = 400
+
+        let rect0 = store.estimatedRect(forLineAt: 0, containerWidth: width)
+        XCTAssertEqual(rect0.origin.y, 0)
+        XCTAssertEqual(rect0.size.height, h)
+        XCTAssertEqual(rect0.size.width, width)
+
+        let rect1 = store.estimatedRect(forLineAt: 1, containerWidth: width)
+        XCTAssertEqual(rect1.origin.y, h)
+        XCTAssertEqual(rect1.size.height, h)
+
+        // Out of bounds
+        let rectInvalid = store.estimatedRect(forLineAt: 99, containerWidth: width)
+        XCTAssertEqual(rectInvalid, .zero)
+    }
+
+    func testEstimatedRectsInYRange() {
+        let store = makeStore(for: "line1\nline2\nline3\nline4")
+        let h: CGFloat = 17.0
+
+        let rects = store.estimatedRects(inYRange: h...(h * 2 + 5), containerWidth: 400)
+        XCTAssertEqual(rects.count, 2) // lines 1 and 2
+        XCTAssertEqual(rects[0].origin.y, h)
+        XCTAssertEqual(rects[1].origin.y, h * 2)
+    }
+
+    func testVisibleLineRange() {
+        let store = makeStore(for: "line1\nline2\nline3\nline4\nline5")
+        let h: CGFloat = 17.0
+
+        // Visible rect covering lines 1-2 (use epsilon to avoid boundary)
+        let visibleRect = CGRect(x: 0, y: h + 1, width: 400, height: h * 2 - 2)
+        let range = store.visibleLineRange(for: visibleRect, padding: 0)
+        XCTAssertEqual(range.lowerBound, 1)
+        XCTAssertEqual(range.upperBound, 2)
+    }
+
+    func testVisibleLineRangeWithPadding() {
+        let store = makeStore(for: "line1\nline2\nline3\nline4\nline5")
+        let h: CGFloat = 17.0
+
+        // Visible rect covering only line 2 (with epsilon), padding 1
+        let visibleRect = CGRect(x: 0, y: h + 1, width: 400, height: h - 2)
+        let range = store.visibleLineRange(for: visibleRect, padding: 1)
+        XCTAssertEqual(range.lowerBound, 0)
+        XCTAssertEqual(range.upperBound, 2)
+    }
+
+    func testLineIndexAtPoint() {
+        let store = makeStore(for: "line1\nline2\nline3")
+        let h: CGFloat = 17.0
+
+        XCTAssertEqual(store.lineIndex(at: CGPoint(x: 10, y: 0)), 0)
+        XCTAssertEqual(store.lineIndex(at: CGPoint(x: 10, y: h)), 1)
+        XCTAssertEqual(store.lineIndex(at: CGPoint(x: 10, y: h * 2)), 2)
+    }
 }

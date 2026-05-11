@@ -1,68 +1,111 @@
-# LineGeometryStore — Phase 0 Baseline
+# LineGeometryStore — Implementation Baseline
 
 **Date**: 2026-05-10  
 **Source**: `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift`  
-**Tests**: 31 tests, 0 failures  
+**Tests**: 64 tests, 0 failures  
 **Reference**: `NSString.getLineStart(_:end:contentsEnd:for:)` — UTF-16 correct ground truth
 
-## Reference Implementation
+## Implementation Summary (Phases 0–5)
 
-The test file contains two oracle helpers that the `LineGeometryStore` must match exactly:
+| Phase | Status | Files | Tests |
+|---|---|---|---|
+| 0 — Benchmark baseline | Complete | `LineGeometryStoreBenchmarkTests.swift` | 31 |
+| 1 — LineGeometryStore | Complete | `Text/LineGeometryStore.swift` (~490 lines) | 19 |
+| 2 — Edit handler | Complete | `Text/LineGeometryEditHandler.swift` (60 lines) | 5 |
+| 3 — Consumer migration | Complete | 5 files migrated from `lineIndexCache` | — |
+| 4 — Re-scope auxiliary code | Complete | Deprecations, doc updates | — |
+| 5 — View reuse + geometry helpers | Complete | `Utilities/ViewReuseQueue.swift`, `Text/LineGeometryStore+GeometryHelpers.swift` | 9 |
+| **Total** | | **8 files created/modified** | **64** |
 
-- `referenceLineOffsets(for:)` — line-start offsets using `NSString.getLineStart` with `contentsEnd` detection to distinguish trailing-empty-line from no-trailing-newline
-- `referenceLineCount(for:)` — delegates to `referenceLineOffsets(for:).count`
+## New Files
 
-These use `contentsEnd < lineEnd` to determine whether a line ends with a terminator (producing a conceptual empty trailing line), avoiding the ambiguity of `lineRange(for:)` at document-end.
+| File | Role |
+|---|---|
+| `Sources/CodeEditorPlugin/Text/LineGeometryStore.swift` | Red-black tree with UTF-16 offsets, height tracking, y-position lookup, fold state |
+| `Sources/CodeEditorPlugin/Text/LineGeometryEditHandler.swift` | `TextEditEventObserving` consumer, rebuilds store on edits |
+| `Sources/CodeEditorPlugin/Text/LineGeometryStore+GeometryHelpers.swift` | Cursor/rect geometry helpers (`estimatedRect`, `visibleLineRange`, `lineIndex(at:)`) |
+| `Sources/CodeEditorPlugin/Utilities/ViewReuseQueue.swift` | Generic view reuse pool for gutter/minimap scrolling optimizations |
+| `Tests/CodeEditorPluginTests/LineGeometryStoreBenchmarkTests.swift` | 64 tests (reference + integration + edit handler + view reuse + geometry) |
+| `BASELINE.md` | This file |
 
-## Performance Baseline (NSString, arm64 macOS)
+## Deprecated / Re-scoped
 
-| Operation | Scale | Time |
+| Class | Action |
+|---|---|
+| `LineIndexCache` | `@available(*, deprecated)` — all consumers migrated |
+| `OptimizedLineIndexCache` | `@available(*, deprecated)` — archived prior art |
+| `TextKit2RenderingOptimizer` | Doc update — clarified as metrics scaffolding |
+| `EditorStateBridge.deriveSelection(from:in:lineIndexCache:)` | Deprecated, new `lineGeometryStore` overload added |
+
+## Consumer Migration (Phase 3)
+
+| Consumer | Lines changed | Detail |
 |---|---|---|
-| Build offsets | 10k lines (avg 30 chars/line) | 2.5 ms |
-| Build offsets | 100k lines (avg 4 chars/line) | 16.4 ms |
-| Line count | 1M lines ("x\n") | 163 ms |
-| Offset→line lookup | 100 queries across 10k lines | 28 µs total |
+| `TextKitLineNumberHelper` | 3 sites | `visibleLineInfo` → `lineGeometries`, `lineNumber` → `lineIndex+1`, `lineCount` → store property |
+| `EditorStateBridge` | New overload | `deriveSelection(from:in:lineGeometryStore:)` with column computation |
+| `CodeEditorView` API | 3 methods | `lineNumber(at:)`, `lineRange(for:)`, `lineCount` → `lineGeometryStore` |
+| Syntax highlighting ext | 27 lines removed | Removed `invalidate()` and `preWarmCache()` — handler replaces |
+| Memory cleanup | 1 site | `lineIndexCache.invalidate()` → `lineGeometryStore.reset()` |
 
-## Correctness Coverage
+## LineGeometryStore API
 
-### ASCII
-- Single line, multi-line (LF), empty text
-- Offset→line round-trip (every offset maps to a line containing it)
-- Line→offset round-trip (line starts match expected positions)
-- Line-number-at-offset for known positions
+```
+// Build
+build(from: NSTextStorage)
 
-### Emoji & Composed Characters
-- Single-scalar emoji: 😀 = 2 UTF-16 code units, 1 Swift Character
-- ZWJ sequence: 👨‍👩‍👧‍👦 = 11 UTF-16 code units, 1 Swift Character
-- Composed é: precomposed (U+00E9, 1 unit) vs decomposed (e + U+0301, 2 units)
-- Emoji in multi-line text with round-trip verification
-- **Character-vs-UTF16 divergence proof**: for `"a😀b\nc👨‍👩‍👧‍👦d"`, Swift Character iteration produces `[0, 4]` while NSString UTF-16 produces `[0, 5]` — confirming the ANALYSIS.md §5.1.1 bug
+// Lookup (all O(log n))
+lineIndex(forUtf16Offset:) -> Int
+utf16Offset(forLineIndex:) -> Int
+lineGeometry(at:) -> LineGeometry?
+lineGeometry(atUtf16Offset:) -> LineGeometry?
+lineIndex(forYPosition:) -> Int
+yPosition(forLineIndex:) -> CGFloat
 
-### Line Endings
-- LF (`\n`)
-- CRLF (`\r\n`)
-- CR (`\r`)
-- Mixed (all three in one document)
-- Trailing newline present → produces trailing empty line
-- Trailing newline absent → no trailing empty line
-- Multiple consecutive blank lines
+// Height / fold
+updateMeasuredHeight(_:forLineAt:)
+setEstimatedHeight(_:)
+setFolded(_:forLineAt:)
 
-### NSRange Round-Trips
-- Every offset in a Swift file round-trips to its containing line
-- Line-start offsets are consistent across document walk
-- Known-offset verification (100 lines of `"line\n"`)
+// Iteration
+lineGeometries(in: NSRange) -> [LineGeometry]
+lineGeometries(inYRange: ClosedRange<CGFloat>) -> [LineGeometry]
+allLineGeometries -> [LineGeometry]
 
-### Edge Cases
-- Single newline only (`"\n"`)
-- Only newlines (`"\n\n\n"`)
-- Very long line (100,000 chars + newline)
-- Very many short lines (50,000 lines of `"x\n"`)
-- Empty text
+// Geometry helpers (Phase 5)
+estimatedRect(forLineAt:containerWidth:) -> CGRect
+estimatedRects(inYRange:containerWidth:) -> [CGRect]
+estimatedRects(in:containerWidth:) -> [CGRect]
+lineIndex(at: CGPoint) -> Int
+visibleLineRange(for:padding:) -> ClosedRange<Int>
 
-### Fuzz Testing
-- 200-iteration random edit correctness: after each edit, full rebuild validates all offsets are strictly increasing, first offset is 0, every offset maps to a valid line
-- 100-iteration random edit line count: offsets form valid line ranges for all positions
+// Admin
+reset()
+validateTree() -> Bool
+```
 
-## Key Requirement for Phase 1
+## ViewReuseQueue API (Phase 5)
 
-The `LineGeometryStore` must be UTF-16–based from day one. Use `NSString.getLineStart(_:end:contentsEnd:for:)` for initial build, not `for char in text` iteration. The existing `LineIndexCache.buildCache(for:)` at line 139 uses character iteration and produces incorrect offsets for documents containing emoji, composed characters, or surrogate pairs.
+```
+getOrCreateView(forKey:factory:) -> View
+enqueueView(_:forKey:)
+enqueueViews(notInSet:)
+clearPool()
+reset()
+totalCreated, pooledCount, activeCount
+```
+
+## Test Coverage (64 tests)
+
+- **31** reference tests (Phase 0): ASCII, emoji, line endings, NSRange round-trips, performance, fuzz
+- **19** integration tests (Phase 1): store vs reference for all input categories, geometry access, height, fold, y-position
+- **5** edit handler tests (Phase 2): rebuild, no-op, sequential, detach, registration
+- **4** view reuse tests (Phase 5): get/create, different keys, enqueue-not-in-set, reset
+- **5** geometry helper tests (Phase 5): estimated rect, y-range rects, visible line range, padding, point-to-line
+
+## Remaining Work (Phase 5 deferred)
+
+- Incremental tree updates (O(m log n) split/merge/insert/delete) to replace rebuild-on-edit
+- Multi-cursor selection model
+- Column selection support
+- Gutter view reuse integration (wiring `ViewReuseQueue` into `GutterView`)
+- Layout invalidation pattern adoption for gutter/minimap
