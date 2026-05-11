@@ -112,6 +112,13 @@ extension CodeEditorView {
 
     // MARK: - Apply Highlighting
 
+    /// `true` when the range-store pipeline is the primary text-styling
+    /// path and the legacy highlighter should yield to it.
+    private var isRangeStorePrimary: Bool {
+        configuration.display.useRangeStoreHighlighting
+            && rangeBasedHighlightingController != nil
+    }
+
     internal func applySyntaxHighlighting() {
         updateRangeBasedHighlightingConfiguration()
         let syntaxService = businessLogicServices.syntaxHighlightingService
@@ -154,6 +161,11 @@ extension CodeEditorView {
             return
         }
 
+        // When the range-store pipeline is primary, the attribute applier
+        // handles text styling — skip the legacy full-document schedule.
+        // The range-based configuration was already updated above.
+        if isRangeStorePrimary { return }
+
         syntaxService.scheduleHighlighting(
             asyncHighlighter: asyncHighlighter,
             textView: self,
@@ -163,6 +175,11 @@ extension CodeEditorView {
     }
 
     internal func applySyntaxHighlighting(in range: NSRange) {
+        // When the range-store pipeline is primary, character-edit
+        // highlighting is handled by the range attribute applier.
+        // Skip the legacy scheduling entirely.
+        if isRangeStorePrimary { return }
+
         let syntaxService = businessLogicServices.syntaxHighlightingService
         #if canImport(AppKit)
         let textLength = textStorage?.length ?? 0

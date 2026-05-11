@@ -50,6 +50,17 @@ extension EditorConfiguration {
         /// Whether the minimap is visible.
         public var isMinimapVisible: Bool = false
 
+        /// When `true` AND a range-highlighting controller is active,
+        /// the legacy attributed-text highlighter is suppressed for
+        /// character edits — the range attribute applier (Phase 2A)
+        /// handles text styling instead.
+        ///
+        /// The legacy highlighter still runs for full-document initial
+        /// highlighting when no range provider is registered for the
+        /// current language. Set this to `true` after validating the
+        /// range attribute applier's output against the legacy highlighter.
+        public var useRangeStoreHighlighting: Bool = false
+
         // MARK: - Initialization
 
         public init() {}
@@ -72,6 +83,7 @@ extension EditorConfiguration.Display: Codable {
         case areFoldingControlsVisible
         case minimumFoldableLines
         case isMinimapVisible
+        case useRangeStoreHighlighting
     }
 
     public init(from decoder: Decoder) throws {
@@ -92,6 +104,7 @@ extension EditorConfiguration.Display: Codable {
         areFoldingControlsVisible = try container.decodeIfPresent(Bool.self, forKey: .areFoldingControlsVisible) ?? false
         minimumFoldableLines = try container.decodeIfPresent(Int.self, forKey: .minimumFoldableLines) ?? 3
         isMinimapVisible = try container.decodeIfPresent(Bool.self, forKey: .isMinimapVisible) ?? false
+        useRangeStoreHighlighting = try container.decodeIfPresent(Bool.self, forKey: .useRangeStoreHighlighting) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -108,5 +121,6 @@ extension EditorConfiguration.Display: Codable {
         try container.encode(areFoldingControlsVisible, forKey: .areFoldingControlsVisible)
         try container.encode(minimumFoldableLines, forKey: .minimumFoldableLines)
         try container.encode(isMinimapVisible, forKey: .isMinimapVisible)
+        try container.encode(useRangeStoreHighlighting, forKey: .useRangeStoreHighlighting)
     }
 }
