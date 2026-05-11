@@ -119,9 +119,15 @@ public final class TextKitLineNumberHelper {
 
     /// Calculate line ranges from text without using layoutManager
     private func calculateLineRanges(in text: String, visibleRange: NSRange) -> [(lineNumber: Int, range: NSRange)] {
-        // Use the line index cache if available through the text view
+        // Use the line geometry store for O(log n) lookup
         if let textView {
-            return textView.lineIndexCache.visibleLineInfo(in: text, visibleRange: visibleRange)
+            let geometries = textView.lineGeometryStore.lineGeometries(in: visibleRange)
+            return geometries.map { geom in
+                let range = NSRange(location: geom.utf16Offset, length: geom.utf16Length)
+                // lineIndex is derived: we use the store to find the 1-based line number
+                let lineIdx = textView.lineGeometryStore.lineIndex(forUtf16Offset: geom.utf16Offset)
+                return (lineNumber: lineIdx + 1, range: range)
+            }
         }
 
         // Fallback to the original implementation if not using CodeEditorView
@@ -191,9 +197,10 @@ public final class TextKitLineNumberHelper {
 
                 // Check if point is within this fragment
                 if point.y >= frame.minY && point.y <= frame.maxY {
-                    // Calculate line number up to this fragment using cache
+                    // Calculate line number up to this fragment using geometry store
                     if let fragmentRange = self.textKitBridge.nsRangeFromTextRange(fragment.rangeInElement) {
-                        foundLine = textView.lineIndexCache.lineNumber(at: fragmentRange.location, in: text)
+                        let lineIdx = textView.lineGeometryStore.lineIndex(forUtf16Offset: fragmentRange.location)
+                        foundLine = lineIdx + 1 // 1-based
                     }
                     return false // Stop enumeration
                 }
@@ -246,8 +253,8 @@ public final class TextKitLineNumberHelper {
         // Estimate line number
         let estimatedLine = Int(point.y / lineHeight) + 1
 
-        // Clamp to valid range using cache if available
-        let totalLines = textView.lineIndexCache.lineCount(in: text)
+        // Clamp to valid range using geometry store
+        let totalLines = textView.lineGeometryStore.lineCount
         return min(max(1, estimatedLine), totalLines)
     }
 

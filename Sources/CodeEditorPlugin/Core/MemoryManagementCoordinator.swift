@@ -225,10 +225,10 @@ public final class MemoryManagementCoordinator {
         }
         #endif
 
-        // Clear line index cache
-        editorView.lineIndexCache.invalidate()
+        // Clear line geometry store
+        editorView.lineGeometryStore.reset()
         memoryFreed += 0.5 // Estimate
-        operations.append("line index cache")
+        operations.append("line geometry store")
 
         // Clear folding state for large documents
         if !editorView.codeFoldingEngine.foldedRegions.isEmpty {

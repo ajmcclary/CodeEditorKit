@@ -10,17 +10,31 @@ enum EditorStateBridge {
     /// `location` counting newlines. O(n) — fine for typical selection
     /// changes.
     ///
-    /// For very large documents, use `deriveSelection(from:in:lineIndexCache:)`
-    /// which accepts a pre-built line-offsets cache to avoid repeated O(n)
+    /// For very large documents, use `deriveSelection(from:in:lineGeometryStore:)`
+    /// which accepts a pre-built line geometry store to avoid repeated O(n)
     /// newline walks.
     static func deriveSelection(from range: NSRange, in text: String) -> SelectionState {
         deriveSelection(from: range, utf16View: text.utf16)
     }
 
-    /// Cache-aware overload that uses a `LineIndexCache` for O(log n)
+    /// Cache-aware overload that uses a `LineGeometryStore` for O(log n)
     /// line lookups instead of O(n) newline-walking. Prefer this over
-    /// `deriveSelection(from:in:)` when a line index cache is available
-    /// (e.g., from `CodeEditorView.lineIndexCache`).
+    /// `deriveSelection(from:in:)` when a line geometry store is available
+    /// (e.g., from `CodeEditorView.lineGeometryStore`).
+    @MainActor
+    static func deriveSelection(from range: NSRange, in text: String, lineGeometryStore: LineGeometryStore) -> SelectionState {
+        let utf16Length = text.utf16.count
+        let safeLocation = max(0, min(range.location, utf16Length))
+        let lineIdx = lineGeometryStore.lineIndex(forUtf16Offset: safeLocation)
+        let lineStart = lineGeometryStore.utf16Offset(forLineIndex: lineIdx)
+        let column = safeLocation - lineStart + 1
+        return SelectionState(line: lineIdx + 1, column: column, selectionLength: range.length)
+    }
+
+    /// Cache-aware overload that uses a `LineIndexCache` for O(log n)
+    /// line lookups. Deprecated in favor of `deriveSelection(from:in:lineGeometryStore:)`
+    /// which uses the UTF-16-correct `LineGeometryStore`.
+    @available(*, deprecated, message: "Use deriveSelection(from:in:lineGeometryStore:) for UTF-16 correctness")
     static func deriveSelection(from range: NSRange, in text: String, lineIndexCache: LineIndexCache) -> SelectionState {
         let utf16Length = text.utf16.count
         let safeLocation = max(0, min(range.location, utf16Length))

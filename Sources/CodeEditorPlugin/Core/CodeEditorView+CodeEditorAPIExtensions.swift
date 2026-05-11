@@ -234,19 +234,23 @@ extension CodeEditorView {
 
     // MARK: - Line Information
 
-    /// Get line number for position
+    /// Get 1-based line number for a String.Index position.
     public func lineNumber(at position: String.Index) -> Int {
-        lineIndexCache.lineNumber(at: position, in: content)
+        let offset = content.utf16.distance(from: content.utf16.startIndex, to: position)
+        return lineGeometryStore.lineIndex(forUtf16Offset: offset) + 1
     }
 
-    /// Get line range for line number
+    /// Get line range for a 1-based line number.
     public func lineRange(for lineNumber: Int) -> Range<String.Index>? {
-        lineIndexCache.lineRange(for: lineNumber, in: content)
+        let idx = lineNumber - 1
+        guard let geom = lineGeometryStore.lineGeometry(at: idx) else { return nil }
+        let nsRange = NSRange(location: geom.utf16Offset, length: geom.utf16Length)
+        return Range(nsRange, in: content)
     }
 
-    /// Total number of lines
+    /// Total number of lines in the document.
     public var lineCount: Int {
-        lineIndexCache.lineCount(in: content)
+        lineGeometryStore.lineCount
     }
 
     // MARK: - Undo/Redo

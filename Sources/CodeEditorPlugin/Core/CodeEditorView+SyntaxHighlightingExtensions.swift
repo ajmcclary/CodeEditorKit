@@ -34,29 +34,8 @@ extension CodeEditorView {
             textEditEventHub.publish(event)
         }
 
-        // Invalidate line index cache when text changes
-        lineIndexCache.invalidate()
-
-        // Pre-warm cache for visible content if this is a significant text change
-        // Defer the pre-warming to avoid conflicts with text storage editing
-        if textStorage.editedMask.contains(.editedCharacters) {
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                #if canImport(AppKit)
-                // For macOS, use visible rect to determine character range
-                if let layoutManager = self.layoutManager,
-                   let textContainer = self.textContainer,
-                   let textStorage = self.textStorage {
-                    let glyphRange = layoutManager.glyphRange(forBoundingRect: self.visibleRect, in: textContainer)
-                    let visibleNSRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
-                    self.lineIndexCache.preWarmCache(for: textStorage.string, visibleRange: visibleNSRange)
-                }
-                #else
-                let visibleNSRange = NSRange(location: 0, length: min(1_000, self.textStorage.length))
-                self.lineIndexCache.preWarmCache(for: self.textStorage.string, visibleRange: visibleNSRange)
-                #endif
-            }
-        }
+        // Note: Line geometry store is kept in sync by LineGeometryEditHandler
+        // via TextEditEventHub — no manual invalidation needed.
 
         // Gutter invalidation (perf C1).
         //
