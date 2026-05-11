@@ -18,7 +18,6 @@ import XCTest
 
 @MainActor
 final class LineGeometryStoreBenchmarkTests: XCTestCase {
-
     // MARK: - Helpers
 
     /// Build offsets using NSString for known-correct UTF-16 positions.
@@ -50,7 +49,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
     /// Build the reference line count from NSString.
     private func referenceLineCount(for text: String) -> Int {
-        return referenceLineOffsets(for: text).count
+        referenceLineOffsets(for: text).count
     }
 
     // MARK: - 1. ASCII Correctness
@@ -527,7 +526,7 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
             // Basic sanity: offsets are strictly increasing
             for i in 1..<referenceOffsets.count {
                 XCTAssertLessThan(referenceOffsets[i - 1], referenceOffsets[i],
-                                  "Iteration \(iteration): offsets not increasing at index \(i): \(referenceOffsets[i-1]) >= \(referenceOffsets[i])")
+                                  "Iteration \(iteration): offsets not increasing at index \(i): \(referenceOffsets[i - 1]) >= \(referenceOffsets[i])")
             }
 
             // Every offset in the document belongs to exactly one line

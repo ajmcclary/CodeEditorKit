@@ -5,7 +5,18 @@ import AppKit
 import UIKit
 #endif
 
-/// Optimizes TextKit2 rendering performance for large files
+/// Metrics and monitoring scaffolding for TextKit2 rendering performance.
+///
+/// This class tracks rendering statistics (fragment counts, layout times,
+/// memory usage, performance budgets) and exposes them via `@Published`
+/// properties for SwiftUI observation. The actual optimization logic
+/// (`createOrRecycleFragment`, `prefetchLayoutAsync`) uses placeholder
+/// fragments and simulated work — it is **not** wired to real layout
+/// behavior.
+///
+/// For concrete rendering control, see `LineGeometryStore` which provides
+/// per-line UTF-16 offsets, heights, y-positions, and fold state for
+/// gutter, minimap, and viewport calculations.
 @MainActor
 public final class TextKit2RenderingOptimizer: ObservableObject {
     // MARK: - Configuration

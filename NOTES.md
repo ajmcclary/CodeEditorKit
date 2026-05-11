@@ -22,15 +22,15 @@ Our platform bet is also safer. [TextKitSetupHelper.swift](/Users/ajmcclary/Dev/
 
 Our `LineIndexCache` is offset-based and rebuild-oriented. It does not track line heights or support direct y-position lookup like CodeEditTextView’s tree. That limits high-performance gutter, minimap, visible range, folding geometry, and scroll preservation work.
 
-We do have [OptimizedLineIndexCache.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Text/OptimizedLineIndexCache.swift:1), but it reads more like an unfinished prototype: multi-line edit handling is not fully implemented, and the production gutter path still leans on [LineIndexCache.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Text/LineIndexCache.swift:1).
+We have since built [LineGeometryStore.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Text/LineGeometryStore.swift:1), a production red-black tree with UTF-16-correct offsets, height tracking, y-position lookup, and incremental edit support via `TextEditEventHub`. The earlier [OptimizedLineIndexCache.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Performance/OptimizedLineIndexCache.swift:1) was archived as prior art and never wired into production. [LineIndexCache.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Text/LineIndexCache.swift:1) is deprecated in favor of the new store.
 
 Our [TextKit2RenderingOptimizer.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Text/TextKit2RenderingOptimizer.swift:1) is more instrumentation and intent than concrete rendering control. By contrast, CodeEditTextView has a tangible reuse queue, visible-line layout loop, and fragment view lifecycle.
 
-There is also a stale doc mismatch: [CodeEditorView.swift](/Users/ajmcclary/Dev/CodeEditor/CodeEditorPlugin/Sources/CodeEditorPlugin/Core/CodeEditorView.swift:20) still mentions TextKit1 fallback, while the helper says TextKit2-only.
+Doc comment fixed: `CodeEditorView.swift:20` now correctly states "TextKit2-only since 0.2.0".
 
 **What We Should Borrow**
 
-The highest-value move is to turn our line model into a production `LineGeometryStore`: incremental updates from `TextEditEventHub`, line UTF-16 length, line count, actual or estimated height, y-position lookup, folded-line state, and visible-line queries. This should replace or subsume `LineIndexCache` and complete the ideas in `OptimizedLineIndexCache`.
+The highest-value move was executed: `LineGeometryStore` is now a production red-black tree (`Sources/CodeEditorPlugin/Text/LineGeometryStore.swift`) with O(log n) lookup by offset, line index, and y-position. It receives incremental rebuilds via `LineGeometryEditHandler` subscribing to `TextEditEventHub`. `LineIndexCache` is deprecated; `OptimizedLineIndexCache` is archived as prior art. Remaining work: incremental tree updates (O(m log n) split/merge/insert/delete) to replace the current rebuild-on-edit path.
 
 Second, make viewport performance measurable. Add benchmarks modeled after CodeEditTextView’s tests: large-file insert/delete, offset-to-line lookup, y-to-line lookup, visible range calculation, and scroll preservation after edits.
 

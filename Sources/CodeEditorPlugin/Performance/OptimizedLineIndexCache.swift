@@ -1,7 +1,22 @@
 import Foundation
 
-/// Optimized line index cache using a balanced tree structure for O(log n) operations
-/// This is a critical performance optimization for large files with frequent edits
+/// Archived prior art — not wired into any production code path.
+///
+/// This was an early prototype of a red-black tree line index cache. It has
+/// been superseded by `LineGeometryStore` (`Sources/CodeEditorPlugin/Text/`),
+/// which adds:
+/// - UTF-16-correct offsets (this cache uses Swift `Character` counts)
+/// - Height tracking (estimated + measured, with y-position lookup)
+/// - Fold state per line
+/// - Subtree metadata (UTF-16 length, line count, height)
+/// - Incremental edit integration via `TextEditEventHub`
+/// - `@MainActor` class isolation (not `actor`) for hot synchronous paths
+///
+/// The red-black tree balancing code (rotations, fixup-after-insertion)
+/// in this file was studied as reference during `LineGeometryStore`
+/// development. The tree is correct but its data model (character offsets,
+/// no heights, stub multi-line edits) makes it unsuitable for production.
+@available(*, deprecated, message: "Use LineGeometryStore instead")
 public actor OptimizedLineIndexCache {
     // MARK: - Types
 

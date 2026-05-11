@@ -118,6 +118,7 @@ public final class LineGeometryStore {
     // MARK: - Stored Properties
 
     private var root: Node?
+    /// Number of lines in the store.
     public private(set) var lineCount: Int = 0
 
     /// Total UTF-16 length of all lines.
@@ -135,6 +136,9 @@ public final class LineGeometryStore {
 
     // MARK: - Initialization
 
+    /// Creates a new empty line geometry store.
+    /// - Parameter defaultEstimatedHeight: Default line height used until
+    ///   measured heights are provided via `updateMeasuredHeight`.
     public init(defaultEstimatedHeight: CGFloat = 17.0) {
         self.defaultEstimatedHeight = defaultEstimatedHeight
     }
@@ -146,6 +150,9 @@ public final class LineGeometryStore {
     ///
     /// Uses standard red-black insertion with fixup for each line to
     /// guarantee invariants regardless of tree shape.
+    ///
+    /// - Parameter textStorage: The text storage to build geometry from.
+    // swiftlint:disable:next legacy_objc_type
     public func build(from textStorage: NSTextStorage) {
         reset()
         let nsString = textStorage.string as NSString
@@ -167,9 +174,12 @@ public final class LineGeometryStore {
         var anyLineTerminated = false
         while index < length {
             var lineStart = 0, lineEnd = 0, contentsEnd = 0
-            nsString.getLineStart(&lineStart, end: &lineEnd,
-                                  contentsEnd: &contentsEnd,
-                                  for: NSRange(location: index, length: 0))
+            nsString.getLineStart(
+                &lineStart,
+                end: &lineEnd,
+                contentsEnd: &contentsEnd,
+                for: NSRange(location: index, length: 0)
+            )
             let utf16Length = lineEnd - lineStart
             let lineEndingLength = lineEnd - contentsEnd
             let geometry = LineGeometry(

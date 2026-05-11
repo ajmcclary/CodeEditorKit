@@ -21,7 +21,6 @@ import UIKit
 /// no-ops — they don't affect line geometry.
 @MainActor
 internal final class LineGeometryEditHandler: TextEditEventObserving {
-
     /// The geometry store to keep in sync.
     private let geometryStore: LineGeometryStore
 
@@ -61,5 +60,4 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
         textView?.textEditEventHub.removeObserver(self)
         textView = nil
     }
-
 }

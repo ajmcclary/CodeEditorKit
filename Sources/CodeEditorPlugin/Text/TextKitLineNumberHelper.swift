@@ -243,7 +243,7 @@ public final class TextKitLineNumberHelper {
     }
 
     /// Estimate line number based on approximate line height
-    private func estimateLineNumber(at point: CGPoint, text: String) -> Int? {
+    private func estimateLineNumber(at point: CGPoint, text _: String) -> Int? {
         guard let textView else { return nil }
 
         // Get an approximate line height

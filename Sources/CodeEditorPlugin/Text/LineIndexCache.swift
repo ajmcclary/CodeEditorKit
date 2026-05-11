@@ -1,6 +1,16 @@
 import Foundation
 
-/// Cache for line indices to optimize line number calculations
+/// Cache for line indices to optimize line number calculations.
+///
+/// - Warning: Deprecated. Use `LineGeometryStore` instead, which provides
+///   UTF-16-correct line offsets, height tracking, y-position lookup, fold
+///   state, and incremental edit support via `TextEditEventHub`.
+///
+/// This cache uses Swift `Character` iteration to build offsets, which
+/// produces incorrect results for documents containing emoji, composed
+/// characters, or surrogate pairs. `LineGeometryStore` uses `NSString`
+/// line enumeration for UTF-16 correctness.
+@available(*, deprecated, message: "Use LineGeometryStore for UTF-16-correct line geometry")
 final class LineIndexCache {
     // MARK: - Types
 
