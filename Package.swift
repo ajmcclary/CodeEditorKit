@@ -46,7 +46,11 @@ import PackageDescription
 let swiftSettings: [SwiftSetting] = [
     .swiftLanguageMode(.v6),
     // Enable strict concurrency checking for Swift 6 compatibility
-    .enableExperimentalFeature("StrictConcurrency")
+    .enableExperimentalFeature("StrictConcurrency"),
+    // Tree-sitter integration (Phase 5-6 spike, Phase 7 packaging).
+    // Remove this define to exclude all Tree-sitter code from the build.
+    // When excluded, the editor falls back to regex highlighting only.
+    .define("CAN_IMPORT_TREE_SITTER")
 ]
 
 let package = Package(
