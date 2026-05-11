@@ -4,7 +4,6 @@ import Foundation
 // MARK: - LineGeometryStore + Geometry Helpers
 
 extension LineGeometryStore {
-
     /// Returns the estimated bounding rectangle for a line, using the
     /// store's y-position and effective height. Width is provided by
     /// the caller (typically the text container width).

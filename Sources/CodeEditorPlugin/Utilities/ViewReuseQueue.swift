@@ -36,7 +36,6 @@ import UIKit
 ///   on the main thread.
 @MainActor
 public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
-
     /// Views available for reuse, grouped by key.
     private var available: [Key: [View]] = [:]
 

@@ -239,7 +239,7 @@ public final class LineGeometryStore {
     ///
     /// For a balanced BST where any node's subtrees differ in height by
     /// at most 1, the black heights (if all nodes were black) also differ
-    /// by at most 1.  The fix is:
+    /// by at most 1. The fix is:
     /// - If children have equal bh: this node stays black, bh ← child_bh + 1.
     /// - If one child is deeper: recolor the deeper child RED (reducing its
     ///   bh by exactly 1), then this node stays black.
