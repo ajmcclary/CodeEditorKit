@@ -35,7 +35,7 @@ import UIKit
 /// - Note: This is a `@MainActor` class. All view mutations must occur
 ///   on the main thread.
 @MainActor
-public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
+final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     /// Views available for reuse, grouped by key.
     private var available: [Key: [View]] = [:]
 
@@ -51,20 +51,20 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     private var activeViews: [Key: View] = [:]
 
     /// Total number of views ever created.
-    public private(set) var totalCreated: Int = 0
+    private(set) var totalCreated: Int = 0
 
     /// Number of views currently in the reuse pool.
-    public var pooledCount: Int {
+    var pooledCount: Int {
         available.values.reduce(0) { $0 + $1.count }
     }
 
     /// Number of views currently checked out.
-    public var activeCount: Int { checkedOut.count }
+    var activeCount: Int { checkedOut.count }
 
     // MARK: - Initialization
 
     /// Creates an empty reuse queue.
-    public init() {}
+    init() {}
 
     // MARK: - Public API
 
@@ -78,7 +78,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     ///   - key: The key identifying the view's intended use (e.g., line index).
     ///   - factory: Closure that creates a new view when the pool is empty.
     /// - Returns: A view ready for configuration and display.
-    public func getOrCreateView(forKey key: Key, factory: () -> View) -> View {
+    func getOrCreateView(forKey key: Key, factory: () -> View) -> View {
         if let view = dequeueAvailableView(preferredKey: key) {
             let id = ObjectIdentifier(view)
             checkedOut.insert(id)
@@ -103,7 +103,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     ///
     /// - Parameter activeKeys: The set of keys that should remain active
     ///   (typically the currently visible line indices).
-    public func enqueueViews(notInSet activeKeys: Set<Key>) {
+    func enqueueViews(notInSet activeKeys: Set<Key>) {
         let keysToEnqueue = activeViews.keys.filter { !activeKeys.contains($0) }
         for key in keysToEnqueue {
             if let view = activeViews[key] {
@@ -117,7 +117,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
     /// - Parameters:
     ///   - view: The view to return to the pool.
     ///   - key: The key to associate with the view for future reuse.
-    public func enqueueView(_ view: View, forKey key: Key) {
+    func enqueueView(_ view: View, forKey key: Key) {
         let id = ObjectIdentifier(view)
         let activeKey = viewToKey[id] ?? key
         checkedOut.remove(id)
@@ -130,7 +130,7 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
 
     /// Removes all checked-out views from tracking. Does not enqueue them
     /// for reuse — use when the owning view is being torn down.
-    public func removeAllCheckedOut() {
+    func removeAllCheckedOut() {
         checkedOut.removeAll()
         viewToKey.removeAll()
         activeViews.removeAll()
@@ -138,13 +138,13 @@ public final class ViewReuseQueue<View: PlatformView, Key: Hashable> {
 
     /// Removes all views from the pool and resets statistics.
     /// Does not affect checked-out views.
-    public func clearPool() {
+    func clearPool() {
         available.removeAll()
     }
 
     /// Removes all views (pooled and tracked). Call during deinit or
     /// when the owning view is removed from the hierarchy.
-    public func reset() {
+    func reset() {
         available.removeAll()
         checkedOut.removeAll()
         viewToKey.removeAll()

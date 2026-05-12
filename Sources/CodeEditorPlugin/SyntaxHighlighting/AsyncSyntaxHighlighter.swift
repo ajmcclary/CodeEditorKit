@@ -466,9 +466,9 @@ public final class AsyncSyntaxHighlighter {
 
         // Apply each color group in a single operation for better performance.
         //
-        // C3 perf: hoist Mac-Catalyst per-token work out of the inner loop —
+        // C3 perf: hoist platform-specific per-token work out of the inner loop —
         // colour resolution and font lookup are O(palette) instead of
-        // O(tokens). On non-Catalyst, build a single attribute dictionary so
+        // O(tokens). On non-iOS, build a single attribute dictionary so
         // the inner call is `addAttributes(_:range:)` not per-attribute.
         #if true
         for (color, ranges) in tokensByColor {
@@ -549,9 +549,9 @@ public final class AsyncSyntaxHighlighter {
     }
 
     deinit {
-        // Note: cleanup() should be called explicitly before deallocation
-        // We cannot access MainActor-isolated properties in deinit with Swift 6
-        // Any remaining cleanup will be handled by ARC when references are released
+        debounceTask?.cancel()
+        periodicOptimizationTask?.cancel()
+        highlightingTask?.cancel()
     }
 
     // MARK: - Cache Management

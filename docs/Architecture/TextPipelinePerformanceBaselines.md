@@ -210,15 +210,16 @@ keeping regex highlighting as the backend.
 Current architecture:
 
 ```text
-EditorConfiguration.behavior.useTreeSitterHighlighting
+EditorConfiguration.performance.usesRangeBasedHighlighting
   -> CodeEditorView.updateRangeBasedHighlightingConfiguration()
-       -> TreeSitterRangeHighlightProvider.makeProvider(for:)
-            -> TreeSitterParser
-                 -> RegexSyntaxHighlighter backend today
-            -> TreeSitterCaptureMap
-            -> RangeBasedHighlightingController
-                 -> StyledRangeContainer
-                 -> RangeAttributeApplier
+       -> RangeBasedHighlightingController
+            -> SyntaxHighlighterRangeAdapter
+                 -> RegexSyntaxHighlighter backend
+            -> StyledRangeContainer
+            -> RangeAttributeApplier
+
+TreeSitterRangeHighlightProvider remains internal scaffolding until a real
+companion package provides C grammar loading.
 ```
 
 The current `TreeSitterParser` keeps actor-isolated parser state, translates

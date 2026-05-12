@@ -18,12 +18,11 @@ import Foundation
 ///
 /// - Important: LSP client is available on all platforms, but functionality varies:
 ///   - macOS: Full support for both local and remote LSP servers
-///   - iOS/Mac Catalyst: Remote LSP servers only (via WebSocket transport)
+///   - iOS / iPadOS: Remote LSP servers only (via WebSocket transport)
 ///
 /// ## Platform Support
 /// - macOS: Full support (local + remote servers)
 /// - iOS: Remote servers only
-/// - Mac Catalyst: Remote servers only
 ///
 /// ## Example Usage
 /// ```swift

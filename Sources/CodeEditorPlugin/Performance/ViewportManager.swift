@@ -79,8 +79,13 @@ public final class ViewportManager: ObservableObject {
             }
             .store(in: &cancellables)
         #elseif canImport(UIKit)
-        // For iOS, we'll update viewport when text changes since UITextView doesn't have
-        // a direct content offset notification
+        textView.publisher(for: \.contentOffset, options: [.new])
+            .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in
+                self?.updateViewport()
+            }
+            .store(in: &cancellables)
+
         NotificationCenter.default.publisher(for: UITextView.textDidChangeNotification)
             .compactMap { [weak self] _ in self?.textView }
             .throttle(for: .seconds(updateInterval), scheduler: RunLoop.main, latest: true)
@@ -113,7 +118,7 @@ public final class ViewportManager: ObservableObject {
         #if canImport(AppKit)
         let visibleBounds = textView.visibleRect
         #elseif canImport(UIKit)
-        let visibleBounds = textView.bounds
+        let visibleBounds = CGRect(origin: textView.contentOffset, size: textView.bounds.size)
         #endif
 
         // Calculate scroll velocity

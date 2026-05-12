@@ -91,7 +91,7 @@ final class CodeEditorViewTests: XCTestCase {
         // line numbers are meant to be handled by the container's NSRulerView
         // For proper line number functionality on macOS, use CodeEditorContainerView
         #else
-        // On iOS/Catalyst, the configuration property works normally
+        // On iOS, the configuration property works normally
         XCTAssertTrue(textView.isLineNumbersEnabled)  // Default is true
         textView.isLineNumbersEnabled = false
         XCTAssertFalse(textView.isLineNumbersEnabled)
@@ -204,7 +204,7 @@ final class CodeEditorViewTests: XCTestCase {
         textView.configuration = config
         XCTAssertTrue(textView.isHorizontallyResizable)
         #else
-        // isHorizontallyResizable is not available on iOS/Catalyst
+        // isHorizontallyResizable is not available on iOS
         #endif
     }
 
@@ -216,7 +216,7 @@ final class CodeEditorViewTests: XCTestCase {
         textView.isVerticallyResizable = false
         XCTAssertFalse(textView.isVerticallyResizable)
         #else
-        // isVerticallyResizable is not available on iOS/Catalyst
+        // isVerticallyResizable is not available on iOS
         #endif
     }
 
@@ -476,7 +476,7 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         XCTAssertTrue(textView.isFlipped)
         #else
-        // isFlipped is not available on iOS/Catalyst
+        // isFlipped is not available on iOS
         #endif
     }
 
@@ -485,9 +485,9 @@ final class CodeEditorViewTests: XCTestCase {
         let textView = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         // Default configuration has showLineNumbers = true
         #if canImport(AppKit)
-        // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in the container's scroll view
+        // On macOS, line numbers are handled by NSRulerView in the container's scroll view
         // The text view itself should never have a gutter view
-        XCTAssertNil(textView.gutterView, "On macOS/Mac Catalyst, CodeEditorView should not have a GutterView")
+        XCTAssertNil(textView.gutterView, "On macOS, CodeEditorView should not have a GutterView")
 
         // Test configuration changes without triggering gutter creation which can hang
         let oldValue = textView.isLineNumbersEnabled
@@ -562,17 +562,17 @@ class MockAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
         // Cleanup if needed
     }
 
-    func annotations(for textRange: NSTextRange) -> [Annotation] {
+    func annotations(for range: NSRange) -> [Annotation] {
         // Return annotations that intersect with the given range
         mockAnnotations.filter { annotation in
-            annotation.range.intersects(textRange)
+            annotation.range.intersects(range)
         }
     }
 
     var textViewAnnotations: [CodeEditorViewAnnotation] {
-        mockAnnotations.compactMap { annotation in
+        mockAnnotations.map { annotation in
             CodeEditorViewAnnotation(
-                location: annotation.range.location,
+                utf16Location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
             )

@@ -7,17 +7,10 @@ extension Theme {
     ///
     /// On a miss the resolver drops the trailing dotted segment and retries.
     /// `function.method.builtin` → `function.method` → `function` → foreground.
-    /// Result is cached per `Theme` identity to avoid repeated string-walks
-    /// during large highlight passes.
+    /// The lookup is pure and does not rely on process-global mutable cache
+    /// state, keeping theme resolution scoped to the `Theme` value.
     public func color(forToken token: TokenName) -> Tokens.Color {
-        let key = token.description
-        let id = SyntaxColorCache.key(for: self)
-        if let cached = SyntaxColorCache.shared.lookup(themeID: id, token: key) {
-            return cached
-        }
-        let resolved = Self.resolveSyntaxColor(token: key, in: self.style)
-        SyntaxColorCache.shared.store(themeID: id, token: key, value: resolved)
-        return resolved
+        Self.resolveSyntaxColor(token: token.description, in: self.style)
     }
 
     /// Hierarchical lookup. Strips trailing dotted segments on miss.
@@ -31,47 +24,5 @@ extension Theme {
             probe = String(probe[..<dot])
         }
         return style.editor.foreground
-    }
-}
-
-/// Cache key derived from a Theme's value identity. Uses (name, appearance,
-/// foregroundHex) as a stable, hashable surrogate; cache hits across calls
-/// to identical-content Theme instances.
-struct SyntaxColorCacheKey: Hashable, Sendable {
-    let name: String
-    let appearance: Theme.Appearance
-    let foregroundHex: String
-}
-
-/// Process-wide syntax-color cache. Single shared instance; keys scope each
-/// theme's hits separately.
-///
-/// `@unchecked Sendable` rationale: `entries` is the only mutable property
-/// and every read/write below is bracketed by `lock.lock()`/`unlock()`. The
-/// stored `Tokens.Color` values are value types (`Sendable`-conforming).
-/// Combine-style synthesis isn't available because the dictionary is mutated
-/// in place by `store(themeID:token:value:)`.
-final class SyntaxColorCache: @unchecked Sendable {
-    static let shared = SyntaxColorCache()
-
-    private let lock = NSLock()
-    private var entries: [SyntaxColorCacheKey: [String: Tokens.Color]] = [:]
-
-    static func key(for theme: Theme) -> SyntaxColorCacheKey {
-        SyntaxColorCacheKey(
-            name: theme.name,
-            appearance: theme.appearance,
-            foregroundHex: theme.style.editor.foreground.hexString
-        )
-    }
-
-    func lookup(themeID: SyntaxColorCacheKey, token: String) -> Tokens.Color? {
-        lock.lock(); defer { lock.unlock() }
-        return entries[themeID]?[token]
-    }
-
-    func store(themeID: SyntaxColorCacheKey, token: String, value: Tokens.Color) {
-        lock.lock(); defer { lock.unlock() }
-        entries[themeID, default: [:]][token] = value
     }
 }

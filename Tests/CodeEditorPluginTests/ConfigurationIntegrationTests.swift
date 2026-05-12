@@ -253,7 +253,7 @@ final class ConfigurationIntegrationTests: XCTestCase {
         #if canImport(AppKit)
         XCTAssertFalse(textView.textContainer?.widthTracksTextView ?? true)
         #else
-        // On iOS/Mac Catalyst, minimal configuration doesn't change widthTracksTextView
+        // On iOS / iPadOS, minimal configuration doesn't change widthTracksTextView
         // since wrapLines is controlled differently
         #endif
 

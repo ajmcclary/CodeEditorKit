@@ -107,7 +107,7 @@ final class LineNumbersPlatformTests: XCTestCase {
 
     #if canImport(UIKit)
     func testIOSUsesGutterViewNotNSRulerView() throws {
-        // Given: A container view on iOS/Catalyst with line numbers enabled
+        // Given: A container view on iOS with line numbers enabled
         let containerView = createContainerView()
         var config = containerView.configuration
         config.display.isLineNumbersEnabled = true
@@ -118,7 +118,7 @@ final class LineNumbersPlatformTests: XCTestCase {
 
         // Then: GutterView should be in the view hierarchy
         XCTAssertTrue(containerView.subviews.contains(containerView.gutterView),
-                     "GutterView should be added to view hierarchy on iOS/Catalyst")
+                     "GutterView should be added to view hierarchy on iOS")
 
         // And: GutterView should be visible
         XCTAssertFalse(containerView.gutterView.isHidden,
@@ -129,7 +129,7 @@ final class LineNumbersPlatformTests: XCTestCase {
     }
 
     func testIOSGutterViewObservesTextView() throws {
-        // Given: A container view on iOS/Catalyst
+        // Given: A container view on iOS
         let containerView = createContainerView()
         let gutterView = containerView.gutterView
 
@@ -141,12 +141,12 @@ final class LineNumbersPlatformTests: XCTestCase {
         XCTAssertGreaterThan(
             gutterView.observers.count,
             0,
-            "GutterView should add observers on iOS/Catalyst"
+            "GutterView should add observers on iOS"
         )
     }
 
     func testIOSDisablingLineNumbers() throws {
-        // Given: A container view on iOS/Catalyst with line numbers initially enabled
+        // Given: A container view on iOS with line numbers initially enabled
         let containerView = createContainerView()
         var config = containerView.configuration
         config.display.isLineNumbersEnabled = true
@@ -177,7 +177,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         // We can't directly test if the method was called, but we can verify the property is set
         XCTAssertTrue(containerView.showsLineNumbers)
         #else
-        // On iOS/Catalyst, gutterView should be visible
+        // On iOS, gutterView should be visible
         XCTAssertFalse(containerView.gutterView.isHidden)
         #endif
 
@@ -188,7 +188,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         #if canImport(AppKit)
         XCTAssertFalse(containerView.showsLineNumbers)
         #else
-        // On iOS/Catalyst, gutterView should be hidden
+        // On iOS, gutterView should be hidden
         XCTAssertTrue(containerView.gutterView.isHidden)
         #endif
     }
@@ -228,7 +228,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         // GutterView should NOT be in hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView))
         #else
-        // iOS/Catalyst should have visible GutterView
+        // iOS should have visible GutterView
         XCTAssertTrue(containerView.subviews.contains(containerView.gutterView))
         XCTAssertFalse(containerView.gutterView.isHidden)
         #endif
@@ -273,7 +273,7 @@ final class LineNumbersPlatformTests: XCTestCase {
         // GutterView should still NOT be in hierarchy
         XCTAssertFalse(containerView.subviews.contains(containerView.gutterView))
         #else
-        // iOS/Catalyst: Both GutterView and MinimapView in hierarchy
+        // iOS: Both GutterView and MinimapView in hierarchy
         XCTAssertTrue(containerView.subviews.contains(containerView.gutterView))
         XCTAssertTrue(containerView.subviews.contains(containerView.minimapView))
         XCTAssertFalse(containerView.gutterView.isHidden)

@@ -56,6 +56,7 @@ enum SnapshotSupport {
     static func framed<V: View>(_ view: V, theme: Theme) -> some View {
         view
             .environment(\.codeEditorTheme, theme)
+            .environment(\.colorScheme, theme.appearance == .dark ? .dark : .light)
             .background(Color(tokens: theme.style.editor.background))
     }
 }

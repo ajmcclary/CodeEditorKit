@@ -2,12 +2,8 @@ import Foundation
 
 // MARK: - Sendable Conformance for Cross-Actor Types
 
-// Note: HighlightedToken, TokenType, Language, and AnnotationKind already conform to Sendable in their declarations.
-
-/// `Annotation` stores an `NSTextRange` (reference type). Stored properties are
-/// immutable post-init and `NSTextRange` is treated as effectively-immutable
-/// here, so the conformance is `@unchecked Sendable` rather than synthesised.
-extension Annotation: @unchecked Sendable {}
+// Note: HighlightedToken, TokenType, Language, Annotation, and AnnotationKind
+// already conform to Sendable in their declarations.
 
 // `CompletionItem`'s `Sendable` conformance lives alongside its declaration in
 // `Completion/CompletionViewModels.swift`.
@@ -160,13 +156,6 @@ public struct SendablePerformanceMetric: Sendable {
 }
 
 // MARK: - Sendable Protocol Conformances
-
-/// `CodeEditorError` carries `any Error` associated values in several cases
-/// (e.g. `.completionRequestFailed`, `.languageServerCommunicationFailed`,
-/// `.fileReadingFailed`). The Swift `Error` protocol is not `Sendable`-bound,
-/// so the conformance is `@unchecked Sendable` and treats those payloads as
-/// effectively-immutable.
-extension CodeEditorError: @unchecked Sendable {}
 
 /// A Sendable configuration change event
 @available(macOS 13.0, iOS 16.0, *)

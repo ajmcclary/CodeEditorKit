@@ -69,7 +69,7 @@ import Foundation
 /// ```
 ///
 /// - SeeAlso: ``ValidationError``, ``CodeEditorResult``
-public enum CodeEditorError: LocalizedError, CustomStringConvertible {
+public enum CodeEditorError: LocalizedError, CustomStringConvertible, Sendable {
     // MARK: - Configuration Errors
     case invalidConfiguration(String)
     case configurationValidationFailed([ValidationError])
@@ -83,11 +83,11 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
     // MARK: - Language Server Errors
     case languageServerNotAvailable(String)
     case languageServerTimeout(TimeInterval)
-    case languageServerCommunicationFailed(Error)
+    case languageServerCommunicationFailed(String)
 
     // MARK: - Completion Errors
     case completionProviderNotFound(String)
-    case completionRequestFailed(Error)
+    case completionRequestFailed(String)
     case completionTimeout(TimeInterval)
 
     // MARK: - Syntax Highlighting Errors
@@ -97,8 +97,11 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
 
     // MARK: - File System Errors
     case fileTooLarge(Int, maxSize: Int)
-    case fileReadingFailed(Error)
-    case fileWritingFailed(Error)
+    case fileReadingFailed(String)
+    case fileWritingFailed(String)
+
+    // MARK: - Service Errors
+    case serviceUnavailable(String)
 
     // MARK: - Platform Errors
     case unsupportedPlatform(String)
@@ -134,14 +137,14 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
         case .languageServerTimeout(let timeout):
             return "Language server timeout: \(timeout) seconds"
 
-        case .languageServerCommunicationFailed(let error):
-            return "Language server communication failed: \(error.localizedDescription)"
+        case .languageServerCommunicationFailed(let details):
+            return "Language server communication failed: \(details)"
 
         case .completionProviderNotFound(let providerId):
             return "Completion provider '\(providerId)' not found"
 
-        case .completionRequestFailed(let error):
-            return "Completion request failed: \(error.localizedDescription)"
+        case .completionRequestFailed(let details):
+            return "Completion request failed: \(details)"
 
         case .completionTimeout(let timeout):
             return "Completion timeout: \(timeout) seconds"
@@ -158,11 +161,11 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
         case let .fileTooLarge(size, maxSize):
             return "File too large: \(size) bytes (maximum: \(maxSize) bytes)"
 
-        case .fileReadingFailed(let error):
-            return "File reading failed: \(error.localizedDescription)"
+        case .fileReadingFailed(let details):
+            return "File reading failed: \(details)"
 
-        case .fileWritingFailed(let error):
-            return "File writing failed: \(error.localizedDescription)"
+        case .fileWritingFailed(let details):
+            return "File writing failed: \(details)"
 
         case .unsupportedPlatform(let platform):
             return "Unsupported platform: \(platform)"
@@ -172,6 +175,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
 
         case .hardwareAccelerationUnavailable:
             return "Hardware acceleration is not available on this device"
+
+        case .serviceUnavailable(let serviceName):
+            return "Required service unavailable: \(serviceName)"
         }
     }
 
@@ -217,6 +223,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
              .platformFeatureUnavailable,
              .hardwareAccelerationUnavailable:
             return "The requested feature is not supported on this platform"
+
+        case .serviceUnavailable:
+            return "A required editor service has not been configured"
         }
     }
 
@@ -278,6 +287,9 @@ public enum CodeEditorError: LocalizedError, CustomStringConvertible {
 
         case .hardwareAccelerationUnavailable:
             return "Disable hardware acceleration in the performance settings"
+
+        case .serviceUnavailable:
+            return "Register the required dependency before requesting this service"
         }
     }
 
@@ -361,7 +373,8 @@ extension CodeEditorError {
              .textProcessingFailed,
              .encodingFailed,
              .fileReadingFailed,
-             .fileWritingFailed:
+             .fileWritingFailed,
+             .serviceUnavailable:
             return true
 
         case .languageServerNotAvailable,
@@ -413,6 +426,9 @@ extension CodeEditorError {
              .platformFeatureUnavailable,
              .hardwareAccelerationUnavailable:
             return "Platform"
+
+        case .serviceUnavailable:
+            return "Service"
         }
     }
 }

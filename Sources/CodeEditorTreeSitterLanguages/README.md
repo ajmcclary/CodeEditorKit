@@ -59,15 +59,15 @@ TreeSitter/
    ]
    ```
 
-5. **Consumer code** wires the provider:
+5. **Consumer code** will wire the provider explicitly once the companion
+   package exists:
    ```swift
    import CodeEditorPlugin
    import CodeEditorTreeSitterLanguages
 
-   let config = EditorConfiguration()
-       .with(behavior: EditorConfiguration.Behavior(
-           useTreeSitterHighlighting: true
-       ))
+   var config = EditorConfiguration()
+   config.performance.usesRangeBasedHighlighting = true
+   // Future companion package API will register its provider explicitly.
    ```
 
 ### Why separate?
@@ -77,13 +77,6 @@ TreeSitter/
 - **Optional**: Not every consumer needs Tree-sitter. Regex highlighting covers all 26 languages with correct token production.
 - **Update cadence**: Grammar updates happen on the Tree-sitter community schedule, not the editor's release cadence.
 
-## Compile-time gate
+## Public integration status
 
-The core editor uses `CAN_IMPORT_TREE_SITTER` (defined in `Package.swift` `swiftSettings`) to conditionally compile Tree-sitter integration. Remove the define to exclude all Tree-sitter code:
-
-```swift
-// Package.swift — comment out or remove this line
-// .define("CAN_IMPORT_TREE_SITTER")
-```
-
-When excluded, `EditorConfiguration.Behavior.useTreeSitterHighlighting` has no effect — the editor always uses regex highlighting.
+The core editor does not define a Tree-sitter build flag by default and does not expose a runtime `EditorConfiguration` switch. Until real grammar binaries and queries ship in this companion package, the consumer-facing highlighting path remains SwiftSyntax for Swift and regex definitions for other languages.

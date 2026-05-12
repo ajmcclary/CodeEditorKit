@@ -34,7 +34,7 @@ final class SwiftCompletionProvider: BaseCompletionProvider {
         [
             SnippetTemplate(
                 label: "func",
-                insertText: "func ${1:name}(${2:parameters}) ${3:-> ReturnType }{{\n    ${4:// implementation}\n}}",
+                insertText: "func ${1:name}(${2:parameters}) ${3:-> ReturnType }{\n    ${4:// implementation}\n}",
                 description: "Function declaration"
             ),
             SnippetTemplate(
@@ -94,7 +94,7 @@ final class SwiftCompletionProvider: BaseCompletionProvider {
             ),
             SnippetTemplate(
                 label: "async func",
-                insertText: "func ${1:name}(${2:parameters}) async ${3:throws }${4:-> ReturnType }{{\n    ${5:// implementation}\n}}",
+                insertText: "func ${1:name}(${2:parameters}) async ${3:throws }${4:-> ReturnType }{\n    ${5:// implementation}\n}",
                 description: "Async function declaration"
             ),
             SnippetTemplate(

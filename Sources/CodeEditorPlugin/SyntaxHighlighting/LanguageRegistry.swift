@@ -96,7 +96,10 @@ public final class LanguageRegistry {
 
         // Update extension map
         for ext in provider.fileExtensions {
-            extensionMap[ext.lowercased()] = provider.identifier
+            let normalizedExtension = ext.lowercased()
+            if extensionMap[normalizedExtension] == nil {
+                extensionMap[normalizedExtension] = provider.identifier
+            }
         }
     }
 

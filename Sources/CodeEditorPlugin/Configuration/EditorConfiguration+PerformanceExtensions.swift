@@ -130,7 +130,7 @@ extension EditorConfiguration {
         /// config.apply(to: editor2)
         /// ```
         ///
-        /// - SeeAlso: <doc:MemoryMonitor-Injection>
+        /// See `docs/Performance/memory-monitoring.md` for integration examples.
         public var memoryMonitor: MemoryMonitor?
 
         // MARK: - Initialization

@@ -17,13 +17,13 @@ import AppKit
 /// ```swift
 /// // Create a TODO annotation
 /// let todoAnnotation = Annotation(
-///     range: NSTextRange(location: 100, length: 4),
+///     range: NSRange(location: 100, length: 4),
 ///     content: "TODO: Implement error handling"
 /// )
 ///
 /// // Create with custom ID for tracking
 /// let warningAnnotation = Annotation(
-///     range: NSTextRange(location: 200, length: 10),
+///     range: NSRange(location: 200, length: 10),
 ///     content: "WARNING: Deprecated API",
 ///     id: "warning-001"
 /// )
@@ -43,11 +43,11 @@ import AppKit
 /// which determines how each annotation is rendered based on its content.
 ///
 /// - SeeAlso: `CodeEditorView.addAnnotation(_:)`, `AnnotationsDataSource`
-public struct Annotation {
+public struct Annotation: Sendable {
     /// Unique identifier for this annotation
     public let id: String
     /// Text range where the annotation appears
-    public let range: NSTextRange
+    public let range: NSRange
     /// Content of the annotation
     public let content: String
 
@@ -59,9 +59,20 @@ public struct Annotation {
     ///   - id: Unique identifier for the annotation (auto-generated if not provided)
     ///
     /// - Note: The range must be valid within the text view's content
-    public init(range: NSTextRange, content: String, id: String = UUID().uuidString) {
+    public init(range: NSRange, content: String, id: String = UUID().uuidString) {
         self.id = id
         self.range = range
         self.content = content
+    }
+
+    /// Creates a new annotation from a TextKit range by converting it to a
+    /// stable UTF-16 `NSRange` at the boundary.
+    ///
+    /// - Parameters:
+    ///   - range: The text range where the annotation should appear
+    ///   - content: The annotation content (e.g., "TODO", "FIXME", custom message)
+    ///   - id: Unique identifier for the annotation (auto-generated if not provided)
+    public init(range textRange: NSTextRange, content: String, id: String = UUID().uuidString) {
+        self.init(range: NSRange(textRange) ?? .notFound, content: content, id: id)
     }
 }

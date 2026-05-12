@@ -67,7 +67,11 @@ enum ContainerViewInitializer {
         components.textView.containerView = container
 
         // Apply common configuration
-        container.configuration.apply(to: components.textView)
+        do {
+            try container.configuration.apply(to: components.textView)
+        } catch {
+            CrossPlatformLogger.logger().error("Rejected container configuration: \(error)")
+        }
 
         // Setup minimap (this needs to be called on container directly due to stored property)
         container.setupMinimap()

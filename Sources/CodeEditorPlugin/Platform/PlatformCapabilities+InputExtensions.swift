@@ -104,7 +104,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **macOS**: Full support with extensive shortcut system
     /// - **iOS**: Limited support, mainly on iPad with external keyboard
-    /// - **Catalyst**: Full support matching macOS behavior
+    /// - **iOS**: Full support matching macOS behavior
     ///
     /// - Returns: True if keyboard shortcuts are available
     public var supportsKeyboardShortcuts: Bool {
@@ -180,7 +180,7 @@ extension PlatformCapabilities {
     ///
     /// ## Platform Support
     /// - **iOS**: Full gesture support
-    /// - **Catalyst**: Touch gesture support with mouse fallbacks
+    /// - **iOS**: Touch gesture support with mouse fallbacks
     /// - **macOS**: Not applicable (uses mouse events)
     ///
     /// - Returns: True if gesture recognizers are available
@@ -196,7 +196,7 @@ extension PlatformCapabilities {
     /// ## Detection Method
     /// - **iOS**: Checks for hardware keyboard presence
     /// - **macOS**: Always returns true (built-in keyboard)
-    /// - **Catalyst**: Always returns true (desktop environment)
+    /// - **iOS**: Always returns true (desktop environment)
     ///
     /// - Returns: True if external keyboard is connected
     public var hasExternalKeyboard: Bool {
@@ -205,7 +205,7 @@ extension PlatformCapabilities {
         return UIDevice.current.userInterfaceIdiom == .pad &&
                isExternalKeyboardConnected()
         #else
-        // Always true on macOS and Catalyst
+        // Always true on macOS and iOS
         return true
         #endif
     }
@@ -218,7 +218,7 @@ extension PlatformCapabilities {
     /// ## Detection Method
     /// - **iOS**: Checks for trackpad/mouse connectivity
     /// - **macOS**: Always returns true (built-in trackpad/mouse)
-    /// - **Catalyst**: Always returns true (desktop environment)
+    /// - **iOS**: Always returns true (desktop environment)
     ///
     /// - Returns: True if pointing device is connected
     public var hasPointingDevice: Bool {

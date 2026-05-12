@@ -38,7 +38,7 @@ import AppKit
 /// - Accessibility settings and contrast preferences
 /// - System accent color changes
 ///
-/// - SeeAlso: <doc:Platform-Adaptation> for color manipulation utilities
+/// See `docs/Platform/platform-abstraction.md` for platform adaptation details.
 public enum PlatformColors {
     // MARK: - Basic Platform Colors
 

@@ -139,10 +139,7 @@ extension CodeEditorView {
         if let coordinator = configuration.actorCoordinator {
             return coordinator
         }
-        // Create and store a new coordinator
-        let newCoordinator = ActorCoordinator.create()
-        configuration.actorCoordinator = newCoordinator
-        return newCoordinator
+        return defaultActorCoordinator
     }
 
     /// Process text using the integrated actor system
@@ -204,21 +201,29 @@ extension SmartTokenCache: CacheProtocol {
 extension SmartTokenCache.CacheKey {
     /// Create cache key from string representation
     init?(fromString string: String) {
-        // Simple parsing - in production would be more robust
-        let components = string.split(separator: "|")
+        let components = string.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false)
         guard components.count >= 2 else { return nil }
 
-        // Create a dummy text to generate the cache key
-        let dummyText = String(components[0])
-        self.init(
-            text: dummyText,
-            language: Language(rawValue: String(components[1])) ?? .plainText,
-            version: components.count > 2 ? Int(components[2]) ?? 0 : 0
-        )
+        if components.count == 3,
+           let data = Data(base64Encoded: String(components[0])),
+           let text = String(data: data, encoding: .utf8) {
+            let language = Language(rawValue: String(components[1])) ?? .plainText
+            let version = Int(components[2]) ?? 0
+            self.init(text: text, language: language, version: version)
+            return
+        }
+
+        // Legacy length-only keys cannot recover the original text, so they
+        // intentionally map to a placeholder that will not collide with real
+        // content keys.
+        guard let textLength = Int(components[0]) else { return nil }
+        let language = Language(rawValue: String(components[1])) ?? .plainText
+        let version = components.count > 2 ? Int(components[2]) ?? 0 : 0
+        self.init(text: String(repeating: "\0", count: textLength), language: language, version: version)
     }
 
     /// Convert cache key to string representation
     var stringRepresentation: String {
-        "\(textHash)|\(language.rawValue)|\(version)"
+        "\(Data(text.utf8).base64EncodedString())|\(language.rawValue)|\(version)"
     }
 }

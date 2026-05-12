@@ -97,74 +97,51 @@ extension CodeEditorContainerView {
     // MARK: - Navigation
 
     private func navigateToLine(_ lineNumber: Int) {
-        #if canImport(AppKit)
-        // macOS navigation
-        let text = textView.string
-        let lines = text.components(separatedBy: .newlines)
+        let lineCount = textView.lineGeometryStore.lineCount
+        guard lineCount > 0 else { return }
 
-        guard lineNumber < lines.count else { return }
-
-        // Calculate character position for the line
-        let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-        let targetPosition = lineNumber > 0 ? lineStart + 1 : 0
+        let targetLineIndex = min(max(0, lineNumber), lineCount - 1)
+        let targetPosition = textView.lineGeometryStore.utf16Offset(forLineIndex: targetLineIndex)
         let targetRange = NSRange(location: targetPosition, length: 0)
 
+        #if canImport(AppKit)
+        guard targetPosition <= textView.string.utf16.count else { return }
+
         if configuration.behavior.autoScrollToCursor {
-            // When auto-scroll is enabled, set selection and explicitly scroll
             textView.setSelectedRange(targetRange)
 
-            // Use the proper macOS scrolling method
-            if let layoutManager = textView.layoutManager,
-               let textContainer = textView.textContainer {
-                let glyphRange = layoutManager.glyphRange(forCharacterRange: targetRange, actualCharacterRange: nil)
-                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-                let adjustedRect = CGRect(
-                    x: rect.origin.x + textView.textContainerOrigin.x,
-                    y: rect.origin.y + textView.textContainerOrigin.y,
-                    width: max(rect.width, 1),
-                    height: max(rect.height, 20)
-                )
-                textView.scrollToVisible(adjustedRect)
-            }
+            var rect = textView.lineGeometryStore.estimatedRect(
+                forLineAt: targetLineIndex,
+                containerWidth: textView.bounds.width
+            )
+            rect.origin.x += textView.textContainerOrigin.x
+            rect.origin.y += textView.textContainerOrigin.y
+            rect.size.width = max(rect.width, 1)
+            rect.size.height = max(rect.height, 20)
+            textView.scrollToVisible(rect)
         } else {
-            // When auto-scroll is disabled, use the method that prevents scrolling
             textView.setSelectedRangeWithoutScrolling(targetRange)
         }
         #else
-        // iOS navigation
         let text = textView.text ?? ""
-        let lines = text.components(separatedBy: .newlines)
+        guard targetPosition <= text.utf16.count,
+              let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) else {
+            return
+        }
 
-        guard lineNumber < lines.count else { return }
+        let textRange = textView.textRange(from: position, to: position)
+        textView.setSelectedTextRangeWithoutScrolling(textRange)
 
-        // Calculate character position for the line
-        let lineStart = lines.prefix(lineNumber).joined(separator: "\n").count
-        if lineNumber > 0 {
-            // Add 1 for the newline character
-            let targetPosition = lineStart + 1
-            if let position = textView.position(from: textView.beginningOfDocument, offset: targetPosition) {
-                let textRange = textView.textRange(from: position, to: position)
-
-                // Use the new method that respects autoScrollToCursor configuration
-                textView.setSelectedTextRangeWithoutScrolling(textRange)
-
-                // Only scroll if autoScrollToCursor is enabled
-                if configuration.behavior.autoScrollToCursor {
-                    let rect = textView.caretRect(for: position)
-                    textView.scrollRectToVisible(rect, animated: true)
-                }
-            }
-        } else {
-            // First line
-            let textRange = textView.textRange(from: textView.beginningOfDocument, to: textView.beginningOfDocument)
-
-            // Use the new method that respects autoScrollToCursor configuration
-            textView.setSelectedTextRangeWithoutScrolling(textRange)
-
-            // Only scroll if autoScrollToCursor is enabled
-            if configuration.behavior.autoScrollToCursor {
-                textView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: true)
-            }
+        if configuration.behavior.autoScrollToCursor {
+            var rect = textView.lineGeometryStore.estimatedRect(
+                forLineAt: targetLineIndex,
+                containerWidth: textView.bounds.width
+            )
+            rect.origin.x += textView.textContainerInset.left
+            rect.origin.y += textView.textContainerInset.top
+            rect.size.width = max(rect.width, 1)
+            rect.size.height = max(rect.height, 20)
+            textView.scrollRectToVisible(rect, animated: true)
         }
         #endif
     }
@@ -180,23 +157,21 @@ extension CodeEditorContainerView {
         let currentSelection = textView.selectedRange
         guard currentSelection.length == 0 else { return } // Only work with cursor, not selections
 
-        // Get cursor position information
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return }
-
         let cursorPosition = currentSelection.location
         let textLength = textView.string.count
         guard cursorPosition < textLength else { return }
 
-        // Calculate cursor rect
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: currentSelection, actualCharacterRange: nil)
-        let cursorRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
-        let adjustedCursorRect = CGRect(
-            x: cursorRect.origin.x + textView.textContainerOrigin.x,
-            y: cursorRect.origin.y + textView.textContainerOrigin.y,
-            width: max(cursorRect.width, 1),
-            height: max(cursorRect.height, 20)
+        let lineIndex = textView.lineGeometryStore.lineIndex(forUtf16Offset: cursorPosition)
+        guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return }
+
+        var adjustedCursorRect = textView.lineGeometryStore.estimatedRect(
+            forLineAt: lineIndex,
+            containerWidth: textView.bounds.width
         )
+        adjustedCursorRect.origin.x += textView.textContainerOrigin.x
+        adjustedCursorRect.origin.y += textView.textContainerOrigin.y
+        adjustedCursorRect.size.width = max(adjustedCursorRect.width, 1)
+        adjustedCursorRect.size.height = max(adjustedCursorRect.height, 20)
 
         // Check if cursor is visible in current view
         let visibleRect = textView.visibleRect

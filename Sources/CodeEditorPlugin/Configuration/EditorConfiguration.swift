@@ -339,21 +339,9 @@ public struct EditorConfiguration: Codable, Sendable {
     ///         triggers this method internally.
     ///
     /// - SeeAlso: ``CodeEditorView/configuration``
-    @MainActor public func apply(to view: CodeEditorView) {
-        // Validate configuration before applying
-        do {
-            try validateAndThrow()
-        } catch {
-            // Log validation error but continue with application
-            // This ensures backward compatibility while alerting developers
-            CrossPlatformLogger.logger().warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
-        }
-
-        // Set the view's configuration property which will trigger applyConfiguration()
-        // This will apply all the settings internally
+    @MainActor public func apply(to view: CodeEditorView) throws {
+        try validateAndThrow()
         view.configuration = self
-
-        // Apply cross-platform text input features that aren't handled by applyConfiguration
         applyTextInputFeatures(to: view)
     }
 

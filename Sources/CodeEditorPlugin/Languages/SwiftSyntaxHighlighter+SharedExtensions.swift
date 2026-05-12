@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Shared Swift Highlighting Utilities
 
 /// Shared utilities for Swift syntax highlighting that work across all platforms
-/// including Mac Catalyst where SwiftSyntax is not available
+/// including iOS where SwiftSyntax is not available
 internal enum SwiftHighlightingUtilities {
     // MARK: - Keywords
 

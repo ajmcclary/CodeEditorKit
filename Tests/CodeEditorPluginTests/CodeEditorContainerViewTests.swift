@@ -51,7 +51,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
             throw XCTSkip("UI tests not supported in this environment")
         }
         #if canImport(UIKit)
-        // On iOS/Mac Catalyst, text view is added directly to container
+        // On iOS / iPadOS, text view is added directly to container
         let textView = containerView.textView
         XCTAssertTrue(containerView.subviews.contains(textView))
 
@@ -61,7 +61,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
             XCTAssertTrue(containerView.subviews.contains(gutterView))
         }
 
-        // Minimap is not added to subviews on iOS/Mac Catalyst in current implementation
+        // Minimap is not added to subviews on iOS / iPadOS in current implementation
         // It's created but not added to the view hierarchy
         XCTAssertNotNil(containerView.minimapView)
         #else
@@ -125,7 +125,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         let expectedMaxWidth = containerView.configuration.layout.gutterWidth + containerView.configuration.layout.lineNumberPadding
         XCTAssertLessThan(insets.width, expectedMaxWidth, "Text container inset width should be less than gutter width plus padding when line numbers are hidden")
         #else
-        // On iOS/Catalyst, GutterView is used
+        // On iOS, GutterView is used
         // Initially show line numbers
         containerView.showsLineNumbers = true
         XCTAssertFalse(containerView.gutterView.isHidden)
@@ -162,12 +162,12 @@ final class CodeEditorContainerViewTests: XCTestCase {
         let gutterWidth = containerView.configuration.layout.gutterWidth
 
         #if canImport(UIKit)
-        // iOS/Catalyst: Check gutter view positioning
+        // iOS: Check gutter view positioning
         XCTAssertEqual(containerView.gutterView.frame.origin.x, 0)
         // The actual frame width should match the configuration
         XCTAssertEqual(containerView.gutterView.frame.width, gutterWidth, "Gutter view width should match configuration")
 
-        // On iOS/Catalyst with Auto Layout, text view is positioned after gutter,
+        // On iOS with Auto Layout, text view is positioned after gutter,
         // so it only needs padding in its insets, not the full gutter width
         let textInsets = containerView.textView.textContainerEdgeInsets
         let expectedPadding = containerView.configuration.layout.lineNumberPadding
@@ -396,7 +396,7 @@ final class CodeEditorContainerViewTests: XCTestCase {
         #if canImport(UIKit)
         // UITextView inherits from UIScrollView and has scrolling enabled by default
         XCTAssertTrue(containerView.textView.isScrollEnabled)
-        // Note: alwaysBounceVertical might be false by default on Mac Catalyst
+        // Note: alwaysBounceVertical might be false by default on iOS
         // so we just check that scrolling works
 
         // Force layout to calculate content size
@@ -405,9 +405,9 @@ final class CodeEditorContainerViewTests: XCTestCase {
         containerView.textView.setNeedsLayout()
         containerView.textView.layoutIfNeeded()
 
-        // On Catalyst, we may need to force text container to layout
+        // On iOS, we may need to force text container to layout
         #if canImport(UIKit)
-        // On iOS/Catalyst, textContainer and layoutManager are non-optional
+        // On iOS, textContainer and layoutManager are non-optional
         let textContainer = containerView.textView.textContainer
         let layoutManager = containerView.textView.layoutManager
         layoutManager.ensureLayout(for: textContainer)

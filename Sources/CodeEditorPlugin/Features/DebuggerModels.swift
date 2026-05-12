@@ -6,17 +6,17 @@ import Foundation
 // MARK: - Debug Session
 
 /// Debug session
-public class DebugSession {
+class DebugSession {
     /// Unique identifier for this debug session
-    public let id: String
+    let id: String
     /// The launch configuration used to start this session
-    public let configuration: LaunchConfiguration
+    let configuration: LaunchConfiguration
     /// The debug adapter handling communication with the debugger
-    public let adapter: DebugAdapter
+    let adapter: DebugAdapter
     /// Current state of the debug session
-    public var state: SessionState = .initializing
+    var state: SessionState = .initializing
     /// The currently active thread ID
-    public var currentThreadId: Int = 1
+    var currentThreadId: Int = 1
 
     init(id: String, configuration: LaunchConfiguration, adapter: DebugAdapter) {
         self.id = id
@@ -25,7 +25,7 @@ public class DebugSession {
     }
 
     /// The possible states of a debug session
-    public enum SessionState {
+    enum SessionState {
         /// Session is being initialized
         case initializing
         /// Session is running normally
@@ -44,24 +44,24 @@ public class DebugSession {
 // MARK: - Launch Configuration
 
 /// Launch configuration
-public struct LaunchConfiguration: Sendable {
-    public let name: String
-    public let type: String
-    public let request: RequestType
-    public let language: String
-    public let program: String?
-    public let args: [String]
-    public let env: [String: String]
-    public let cwd: String?
-    public let stopOnEntry: Bool
-    public let noDebug: Bool
+struct LaunchConfiguration: Sendable {
+    let name: String
+    let type: String
+    let request: RequestType
+    let language: String
+    let program: String?
+    let args: [String]
+    let env: [String: String]
+    let cwd: String?
+    let stopOnEntry: Bool
+    let noDebug: Bool
 
-    public enum RequestType: Sendable {
+    enum RequestType: Sendable {
         case launch
         case attach
     }
 
-    public init(
+    init(
         name: String,
         type: String,
         request: RequestType,
@@ -89,21 +89,21 @@ public struct LaunchConfiguration: Sendable {
 // MARK: - Breakpoint
 
 /// Breakpoint
-public struct Breakpoint: Identifiable, Sendable {
-    public let id = UUID()
-    public let source: Source
-    public let line: Int
-    public var column: Int?
-    public var condition: String?
-    public var hitCondition: String?
-    public var logMessage: String?
-    public var verified = false
+struct Breakpoint: Identifiable, Sendable {
+    let id = UUID()
+    let source: Source
+    let line: Int
+    var column: Int?
+    var condition: String?
+    var hitCondition: String?
+    var logMessage: String?
+    var verified = false
 
-    public var isConditional: Bool {
+    var isConditional: Bool {
         condition != nil || hitCondition != nil
     }
 
-    public var isLogpoint: Bool {
+    var isLogpoint: Bool {
         logMessage != nil
     }
 }
@@ -111,12 +111,12 @@ public struct Breakpoint: Identifiable, Sendable {
 // MARK: - Source
 
 /// Source file
-public struct Source: Sendable {
-    public let name: String?
-    public let path: String
-    public let sourceReference: Int?
+struct Source: Sendable {
+    let name: String?
+    let path: String
+    let sourceReference: Int?
 
-    public init(path: String, name: String? = nil, sourceReference: Int? = nil) {
+    init(path: String, name: String? = nil, sourceReference: Int? = nil) {
         self.name = name
         self.path = path
         self.sourceReference = sourceReference
@@ -126,15 +126,15 @@ public struct Source: Sendable {
 // MARK: - Stack Frame
 
 /// Stack frame
-public struct StackFrame: Identifiable, Sendable {
-    public let id: Int
-    public let name: String
-    public let source: Source?
-    public let line: Int
-    public let column: Int
-    public let presentationHint: PresentationHint?
+struct StackFrame: Identifiable, Sendable {
+    let id: Int
+    let name: String
+    let source: Source?
+    let line: Int
+    let column: Int
+    let presentationHint: PresentationHint?
 
-    public enum PresentationHint: String, Sendable {
+    enum PresentationHint: String, Sendable {
         case normal
         case label
         case subtle
@@ -144,71 +144,71 @@ public struct StackFrame: Identifiable, Sendable {
 // MARK: - Variable
 
 /// Variable
-public struct Variable: Identifiable, Sendable {
-    public let id = UUID()
-    public let name: String
-    public let value: String
-    public let type: String?
-    public let variablesReference: Int
-    public let namedVariables: Int?
-    public let indexedVariables: Int?
-    public let presentationHint: VariablePresentationHint?
+struct Variable: Identifiable, Sendable {
+    let id = UUID()
+    let name: String
+    let value: String
+    let type: String?
+    let variablesReference: Int
+    let namedVariables: Int?
+    let indexedVariables: Int?
+    let presentationHint: VariablePresentationHint?
 
-    public struct VariablePresentationHint: Sendable {
-        public let kind: String?
-        public let attributes: [String]
-        public let visibility: String?
+    struct VariablePresentationHint: Sendable {
+        let kind: String?
+        let attributes: [String]
+        let visibility: String?
     }
 }
 
 // MARK: - Scope
 
 /// Scope
-public struct Scope: Sendable {
-    public let name: String
-    public let variablesReference: Int
-    public let namedVariables: Int?
-    public let indexedVariables: Int?
-    public let expensive: Bool
+struct Scope: Sendable {
+    let name: String
+    let variablesReference: Int
+    let namedVariables: Int?
+    let indexedVariables: Int?
+    let expensive: Bool
 }
 
 // MARK: - Module
 
 /// Module
-public struct Module: Sendable {
-    public let id: Int
-    public let name: String
-    public let path: String?
-    public let isOptimized: Bool
-    public let isUserCode: Bool
-    public let symbolStatus: String?
+struct Module: Sendable {
+    let id: Int
+    let name: String
+    let path: String?
+    let isOptimized: Bool
+    let isUserCode: Bool
+    let symbolStatus: String?
 }
 
 // MARK: - Inline Value
 
 /// Inline value
-public struct InlineValue: Sendable {
-    public let range: NSRange
-    public let value: String
-    public let variableName: String?
-    public let type: String?
+struct InlineValue: Sendable {
+    let range: NSRange
+    let value: String
+    let variableName: String?
+    let type: String?
 }
 
 // MARK: - Hover Evaluation
 
 /// Hover evaluation result
-public struct HoverEvaluation: Sendable {
-    public let expression: String
-    public let value: String
-    public let type: String?
-    public let hasChildren: Bool
-    public let location: Int
+struct HoverEvaluation: Sendable {
+    let expression: String
+    let value: String
+    let type: String?
+    let hasChildren: Bool
+    let location: Int
 }
 
 // MARK: - Enums
 
 /// Evaluate context
-public enum EvaluateContext: String, Sendable {
+enum EvaluateContext: String, Sendable {
     case watch
     case repl
     case hover
@@ -216,7 +216,7 @@ public enum EvaluateContext: String, Sendable {
 }
 
 /// Stopped reason
-public enum StoppedReason: String, Sendable {
+enum StoppedReason: String, Sendable {
     case step
     case breakpoint
     case exception
@@ -231,54 +231,54 @@ public enum StoppedReason: String, Sendable {
 // MARK: - Debug Capabilities
 
 /// Debug capabilities
-public struct DebugCapabilities: Sendable {
-    public var supportsConfigurationDoneRequest = true
-    public var supportsFunctionBreakpoints = true
-    public var supportsConditionalBreakpoints = true
-    public var supportsHitConditionalBreakpoints = true
-    public var supportsEvaluateForHovers = true
-    public var supportsStepBack = false
-    public var supportsSetVariable = true
-    public var supportsRestartFrame = false
-    public var supportsGotoTargetsRequest = false
-    public var supportsStepInTargetsRequest = false
-    public var supportsCompletionsRequest = true
-    public var supportsModulesRequest = true
-    public var supportsRestartRequest = true
-    public var supportsExceptionOptions = true
-    public var supportsValueFormattingOptions = true
-    public var supportsExceptionInfoRequest = true
-    public var supportTerminateDebuggee = true
-    public var supportSuspendDebuggee = true
-    public var supportsDelayedStackTraceLoading = true
-    public var supportsLoadedSourcesRequest = true
-    public var supportsLogPoints = true
-    public var supportsTerminateThreadsRequest = false
-    public var supportsSetExpression = false
-    public var supportsTerminateRequest = true
-    public var supportsDataBreakpoints = false
-    public var supportsReadMemoryRequest = false
-    public var supportsWriteMemoryRequest = false
-    public var supportsDisassembleRequest = false
-    public var supportsCancelRequest = true
-    public var supportsBreakpointLocationsRequest = true
-    public var supportsClipboardContext = true
-    public var supportsSteppingGranularity = false
-    public var supportsInstructionBreakpoints = false
-    public var supportsExceptionFilterOptions = false
+struct DebugCapabilities: Sendable {
+    var supportsConfigurationDoneRequest = true
+    var supportsFunctionBreakpoints = true
+    var supportsConditionalBreakpoints = true
+    var supportsHitConditionalBreakpoints = true
+    var supportsEvaluateForHovers = true
+    var supportsStepBack = false
+    var supportsSetVariable = true
+    var supportsRestartFrame = false
+    var supportsGotoTargetsRequest = false
+    var supportsStepInTargetsRequest = false
+    var supportsCompletionsRequest = true
+    var supportsModulesRequest = true
+    var supportsRestartRequest = true
+    var supportsExceptionOptions = true
+    var supportsValueFormattingOptions = true
+    var supportsExceptionInfoRequest = true
+    var supportTerminateDebuggee = true
+    var supportSuspendDebuggee = true
+    var supportsDelayedStackTraceLoading = true
+    var supportsLoadedSourcesRequest = true
+    var supportsLogPoints = true
+    var supportsTerminateThreadsRequest = false
+    var supportsSetExpression = false
+    var supportsTerminateRequest = true
+    var supportsDataBreakpoints = false
+    var supportsReadMemoryRequest = false
+    var supportsWriteMemoryRequest = false
+    var supportsDisassembleRequest = false
+    var supportsCancelRequest = true
+    var supportsBreakpointLocationsRequest = true
+    var supportsClipboardContext = true
+    var supportsSteppingGranularity = false
+    var supportsInstructionBreakpoints = false
+    var supportsExceptionFilterOptions = false
 }
 
 // MARK: - Errors
 
 /// Debug error
-public enum DebugError: LocalizedError, Sendable {
+enum DebugError: LocalizedError, Sendable {
     case noAdapterForLanguage(String)
     case sessionNotFound(String)
     case noActiveSession
     case adapterError(String)
     case communicationError(String)
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .noAdapterForLanguage(let language):
             return "No debug adapter registered for language: \(language)"

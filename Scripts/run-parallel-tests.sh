@@ -14,46 +14,28 @@ echo "================================================"
 
 # Function to run tests and capture timing
 run_tests() {
-    local testplan=$1
-    local description=$2
-    
+    local description=$1
+
     echo -e "\n${YELLOW}$description${NC}"
-    
+
     # Record start time
     start_time=$(date +%s)
-    
-    # Run tests
-    if [ "$USE_XCODEBUILD" = "1" ]; then
-        xcodebuild test \
-            -scheme CodeEditorPlugin \
-            -testPlan "$testplan" \
-            -destination 'platform=macOS' \
-            -parallel-testing-enabled YES \
-            -maximum-concurrent-test-device-destinations 4 \
-            -quiet | xcpretty
+
+    if [[ -n "${NUM_WORKERS:-}" ]]; then
+        swift test --parallel --num-workers "$NUM_WORKERS"
     else
-        swift test \
-            --parallel \
-            --num-workers auto
+        swift test --parallel
     fi
-    
+
     # Record end time
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     echo -e "${GREEN}Completed in ${duration} seconds${NC}"
 }
 
-# Check if we should use xcodebuild or swift test
-if [ -f "CodeEditorPlugin-SmartParallel.xctestplan" ]; then
-    echo "Using smart parallel test plan..."
-    USE_XCODEBUILD=1
-    run_tests "CodeEditorPlugin-SmartParallel" "Running tests with smart parallelization"
-else
-    echo "Using swift test with parallel execution..."
-    USE_XCODEBUILD=0
-    run_tests "" "Running all tests in parallel"
-fi
+echo "Using swift test with parallel execution..."
+run_tests "Running all tests in parallel"
 
 echo -e "\n${GREEN}All tests completed!${NC}"
 

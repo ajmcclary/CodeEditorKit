@@ -2,7 +2,7 @@
 import SwiftUI
 import UIKit
 
-// MARK: - IOS/Catalyst UIViewRepresentable
+// MARK: - IOS/iOS UIViewRepresentable
 
 @available(iOS 16.0, *)
 struct CodeEditorRepresentable: UIViewRepresentable {

@@ -112,7 +112,6 @@ enum KnobIcon {
         "isCodeCompletionEnabled": "sparkles",
         "isAutomaticTextCompletionEnabled": "text.append",
         "showInlineCompletionSuggestions": "lightbulb",
-        "useTreeSitterHighlighting": "tree",
         "completionTriggerCharacters": "keyboard",
 
         "maxSyntaxHighlightingLength": "ruler.fill",

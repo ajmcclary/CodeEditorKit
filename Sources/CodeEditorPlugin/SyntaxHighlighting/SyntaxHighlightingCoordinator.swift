@@ -1,6 +1,6 @@
 import Foundation
 
-// SwiftSyntax is not compatible with Mac Catalyst
+// SwiftSyntax is not compatible with iOS
 import SwiftParser
 import SwiftSyntax
 

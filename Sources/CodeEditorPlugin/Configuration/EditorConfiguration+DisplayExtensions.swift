@@ -35,7 +35,7 @@ extension EditorConfiguration {
         public var visibleLines: Int = PlatformConstants.defaultVisibleLines
 
         /// Whether invisible characters (spaces, tabs) are visible.
-        /// - Note: Only supported on macOS. Not available on iOS or Mac Catalyst due to TextKit limitations.
+        /// - Note: Only supported on macOS. Not available on iOS due to TextKit limitations.
         public var areInvisibleCharactersVisible: Bool = false
 
         /// Whether code folding functionality is enabled.

@@ -76,38 +76,46 @@ public protocol ProjectSearchProvider: AnyObject {
 public final class PortableProjectSearchAdapter: ProjectSearchProvider {
     private var indexedFiles: [URL] = []
     private var searchTask: Task<[ProjectSearchResult], Never>?
+    private let lock = NSLock()
     private let fileManager = FileManager.default
 
     public init() {}
 
     public func indexFiles(urls: [URL]) async throws {
-        indexedFiles = urls.filter { url in
+        let files = urls.filter { url in
             var isDir: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir) else { return false }
             return !isDir.boolValue
+        }
+        locked {
+            indexedFiles = files
         }
     }
 
     /// Re-index with file extension filtering applied.
     public func indexFiles(urls: [URL], extensions: [String]) async throws {
         let extSet = Set(extensions.map { $0.lowercased() })
-        indexedFiles = urls.filter { url in
+        let files = urls.filter { url in
             var isDir: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir),
                   !isDir.boolValue else { return false }
             if extSet.isEmpty { return true }
             return extSet.contains(url.pathExtension.lowercased())
         }
+        locked {
+            indexedFiles = files
+        }
     }
 
     public func search(query: String, options: ProjectSearchOptions) async throws -> [ProjectSearchResult] {
         cancelSearch()
-        let files: [URL]
-        if options.fileExtensions.isEmpty {
-            files = indexedFiles
-        } else {
-            let extSet = Set(options.fileExtensions.map { $0.lowercased() })
-            files = indexedFiles.filter { extSet.contains($0.pathExtension.lowercased()) }
+        let files: [URL] = locked {
+            if options.fileExtensions.isEmpty {
+                return indexedFiles
+            } else {
+                let extSet = Set(options.fileExtensions.map { $0.lowercased() })
+                return indexedFiles.filter { extSet.contains($0.pathExtension.lowercased()) }
+            }
         }
         let opts = options
 
@@ -121,11 +129,13 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
             )
         }
 
-        searchTask = task
+        locked {
+            searchTask = task
+        }
         return await task.value
     }
 
-    private static func performSearch(
+    nonisolated private static func performSearch(
         query: String,
         options: ProjectSearchOptions,
         files: [URL],
@@ -158,7 +168,7 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         return results
     }
 
-    private static func makePredicate(query: String, options: ProjectSearchOptions) -> (String) -> Bool {
+    nonisolated private static func makePredicate(query: String, options: ProjectSearchOptions) -> (String) -> Bool {
         if options.useRegex {
             let regex = try? NSRegularExpression(
                 pattern: query,
@@ -174,7 +184,7 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         }
     }
 
-    private static func computeColumn(query: String, options: ProjectSearchOptions, line: String) -> Int {
+    nonisolated private static func computeColumn(query: String, options: ProjectSearchOptions, line: String) -> Int {
         if options.useRegex {
             let regex = try? NSRegularExpression(
                 pattern: query,
@@ -191,7 +201,7 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
         return 1
     }
 
-    private static func extractMatchedText(query: String, line: String, column: Int) -> String {
+    nonisolated private static func extractMatchedText(query: String, line: String, column: Int) -> String {
         let start = max(0, column - 1)
         let end = min(line.utf16.count, start + query.utf16.count)
         if end > start,
@@ -205,11 +215,27 @@ public final class PortableProjectSearchAdapter: ProjectSearchProvider {
     }
 
     public func cancelSearch() {
-        searchTask?.cancel()
-        searchTask = nil
+        let task = locked {
+            let task = searchTask
+            searchTask = nil
+            return task
+        }
+        task?.cancel()
     }
 
     public func clearIndex() {
-        indexedFiles.removeAll()
+        let task = locked {
+            indexedFiles.removeAll()
+            let task = searchTask
+            searchTask = nil
+            return task
+        }
+        task?.cancel()
+    }
+
+    private func locked<T>(_ body: () -> T) -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return body()
     }
 }

@@ -30,7 +30,7 @@ extension CodeEditorView {
         // Always ensure no GutterView exists on the text view itself
         updateGutterVisibility()
         #else
-        // On iOS/Catalyst, gutter is handled by the container view
+        // On iOS, gutter is handled by the container view
         // But when used standalone, the text view should manage its own gutter
         updateGutterVisibility()
         #endif
@@ -69,7 +69,7 @@ extension CodeEditorView {
         updateTextContainerSize()
         #endif
 
-        // Ensure text colors are visible on Mac Catalyst
+        // Ensure text colors are visible on iOS
 
         // Apply behavior settings
         isEditable = configuration.behavior.isEditable
@@ -197,8 +197,8 @@ extension CodeEditorView {
         layoutManager?.showsInvisibleCharacters = isInvisibleCharactersEnabled
         #else
         // UITextView's layout manager doesn't support showsInvisibleCharacters directly
-        // For Mac Catalyst, we need to implement custom rendering
-        // This is a known limitation - invisible characters require custom drawing on iOS/Catalyst
+        // For iOS, we need to implement custom rendering
+        // This is a known limitation - invisible characters require custom drawing on iOS
         #endif
     }
 

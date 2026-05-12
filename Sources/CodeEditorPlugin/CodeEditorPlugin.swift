@@ -14,8 +14,8 @@ import SwiftUI
 /// CodeEditorPlugin: Production-ready code editor component for Swift applications
 ///
 /// This module provides a comprehensive code editing solution with:
-/// - **20 programming languages** with syntax highlighting
-/// - **Cross-platform support** for macOS, iOS, and Mac Catalyst
+/// - **25 concrete programming languages plus plain text** with syntax highlighting
+/// - **Cross-platform support** for native macOS and iOS / iPadOS
 /// - **Modern Swift 6.3 concurrency** with actor-based architecture
 /// - **SwiftUI and UIKit/AppKit integration**
 /// - **Performance optimizations** for large files

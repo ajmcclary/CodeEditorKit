@@ -87,7 +87,7 @@ extension CodeEditorView {
             }
         }
 
-        // On Mac Catalyst, ensure text remains visible after edits
+        // On iOS, ensure text remains visible after edits
 
         // Publish text changed event
         if editedRange.location != NSNotFound {

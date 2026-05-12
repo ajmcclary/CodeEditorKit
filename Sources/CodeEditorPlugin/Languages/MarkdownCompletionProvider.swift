@@ -352,7 +352,7 @@ final class MarkdownCompletionProvider: BaseCompletionProvider {
             ),
             CompletionItemModel(
                 label: "|---|",
-                insertText: "|${1:----------|----------|----------|",
+                insertText: "| ${1:----------} | ${2:----------} | ${3:----------} |",
                 kind: .snippet,
                 detail: "Table separator",
                 priority: 80,
@@ -379,7 +379,7 @@ final class MarkdownCompletionProvider: BaseCompletionProvider {
             .map { language in
                 CompletionItemModel(
                     label: language,
-                    insertText: "\(language)\n${1:code}\n```",
+                    insertText: "```\(language)\n${1:code}\n```",
                     kind: .snippet,
                     detail: "Code block",
                     priority: 85,

@@ -144,6 +144,8 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
     private var documentVersion = 0
     private var setupTask: Task<Void, Error>?
     private var preEditSnapshots: [PreEditSnapshot] = []
+    private var cachedSource: String?
+    private var cachedResult: TreeSitterParseResult?
     private let logger = CrossPlatformLogger.logger(
         subsystem: "CodeEditorPlugin",
         category: "TreeSitterProvider"
@@ -160,6 +162,8 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
         currentLanguage = language
         documentVersion = 0
         preEditSnapshots.removeAll()
+        cachedSource = nil
+        cachedResult = nil
         setupTask?.cancel()
 
         let parser = self.parser
@@ -178,6 +182,8 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
 
     func applyEdit(textView: CodeEditorView, range: NSRange, delta: Int) async -> IndexSet {
         documentVersion &+= 1
+        cachedSource = nil
+        cachedResult = nil
 
         do {
             try await awaitSetup()
@@ -221,7 +227,7 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
         let clampedRange = TextRangeUtilities.clampRange(range, toTextLength: sourceLength)
         guard clampedRange.length > 0 else { return [] }
 
-        let result = try await parser.parse(source: source)
+        let result = try await parseResult(for: source)
 
         // Convert captures to HighlightedToken array
         var tokens: [HighlightedToken] = []
@@ -253,6 +259,17 @@ internal final class TreeSitterRangeHighlightProvider: RangeHighlightProviding {
         if let setupTask {
             try await setupTask.value
         }
+    }
+
+    private func parseResult(for source: String) async throws -> TreeSitterParseResult {
+        if cachedSource == source, let cachedResult {
+            return cachedResult
+        }
+
+        let result = try await parser.parse(source: source)
+        cachedSource = source
+        cachedResult = result
+        return result
     }
 
     private func recordPreEditSnapshot(source: String, range: NSRange) {
@@ -312,8 +329,8 @@ extension TreeSitterRangeHighlightProvider {
     ///
     /// Uses `TreeSitterParser` (with bounded incremental invalidation)
     /// instead of the spike's `RegexBackedTreeSitterParser`. The parser
-    /// backend supports real C tree-sitter when the `CAN_IMPORT_TREE_SITTER`
-    /// flag is set and `SwiftTreeSitter` is linked.
+    /// backend is still regex-backed until a companion package provides real
+    /// C grammar loading.
     static func makeProvider(for language: Language) -> TreeSitterRangeHighlightProvider? {
         guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
             return nil
@@ -321,19 +338,6 @@ extension TreeSitterRangeHighlightProvider {
 
         let captureMap = TreeSitterCaptureMap.forLanguage(language)
         let parser = TreeSitterParser()
-        return TreeSitterRangeHighlightProvider(parser: parser, captureMap: captureMap)
-    }
-
-    /// Legacy spike provider using regex-only backend. Kept for
-    /// testing and fallback scenarios.
-    @available(*, deprecated, message: "Use makeProvider(for:) instead")
-    static func makeSpikeProvider(for language: Language) -> TreeSitterRangeHighlightProvider? {
-        guard LanguageDescriptor.descriptor(for: language)?.treeSitterName != nil else {
-            return nil
-        }
-
-        let captureMap = TreeSitterCaptureMap.forLanguage(language)
-        let parser = RegexBackedTreeSitterParser()
         return TreeSitterRangeHighlightProvider(parser: parser, captureMap: captureMap)
     }
 }

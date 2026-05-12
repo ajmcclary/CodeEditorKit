@@ -69,7 +69,7 @@ final class PlatformCapabilitiesTests: XCTestCase {
     func testMinimapSupport() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let isAvailable = capabilities.isFeatureAvailable(.minimap)
-        // supportsMinimap is true for iOS and Catalyst, false for macOS
+        // supportsMinimap is true for iOS and false for native macOS.
         let platform = capabilities.currentPlatform
 
         switch platform {
@@ -405,10 +405,10 @@ final class PlatformCapabilitiesTests: XCTestCase {
         #endif
     }
 
-    // MARK: - Mac Catalyst-specific Tests
+    // MARK: - Native Platform Tests
 
     @MainActor
-    func testCADisplayLinkSupportOnCatalyst() {
+    func testCADisplayLinkSupportOnNativePlatform() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let perfCaps = capabilities.performanceCapabilities
 
@@ -430,18 +430,36 @@ final class PlatformCapabilitiesTests: XCTestCase {
     }
 
     @MainActor
-    func testCatalystPerformanceCapabilities() {
+    func testNativePlatformPerformanceCapabilities() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
         let perfCaps = capabilities.performanceCapabilities
+
+        XCTAssertTrue(perfCaps.supportsHardwareAcceleration)
+        XCTAssertTrue(perfCaps.supportsBackgroundProcessing)
+        XCTAssertGreaterThan(perfCaps.recommendedCacheSize, 0)
+        XCTAssertGreaterThan(perfCaps.maxRecommendedFileSize, 0)
     }
 
     @MainActor
-    func testCatalystFeatureAvailability() {
+    func testNativePlatformFeatureAvailability() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
+
+        XCTAssertTrue(capabilities.isFeatureAvailable(.syntaxHighlighting))
+        XCTAssertTrue(capabilities.isFeatureAvailable(.lineNumbers))
+        XCTAssertTrue(capabilities.isFeatureAvailable(.codeFolding))
+        XCTAssertEqual(
+            capabilities.isFeatureAvailable(.languageServerProtocol),
+            capabilities.currentPlatform == .macOS
+        )
     }
 
     @MainActor
-    func testCatalystRecommendedConfiguration() {
+    func testNativePlatformRecommendedConfiguration() {
         let capabilities = CodeEditorDependencies.makePlatformCapabilities()
+        let config = capabilities.recommendedConfiguration()
+
+        XCTAssertTrue(config.display.isLineNumbersEnabled)
+        XCTAssertGreaterThan(config.display.fontSize, 0)
+        XCTAssertGreaterThan(config.layout.gutterWidth, 0)
     }
 }

@@ -268,7 +268,11 @@ extension CodeEditorContainerView {
         }
 
         // Apply configuration
-        configuration.apply(to: textView)
+        do {
+            try configuration.apply(to: textView)
+        } catch {
+            CrossPlatformLogger.logger().error("Rejected AppKit container configuration: \(error)")
+        }
     }
 
     /// Updates the macOS-specific ruler view with new configuration

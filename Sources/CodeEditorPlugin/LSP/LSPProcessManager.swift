@@ -5,7 +5,7 @@ import Foundation
 /// Manages LSP server process lifecycle (macOS only)
 ///
 /// This module handles starting, monitoring, and terminating LSP server processes
-/// using the Process API. Only available on macOS (not iOS or Mac Catalyst).
+/// using the Process API. Only available on macOS (not iOS).
 @MainActor
 final class LSPProcessManager {
     // MARK: - Properties

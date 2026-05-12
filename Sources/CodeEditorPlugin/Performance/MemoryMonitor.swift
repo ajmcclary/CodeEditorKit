@@ -177,8 +177,7 @@ import UIKit
 /// }
 /// ```
 ///
-/// For comprehensive examples and patterns, see:
-/// - <doc:MemoryMonitor-Injection>
+/// See `docs/Performance/memory-monitoring.md` for integration examples.
 ///
 @available(macOS 10.15, iOS 13.0, *)
 @MainActor

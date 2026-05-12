@@ -19,7 +19,7 @@ import UIKit
 /// (`AnnotationKind.infer(from:)` keys color off the `content` prefix —
 /// hence the literal "ERROR" / "TODO" / etc. baked into the content
 /// strings). The hub borrows the host's `EditorController` to translate
-/// 1-based line numbers into `NSTextRange`s on demand.
+/// 1-based line numbers into ranges on demand.
 @MainActor
 @Observable
 final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
@@ -31,7 +31,7 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
     private(set) var demoAnnotations: [Int: AnnotationKind] = [:]
 
     /// Weak handle on the host's `EditorController`; needed to translate
-    /// line numbers into `NSTextRange`s when vending annotations.
+    /// line numbers into ranges when vending annotations.
     @ObservationIgnored
     weak var controller: EditorController?
 
@@ -76,15 +76,15 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
 
     // MARK: - AnnotationsDataSource
 
-    func annotations(for textRange: NSTextRange) -> [Annotation] {
+    func annotations(for range: NSRange) -> [Annotation] {
         let all = currentAnnotations()
-        return all.filter { $0.range.intersects(textRange) }
+        return all.filter { $0.range.intersects(range) }
     }
 
     var textViewAnnotations: [CodeEditorViewAnnotation] {
         currentAnnotations().map { annotation in
             CodeEditorViewAnnotation(
-                location: annotation.range.location,
+                utf16Location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
             )
@@ -108,7 +108,7 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
         guard let controller else { return [] }
         var out: [Annotation] = []
         for line in breakpointLines.sorted() {
-            guard let range = controller.textRange(forLine: line) else { continue }
+            guard let range = controller.nsRange(forLine: line) else { continue }
             out.append(Annotation(
                 range: range,
                 content: "ERROR: breakpoint",
@@ -117,7 +117,7 @@ final class AnnotationsHub: @preconcurrency AnnotationsDataSource {
         }
         for line in demoAnnotations.keys.sorted() {
             guard let kind = demoAnnotations[line],
-                  let range = controller.textRange(forLine: line) else { continue }
+                  let range = controller.nsRange(forLine: line) else { continue }
             out.append(Annotation(
                 range: range,
                 content: "\(kind.rawValue): demo annotation",

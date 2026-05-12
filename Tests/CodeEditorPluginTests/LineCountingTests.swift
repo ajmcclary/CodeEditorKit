@@ -14,7 +14,7 @@ final class LineCountingTests: XCTestCase {
         // Private method - we'll test through the gutter view
         editor.isLineNumbersEnabled = true
 
-        // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in container
+        // On macOS, line numbers are handled by NSRulerView in container
         #if canImport(AppKit)
         XCTAssertNil(editor.gutterView)
         #else
@@ -67,7 +67,7 @@ final class LineCountingTests: XCTestCase {
 
     func testLineNumbersInGutterViewiOS() {
         #if canImport(UIKit)
-        // On iOS/Mac Catalyst, the gutter is managed by CodeEditorContainerView
+        // On iOS / iPadOS, the gutter is managed by CodeEditorContainerView
         // Create a container to test the gutter functionality
         let container = CodeEditorContainerView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         container.textView.text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"

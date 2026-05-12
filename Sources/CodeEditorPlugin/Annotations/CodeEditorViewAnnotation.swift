@@ -25,4 +25,13 @@ public struct CodeEditorViewAnnotation {
         self.location = location
         self.content = content
     }
+
+    /// Creates a new code editor view annotation from a UTF-16 location.
+    /// - Parameters:
+    ///   - utf16Location: Location in the text
+    ///   - content: Annotation content
+    ///   - id: Unique identifier (defaults to new UUID)
+    public init(utf16Location: Int, content: String, id: String = UUID().uuidString) {
+        self.init(location: UTF16TextLocation(value: utf16Location), content: content, id: id)
+    }
 }

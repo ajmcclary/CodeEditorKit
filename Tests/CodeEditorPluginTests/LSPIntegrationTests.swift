@@ -319,9 +319,9 @@ final class LSPIntegrationTests: XCTestCase {
         let lspAvailability = CodeEditorDependencies.makePlatformCapabilities().isFeatureAvailable(.languageServerProtocol)
         XCTAssertTrue(lspAvailability, "LSP should be supported on native macOS")
         #else
-        // LSP is not available on iOS/Catalyst
+        // LSP is not available on iOS
         let lspAvailability = CodeEditorDependencies.makePlatformCapabilities().isFeatureAvailable(.languageServerProtocol)
-        XCTAssertFalse(lspAvailability, "LSP should not be supported on iOS/Catalyst")
+        XCTAssertFalse(lspAvailability, "LSP should not be supported on iOS")
         #endif
     }
 

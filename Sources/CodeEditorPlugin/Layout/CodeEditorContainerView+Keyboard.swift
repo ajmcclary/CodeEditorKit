@@ -105,7 +105,7 @@ extension CodeEditorContainerView {
         // Make sure the gutter redraws with proper positioning
         gutterView.setNeedsDisplay()
 
-        // For iOS/Mac Catalyst, also update gutter frame to match text view content insets
+        // For iOS / iPadOS, also update gutter frame to match text view content insets
         layoutViews()  // Force layout update to sync gutter with text view
 
         // If keyboard is showing, ensure we can still scroll to see all content

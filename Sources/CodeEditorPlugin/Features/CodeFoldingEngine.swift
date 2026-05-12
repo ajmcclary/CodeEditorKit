@@ -423,6 +423,6 @@ internal class CodeFoldingEngine: ObservableObject, TextEditEventObserving {
     }
 
     deinit {
-        // Cleanup is handled automatically by ARC
+        updateTask?.cancel()
     }
 }

@@ -111,7 +111,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **macOS**: Not currently implemented
     /// - **iOS**: Supported with touch navigation
-    /// - **Catalyst**: Supported with hybrid interaction
+    /// - **iOS**: Supported with hybrid interaction
     ///
     /// - Returns: True if minimap is available
     public var supportsMinimap: Bool {
@@ -128,7 +128,7 @@ extension PlatformCapabilities {
     /// - **macOS**: Full multi-window support
     /// - **iPadOS**: Scene-based multiple windows (13.0+)
     /// - **iOS iPhone**: Not supported
-    /// - **Catalyst**: Full multi-window support
+    /// - **iOS**: Full multi-window support
     ///
     /// - Returns: True if multiple windows are supported
     public var supportsMultipleWindows: Bool {
@@ -154,7 +154,7 @@ extension PlatformCapabilities {
     /// ## Device Support
     /// - **MacBook Pro**: 2016-2020 models with Touch Bar
     /// - **Other Macs**: Not supported
-    /// - **iOS/Catalyst**: Not applicable
+    /// - **iOS**: Not applicable
     ///
     /// - Returns: True if Touch Bar is available
     public var supportsTouchBar: Bool {
@@ -173,7 +173,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **macOS**: Full context menu support
     /// - **iOS**: Long-press context menus (13.0+)
-    /// - **Catalyst**: Both right-click and long-press support
+    /// - **iOS**: Both right-click and long-press support
     ///
     /// - Returns: True if context menus are available
     public var supportsContextMenus: Bool {
@@ -195,7 +195,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **macOS**: NSVisualEffectView materials
     /// - **iOS**: UIVisualEffectView materials (13.0+)
-    /// - **Catalyst**: Inherits iOS support
+    /// - **iOS**: Inherits iOS support
     ///
     /// - Returns: True if vibrant materials are available
     public var supportsVibrantMaterials: Bool {
@@ -218,7 +218,7 @@ extension PlatformCapabilities {
     /// - **macOS**: Full floating window support
     /// - **iPadOS**: Limited floating support via scenes
     /// - **iOS iPhone**: Not supported
-    /// - **Catalyst**: Full floating window support
+    /// - **iOS**: Full floating window support
     ///
     /// - Returns: True if floating panels are supported
     public var supportsFloatingPanels: Bool {
@@ -354,7 +354,7 @@ extension PlatformCapabilities {
         /// Whether to simplify interface for accessibility
         public var simplifyInterface: Bool = false
 
-        /// Whether to enable hybrid mouse/touch interaction (Catalyst)
+        /// Whether to enable hybrid mouse/touch interaction (iOS)
         public var enableHybridInteraction: Bool = false
 
         /// Creates default UI configuration for the current platform

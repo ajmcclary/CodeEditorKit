@@ -259,43 +259,27 @@ extension LineNumberCalculationService {
         textView: CodeEditorView,
         configuration _: EditorConfiguration
     ) -> CGFloat? {
-        guard let textContainer = textView.textContainer,
-              let layoutManager = textView.layoutManager else { return nil }
-
-        // Find the character range for the line
-        guard let range = characterRange(for: lineNumber, in: textView) else { return nil }
-
-        // Get the glyph range for this character range
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        guard glyphRange.location != NSNotFound else { return nil }
-
-        // Calculate the bounding rect for the line
-        let lineRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        let lineIndex = lineNumber - 1
+        guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return nil }
 
         // Apply text container insets and adjustments
         let textContainerInset = textView.textContainerInset
+        let lineRect = textView.lineGeometryStore.estimatedRect(
+            forLineAt: lineIndex,
+            containerWidth: textView.bounds.width
+        )
         return lineRect.minY + textContainerInset.height / 2
     }
 
     func findLineNumberMacOS(at point: CGPoint, textView: CodeEditorView) -> Int? {
-        guard let textContainer = textView.textContainer,
-              let layoutManager = textView.layoutManager else { return nil }
-
-        // Convert point to text container coordinates
         let textContainerInset = textView.textContainerInset
         let adjustedPoint = CGPoint(
             x: point.x - textContainerInset.width / 2,
             y: point.y - textContainerInset.height / 2
         )
 
-        // Find the character index at this point
-        let characterIndex = layoutManager.characterIndex(
-            for: adjustedPoint,
-            in: textContainer,
-            fractionOfDistanceBetweenInsertionPoints: nil
-        )
-
-        return lineNumber(for: characterIndex, in: textView)
+        guard textView.lineGeometryStore.lineCount > 0 else { return nil }
+        return textView.lineGeometryStore.lineIndex(at: adjustedPoint) + 1
     }
     #endif
 
@@ -305,49 +289,27 @@ extension LineNumberCalculationService {
         textView: CodeEditorView,
         configuration _: EditorConfiguration
     ) -> CGFloat? {
-        #if true
-        // iOS: Access layoutManager directly
-        let textContainer = textView.textContainer
-        let layoutManager = textView.layoutManager
-
-        // Find the character range for the line
-        guard let range = characterRange(for: lineNumber, in: textView) else { return nil }
-
-        // Get the glyph range for this character range
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        guard glyphRange.location != NSNotFound else { return nil }
-
-        // Calculate the bounding rect for the line
-        let lineRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+        let lineIndex = lineNumber - 1
+        guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return nil }
 
         // Apply text container insets and adjustments
         let textContainerInset = textView.textContainerInset
+        let lineRect = textView.lineGeometryStore.estimatedRect(
+            forLineAt: lineIndex,
+            containerWidth: textView.bounds.width
+        )
         return lineRect.minY + (textContainerInset.top + textContainerInset.bottom) / 2
-        #endif
     }
 
     func findLineNumberiOS(at point: CGPoint, textView: CodeEditorView) -> Int? {
-        #if true
-        // iOS: Access layoutManager directly
-        let textContainer = textView.textContainer
-        let layoutManager = textView.layoutManager
-
-        // Convert point to text container coordinates
         let textContainerInset = textView.textContainerInset
         let adjustedPoint = CGPoint(
             x: point.x - (textContainerInset.left + textContainerInset.right) / 2,
             y: point.y - (textContainerInset.top + textContainerInset.bottom) / 2
         )
 
-        // Find the character index at this point
-        let characterIndex = layoutManager.characterIndex(
-            for: adjustedPoint,
-            in: textContainer,
-            fractionOfDistanceBetweenInsertionPoints: nil
-        )
-
-        return lineNumber(for: characterIndex, in: textView)
-        #endif
+        guard textView.lineGeometryStore.lineCount > 0 else { return nil }
+        return textView.lineGeometryStore.lineIndex(at: adjustedPoint) + 1
     }
     #endif
 

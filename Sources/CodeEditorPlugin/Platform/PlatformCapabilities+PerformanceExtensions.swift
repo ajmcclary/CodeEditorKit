@@ -130,7 +130,7 @@ extension PlatformCapabilities {
     /// ## Support Details
     /// - **macOS**: Metal support on all supported versions
     /// - **iOS**: Metal support on all supported devices
-    /// - **Catalyst**: Inherits macOS Metal support
+    /// - **iOS**: Inherits macOS Metal support
     ///
     /// - Returns: True if hardware acceleration is available
     public var supportsHardwareAcceleration: Bool {
@@ -169,7 +169,7 @@ extension PlatformCapabilities {
     /// ## Support Details
     /// - **macOS**: Always supported
     /// - **iOS**: ProMotion displays (120Hz)
-    /// - **Catalyst**: Always supported (inherits macOS behavior)
+    /// - **iOS**: Always supported (inherits macOS behavior)
     /// - **Standard displays**: 60Hz scrolling
     ///
     /// - Returns: True if smooth scrolling is available
@@ -193,7 +193,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **iOS**: Available on all versions
     /// - **macOS**: Available on 14.0+
-    /// - **Catalyst**: Follows macOS availability (14.0+)
+    /// - **iOS**: Follows macOS availability (14.0+)
     ///
     /// - Returns: True if CADisplayLink is available
     public var supportsCADisplayLink: Bool {

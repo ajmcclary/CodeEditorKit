@@ -13,10 +13,8 @@
 │  ├── Language catalog (25 + plain text) │
 │  ├── RangeHighlightProviding protocol   │
 │  ├── RangeBasedHighlightingController   │
-│  ├── EditorConfiguration.Behavior       │
-│  │    └── useTreeSitterHighlighting     │
-│  └── #if CAN_IMPORT_TREE_SITTER         │
-│       └── TreeSitterRangeHighlightProvider│
+│  └── internal Tree-sitter scaffolding   │
+│       └── not wired to public config    │
 └──────────────┬──────────────────────────┘
                │ optional dependency
 ┌──────────────▼──────────────────────────┐
@@ -44,29 +42,9 @@ Sources/CodeEditorPlugin/SyntaxHighlighting/TreeSitter/
 
 The spike uses `RegexBackedTreeSitterParser` — a regex-backed implementation that proves the architecture without requiring C grammar binaries.
 
-## Compile-Time Gate
+## Public Runtime Gate
 
-`Package.swift` defines `CAN_IMPORT_TREE_SITTER` by default:
-
-```swift
-let swiftSettings: [SwiftSetting] = [
-    .swiftLanguageMode(.v6),
-    .enableExperimentalFeature("StrictConcurrency"),
-    .define("CAN_IMPORT_TREE_SITTER")
-]
-```
-
-The wiring in `CodeEditorView+RangeBasedHighlightingExtensions.swift` is guarded:
-
-```swift
-#if CAN_IMPORT_TREE_SITTER
-if configuration.behavior.useTreeSitterHighlighting {
-    externalProvider = TreeSitterRangeHighlightProvider.makeSpikeProvider(for: language)
-}
-#endif
-```
-
-When excluded, `useTreeSitterHighlighting` has no effect — regex is always used.
+There is currently no public runtime Tree-sitter gate. `Package.swift` does not define a Tree-sitter build flag by default, and `EditorConfiguration.Behavior` intentionally has no Tree-sitter option. Regex highlighting remains the only consumer-facing non-Swift path until a real grammar package exists.
 
 ## Extraction Checklist
 
@@ -95,7 +73,8 @@ import CodeEditorPlugin
 import CodeEditorTreeSitterLanguages
 
 var config = EditorConfiguration()
-config.behavior.useTreeSitterHighlighting = true
+config.performance.usesRangeBasedHighlighting = true
+// Future companion package will register its provider explicitly.
 ```
 
 ## Binary Size Comparison
@@ -117,5 +96,4 @@ These stay in the core editor regardless:
 | `LanguageDescriptor.treeSitterName` | Data field — no code dependency |
 | `RangeHighlightProviding` protocol | Core interface — used by LSP, spellcheck too |
 | `RangeBasedHighlightingController` | Core pipeline — accepts any provider |
-| `EditorConfiguration.Behavior.useTreeSitterHighlighting` | Feature flag — just a Bool |
 | `SyntaxHighlighterRangeAdapter` | Regex adapter — default provider |

@@ -16,7 +16,7 @@ import AppKit
 /// - **Code completion** with LSP integration and custom providers
 /// - **Line numbers** with customizable gutter display
 /// - **Annotations** for displaying TODOs, FIXMEs, and custom markers
-/// - **Cross-platform support** for iOS, macOS, and Mac Catalyst
+/// - **Cross-platform support** for native macOS and iOS / iPadOS
 /// - **Modern TextKit2** integration (TextKit2-only since 0.2.0)
 /// - **Configurable appearance** with themes and layout options
 /// - **Performance optimization** for large files and real-time editing
@@ -153,21 +153,23 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
     /// The configuration object that controls all aspects of the editor's behavior and appearance
     public var configuration: EditorConfiguration = .default {
         didSet {
-            // Validate configuration before applying
+            guard !isApplyingConfiguration else { return }
+
             do {
                 try configuration.validateAndThrow()
             } catch {
-                // Log validation error but continue with application
-                // This ensures backward compatibility while alerting developers
-                Self.logger.warning("[CodeEditorPlugin] Configuration validation warning: \(error)")
+                Self.logger.error("[CodeEditorPlugin] Rejected invalid configuration: \(error)")
+                isApplyingConfiguration = true
+                configuration = oldValue
+                isApplyingConfiguration = false
+                return
             }
 
             // Apply configuration if it changed OR if the memory monitor changed OR if workspace root changed
             // (memoryMonitor and workspaceRoot are excluded from EditorConfiguration equality)
-            if !isApplyingConfiguration &&
-               (configuration != oldValue ||
+            if configuration != oldValue ||
                 configuration.performance.memoryMonitor !== oldValue.performance.memoryMonitor ||
-                configuration.workspaceRoot != oldValue.workspaceRoot) {
+                configuration.workspaceRoot != oldValue.workspaceRoot {
                 isApplyingConfiguration = true
                 applyConfiguration()
                 isApplyingConfiguration = false
@@ -357,6 +359,9 @@ open class CodeEditorView: PlatformTextView, NSTextLayoutManagerDelegate, CodeEd
 
     /// Memory management coordinator
     internal lazy var memoryCoordinator = MemoryManagementCoordinator(memoryMonitor: memoryMonitor, editorView: self)
+
+    /// Default actor coordinator owned by this editor instance.
+    internal lazy var defaultActorCoordinator = ActorCoordinator.create()
 
     #if canImport(AppKit)
     override public var string: String {

@@ -9,7 +9,7 @@ import AppKit
 ///
 /// `PlatformCapabilities` provides runtime detection of platform features and capabilities,
 /// allowing the code editor to adapt its behavior and UI based on the current environment.
-/// This ensures optimal performance and user experience across macOS, iOS, and Mac Catalyst.
+/// This ensures optimal performance and user experience across native macOS and iOS / iPadOS.
 ///
 /// ## Overview
 ///
@@ -50,7 +50,6 @@ import AppKit
 /// The system accurately detects:
 /// - macOS (native)
 /// - iOS (iPhone and iPad)
-/// - Mac Catalyst (iOS apps on Mac)
 ///
 /// ## Performance Optimization
 ///
@@ -101,7 +100,7 @@ public final class PlatformCapabilities {
         }
     }
 
-    /// The current runtime platform (macOS, iOS, or Mac Catalyst)
+    /// The current runtime platform (macOS or iOS / iPadOS).
     public var currentPlatform: Platform {
         _currentPlatform
     }
@@ -160,7 +159,7 @@ public final class PlatformCapabilities {
     /// ## Differences from platformOptimized
     ///
     /// - **platformOptimized**: Returns a compile-time preset based on the build target
-    ///   (iOS, macOS, or Catalyst). Static configuration that doesn't adapt to device.
+    ///   (iOS or macOS). Static configuration that doesn't adapt to device.
     /// - **recommendedConfiguration()**: Returns a runtime-optimized configuration based
     ///   on actual device capabilities. Adapts to different hardware within same platform.
     ///

@@ -342,16 +342,18 @@ private final class EditorEventSubscription<S: Subscriber>: Subscription, @unche
     }
 
     nonisolated private func ensureSetup() {
-        // Extract all necessary values before entering the Task to avoid capturing self
-        let isPendingSetup = pendingSetup
-        guard isPendingSetup else { return }
+        lock.lock()
+        let shouldSetUp = pendingSetup
+        if shouldSetUp {
+            pendingSetup = false
+        }
+        lock.unlock()
+
+        guard shouldSetUp else { return }
 
         let handlerRef = self.handlerReference
         let publisher = self.eventPublisher
         let storage = self.wrapperStorage
-
-        // Mark as not pending immediately to avoid race conditions
-        pendingSetup = false
 
         // Use structured concurrency for main actor isolation
         Task { @MainActor in

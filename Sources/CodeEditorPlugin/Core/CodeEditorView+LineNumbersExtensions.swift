@@ -13,8 +13,8 @@ extension CodeEditorView {
 
     internal func updateGutterVisibility() {
         #if canImport(AppKit)
-        // On macOS and Mac Catalyst, line numbers are handled by NSRulerView in the container's scroll view
-        // We should never create a GutterView on macOS or Mac Catalyst
+        // On macOS, line numbers are handled by NSRulerView in the container's scroll view
+        // We should never create a GutterView on macOS
         removeGutter()
         #else
         // On iOS, gutter is managed by the text view when used standalone
@@ -32,7 +32,7 @@ extension CodeEditorView {
         }
 
         #if canImport(AppKit)
-        // On macOS and Mac Catalyst, gutters should not be created
+        // On macOS, gutters should not be created
         return
         #else
         // First update text container inset to make room for gutter
@@ -73,7 +73,7 @@ extension CodeEditorView {
         }
 
         #if canImport(AppKit)
-        // On macOS and Mac Catalyst, gutters should not exist
+        // On macOS, gutters should not exist
         return
         #else
         layoutCoordinator.performLayout {

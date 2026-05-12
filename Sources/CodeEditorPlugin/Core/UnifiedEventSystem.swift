@@ -213,7 +213,8 @@ public final class UnifiedEventSystem: ObservableObject {
     }
 
     private func notifyHandlers(of event: EditorEvent) {
-        for handler in eventHandlers.values where handler.canHandle(event) {
+        let handlers = Array(eventHandlers.values)
+        for handler in handlers where handler.canHandle(event) {
             handler.handle(event)
         }
     }

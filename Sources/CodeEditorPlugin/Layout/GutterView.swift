@@ -27,12 +27,8 @@ private final class GutterDisplayLinkTarget: NSObject {
 
 // Display-link handle for the iOS gutter.
 //
-// `@unchecked Sendable` rationale: `target` is a constant after init.
-// `displayLink` is mutated only via `@MainActor` methods (`init`, `setPaused`)
-// and read only inside a `deinit` whose lifetime is bounded by main-actor
-// release. The whole type is effectively main-actor-isolated; the unchecked
-// stamp exists because Swift can't synthesize Sendable for a class that holds
-// a `CADisplayLink` (UIKit reference type).
+// `@unchecked Sendable` rationale: `target` is a constant after init, and
+// display-link mutation is explicitly routed through the main thread.
 private final class GutterDisplayLinkHandle: @unchecked Sendable {
     private let target: GutterDisplayLinkTarget
     private var displayLink: CADisplayLink?
@@ -55,7 +51,14 @@ private final class GutterDisplayLinkHandle: @unchecked Sendable {
     }
 
     deinit {
-        displayLink?.invalidate()
+        let displayLink = displayLink
+        if Thread.isMainThread {
+            displayLink?.invalidate()
+        } else {
+            DispatchQueue.main.async {
+                displayLink?.invalidate()
+            }
+        }
     }
 }
 #endif
@@ -142,7 +145,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
         // Make gutter transparent so it doesn't block text
         layer?.backgroundColor = PlatformColors.clear.cgColor
         #else
-        // Make gutter transparent on iOS/Catalyst as well to avoid visible white space
+        // Make gutter transparent on iOS as well to avoid visible white space
         backgroundColor = PlatformColors.clear
         setupDisplayLink()
         #endif
@@ -187,7 +190,7 @@ public class GutterView: PlatformView, GutterViewProtocol {
     override public func draw(_ rect: CGRect) {
         super.draw(rect)
 
-        // On Mac Catalyst, force clearing the entire bounds before drawing
+        // On iOS, force clearing the entire bounds before drawing
 
         // Always redraw the full bounds to ensure line numbers are visible
         // Use bounds instead of rect to force full redraw
@@ -418,7 +421,7 @@ extension GutterView: UITextViewDelegate {
         setNeedsDisplay()
         layer.setNeedsDisplay()
 
-        // On Catalyst, we need to force the display update more aggressively
+        // On iOS, we need to force the display update more aggressively
     }
 
     @objc public func scrollViewWillBeginDragging(_: UIScrollView) {

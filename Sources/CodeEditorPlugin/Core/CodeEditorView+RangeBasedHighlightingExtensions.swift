@@ -15,24 +15,10 @@ extension CodeEditorView {
         }
 
         if rangeBasedHighlightingController == nil {
-            // Check if Tree-sitter highlighting is enabled for this language.
-            // Gated behind CAN_IMPORT_TREE_SITTER (Phase 7 packaging) so the
-            // core editor compiles without the Tree-sitter module.
-            let externalProvider: (any RangeHighlightProviding)?
-            #if CAN_IMPORT_TREE_SITTER
-            if configuration.behavior.useTreeSitterHighlighting {
-                externalProvider = TreeSitterRangeHighlightProvider.makeProvider(for: language)
-            } else {
-                externalProvider = nil
-            }
-            #else
-            externalProvider = nil
-            #endif
-
             rangeBasedHighlightingController = RangeBasedHighlightingController(
                 textView: self,
                 language: language,
-                externalProvider: externalProvider
+                externalProvider: nil
             )
         }
 

@@ -70,14 +70,7 @@ var config = EditorConfiguration()
 config.performance.usesRangeBasedHighlighting = true
 ```
 
-The Tree-sitter spike is compile-time gated by `CAN_IMPORT_TREE_SITTER` and opt-in at runtime:
-
-```swift
-var config = EditorConfiguration()
-config.behavior.useTreeSitterHighlighting = true
-```
-
-Today that spike uses `RegexBackedTreeSitterParser` to prove the range-provider architecture without shipping C grammar binaries. See [Tree-sitter packaging](../TreeSitterPackaging.md) for the extraction plan.
+The Tree-sitter spike is internal only. There is no public runtime flag and the package does not ship C grammar binaries. Today the editor uses SwiftSyntax for Swift and regex definitions for other languages; see [Tree-sitter packaging](../TreeSitterPackaging.md) for the extraction plan.
 
 ## Performance
 

@@ -450,6 +450,14 @@ public enum RangeUtilities {
 // MARK: - Extensions for Convenience
 
 extension NSRange {
+    /// Returns true when this range overlaps another range.
+    public func intersects(_ other: NSRange) -> Bool {
+        guard location != NSNotFound, other.location != NSNotFound else {
+            return false
+        }
+        return location < other.upperBound && other.location < upperBound
+    }
+
     /// Check if this range is valid for the given string
     public func isValid(for string: String) -> Bool {
         RangeUtilities.validate(self, in: string)
