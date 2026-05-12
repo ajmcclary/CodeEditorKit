@@ -80,6 +80,7 @@ enum KnobIcon {
         "minimumFoldableLines": "arrow.up.and.down.text.horizontal",
         "isMinimapVisible": "map",
         "visibleLines": "list.dash",
+        "useRangeStoreHighlighting": "paintbrush.pointed",
 
         "tabWidth": "arrow.right.to.line",
         "insertSpacesForTabs": "space",

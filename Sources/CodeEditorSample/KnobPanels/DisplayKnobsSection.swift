@@ -31,6 +31,7 @@ struct DisplayKnobsSection: View {
                 ToggleRow(label: "isSelectedLineHighlighted", value: $configuration.display.isSelectedLineHighlighted)
                 ColorRow(label: "selectedLineHighlightColor", value: $configuration.display.selectedLineHighlightColor)
                 ToggleRow(label: "areInvisibleCharactersVisible", value: $configuration.display.areInvisibleCharactersVisible)
+                ToggleRow(label: "useRangeStoreHighlighting", value: $configuration.display.useRangeStoreHighlighting)
 
                 KnobSubsection(title: "Code Folding")
                 ToggleRow(label: "isCodeFoldingEnabled", value: $configuration.display.isCodeFoldingEnabled)

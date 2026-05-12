@@ -7,15 +7,14 @@ import SwiftUI
 /// reflected immediately in the editor and vice versa.
 ///
 /// The window uses a `NavigationSplitView` with a sidebar listing the
-/// five categories (Display, Layout, Behavior, Performance, Theme) and
-/// a detail pane that reuses the same knob sections rendered in always-
-/// expanded mode.
+/// sample's knob categories and a detail pane that reuses the same knob
+/// sections rendered in always-expanded mode.
 struct SettingsScene: View {
     @Bindable var appState: AppState
     @State private var selection: Category = .display
 
     enum Category: String, CaseIterable, Identifiable {
-        case display, layout, behavior, performance, theme
+        case display, layout, behavior, performance, workspace, annotations, theme
 
         var id: String { rawValue }
 
@@ -25,6 +24,8 @@ struct SettingsScene: View {
             case .layout: return "Layout"
             case .behavior: return "Behavior"
             case .performance: return "Performance"
+            case .workspace: return "Workspace"
+            case .annotations: return "Annotations"
             case .theme: return "Theme"
             }
         }
@@ -35,6 +36,8 @@ struct SettingsScene: View {
             case .layout: return "rectangle.split.3x1"
             case .behavior: return "wand.and.stars"
             case .performance: return "gauge.with.dots.needle.bottom.50percent"
+            case .workspace: return "folder"
+            case .annotations: return "exclamationmark.bubble"
             case .theme: return "paintbrush"
             }
         }
@@ -93,6 +96,12 @@ struct SettingsScene: View {
         case .performance:
             PerformanceKnobsSection(configuration: $appState.configuration, expansion: .always)
 
+        case .workspace:
+            WorkspaceKnobsSection(configuration: $appState.configuration, expansion: .always)
+
+        case .annotations:
+            AnnotationsKnobsSection(appState: appState, expansion: .always)
+
         case .theme:
             SwitcherSection(
                 theme: $appState.theme,
@@ -139,7 +148,9 @@ private struct CategoryRow: View {
         case .layout: return 1
         case .behavior: return 2
         case .performance: return 3
-        case .theme: return 4
+        case .workspace: return 4
+        case .annotations: return 5
+        case .theme: return 6
         }
     }
 }

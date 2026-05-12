@@ -4,12 +4,11 @@ import CodeEditorPlugin
 import Foundation
 import SwiftUI
 
-/// Read-only inspector surface for the LSP subsystem. Registers a handful
-/// of common language-server configs and probes their availability on
-/// disk. This makes `EditorConfiguration.workspaceRoot` + `LSPManager`
-/// addressable from the sample without requiring a live server connection;
-/// connection-state wiring through the SwiftUI `CodeEditor` wrapper still
-/// needs a framework-side modifier and is out of scope for the sample.
+/// Read-only availability probe for the LSP subsystem. Registers a handful
+/// of common language-server configs and checks whether their executables
+/// can be resolved on disk. This makes `EditorConfiguration.workspaceRoot`
+/// + `LSPManager` addressable from the sample without implying that the
+/// active editor document is attached to a live server connection.
 struct LSPStatusPanel: View {
     @Environment(\.codeEditorTheme) private var theme
     let workspaceRoot: URL?
@@ -41,7 +40,7 @@ struct LSPStatusPanel: View {
             Image(systemName: "network")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color(tokens: theme.style.text.accent))
-            Text("Language Servers")
+            Text("Server Availability")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color(tokens: theme.style.text.base))
             Spacer()
@@ -86,7 +85,7 @@ struct LSPStatusPanel: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Color(tokens: theme.style.text.base))
                 Spacer()
-                Text(isAvailable ? "available" : "not found")
+                Text(isAvailable ? "found" : "not found")
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(Color(tokens: isAvailable
                                            ? theme.style.text.accent
@@ -110,7 +109,7 @@ struct LSPStatusPanel: View {
     }
 
     private var footer: some View {
-        Text("Probing only — connection wiring requires a framework-side modifier on CodeEditor.")
+        Text("Availability probe only — this does not connect the active editor document.")
             .font(.system(size: 9))
             .foregroundStyle(Color(tokens: theme.style.text.muted))
             .padding(.top, 4)

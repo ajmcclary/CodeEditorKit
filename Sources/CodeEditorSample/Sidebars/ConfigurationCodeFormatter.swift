@@ -76,6 +76,9 @@ enum ConfigurationCodeFormatter {
         if live.visibleLines != base.visibleLines {
             lines.append("\(prefix).visibleLines = \(live.visibleLines)")
         }
+        if live.useRangeStoreHighlighting != base.useRangeStoreHighlighting {
+            lines.append("\(prefix).useRangeStoreHighlighting = \(live.useRangeStoreHighlighting)")
+        }
         if live.selectedLineHighlightColor != base.selectedLineHighlightColor {
             lines.append("\(prefix).selectedLineHighlightColor = /* custom */")
         }
@@ -100,6 +103,14 @@ enum ConfigurationCodeFormatter {
         }
         if live.wrapLines != base.wrapLines {
             lines.append("\(prefix).wrapLines = \(live.wrapLines)")
+        }
+        if live.textContainerInset != base.textContainerInset {
+            lines.append(
+                "\(prefix).textContainerInset = FrameworkEdgeInsets(top: \(formatCGFloat(live.textContainerInset.top)), " +
+                "left: \(formatCGFloat(live.textContainerInset.left)), " +
+                "bottom: \(formatCGFloat(live.textContainerInset.bottom)), " +
+                "right: \(formatCGFloat(live.textContainerInset.right)))"
+            )
         }
         if live.gutterWidth != base.gutterWidth {
             lines.append("\(prefix).gutterWidth = \(formatCGFloat(live.gutterWidth))")
@@ -267,7 +278,7 @@ enum ConfigurationCodeFormatter {
         var lines: [String] = []
         if live.workspaceRoot != baseline.workspaceRoot {
             if let root = live.workspaceRoot {
-                lines.append("config.workspaceRoot = URL(fileURLWithPath: \"\(root.path)\")")
+                lines.append("config.workspaceRoot = URL(fileURLWithPath: \(swiftStringLiteral(root.path)))")
             } else {
                 lines.append("config.workspaceRoot = nil")
             }
@@ -289,5 +300,9 @@ enum ConfigurationCodeFormatter {
         let attos = duration.components.attoseconds
         let seconds = Double(duration.components.seconds)
         return Int(seconds * 1_000 + Double(attos) / 1_000_000_000_000_000)
+    }
+
+    private static func swiftStringLiteral(_ value: String) -> String {
+        String(reflecting: value)
     }
 }

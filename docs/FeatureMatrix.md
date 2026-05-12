@@ -22,7 +22,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | TextKit2 layout | ✅ | ✅ | `Sources/CodeEditorPlugin/Text/TextLayoutManager.swift` |
 | Syntax highlighting (25 concrete languages + plain text) | ✅ | ✅ | `Sources/CodeEditorPlugin/Languages/` |
 | SwiftSyntax-backed Swift highlighter | ✅ | ✅ | unconditional dependency on `swift-syntax` |
-| Range-based highlighting (experimental) | ✅ | ✅ | `Performance.usesRangeBasedHighlighting` toggle |
+| Range-based highlighting (experimental) | ✅ | ✅ | `Display.useRangeStoreHighlighting` and `Performance.usesRangeBasedHighlighting` toggles |
 | Streaming highlighter for large files | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |
 | Async / debounced highlighter | ✅ | ✅ | 300 ms debounce by default |
 | Code folding | ✅ | ✅ | 250 ms detection debounce; cache evicted on memory pressure |
@@ -43,7 +43,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | Language picker (all 25 concrete languages + plain text) | ✅ | ✅ | `LanguageCatalog` |
 | Per-section knob panels (Display / Layout / Behavior / Performance / Workspace / Annotations) | ✅ | ✅ | iOS shows the same controls in a NavigationSplitView sidebar |
 | `Layout.textContainerInset` sliders | ✅ | ✅ | top / left / bottom / right edge controls |
-| `Performance.usesRangeBasedHighlighting` toggle | ✅ | ✅ | new in 0.1.0 |
+| Range-store highlighting toggles | ✅ | ✅ | exposes both `Display.useRangeStoreHighlighting` and `Performance.usesRangeBasedHighlighting` |
 | Multi-tab in-memory document store | ✅ | ✅ | `DocumentStore` |
 | Command palette (⌘⇧P) | ✅ | — | macOS-only `EditorCommandPalette` |
 | Live configuration inspector (right sidebar) | ✅ | — | uses `EditorSidebarShell` (macOS only) |
