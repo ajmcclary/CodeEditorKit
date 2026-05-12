@@ -1319,7 +1319,9 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
         // Visible rect covering lines 1-2 (use epsilon to avoid boundary)
         let visibleRect = CGRect(x: 0, y: h + 1, width: 400, height: h * 2 - 2)
-        let range = store.visibleLineRange(for: visibleRect, padding: 0)
+        guard let range = store.visibleLineRange(for: visibleRect, padding: 0) else {
+            return XCTFail("Expected a visible line range")
+        }
         XCTAssertEqual(range.lowerBound, 1)
         XCTAssertEqual(range.upperBound, 2)
     }
@@ -1330,7 +1332,9 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
         // Visible rect covering only line 2 (with epsilon), padding 1
         let visibleRect = CGRect(x: 0, y: h + 1, width: 400, height: h - 2)
-        let range = store.visibleLineRange(for: visibleRect, padding: 1)
+        guard let range = store.visibleLineRange(for: visibleRect, padding: 1) else {
+            return XCTFail("Expected a visible line range")
+        }
         XCTAssertEqual(range.lowerBound, 0)
         XCTAssertEqual(range.upperBound, 2)
     }

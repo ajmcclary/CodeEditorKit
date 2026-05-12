@@ -28,7 +28,7 @@ public final class TextKitLineNumberHelper {
 
     // MARK: - Line Information
 
-    /// Get visible line ranges without accessing layoutManager directly on iOS/Catalyst
+    /// Get visible line ranges without accessing layoutManager directly on iOS
     public func getVisibleLineRanges() -> [(lineNumber: Int, range: NSRange)] {
         guard let textView else {
             return []
@@ -68,16 +68,8 @@ public final class TextKitLineNumberHelper {
             return fragmentRect
         }
 
-        // For TextKit 1 (macOS only), we can safely use layoutManager
-        #if canImport(AppKit)
-        if let layoutManager = textView.layoutManager {
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
-            return layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
-        }
-        #endif
-
-        // Fallback: calculate approximate position based on line height
-        return calculateApproximateLineRect(for: lineRange)
+        let lineIndex = textView.lineGeometryStore.lineIndex(forUtf16Offset: lineRange.location)
+        return textView.lineGeometryStore.estimatedRect(forLineAt: lineIndex, containerWidth: textView.bounds.width)
     }
 
     /// Get the visible rect for the text view (platform-agnostic)
@@ -88,7 +80,7 @@ public final class TextKitLineNumberHelper {
         // macOS: Use the visible rect
         return textView.visibleRect
         #else
-        // iOS/Catalyst: Calculate from content offset and bounds
+        // iOS: Calculate from content offset and bounds
         return CGRect(
             origin: textView.contentOffset,
             size: textView.bounds.size
@@ -106,8 +98,9 @@ public final class TextKitLineNumberHelper {
         // Adjust point for text container inset
         let adjustedPoint = adjustPoint(point)
 
-        if let textLayoutManager = textView.textLayoutManager {
-            return lineNumberTextKit2(at: adjustedPoint, textLayoutManager: textLayoutManager, text: text)
+        if textView.lineGeometryStore.lineCount > 0 {
+            let lineIndex = textView.lineGeometryStore.lineIndex(at: adjustedPoint)
+            return min(lineIndex + 1, textView.lineGeometryStore.lineCount)
         }
 
         // Defensive: textLayoutManager should always be present (TextKit2-only
@@ -181,7 +174,7 @@ public final class TextKitLineNumberHelper {
         // macOS: Point is already in the correct coordinate system
         return point
         #else
-        // iOS/Catalyst: Account for text container inset and scroll offset
+        // iOS: Account for text container inset and scroll offset
         let textContainerInset = textView.textContainerInset
         return CGPoint(
             x: point.x,

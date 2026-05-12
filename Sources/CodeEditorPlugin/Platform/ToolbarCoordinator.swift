@@ -17,7 +17,6 @@ import AppKit
 /// This coordinator abstracts toolbar differences between:
 /// - macOS: Full desktop toolbar with rich customization
 /// - iOS: Compact toolbar with essential actions
-/// - Mac Catalyst: Hybrid approach supporting both paradigms
 ///
 /// ## Features
 ///
@@ -341,12 +340,6 @@ public final class ToolbarCoordinator: ObservableObject {
         }
 
         return items
-    }
-
-    private func createCatalystToolbar() -> [ToolbarItem] {
-        // Mac Catalyst gets a hybrid approach
-        // Similar to macOS but respects iOS constraints
-        createMacOSToolbar()
     }
     #endif
 

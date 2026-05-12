@@ -68,10 +68,11 @@ public actor CacheCoordinatorActor {
         from cacheId: String
     ) async -> T? {
         guard let cache = caches[cacheId] else { return nil }
+        let value = await cache.getValue(key)
 
         // Update stats
         if let stats = cacheStats[cacheId] {
-            let hit = await cache.contains(key)
+            let hit = value != nil
             cacheStats[cacheId] = CacheStatistics(
                 hits: stats.hits + (hit ? 1 : 0),
                 misses: stats.misses + (hit ? 0 : 1),
@@ -81,7 +82,6 @@ public actor CacheCoordinatorActor {
             )
         }
 
-        let value = await cache.getValue(key)
         return value as? T
     }
 

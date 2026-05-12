@@ -208,9 +208,6 @@ enum ConfigurationCodeFormatter {
         if live.autoScrollToCursor != base.autoScrollToCursor {
             lines.append("\(prefix).autoScrollToCursor = \(live.autoScrollToCursor)")
         }
-        if live.useTreeSitterHighlighting != base.useTreeSitterHighlighting {
-            lines.append("\(prefix).useTreeSitterHighlighting = \(live.useTreeSitterHighlighting)")
-        }
         return lines
     }
 

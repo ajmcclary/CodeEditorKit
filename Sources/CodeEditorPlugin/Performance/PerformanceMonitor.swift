@@ -55,7 +55,7 @@ public actor PerformanceMonitor {
     // MARK: - Properties
 
     private let logger = CrossPlatformLogger.logger(subsystem: "com.codeeditor.plugin", category: "Performance")
-    private var metrics: [String: MonitoringPerformanceMetric] = [:]
+    private var metrics: [UUID: MonitoringPerformanceMetric] = [:]
     private var cleanupTask: Task<Void, Never>?
 
     // MARK: - Initialization
@@ -73,9 +73,9 @@ public actor PerformanceMonitor {
     /// Start measuring a performance metric
     @discardableResult
     public func startMeasuring(_ name: String) -> MeasurementToken {
-        let token = MeasurementToken(name: name, startTime: CFAbsoluteTimeGetCurrent())
+        let token = MeasurementToken(id: UUID(), name: name, startTime: CFAbsoluteTimeGetCurrent())
 
-        metrics[name] = MonitoringPerformanceMetric(
+        metrics[token.id] = MonitoringPerformanceMetric(
             name: name,
             startTime: token.startTime
         )
@@ -93,10 +93,10 @@ public actor PerformanceMonitor {
         let endTime = CFAbsoluteTimeGetCurrent()
         let duration = endTime - token.startTime
 
-        if var metric = metrics[token.name] {
+        if var metric = metrics[token.id] {
             metric.endTime = endTime
             metric.duration = duration
-            metrics[token.name] = metric
+            metrics[token.id] = metric
 
             // Log if duration exceeds threshold
             if duration > 0.1 { // 100ms threshold
@@ -140,7 +140,9 @@ public actor PerformanceMonitor {
 
     /// Get metrics for a specific operation
     public func getMetrics(for name: String) -> MonitoringPerformanceMetric? {
-        metrics[name]
+        metrics.values
+            .filter { $0.name == name }
+            .max { $0.startTime < $1.startTime }
     }
 
     /// Clear all metrics
@@ -245,6 +247,9 @@ public actor PerformanceMonitor {
 ///
 /// - SeeAlso: ``PerformanceMonitor``
 public struct MeasurementToken: Sendable {
+    /// Unique identifier for this measurement instance.
+    let id: UUID
+
     /// The name of the operation being measured.
     let name: String
 

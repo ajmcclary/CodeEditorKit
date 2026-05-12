@@ -191,12 +191,12 @@ final class MinimapIntegrationTests: XCTestCase {
 
         // Test showing minimap
         config.display.isMinimapVisible = true
-        config.apply(to: textView)
+        try? config.apply(to: textView)
         XCTAssertTrue(textView.configuration.display.isMinimapVisible, "Minimap should be visible")
 
         // Test hiding minimap
         config.display.isMinimapVisible = false
-        config.apply(to: textView)
+        try? config.apply(to: textView)
         XCTAssertFalse(textView.configuration.display.isMinimapVisible, "Minimap should be hidden")
     }
 

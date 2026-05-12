@@ -201,7 +201,7 @@ public class SearchReplaceEngine: ObservableObject {
             replacementCount += 1
         }
         #else
-        // On iOS/Catalyst, textStorage is not optional
+        // On iOS, textStorage is not optional
         let textStorage = textView.textStorage
 
         // Use textStorage
@@ -473,7 +473,7 @@ public class SearchReplaceEngine: ObservableObject {
     }
 
     deinit {
-        // Cleanup is handled automatically by ARC
+        currentSearchTask?.cancel()
     }
 }
 

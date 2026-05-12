@@ -5,6 +5,21 @@ import XCTest
 
 @available(macOS 12.0, iOS 16.0, *)
 final class SwiftUIModifierTests: XCTestCase {
+    private func assertTypeName<V: View>(
+        _ view: V,
+        contains expectedFragment: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let typeName = String(reflecting: type(of: view))
+        XCTAssertTrue(
+            typeName.contains(expectedFragment),
+            "Expected \(typeName) to contain \(expectedFragment)",
+            file: file,
+            line: line
+        )
+    }
+
     // MARK: - Language Modifier Tests
 
     @MainActor
@@ -44,8 +59,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let editor = CodeEditor(text: binding)
             .codeLanguage(.python)
 
-        // Verify the modifier is applied
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
 
     // MARK: - Theme Modifier Tests
@@ -71,9 +85,9 @@ final class SwiftUIModifierTests: XCTestCase {
         let customEditor = CodeEditor(text: binding)
             .codeTheme(customTheme)
 
-        XCTAssertNotNil(defaultEditor)
-        XCTAssertNotNil(darkEditor)
-        XCTAssertNotNil(customEditor)
+        assertTypeName(defaultEditor, contains: "ModifiedContent")
+        assertTypeName(darkEditor, contains: "ModifiedContent")
+        assertTypeName(customEditor, contains: "ModifiedContent")
     }
 
     // MARK: - Configuration Modifier Tests
@@ -98,7 +112,7 @@ final class SwiftUIModifierTests: XCTestCase {
             let editor = CodeEditor(text: binding)
                 .codeEditorEnvironment(configuration: config)
 
-            XCTAssertNotNil(editor)
+            assertTypeName(editor, contains: "ModifiedContent")
         }
 
         // Test with custom configuration
@@ -110,7 +124,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let customEditor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: customConfig)
 
-        XCTAssertNotNil(customEditor)
+        assertTypeName(customEditor, contains: "ModifiedContent")
     }
 
     // MARK: - Focus Modifier Tests
@@ -130,8 +144,8 @@ final class SwiftUIModifierTests: XCTestCase {
         let unfocusedEditor = CodeEditor(text: binding)
             .becomeFirstResponder(false)
 
-        XCTAssertNotNil(focusedEditor)
-        XCTAssertNotNil(unfocusedEditor)
+        assertTypeName(focusedEditor, contains: "ModifiedContent")
+        assertTypeName(unfocusedEditor, contains: "ModifiedContent")
     }
 
     // MARK: - Memory Monitor Modifier Tests
@@ -148,14 +162,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let editor = CodeEditor(text: binding)
             .memoryMonitor(memoryMonitor)
 
-        XCTAssertNotNil(editor)
-    }
-
-    @MainActor
-    func testCodeEditorMemoryMonitorNilModifier() {
-        // Skip nil test as memoryMonitor doesn't accept nil
-        // The modifier requires a MemoryMonitor instance
-        XCTAssertTrue(true) // Test skipped
+        assertTypeName(editor, contains: "ModifiedContent")
     }
 
     // MARK: - Modifier Chaining Tests
@@ -180,7 +187,7 @@ final class SwiftUIModifierTests: XCTestCase {
             .padding()
             .background(Color.gray.opacity(0.1))
 
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
 
     @MainActor
@@ -199,8 +206,8 @@ final class SwiftUIModifierTests: XCTestCase {
             .codeLanguage(.python)
             .codeTheme(.dark)
 
-        XCTAssertNotNil(editor1)
-        XCTAssertNotNil(editor2)
+        assertTypeName(editor1, contains: "ModifiedContent")
+        assertTypeName(editor2, contains: "ModifiedContent")
     }
 
     // MARK: - Conditional Modifier Tests
@@ -221,7 +228,7 @@ final class SwiftUIModifierTests: XCTestCase {
             .codeTheme(isDarkMode ? .dark : .default)
             .codeEditorEnvironment(configuration: configurationForTheme)
 
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
 
     // MARK: - Dynamic Modifier Tests
@@ -248,7 +255,7 @@ final class SwiftUIModifierTests: XCTestCase {
         isFocused = true
 
         // Editor should be valid with new state
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
 
     // MARK: - Platform-Specific Modifier Tests
@@ -269,7 +276,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
 
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
     #endif
 
@@ -290,7 +297,7 @@ final class SwiftUIModifierTests: XCTestCase {
         let editor = CodeEditor(text: binding)
             .codeEditorEnvironment(configuration: config)
 
-        XCTAssertNotNil(editor)
+        assertTypeName(editor, contains: "ModifiedContent")
     }
     #endif
 
@@ -350,9 +357,9 @@ final class SwiftUIModifierTests: XCTestCase {
                 .navigationTitle("Code Editor")
         }
 
-        XCTAssertNotNil(vstack)
-        XCTAssertNotNil(hstack)
-        XCTAssertNotNil(scrollView)
-        XCTAssertNotNil(navView)
+        assertTypeName(vstack, contains: "VStack")
+        assertTypeName(hstack, contains: "HStack")
+        assertTypeName(scrollView, contains: "ScrollView")
+        assertTypeName(navView, contains: "NavigationView")
     }
 }

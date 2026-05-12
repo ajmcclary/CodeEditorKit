@@ -149,28 +149,33 @@ extension CodeEditorView {
             return
         }
 
+        guard let textContentManager = textLayoutManager.textContentManager,
+              let annotationTextRange = RangeUtilities.convert(annotation.range, in: textContentManager) else {
+            return
+        }
+
         // Convert Annotation to CodeEditorViewAnnotation
         let textViewAnnotation = CodeEditorViewAnnotation(
-            location: annotation.range.location,
+            location: annotationTextRange.location,
             content: annotation.content,
             id: annotation.id
         )
 
         // Ensure layout for the annotation range
-        textLayoutManager.ensureLayout(for: annotation.range)
+        textLayoutManager.ensureLayout(for: annotationTextRange)
 
         // Get text layout fragment for the annotation location
-        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotation.range.location) else {
+        guard let textLayoutFragment = textLayoutManager.textLayoutFragment(for: annotationTextRange.location) else {
             return
         }
 
-        guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotation.range.location) else {
+        guard let textLineFragment = textLayoutFragment.textLineFragment(at: annotationTextRange.location) else {
             return
         }
 
         // Get the exact text segment frame for the annotation range
         guard let segmentFrame = textLayoutManager.textSegmentFrame(
-            in: annotation.range,
+            in: annotationTextRange,
             type: .standard
         ) else {
             return

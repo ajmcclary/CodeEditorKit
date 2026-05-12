@@ -4,7 +4,7 @@ import UIKit
 
 // MARK: - LineHighlightView
 
-/// Implementation for iOS and Catalyst
+/// Implementation for iOS and iOS
 @MainActor
 public class LineHighlightView: UIView {
     public var highlightColor: PlatformColor = PlatformColors.tintColor.withAlphaComponent(0.1) {

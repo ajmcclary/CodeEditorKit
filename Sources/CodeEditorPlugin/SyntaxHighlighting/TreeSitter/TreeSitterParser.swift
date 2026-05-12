@@ -6,16 +6,16 @@ import Foundation
 ///
 /// **Current backend**: `RegexSyntaxHighlighter` with bounded incremental
 /// invalidation (±4096 chars around edits). This is architecturally ready
-/// for a real C tree-sitter library — `CAN_IMPORT_TREE_SITTER` flag and
-/// `SwiftTreeSitter` import path are reserved — but **no C tree-sitter
-/// dependency is linked yet**. The plan's "Phase 3 complete" refers to
+/// for a real C tree-sitter library and `SwiftTreeSitter` import path are
+/// reserved — but **no C tree-sitter dependency is linked yet**. The plan's
+/// "Phase 3 complete" refers to
 /// the parser architecture (incremental edit pipeline, actor isolation,
 /// byte/UTF-16 translation, timeout thresholds), not to a finished C
 /// FFI integration.
 ///
-/// To add real tree-sitter: add `swift-tree-sitter` to `Package.swift`,
-/// set `CAN_IMPORT_TREE_SITTER`, and replace the regex `highlightTokens`
-/// call with `TSParser` + `TSQuery` operations.
+/// To add real tree-sitter: add `swift-tree-sitter` to `Package.swift` and
+/// replace the regex `highlightTokens` call with `TSParser` + `TSQuery`
+/// operations.
 ///
 /// Parser state is isolated behind an actor so queries and edits can
 /// proceed concurrently without data races.
@@ -70,7 +70,6 @@ internal final class TreeSitterParser: TreeSitterParserProtocol, @unchecked Send
     private let longParseTimeoutNanos: UInt64 = 500_000_000   // 0.5 s
     private let maxSyncContentLength = 1_000_000
     private let contextChars = 4_096
-    private let matchLimit = 256
 
     // MARK: - Dependencies
 
@@ -110,7 +109,7 @@ internal final class TreeSitterParser: TreeSitterParserProtocol, @unchecked Send
         var captures: [TreeSitterCapture] = []
         captures.reserveCapacity(tokens.count)
 
-        for token in tokens.prefix(matchLimit) {
+        for token in tokens {
             guard let stringRange = Range(token.range, in: source) else { continue }
             let byteStart = source[..<stringRange.lowerBound].utf8.count
             let byteEnd = source[..<stringRange.upperBound].utf8.count

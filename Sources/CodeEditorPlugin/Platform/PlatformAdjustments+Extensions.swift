@@ -60,7 +60,7 @@ public struct PlatformAdjustments: Sendable {
         self.isMinimapVisible = true
         self.enableMultiCursor = true
         #else
-        // iOS/Catalyst adjustments
+        // iOS adjustments
         self.defaultFontSize = 14.0 // Larger for touch
         self.lineSpacing = 1.4 // More spacing for touch
         self.gutterWidth = 50.0 // Wider for touch targets

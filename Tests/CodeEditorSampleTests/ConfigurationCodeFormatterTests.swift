@@ -21,15 +21,6 @@ final class ConfigurationCodeFormatterTests: XCTestCase {
         XCTAssertTrue(rendered.contains("config.performance.usesRangeBasedHighlighting = true"))
     }
 
-    func testRendersTreeSitterHighlightingFlag() {
-        var configuration = EditorConfiguration()
-        configuration.behavior.useTreeSitterHighlighting = true
-
-        let rendered = ConfigurationCodeFormatter.render(configuration)
-
-        XCTAssertTrue(rendered.contains("config.behavior.useTreeSitterHighlighting = true"))
-    }
-
     func testRendersTextContainerInset() {
         var configuration = EditorConfiguration()
         configuration.layout.textContainerInset = FrameworkEdgeInsets(

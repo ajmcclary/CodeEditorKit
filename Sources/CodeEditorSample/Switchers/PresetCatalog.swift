@@ -4,7 +4,7 @@ import Foundation
 /// Demo presets exposed by the sample's preset picker. The iOS preset is
 /// reachable from the macOS demo so its effects can be previewed via the
 /// inspector even though some behaviors only fully manifest on the matching
-/// platform. Catalyst was retired in 0.2.0.
+/// platform.
 struct ConfigurationPreset: Identifiable, Hashable {
     let id: String
     let name: String

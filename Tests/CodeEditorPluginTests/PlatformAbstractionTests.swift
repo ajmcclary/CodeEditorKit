@@ -233,7 +233,7 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertTrue(features.supportsGrammarChecking)
         XCTAssertTrue(features.supportsAutomaticTextCompletion)
         #else
-        // iOS and Mac Catalyst don't support these features
+        // iOS and iOS don't support these features
         XCTAssertFalse(features.supportsGrammarChecking)
         XCTAssertFalse(features.supportsAutomaticTextCompletion)
         #endif
@@ -289,7 +289,7 @@ final class PlatformAbstractionTests: XCTestCase {
         XCTAssertFalse(floatingPanels.isAvailable)
         #else
         let minimap = capabilities.getFeatureAvailability(.minimap)
-        // minimap is only available on iOS/Catalyst now
+        // minimap is only available on iOS now
         XCTAssertFalse(minimap.isAvailable)
         #endif
     }

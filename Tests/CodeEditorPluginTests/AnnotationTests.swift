@@ -90,7 +90,7 @@ final class AnnotationTests: XCTestCase {
 
         let annotation = Annotation(range: range, content: "Test annotation", id: "test-id")
 
-        XCTAssertEqual(annotation.range, range)
+        XCTAssertEqual(annotation.range, NSRange(range) ?? .notFound)
         XCTAssertEqual(annotation.content, "Test annotation")
         XCTAssertEqual(annotation.id, "test-id")
     }
@@ -476,8 +476,8 @@ class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
     var mockAnnotations: [Annotation] = []
     var viewCreationCount = 0
 
-    func annotations(for textRange: NSTextRange) -> [Annotation] {
-        _ = textRange
+    func annotations(for range: NSRange) -> [Annotation] {
+        _ = range
         return mockAnnotations.filter { _ in
             // Simple intersection check for testing
             true
@@ -485,9 +485,9 @@ class TestAnnotationDataSource: NSObject, @preconcurrency AnnotationsDataSource 
     }
 
     var textViewAnnotations: [CodeEditorViewAnnotation] {
-        mockAnnotations.compactMap { annotation in
+        mockAnnotations.map { annotation in
             CodeEditorViewAnnotation(
-                location: annotation.range.location,
+                utf16Location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
             )

@@ -326,6 +326,6 @@ public class SymbolNavigator: ObservableObject {
     }
 
     deinit {
-        // Cleanup is handled automatically by ARC
+        updateTask?.cancel()
     }
 }

@@ -124,11 +124,8 @@
 ///
 /// ## Platform Support
 ///
-/// - **macOS**: 13.0+ (native NSTextView-based implementation)
-/// - **iOS**: 16.0+ (native UITextView-based implementation) 
-/// - **Mac Catalyst**: 16.0+ (UIKit implementation)
-///
-/// For older platform versions (macOS 12.0+, iOS 15.0+), this view may have limited functionality.
+/// - **macOS**: native NSTextView-based implementation
+/// - **iOS / iPadOS**: native UITextView-based implementation
 @available(macOS 13.0, iOS 16.0, *)
 public struct CodeEditor: View {
     // MARK: - Properties

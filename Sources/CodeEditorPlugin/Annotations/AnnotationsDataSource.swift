@@ -24,11 +24,11 @@ import AppKit
 /// class MyAnnotationsDataSource: AnnotationsDataSource {
 ///     private var annotations: [Annotation] = []
 ///     
-///     func annotations(for textRange: NSTextRange) -> [Annotation] {
+///     func annotations(for range: NSRange) -> [Annotation] {
 ///         // Return annotations that intersect with the given range
 ///         return annotations.filter { annotation in
 ///             // Check if annotation's range intersects with textRange
-///             return rangesIntersect(annotation.range, textRange)
+///             return annotation.range.intersects(range)
 ///         }
 ///     }
 ///     
@@ -72,9 +72,9 @@ public protocol AnnotationsDataSource: AnyObject {
     /// should be displayed for visible text. Only return annotations that
     /// intersect with the provided range for optimal performance.
     ///
-    /// - Parameter textRange: The range of text being laid out
+    /// - Parameter range: The UTF-16 text range being laid out
     /// - Returns: Array of annotations that should be displayed in this range
-    func annotations(for textRange: NSTextRange) -> [Annotation]
+    func annotations(for range: NSRange) -> [Annotation]
 
     /// All annotations managed by this data source.
     ///

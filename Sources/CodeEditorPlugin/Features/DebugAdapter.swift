@@ -4,12 +4,12 @@ import Combine
 #endif
 
 /// Adapter errors
-public enum AdapterError: LocalizedError {
+enum AdapterError: LocalizedError {
     case invalidResponse(String)
     case notInitialized
     case timeout
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .invalidResponse(let message):
             return "Invalid response: \(message)"
@@ -25,7 +25,7 @@ public enum AdapterError: LocalizedError {
 
 /// Protocol for debug adapters following the Debug Adapter Protocol (DAP)
 @MainActor
-public protocol DebugAdapter: AnyObject {
+protocol DebugAdapter: AnyObject {
     /// Event publisher for debug events
     var eventPublisher: AnyPublisher<DebugEvent, Never> { get }
 
@@ -76,14 +76,14 @@ public protocol DebugAdapter: AnyObject {
 }
 
 /// Source breakpoint for setting
-public struct SourceBreakpoint: Sendable {
-    public let line: Int
-    public let column: Int?
-    public let condition: String?
-    public let hitCondition: String?
-    public let logMessage: String?
+struct SourceBreakpoint: Sendable {
+    let line: Int
+    let column: Int?
+    let condition: String?
+    let hitCondition: String?
+    let logMessage: String?
 
-    public init(
+    init(
         line: Int,
         column: Int? = nil,
         condition: String? = nil,
@@ -99,7 +99,7 @@ public struct SourceBreakpoint: Sendable {
 }
 
 /// Debug events
-public enum DebugEvent: Sendable {
+enum DebugEvent: Sendable {
     case stopped(reason: StoppedReason, threadId: Int, allThreadsStopped: Bool)
     case continued(threadId: Int, allThreadsContinued: Bool)
     case exited(exitCode: Int)

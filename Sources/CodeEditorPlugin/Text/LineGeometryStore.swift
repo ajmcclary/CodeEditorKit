@@ -946,9 +946,11 @@ extension LineGeometryStore {
     /// Returns an array of `LineGeometry` values for lines intersecting the
     /// given UTF-16 range.
     public func lineGeometries(in utf16Range: NSRange) -> [LineGeometry] {
+        guard lineCount > 0 else { return [] }
         let startIndex = lineIndex(forUtf16Offset: utf16Range.location)
         let endOffset = utf16Range.location + utf16Range.length
         let endIndex = lineIndex(forUtf16Offset: max(0, endOffset - 1))
+        guard startIndex <= endIndex else { return [] }
         var result: [LineGeometry] = []
         for idx in startIndex...endIndex {
             if let geom = lineGeometry(at: idx) {
@@ -961,8 +963,10 @@ extension LineGeometryStore {
     /// Returns an array of `LineGeometry` values for lines intersecting the
     /// given y-position range.
     public func lineGeometries(inYRange yRange: ClosedRange<CGFloat>) -> [LineGeometry] {
+        guard lineCount > 0 else { return [] }
         let startIndex = lineIndex(forYPosition: yRange.lowerBound)
         let endIndex = lineIndex(forYPosition: yRange.upperBound)
+        guard startIndex <= endIndex else { return [] }
         var result: [LineGeometry] = []
         for idx in startIndex...endIndex {
             if let geom = lineGeometry(at: idx) {

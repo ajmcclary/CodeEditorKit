@@ -64,7 +64,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let anotherMonitor = MemoryMonitor()
         anotherMonitor.memoryThresholdMB = 300.0
         config.performance.memoryMonitor = anotherMonitor
-        config.apply(to: editor)
+        try? config.apply(to: editor)
 
         // Verify the monitor was updated from configuration
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 300.0, "Memory monitor should be updated from configuration")
@@ -84,7 +84,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let editor = CodeEditorView()
 
         // Apply configuration
-        config.apply(to: editor)
+        try? config.apply(to: editor)
 
         // Verify the custom monitor was injected via configuration
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 250.0, "Memory monitor should be injected from builder configuration")
@@ -101,7 +101,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let originalMonitor = editor.memoryMonitor
 
         // Apply configuration
-        config.apply(to: editor)
+        try? config.apply(to: editor)
 
         // Verify the original monitor is still used
         XCTAssertIdentical(editor.memoryMonitor, originalMonitor, "Editor should keep its original monitor when config has nil")
@@ -117,7 +117,7 @@ final class MemoryMonitorDITests: XCTestCase {
         monitor1.memoryThresholdMB = 150.0
         var config = EditorConfiguration()
         config.performance.memoryMonitor = monitor1
-        config.apply(to: editor)
+        try? config.apply(to: editor)
 
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 150.0, "First monitor should be applied")
 
@@ -125,7 +125,7 @@ final class MemoryMonitorDITests: XCTestCase {
         let monitor2 = MemoryMonitor()
         monitor2.memoryThresholdMB = 175.0
         config.performance.memoryMonitor = monitor2
-        config.apply(to: editor)
+        try? config.apply(to: editor)
 
         XCTAssertEqual(editor.memoryMonitor.memoryThresholdMB, 175.0, "Second monitor should replace the first")
     }

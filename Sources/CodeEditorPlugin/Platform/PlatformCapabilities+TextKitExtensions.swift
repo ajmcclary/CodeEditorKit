@@ -60,7 +60,7 @@ extension PlatformCapabilities {
     /// ## Platform Support
     /// - **macOS**: Supported on 13.0+, stable on 14.0+
     /// - **iOS**: Supported on 16.0+
-    /// - **Mac Catalyst**: Follows iOS requirements
+    /// - **iOS**: Follows iOS requirements
     ///
     /// - Returns: True if TextKit2 is available
     public var supportsTextKit2: Bool {
@@ -85,7 +85,7 @@ extension PlatformCapabilities {
     /// ## Recommendation Logic
     /// - **macOS**: Preferred on 14.0+ for better stability
     /// - **iOS**: Always preferred when available
-    /// - **Catalyst**: Follows iOS logic
+    /// - **iOS**: Follows iOS logic
     ///
     /// - Returns: True if TextKit2 should be used by default
     public var preferTextKit2: Bool {

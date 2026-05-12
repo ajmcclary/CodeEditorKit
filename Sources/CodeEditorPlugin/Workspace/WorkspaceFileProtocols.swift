@@ -3,15 +3,15 @@ import Foundation
 // MARK: - Workspace File Protocols
 
 /// A node in the workspace file tree. Represents a file or directory.
-public struct WorkspaceFileNode: Identifiable, Sendable {
-    public let id: String
-    public let name: String
-    public let url: URL
-    public let isDirectory: Bool
+struct WorkspaceFileNode: Identifiable, Sendable {
+    let id: String
+    let name: String
+    let url: URL
+    let isDirectory: Bool
     /// Cached children file names for directories. Empty for files.
-    public var children: [String]
+    var children: [String]
 
-    public init(
+    init(
         name: String,
         url: URL,
         isDirectory: Bool,
@@ -27,7 +27,7 @@ public struct WorkspaceFileNode: Identifiable, Sendable {
 }
 
 /// Events emitted by workspace file watching.
-public enum WorkspaceFileEvent: Sendable {
+enum WorkspaceFileEvent: Sendable {
     case created(url: URL)
     case modified(url: URL)
     case deleted(url: URL)
@@ -41,7 +41,7 @@ public enum WorkspaceFileEvent: Sendable {
 /// Only root children are loaded initially; deeper nodes are
 /// loaded on demand via `children(of:)`.
 @MainActor
-public protocol WorkspaceFileTree: AnyObject {
+protocol WorkspaceFileTree: AnyObject {
     /// The root node of the file tree (the workspace directory itself).
     var root: WorkspaceFileNode { get }
 
@@ -62,7 +62,7 @@ public protocol WorkspaceFileTree: AnyObject {
 
 /// Protocol for watching file-system changes in a workspace.
 @MainActor
-public protocol WorkspaceFileWatching: AnyObject {
+protocol WorkspaceFileWatching: AnyObject {
     /// Start watching a root directory.
     func startWatching(root: URL) async throws
 

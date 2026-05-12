@@ -122,7 +122,7 @@ extension CodeEditorContainerView {
             height: currentInsets.height
         )
         #else
-        // On iOS/Catalyst, update edge insets
+        // On iOS, update edge insets
         let currentInsets = textView.textContainerEdgeInsets
 
         #if true

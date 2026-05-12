@@ -37,8 +37,10 @@ extension LineGeometryStore {
         inYRange yRange: ClosedRange<CGFloat>,
         containerWidth: CGFloat
     ) -> [CGRect] {
+        guard lineCount > 0 else { return [] }
         let startIdx = lineIndex(forYPosition: yRange.lowerBound)
         let endIdx = lineIndex(forYPosition: yRange.upperBound)
+        guard startIdx <= endIdx else { return [] }
         var result: [CGRect] = []
         for idx in startIdx...endIdx {
             let y = yPosition(forLineIndex: idx)
@@ -60,9 +62,11 @@ extension LineGeometryStore {
         in utf16Range: NSRange,
         containerWidth: CGFloat
     ) -> [CGRect] {
+        guard lineCount > 0 else { return [] }
         let startIdx = lineIndex(forUtf16Offset: utf16Range.location)
         let endOffset = utf16Range.location + utf16Range.length
         let endIdx = lineIndex(forUtf16Offset: max(0, endOffset - 1))
+        guard startIdx <= endIdx else { return [] }
         var result: [CGRect] = []
         for idx in startIdx...endIdx {
             let y = yPosition(forLineIndex: idx)
@@ -93,11 +97,13 @@ extension LineGeometryStore {
     public func visibleLineRange(
         for visibleRect: CGRect,
         padding: Int = 1
-    ) -> ClosedRange<Int> {
+    ) -> ClosedRange<Int>? {
+        guard lineCount > 0 else { return nil }
         let top = visibleRect.minY
         let bottom = visibleRect.maxY
         let start = max(0, lineIndex(forYPosition: top) - padding)
         let end = min(lineCount - 1, lineIndex(forYPosition: bottom) + padding)
+        guard start <= end else { return nil }
         return start...end
     }
 }

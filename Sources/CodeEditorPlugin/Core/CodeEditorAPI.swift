@@ -8,7 +8,7 @@ import AppKit
 /// Unified API for code editor functionality across platforms.
 ///
 /// `CodeEditorAPI` defines the core interface for interacting with the code editor,
-/// providing a consistent API across macOS, iOS, and Mac Catalyst. This protocol
+/// providing a consistent API across native macOS and iOS / iPadOS. This protocol
 /// abstracts platform-specific implementations while exposing all essential editor
 /// functionality.
 ///

@@ -11,6 +11,7 @@ public final class LayoutCache {
 
     /// The cached layout frames
     private var cache: [String: EditorLayoutService.ComponentFrames] = [:]
+    private var accessOrder: [String] = []
 
     /// Maximum number of entries to keep in cache
     private let maxCacheSize: Int
@@ -29,7 +30,9 @@ public final class LayoutCache {
     /// - Parameter key: The cache key
     /// - Returns: Cached frames if available, nil otherwise
     public func get(_ key: String) -> EditorLayoutService.ComponentFrames? {
-        cache[key]
+        guard let frames = cache[key] else { return nil }
+        markAccessed(key)
+        return frames
     }
 
     /// Stores frames in the cache
@@ -37,16 +40,18 @@ public final class LayoutCache {
     ///   - frames: The frames to cache
     ///   - key: The cache key
     public func store(_ frames: EditorLayoutService.ComponentFrames, forKey key: String) {
-        // Evict oldest entry if at capacity
-        if cache.count >= maxCacheSize, let oldestKey = cache.keys.first {
+        cache[key] = frames
+        markAccessed(key)
+        while cache.count > maxCacheSize, let oldestKey = accessOrder.first {
+            accessOrder.removeFirst()
             cache.removeValue(forKey: oldestKey)
         }
-        cache[key] = frames
     }
 
     /// Clears the entire cache
     public func clear() {
         cache.removeAll()
+        accessOrder.removeAll()
         logger.debug("Layout cache cleared")
     }
 
@@ -56,12 +61,18 @@ public final class LayoutCache {
         let configHash = String(configuration.hashValue)
         let keysToRemove = cache.keys.filter { $0.contains(configHash) }
         keysToRemove.forEach { cache.removeValue(forKey: $0) }
+        accessOrder.removeAll { keysToRemove.contains($0) }
         logger.debug("Layout cache invalidated for configuration")
     }
 
     /// Returns the current number of cached entries
     public var count: Int {
         cache.count
+    }
+
+    private func markAccessed(_ key: String) {
+        accessOrder.removeAll { $0 == key }
+        accessOrder.append(key)
     }
 
     // MARK: - Key Generation

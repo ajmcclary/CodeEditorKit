@@ -49,7 +49,7 @@ public final class GutterInteractionHandler {
         // macOS: Mouse events are handled by overriding mouseDown in GutterView
         // No additional setup needed here
         #else
-        // iOS/Catalyst: Add tap gesture recognizer
+        // iOS: Add tap gesture recognizer
         guard let gutterView else { return }
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
@@ -74,7 +74,7 @@ public final class GutterInteractionHandler {
     #endif
 
     #if canImport(UIKit)
-    /// Handles tap gestures on iOS/Catalyst
+    /// Handles tap gestures on iOS
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard gesture.state == .ended,
               let gutterView else { return }
@@ -150,34 +150,21 @@ public final class GutterInteractionHandler {
         guard let textView,
               let gutterView else { return nil }
 
-        // Get the rectangle from the text view
-        #if canImport(AppKit)
-        guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return nil }
+        let lineIndex = textView.lineGeometryStore.lineIndex(forUtf16Offset: range.location)
+        guard lineIndex >= 0, lineIndex < textView.lineGeometryStore.lineCount else { return nil }
 
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        var lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
+        var lineRect = textView.lineGeometryStore.estimatedRect(
+            forLineAt: lineIndex,
+            containerWidth: textView.bounds.width
+        )
 
-        // Convert to gutter coordinates
-        lineRect = textView.convert(lineRect, to: gutterView)
-        return lineRect
-
-        #else
-        // iOS: Use text container to get line rectangle
-        let layoutManager = textView.layoutManager
-        let textContainer = textView.textContainer
-
-        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-        var lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphRange.location, effectiveRange: nil, withoutAdditionalLayout: true)
-
-        // Adjust for text container offset
+        #if canImport(UIKit)
         lineRect.origin.x += textView.textContainerInset.left
         lineRect.origin.y += textView.textContainerInset.top
+        #endif
 
-        // Convert to gutter coordinates
         lineRect = textView.convert(lineRect, to: gutterView)
         return lineRect
-        #endif
     }
 
     // MARK: - Folding Control Hit Testing

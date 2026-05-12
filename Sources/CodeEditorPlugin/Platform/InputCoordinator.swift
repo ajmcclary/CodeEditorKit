@@ -17,7 +17,7 @@ import AppKit
 /// This coordinator abstracts the differences between:
 /// - macOS: NSEvent-based input (keyboard, mouse, trackpad)
 /// - iOS: UIEvent-based input (touch, gestures, Apple Pencil)
-/// - Mac Catalyst: Hybrid input supporting both paradigms
+/// - iOS: Hybrid input supporting both paradigms
 ///
 /// ## Features
 ///

@@ -188,7 +188,7 @@ extension CodeEditorView {
         }
 
         #else
-        // iOS/Catalyst handles container sizing differently
+        // iOS handles container sizing differently
         let textContainer = self.textContainer
 
         if configuration.layout.wrapLines {

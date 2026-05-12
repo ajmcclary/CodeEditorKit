@@ -45,8 +45,8 @@ CodeEditSourceEditor's `TreeSitterExecutor` pattern (priority queue with sync/as
 
 Rationale:
 1. The `RangeHighlightProviding` protocol and range-based highlighting infrastructure now exist.
-2. `TreeSitterRangeHighlightProvider` is present behind `CAN_IMPORT_TREE_SITTER` and `EditorConfiguration.Behavior.useTreeSitterHighlighting`.
-3. The current provider intentionally uses `RegexBackedTreeSitterParser`; it proves the range-provider architecture without adding C grammar binaries to the core package.
+2. `TreeSitterRangeHighlightProvider` remains internal scaffolding and is no longer wired to public configuration.
+3. The current provider intentionally uses `RegexBackedTreeSitterParser`; it proves the range-provider architecture without adding C grammar binaries or consumer-facing Tree-sitter claims to the core package.
 4. Real Tree-sitter adoption still carries the original build, binary-size, and maintenance risks.
 
 ## Required Actions (before real grammar adoption)

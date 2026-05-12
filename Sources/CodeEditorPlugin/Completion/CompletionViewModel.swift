@@ -231,6 +231,8 @@ public final class CompletionViewModel {
     }
 
     deinit {
+        completionTask?.cancel()
+        filterTask?.cancel()
         logger.debug("CompletionViewModel deinitialized")
     }
 }

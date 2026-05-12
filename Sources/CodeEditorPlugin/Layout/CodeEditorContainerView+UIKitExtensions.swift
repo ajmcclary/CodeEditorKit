@@ -64,7 +64,11 @@ extension CodeEditorContainerView {
         gutterView.textView = textView
 
         // Apply configuration BEFORE building constraints
-        configuration.apply(to: textView)
+        do {
+            try configuration.apply(to: textView)
+        } catch {
+            CrossPlatformLogger.logger().error("Rejected UIKit container configuration: \(error)")
+        }
 
         // Set the text view's delegate AFTER configuration
         // This must be done after textView.setupTextView() and configuration.apply()
@@ -255,7 +259,7 @@ extension CodeEditorContainerView: UITextViewDelegate {
         // Force the gutter view to redraw immediately
         gutterView.setNeedsDisplay()
 
-        // On Mac Catalyst, we need to force the display update more aggressively
+        // On iOS, we need to force the display update more aggressively
     }
 
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

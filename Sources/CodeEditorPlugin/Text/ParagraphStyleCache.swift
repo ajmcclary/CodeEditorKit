@@ -39,6 +39,7 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     // MARK: - Properties
 
     private var cache: [CacheKey: NSParagraphStyle] = [:]
+    private var accessOrder: [CacheKey] = []
     private let cacheQueue = DispatchQueue(label: "com.codeeditor.paragraphstyle-cache")
     private let capacity: Int
 
@@ -69,6 +70,7 @@ public final class ParagraphStyleCache: @unchecked Sendable {
 
         return cacheQueue.sync {
             if let cached = cache[key] {
+                markAccessed(key)
                 return cached
             }
 
@@ -79,7 +81,9 @@ public final class ParagraphStyleCache: @unchecked Sendable {
             )
 
             cache[key] = paragraphStyle
-            if cache.count > capacity, let oldestKey = cache.keys.first {
+            markAccessed(key)
+            while cache.count > capacity, let oldestKey = accessOrder.first {
+                accessOrder.removeFirst()
                 cache.removeValue(forKey: oldestKey)
             }
 
@@ -91,6 +95,7 @@ public final class ParagraphStyleCache: @unchecked Sendable {
     public func clear() {
         cacheQueue.sync {
             cache.removeAll()
+            accessOrder.removeAll()
         }
     }
 
@@ -101,6 +106,11 @@ public final class ParagraphStyleCache: @unchecked Sendable {
         let spaceString = "    " // Four spaces
         let size = spaceString.size(withAttributes: attributes)
         return size.width / 4.0
+    }
+
+    private func markAccessed(_ key: CacheKey) {
+        accessOrder.removeAll { $0 == key }
+        accessOrder.append(key)
     }
 
     private func createParagraphStyle(

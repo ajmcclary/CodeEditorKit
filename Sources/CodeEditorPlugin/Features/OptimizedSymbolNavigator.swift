@@ -2,15 +2,15 @@ import Foundation
 
 /// Optimized symbol navigation system with improved performance
 @MainActor
-public class OptimizedSymbolNavigator: ObservableObject {
+class OptimizedSymbolNavigator: ObservableObject {
     private let logger = CrossPlatformLogger.logger(subsystem: "CodeEditorPlugin", category: "OptimizedSymbolNavigator")
 
     // MARK: - Published Properties
 
-    @Published public private(set) var symbols: [DocumentSymbol] = []
-    @Published public private(set) var currentBreadcrumbs: [BreadcrumbItem] = []
-    @Published public private(set) var isProcessing = false
-    @Published public private(set) var selectedSymbol: DocumentSymbol?
+    @Published private(set) var symbols: [DocumentSymbol] = []
+    @Published private(set) var currentBreadcrumbs: [BreadcrumbItem] = []
+    @Published private(set) var isProcessing = false
+    @Published private(set) var selectedSymbol: DocumentSymbol?
 
     // MARK: - Properties
 
@@ -28,7 +28,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
 
     // MARK: - Configuration
 
-    public var configuration = SymbolNavigationConfiguration()
+    var configuration = SymbolNavigationConfiguration()
 
     // MARK: - Helper Types
 
@@ -100,12 +100,12 @@ public class OptimizedSymbolNavigator: ObservableObject {
 
     // MARK: - Initialization
 
-    public init() {
+    init() {
         setupDefaultProviders()
     }
 
     /// Attach to a text view
-    public func attach(to textView: CodeEditorView) {
+    func attach(to textView: CodeEditorView) {
         self.textView = textView
         updateSymbols()
     }
@@ -113,7 +113,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Provider Management
 
     /// Register a symbol provider for a language
-    public func registerProvider(_ provider: DocumentSymbolProvider, for language: Language) {
+    func registerProvider(_ provider: DocumentSymbolProvider, for language: Language) {
         providers[language] = provider
         logger.info("Registered symbol provider for \(language.name)")
     }
@@ -147,7 +147,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Symbol Detection
 
     /// Update symbols based on current text
-    public func updateSymbols() {
+    func updateSymbols() {
         updateTask?.cancel()
 
         updateTask = Task { [weak self] in
@@ -302,7 +302,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Navigation
 
     /// Navigate to a symbol
-    public func navigate(to symbol: DocumentSymbol) {
+    func navigate(to symbol: DocumentSymbol) {
         guard let textView else { return }
 
         // Select the symbol range
@@ -321,7 +321,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     }
 
     /// Navigate to next symbol
-    public func navigateToNext() {
+    func navigateToNext() {
         guard let currentLocation = textView?.selectedRange.location else { return }
 
         // Use cached flattened symbols for better performance
@@ -337,7 +337,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     }
 
     /// Navigate to previous symbol
-    public func navigateToPrevious() {
+    func navigateToPrevious() {
         guard let currentLocation = textView?.selectedRange.location else { return }
 
         // Use cached flattened symbols for better performance
@@ -355,7 +355,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Breadcrumbs
 
     /// Update breadcrumbs based on current cursor position
-    public func updateBreadcrumbs() {
+    func updateBreadcrumbs() {
         guard let textView else {
             currentBreadcrumbs = []
             return
@@ -383,7 +383,7 @@ public class OptimizedSymbolNavigator: ObservableObject {
     // MARK: - Symbol Search
 
     /// Search symbols by name
-    public func searchSymbols(query: String) async -> [DocumentSymbol] {
+    func searchSymbols(query: String) async -> [DocumentSymbol] {
         guard !query.isEmpty else { return flattenedSymbols }
 
         // Use the optimized fuzzy matcher
@@ -400,16 +400,20 @@ public class OptimizedSymbolNavigator: ObservableObject {
     }
 
     /// Get symbol at location
-    public func symbolAt(location: Int) -> DocumentSymbol? {
+    func symbolAt(location: Int) -> DocumentSymbol? {
         // Use interval tree for O(log n) lookup
         symbolRangeIndex.findContaining(location: location).first
     }
 
     /// Get symbols in range
-    public func symbolsIn(range: NSRange) -> [DocumentSymbol] {
+    func symbolsIn(range: NSRange) -> [DocumentSymbol] {
         // Efficiently find symbols that overlap with the given range
         flattenedSymbols.filter { symbol in
             NSIntersectionRange(symbol.range, range).length > 0
         }
+    }
+
+    deinit {
+        updateTask?.cancel()
     }
 }

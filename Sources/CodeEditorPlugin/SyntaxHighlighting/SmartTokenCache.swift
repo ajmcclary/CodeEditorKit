@@ -3,29 +3,42 @@ import Foundation
 /// Smart cache for syntax highlighting tokens with intelligent eviction strategies
 actor SmartTokenCache {
     struct CacheKey: Hashable {
-        let textHash: Int
+        let text: String
         let textLength: Int
+        let textFingerprint: UInt64
         let language: Language
         let version: Int
 
         init(text: String, language: Language, version: Int) {
-            // Create hash of the entire text content
-            var hasher = Hasher()
-            hasher.combine(text) // Hash the entire text content
-            hasher.combine(language)
-            hasher.combine(version)
-
-            self.textHash = hasher.finalize()
-            self.textLength = text.count
+            self.text = text
+            self.textLength = TextRangeUtilities.utf16Length(of: text)
+            self.textFingerprint = Self.fingerprint(text)
             self.language = language
             self.version = version
         }
 
+        static func == (lhs: CacheKey, rhs: CacheKey) -> Bool {
+            lhs.textLength == rhs.textLength &&
+            lhs.textFingerprint == rhs.textFingerprint &&
+            lhs.language == rhs.language &&
+            lhs.version == rhs.version &&
+            lhs.text == rhs.text
+        }
+
         func hash(into hasher: inout Hasher) {
-            hasher.combine(textHash)
             hasher.combine(textLength)
+            hasher.combine(textFingerprint)
             hasher.combine(language)
             hasher.combine(version)
+        }
+
+        private static func fingerprint(_ text: String) -> UInt64 {
+            var hash: UInt64 = 0xcbf29ce484222325
+            for byte in text.utf8 {
+                hash ^= UInt64(byte)
+                hash &*= 0x100000001b3
+            }
+            return hash
         }
     }
 
@@ -147,6 +160,7 @@ actor SmartTokenCache {
         )
 
         cache[key] = entry
+        accessOrder.removeAll { $0 == key }
         accessOrder.append(key)
 
         // Evict if necessary

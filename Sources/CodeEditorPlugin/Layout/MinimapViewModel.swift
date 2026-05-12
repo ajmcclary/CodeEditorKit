@@ -262,7 +262,7 @@ public final class MinimapViewModel {
     public func textDidChange(_ newText: String) {
         if newText != cachedContent {
             cachedContent = newText
-            cachedLineCount = newText.components(separatedBy: .newlines).count
+            cachedLineCount = textView?.lineGeometryStore.lineCount ?? newText.components(separatedBy: .newlines).count
 
             updateContentSize()
             scheduleRenderUpdate()
@@ -385,6 +385,8 @@ public final class MinimapViewModel {
     }
 
     deinit {
+        renderTask?.cancel()
+        scrollTask?.cancel()
         logger.debug("MinimapViewModel deinitialized")
     }
 }
@@ -583,7 +585,7 @@ extension MinimapViewModel {
         let scrollRatio = minimapState.contentSize.height > 0 ? clampedPosition / minimapState.contentSize.height : 0
 
         // Calculate target line number based on scroll ratio
-        let totalLines = (textView.text ?? "").components(separatedBy: .newlines).count
+        let totalLines = textView.lineGeometryStore.lineCount
         let targetLine = max(1, Int(scrollRatio * CGFloat(totalLines)))
 
         // Scroll text view to the calculated line

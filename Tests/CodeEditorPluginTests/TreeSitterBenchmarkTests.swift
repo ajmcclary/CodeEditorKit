@@ -98,8 +98,8 @@ final class TreeSitterBenchmarkTests: XCTestCase {
     func testSpikeProviderProducesTokens() async throws {
         let source = javascriptFixture(lineCount: 80)
 
-        guard TreeSitterRangeHighlightProvider.makeSpikeProvider(for: .javascript) != nil else {
-            XCTFail("Should create spike provider for JavaScript")
+        guard TreeSitterRangeHighlightProvider.makeProvider(for: .javascript) != nil else {
+            XCTFail("Should create internal provider for JavaScript")
             return
         }
 
@@ -312,8 +312,8 @@ final class TreeSitterBenchmarkTests: XCTestCase {
         XCTAssertGreaterThan(languagesWithTS.count, 20, "Should have > 20 languages with tree-sitter names")
 
         for language in languagesWithTS {
-            let provider = TreeSitterRangeHighlightProvider.makeSpikeProvider(for: language)
-            XCTAssertNotNil(provider, "Should create spike provider for \(language.name)")
+            let provider = TreeSitterRangeHighlightProvider.makeProvider(for: language)
+            XCTAssertNotNil(provider, "Should create internal provider for \(language.name)")
         }
     }
 

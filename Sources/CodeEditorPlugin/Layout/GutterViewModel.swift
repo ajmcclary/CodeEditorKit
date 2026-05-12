@@ -156,8 +156,13 @@ public final class GutterViewModel {
         businessLogicServices.gutterSizingService
     }
 
-    private var codeFoldingService: CodeFoldingCoordinatorService {
-        businessLogicServices.codeFoldingCoordinatorService
+    private var codeFoldingService: CodeFoldingCoordinatorService? {
+        do {
+            return try businessLogicServices.codeFoldingCoordinatorService()
+        } catch {
+            logger.warning("Code folding service unavailable: \(error)")
+            return nil
+        }
     }
 
     // Text view reference (weak to avoid retain cycles)
@@ -173,6 +178,7 @@ public final class GutterViewModel {
     private let updateThrottleInterval: TimeInterval = 0.05
 
     deinit {
+        updateTask?.cancel()
         logger.debug("GutterViewModel deinitialized")
     }
 
@@ -234,7 +240,7 @@ public final class GutterViewModel {
 
     /// Called when text content changes
     public func textDidChange(_ newText: String) {
-        let newLineCount = newText.components(separatedBy: .newlines).count
+        let newLineCount = textView?.lineGeometryStore.lineCount ?? newText.components(separatedBy: .newlines).count
 
         if newLineCount != cachedLineCount {
             cachedLineCount = newLineCount
@@ -269,6 +275,7 @@ public final class GutterViewModel {
 
         // Check if clicking on a fold control
         if let lineNumber = findLineNumber(at: location),
+           let codeFoldingService,
            codeFoldingService.isFoldControlHit(at: location, for: lineNumber) {
             if let textView {
                 _ = codeFoldingService.toggleFold(at: lineNumber, in: textView)
@@ -305,7 +312,7 @@ public final class GutterViewModel {
 
         // Add folding options if available
         if let textView {
-            if codeFoldingService.isFoldable(at: lineNumber, in: textView) {
+            if let codeFoldingService, codeFoldingService.isFoldable(at: lineNumber, in: textView) {
                 if codeFoldingService.isFolded(at: lineNumber) {
                     menuItems.append("Unfold")
                 } else {
@@ -327,10 +334,12 @@ public final class GutterViewModel {
 
         switch action {
         case "Fold":
+            guard let codeFoldingService else { return }
             _ = codeFoldingService.toggleFold(at: lineNumber, in: textView)
             updateVisibleLineNumbers()
 
         case "Unfold":
+            guard let codeFoldingService else { return }
             _ = codeFoldingService.toggleFold(at: lineNumber, in: textView)
             updateVisibleLineNumbers()
 
@@ -481,7 +490,7 @@ extension GutterViewModel {
 
             // Calculate fold control layout if folding is enabled
             var foldControlLayout: CodeFoldingCoordinatorService.FoldControlLayout?
-            if configuration.display.isCodeFoldingEnabled {
+            if configuration.display.isCodeFoldingEnabled, let codeFoldingService {
                 foldControlLayout = codeFoldingService.calculateFoldControlPosition(
                     for: lineNumber,
                     in: frame,

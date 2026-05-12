@@ -101,7 +101,7 @@ public enum TextKitSetupHelper {
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
 
         #else
-        // iOS/Catalyst configuration
+        // iOS configuration
         textView.autocorrectionType = options.enableSpellChecking ? .default : .no
         textView.autocapitalizationType = .none
         textView.spellCheckingType = options.enableSpellChecking ? .default : .no

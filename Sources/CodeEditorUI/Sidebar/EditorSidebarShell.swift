@@ -14,7 +14,7 @@ import SwiftUI
 ///   header used by the sample's settings sidebar. May be paired with
 ///   an inline reset action via `onReset`.
 ///
-/// Available on macOS and Mac Catalyst. Absent on iOS — sidebars on
+/// Available on macOS. Absent on iOS — sidebars on
 /// iPad have a different navigation idiom and aren't covered by this
 /// component.
 public struct EditorSidebarShell<Header: View, Content: View, Footer: View>: View {

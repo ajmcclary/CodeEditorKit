@@ -164,7 +164,7 @@ public final class CrossPlatformCoordinator: ObservableObject {
 
         #if canImport(UIKit)
         // Update platform adjustments based on runtime checks
-        // Skip this for Mac Catalyst to keep default values
+        // Skip this for iOS to keep default values
         if UIDevice.current.userInterfaceIdiom == .pad {
             // iPad gets platform-optimized adjustments
             platformAdjustments = PlatformAdjustments.forCurrentDevice()

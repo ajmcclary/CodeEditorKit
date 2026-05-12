@@ -321,6 +321,7 @@ public final class EditorContainerViewModel {
     }
 
     deinit {
+        updateTask?.cancel()
         logger.debug("EditorContainerViewModel deinitialized")
     }
 }
@@ -373,7 +374,7 @@ extension EditorContainerViewModel {
 
     func updateEditorStateFromText(_ text: String) {
         editorState.characterCount = text.count
-        editorState.lineCount = text.components(separatedBy: .newlines).count
+        editorState.lineCount = textView?.lineGeometryStore.lineCount ?? text.components(separatedBy: .newlines).count
 
         // Update visible range if we have layout information
         if let textView {
@@ -447,15 +448,18 @@ extension EditorContainerViewModel {
     func getColumnNumber(for characterIndex: Int) -> Int {
         guard let textView else { return 1 }
         let text = textView.text ?? ""
-        guard characterIndex >= 0 && characterIndex <= text.count else { return 1 }
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        guard characterIndex >= 0 && characterIndex <= textLength else { return 1 }
 
-        let textUpToIndex = String(text.prefix(characterIndex))
-        if let lastNewlineIndex = textUpToIndex.lastIndex(of: "\n") {
-            let lineStart = textUpToIndex.index(after: lastNewlineIndex)
-            return textUpToIndex.distance(from: lineStart, to: textUpToIndex.endIndex) + 1
-        } else {
-            return characterIndex + 1
+        let store = textView.lineGeometryStore
+        if store.lineCount > 0 {
+            let lineIndex = store.lineIndex(forUtf16Offset: characterIndex)
+            let lineStart = store.utf16Offset(forLineIndex: lineIndex)
+            return max(1, characterIndex - lineStart + 1)
         }
+
+        let lineRange = TextRangeUtilities.lineRange(containingUTF16Offset: characterIndex, in: text)
+        return max(1, characterIndex - lineRange.location + 1)
     }
 }
 

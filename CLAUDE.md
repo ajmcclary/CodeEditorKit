@@ -45,7 +45,7 @@ The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attac
 
 Tests mix both XCTest and Swift Testing frameworks across 4 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`, `CodeEditorSampleTests`).
 
-The package currently defines a `CAN_IMPORT_TREE_SITTER` Swift setting on the main target. The checked-in tree-sitter work is still a regex-backed / packaging spike; there are no bundled C grammar libraries wired into `Package.swift`.
+Tree-sitter work is internal scaffolding only. There is no public configuration flag and no bundled C grammar libraries wired into `Package.swift`; normal syntax highlighting uses the descriptor-backed regex path.
 
 ## Source Tree
 
@@ -160,6 +160,6 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **`MemoryMonitor` is final**: tests should use `MemoryMonitor.mock(...)` or registered cleanup handlers, not subclass overrides.
 
-- **Legacy scripts are not doc truth**: `Scripts/generate-dependency-diagrams.sh` still references `depermaid` and the old `CodeEditorSample` directory shape, and `Scripts/Generate_Docs.sh` is an old Pandoc/Documentation helper. Update them before using them as automation.
+- **Scripts are intentionally narrow**: `Scripts/generate-dependency-diagrams.sh` uses `swift package describe`, and `Scripts/run-parallel-tests.sh` delegates to SwiftPM. Do not reintroduce stale plugin, Pandoc, or sample-directory assumptions.
 
 - **`docs/superpowers/` is archived working notes**: don't link it as authoritative project documentation.

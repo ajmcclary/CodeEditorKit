@@ -108,18 +108,31 @@ public final class IncrementalSyntaxHighlighter {
     // MARK: - Private Methods
 
     private func canUseIncrementalUpdate(text: String, change: NSRange) -> Bool {
-        // Check if we have cached data
         guard !lastProcessedText.isEmpty else { return false }
 
-        // Check if the change is small enough for incremental update
-        let changeRatio = Double(change.length) / Double(text.count)
-        guard changeRatio < 0.1 else { return false } // More than 10% changed
+        let oldLength = TextRangeUtilities.utf16Length(of: lastProcessedText)
+        let newLength = TextRangeUtilities.utf16Length(of: text)
+        guard newLength > 0,
+              change.location >= 0,
+              change.location <= oldLength,
+              change.location <= newLength else {
+            return false
+        }
 
-        // Verify text consistency (rough check)
-        let textHash = text.hashValue
-        let expectedHash = combineHashes(lastProcessedHash, change: change)
+        let changedLength = max(change.length, abs(newLength - oldLength))
+        let changeRatio = Double(changedLength) / Double(max(max(newLength, oldLength), 1))
+        guard changeRatio < 0.1 else { return false }
 
-        return abs(textHash - expectedHash) < Int.max / 4 // Allow some variance
+        let prefixRange = NSRange(location: 0, length: change.location)
+        guard substringForRange(lastProcessedText, range: prefixRange) == substringForRange(text, range: prefixRange) else {
+            return false
+        }
+
+        let oldChangeEnd = min(oldLength, change.location + change.length)
+        let newChangeEnd = min(newLength, max(change.location, oldChangeEnd + (newLength - oldLength)))
+        let oldSuffix = NSRange(location: oldChangeEnd, length: oldLength - oldChangeEnd)
+        let newSuffix = NSRange(location: newChangeEnd, length: newLength - newChangeEnd)
+        return substringForRange(lastProcessedText, range: oldSuffix) == substringForRange(text, range: newSuffix)
     }
 
     private func performIncrementalHighlight(
@@ -134,7 +147,7 @@ public final class IncrementalSyntaxHighlighter {
         let affectedRegions = calculateAffectedRegions(change: change, in: text)
 
         // Invalidate affected cache entries
-        invalidateCache(for: affectedRegions)
+        invalidateCache(for: affectedRegions, text: text)
 
         // Re-highlight only affected regions
         var updatedTokens: [Token] = []
@@ -266,10 +279,13 @@ public final class IncrementalSyntaxHighlighter {
         }
     }
 
-    private func invalidateCache(for regions: [NSRange]) {
+    private func invalidateCache(for regions: [NSRange], text: String) {
+        let lineOffsets = lineOffsets(in: text)
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+
         // Invalidate line cache
         let affectedLines = regions.flatMap { range in
-            lineIndicesForRange(range)
+            lineIndicesForRange(range, lineOffsets: lineOffsets, textLength: textLength)
         }
 
         for line in affectedLines {
@@ -299,12 +315,15 @@ public final class IncrementalSyntaxHighlighter {
         )
     }
 
-    private func cacheTokens(_ tokens: [Token], for _: String) {
+    private func cacheTokens(_ tokens: [Token], for text: String) {
+        let lineOffsets = lineOffsets(in: text)
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+
         // Group tokens by line
         var tokensByLine: [Int: [Token]] = [:]
 
         for token in tokens {
-            let lines = lineIndicesForRange(token.range)
+            let lines = lineIndicesForRange(token.range, lineOffsets: lineOffsets, textLength: textLength)
             for line in lines {
                 tokensByLine[line, default: []].append(token)
             }
@@ -339,26 +358,49 @@ public final class IncrementalSyntaxHighlighter {
         return allTokens
     }
 
-    private func lineIndicesForRange(_ range: NSRange) -> [Int] {
-        // Simplified line calculation - in production, use line index cache
-        let startLine = range.location / 80 // Assume average 80 chars per line
-        let endLine = (range.location + range.length) / 80
+    private func lineOffsets(in text: String) -> [Int] {
+        let textLength = TextRangeUtilities.utf16Length(of: text)
+        var offsets = [0]
+        text.enumerateSubstrings(
+            in: text.startIndex..<text.endIndex,
+            options: [.byLines, .substringNotRequired]
+        ) { _, _, enclosingRange, _ in
+            let nextIndex = NSRange(enclosingRange, in: text).upperBound
+            if nextIndex < textLength {
+                offsets.append(nextIndex)
+            }
+        }
+        return offsets
+    }
+
+    private func lineIndicesForRange(
+        _ range: NSRange,
+        lineOffsets: [Int],
+        textLength: Int
+    ) -> [Int] {
+        guard !lineOffsets.isEmpty else { return [] }
+        let startOffset = max(0, min(range.location, textLength))
+        let endOffset = max(startOffset, min(range.location + max(range.length, 1) - 1, textLength))
+        let startLine = lineIndex(forUTF16Offset: startOffset, lineOffsets: lineOffsets)
+        let endLine = lineIndex(forUTF16Offset: endOffset, lineOffsets: lineOffsets)
+        guard startLine <= endLine else { return [] }
         return Array(startLine...endLine)
     }
 
-    private func createMockTextView(with text: String) -> CodeEditorView {
-        let view = CodeEditorView()
-        view.text = text
-        return view
-    }
-
-    private func combineHashes(_ base: Int, change: NSRange) -> Int {
-        // Simple hash combination for change detection
-        var hasher = Hasher()
-        hasher.combine(base)
-        hasher.combine(change.location)
-        hasher.combine(change.length)
-        return hasher.finalize()
+    private func lineIndex(forUTF16Offset offset: Int, lineOffsets: [Int]) -> Int {
+        var low = 0
+        var high = lineOffsets.count - 1
+        var result = 0
+        while low <= high {
+            let mid = (low + high) / 2
+            if lineOffsets[mid] <= offset {
+                result = mid
+                low = mid + 1
+            } else {
+                high = mid - 1
+            }
+        }
+        return result
     }
 
     private func substringForRange(_ text: String, range: NSRange) -> String? {

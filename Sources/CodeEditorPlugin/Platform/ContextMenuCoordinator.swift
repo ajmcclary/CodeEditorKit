@@ -17,7 +17,7 @@ import AppKit
 /// This coordinator abstracts the differences between:
 /// - macOS: Rich context menus with submenus and keyboard shortcuts
 /// - iOS: Touch-optimized context menus with clear visual hierarchy
-/// - Mac Catalyst: Hybrid menus supporting both mouse and touch interaction
+/// - iOS: Hybrid menus supporting both mouse and touch interaction
 ///
 /// ## Features
 ///

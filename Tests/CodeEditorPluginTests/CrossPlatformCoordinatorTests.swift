@@ -77,7 +77,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
         XCTAssertTrue(adjustments.isMinimapVisible)
         XCTAssertTrue(adjustments.enableMultiCursor)
         #else
-        // iOS/Catalyst - values may be adjusted for iPad
+        // iOS - values may be adjusted for iPad
         #if canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .pad {
             // iPad gets optimized adjustments
@@ -106,7 +106,7 @@ final class CrossPlatformCoordinatorTests: XCTestCase {
             XCTAssertFalse(adjustments.enableMultiCursor)
         }
         #else
-        // Mac Catalyst uses default iOS values
+        // iOS uses default iOS values
         XCTAssertEqual(adjustments.defaultFontSize, 14.0)
         XCTAssertEqual(adjustments.lineSpacing, 1.4)
         XCTAssertEqual(adjustments.gutterWidth, 50.0)

@@ -247,23 +247,13 @@ public final class MemoryManagementCoordinator {
 extension CodeEditorView {
     /// Sets up memory management coordination
     internal func setupMemoryManagement() {
-        // This method would be called from CodeEditorView's initialization
-        // to set up the memory management coordinator
-        let coordinator = MemoryManagementCoordinator(
-            memoryMonitor: memoryMonitor,
-            editorView: self
-        )
-
-        // Use coordinator to create managed components
-        self.asyncHighlighter = coordinator.createAsyncHighlighter()
-        self.renderingOptimizer = coordinator.createRenderingOptimizer()
-        self.completionManager = coordinator.createCompletionManager()
+        memoryCoordinator.updateMemoryMonitor(memoryMonitor)
+        self.asyncHighlighter = memoryCoordinator.createAsyncHighlighter()
+        self.renderingOptimizer = memoryCoordinator.createRenderingOptimizer()
+        self.completionManager = memoryCoordinator.createCompletionManager()
 
         #if canImport(AppKit)
-        self.lspManager = coordinator.createLSPManager()
+        self.lspManager = memoryCoordinator.createLSPManager(workspaceRoot: configuration.workspaceRoot)
         #endif
-
-        // Store coordinator reference if needed
-        // Note: In practice, you might want to store this as a property
     }
 }

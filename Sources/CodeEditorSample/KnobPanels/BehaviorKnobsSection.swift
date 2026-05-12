@@ -85,10 +85,6 @@ struct BehaviorKnobsSection: View {
             label: "showInlineCompletionSuggestions",
             value: $configuration.behavior.showInlineCompletionSuggestions
         )
-        ToggleRow(
-            label: "useTreeSitterHighlighting",
-            value: $configuration.behavior.useTreeSitterHighlighting
-        )
         CharSetRow(
             label: "completionTriggerCharacters",
             value: $configuration.behavior.completionTriggerCharacters

@@ -12,11 +12,9 @@ final class SimpleMemoryTest: XCTestCase {
         autoreleasepool {
             let editor = CodeEditorView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
             editor.text = "test"
-            XCTAssertNotNil(editor)
+            XCTAssertEqual(editor.text, "test")
+            XCTAssertTrue(editor.configuration.display.isLineNumbersEnabled)
         }
-
-        // If we get here without crashing, basic memory management works
-        XCTAssertTrue(true)
     }
 
     @MainActor
@@ -30,7 +28,7 @@ final class SimpleMemoryTest: XCTestCase {
             // Apply configuration
             var config = EditorConfiguration()
             config.display.isLineNumbersEnabled = true
-            config.apply(to: editor)
+            try? config.apply(to: editor)
 
             // Explicit cleanup to break any configuration-related retain cycles
             editor.removeFromSuperview()

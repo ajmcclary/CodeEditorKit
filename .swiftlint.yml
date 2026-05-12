@@ -124,7 +124,6 @@ opt_in_rules:
   - object_literal
   - optional_enum_case_matching
   - overridden_super_call
-  - override_in_extension
   - prefer_self_in_static_references
   - prefer_self_type_over_type_of_self
   - prefer_zero_over_explicit_init
@@ -137,7 +136,6 @@ opt_in_rules:
   - required_enum_case
   - self_binding
   - shorthand_optional_binding
-  - static_operator
   - strict_fileprivate
   - superfluous_disable_command
   - toggle_bool
@@ -245,7 +243,7 @@ closure_body_length:
   error: 100
 
 force_unwrapping:
-  severity: warning
+  severity: error
 
 # ===========================
 # MARK: - Custom Rules

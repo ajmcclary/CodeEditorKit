@@ -6,7 +6,7 @@ import SwiftUI
 /// Tahoe-styled title bar with traffic lights, centered title, and a
 /// trailing slot for toolbar pills.
 ///
-/// Available on macOS and Mac Catalyst. The title bar is an embeddable
+/// Available on macOS. The title bar is an embeddable
 /// SwiftUI view — it does not require `.windowStyle(.hiddenTitleBar)` and
 /// does not interact with the host `NSWindow`'s real traffic-light
 /// buttons. For real-window integration, hosts apply

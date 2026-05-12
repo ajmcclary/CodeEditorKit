@@ -120,7 +120,7 @@ public enum DeviceType: String, CaseIterable, Sendable {
             return true
 
         case .mac:
-            // Mac might have touch bar or be using Mac Catalyst
+            // Mac might have touch bar or be using iOS
             #if true
             return false
             #endif

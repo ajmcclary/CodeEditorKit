@@ -232,7 +232,7 @@ public final class CodeEditorContainerView: PlatformView {
             // Update the ruler view instead
             updateMacOSRuler()
             #else
-            // On iOS/Catalyst, use the GutterView
+            // On iOS, use the GutterView
             gutterView.isHidden = !newValue
             #endif
 

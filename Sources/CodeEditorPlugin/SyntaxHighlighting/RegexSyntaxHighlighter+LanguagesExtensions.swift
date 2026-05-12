@@ -263,9 +263,10 @@ extension RegexSyntaxHighlighter {
             rule(#"/\*[\s\S]*?\*/"#, .comment, 10),
 
             // Preprocessor
-            rule(#"#\w+.*$"#, .preprocessor, 10),
+            rule(#"#\w+.*$"#, .preprocessor, 8),
 
             // Strings
+            rule(#"R\"[A-Za-z0-9_]*\([\s\S]*?\)[A-Za-z0-9_]*\""#, .string, 9),
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
             rule(#"'(?:[^'\\\\]|\\\\.)*'"#, .string, 9),
 
@@ -303,9 +304,10 @@ extension RegexSyntaxHighlighter {
             rule(#"/\*[\s\S]*?\*/"#, .comment, 10),
 
             // Preprocessor
-            rule(#"#\w+.*$"#, .preprocessor, 10),
+            rule(#"#\w+.*$"#, .preprocessor, 8),
 
             // Strings
+            rule(#"R\"[A-Za-z0-9_]*\([\s\S]*?\)[A-Za-z0-9_]*\""#, .string, 9),
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
             rule(#"'(?:[^'\\\\]|\\\\.)*'"#, .string, 9),
 
@@ -340,7 +342,9 @@ extension RegexSyntaxHighlighter {
         let rules: [RegexHighlightRule] = [
             rule(#"//.*$"#, .comment, 10),
             rule(#"/\*[\s\S]*?\*/"#, .comment, 10),
+            rule(#"\"\"\"[\s\S]*?\"\"\""#, .string, 9),
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
+            rule(#"'(?:[^'\\\\]|\\\\.)'"#, .string, 9),
             rule(#"\b\d+\.?\d*[fFlLdD]?\b"#, .number, 8),
             rule(
                 #"\b(abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while)\b"#,
@@ -391,6 +395,7 @@ extension RegexSyntaxHighlighter {
     private static func createRubyDefinition() -> RegexLanguageDefinition {
         let rules: [RegexHighlightRule] = [
             rule(#"#.*$"#, .comment, 10),
+            rule(#"(?m)^=begin[\s\S]*?^=end"#, .comment, 10),
             rule(#"\"(?:[^\"\\\\]|\\\\.)*\""#, .string, 9),
             rule(#"'(?:[^'\\\\]|\\\\.)*'"#, .string, 9),
             rule(#"\b\d+\.?\d*\b"#, .number, 8),

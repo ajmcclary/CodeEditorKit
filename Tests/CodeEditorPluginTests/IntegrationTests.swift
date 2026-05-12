@@ -147,7 +147,7 @@ final class IntegrationTests: CleanupTestCase {
         #elseif canImport(UIKit)
         XCTAssertEqual(capabilities.currentPlatform, .iOS)
 
-        // Test iOS/Catalyst-specific features
+        // Test iOS-specific features
         editor.autocapitalizationType = .none
         XCTAssertEqual(editor.autocapitalizationType, .none)
         #endif

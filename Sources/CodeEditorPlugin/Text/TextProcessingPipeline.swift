@@ -85,6 +85,8 @@ public struct TextProcessingPipeline {
     private var validators: [TextValidator] = []
     private var transformers: [TextTransformer] = []
     private var configuration: PipelineConfiguration
+    private let resultCache: PipelineCache
+    private let operationCache: OperationCache
 
     // MARK: - Configuration
 
@@ -115,6 +117,8 @@ public struct TextProcessingPipeline {
     /// - Parameter configuration: Configuration options for the pipeline (uses defaults if not specified)
     public init(configuration: PipelineConfiguration = PipelineConfiguration()) {
         self.configuration = configuration
+        self.resultCache = PipelineCache()
+        self.operationCache = OperationCache()
     }
 
     // MARK: - Pipeline Construction
@@ -281,7 +285,7 @@ public struct TextProcessingPipeline {
     /// Processes text with caching for repeated operations
     public func processWithCaching(_ text: String, cacheKey: String) async throws -> ProcessingResult {
         if configuration.enableCaching {
-            if let cachedResult = await PipelineCache.shared.get(key: cacheKey) {
+            if let cachedResult = await resultCache.get(key: cacheKey) {
                 return cachedResult
             }
         }
@@ -289,7 +293,7 @@ public struct TextProcessingPipeline {
         let result = try await process(text)
 
         if configuration.enableCaching {
-            await PipelineCache.shared.set(key: cacheKey, value: result)
+            await resultCache.set(key: cacheKey, value: result, maxSize: configuration.maxCacheSize)
         }
 
         return result
@@ -363,32 +367,34 @@ public protocol TextTransformer: Sendable {
 // MARK: - Caching System
 
 private actor PipelineCache {
-    static let shared = PipelineCache()
-
     private var cache: [String: TextProcessingPipeline.ProcessingResult] = [:]
-    private var accessTimes: [String: Date] = [:]
-    private let maxSize = 100
+    private var accessOrder: [String] = []
 
-    private init() {}
+    init() {}
 
     func get(key: String) -> TextProcessingPipeline.ProcessingResult? {
-        accessTimes[key] = Date()
-        return cache[key]
+        guard let value = cache[key] else { return nil }
+        markAccessed(key)
+        return value
     }
 
-    func set(key: String, value: TextProcessingPipeline.ProcessingResult) {
+    func set(key: String, value: TextProcessingPipeline.ProcessingResult, maxSize: Int) {
         cache[key] = value
-        accessTimes[key] = Date()
-
-        if cache.count > maxSize {
-            evictOldestEntry()
-        }
+        markAccessed(key)
+        evictIfNeeded(maxSize: maxSize)
     }
 
-    private func evictOldestEntry() {
-        guard let oldestKey = accessTimes.min(by: { $0.value < $1.value })?.key else { return }
-        cache.removeValue(forKey: oldestKey)
-        accessTimes.removeValue(forKey: oldestKey)
+    private func markAccessed(_ key: String) {
+        accessOrder.removeAll { $0 == key }
+        accessOrder.append(key)
+    }
+
+    private func evictIfNeeded(maxSize: Int) {
+        let boundedSize = max(0, maxSize)
+        while cache.count > boundedSize, let oldestKey = accessOrder.first {
+            accessOrder.removeFirst()
+            cache.removeValue(forKey: oldestKey)
+        }
     }
 }
 
@@ -533,8 +539,8 @@ extension TextProcessingPipeline {
 
     func executeOperation(_ operation: TextProcessingOperation, on text: String) async throws -> OperationExecutionResult {
         // Check cache first
-        let cacheKey = "\(operation.name)_\(text.hashValue)"
-        if configuration.enableCaching, let cachedText = await OperationCache.shared.get(key: cacheKey) {
+        let cacheKey = OperationCacheKey(operationName: operation.name, text: text)
+        if configuration.enableCaching, let cachedText = await operationCache.get(key: cacheKey, originalText: text) {
             return OperationExecutionResult(processedText: cachedText, wasFromCache: true)
         }
 
@@ -545,7 +551,7 @@ extension TextProcessingPipeline {
 
         // Cache result
         if configuration.enableCaching {
-            await OperationCache.shared.set(key: cacheKey, value: processedText)
+            await operationCache.set(key: cacheKey, originalText: text, value: processedText, maxSize: configuration.maxCacheSize)
         }
 
         return OperationExecutionResult(processedText: processedText, wasFromCache: false)
@@ -585,27 +591,44 @@ extension TextProcessingPipeline {
 
 // MARK: - Operation Cache
 
+private struct OperationCacheKey: Hashable, Sendable {
+    let operationName: String
+    let text: String
+}
+
 private actor OperationCache {
-    static let shared = OperationCache()
-
-    private var cache: [String: String] = [:]
-    private let maxSize = 1_000
-
-    private init() {}
-
-    func get(key: String) -> String? {
-        cache[key]
+    private struct Entry: Sendable {
+        let originalText: String
+        let processedText: String
     }
 
-    func set(key: String, value: String) {
-        cache[key] = value
+    private var cache: [OperationCacheKey: Entry] = [:]
+    private var accessOrder: [OperationCacheKey] = []
 
-        if cache.count > maxSize {
-            // Simple eviction: remove random entries
-            let keysToRemove = Array(cache.keys.prefix(maxSize / 4))
-            for key in keysToRemove {
-                cache.removeValue(forKey: key)
-            }
+    init() {}
+
+    func get(key: OperationCacheKey, originalText: String) -> String? {
+        guard let entry = cache[key], entry.originalText == originalText else { return nil }
+        markAccessed(key)
+        return entry.processedText
+    }
+
+    func set(key: OperationCacheKey, originalText: String, value: String, maxSize: Int) {
+        cache[key] = Entry(originalText: originalText, processedText: value)
+        markAccessed(key)
+        evictIfNeeded(maxSize: maxSize)
+    }
+
+    private func markAccessed(_ key: OperationCacheKey) {
+        accessOrder.removeAll { $0 == key }
+        accessOrder.append(key)
+    }
+
+    private func evictIfNeeded(maxSize: Int) {
+        let boundedSize = max(0, maxSize)
+        while cache.count > boundedSize, let oldestKey = accessOrder.first {
+            accessOrder.removeFirst()
+            cache.removeValue(forKey: oldestKey)
         }
     }
 }

@@ -279,6 +279,14 @@ public final class EditorController {
         let nsRange = NSRange(stringRange, in: view.content)
         return RangeUtilities.convert(nsRange, in: storage)
     }
+
+    /// Build a UTF-16 `NSRange` covering line `lineNumber` (1-based).
+    /// This is the preferred range representation for `Annotation` storage.
+    public func nsRange(forLine lineNumber: Int) -> NSRange? {
+        guard let view = codeEditorView,
+              let stringRange = view.lineRange(for: lineNumber) else { return nil }
+        return NSRange(stringRange, in: view.content)
+    }
 }
 
 #endif

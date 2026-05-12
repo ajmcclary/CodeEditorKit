@@ -84,15 +84,17 @@ public final class BusinessLogicServiceRegistry {
         return service
     }
 
-    /// Gets or creates the code folding coordinator service
-    public var codeFoldingCoordinatorService: CodeFoldingCoordinatorService {
+    /// Gets or creates the code folding coordinator service.
+    ///
+    /// - Throws: `CodeEditorError.serviceUnavailable("CodeFoldingEngine")`
+    ///   when the folding engine dependency has not been registered.
+    public func codeFoldingCoordinatorService() throws -> CodeFoldingCoordinatorService {
         if let service = _codeFoldingCoordinatorService {
             return service
         }
 
-        // Ensure we have a code folding engine
         guard let engine = codeFoldingEngine else {
-            fatalError("CodeFoldingEngine must be registered before accessing CodeFoldingCoordinatorService")
+            throw CodeEditorError.serviceUnavailable("CodeFoldingEngine")
         }
 
         let service = CodeFoldingCoordinatorService(
@@ -280,10 +282,14 @@ extension BusinessLogicServiceRegistry {
 
         // Update folding state if code folding is enabled
         if configuration.display.isCodeFoldingEnabled {
-            self.codeFoldingCoordinatorService.updateFoldingState(
-                for: textView,
-                configuration: configuration
-            )
+            do {
+                try self.codeFoldingCoordinatorService().updateFoldingState(
+                    for: textView,
+                    configuration: configuration
+                )
+            } catch {
+                CrossPlatformLogger.logger().warning("Code folding unavailable during service configuration: \(error)")
+            }
         }
 
         // Warm up caches with initial calculations

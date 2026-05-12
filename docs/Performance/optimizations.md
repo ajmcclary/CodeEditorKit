@@ -58,14 +58,7 @@ Internally this uses `RangeBasedHighlightingController`, `RangeHighlightProvidin
 
 ### Tree-sitter Spike
 
-`EditorConfiguration.Behavior.useTreeSitterHighlighting` enables the Tree-sitter-shaped range provider when the package is built with `CAN_IMPORT_TREE_SITTER`:
-
-```swift
-var config = EditorConfiguration()
-config.behavior.useTreeSitterHighlighting = true
-```
-
-The current provider is regex-backed and exists to validate the architecture. Real C grammar packaging is tracked in [Tree-sitter packaging](../TreeSitterPackaging.md).
+The Tree-sitter-shaped provider remains internal architecture only. The core package does not expose a runtime Tree-sitter switch and does not ship C grammar binaries; syntax highlighting uses SwiftSyntax for Swift and regex definitions for the rest of the language catalog. Real C grammar packaging is tracked in [Tree-sitter packaging](../TreeSitterPackaging.md).
 
 ## Memory and Cache Behavior
 

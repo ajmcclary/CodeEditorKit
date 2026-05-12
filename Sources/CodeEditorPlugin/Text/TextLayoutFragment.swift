@@ -32,10 +32,8 @@ final class TextLayoutFragment: NSTextLayoutFragment {
         // super.draw(at: point.moved(dx: 0, dy: offset), in: context)
 
         if state.rawValue < NSTextLayoutFragment.State.layoutAvailable.rawValue {
-            // Calling private `NSTextLayoutFragment.layout` just like UIFoundation does in draw(at:in:)
-            // It is necessary for not layed out elements at this point, and no public API gives that
-            // possibility.
-            perform(Selector(("l" + "oya".reversed() + "ut")))
+            super.draw(at: point, in: context)
+            return
         }
 
         context.saveGState()

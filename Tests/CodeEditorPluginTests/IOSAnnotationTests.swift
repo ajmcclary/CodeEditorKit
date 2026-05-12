@@ -173,17 +173,17 @@ private class MockIOSAnnotationDataSource: NSObject, @preconcurrency Annotations
     var annotationRequestCount = 0
     var annotationColor: UIColor = .systemBlue
 
-    func annotations(for textRange: NSTextRange) -> [Annotation] {
+    func annotations(for range: NSRange) -> [Annotation] {
         annotationRequestCount += 1
         return mockAnnotations.filter { annotation in
-            annotation.range.intersects(textRange)
+            annotation.range.intersects(range)
         }
     }
 
     var textViewAnnotations: [CodeEditorViewAnnotation] {
         mockAnnotations.map { annotation in
             CodeEditorViewAnnotation(
-                location: annotation.range.location,
+                utf16Location: annotation.range.location,
                 content: annotation.content,
                 id: annotation.id
             )

@@ -177,7 +177,7 @@ extension CodeEditorView {
     /// ```
     ///
     /// - Returns: The text content storage if TextKit2 is available, `nil` otherwise
-    /// - Note: This property is available on iOS and Mac Catalyst
+    /// - Note: This property is available on iOS
     public var textContentStorage: NSTextContentStorage? {
         textLayoutManager?.textContentManager as? NSTextContentStorage
     }
@@ -232,7 +232,7 @@ extension CodeEditorView {
     /// ## Platform Differences
     ///
     /// - **macOS**: Uses `NSTextContainer.heightTracksTextView`
-    /// - **Mac Catalyst**: Uses `UITextView.textContainer.heightTracksTextView`
+    /// - **iOS**: Uses `UITextView.textContainer.heightTracksTextView`
     /// - **iOS**: Always returns `true` (property not available)
     ///
     /// ## Example

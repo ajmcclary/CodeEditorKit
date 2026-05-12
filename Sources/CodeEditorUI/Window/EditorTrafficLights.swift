@@ -31,7 +31,7 @@ public struct TrafficLightsConfiguration: Sendable {
 }
 
 /// Custom-painted SwiftUI traffic lights matching macOS Tahoe colors and
-/// sizing. Available on macOS and Mac Catalyst; absent on iOS.
+/// sizing. Available on macOS; absent on iOS.
 ///
 /// Each circle is `size`×`size` (default 14pt). Callbacks from
 /// `TrafficLightsConfiguration` fire on click; if all three are nil the

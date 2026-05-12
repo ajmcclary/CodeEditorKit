@@ -4,10 +4,10 @@ import Foundation
 ///
 /// WebSocketTransport enables communication with LSP servers over WebSocket connections,
 /// allowing language server functionality on platforms that don't support local process
-/// execution (iOS, Mac Catalyst).
+/// execution (iOS / iPadOS).
 ///
 /// ## Features
-/// - Cross-platform support (macOS, iOS, Mac Catalyst)
+/// - Cross-platform support (macOS and iOS / iPadOS)
 /// - Automatic reconnection with exponential backoff
 /// - Message queuing during disconnection
 /// - Support for both ws:// and wss:// protocols

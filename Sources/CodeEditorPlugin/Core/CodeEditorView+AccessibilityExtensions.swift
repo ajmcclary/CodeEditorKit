@@ -229,7 +229,7 @@ extension CodeEditorView {
         let spaceWidth: CGFloat
         if let font {
             #if canImport(UIKit)
-            // iOS and Mac Catalyst don't have maximumAdvancement, calculate manually
+            // iOS don't have maximumAdvancement, calculate manually
             let spaceAttributes = [NSAttributedString.Key.font: font]
             spaceWidth = " ".size(withAttributes: spaceAttributes).width
             #else

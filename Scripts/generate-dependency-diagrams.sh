@@ -1,64 +1,107 @@
 #!/bin/bash
 
-# Generate dependency diagrams using depermaid
-# This script generates Mermaid diagrams for both CodeEditorPlugin and CodeEditorSample
+# Generate package dependency diagrams from SwiftPM's built-in package
+# description. This intentionally avoids third-party package plugins so the
+# script works in a fresh checkout.
 
-set -e
+set -euo pipefail
 
-echo "🔍 Generating dependency diagrams for CodeEditorPlugin..."
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+DIAGRAM_DIR="$ROOT_DIR/docs/Diagrams"
+PACKAGE_JSON="$(mktemp)"
 
-# Navigate to the root directory
-cd "$(dirname "$0")/.."
+cleanup() {
+    rm -f "$PACKAGE_JSON"
+}
+trap cleanup EXIT
 
-echo "📊 Generating main package dependencies..."
+cd "$ROOT_DIR"
+mkdir -p "$DIAGRAM_DIR"
 
-# Generate main package diagram
-echo "# Package Dependencies - CodeEditorPlugin" > Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo "This diagram shows the package dependencies for the main CodeEditorPlugin framework." >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo "## Default View (Products Only)" >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-swift package plugin depermaid --product >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo "## Complete View (Including Test Targets)" >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo '```mermaid' >> Diagrams/25-package-dependencies.md
-swift package plugin depermaid --test >> Diagrams/25-package-dependencies.md
-echo '```' >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo "## Horizontal Layout" >> Diagrams/25-package-dependencies.md
-echo "" >> Diagrams/25-package-dependencies.md
-echo '```mermaid' >> Diagrams/25-package-dependencies.md
-swift package plugin depermaid --product --direction LR >> Diagrams/25-package-dependencies.md
-echo '```' >> Diagrams/25-package-dependencies.md
+swift package describe --type json > "$PACKAGE_JSON"
 
-echo "📊 Generating sample app dependencies..."
+/usr/bin/python3 - "$PACKAGE_JSON" "$DIAGRAM_DIR" <<'PY'
+import json
+import pathlib
+import sys
 
-# Generate sample app diagram
-cd CodeEditorSample
-echo "# Package Dependencies - CodeEditorSample" > ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo "This diagram shows the package dependencies for the CodeEditorSample demonstration app." >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo "## Default View (Executable and Dependencies)" >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-swift package plugin depermaid --executable >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo "## Complete View (Including Test Targets)" >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo '```mermaid' >> ../Diagrams/26-sample-dependencies.md
-swift package plugin depermaid --test --executable >> ../Diagrams/26-sample-dependencies.md
-echo '```' >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo "## Horizontal Layout with All Components" >> ../Diagrams/26-sample-dependencies.md
-echo "" >> ../Diagrams/26-sample-dependencies.md
-echo '```mermaid' >> ../Diagrams/26-sample-dependencies.md
-swift package plugin depermaid --test --executable --product --direction LR >> ../Diagrams/26-sample-dependencies.md
-echo '```' >> ../Diagrams/26-sample-dependencies.md
+package_path = pathlib.Path(sys.argv[1])
+diagram_dir = pathlib.Path(sys.argv[2])
+data = json.loads(package_path.read_text())
 
-cd ..
+targets = {target["name"]: target for target in data.get("targets", [])}
+products = data.get("products", [])
 
-echo "✅ Dependency diagrams generated successfully!"
-echo "   - Diagrams/25-package-dependencies.md"
-echo "   - Diagrams/26-sample-dependencies.md"
+
+def dependency_name(dependency):
+    if isinstance(dependency, str):
+        return dependency
+    if isinstance(dependency, dict):
+        return (
+            dependency.get("name")
+            or dependency.get("target")
+            or dependency.get("product")
+            or dependency.get("byName")
+        )
+    return None
+
+
+def node_id(name):
+    return "".join(character if character.isalnum() else "_" for character in name)
+
+
+def write_diagram(path, title, product_filter):
+    lines = [
+        f"# {title}",
+        "",
+        "Generated from `swift package describe --type json`.",
+        "",
+        "```mermaid",
+        "graph TD",
+    ]
+
+    included_targets = set()
+    for product in products:
+        product_name = product["name"]
+        product_targets = product.get("targets", [])
+        if not product_filter(product_name, product_targets):
+            continue
+        product_node = f"product_{node_id(product_name)}"
+        lines.append(f'    {product_node}["{product_name}"]')
+        for target_name in product_targets:
+            included_targets.add(target_name)
+            lines.append(f'    {product_node} --> target_{node_id(target_name)}["{target_name}"]')
+
+    queue = list(included_targets)
+    while queue:
+        target_name = queue.pop(0)
+        target = targets.get(target_name)
+        if target is None:
+            continue
+        for dependency in target.get("dependencies", []):
+            dep_name = dependency_name(dependency)
+            if dep_name is None:
+                continue
+            dep_node = node_id(dep_name)
+            lines.append(f'    target_{node_id(target_name)} --> target_{dep_node}["{dep_name}"]')
+            if dep_name in targets and dep_name not in included_targets:
+                included_targets.add(dep_name)
+                queue.append(dep_name)
+
+    lines.extend(["```", ""])
+    path.write_text("\n".join(lines))
+
+
+write_diagram(
+    diagram_dir / "25-package-dependencies.md",
+    "Package Dependencies - CodeEditorPlugin",
+    lambda product_name, _: product_name != "CodeEditorSample",
+)
+write_diagram(
+    diagram_dir / "26-sample-dependencies.md",
+    "Package Dependencies - CodeEditorSample",
+    lambda product_name, targets: product_name == "CodeEditorSample" or "CodeEditorSample" in targets,
+)
+PY
+
+echo "Dependency diagrams generated in $DIAGRAM_DIR"
