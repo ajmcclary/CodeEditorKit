@@ -505,7 +505,9 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
     }
 
     func testStoreLineCountPerformance1MLines() throws {
-        throw XCTSkip("Skipped in CI — 1M-line red-black tree build takes ~40s. The baseline is recorded in BASELINE.md.")
+        let reason = "Skipped in CI — 1M-line red-black tree build takes ~40s. " +
+            "The baseline is recorded in docs/Architecture/TextPipelinePerformanceBaselines.md."
+        throw XCTSkip(reason)
         /* let text = String(repeating: "x\n", count: 1_000_000)
 
         measure(options: Self.ultraFastMeasureOptions) {

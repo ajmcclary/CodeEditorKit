@@ -9,6 +9,7 @@ Short ADRs capturing structural decisions made for CodeEditorPlugin. Each one re
 | C | [Folding presentation strategy](FoldingPresentationDecision.md) — keep `attributeHidden` for now; overlay placeholders as the preferred future direction | go | 2026-05-07 |
 | D | [Text edit event hub](TextEditEventHubDecision.md) — `CodeEditorView` owns a single `TextEditEventHub`; one canonical `TextEditEvent` struct for all consumers | go | 2026-05-07 |
 | — | [Performance scaffolding audit](PerformanceScaffoldingAudit.md) — phase-1.2 audit of performance-critical methods | reference | 2026-05-07 |
+| — | [Text pipeline performance baselines](TextPipelinePerformanceBaselines.md) — consolidated edit-event, line-geometry, Tree-sitter, and renderer evaluation notes | reference | 2026-05-11 |
 
 ## When to add a new ADR
 

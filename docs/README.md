@@ -90,6 +90,7 @@ The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https
 ## Architecture & visuals
 
 - **[Architecture decision records](Architecture/README.md)** — the short-form ADRs capturing structural choices (range store, tree-sitter, folding presentation, event hub).
+- **[Text pipeline performance baselines](Architecture/TextPipelinePerformanceBaselines.md)** — consolidated phase audit notes for edit events, line geometry, Tree-sitter staging, and the renderer no-go.
 - **[Diagrams](Diagrams/README.md)** — Mermaid diagrams of every major subsystem, indexed and grouped.
 
 ## Working notes
