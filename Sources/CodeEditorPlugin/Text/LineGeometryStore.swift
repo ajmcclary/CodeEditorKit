@@ -10,10 +10,12 @@ import UIKit
 // MARK: - LineGeometry
 
 /// Per-line geometry data stored in the tree.
+///
+/// `utf16Offset` is removed — line position is derived from subtree
+/// metadata during tree traversal (O(log n)). Use
+/// `LineGeometryStore.utf16Offset(forLineIndex:)` for the start offset
+/// of any line.
 public struct LineGeometry: Equatable, Sendable {
-    /// Start offset of this line in UTF-16 code units.
-    public let utf16Offset: Int
-
     /// Length of this line in UTF-16 code units (including the line terminator).
     public let utf16Length: Int
 
@@ -37,14 +39,12 @@ public struct LineGeometry: Equatable, Sendable {
     }
 
     public init(
-        utf16Offset: Int,
         utf16Length: Int,
         lineEndingLength: Int,
         estimatedHeight: CGFloat,
         measuredHeight: CGFloat? = nil,
         isFolded: Bool = false
     ) {
-        self.utf16Offset = utf16Offset
         self.utf16Length = utf16Length
         self.lineEndingLength = lineEndingLength
         self.estimatedHeight = estimatedHeight
@@ -163,7 +163,6 @@ public final class LineGeometryStore {
         let length = nsString.length
         guard length > 0 else {
             let emptyGeometry = LineGeometry(
-                utf16Offset: 0,
                 utf16Length: 0,
                 lineEndingLength: 0,
                 estimatedHeight: defaultEstimatedHeight
@@ -177,7 +176,6 @@ public final class LineGeometryStore {
         // Collect all line geometries
         var geometries: [LineGeometry] = []
         var index = 0
-        var runningOffset = 0
         var anyLineTerminated = false
         while index < length {
             var lineStart = 0, lineEnd = 0, contentsEnd = 0
@@ -190,19 +188,16 @@ public final class LineGeometryStore {
             let utf16Length = lineEnd - lineStart
             let lineEndingLength = lineEnd - contentsEnd
             geometries.append(LineGeometry(
-                utf16Offset: runningOffset,
                 utf16Length: utf16Length,
                 lineEndingLength: lineEndingLength,
                 estimatedHeight: defaultEstimatedHeight
             ))
-            runningOffset += utf16Length
             anyLineTerminated = contentsEnd < lineEnd
             index = lineEnd
             if index >= length { break }
         }
         if anyLineTerminated && index == length {
             geometries.append(LineGeometry(
-                utf16Offset: runningOffset,
                 utf16Length: 0,
                 lineEndingLength: 0,
                 estimatedHeight: defaultEstimatedHeight
@@ -293,52 +288,7 @@ public final class LineGeometryStore {
         node.updateSubtreeMetadata()
     }
 
-    // MARK: - Red-Black Tree Insertion
-
-    /// Insert a node into the tree with red-black fixup.
-    private func insertNode(_ node: Node) {
-        node.isRed = true
-        node.left = nil
-        node.right = nil
-        node.updateSubtreeMetadata()
-
-        guard let root else {
-            self.root = node
-            node.isRed = false
-            lineCount = 1
-            return
-        }
-
-        // Standard BST insert
-        var current = root
-        while true {
-            if node.geometry.utf16Offset < current.geometry.utf16Offset {
-                if let left = current.left {
-                    current = left
-                } else {
-                    current.left = node
-                    node.parent = current
-                    break
-                }
-            } else {
-                if let right = current.right {
-                    current = right
-                } else {
-                    current.right = node
-                    node.parent = current
-                    break
-                }
-            }
-        }
-
-        // Propagate metadata upward
-        node.propagateMetadataUpward()
-
-        // Fix red-black violations
-        fixupAfterInsertion(node)
-
-        lineCount += 1
-    }
+    // MARK: - Red-Black Tree Insertion (index-based)
 
     /// Restore red-black invariants after insertion.
     private func fixupAfterInsertion(_ node: Node) {
@@ -649,7 +599,6 @@ public final class LineGeometryStore {
         var stack: [Node] = [root]
         while let node = stack.popLast() {
             node.geometry = LineGeometry(
-                utf16Offset: node.geometry.utf16Offset,
                 utf16Length: node.geometry.utf16Length,
                 lineEndingLength: node.geometry.lineEndingLength,
                 estimatedHeight: height,
@@ -735,7 +684,203 @@ public final class LineGeometryStore {
 
     // MARK: - Incremental Updates
 
-    // (Implemented in Phase 2 — see LineGeometryEditHandler)
+    /// Insert one or more `LineGeometry` values at a line index.
+    /// Each new node's metadata is local; offsets are derived from tree
+    /// position during lookups. O(m log n) for m inserted lines.
+    public func insertLines(_ lines: [LineGeometry], at lineIndex: Int) {
+        guard !lines.isEmpty else { return }
+        let clampedIndex = min(lineIndex, lineCount)
+
+        for (offset, geometry) in lines.enumerated() {
+            let node = Node(geometry: geometry)
+            insertNode(node, atLineIndex: clampedIndex + offset)
+        }
+    }
+
+    /// Remove a range of lines. O(m log n) for m removed lines.
+    public func removeLines(in range: ClosedRange<Int>) {
+        let clamped = range.clamped(to: 0...(lineCount - 1))
+        guard clamped.lowerBound <= clamped.upperBound else { return }
+
+        // Remove from highest to lowest to preserve indices.
+        for lineIdx in (clamped.lowerBound...clamped.upperBound).reversed() {
+            removeNode(atLineIndex: lineIdx)
+        }
+    }
+
+    /// Replace a single line's geometry. Preserves fold state unless
+    /// explicitly changed. O(log n).
+    public func replaceLine(at lineIndex: Int, with geometry: LineGeometry) {
+        guard let node = findNode(forLineIndex: lineIndex) else { return }
+        let wasFolded = node.geometry.isFolded
+        node.geometry = geometry
+        node.geometry.isFolded = wasFolded
+        node.propagateMetadataUpward()
+    }
+
+    // MARK: - Index-Based Insertion
+
+    /// Insert a node at a specific 0-based line index. Uses the existing
+    /// red-black insertion machinery but orders by line index rather than
+    /// stored offset. O(log n) for the BST insert + O(log n) for fixup.
+    private func insertNode(_ node: Node, atLineIndex lineIndex: Int) {
+        node.isRed = true
+        node.left = nil
+        node.right = nil
+        node.updateSubtreeMetadata()
+
+        guard let root else {
+            self.root = node
+            node.isRed = false
+            lineCount = 1
+            return
+        }
+
+        // Find insertion position by walking the tree using line-index ordering.
+        var current = root
+        var remaining = lineIndex
+
+        while true {
+            let leftLineCount = current.left?.subtreeLineCount ?? 0
+            if remaining <= leftLineCount {
+                if let left = current.left {
+                    current = left
+                } else {
+                    current.left = node
+                    node.parent = current
+                    break
+                }
+            } else {
+                remaining -= leftLineCount + 1
+                if let right = current.right {
+                    current = right
+                } else {
+                    current.right = node
+                    node.parent = current
+                    break
+                }
+            }
+        }
+
+        node.propagateMetadataUpward()
+        fixupAfterInsertion(node)
+        lineCount += 1
+    }
+
+    /// Remove the node at a specific line index. O(log n).
+    private func removeNode(atLineIndex lineIndex: Int) {
+        guard let node = findNode(forLineIndex: lineIndex) else { return }
+
+        // Use standard red-black deletion: if node has two children,
+        // swap with successor, then delete.
+        let nodeToDelete: Node
+        if node.left != nil, let rightChild = node.right {
+            // Find in-order successor
+            var successor = rightChild
+            while let leftChild = successor.left {
+                successor = leftChild
+            }
+            // Swap geometries
+            let tempGeom = node.geometry
+            node.geometry = successor.geometry
+            successor.geometry = tempGeom
+            nodeToDelete = successor
+        } else {
+            nodeToDelete = node
+        }
+
+        let child = nodeToDelete.left ?? nodeToDelete.right
+        let wasRed = nodeToDelete.isRed
+
+        // Replace nodeToDelete with its child
+        if let parent = nodeToDelete.parent {
+            if nodeToDelete === parent.left {
+                parent.left = child
+            } else {
+                parent.right = child
+            }
+        } else {
+            root = child
+        }
+        child?.parent = nodeToDelete.parent
+
+        if !wasRed {
+            fixupAfterDeletion(child, parent: nodeToDelete.parent)
+        }
+
+        // Propagate metadata from the replacement point upward
+        (child ?? nodeToDelete.parent)?.propagateMetadataUpward()
+
+        lineCount -= 1
+    }
+
+    /// Restore red-black invariants after deletion.
+    private func fixupAfterDeletion(_ node: Node?, parent: Node?) {
+        var current = node
+        var currentParent = parent
+
+        while current !== root, current?.isRed != true {
+            guard let parentNode = currentParent else { break }
+
+            if current === parentNode.left {
+                var sibling = parentNode.right
+                if sibling?.isRed == true {
+                    sibling?.isRed = false
+                    parentNode.isRed = true
+                    rotateLeft(parentNode)
+                    sibling = parentNode.right
+                }
+                if sibling?.left?.isRed != true, sibling?.right?.isRed != true {
+                    sibling?.isRed = true
+                    current = parentNode
+                    currentParent = parentNode.parent
+                } else {
+                    if sibling?.right?.isRed != true {
+                        sibling?.left?.isRed = false
+                        sibling?.isRed = true
+                        if let sibling {
+                            rotateRight(sibling)
+                        }
+                        sibling = parentNode.right
+                    }
+                    sibling?.isRed = parentNode.isRed
+                    parentNode.isRed = false
+                    sibling?.right?.isRed = false
+                    rotateLeft(parentNode)
+                    current = root
+                }
+            } else {
+                var sibling = parentNode.left
+                if sibling?.isRed == true {
+                    sibling?.isRed = false
+                    parentNode.isRed = true
+                    rotateRight(parentNode)
+                    sibling = parentNode.left
+                }
+                if sibling?.right?.isRed != true, sibling?.left?.isRed != true {
+                    sibling?.isRed = true
+                    current = parentNode
+                    currentParent = parentNode.parent
+                } else {
+                    if sibling?.left?.isRed != true {
+                        sibling?.right?.isRed = false
+                        sibling?.isRed = true
+                        if let sibling {
+                            rotateLeft(sibling)
+                        }
+                        sibling = parentNode.left
+                    }
+                    sibling?.isRed = parentNode.isRed
+                    parentNode.isRed = false
+                    sibling?.left?.isRed = false
+                    rotateRight(parentNode)
+                    current = root
+                }
+            }
+        }
+
+        current?.isRed = false
+    }
 
     // MARK: - Reset
 

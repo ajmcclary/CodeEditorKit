@@ -802,18 +802,18 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         // Access individual line geometries
         let geom0 = store.lineGeometry(at: 0)
         XCTAssertNotNil(geom0)
-        XCTAssertEqual(geom0?.utf16Offset, 0)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 0), 0)
         XCTAssertEqual(geom0?.utf16Length, 6) // "line1\n"
         XCTAssertEqual(geom0?.lineEndingLength, 1)
 
         let geom1 = store.lineGeometry(at: 1)
         XCTAssertNotNil(geom1)
-        XCTAssertEqual(geom1?.utf16Offset, 6)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 6)
         XCTAssertEqual(geom1?.utf16Length, 6)
 
         let geom2 = store.lineGeometry(at: 2)
         XCTAssertNotNil(geom2)
-        XCTAssertEqual(geom2?.utf16Offset, 12)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 2), 12)
         XCTAssertEqual(geom2?.utf16Length, 5) // "line3" — no newline
         XCTAssertEqual(geom2?.lineEndingLength, 0)
 
@@ -830,9 +830,9 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
         let range = NSRange(location: 2, length: 10) // covers "bb\nccc\ndd"
         let geometries = store.lineGeometries(in: range)
         XCTAssertEqual(geometries.count, 3) // lines 1, 2, 3
-        XCTAssertEqual(geometries[0].utf16Offset, 2) // "bb\n"
-        XCTAssertEqual(geometries[1].utf16Offset, 5) // "ccc\n"
-        XCTAssertEqual(geometries[2].utf16Offset, 9) // "dddd\n"
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 2) // "bb\n"
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 2), 5) // "ccc\n"
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 3), 9) // "dddd\n"
     }
 
     func testStoreHeightTracking() {
@@ -907,9 +907,9 @@ final class LineGeometryStoreBenchmarkTests: XCTestCase {
 
         let all = store.allLineGeometries
         XCTAssertEqual(all.count, 3)
-        XCTAssertEqual(all[0].utf16Offset, 0)
-        XCTAssertEqual(all[1].utf16Offset, 2)
-        XCTAssertEqual(all[2].utf16Offset, 4)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 0), 0)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 1), 2)
+        XCTAssertEqual(store.utf16Offset(forLineIndex: 2), 4)
     }
 
     func testStoreRebuildAfterReset() {

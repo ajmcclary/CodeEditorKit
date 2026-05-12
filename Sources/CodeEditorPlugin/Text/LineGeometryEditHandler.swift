@@ -9,13 +9,8 @@ import UIKit
 // MARK: - LineGeometryEditHandler
 
 /// Observes `TextEditEventHub` and keeps `LineGeometryStore` in sync with
-/// `NSTextStorage` after text edits.
-///
-/// On each character-level edit, the handler rebuilds the geometry store
-/// from the text storage. This is O(n) per edit — matching the current
-/// `LineIndexCache` behavior. The architecture supports incremental
-/// (O(m log n)) updates as a follow-on optimization; the observer pattern,
-/// registration, and API surface are already in place.
+/// `NSTextStorage` after text edits using incremental node-level updates
+/// (O(m log n) for m affected lines).
 ///
 /// Attribute-only edits (e.g., syntax highlighting color changes) are
 /// no-ops — they don't affect line geometry.
@@ -43,11 +38,91 @@ internal final class LineGeometryEditHandler: TextEditEventObserving {
             return
         }
 
-        // Rebuild the geometry store from the current text storage state.
-        // Future optimization: incremental update using red-black tree
-        // split/merge/insert/delete operations (O(m log n) for m affected
-        // lines). The observer pattern and store API are already in place.
-        textView?.rebuildLineGeometryStoreFromCurrentTextStorage()
+        guard let textView, let textStorage = textView.textStorage else {
+            // Fall back to full rebuild if text view is unavailable.
+            textView?.rebuildLineGeometryStoreFromCurrentTextStorage()
+            return
+        }
+
+        // Compute the affected line range from the edit.
+        let oldLineStart = geometryStore.lineIndex(forUtf16Offset: event.editedRange.location)
+        let oldLineEnd = geometryStore.lineIndex(
+            forUtf16Offset: max(0, event.editedRange.location + event.editedRange.length - 1)
+        )
+
+        // Build new geometries for the affected region from the text storage.
+        // swiftlint:disable:next legacy_objc_type
+        let nsString = textStorage.string as NSString
+        let length = nsString.length
+
+        // Enumerate lines in the affected region.
+        var newGeometries: [LineGeometry] = []
+        var lineIndex = oldLineStart
+        var searchPos = geometryStore.utf16Offset(forLineIndex: lineIndex)
+        searchPos = max(0, searchPos - 1) // Start from previous line start
+
+        // Find the actual start of the line at oldLineStart
+        if searchPos > 0 {
+            var lineStart = 0
+            var lineEnd = 0
+            var contentsEnd = 0
+            nsString.getLineStart(
+                &lineStart,
+                end: &lineEnd,
+                contentsEnd: &contentsEnd,
+                for: NSRange(location: searchPos, length: 0)
+            )
+            searchPos = lineStart
+        }
+
+        // Determine how many lines to scan: the affected line count plus
+        // new lines introduced or removed.
+        let oldAffectedCount = oldLineEnd - oldLineStart + 1
+        let newEndOffset = event.editedRange.location + event.editedRange.length + event.changeInLength
+        let newLineEnd = geometryStore.lineIndex(forUtf16Offset: max(0, newEndOffset - 1))
+        let scanToLine = max(newLineEnd, oldLineEnd) + 1 // one extra for safety
+
+        // Enumerate lines starting from searchPos
+        var pos = searchPos
+        while pos < length {
+            var lineStart = 0
+            var lineEnd = 0
+            var contentsEnd = 0
+            nsString.getLineStart(
+                &lineStart,
+                end: &lineEnd,
+                contentsEnd: &contentsEnd,
+                for: NSRange(location: pos, length: 0)
+            )
+            let utf16Length = lineEnd - lineStart
+            let lineEndingLength = lineEnd - contentsEnd
+
+            newGeometries.append(LineGeometry(
+                utf16Length: utf16Length,
+                lineEndingLength: lineEndingLength,
+                estimatedHeight: geometryStore.lineGeometry(at: lineIndex)?.estimatedHeight ?? 17.0
+            ))
+
+            lineIndex += 1
+            pos = lineEnd
+            if lineIndex > scanToLine || pos >= length { break }
+
+            // If we've scanned past the edit region and hit the next old
+            // line that already exists, we can stop.
+            if lineIndex > oldLineEnd && pos >= newEndOffset {
+                break
+            }
+        }
+
+        // Apply the incremental edit.
+        if oldAffectedCount > 0 {
+            // First remove the old lines, then insert the new ones
+            geometryStore.removeLines(in: oldLineStart...oldLineEnd)
+        }
+
+        if !newGeometries.isEmpty {
+            geometryStore.insertLines(newGeometries, at: oldLineStart)
+        }
     }
 
     // MARK: - Lifecycle

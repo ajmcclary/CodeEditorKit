@@ -37,11 +37,16 @@ extension LineGeometryStore {
         inYRange yRange: ClosedRange<CGFloat>,
         containerWidth: CGFloat
     ) -> [CGRect] {
-        let geoms = lineGeometries(inYRange: yRange)
-        return geoms.map { geom in
-            let y = yPosition(forLineIndex: lineIndex(forUtf16Offset: geom.utf16Offset))
-            return CGRect(x: 0, y: y, width: containerWidth, height: geom.effectiveHeight)
+        let startIdx = lineIndex(forYPosition: yRange.lowerBound)
+        let endIdx = lineIndex(forYPosition: yRange.upperBound)
+        var result: [CGRect] = []
+        for idx in startIdx...endIdx {
+            let y = yPosition(forLineIndex: idx)
+            if let geom = lineGeometry(at: idx) {
+                result.append(CGRect(x: 0, y: y, width: containerWidth, height: geom.effectiveHeight))
+            }
         }
+        return result
     }
 
     /// Returns the estimated bounding rectangles for all lines
@@ -55,11 +60,17 @@ extension LineGeometryStore {
         in utf16Range: NSRange,
         containerWidth: CGFloat
     ) -> [CGRect] {
-        let geoms = lineGeometries(in: utf16Range)
-        return geoms.map { geom in
-            let y = yPosition(forLineIndex: lineIndex(forUtf16Offset: geom.utf16Offset))
-            return CGRect(x: 0, y: y, width: containerWidth, height: geom.effectiveHeight)
+        let startIdx = lineIndex(forUtf16Offset: utf16Range.location)
+        let endOffset = utf16Range.location + utf16Range.length
+        let endIdx = lineIndex(forUtf16Offset: max(0, endOffset - 1))
+        var result: [CGRect] = []
+        for idx in startIdx...endIdx {
+            let y = yPosition(forLineIndex: idx)
+            if let geom = lineGeometry(at: idx) {
+                result.append(CGRect(x: 0, y: y, width: containerWidth, height: geom.effectiveHeight))
+            }
         }
+        return result
     }
 
     /// Returns the 0-based line index closest to a given point, using the

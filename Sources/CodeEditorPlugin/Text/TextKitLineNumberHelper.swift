@@ -121,13 +121,17 @@ public final class TextKitLineNumberHelper {
     private func calculateLineRanges(in text: String, visibleRange: NSRange) -> [(lineNumber: Int, range: NSRange)] {
         // Use the line geometry store for O(log n) lookup
         if let textView {
-            let geometries = textView.lineGeometryStore.lineGeometries(in: visibleRange)
-            return geometries.map { geom in
-                let range = NSRange(location: geom.utf16Offset, length: geom.utf16Length)
-                // lineIndex is derived: we use the store to find the 1-based line number
-                let lineIdx = textView.lineGeometryStore.lineIndex(forUtf16Offset: geom.utf16Offset)
-                return (lineNumber: lineIdx + 1, range: range)
+            let store = textView.lineGeometryStore
+            let geometries = store.lineGeometries(in: visibleRange)
+            var result: [(lineNumber: Int, range: NSRange)] = []
+            var lineIdx = store.lineIndex(forUtf16Offset: visibleRange.location)
+            for geom in geometries {
+                let offset = store.utf16Offset(forLineIndex: lineIdx)
+                let range = NSRange(location: offset, length: geom.utf16Length)
+                result.append((lineNumber: lineIdx + 1, range: range))
+                lineIdx += 1
             }
+            return result
         }
 
         // Fallback to the original implementation if not using CodeEditorView

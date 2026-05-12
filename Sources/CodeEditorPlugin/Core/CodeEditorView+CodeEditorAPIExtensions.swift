@@ -244,7 +244,8 @@ extension CodeEditorView {
     public func lineRange(for lineNumber: Int) -> Range<String.Index>? {
         let idx = lineNumber - 1
         guard let geom = lineGeometryStore.lineGeometry(at: idx) else { return nil }
-        let nsRange = NSRange(location: geom.utf16Offset, length: geom.utf16Length)
+        let offset = lineGeometryStore.utf16Offset(forLineIndex: idx)
+        let nsRange = NSRange(location: offset, length: geom.utf16Length)
         return Range(nsRange, in: content)
     }
 
