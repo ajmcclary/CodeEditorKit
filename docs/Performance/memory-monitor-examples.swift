@@ -1,5 +1,6 @@
 import CodeEditorPlugin
 import SwiftUI
+import XCTest
 
 // MARK: - Example 1: Basic Memory Monitor Setup
 
@@ -138,28 +139,23 @@ struct DocumentEditor: View {
     }
 }
 
-// MARK: - Example 4: Custom Memory Monitor for Testing
+// MARK: - Example 4: Mock Memory Monitor for Testing
 
-class TestableMemoryMonitor: MemoryMonitor {
-    var cleanupCalls: [(identifier: String, freed: Double)] = []
-    var mockMemoryUsage: Double = 50.0
-
-    override func getCurrentMemoryUsage() -> Double {
-        mockMemoryUsage
-    }
-
-    override func performCleanup(targetReduction: Double? = nil) async -> Double {
-        cleanupCalls.append((identifier: "manual", freed: targetReduction ?? 0))
-        return targetReduction ?? 20.0
-    }
+@MainActor
+final class CleanupCounter {
+    var count = 0
 }
 
 @MainActor
 class EditorTests: XCTestCase {
     func testMemoryCleanupIntegration() async {
-        // Create testable monitor
-        let testMonitor = TestableMemoryMonitor()
-        testMonitor.mockMemoryUsage = 200.0
+        let testMonitor = MemoryMonitor.mock(memoryUsage: 200.0, memoryPressure: .warning)
+        let counter = CleanupCounter()
+
+        testMonitor.registerCleanupHandler(identifier: "test-cache") { @MainActor in
+            counter.count += 1
+            return CleanupResult(memoryFreedMB: 100.0, description: "Cleared test cache")
+        }
 
         // Configure editor
         let editor = CodeEditorView()
@@ -167,14 +163,11 @@ class EditorTests: XCTestCase {
         config.performance.memoryMonitor = testMonitor
         config.apply(to: editor)
 
-        // Simulate high memory usage
-        testMonitor.mockMemoryUsage = 350.0
-
         // Trigger cleanup
         let freed = await testMonitor.performCleanup(targetReduction: 100.0)
 
         XCTAssertEqual(freed, 100.0)
-        XCTAssertEqual(testMonitor.cleanupCalls.count, 1)
+        XCTAssertEqual(counter.count, 1)
     }
 }
 
@@ -331,7 +324,8 @@ class WindowManager: ObservableObject {
             priority: .normal
         ) { @MainActor in
             // Delegate to window's monitor
-            await windowMonitor.performCleanup()
+            let freed = await windowMonitor.performCleanup()
+            return CleanupResult(memoryFreedMB: freed, description: "Cleaned window cache")
         }
 
         windowMonitors[window] = windowMonitor

@@ -180,46 +180,33 @@ struct ChildView: View {
 
 ### Testing with Mock MemoryMonitor
 
-Create a mock MemoryMonitor for testing:
+`MemoryMonitor` is `final`; use the built-in mock factory and cleanup handlers in tests instead of subclassing:
 
 ```swift
-class MockMemoryMonitor: MemoryMonitor {
-    var cleanupCallCount = 0
-    var registeredHandlers: [String] = []
-    
-    override func performCleanup(targetReduction: Double? = nil) async -> Double {
-        cleanupCallCount += 1
-        return 50.0  // Always return 50MB freed
-    }
-    
-    override func registerCleanupHandler(
-        identifier: String,
-        priority: CleanupPriority = .normal,
-        handler: @escaping @MainActor @Sendable () async -> CleanupResult
-    ) {
-        registeredHandlers.append(identifier)
-        super.registerCleanupHandler(
-            identifier: identifier,
-            priority: priority,
-            handler: handler
-        )
-    }
-}
-
-// Use in tests
 func testMemoryCleanup() async {
-    let mockMonitor = MockMemoryMonitor()
+    let monitor = MemoryMonitor.mock(memoryUsage: 250, memoryPressure: .warning)
+    let counter = CleanupCounter()
+    
+    monitor.registerCleanupHandler(identifier: "test-cache") { @MainActor in
+        counter.count += 1
+        return CleanupResult(memoryFreedMB: 50, description: "Cleared test cache")
+    }
     
     var config = EditorConfiguration()
-    config.performance.memoryMonitor = mockMonitor
+    config.performance.memoryMonitor = monitor
     
     let editor = CodeEditorView()
     config.apply(to: editor)
     
-    // Trigger cleanup
-    await mockMonitor.performCleanup()
+    let freed = await monitor.performCleanup()
     
-    XCTAssertEqual(mockMonitor.cleanupCallCount, 1)
+    XCTAssertEqual(await counter.count, 1)
+    XCTAssertEqual(freed, 50)
+}
+
+@MainActor
+final class CleanupCounter {
+    var count = 0
 }
 ```
 
@@ -289,14 +276,14 @@ let monitor = MemoryMonitor()
 
 // Get current statistics
 let stats = monitor.getMemoryStatistics()
-print("Current usage: \(stats.currentUsageMB)MB")
-print("Peak usage: \(stats.peakUsageMB)MB")
-print("Average usage: \(stats.averageUsageMB)MB")
+CrossPlatformLogger.logger().info("Current usage: \(stats.currentUsageMB)MB")
+CrossPlatformLogger.logger().info("Peak usage: \(stats.peakUsageMB)MB")
+CrossPlatformLogger.logger().info("Average usage: \(stats.averageUsageMB)MB")
 
 // Monitor cleanup effectiveness
-print("Total cleanups: \(stats.totalCleanupOperations)")
-print("Total memory freed: \(stats.totalMemoryFreed)MB")
-print("Cleanup effectiveness: \(stats.cleanupEffectiveness)MB per operation")
+CrossPlatformLogger.logger().info("Total cleanups: \(stats.totalCleanupOperations)")
+CrossPlatformLogger.logger().info("Total memory freed: \(stats.totalMemoryFreed)MB")
+CrossPlatformLogger.logger().info("Cleanup effectiveness: \(stats.cleanupEffectiveness)MB per operation")
 ```
 
 ### 3. Respond to Memory Pressure
@@ -331,14 +318,12 @@ class EditorViewController {
 }
 ```
 
-## Migration from Singleton
+## Migration from Singleton-Style Wiring
 
-If you're migrating from the deprecated singleton pattern:
+If older app code or docs used a shared monitor, replace that global access with an instance your app owns:
 
 ```swift
-// Old way (deprecated)
-let editor = CodeEditorView()
-editor.memoryMonitor = MemoryMonitor.shared  // ⚠️ Deprecated
+// Old shape: globally shared monitor owned outside the editor
 
 // New way (recommended)
 let monitor = MemoryMonitor()
@@ -355,26 +340,24 @@ config.apply(to: editor)
 If cleanup handlers aren't being called:
 
 1. Verify the monitor is properly injected
-2. Check that monitoring is started (automatic unless in tests)
+2. Check that monitoring is started when you need periodic threshold checks
 3. Ensure thresholds are appropriately set
 
 ```swift
 // Debug memory monitor
 let monitor = editor.memoryMonitor
-print("Monitoring active: \(monitor.memoryStats.lastUpdateTime)")
-print("Threshold: \(monitor.memoryThresholdMB)MB")
-print("Current usage: \(monitor.getCurrentMemoryUsage())MB")
+CrossPlatformLogger.logger().info("Monitoring active: \(monitor.memoryStats.lastUpdateTime)")
+CrossPlatformLogger.logger().info("Threshold: \(monitor.memoryThresholdMB)MB")
+CrossPlatformLogger.logger().info("Current usage: \(monitor.getCurrentMemoryUsage())MB")
 ```
 
 ### Testing Considerations
 
-MemoryMonitor automatically disables monitoring in test environments to avoid interference:
+Monitoring does not need to run for cleanup-handler tests. Trigger cleanup directly for deterministic assertions:
 
 ```swift
-// In tests, monitoring is disabled by default
-// You can manually trigger cleanup for testing
 func testCleanup() async {
-    let monitor = MemoryMonitor()
+    let monitor = MemoryMonitor.mock(memoryUsage: 100)
     let result = await monitor.performCleanup()
     XCTAssertGreaterThanOrEqual(result, 0)
 }
@@ -413,7 +396,10 @@ enum MemoryMonitorFactory {
 }
 
 // Usage
-let editor = CodeEditorView(frame: .zero, memoryMonitor: MemoryMonitorFactory.createDefault())
+let editor = CodeEditorView()
+var config = EditorConfiguration()
+config.performance.memoryMonitor = MemoryMonitorFactory.createDefault()
+config.apply(to: editor)
 ```
 
 ### Dependency Container Pattern
@@ -434,10 +420,8 @@ class DependencyContainer {
         // Configure based on environment
         #if DEBUG
         monitor.memoryThresholdMB = 100.0
-        monitor.enableDebugLogging = true
         #else
         monitor.memoryThresholdMB = 300.0
-        monitor.enableDebugLogging = false
         #endif
         
         // Register app-wide cleanup handlers
@@ -505,7 +489,10 @@ class DocumentWindowController {
         documentMonitors[documentID] = documentMonitor
         
         // Create editor with document-specific monitor
-        let editor = CodeEditorView(frame: .zero, memoryMonitor: documentMonitor)
+        let editor = CodeEditorView()
+        var config = EditorConfiguration()
+        config.performance.memoryMonitor = documentMonitor
+        config.apply(to: editor)
         return editor
     }
     

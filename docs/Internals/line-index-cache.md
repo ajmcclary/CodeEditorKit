@@ -94,8 +94,8 @@ let result2 = await cache.lineAndColumn(for: 1000)  // O(1)
 ```swift
 // Get detailed line information - O(log n)
 if let info = await cache.lineInfo(at: lineIndex) {
-    print("Line starts at: \(info.start)")
-    print("Line length: \(info.length)")
+    CrossPlatformLogger.logger().info("Line starts at: \(info.start)")
+    CrossPlatformLogger.logger().info("Line length: \(info.length)")
 }
 ```
 
@@ -155,7 +155,7 @@ let start = CFAbsoluteTimeGetCurrent()
 let (line, column) = await cache.lineAndColumn(for: offset)
 let elapsed = CFAbsoluteTimeGetCurrent() - start
 
-print("Lookup took: \(elapsed * 1000)ms")
+CrossPlatformLogger.logger().info("Lookup took: \(elapsed * 1000)ms")
 ```
 
 ## Handling Text Changes

@@ -1,348 +1,162 @@
 # Thread-Safe Callbacks with @Sendable
 
-Learn how to use @Sendable callbacks in CodeEditorPlugin for guaranteed thread safety with Swift 6 concurrency.
+`CodeEditor`'s SwiftUI callback modifiers accept `@Sendable` closures so they remain compatible with Swift 6 strict concurrency.
 
-## Overview
-
-All callbacks in CodeEditorPlugin are now marked with `@Sendable`, ensuring they can be safely called across actor boundaries. This enhancement provides compile-time guarantees of thread safety and full compatibility with Swift 6's strict concurrency checking.
-
-## Why @Sendable Matters
-
-In Swift 6, the compiler enforces strict concurrency checking to prevent data races. The `@Sendable` attribute indicates that a closure can be safely passed across concurrency domains without risk of data races.
-
-```swift
-// Without @Sendable - potential data race
-var counter = 0
-CodeEditor(text: $text)
-    .onTextChange { newText in
-        counter += 1  // ❌ Data race - counter accessed from different contexts
-    }
-
-// With @Sendable - compiler enforces safety
-CodeEditor(text: $text)
-    .onTextChange { @Sendable newText in
-        // ✅ Compiler ensures only Sendable data is captured
-        print("Text changed to: \(newText.count) characters")
-    }
-```
-
-## Basic Usage
-
-### Text Change Callbacks
-
-Monitor text changes with thread-safe callbacks:
-
-```swift
-import SwiftUI
-import CodeEditorPlugin
-
-struct EditorView: View {
-    @State private var code = ""
-    @State private var lastSaved = Date()
-    
-    var body: some View {
-        CodeEditor(text: $code)
-            .onTextChange { @Sendable newText in
-                // This closure is guaranteed thread-safe
-                Task {
-                    await autoSave(newText)
-                }
-            }
-    }
-    func autoSave(_ text: String) async {
-        // Save logic here
-        lastSaved = Date()
-    }
-}
-```
-
-### Selection Change Callbacks
-
-Handle selection changes safely:
+## Current Callback Surface
 
 ```swift
 CodeEditor(text: $code)
-    .onSelectionChange { @Sendable range in
-        // Thread-safe selection handling
-        Task { @MainActor in
-            updateStatusBar(with: range)
+    .onTextChange { @Sendable newText in
+        // newText: String
+    }
+    .onSelectionChange { @Sendable selection in
+        // selection: Range<String.Index>?
+    }
+```
+
+`onTextChange` receives the complete current text. `onSelectionChange` receives a `String.Index` range when text is selected, or `nil` for an insertion point / no active selection. Internal AppKit/UIKit bridges still use `NSRange`, but the public SwiftUI callback is string-index based.
+
+## Why @Sendable Matters
+
+Swift 6 rejects captures that could create data races:
+
+```swift
+var counter = 0
+
+CodeEditor(text: $text)
+    .onTextChange { @Sendable _ in
+        counter += 1 // Not safe to capture and mutate from a Sendable closure.
+    }
+```
+
+Move mutable state behind an actor, or hop to the main actor for UI state:
+
+```swift
+actor ChangeCounter {
+    private(set) var count = 0
+
+    func increment() {
+        count += 1
+    }
+}
+
+let counter = ChangeCounter()
+
+CodeEditor(text: $text)
+    .onTextChange { @Sendable newText in
+        Task {
+            await counter.increment()
+            await saveDraft(newText)
         }
     }
-func updateStatusBar(with range: NSRange) {
-    // Update UI with selection info
-    statusText = "Line: \(getLineNumber(for: range.location))"
-}
 ```
 
-## Advanced Patterns
+## Updating SwiftUI State
 
-### Capturing State Safely
-
-When you need to capture state in callbacks, ensure it's Sendable:
+Use `Task { @MainActor in ... }` before touching view-model or UI state from a Sendable callback.
 
 ```swift
-struct EditorConfiguration: Sendable {
-    let autoSaveInterval: TimeInterval
-    let syntaxHighlighting: Bool
-}
-
-struct ConfigurableEditor: View {
-    let config: EditorConfiguration  // Sendable type
-    @State private var text = ""
-    
-    var body: some View {
-        CodeEditor(text: $text)
-            .onTextChange { @Sendable newText in
-                // Safe to capture 'config' because it's Sendable
-                if config.autoSaveInterval > 0 {
-                    Task {
-                        try await Task.sleep(for: .seconds(config.autoSaveInterval))
-                        await save(newText)
-                    }
-                }
-            }
-    }
-}
-```
-
-### Actor Integration
-
-Integrate callbacks with custom actors:
-
-```swift
+@MainActor
 final class EditorViewModel: ObservableObject {
-    @Published var text = ""
     @Published var wordCount = 0
-    
-    private let analytics: AnalyticsActor
-    
+    let analytics: AnalyticsActor
+
     init(analytics: AnalyticsActor) {
         self.analytics = analytics
     }
-    
-    var editorView: some View {
-        CodeEditor(text: $text)
+
+    func editor(text: Binding<String>) -> some View {
+        CodeEditor(text: text)
             .onTextChange { @Sendable newText in
-                // Update word count on MainActor
                 Task { @MainActor in
                     self.wordCount = newText.split(separator: " ").count
                 }
-                
-                // Send analytics on background actor
+
                 Task {
                     await self.analytics.logTextChange(length: newText.count)
                 }
             }
     }
 }
-
-actor AnalyticsActor {
-    func logTextChange(length: Int) {
-        // Thread-safe analytics logging
-    }
-}
 ```
 
-## Error Handling in Callbacks
+## Selection Handling
 
-Handle errors safely in async contexts:
+Selection ranges are valid for the current bound string. Convert them immediately if you need selected text:
 
 ```swift
-struct SafeEditor: View {
-    @State private var text = ""
-    @State private var lastError: String?
-    
-    var body: some View {
-        VStack {
-            if let error = lastError {
-                Text(error)
-                    .foregroundColor(.red)
+CodeEditor(text: $code)
+    .onSelectionChange { @Sendable selection in
+        Task { @MainActor in
+            if selection != nil {
+                statusText = "Selection active"
+            } else {
+                statusText = "No selection"
             }
-            
-            CodeEditor(text: $text)
-                .onTextChange { @Sendable newText in
-                    Task { @MainActor in
-                        do {
-                            try await validateSyntax(newText)
-                            lastError = nil
-                        } catch {
-                            lastError = error.localizedDescription
-                        }
-                    }
-                }
         }
     }
-    
-    func validateSyntax(_ text: String) async throws {
-        // Validation logic that might throw
-    }
-}
 ```
 
-## Debouncing with @Sendable
+## Debouncing Work
 
-Implement debounced callbacks while maintaining thread safety:
+Store debounce tasks in a main-actor model rather than mutating `@State` directly inside the Sendable closure.
 
 ```swift
-final class DebouncedEditor: View {
+@MainActor
+final class SearchModel: ObservableObject {
+    private var task: Task<Void, Never>?
+
+    func scheduleSearch(for query: String) {
+        task?.cancel()
+        task = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            await performSearch(query)
+        }
+    }
+
+    private func performSearch(_ query: String) async {
+        // Search implementation.
+    }
+}
+
+struct SearchBackedEditor: View {
     @State private var text = ""
-    @State private var searchTask: Task<Void, Never>?
-    
+    @StateObject private var search = SearchModel()
+
     var body: some View {
         CodeEditor(text: $text)
             .onTextChange { @Sendable newText in
-                // Cancel previous search
-                searchTask?.cancel()
-                
-                // Start new debounced search
-                searchTask = Task {
-                    do {
-                        try await Task.sleep(for: .milliseconds(300))
-                        await performSearch(newText)
-                    } catch {
-                        // Task cancelled
-                    }
+                Task { @MainActor in
+                    search.scheduleSearch(for: newText)
                 }
             }
-    }
-    func performSearch(_ query: String) async {
-        // Search implementation
     }
 }
 ```
 
-## Combining Multiple Callbacks
+## Combining Work
 
-Chain multiple thread-safe operations:
+Capture Sendable dependencies, then fan out with tasks:
 
 ```swift
 struct AdvancedEditor: View {
     @State private var text = ""
     let documentManager: DocumentManager
     let syntaxChecker: SyntaxChecker
-    
+
     var body: some View {
         CodeEditor(text: $text)
             .onTextChange { @Sendable newText in
-                // Multiple async operations
                 Task {
                     async let save = documentManager.autoSave(newText)
                     async let check = syntaxChecker.validate(newText)
-                    
-                    // Wait for both to complete
+
                     let (saveResult, checkResult) = await (save, check)
-                    
+
                     await MainActor.run {
                         handleResults(saveResult, checkResult)
                     }
-                }
-            }
-            .onSelectionChange { @Sendable range in
-                Task {
-                    await highlightMatchingBrackets(at: range)
-                }
-            }
-    }
-}
-```
-
-## Testing @Sendable Callbacks
-
-Write tests for callbacks with proper async handling:
-
-```swift
-final class CallbackTests: XCTestCase {
-    func testTextChangeCallback() async {
-        let expectation = XCTestExpectation(description: "Text change callback")
-        var capturedText: String?
-        
-        let editor = CodeEditor(text: .constant(""))
-            .onTextChange { @Sendable newText in
-                capturedText = newText
-                expectation.fulfill()
-            }
-        
-        // Simulate text change
-        editor.coordinator.handleTextChange("Hello, World!")
-        
-        await fulfillment(of: [expectation], timeout: 1.0)
-        XCTAssertEqual(capturedText, "Hello, World!")
-    }
-    
-    func testConcurrentCallbacks() async {
-        let editor = CodeEditor(text: .constant(""))
-        var callCount = 0
-        let lock = NSLock()
-        
-        // Set up callback with thread-safe counter
-        editor.onTextChange { @Sendable _ in
-            Task {
-                lock.withLock {
-                    callCount += 1
-                }
-            }
-        }
-        
-        // Trigger multiple concurrent changes
-        await withTaskGroup(of: Void.self) { group in
-            for i in 0..<100 {
-                group.addTask {
-                    editor.coordinator.handleTextChange("Change \(i)")
-                }
-            }
-        }
-        
-        // Verify thread safety
-        XCTAssertEqual(callCount, 100)
-    }
-}
-```
-
-## Migration Guide
-
-If you're upgrading from a version without @Sendable callbacks:
-
-### Before (Not Thread-Safe)
-```swift
-var sharedState = 0
-
-CodeEditor(text: $text)
-    .onTextChange { newText in
-        sharedState += 1  // ⚠️ Potential data race
-        processText(newText)
-    }
-```
-
-### After (Thread-Safe)
-```swift
-// Option 1: Use actor for shared state
-actor StateManager {
-    private(set) var changeCount = 0
-    
-    func incrementChangeCount() {
-        changeCount += 1
-    }
-}
-
-let stateManager = StateManager()
-
-CodeEditor(text: $text)
-    .onTextChange { @Sendable newText in
-        Task {
-            await stateManager.incrementChangeCount()
-            await processText(newText)
-        }
-    }
-
-// Option 2: Use @MainActor for UI state
-final class ViewModel: ObservableObject {
-    @Published var changeCount = 0
-    
-    var editor: some View {
-        CodeEditor(text: .constant(""))
-            .onTextChange { @Sendable newText in
-                Task { @MainActor in
-                    self.changeCount += 1
                 }
             }
     }
@@ -351,54 +165,16 @@ final class ViewModel: ObservableObject {
 
 ## Best Practices
 
-1. **Always use Task for async operations** - Don't perform blocking operations in callbacks
-2. **Minimize captured state** - Only capture Sendable types or use actors
-3. **Use @MainActor for UI updates** - Ensure UI modifications happen on the main thread
-4. **Handle cancellation** - Check for task cancellation in long-running operations
-5. **Test concurrency** - Write tests that verify thread safety
-
-## Common Patterns
-
-### Analytics Tracking
-```swift
-let analytics = AnalyticsService.shared
-
-CodeEditor(text: $text)
-    .onTextChange { @Sendable newText in
-        Task.detached(priority: .background) {
-            await analytics.track("text_changed", [
-                "length": newText.count,
-                "timestamp": Date().timeIntervalSince1970
-            ])
-        }
-    }
-```
-
-### Real-time Collaboration
-```swift
-let collaborationService = CollaborationService()
-
-CodeEditor(text: $text)
-    .onTextChange { @Sendable newText in
-        Task {
-            try await collaborationService.broadcast(
-                TextChangeEvent(content: newText, timestamp: Date())
-            )
-        }
-    }
-    .onSelectionChange { @Sendable range in
-        Task {
-            try await collaborationService.broadcastCursor(
-                position: range.location
-            )
-        }
-    }
-```
+1. Keep callback bodies small; start a `Task` for async or expensive work.
+2. Capture immutable `Sendable` values, actors, or main-actor view models.
+3. Hop to `@MainActor` before mutating SwiftUI-visible state.
+4. Convert selection ranges immediately if later text changes could invalidate them.
+5. Prefer framework debouncing (`CodeEditor(text:debounceInterval:)`) for text-change frequency, and app-level models for domain-specific debouncing.
 
 ## See Also
 
-- [Swift6-Concurrency](swift6.md)
-- [SwiftUI-Integration](../SwiftUI/integration.md)
-- [Swift Concurrency Documentation](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/)
+- [Swift 6 concurrency](swift6.md)
+- [SwiftUI integration](../SwiftUI/integration.md)
+- [Swift Concurrency documentation](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/)
 - `CodeEditor/onTextChange(perform:)`
 - `CodeEditor/onSelectionChange(perform:)`

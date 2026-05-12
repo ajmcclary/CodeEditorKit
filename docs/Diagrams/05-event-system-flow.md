@@ -1,6 +1,6 @@
 # Event System Flow Diagram
 
-This diagram illustrates the enhanced unified event system with modern async processing and performance monitoring.
+This diagram illustrates the current unified event system with Combine publishing, filters, event history, handler tokens, and adjacent async processing utilities.
 
 ```mermaid
 flowchart TB
@@ -16,8 +16,8 @@ flowchart TB
     %% Event Creation & Injection
     subgraph "Event System Injection"
         INJECT[EditorConfiguration<br/>Dependency Injection]
-        CREATE[Event Factory<br/>Type-safe Creation]
-        EVENT[EditorEvent Enum<br/>Type-safe Event Creation]
+        CREATE[Framework Emitters<br/>Built-in Event Creation]
+        EVENT[EditorEvent Enum<br/>Built-in Event Cases]
     end
 
     %% Enhanced Event System Core
@@ -55,7 +55,7 @@ flowchart TB
     %% Event Types (Expanded)
     subgraph "Event Type Hierarchy"
         CORE_EVENTS[Core Events<br/>textDidChange<br/>textSelectionDidChange<br/>completionRequested<br/>performanceWarning]
-        TYPED_EXTRACT[Type Extraction<br/>TextDidChangeEvent<br/>TextSelectionDidChangeEvent<br/>Custom Event Types]
+        TYPED_EXTRACT[Type Extraction<br/>TextDidChangeEvent<br/>TextSelectionDidChangeEvent]
     end
 
     %% Cross-Platform Coordination
@@ -165,7 +165,7 @@ CodeEditor(text: $code)
 ```swift
 // Type-safe event subscription
 let cancellable = eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
-    print("Text changed: \(event.text)")
+    CrossPlatformLogger.logger().info("Text changed: \(event.text)")
 }
 
 // Protocol-based handler registration
@@ -263,9 +263,9 @@ debouncer.requestCompletions(
 ```swift
 // Event metrics tracking
 let metrics = eventSystem.getMetrics()
-print("Events per second: \(metrics.eventsPerSecond)")
-print("Total published: \(metrics.publishedCount)")
-print("Filtered count: \(metrics.filteredCount)")
+CrossPlatformLogger.logger().info("Events per second: \(metrics.eventsPerSecond)")
+CrossPlatformLogger.logger().info("Total published: \(metrics.publishedCount)")
+CrossPlatformLogger.logger().info("Filtered count: \(metrics.filteredCount)")
 
 // Event history queries
 let recentTextEvents = eventSystem.getEvents(

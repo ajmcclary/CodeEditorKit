@@ -101,7 +101,7 @@ struct MyEditor: View {
                 language: .swift,
                 theme: .dark,
                 configuration: EditorConfiguration.default,
-                becomeFirstResponder: true
+                becomeFirstResponder: .yes
             )
     }
 }
@@ -141,8 +141,12 @@ struct MyEditor: View {
 A settings view can bind directly into the nested configuration value:
 
 ```swift
-struct UnifiedConfigurationView: View {
-    @EnvironmentObject var appState: AppState
+final class EditorSettings: ObservableObject {
+    @Published var configuration = EditorConfiguration.default
+}
+
+struct SearchableSettingsView: View {
+    @EnvironmentObject var settings: EditorSettings
     @State private var searchText = ""
     
     var body: some View {
@@ -190,16 +194,15 @@ The recommended approach for configuration in SwiftUI is to use direct property 
 
 ```swift
 struct ConfigurationView: View {
-    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var settings: EditorSettings
     @Binding var selectedTheme: Theme
     
     var body: some View {
         Form {
-            // ✅ RECOMMENDED: Direct binding pattern
-            Toggle("Show Line Numbers", 
-                   isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+            Toggle("Show Line Numbers",
+                   isOn: $settings.configuration.display.isLineNumbersEnabled)
             
-            Slider(value: $appState.currentConfiguration.display.fontSize, 
+            Slider(value: $settings.configuration.display.fontSize,
                    in: 10...20,
                    step: 1) {
                 Text("Font Size")
@@ -216,12 +219,10 @@ struct ConfigurationView: View {
 
 // For batch updates
 Button("Apply Preset") {
-    appState.updateConfiguration { config in
-        config.display.isLineNumbersEnabled = true
-        config.display.fontSize = 16
-        config.behavior.isEditable = true
-        config.layout.tabWidth = 4
-    }
+    var config = EditorConfiguration.default
+    config.display.fontSize = 16
+    config.layout.tabWidth = 4
+    settings.configuration = config
 }
 ```
 
@@ -244,7 +245,7 @@ CodeEditor(text: $code)
     // or
     .codeLanguage(.python)
     // or detect from filename
-    .codeLanguage(from: "main.rs")  // Detects Rust
+    .codeLanguage(Language(fileExtension: "rs") ?? .plainText)
 ```
 
 ### Frame and Layout
@@ -266,19 +267,19 @@ CodeEditor(text: $code)
 For complex state management:
 
 ```swift
-class EditorState: ObservableObject {
+final class DocumentEditorModel: ObservableObject {
     @Published var code = ""
     @Published var configuration = EditorConfiguration()
     @Published var language: Language = .swift
     
     func loadFile(from url: URL) {
-        code = try String(contentsOf: url)
-        language = Language.detect(from: url.pathExtension)
+        code = (try? String(contentsOf: url)) ?? ""
+        language = Language(fileExtension: url.pathExtension) ?? .plainText
     }
 }
 
 struct EditorView: View {
-    @StateObject private var state = EditorState()
+    @StateObject private var state = DocumentEditorModel()
     
     var body: some View {
         CodeEditor(text: $state.code)
@@ -328,9 +329,6 @@ Take advantage of macOS features:
 CodeEditor(text: $code)
     .codeLanguage(.swift)
     .focusable()  // Enable keyboard focus
-    .onCommand(#selector(NSText.selectAll(_:))) {
-        // Handle Select All
-    }
 #endif
 ```
 
@@ -351,7 +349,7 @@ CodeEditor(text: $code)
 
 #### `\.codeEditorLanguage`
 - **Type**: `Language`
-- **Default**: `.swift`
+- **Default**: `.plainText`
 - **Usage**: Sets the programming language for syntax highlighting
 ```swift
 CodeEditor(text: $code)
@@ -359,7 +357,7 @@ CodeEditor(text: $code)
 ```
 
 #### `\.codeEditorTheme`
-- **Type**: `CodeEditorSwiftUITheme`
+- **Type**: `Theme`
 - **Default**: `.default`
 - **Usage**: Sets the color theme
 ```swift
@@ -419,7 +417,7 @@ struct CustomEditorWrapper: View {
 
 1. **Use @State Wisely**: Keep code text in @State for responsiveness
 2. **Environment Configuration**: Always use environment for configuration
-3. **Consistent Updates**: Use helper methods like `appState.updateConfiguration()` for consistent state management
+3. **Consistent Updates**: Centralize preset changes and validation in your own app model
 4. **Search and Discovery**: Implement searchable configuration interfaces with keywords
 5. **Input Validation**: Use bounds checking for numeric inputs (e.g., `.clamped(to: 1...8)`)
 6. **Platform-Specific UI**: Adapt interface elements to each platform's conventions
@@ -457,14 +455,14 @@ struct SplitEditor: View {
 Extend the environment for your needs:
 
 ```swift
-private struct EditorThemeKey: EnvironmentKey {
+private struct CustomThemeKey: EnvironmentKey {
     static let defaultValue = Theme.lcarsDark
 }
 
 extension EnvironmentValues {
     var editorTheme: Theme {
-        get { self[EditorThemeKey.self] }
-        set { self[EditorThemeKey.self] = newValue }
+        get { self[CustomThemeKey.self] }
+        set { self[CustomThemeKey.self] = newValue }
     }
 }
 ```

@@ -1,202 +1,143 @@
 # Annotation System
 
-Add interactive inline annotations to highlight important comments in your code.
+Add inline annotation badges to highlight diagnostics, review notes, TODO comments, breakpoints, or app-specific markers.
 
 ## Overview
 
-The annotation system automatically detects and displays special comments like TODO, FIXME, NOTE, WARNING, and ERROR as interactive badges within your code. This helps developers track important items without leaving the editor.
+The current annotation system is data-source driven. The framework renders annotations that your app provides through `AnnotationsDataSource`; it does not scan source text automatically for TODO/FIXME comments.
 
-## Supported Annotations
+`AnnotationKind` supplies the built-in visual categories used by the default badge view:
 
-### TODO
-Tasks that need to be completed:
-```swift
-// TODO: Implement user authentication
-// TODO: Add error handling for network requests
-```
+- `info`
+- `note`
+- `todo`
+- `fixme`
+- `warning`
+- `error`
 
-### FIXME
-Bugs or issues that need fixing:
-```swift
-// FIXME: Memory leak when processing large files
-// FIXME: Race condition in concurrent updates
-```
-
-### NOTE
-Important information or explanations:
-```swift
-// NOTE: This algorithm has O(n²) complexity
-// NOTE: Deprecated in iOS 17, use new API
-```
-
-### WARNING
-Potential issues or cautions:
-```swift
-// WARNING: This operation is expensive
-// WARNING: Not thread-safe
-```
-
-### ERROR
-Critical issues that must be addressed:
-```swift
-// ERROR: This will crash in production
-// ERROR: Security vulnerability
-```
+`AnnotationView` infers a kind from the annotation message when a more specific `MessageLineAnnotation` kind is not available.
 
 ## Enabling Annotations
+
+Annotations are controlled by `EditorConfiguration.Display.areAnnotationsEnabled`.
 
 ### SwiftUI
 
 ```swift
 struct AnnotatedEditor: View {
-    @State private var config = EditorConfiguration()
-    
+    @State private var code = ""
+    @State private var config: EditorConfiguration = {
+        var config = EditorConfiguration.default
+        config.display.areAnnotationsEnabled = true
+        return config
+    }()
+
     var body: some View {
         CodeEditor(text: $code)
-            .onAppear {
-                config.display.areAnnotationsEnabled = true
-            }
             .environment(\.codeEditorConfiguration, config)
     }
 }
 ```
 
-### UIKit/AppKit
+### AppKit/UIKit
 
 ```swift
 let editor = CodeEditorView()
-var config = EditorConfiguration()
+
+var config = EditorConfiguration.default
 config.display.areAnnotationsEnabled = true
 config.apply(to: editor)
 ```
 
-## Annotation Appearance
+## Providing Annotations
 
-### Inline Badges
-
-Annotations appear as colored badges next to the line:
-
-- **TODO**: Blue badge
-- **FIXME**: Orange badge
-- **NOTE**: Gray badge
-- **WARNING**: Yellow badge
-- **ERROR**: Red badge
-
-### Hover Details
-
-Hovering over an annotation shows:
-- Full annotation text
-- Line number
-- File location
-- Timestamp (if available)
-
-## Customization
-
-### Custom Annotation Types
-
-Add your own annotation types:
+Implement `AnnotationsDataSource` and assign it to the editor view.
 
 ```swift
-// Coming in v1.5
-AnnotationRegistry.register(
-    type: "HACK",
-    color: PlatformColor(hex: "#9C27B0"),
-    priority: .medium
-)
+final class ReviewAnnotationsDataSource: AnnotationsDataSource {
+    private var annotations: [Annotation] = []
+
+    func replaceAnnotations(_ newAnnotations: [Annotation]) {
+        annotations = newAnnotations
+    }
+
+    func annotations(for textRange: NSTextRange) -> [Annotation] {
+        annotations.filter { annotation in
+            rangesOverlap(annotation.range, textRange)
+        }
+    }
+
+    var textViewAnnotations: [CodeEditorViewAnnotation] {
+        annotations.map { annotation in
+            CodeEditorViewAnnotation(
+                location: annotation.range.location,
+                content: annotation.content,
+                id: annotation.id
+            )
+        }
+    }
+
+    func textView(
+        _ textView: CodeEditorView,
+        viewForLineAnnotation annotation: CodeEditorViewAnnotation,
+        textLineFragment: NSTextLineFragment,
+        proposedViewFrame: CGRect
+    ) -> PlatformView? {
+        nil // Return nil to use the framework's default annotation view.
+    }
+
+    private func rangesOverlap(_ lhs: NSTextRange, _ rhs: NSTextRange) -> Bool {
+        // Implement with your app's NSTextLocation indexing policy.
+        true
+    }
+}
 ```
 
-### Annotation Filtering
-
-Show only specific annotation types:
+Then wire the data source:
 
 ```swift
-config.display.annotationFilter = [.todo, .fixme]
-// Only shows TODO and FIXME annotations
+let dataSource = ReviewAnnotationsDataSource()
+editor.annotationsDataSource = dataSource
+
+dataSource.replaceAnnotations([
+    Annotation(
+        range: textRangeForLine12,
+        content: "TODO: Add empty-state handling"
+    )
+])
+
+editor.reloadAnnotations()
 ```
 
-### Custom Rendering
+## Appearance
 
-Customize annotation appearance:
+Default annotation badges are theme-aware. `AnnotationKind.color(in:)` maps the annotation kind to colors from the active `Theme`, and `AnnotationKind.iconName` selects the SF Symbol used by `AnnotationView`.
+
+The default view supports hover/tap details and accessibility labels. Apps that need custom rendering can return their own `PlatformView` from:
 
 ```swift
-config.display.annotationRenderingMode = .inline  // Default
-config.display.annotationRenderingMode = .gutter  // In gutter
-config.display.annotationRenderingMode = .both    // Both locations
+func textView(
+    _ textView: CodeEditorView,
+    viewForLineAnnotation annotation: CodeEditorViewAnnotation,
+    textLineFragment: NSTextLineFragment,
+    proposedViewFrame: CGRect
+) -> PlatformView?
 ```
 
 ## Performance
 
-### Efficient Detection
+Only return annotations that intersect the requested `NSTextRange`. `annotations(for:)` can be called during layout, so cache any expensive parsing or diagnostic conversion outside that method.
 
-Annotations are detected during syntax highlighting:
-- No additional passes needed
-- Minimal performance impact
-- Cached for repeated access
+For large files, keep your own annotation list bounded or paged before assigning it to the data source. There is no `maxAnnotationsPerFile` configuration key in the framework.
 
-### Large File Optimization
+## Integration Notes
 
-For files with many annotations:
-```swift
-config.performance.maxAnnotationsPerFile = 100
-// Limits displayed annotations for performance
-```
-
-## Integration with Other Features
-
-### Symbol Navigation
-
-Annotations appear in the symbol navigator:
-```swift
-// Jump to annotations quickly
-symbolNavigator.includeAnnotations = true
-```
-
-### Search
-
-Find all annotations in your project:
-```swift
-// Search for all TODOs
-// Use search functionality to find annotation patterns
-```
-
-## Best Practices
-
-1. **Consistent Format**: Use standard annotation format
-2. **Clear Descriptions**: Write descriptive annotation text
-3. **Regular Review**: Periodically review and resolve annotations
-4. **Team Standards**: Agree on annotation usage within teams
-5. **Avoid Overuse**: Too many annotations reduce their value
-
-## Advanced Usage
-
-### Annotation Actions
-
-Add actions to annotations:
-
-```swift
-// Coming in v2.0
-annotation.addAction("Create Issue") { annotation in
-    GitHubIntegration.createIssue(
-        title: annotation.text,
-        labels: [annotation.type.rawValue]
-    )
-}
-```
-
-### CI Integration
-
-Fail builds with too many annotations:
-
-```swift
-// In your CI script
-let annotationCount = editor.getAnnotationCount(type: .error)
-if annotationCount > 0 {
-    exit(1) // Fail the build
-}
-```
+- Use the search engine if your app wants to find TODO/FIXME comments and turn them into annotations.
+- LSP diagnostics can be converted into `Annotation` values by the host app, but the framework does not currently provide a full diagnostics UI.
+- The sample app demonstrates annotation controls through its own `AnnotationsHub`; that type belongs to the `CodeEditorSample` target, not the framework library.
 
 ## See Also
 
-- [Configuration-System](../Configuration/system.md)
-- [Syntax-Highlighting](syntax-highlighting.md)
-- [Performance-Monitoring](../Performance/monitoring.md)
+- [Configuration system](../Configuration/system.md)
+- [Syntax highlighting](syntax-highlighting.md)
+- [Performance monitoring](../Performance/monitoring.md)

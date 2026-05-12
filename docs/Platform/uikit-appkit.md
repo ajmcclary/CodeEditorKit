@@ -92,24 +92,31 @@ class EditorViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        editor.delegate = self
+        editor.textDelegate = self
     }
 }
 
 extension EditorViewController: CodeEditorViewDelegate {
-    func codeEditorView(_ editor: CodeEditorView, didChangeText text: String) {
-        // Handle text changes
+    func textViewDidChangeText(_ notification: Notification) {
+        guard let editor = notification.object as? CodeEditorView else { return }
+        // Handle text changes.
+        _ = editor.text
         updateSaveButton(enabled: true)
     }
     
-    func codeEditorView(_ editor: CodeEditorView, didChangeSelection range: NSRange) {
-        // Handle selection changes
+    func textViewDidChangeSelection(_ notification: Notification) {
+        guard let editor = notification.object as? CodeEditorView else { return }
+        let range = editor.selectedRange
+        // Handle selection changes.
         updateStatusBar(with: range)
     }
     
-    func codeEditorView(_ editor: CodeEditorView, willHighlight range: NSRange) -> Bool {
-        // Control highlighting
-        return range.length < 100_000
+    func textView(
+        _ textView: CodeEditorView,
+        shouldChangeTextIn affectedCharRange: NSTextRange,
+        replacementString: String?
+    ) -> Bool {
+        true
     }
 }
 ```

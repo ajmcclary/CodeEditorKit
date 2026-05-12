@@ -10,7 +10,7 @@ CodeEditorPlugin uses a clean, modern architecture optimized for performance, ma
 
 The codebase is organized by feature rather than by type, providing several benefits:
 
-- **Streamlined Organization**: 18 directories (down from 22) for better discoverability
+- **Streamlined Organization**: 20 top-level directories in the main target for better discoverability
 - **Self-Contained Features**: Each feature includes its own models, views, and logic
 - **Faster Development**: No jumping between directories to understand a feature
 - **Better Testability**: Feature isolation makes testing straightforward
@@ -19,22 +19,25 @@ The codebase is organized by feature rather than by type, providing several bene
 
 ```
 Sources/CodeEditorPlugin/
-├── Core/                    # Core functionality, APIs, business logic (40+ files)
-├── Text/                    # Unified text handling (TextKit, layout, processing)
+├── Core/                    # Core functionality, APIs, business logic
+├── Text/                    # TextKit2, layout, parsing, range store, processing
 ├── Layout/                  # UI components, view models (GutterView, MinimapView)
 ├── Configuration/           # Settings and validation system
-├── SyntaxHighlighting/      # Language highlighting (25 concrete languages + plain text)
+├── SyntaxHighlighting/      # Language highlighting and tree-sitter adapters
 ├── Languages/               # Language-specific providers
 ├── Completion/              # Code completion with view model
-├── Features/                # Optional features (flat structure)
+├── Features/                # Optional features (folding, smart editing, search/replace)
 ├── SwiftUI/                 # SwiftUI integration (CodeEditor)
 ├── Platform/                # Cross-platform abstractions
 ├── Extensions/              # Type extensions (+Extensions naming)
 ├── Performance/             # Monitoring and optimization
 ├── LSP/                     # Language Server Protocol
 ├── Annotations/             # Code annotation system
+├── Search/                  # Search result and support types
+├── Workspace/               # Workspace indexing/search types
 ├── Models/                  # Data models
-└── Utilities/               # Shared utilities
+├── Utilities/               # Shared utilities
+└── Resources/               # Bundled theme JSON
 ```
 
 (Long-form prose docs live in the top-level [`docs/`](../README.md) folder, not inside `Sources/`.)
@@ -62,7 +65,7 @@ Sources/CodeEditorPlugin/
 
 **Benefits of Reorganization**:
 - **Better Discoverability**: Related code now lives together (e.g., all text handling in one place)
-- **Reduced Navigation**: 18 directories instead of 22 means less hunting for files
+- **Reduced Navigation**: feature ownership is concentrated in 20 main-target directories
 - **Clearer Ownership**: ViewModels next to their Views makes relationships obvious
 - **Service-Oriented**: New service layer provides clear API boundaries
 - **Simplified Imports**: Fewer directories means cleaner import statements
@@ -83,8 +86,8 @@ The heart of the editor, built on TextKit2:
 A sophisticated configuration system with:
 
 - Nested structure: display, layout, behavior, performance
-- Builder pattern with immutable updates
-- Five built-in presets for common use cases
+- Immutable `with(display:)`, `with(layout:)`, `with(behavior:)`, and `with(performance:)` updates
+- Eight built-in presets for common scenarios and platforms
 - Live configuration updates without view recreation
 
 ### SyntaxHighlightingCoordinator
@@ -164,10 +167,10 @@ config.layout.tabWidth = 4
 
 ## Recent Architecture Improvements
 
-### Unified Wrapper System
-- Implemented `CodeEditorViewWrapperProtocol` for sample app
-- Platform-specific implementations: `MacOSCodeEditorViewWrapper`, `IOSCodeEditorViewWrapper`
-- Eliminated code duplication through protocol-based architecture
+### SwiftUI Representable Bridge
+- Uses platform-specific SwiftUI representables for AppKit and UIKit text views
+- Shares coordinator setup where possible while preserving native platform behavior
+- Applies configuration through `EditorConfiguration` and the consolidated `CodeEditorEnvironment`
 
 ### Platform Abstraction Enhancements
 - Replaced all `#if os()` with `#if canImport()` patterns throughout codebase
@@ -177,10 +180,10 @@ config.layout.tabWidth = 4
 - Added CrossPlatformCoordinator for unified input handling
 
 ### Quality Achievements
-- **70 test files** covering the major editor, configuration, platform, and language paths
-- **Zero SwiftLint violations** across 437 Swift source files
+- **115 `*Tests.swift` files** across 4 test targets covering the major editor, configuration, platform, and language paths
+- **Zero SwiftLint violations** across 453 Swift files in the main target and 513 Swift files under `Sources/`
 - **Enhanced cross-platform consistency**
-- **Directory organization** across 18 top-level source directories for discoverability
+- **Directory organization** across 20 top-level main-target directories for discoverability
 
 ## See Also
 

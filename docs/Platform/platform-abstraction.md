@@ -103,9 +103,9 @@ let capabilities = PlatformCapabilities()
 // Check platform — exhaustive, two-way switch
 switch capabilities.currentPlatform {
 case .macOS:
-    print("Running on macOS")
+    CrossPlatformLogger.logger().info("Running on macOS")
 case .iOS:
-    print("Running on iOS / iPadOS")
+    CrossPlatformLogger.logger().info("Running on iOS / iPadOS")
 }
 
 // Check features
@@ -127,7 +127,7 @@ let coordinator = CrossPlatformCoordinator.shared
 let fontSize = coordinator.platformAdjustments.defaultFontSize
 let gutterWidth = coordinator.platformAdjustments.gutterWidth
 
-if coordinator.isFeatureAvailable(\.minimap) {
+if coordinator.isFeatureAvailable(.minimap) {
     // Enable minimap feature
 }
 
@@ -180,7 +180,7 @@ config.applyTextInputFeatures(to: textView)
 
 ```swift
 let capabilities = PlatformCapabilities()
-if capabilities.supportsFeature {
+if capabilities.isFeatureAvailable(.minimap) {
     // Use the feature
 } else {
     // Provide fallback

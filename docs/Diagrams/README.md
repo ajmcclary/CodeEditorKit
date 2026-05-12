@@ -4,6 +4,8 @@ This directory contains architectural diagrams for the CodeEditorPlugin framewor
 
 > **Note (0.2.0):** several diagrams in this folder were authored while Mac Catalyst was a supported platform and TextKit1 was a live fallback. As of 0.2.0 both have been retired — the framework targets macOS and iOS only, and TextKit2 is the only supported layout system. Catalyst-specific boxes / class members in the mermaid sources below are preserved for historical context but no longer reflect source. The platform-abstraction diagram (#8) carries an explicit historical-snapshot banner. For the current state, see [`docs/Platform/platform-abstraction.md`](../Platform/platform-abstraction.md) and [`docs/FeatureMatrix.md`](../FeatureMatrix.md).
 
+When a diagram conflicts with source or a topic page, treat the source and topic page as authoritative. The diagrams are subsystem maps, not complete generated type inventories.
+
 ## Index of Diagrams
 
 ### 1. [High-Level Architecture](01-high-level-architecture.md)
@@ -19,7 +21,7 @@ Configuration architecture including EditorConfiguration structure with Display,
 Service-oriented architecture diagram showing BusinessLogicServiceRegistry and all managed services (TextEditingService, SyntaxHighlightingService, LanguageDetectionService, CompletionProviderRegistry, LineNumberCalculationService, GutterSizingService, CodeFoldingCoordinatorService, EditorLayoutService, MemoryManagementCoordinator).
 
 ### 5. [Event System Flow](05-event-system-flow.md)
-Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), creation, filtering, queuing, dispatching, and handler execution. Shows priority-based processing, throttling, debouncing, and async support.
+Unified event system flow diagram illustrating event sources (UI, text changes, system, service, configuration), built-in `EditorEvent` creation, filtering, history, Combine subscriptions, and handler-token execution. Adjacent debouncing and async utilities are shown as integration points rather than custom event-type support.
 
 ### 6. [Language Support & Syntax Highlighting Pipeline](06-language-syntax-highlighting-pipeline.md)
 Complete pipeline for language detection and syntax highlighting, including both SwiftSyntax and regex-based paths. Shows caching, tokenization, rendering stages, and enhanced performance optimization with OptimizedSyntaxHighlightingCoordinator, performance tracking, chunking, and circuit breaker pattern.
@@ -92,6 +94,20 @@ Comprehensive performance budget system that monitors and enforces performance t
 
 ### 29. [Syntax Highlighting Architecture (Updated)](29-enhanced-syntax-highlighting-architecture-updated.md)
 Current optimized syntax highlighting system with actor-based concurrency, streaming highlighter for large files, circuit breaker patterns, and comprehensive performance tracking. The original design document is at [`29-enhanced-syntax-highlighting-architecture.md`](29-enhanced-syntax-highlighting-architecture.md).
+
+### 30. [Diagram Colors](Colors.md)
+Shared Mermaid color palette used by the diagrams in this directory.
+
+## Current vs Design Status
+
+| File | Status |
+|---|---|
+| `08-platform-abstraction-layer.md` | Historical snapshot from the retired Catalyst/TextKit1 era. |
+| `20-debugging-integration.md` | Current implemented debugging integration. |
+| `20-debugging-integration-architecture.md` | Extended design document. |
+| `27-plugin-system-architecture.md` | Planned plugin design; plugin APIs are not implemented. |
+| `29-enhanced-syntax-highlighting-architecture.md` | Planned enhanced-highlighting design. |
+| `29-enhanced-syntax-highlighting-architecture-updated.md` | Current optimized syntax-highlighting implementation. |
 
 ## How to View These Diagrams
 

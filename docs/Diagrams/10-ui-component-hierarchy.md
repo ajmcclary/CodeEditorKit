@@ -11,7 +11,7 @@ classDiagram
         &lt;&lt;SwiftUI View&gt;&gt;
         +text Binding~String~
         +language Language
-        +theme CodeEditorSwiftUITheme
+        +theme Theme
         +configuration EditorConfiguration
         +memoryMonitor MemoryMonitor
         +onTextChange ((String) -> Void)?
@@ -31,7 +31,7 @@ classDiagram
         &lt;&lt;SwiftUI Environment&gt;&gt;
         +configuration EditorConfiguration
         +language Language
-        +theme CodeEditorSwiftUITheme
+        +theme Theme
         +eventSystem UnifiedEventSystem?
         +memoryMonitor MemoryMonitor?
     }

@@ -16,7 +16,7 @@ classDiagram
         @Environment(\.codeEditorEnvironment) environment
         @State defaultMemoryMonitor MemoryMonitor
         +initialLanguage Language?
-        +initialTheme CodeEditorSwiftUITheme?
+        +initialTheme Theme?
         +onTextChange (@Sendable (String) -> Void)?
         +onSelectionChange (@Sendable (Range<String.Index>?) -> Void)?
         +completionProvider (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
@@ -27,7 +27,7 @@ classDiagram
     class CodeEditorEnvironment {
         <<Sendable environment>>
         +language Language
-        +theme CodeEditorSwiftUITheme
+        +theme Theme
         +configuration EditorConfiguration
         +becomeFirstResponder Bool
         +memoryMonitor MemoryMonitor?
@@ -53,7 +53,7 @@ classDiagram
         <<cross-platform representable>>
         @Binding text String
         +language Language
-        +theme CodeEditorSwiftUITheme
+        +theme Theme
         +configuration EditorConfiguration
         +memoryMonitor MemoryMonitor
         @Binding isFocused Bool
@@ -138,7 +138,7 @@ classDiagram
     class EnvironmentValues {
         <<SwiftUI EnvironmentValues extension>>
         +codeEditorEnvironment CodeEditorEnvironment
-        +codeEditorTheme CodeEditorSwiftUITheme
+        +codeEditorTheme Theme
         +codeEditorLanguage Language
         +codeEditorConfiguration EditorConfiguration
         +codeEditorBecomeFirstResponder Bool
@@ -601,7 +601,7 @@ struct PerformanceAwareEditor: View {
 final class CodeEditorAppState {
     var code: String = ""
     var language: Language = .swift
-    var theme: CodeEditorSwiftUITheme = .default
+    var theme: Theme = .default
     var configuration = EditorConfiguration()
     
     func updateConfiguration(updates: (inout EditorConfiguration) -> Void) {

@@ -15,7 +15,7 @@ flowchart TB
     subgraph "Language Detection"
         LDS[LanguageDetectionService]
         DETECT[Detection Pipeline<br/>1. Extension Map<br/>2. Content Analysis<br/>3. Heuristics]
-        LANG[LanguageConfig<br/>- identifier<br/>- extensions<br/>- highlighter]
+        LANG[Language<br/>- identifier<br/>- extensions<br/>- highlighter]
     end
 
     %% Language Registry
@@ -201,7 +201,7 @@ flowchart TB
 ## Language Configuration Example
 
 ```swift
-struct LanguageConfig {
+struct Language {
     let identifier: String
     let displayName: String
     let fileExtensions: [String]
@@ -298,7 +298,7 @@ await highlighter.configureCacheSettings(
 ```swift
 func selectHighlightingStrategy(
     fileSize: Int,
-    language: LanguageConfig,
+    language: Language,
     memoryPressure: Double,
     performanceMetrics: PerformanceMetrics
 ) -> HighlightingStrategy {

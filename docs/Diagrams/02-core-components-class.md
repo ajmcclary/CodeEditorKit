@@ -9,7 +9,7 @@ classDiagram
     %% Top Row - Core Protocols
     class CodeEditorAPI {
         &lt;&lt;protocol&gt;&gt;
-        +language LanguageConfig?
+        +language Language?
         +text String
         +configuration EditorConfiguration
         +setLanguage()
@@ -27,7 +27,7 @@ classDiagram
     class CodeEditorView {
         &lt;&lt;main text view&gt;&gt;
         +delegate CodeEditorViewDelegate?
-        +language LanguageConfig?
+        +language Language?
         +eventSystem UnifiedEventSystem
         +serviceRegistry BusinessLogicServiceRegistry
         +performTextEdit()
@@ -46,7 +46,7 @@ classDiagram
         &lt;&lt;SwiftUI wrapper&gt;&gt;
         @Binding text String
         +configuration EditorConfiguration
-        +language LanguageConfig?
+        +language Language?
         +makeNSView()
         +makeUIView()
     }
@@ -62,7 +62,7 @@ classDiagram
         +validate()
     }
 
-    class LanguageConfig {
+    class Language {
         &lt;&lt;language definition&gt;&gt;
         +identifier String
         +name String
@@ -131,7 +131,7 @@ classDiagram
     class LanguageDetectionService {
         &lt;&lt;language recognition&gt;&gt;
         +detectLanguage()
-        +supportedLanguages [LanguageConfig]
+        +supportedLanguages [Language]
         +registerLanguage()
     }
 
@@ -195,7 +195,7 @@ classDiagram
         +updateMemoryMonitor()
     }
 
-    class CodeEditorLayoutManager {
+    class TextLayoutManager {
         &lt;&lt;NSLayoutManager&gt;&gt;
         +lineHeight CGFloat
         +characterWidth CGFloat
@@ -255,7 +255,7 @@ classDiagram
     class CompletionContext {
         &lt;&lt;completion state&gt;&gt;
         +position NSRange
-        +language LanguageConfig?
+        +language Language?
         +text String
     }
 
@@ -271,10 +271,10 @@ classDiagram
     CodeEditorView --> CodeEditorViewDelegate : delegates to
     CodeEditorView --> UnifiedEventSystem : uses
     CodeEditorView --> BusinessLogicServiceRegistry : uses
-    CodeEditorView --> CodeEditorLayoutManager : uses
+    CodeEditorView --> TextLayoutManager : uses
     CodeEditorView --> LineIndexCache : maintains
     CodeEditorView --> EditorConfiguration : configured by
-    CodeEditorView --> LanguageConfig : uses
+    CodeEditorView --> Language : uses
     
     CodeEditorContainerView --> CodeEditorView : contains
     CodeEditorContainerView --> GutterView : contains
@@ -284,7 +284,7 @@ classDiagram
     CodeEditor --> CodeEditorContainerView : creates
     CodeEditor --> CodeEditorView : configures
     CodeEditor --> EditorConfiguration : uses
-    CodeEditor --> LanguageConfig : uses
+    CodeEditor --> Language : uses
     
     UnifiedEventSystem --> Event : processes
     UnifiedEventSystem --> EventType : categorizes
@@ -318,12 +318,12 @@ classDiagram
     LineIndexCache --> LineInfo : stores
     
     TextEditingService --> TextChange : creates
-    SyntaxHighlightingService --> LanguageConfig : uses
-    LanguageDetectionService --> LanguageConfig : provides
+    SyntaxHighlightingService --> Language : uses
+    LanguageDetectionService --> Language : provides
     CompletionManager --> CompletionContext : uses
     CompletionManager --> CompletionItem : provides
     
-    CodeEditorLayoutManager --> NSLayoutManager : inherits
+    TextLayoutManager --> NSLayoutManager : inherits
 
     %% Styling - Light/Dark mode compatible colors
     classDef protocol fill:#34C75920,stroke:#34C759,stroke-width:2px,color:#1D1D1F
@@ -353,12 +353,12 @@ classDiagram
     class CompletionProviderRegistry service
     class CompletionManager service
     class MemoryMonitor service
-    class CodeEditorLayoutManager layout
+    class TextLayoutManager layout
     class LineIndexCache layout
     class GutterView ui
     class MinimapView ui
     class EditorConfiguration config
-    class LanguageConfig config
+    class Language config
     class LineInfo support
     class TextChange support
     class CompletionContext support

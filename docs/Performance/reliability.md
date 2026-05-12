@@ -54,14 +54,13 @@ The plugin handles real-world edge cases that can crash other text editors:
 // The plugin automatically recovers from errors
 let editor = CodeEditorView()
 
-// These operations are safe even with invalid input
-editor.text = corruptedOrBinaryContent
+// These operations are safe even with malformed or unusual text
+editor.string = corruptedOrBinaryContent
 editor.language = .swift
 editor.configuration = invalidConfiguration
 
 // Editor remains functional after errors
-XCTAssertNotNil(editor.text)
-XCTAssertTrue(editor.isOperational)
+XCTAssertFalse(editor.string.isEmpty)
 ```
 
 ### Configuration Validation
@@ -109,7 +108,7 @@ editor.text = "New content continues to work"
 ### Comprehensive Test Suite
 - **70 Test Files**: Comprehensive coverage across all functionality
 - **100% Pass Rate**: All tests passing on macOS, iOS
-- **Zero Linting Violations**: Maintained across 437 Swift source files
+- **Zero Linting Violations**: Maintained across 453 Swift files in the main target and 513 Swift files under `Sources/`
 - **Swift 6 Compliant**: Full actor isolation and concurrency safety
 
 ### Test Categories
@@ -140,18 +139,11 @@ The plugin has been tested against real-world challenges:
 
 ### Error Handling in Your App
 ```swift
-do {
-    try editor.setText(userContent)
-    try editor.setLanguage(.swift)
-} catch let error as CodeEditorError {
-    // Handle specific editor errors
-    print("Editor error: \(error.localizedDescription)")
-    
-    // Attempt automatic recovery
-    editor.attemptErrorRecovery(from: error)
-} catch {
-    // Handle unexpected errors
-    print("Unexpected error: \(error)")
+editor.string = userContent
+editor.language = .swift
+
+if editor.string.isEmpty && !userContent.isEmpty {
+    CrossPlatformLogger.logger().warning("Editor did not accept provided content")
 }
 ```
 
@@ -165,7 +157,7 @@ func applyConfiguration(_ config: EditorConfiguration) {
         editor.configuration = config
     } else {
         // Log errors and use safe defaults
-        print("Invalid configuration: \(errors)")
+        CrossPlatformLogger.logger().warning("Invalid configuration: \(errors)")
         editor.configuration = .default
     }
 }
@@ -182,8 +174,8 @@ memoryMonitor.registerCleanupHandler(
     priority: .normal
 ) { @MainActor in
     // Clean up editor caches
-    await editor.optimizeMemoryUsage()
-    return CleanupResult(memoryFreedMB: memoryFreed, description: "Editor cleanup")
+    let freed = clearEditorCaches()
+    return CleanupResult(memoryFreedMB: freed, description: "Editor cleanup")
 }
 ```
 

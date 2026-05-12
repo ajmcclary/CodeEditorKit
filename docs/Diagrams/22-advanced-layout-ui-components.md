@@ -137,7 +137,7 @@ classDiagram
         @FocusState +isFocused Bool
         @Environment +codeEditorEnvironment
         +initialLanguage Language?
-        +initialTheme CodeEditorSwiftUITheme?
+        +initialTheme Theme?
         +onTextChange (@Sendable (String) -> Void)?
         +completionProvider (@Sendable (SwiftUICompletionContext) async -> [SwiftUICompletionItem])?
         +textDebounceInterval Duration

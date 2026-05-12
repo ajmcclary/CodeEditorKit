@@ -85,12 +85,12 @@ smartEngine.clearMultiCursors()
 // Monitor cursor state
 smartEngine.$isMultiCursorMode
     .sink { isMulti in
-        print("Multi-cursor mode: \(isMulti)")
+        CrossPlatformLogger.logger().info("Multi-cursor mode: \(isMulti)")
     }
 
 smartEngine.$cursors
     .sink { cursors in
-        print("Active cursors: \(cursors.count)")
+        CrossPlatformLogger.logger().info("Active cursors: \(cursors.count)")
     }
 ```
 

@@ -26,7 +26,7 @@ struct MyApp: App {
 **Type**: `EditorConfiguration`  
 **Default**: `EditorConfiguration.default`
 
-> **Related Modifier**: Use the `CodeEditor/environment(_:_:)` method directly on the view for convenience.
+> **Related Modifier**: Use SwiftUI's `.environment(\.codeEditorConfiguration, ...)` directly, or the consolidated `.codeEditorEnvironment(...)` helper.
 
 ### `codeEditorLanguage`
 
@@ -58,8 +58,8 @@ struct ThemedEditor: View {
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        CodeEditor(text: .constant(""))
-            .environment(\.codeEditorTheme, colorScheme == .dark ? .dark : .light)
+CodeEditor(text: .constant(""))
+            .environment(\.codeEditorTheme, colorScheme == .dark ? .dark : .default)
     }
 }
 ```
@@ -108,7 +108,7 @@ struct FocusedEditor: View {
 **Type**: `Bool`  
 **Default**: `false`
 
-> **Related Modifier**: Use `CodeEditor/focused(_:)` for more advanced focus management with FocusState.
+> **Related Modifier**: Use `.becomeFirstResponder()` or `.becomeFirstResponder(_:)` on the editor view.
 
 ### `codeEditorEventSystem`
 
@@ -126,7 +126,7 @@ struct MultiEditorView: View {
         .environment(\.codeEditorEventSystem, eventSystem)
         .onAppear {
             // Subscribe to events from both editors
-            eventSystem.subscribe(to: TextChangeEvent.self) { event in
+            eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
                 // Handle text change in one of the editors
             }
         }
@@ -135,7 +135,7 @@ struct MultiEditorView: View {
 ```
 
 **Type**: `UnifiedEventSystem?`  
-**Default**: `nil` (creates a new instance)
+**Default**: `nil` (no shared system is injected unless you provide one)
 
 > **Related Modifier**: Use `CodeEditor/eventSystem(_:)` for setting a custom event system on individual editors.
 
@@ -191,7 +191,7 @@ extension View {
     func applyEditorDefaults() -> some View {
         self
             .environment(\.codeEditorConfiguration, .default)
-            .environment(\.codeEditorTheme, .light)
+            .environment(\.codeEditorTheme, .default)
             .environment(\.codeEditorLanguage, .swift)
     }
 }

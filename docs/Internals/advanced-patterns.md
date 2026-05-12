@@ -52,7 +52,7 @@ class TabbedEditorController: NSViewController {
     func addTab(for file: URL) {
         let editor = CodeEditorView()
         editor.text = try String(contentsOf: file)
-        editor.setLanguage(from: file.pathExtension)
+        editor.setLanguage(fileExtension: file.pathExtension)
         
         let tabItem = NSTabViewItem(viewController: wrapEditor(editor))
         tabItem.label = file.lastPathComponent
@@ -90,7 +90,7 @@ class CodeDocument: NSDocument {
     
     override func read(from data: Data, ofType typeName: String) throws {
         content = String(data: data, encoding: .utf8) ?? ""
-        language = Language.detect(from: typeName)
+        language = Language(fileExtension: typeName) ?? .plainText
     }
 }
 ```
@@ -288,27 +288,27 @@ class PerformanceTests: XCTestCase {
 
 ## Error Handling
 
-CodeEditorPlugin provides comprehensive error handling:
+CodeEditorPlugin favors validation before applying state:
 
 ### Safe Operations
 
 ```swift
-do {
-    // Safe operations that validate input
-    try editor.setText(largeText)
-    try editor.setLanguage(.python)
-    try editor.replaceTextSafe(in: range, with: "new text")
-    
-    // Async operations with error handling
-    let hover = try await editor.requestHover(at: position)
-    let completions = try await editor.requestCompletion(at: position)
-} catch let error as CodeEditorError {
-    print("Editor error: \(error.localizedDescription)")
-    
-    // Attempt automatic recovery
-    if editor.attemptErrorRecovery(from: error) {
-        print("Successfully recovered from error")
-    }
+var config = editor.configuration
+config.display.fontSize = 16
+
+let errors = config.validate()
+if errors.isEmpty {
+    editor.configuration = config
+} else {
+    CrossPlatformLogger.logger().warning("Invalid configuration: \(errors)")
+}
+
+let utf16Length = editor.string.utf16.count
+let requestedRange = NSRange(location: 0, length: 10)
+let validRange = requestedRange.clamped(to: NSRange(location: 0, length: utf16Length))
+
+if let textRange = NSTextRange(validRange) {
+    editor.replaceCharacters(in: textRange, with: "new text")
 }
 ```
 
@@ -389,8 +389,9 @@ editor.apply(theme: .lcarsDark)
 ### Custom Colors
 
 ```swift
-editor.backgroundColor = PlatformColor.codeBackground
-editor.selectedLineHighlightColor = PlatformColor.selectedLineHighlight
+var config = editor.configuration
+config.display.selectedLineHighlightColor = PlatformColors.selectedLineHighlight
+editor.configuration = config
 ```
 
 ### Creating Custom Themes

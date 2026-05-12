@@ -35,8 +35,9 @@ Controls visual appearance:
 config.display.isLineNumbersEnabled = true
 config.display.isSelectedLineHighlighted = true
 config.display.fontSize = 14.0
-config.display.fontName = "SF Mono"
 config.display.areAnnotationsEnabled = true
+config.display.isCodeFoldingEnabled = true
+config.display.areFoldingControlsVisible = true
 config.display.isMinimapVisible = false
 config.display.areInvisibleCharactersVisible = false
 ```
@@ -48,10 +49,10 @@ Controls spacing and dimensions:
 ```swift
 config.layout.tabWidth = 4
 config.layout.insertSpacesForTabs = true
-config.layout.lineSpacing = 1.2
+config.layout.lineHeightMultiple = 1.2
 config.layout.wrapLines = false
 config.layout.gutterWidth = 50
-config.layout.editorInsets = EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+config.layout.textContainerInset = EdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
 ```
 
 ### Behavior Settings
@@ -62,9 +63,9 @@ Controls editing behavior:
 config.behavior.isEditable = true
 config.behavior.isAutoIndentEnabled = true
 config.behavior.isCodeCompletionEnabled = true
-config.behavior.enableBraceMatching = true
 config.behavior.autoCloseBrackets = true
-config.behavior.enableSpellChecking = false
+config.behavior.autoCloseQuotes = true
+config.behavior.isContinuousSpellCheckingEnabled = false
 ```
 
 ### Performance Settings
@@ -179,10 +180,15 @@ CodeEditor(text: $code)
 Use the `.with()` method for immutable updates:
 
 ```swift
-let newConfig = existingConfig.with { config in
-    config.display.fontSize = 18
-    config.layout.tabWidth = 2
-}
+var display = existingConfig.display
+display.fontSize = 18
+
+var layout = existingConfig.layout
+layout.tabWidth = 2
+
+let newConfig = existingConfig
+    .with(display: display)
+    .with(layout: layout)
 ```
 
 ## Live Configuration Updates
@@ -203,7 +209,6 @@ extension EditorConfiguration {
     static var myCustomPreset: EditorConfiguration {
         var config = EditorConfiguration()
         config.display.fontSize = 13
-        config.display.fontName = "JetBrains Mono"
         config.layout.tabWidth = 3
         config.behavior.isAutoIndentEnabled = true
         return config
@@ -217,18 +222,16 @@ Save and load configurations as JSON:
 
 ```swift
 // Export configuration to JSON string
-if let jsonString = appState.exportConfigurationAsJSON() {
-    // Save to file or share
-    try jsonString.write(to: url, atomically: true, encoding: .utf8)
-}
+let data = try JSONEncoder().encode(configuration)
+let jsonString = String(decoding: data, as: UTF8.self)
+try jsonString.write(to: url, atomically: true, encoding: .utf8)
 
 // Import configuration from JSON string
 let jsonString = try String(contentsOf: url, encoding: .utf8)
-if appState.importConfiguration(from: jsonString) {
-    print("Configuration imported successfully")
-} else {
-    print("Invalid configuration format")
-}
+let decoded = try JSONDecoder().decode(
+    EditorConfiguration.self,
+    from: Data(jsonString.utf8)
+)
 
 // Copy to clipboard (cross-platform)
 #if canImport(AppKit)
@@ -273,40 +276,43 @@ For SwiftUI applications, use direct property binding:
 
 ```swift
 struct SettingsView: View {
-    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var settings: EditorSettings
     
     var body: some View {
         Form {
             Section("Display") {
-                // ✅ Direct binding - no Sendable warnings
-                Toggle("Show Line Numbers", 
-                       isOn: $appState.currentConfiguration.display.isLineNumbersEnabled)
+                Toggle("Show Line Numbers",
+                       isOn: $settings.configuration.display.isLineNumbersEnabled)
                 
-                Slider(value: $appState.currentConfiguration.display.fontSize,
+                Slider(value: $settings.configuration.display.fontSize,
                        in: 10...30,
                        step: 1) {
-                    Text("Font Size: \(appState.currentConfiguration.display.fontSize, specifier: "%.0f")")
+                    Text("Font Size: \(settings.configuration.display.fontSize, specifier: "%.0f")")
                 }
             }
             
             Section("Layout") {
-                Stepper("Tab Width: \(appState.currentConfiguration.layout.tabWidth)",
-                        value: $appState.currentConfiguration.layout.tabWidth,
+                Stepper("Tab Width: \(settings.configuration.layout.tabWidth)",
+                        value: $settings.configuration.layout.tabWidth,
                         in: 1...8)
                 
                 Toggle("Wrap Lines",
-                       isOn: $appState.currentConfiguration.layout.wrapLines)
+                       isOn: $settings.configuration.layout.wrapLines)
             }
             
             Section("Behavior") {
                 Toggle("Auto Indent",
-                       isOn: $appState.currentConfiguration.behavior.isAutoIndentEnabled)
+                       isOn: $settings.configuration.behavior.isAutoIndentEnabled)
                 
                 Toggle("Code Completion",
-                       isOn: $appState.currentConfiguration.behavior.isCodeCompletionEnabled)
+                       isOn: $settings.configuration.behavior.isCodeCompletionEnabled)
             }
         }
     }
+}
+
+final class EditorSettings: ObservableObject {
+    @Published var configuration = EditorConfiguration.default
 }
 ```
 

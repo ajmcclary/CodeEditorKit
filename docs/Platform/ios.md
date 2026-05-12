@@ -20,11 +20,11 @@ let backgroundColor = PlatformColors.systemBackground
 let textColor = PlatformColors.label
 let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
 
-// Configure editor with platform types
+// Use platform values when building app chrome; editor color comes from Theme.
 var config = EditorConfiguration()
-config.display.backgroundColor = backgroundColor
-config.display.textColor = textColor
-config.display.font = codeFont
+config.display.fontSize = 16
+config.layout.tabWidth = 4
+let theme = Theme.default
 ```
 
 ## Touch Interactions

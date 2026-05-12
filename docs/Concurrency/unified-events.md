@@ -1,454 +1,243 @@
 # Unified Event System
 
-Learn how to use the UnifiedEventSystem for decoupled event handling and advanced editor customization.
+Use `UnifiedEventSystem` when host applications need a shared, injectable event stream across one or more editors.
 
 ## Overview
 
-The `UnifiedEventSystem` provides a powerful, type-safe publish-subscribe mechanism for handling events in CodeEditorPlugin. It enables loose coupling between components while maintaining Swift's strong type safety and modern concurrency patterns.
+`UnifiedEventSystem` is a `@MainActor` `ObservableObject` that publishes the framework's `EditorEvent` enum through Combine. It is intentionally dependency-injected: create an instance where your app owns editor coordination, then pass it through `EditorConfiguration.eventSystem` or SwiftUI's `.eventSystem(_:)` modifier.
 
-## Key Features
+The current event model is closed over the built-in `EditorEvent` cases. Custom event types are not added by conforming to `EditorEvent`; instead, app-specific events should live in the host app's own publisher or wrapper.
 
-- **Type-Safe Events**: Define custom event types with associated data
-- **Async/Await Support**: Modern Swift concurrency for event handling
-- **Thread-Safe**: Built with actors for safe concurrent access
-- **Weak References**: Automatic cleanup of deallocated subscribers
-- **Priority Handling**: Process events in priority order
-- **Event History**: Optional event logging for debugging
-- **Dependency Injection**: No singleton pattern for better testability
+## Event Cases
 
-## Basic Usage
+`EditorEvent` currently includes:
 
-### Creating an Event System
+- `textDidChange(String)`
+- `textWillChange(range: NSRange, replacement: String)`
+- `textSelectionDidChange(NSRange)`
+- `didBecomeFirstResponder`
+- `didResignFirstResponder`
+- `completionRequested(context: CompletionContext)`
+- `completionItemSelected(any CompletionItemView)`
+- `annotationHovered(annotationId: String)`
+- `annotationClicked(annotationId: String)`
+- `performanceWarning(message: String)`
+- `error(Error)`
+
+Typed extraction helpers exist for text events:
+
+- `TextDidChangeEvent`
+- `TextSelectionDidChangeEvent`
+
+## Creating and Injecting
 
 ```swift
-// Create a custom event system instance
 let eventSystem = UnifiedEventSystem()
 
-// Or inject via configuration
-var config = EditorConfiguration()
-config.eventSystem = eventSystem
+var configuration = EditorConfiguration()
+configuration.eventSystem = eventSystem
 
-// Apply to editor
 let editor = CodeEditorView()
-config.apply(to: editor)
+configuration.apply(to: editor)
 ```
 
-### Defining Custom Events
+SwiftUI:
 
 ```swift
-// Define your custom event types
-struct TextChangeEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    let oldText: String
-    let newText: String
-    let range: NSRange
-}
-
-struct SelectionChangeEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    let selectedRange: NSRange
-    let affinity: NSSelectionAffinity
-}
-
-struct AutocompleteEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    let prefix: String
-    let position: Int
-    let suggestions: [String]
-}
-```
-
-### Publishing Events
-
-```swift
-// Publish events from your components
-func textDidChange(in editor: CodeEditorView) {
-    guard let eventSystem = editor.configuration.eventSystem else { return }
-    
-    let event = TextChangeEvent(
-        oldText: previousText,
-        newText: editor.text,
-        range: changedRange
-    )
-    
-    eventSystem.publish(event)
-}
-```
-
-### Subscribing to Events
-
-```swift
-// Subscribe with async handlers
-let subscription = eventSystem.subscribe(to: TextChangeEvent.self) { event in
-    print("Text changed from '\(event.oldText)' to '\(event.newText)'")
-    
-    // Perform async operations
-    await validateSyntax(event.newText)
-    await updateAutocompleteSuggestions(event.newText)
-}
-
-// Subscribe with priority
-let prioritySubscription = eventSystem.subscribe(
-    to: SelectionChangeEvent.self,
-    priority: .high
-) { event in
-    // High-priority handlers execute first
-    await updateSelectionIndicators(event.selectedRange)
-}
-```
-
-### Managing Subscriptions
-
-```swift
-// Store subscriptions to manage lifecycle
-class EditorViewController {
-    private var subscriptions: Set<SubscriptionToken> = []
-    
-    func setupEventHandlers() {
-        // Subscribe to multiple event types
-        subscriptions.insert(
-            eventSystem.subscribe(to: TextChangeEvent.self) { event in
-                await self.handleTextChange(event)
-            }
-        )
-        
-        subscriptions.insert(
-            eventSystem.subscribe(to: SelectionChangeEvent.self) { event in
-                await self.handleSelectionChange(event)
-            }
-        )
-    }
-    
-    func cleanup() {
-        // Unsubscribe all handlers
-        subscriptions.forEach { eventSystem.unsubscribe($0) }
-        subscriptions.removeAll()
-    }
-}
-```
-
-## Advanced Patterns
-
-### Event Filtering
-
-```swift
-// Subscribe only to specific events
-eventSystem.subscribe(to: TextChangeEvent.self) { event in
-    // Only handle significant changes
-    guard event.newText.count > 10 else { return }
-    guard event.newText != event.oldText else { return }
-    
-    await processSignificantChange(event)
-}
-```
-
-### Event Aggregation
-
-```swift
-// Collect multiple events before processing
-actor EventAggregator {
-    private var pendingEvents: [TextChangeEvent] = []
-    private var processTask: Task<Void, Never>?
-    
-    func add(_ event: TextChangeEvent) {
-        pendingEvents.append(event)
-        
-        // Cancel existing task
-        processTask?.cancel()
-        
-        // Debounce processing
-        processTask = Task {
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-            
-            await processBatch(pendingEvents)
-            pendingEvents.removeAll()
-        }
-    }
-    
-    private func processBatch(_ events: [TextChangeEvent]) async {
-        // Process aggregated events
-        let totalChanges = events.count
-        let finalText = events.last?.newText ?? ""
-        
-        print("Processed \(totalChanges) changes, final text: \(finalText)")
-    }
-}
-```
-
-### Cross-Component Communication
-
-```swift
-// Syntax highlighter publishes completion
-struct SyntaxHighlightingCompleteEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    let language: Language
-    let tokenCount: Int
-    let duration: TimeInterval
-}
-
-// Minimap subscribes to update
-class MinimapView {
-    func setupEventHandling(_ eventSystem: UnifiedEventSystem) {
-        eventSystem.subscribe(to: SyntaxHighlightingCompleteEvent.self) { event in
-            await MainActor.run {
-                self.updateSyntaxOverlay(
-                    language: event.language,
-                    tokenCount: event.tokenCount
-                )
-            }
-        }
-    }
-}
-```
-
-### Event History and Debugging
-
-```swift
-// Enable event history for debugging
-let eventSystem = UnifiedEventSystem(maxEventHistory: 100)
-
-// Retrieve recent events
-let recentTextChanges = eventSystem.getEventHistory(
-    ofType: TextChangeEvent.self,
-    limit: 10
-)
-
-// Debug event flow
-for event in recentTextChanges {
-    print("[\(event.timestamp)] Text changed: \(event.oldText) → \(event.newText)")
-}
-
-// Get all event types that have been published
-let activeEventTypes = eventSystem.getAllEventTypes()
-print("Active event types: \(activeEventTypes)")
-```
-
-## Integration with SwiftUI
-
-### Environment-Based Event System
-
-```swift
-struct ContentView: View {
+struct EventBackedEditor: View {
     @State private var code = ""
     @State private var eventSystem = UnifiedEventSystem()
+
+    var body: some View {
+        CodeEditor(text: $code)
+            .eventSystem(eventSystem)
+    }
+}
+```
+
+## Publishing Events
+
+```swift
+eventSystem.publish(.textDidChange(source))
+eventSystem.publish(.textSelectionDidChange(NSRange(location: 12, length: 0)))
+eventSystem.publish(.performanceWarning(message: "Highlighting exceeded budget"))
+```
+
+Use `publishBatch(_:)` when a component has already accumulated multiple events:
+
+```swift
+eventSystem.publishBatch([
+    .textWillChange(range: changedRange, replacement: replacement),
+    .textDidChange(updatedText)
+])
+```
+
+## Subscribing with Combine
+
+`subscribe(to:handler:)` filters the enum stream through an `EditorEventType` extractor and returns `AnyCancellable`.
+
+```swift
+final class EditorObserver {
+    private var cancellables: Set<AnyCancellable> = []
+
+    @MainActor
+    func attach(to eventSystem: UnifiedEventSystem) {
+        eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
+            // `event.text` is the complete current editor text.
+            self.handleTextChange(event.text)
+        }
+        .store(in: &cancellables)
+
+        eventSystem.subscribe(to: TextSelectionDidChangeEvent.self) { event in
+            self.handleSelection(event.range)
+        }
+        .store(in: &cancellables)
+    }
+
+    private func handleTextChange(_ text: String) {}
+    private func handleSelection(_ range: NSRange) {}
+}
+```
+
+You can also subscribe to the raw stream:
+
+```swift
+eventSystem.events
+    .sink { event in
+        switch event {
+        case .error(let error):
+            CrossPlatformLogger.logger().error("Editor error: \(error)")
+        default:
+            break
+        }
+    }
+    .store(in: &cancellables)
+```
+
+## Registered Handlers
+
+For handler objects, use `EventHandler` and keep the returned `EventHandlerToken` alive. Releasing the token unregisters the handler.
+
+```swift
+struct ErrorHandler: EventHandler {
+    func canHandle(_ event: EditorEvent) -> Bool {
+        if case .error = event { return true }
+        return false
+    }
+
+    func handle(_ event: EditorEvent) {
+        guard case .error(let error) = event else { return }
+        CrossPlatformLogger.logger().error("Editor error: \(error)")
+    }
+}
+
+let token = eventSystem.registerHandler(ErrorHandler())
+```
+
+Manual unregistering is also available:
+
+```swift
+token.unregister()
+```
+
+## Filtering and Throttling
+
+Filters can drop events before they reach subscribers and handlers:
+
+```swift
+struct ErrorOnlyFilter: EventFilter {
+    func shouldAllow(_ event: EditorEvent) -> Bool {
+        if case .error = event { return true }
+        return false
+    }
+}
+
+eventSystem.addFilter(ErrorOnlyFilter())
+```
+
+`clearFilters()` restores the built-in platform and performance filters. To adjust the high-frequency throttling filter:
+
+```swift
+eventSystem.configureThrottling(maxEventsPerSecond: 30)
+```
+
+## Event History and Metrics
+
+`UnifiedEventSystem` keeps a fixed-size recent history for debugging.
+
+```swift
+let recentEvents = eventSystem.getRecentEvents(count: 20)
+let textEvents = eventSystem.getEvents(ofType: TextDidChangeEvent.self, limit: 10)
+let metrics = eventSystem.getMetrics()
+
+eventSystem.clearHistory()
+```
+
+## SwiftUI Event Log
+
+```swift
+struct EventLogEditor: View {
+    @State private var code = ""
+    @State private var eventSystem = UnifiedEventSystem()
+    @State private var cancellable: AnyCancellable?
     @State private var eventLog: [String] = []
-    
+
     var body: some View {
         VStack {
             CodeEditor(text: $code)
                 .eventSystem(eventSystem)
-                .onAppear {
-                    setupEventMonitoring()
-                }
-            
-            // Event log display
-            List(eventLog, id: \.self) { log in
-                Text(log)
-                    .font(.caption)
+                .onAppear(perform: attachLogger)
+
+            List(eventLog, id: \.self) { entry in
+                Text(entry).font(.caption)
             }
-            .frame(height: 100)
+            .frame(height: 120)
         }
     }
-    
-    private func setupEventMonitoring() {
-        eventSystem.subscribe(to: TextChangeEvent.self) { event in
-            await MainActor.run {
-                eventLog.append("Text changed at \(event.timestamp)")
-                
-                // Keep only recent logs
-                if eventLog.count > 50 {
-                    eventLog.removeFirst()
-                }
+
+    private func attachLogger() {
+        guard cancellable == nil else { return }
+        cancellable = eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
+            eventLog.append("Text length: \(event.text.count)")
+            if eventLog.count > 50 {
+                eventLog.removeFirst()
             }
         }
     }
 }
-```
-
-### Custom View Modifiers
-
-```swift
-extension View {
-    func onCodeEditorEvent<T: EditorEvent>(
-        _ eventType: T.Type,
-        perform action: @escaping (T) async -> Void
-    ) -> some View {
-        self.onReceive(NotificationCenter.default.publisher(
-            for: .init("CodeEditorEvent.\(eventType)")
-        )) { notification in
-            guard let event = notification.object as? T else { return }
-            Task {
-                await action(event)
-            }
-        }
-    }
-}
-
-// Usage
-CodeEditor(text: $code)
-    .onCodeEditorEvent(TextChangeEvent.self) { event in
-        await validateCode(event.newText)
-    }
-    .onCodeEditorEvent(SelectionChangeEvent.self) { event in
-        await updateStatusBar(selection: event.selectedRange)
-    }
 ```
 
 ## Best Practices
 
-### 1. Define Clear Event Contracts
+1. **Inject explicitly**: create event systems at app or document scope rather than relying on global state.
+2. **Store cancellables**: Combine subscriptions end when the returned `AnyCancellable` is released.
+3. **Keep handlers cheap**: publish happens on the main actor; dispatch expensive work to a task or background actor.
+4. **Use filters sparingly**: filters affect all downstream subscribers for that `UnifiedEventSystem` instance.
+5. **Use app publishers for app events**: the framework event enum is not an extension point for arbitrary host-app events.
+
+## Testing
 
 ```swift
-// Good: Specific, well-documented events
-/// Published when the user triggers code completion
-struct CodeCompletionRequestedEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    
-    /// The text position where completion was requested
-    let position: Int
-    
-    /// The partial word being completed
-    let prefix: String
-    
-    /// The language context for completion
-    let language: Language
-}
+@MainActor
+func testTextChangeEventHandling() {
+    let eventSystem = UnifiedEventSystem()
+    var receivedText: String?
 
-// Avoid: Generic, unclear events
-struct SomethingHappenedEvent: EditorEvent {
-    let identifier = UUID()
-    let timestamp = Date()
-    let data: Any // Too generic!
-}
-```
-
-### 2. Use Weak References
-
-```swift
-class EditorPlugin {
-    weak var editor: CodeEditorView?
-    private var subscription: SubscriptionToken?
-    
-    init(editor: CodeEditorView, eventSystem: UnifiedEventSystem) {
-        self.editor = editor
-        
-        // Capture self weakly in closures
-        subscription = eventSystem.subscribe(to: TextChangeEvent.self) { [weak self] event in
-            guard let self = self else { return }
-            await self.processTextChange(event)
-        }
+    let cancellable = eventSystem.subscribe(to: TextDidChangeEvent.self) { event in
+        receivedText = event.text
     }
-}
-```
 
-### 3. Handle Errors Gracefully
+    eventSystem.publish(.textDidChange("Hello"))
 
-```swift
-eventSystem.subscribe(to: TextChangeEvent.self) { event in
-    do {
-        try await riskyOperation(event.newText)
-    } catch {
-        // Log error but don't crash
-        print("Error processing text change: \(error)")
-        
-        // Optionally publish error event
-        let errorEvent = EditorErrorEvent(
-            originalEvent: event,
-            error: error
-        )
-        eventSystem.publish(errorEvent)
-    }
-}
-```
-
-### 4. Consider Performance
-
-```swift
-// For high-frequency events, use debouncing
-class DebouncedEventHandler {
-    private var task: Task<Void, Never>?
-    private let delay: Duration
-    
-    init(delay: Duration = .milliseconds(100)) {
-        self.delay = delay
-    }
-    
-    func handle(_ event: TextChangeEvent) {
-        task?.cancel()
-        task = Task {
-            try? await Task.sleep(for: delay)
-            guard !Task.isCancelled else { return }
-            
-            await processEvent(event)
-        }
-    }
-}
-```
-
-## Migration from Singleton
-
-If you're migrating from the deprecated singleton pattern:
-
-```swift
-// Old (deprecated)
-UnifiedEventSystem.shared.publish(event)
-
-// New (dependency injection)
-class MyComponent {
-    private let eventSystem: UnifiedEventSystem
-    
-    init(eventSystem: UnifiedEventSystem) {
-        self.eventSystem = eventSystem
-    }
-    
-    func doWork() {
-        eventSystem.publish(event)
-    }
-}
-```
-
-## Testing with Event System
-
-```swift
-class EditorEventTests: XCTestCase {
-    func testTextChangeEventHandling() async {
-        let eventSystem = UnifiedEventSystem()
-        let expectation = expectation(description: "Event handled")
-        var receivedEvent: TextChangeEvent?
-        
-        let subscription = eventSystem.subscribe(to: TextChangeEvent.self) { event in
-            receivedEvent = event
-            expectation.fulfill()
-        }
-        
-        let event = TextChangeEvent(
-            oldText: "Hello",
-            newText: "Hello, World!",
-            range: NSRange(location: 5, length: 8)
-        )
-        
-        eventSystem.publish(event)
-        
-        await fulfillment(of: [expectation], timeout: 1.0)
-        
-        XCTAssertEqual(receivedEvent?.newText, "Hello, World!")
-        
-        // Cleanup
-        eventSystem.unsubscribe(subscription)
-    }
+    XCTAssertEqual(receivedText, "Hello")
+    _ = cancellable
 }
 ```
 
 ## See Also
 
-- [Configuration-System](../Configuration/system.md)
-- [MemoryMonitor-Injection](../Performance/memory-monitor.md)
-- [Swift6-Concurrency](swift6.md)
+- [Configuration system](../Configuration/system.md)
+- [Memory monitor](../Performance/memory-monitor.md)
+- [Swift 6 concurrency](swift6.md)
 - `UnifiedEventSystem`
 - `EditorEvent`

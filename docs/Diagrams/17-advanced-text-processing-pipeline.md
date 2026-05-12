@@ -173,7 +173,7 @@ classDiagram
         +streamBuffer TextStreamBuffer
         +processInChunks()
         +handleLargeDocuments()
-        +optimizeMemoryUsage()
+        +performCacheCleanupIfNeeded()
         +streamProcessing()
     }
 

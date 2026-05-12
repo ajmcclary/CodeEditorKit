@@ -34,9 +34,9 @@ let searchEngine = codeEditorView.searchEngine
 let results = await searchEngine.findAll(pattern: "TODO")
 
 // Check results
-print("Found \(results.count) matches")
+CrossPlatformLogger.logger().info("Found \(results.count) matches")
 for result in results {
-    print("Line \(result.lineNumber): \(result.context)")
+    CrossPlatformLogger.logger().info("Line \(result.lineNumber): \(result.context)")
 }
 ```
 
@@ -45,18 +45,18 @@ for result in results {
 ```swift
 // Find next from current position
 if let next = searchEngine.findNext() {
-    print("Found at line \(next.lineNumber)")
+    CrossPlatformLogger.logger().info("Found at line \(next.lineNumber)")
 }
 
 // Find previous
 if let previous = searchEngine.findPrevious() {
-    print("Found at line \(previous.lineNumber)")
+    CrossPlatformLogger.logger().info("Found at line \(previous.lineNumber)")
 }
 
 // Find from specific location
 let range = NSRange(location: 100, length: 0)
 if let next = searchEngine.findNext(from: range) {
-    print("Found after position 100")
+    CrossPlatformLogger.logger().info("Found after position 100")
 }
 ```
 
@@ -124,7 +124,7 @@ let count = await searchEngine.replaceAll(
     pattern: "TODO:",
     with: "DONE:"
 )
-print("Replaced \(count) occurrences")
+CrossPlatformLogger.logger().info("Replaced \(count) occurrences")
 
 // With options
 let options = SearchOptions()
@@ -163,11 +163,11 @@ Access detailed search statistics:
 ```swift
 let stats = searchEngine.searchStatistics
 
-print("Total matches: \(stats.totalMatches)")
-print("Lines with matches: \(stats.linesWithMatches)")
-print("First match line: \(stats.firstMatchLine)")
-print("Last match line: \(stats.lastMatchLine)")
-print("Search completed at: \(stats.searchTime)")
+CrossPlatformLogger.logger().info("Total matches: \(stats.totalMatches)")
+CrossPlatformLogger.logger().info("Lines with matches: \(stats.linesWithMatches)")
+CrossPlatformLogger.logger().info("First match line: \(stats.firstMatchLine)")
+CrossPlatformLogger.logger().info("Last match line: \(stats.lastMatchLine)")
+CrossPlatformLogger.logger().info("Search completed at: \(stats.searchTime)")
 ```
 
 ## Advanced Usage
@@ -205,7 +205,7 @@ Each result includes context (40 characters before and after):
 
 ```swift
 let result = searchResults[0]
-print(result.context)
+CrossPlatformLogger.logger().info(result.context)
 // Output: "...surrounding text [matched text] more surrounding..."
 ```
 

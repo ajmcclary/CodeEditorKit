@@ -207,7 +207,7 @@ extension EditorConfiguration {
         
         // Layout settings
         config.layout.tabWidth = 2
-        config.layout.lineSpacing = 1.0
+        config.layout.lineHeightMultiple = 1.0
         config.layout.gutterWidth = 40
         
         // Behavior settings

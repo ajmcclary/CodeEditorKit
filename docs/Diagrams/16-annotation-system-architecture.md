@@ -266,7 +266,7 @@ classDiagram
         +annotationBadgePadding CGFloat
         +tabWidth Int
         +showLineNumbers Bool
-        +lineSpacing CGFloat
+        +lineHeightMultiple CGFloat
     }
 
     class CrossPlatformLogger {
@@ -515,7 +515,7 @@ sequenceDiagram
 
 ### 5. **Production Ready**
 - Zero SwiftLint violations maintained
-- Comprehensive test coverage (66+ test files)
+- Comprehensive test coverage (115 `*Tests.swift` files across the package)
 - Memory leak prevention with proper cleanup
 - Battle-tested in real applications
 

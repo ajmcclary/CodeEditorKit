@@ -44,7 +44,7 @@ Inspect every variant in a bundled family:
 ```swift
 if let family = ThemeFamily.bundled("zed-trek") {
     for theme in family.themes {
-        print(theme.name)
+        CrossPlatformLogger.logger().info(theme.name)
     }
 }
 ```
@@ -160,7 +160,7 @@ let data = try Data(contentsOf: url)
 let (family, warnings) = try ThemeFamily.loaded(jsonData: data)
 
 for warning in warnings {
-    print(warning)
+    CrossPlatformLogger.logger().warning(warning)
 }
 
 let theme = family.themes.first ?? .lcarsDark

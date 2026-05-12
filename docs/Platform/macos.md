@@ -21,7 +21,7 @@ let textColor = PlatformColors.label
 let codeFont = PlatformFonts.monospacedSystemFont(ofSize: 14)
 
 // Platform capabilities
-let capabilities = PlatformCapabilities.shared
+let capabilities = PlatformCapabilities()
 if capabilities.supportsHardwareAcceleration {
     // Enable GPU acceleration
 }
@@ -64,14 +64,14 @@ extension CodeEditorView {
         if event.modifierFlags.contains(.command) {
             switch event.charactersIgnoringModifiers {
             case "d":
-                duplicateSelection()
+                handleDuplicateSelection()
                 return true
             case "/":
-                toggleComment()
+                handleToggleComment()
                 return true
             case "[":
                 if event.modifierFlags.contains(.option) {
-                    foldCode()
+                    handleFoldCommand()
                     return true
                 }
             default:

@@ -122,11 +122,11 @@ let startTime = ContinuousClock.now
 await expensiveOperation()
 let elapsed = ContinuousClock.now - startTime
 
-print("Operation took: \(elapsed)")
+CrossPlatformLogger.logger().info("Operation took: \(elapsed)")
 
 // Compare with threshold
 if elapsed > .seconds(1) {
-    print("Warning: Operation took longer than expected")
+    CrossPlatformLogger.logger().warning("Operation took longer than expected")
 }
 ```
 
@@ -243,10 +243,10 @@ await highlighter.configureCacheSettings(
 // Track highlighting performance
 let stats = await highlighter.performanceMonitor.getAverageTime(for: .syntaxHighlighting)
 if let avgTime = stats {
-    print("Average highlighting time: \(avgTime)")
+    CrossPlatformLogger.logger().info("Average highlighting time: \(avgTime)")
     
     if avgTime > .milliseconds(100) {
-        print("Performance warning: Highlighting is slow")
+        CrossPlatformLogger.logger().warning("Performance warning: Highlighting is slow")
     }
 }
 ```
@@ -267,7 +267,7 @@ let fast = Duration.milliseconds(100)
 let slow = Duration.seconds(1)
 
 if fast < slow {
-    print("Fast is indeed faster")
+    CrossPlatformLogger.logger().info("Fast is indeed faster")
 }
 
 // Use in timeout logic
@@ -275,7 +275,7 @@ let timeout = Duration.seconds(30)
 let elapsed = Duration.seconds(25)
 
 if elapsed > timeout * 0.8 {
-    print("Warning: Approaching timeout")
+    CrossPlatformLogger.logger().warning("Approaching timeout")
 }
 ```
 
@@ -311,7 +311,7 @@ do {
         try await slowOperation()
     }
 } catch is TimeoutError {
-    print("Operation timed out")
+    CrossPlatformLogger.logger().warning("Operation timed out")
 }
 ```
 

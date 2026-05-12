@@ -1,6 +1,6 @@
 # LSP Path Resolution
 
-> Important: LSP functionality is only available on macOS. This type is not available on iOS.
+> Important: `LSPPathResolver` and local process-backed LSP management are only available on macOS. The all-platform `LSPClient` remote WebSocket path is documented in [LSP integration](integration.md).
 
 Resolves Language Server Protocol (LSP) server executable paths with flexible path resolution strategies.
 
@@ -26,7 +26,7 @@ let resolver = LSPPathResolver()
 
 // Resolve from executable name
 if let path = resolver.resolvePath("typescript-language-server") {
-    print("Found TypeScript language server at: \(path)")
+    CrossPlatformLogger.logger().info("Found TypeScript language server at: \(path)")
 }
 
 // Use absolute path directly
@@ -38,7 +38,7 @@ let absolutePath = resolver.resolvePath("/usr/local/bin/pylsp")
 ```swift
 // Check if a language server is available
 if resolver.isAvailable("rust-analyzer") {
-    print("Rust analyzer is available")
+    CrossPlatformLogger.logger().info("Rust analyzer is available")
 }
 ```
 
@@ -48,7 +48,7 @@ if resolver.isAvailable("rust-analyzer") {
 // Find all installations of a language server
 let allPaths = resolver.findAllPaths(for: "gopls")
 for path in allPaths {
-    print("Found gopls at: \(path)")
+    CrossPlatformLogger.logger().info("Found gopls at: \(path)")
 }
 ```
 
@@ -89,18 +89,22 @@ LSPPathResolver is typically used with LSPManager to configure language servers:
 
 ```swift
 let resolver = LSPPathResolver()
-let manager = LSPManager()
+let manager = LSPManager(
+    memoryMonitor: MemoryMonitor(),
+    workspaceRoot: projectURL
+)
 
 // Configure TypeScript language server
 if let tsPath = resolver.resolvePath("typescript-language-server") {
-    manager.configureServer(
-        for: .typeScript,
-        configuration: LSPConfiguration(
-            serverPath: tsPath,
-            arguments: ["--stdio"],
-            rootPath: projectPath
-        )
+    let config = LanguageServerConfig(
+        languageId: "typescript",
+        serverPath: tsPath,
+        fileExtensions: ["ts", "tsx", "js", "jsx"],
+        serverArguments: ["--stdio"],
+        enablePathResolution: false
     )
+    manager.registerLanguageServer(config)
+    try await manager.startLanguageServer(for: "typescript")
 }
 ```
 
@@ -129,10 +133,7 @@ let resolver = LSPPathResolver()
 
 guard let serverPath = resolver.resolvePath("my-language-server") else {
     // Handle missing server
-    print("Language server not found. Please install it using:")
-    print("  brew install my-language-server")
-    print("  OR")
-    print("  npm install -g my-language-server")
+    showInstallInstructions()
     return
 }
 

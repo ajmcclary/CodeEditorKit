@@ -123,7 +123,7 @@ classDiagram
         -coordinator ActorCoordinator
         +registerManagedComponent()
         +handleMemoryWarning()
-        +optimizeMemoryUsage()
+        +updateMemoryMonitor()
         +getMemoryStats()
         +performCleanup()
     }
@@ -164,7 +164,7 @@ classDiagram
 
     class UniversalCompletionProvider {
         &lt;&lt;completion factory&gt;&gt;
-        -providers Dictionary&lt;LanguageConfig, CompletionProvider&gt;
+        -providers Dictionary&lt;Language, CompletionProvider&gt;
         -fallbackProvider CompletionProvider
         +createProvider()
         +getProviderForLanguage()
@@ -232,7 +232,7 @@ classDiagram
         &lt;&lt;folding definition&gt;&gt;
         +startPattern String
         +endPattern String
-        +language LanguageConfig
+        +language Language
         +foldingType FoldingType
     }
 
@@ -280,7 +280,7 @@ classDiagram
         &lt;&lt;completion request&gt;&gt;
         +position NSRange
         +text String
-        +language LanguageConfig?
+        +language Language?
         +triggerCharacter String?
     }
 
@@ -305,7 +305,7 @@ classDiagram
     }
 
     %% Tenth Row - Basic Support Types
-    class LanguageConfig {
+    class Language {
         &lt;&lt;language definition&gt;&gt;
         +identifier String
         +name String
@@ -370,7 +370,7 @@ classDiagram
     SyntaxHighlighter <|-- RegexHighlighter : implements
     
     LanguageDetectionService --> LanguageDetector : uses
-    LanguageDetectionService --> LanguageConfig : detects
+    LanguageDetectionService --> Language : detects
     
     CompletionProviderRegistry --> UniversalCompletionProvider : uses
     CompletionProviderRegistry --> CompletionSession : creates
@@ -435,7 +435,7 @@ classDiagram
     class SyntaxToken highlighting
     class CompletionContext completion
     class CompletionItem completion
-    class LanguageConfig completion
+    class Language completion
     class LineNumberInfo completion
     class FoldingPattern completion
     class ActorCoordinator coordinator

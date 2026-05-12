@@ -2,7 +2,7 @@
 
 Configure robust retry behavior for Language Server Protocol connections to ensure reliability.
 
-> Important: LSP functionality is only available on macOS. This documentation does not apply to iOS builds.
+> Important: this page covers macOS local process-backed LSP servers managed by `LSPManager`. Remote WebSocket clients are available on all supported platforms; see [LSP integration](integration.md).
 
 ## Overview
 
@@ -15,7 +15,10 @@ The CodeEditorPlugin includes sophisticated retry logic for LSP connections, ens
 Standard retry configuration suitable for most use cases:
 
 ```swift
-let lspManager = LSPManager(workspaceRoot: projectURL)
+let lspManager = LSPManager(
+    memoryMonitor: MemoryMonitor(),
+    workspaceRoot: projectURL
+)
 try await lspManager.startLanguageServer(for: "swift")
 ```
 
@@ -110,7 +113,7 @@ do {
     try await lspManager.startLanguageServer(for: "rust")
 } catch {
     // Handle LSPError with details about failed attempts
-    print("Failed to start language server after retries: \(error)")
+    CrossPlatformLogger.logger().error("Failed to start language server after retries: \(error)")
 }
 ```
 
@@ -124,7 +127,7 @@ do {
 
 ## Implementation Details
 
-The retry logic is implemented at the `LSPClientRegistry` level and automatically applies to:
+The retry logic is implemented in the local LSP registry startup path.
 
 The retry mechanism:
 1. Attempts connection with the language server

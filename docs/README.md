@@ -85,6 +85,7 @@ The package is MIT-licensed (`LICENSE` at repo root) and distributed from `https
 
 - [Troubleshooting](Reference/troubleshooting.md)
 - [Duration API migration](Reference/duration-api-migration.md)
+- [Tree-sitter packaging](TreeSitterPackaging.md) — current compile flag, package shape, and extraction plan.
 
 ## Architecture & visuals
 

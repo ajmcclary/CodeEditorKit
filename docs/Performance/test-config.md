@@ -165,8 +165,8 @@ func testNoMemoryLeaks() {
     trackForMemoryLeaks(coordinator)
     
     // Use objects
-    editor.setText("Hello, world!")
-    coordinator.highlight(editor.text)
+    editor.text = "Hello, world!"
+    _ = coordinator
     
     // Objects should be deallocated after test
 }
@@ -390,7 +390,7 @@ xcrun xctrace record --template "Time Profiler" --launch -- \
 ```swift
 class PerformanceTestObserver: NSObject, XCTestObservation {
     func testBundleWillStart(_ testBundle: Bundle) {
-        print("Starting test bundle: \(testBundle)")
+        CrossPlatformLogger.logger().info("Starting test bundle: \(testBundle)")
     }
     
     func testCase(_ testCase: XCTestCase, 

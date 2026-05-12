@@ -460,7 +460,7 @@ sequenceDiagram
 
 2. **Theme System Integration**
    - Theme API exists but integration with main editor theming is incomplete
-   - Need bidirectional connection with existing `EditorTheme` system
+   - Need bidirectional connection with existing `Theme` system
    - Theme application and switching needs implementation
 
 3. **Language Server Protocol Support**

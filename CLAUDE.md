@@ -6,7 +6,7 @@ AI assistant guidance for CodeEditorPlugin — a TextKit2-based code editor fram
 
 ```bash
 # Build, lint, test (in order — lint catches issues tests may miss)
-swift build && swiftlint && swift test --parallel
+swift build && swiftlint --fix && swiftlint && swift test --parallel
 
 # Fix auto-correctable lint violations
 swiftlint --fix
@@ -17,9 +17,15 @@ swift test --filter TestName
 # Build/run the sample app (target, not a separate package)
 swift build --target CodeEditorSample
 swift run CodeEditorSample
+./Scripts/run-sample.sh [debug|release]
 
-# Build a single target
+# Build a single library target
 swift build --target CodeEditorPlugin
+swift build --target CodeEditorUI
+swift build --target CodeEditorDesignTokens
+
+# Run the package test helper
+./Scripts/run-parallel-tests.sh
 ```
 
 ## Package Structure
@@ -39,25 +45,29 @@ The snapshot-testing fork (`ajmcclary/swift-snapshot-testing@fix-swift-6.3-attac
 
 Tests mix both XCTest and Swift Testing frameworks across 4 test targets (`CodeEditorPluginTests`, `CodeEditorDesignTokensTests`, `CodeEditorUITests`, `CodeEditorSampleTests`).
 
+The package currently defines a `CAN_IMPORT_TREE_SITTER` Swift setting on the main target. The checked-in tree-sitter work is still a regex-backed / packaging spike; there are no bundled C grammar libraries wired into `Package.swift`.
+
 ## Source Tree
 
 ```
 Sources/CodeEditorPlugin/
 ├── Core/                    # Main APIs, services, event system
-├── Text/                    # TextKit2 handling, layout, processing
+├── Text/                    # TextKit2 handling, layout, parsing, range store, processing
 ├── Layout/                  # UI components + co-located ViewModels
 ├── Configuration/           # Settings, presets, validation
-├── SyntaxHighlighting/      # Language highlighting engine
+├── SyntaxHighlighting/      # Language highlighting engine + tree-sitter adapters
 ├── Languages/               # Language-specific providers (25 concrete languages + plain text)
 ├── Theming/                 # Theme system, color tokens, appearance
 ├── Completion/              # Code completion providers
-├── Features/                # Optional features (folding, annotations, etc.)
+├── Features/                # Optional features (folding, smart editing, search/replace, etc.)
 ├── SwiftUI/                 # SwiftUI wrappers and modifiers
 ├── Platform/                # Cross-platform color/font/view abstractions
 ├── Extensions/              # Type extensions (all use +Extensions suffix)
 ├── Performance/             # Monitoring, profiling, memory tracking
 ├── LSP/                     # Language Server Protocol support
-├── Annotations/             # Code annotation detection (TODO, FIXME, etc.)
+├── Annotations/             # Data-source driven annotation badges
+├── Search/                  # Search result models and shared search support
+├── Workspace/               # Workspace indexing/search types
 ├── Models/                  # Shared data models
 ├── Utilities/               # Shared helpers
 └── Resources/               # Bundled theme JSON (processed via `resources:`)
@@ -65,7 +75,13 @@ Sources/CodeEditorPlugin/
 
 Long-form prose docs live in `docs/` — see [`docs/README.md`](docs/README.md) for the topical index.
 
-18 directories, ~445 Swift source files in the main target.
+20 top-level directories, 453 Swift source files in the main target, and 513 Swift source files under `Sources/`.
+
+Other source roots:
+- `Sources/CodeEditorDesignTokens/` — standalone design-token library.
+- `Sources/CodeEditorUI/` — optional SwiftUI chrome/components.
+- `Sources/CodeEditorSample/` — executable demo app target.
+- `Sources/CodeEditorTreeSitterLanguages/` — tree-sitter packaging/staging sources; it is not currently an SPM target.
 
 ## Conventions
 
@@ -92,12 +108,15 @@ All extension files use the `+Extensions` suffix: `String+Extensions.swift`, `NS
 ### Dependency Injection
 No singletons. Pass dependencies through `EditorConfiguration` or service initializers:
 - `ActorCoordinator`: `config.actorCoordinator = ActorCoordinator.create()`
-- `MemoryMonitor`: inject through configuration or environment
+- `MemoryMonitor`: `config.performance.memoryMonitor = MemoryMonitor()`, or use the SwiftUI `.memoryMonitor(_:)` modifier
+- `UnifiedEventSystem`: `config.eventSystem = UnifiedEventSystem()`, or use `.eventSystem(_:)`
 
 ### Configuration
 ```swift
 // Direct updates (preferred for SwiftUI bindings)
 config.display.isLineNumbersEnabled = true
+config.display.isCodeFoldingEnabled = true
+config.behavior.isAutoIndentEnabled = true
 
 // Presets
 let config = EditorConfiguration.minimal
@@ -117,10 +136,11 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 **Watch for stale claims in diagrams:**
 - Language count is 25 concrete languages plus plain text (Swift, Python, JavaScript, TypeScript, Java, Go, Rust, C, C++, PHP, Ruby, JSON, YAML, XML, Markdown, CSS, HTML, SQL, Shell, Dockerfile, TOML, Lua, C#, Kotlin, Dart, plus plain text).
-- The plugin system (`Diagram 27`) is a design document — not yet implemented.
+- `08-platform-abstraction-layer.md` is a historical snapshot from the Mac Catalyst / TextKit1 era. Current platform truth lives in `docs/Platform/platform-abstraction.md` and `docs/FeatureMatrix.md`.
 - `20-debugging-integration-architecture.md` is the extended design; `20-debugging-integration.md` reflects current implementation.
+- The plugin system (`Diagram 27`) is a design document — not yet implemented.
 - `29-enhanced-syntax-highlighting-architecture.md` is the planned design; `29-enhanced-syntax-highlighting-architecture-updated.md` reflects current code.
-- These symbols are referenced in older diagrams but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
+- These symbols are referenced in older diagrams, scripts, or design docs but do **not** exist in the framework: `depermaid`, `ConfigurationBatchUpdater`, `PluginManager`, `ServiceLifecycle`, `CodeEditorSwiftUITheme`, `EditorTheme`, `LanguageConfig`, `CodeEditorLayoutManager`, `ConfigurationValidator`, `EditorConfigurationBuilder`, `ConfigurationMigrator`, `ConfigurationHotReload`, `PluginAPI`, `PluginContext`, `MarkdownPlugin`. (`AppState` exists in the `CodeEditorSample` target, not in the framework — don't confuse the two.)
 
 ## What Will Go Wrong
 
@@ -132,6 +152,14 @@ Architecture diagrams live in `docs/Diagrams/` (Mermaid). Keep them in sync with
 
 - **Custom lint rule `no_print_statements`** matches `///` doc comment lines in source, but the regex exempts them. Edits to that regex must preserve the `///` exclusion.
 
-- **`canImport` conventions are enforced across ~275 files**. Adding a new `#if os()` is a regression.
+- **`canImport` conventions are enforced across ~296 files**. Adding a new `#if os()` is a regression.
 
 - **Test count varies**: the codebase uses both `@Suite` (Swift Testing) and `XCTestCase` (XCTest). Counting "tests" depends on framework — `swift test --parallel` runs all of them regardless.
+
+- **Mac Catalyst and TextKit1 are retired**: don't reintroduce `.macCatalyst`, `targetEnvironment(macCatalyst)`, `EditorConfiguration.catalyst`, or TextKit1 fallback branches. The package supports native macOS and iOS/iPadOS only.
+
+- **`MemoryMonitor` is final**: tests should use `MemoryMonitor.mock(...)` or registered cleanup handlers, not subclass overrides.
+
+- **Legacy scripts are not doc truth**: `Scripts/generate-dependency-diagrams.sh` still references `depermaid` and the old `CodeEditorSample` directory shape, and `Scripts/Generate_Docs.sh` is an old Pandoc/Documentation helper. Update them before using them as automation.
+
+- **`docs/superpowers/` is archived working notes**: don't link it as authoritative project documentation.

@@ -109,8 +109,8 @@ let metrics = await coordinator.performanceMetrics.getMetrics(
     for: "syntax-highlighting"
 )
 
-print("Average duration: \(metrics.averageDuration)")
-print("Total operations: \(metrics.count)")
+CrossPlatformLogger.logger().info("Average duration: \(metrics.averageDuration)")
+CrossPlatformLogger.logger().info("Total operations: \(metrics.count)")
 ```
 
 ## Document Management
@@ -259,7 +259,7 @@ do {
     )
 } catch {
     // Only handle non-recoverable errors
-    print("Unrecoverable error: \(error)")
+    CrossPlatformLogger.logger().error("Unrecoverable error: \(error)")
 }
 ```
 

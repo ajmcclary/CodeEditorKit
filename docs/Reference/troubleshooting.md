@@ -42,7 +42,8 @@ Or in Xcode:
 var config = EditorConfiguration()
 config.performance.useHardwareAcceleration = true
 config.performance.maxSyntaxHighlightingLength = 500_000 // Limit to 500KB
-config.performance.useViewportRendering = true
+config.performance.usesRangeBasedHighlighting = true
+config.performance.maxVisibleLines = 1_000
 ```
 
 ### Memory Usage
@@ -51,11 +52,12 @@ config.performance.useViewportRendering = true
 
 **Solution**: Use memory-aware configuration:
 ```swift
-let memoryConfig = PlatformCapabilities.shared.recommendedMemoryConfiguration
+let monitor = MemoryMonitor()
+monitor.memoryThresholdMB = 250
 
-if memoryConfig.availableMemory < 4_000_000_000 { // 4GB
-    config.performance.maxFileSize = 5_000_000 // 5MB limit
-}
+var config = EditorConfiguration.default
+config.performance.memoryMonitor = monitor
+config.performance.maxFileSize = 5_000_000 // 5MB limit
 ```
 
 ### Syntax Highlighting Lag
@@ -64,7 +66,7 @@ if memoryConfig.availableMemory < 4_000_000_000 { // 4GB
 
 **Solution**: Adjust debounce timing:
 ```swift
-config.behavior.syntaxHighlightingDebounce = 100 // milliseconds
+config.performance.highlightingDebounceInterval = .milliseconds(100)
 ```
 
 ## Layout Issues
@@ -101,8 +103,10 @@ let container = CodeEditorContainerView()
 
 **Solution**: Ensure proper content insets:
 ```swift
-editor.textContainerInset = NSSize(width: 5, height: 5)
-editor.layoutManager?.ensureLayout(for: editor.textContainer!)
+editor.setUnifiedTextContainerInsets(EdgeInsets(uniform: 8))
+if let documentRange = editor.textLayoutManager?.documentRange {
+    editor.textLayoutManager?.ensureLayout(for: documentRange)
+}
 ```
 
 ## Platform-Specific Issues
@@ -145,17 +149,18 @@ var body: some View {
 
 ## Common Errors
 
-### CodeEditorError.invalidRange
+### Invalid Text Ranges
 
 **Issue**: "Invalid range" error when manipulating text.
 
 **Solution**: Validate ranges before operations:
 ```swift
-do {
-    let range = NSRange(location: 0, length: 10)
-    try editor.replaceTextSafe(in: range, with: "new text")
-} catch CodeEditorError.invalidRange(let range, let length) {
-    print("Range \(range) exceeds text length \(length)")
+let utf16Length = editor.string.utf16.count
+let requestedRange = NSRange(location: 0, length: 10)
+let validRange = requestedRange.clamped(to: NSRange(location: 0, length: utf16Length))
+
+if let textRange = NSTextRange(validRange) {
+    editor.replaceCharacters(in: textRange, with: "new text")
 }
 ```
 
@@ -168,28 +173,26 @@ As of 0.2.0 the framework is TextKit2-only on every supported platform — the T
 ### Enable Verbose Logging
 
 ```swift
-// Enable performance monitoring
-let stats = editor.performanceStatistics
-print("Average render time: \(stats.averageRenderTime)ms")
-print("Syntax highlighting time: \(stats.syntaxHighlightingTime)ms")
+let metrics = editor.configuration.eventSystem?.getMetrics()
+CrossPlatformLogger.logger().info("Published events: \(metrics?.publishedCount ?? 0)")
 ```
 
 ### Check Platform Capabilities
 
 ```swift
-let capabilities = PlatformCapabilities.shared
-print("TextKit2: \(capabilities.supportsTextKit2)")
-print("Hardware acceleration: \(capabilities.supportsHardwareAcceleration)")
-print("Touch Bar: \(capabilities.supportsTouchBar)")
+let capabilities = PlatformCapabilities()
+CrossPlatformLogger.logger().info("TextKit2: \(capabilities.supportsTextKit2)")
+CrossPlatformLogger.logger().info("Hardware acceleration: \(capabilities.supportsHardwareAcceleration)")
+CrossPlatformLogger.logger().info("Touch Bar: \(capabilities.supportsTouchBar)")
 ```
 
 ### Monitor Memory
 
 ```swift
 // Add memory monitoring
-editor.memoryMonitor.startMonitoring { stats in
-    print("Memory usage: \(stats.residentMemory / 1024 / 1024)MB")
-}
+editor.memoryMonitor.startMonitoring()
+let stats = editor.memoryMonitor.getMemoryStatistics()
+CrossPlatformLogger.logger().info("Memory usage: \(stats.currentUsageMB)MB")
 ```
 
 ## Getting Help

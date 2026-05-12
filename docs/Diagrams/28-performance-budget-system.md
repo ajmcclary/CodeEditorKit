@@ -303,7 +303,7 @@ class PerformanceRegressionTests: XCTestCase {
 ### Report Generation
 ```swift
 let report = await reporter.generateReport()
-print(report.summary)
+CrossPlatformLogger.logger().info(report.summary)
 
 // Output:
 // Performance Budget Report

@@ -26,7 +26,7 @@ What works on the package's declared Apple platforms. Reflects the package as of
 | Streaming highlighter for large files | ✅ | ✅ | adaptive chunk sizes via `StreamingHighlighter.Configuration` |
 | Async / debounced highlighter | ✅ | ✅ | 300 ms debounce by default |
 | Code folding | ✅ | ✅ | 250 ms detection debounce; cache evicted on memory pressure |
-| Annotations (TODO / FIXME / MARK) | ✅ | ✅ | `Sources/CodeEditorPlugin/Annotations/` |
+| Annotations (data-source driven badges) | ✅ | ✅ | `Sources/CodeEditorPlugin/Annotations/`; host apps provide TODO/FIXME/diagnostic markers. |
 | Code completion | ✅ | ✅ | single-character trigger guard prevents paste storms |
 | LSP integration | ✅ | ⚠️ | macOS has `LSPManager` for local process-backed servers. iOS has the all-platform `LSPClient` / `WebSocketTransport` primitives for remote servers, but no local process manager. |
 | Minimap | ✅ | ✅ | `Layout.isMinimapVisible`, `Layout.minimapWidth` |
